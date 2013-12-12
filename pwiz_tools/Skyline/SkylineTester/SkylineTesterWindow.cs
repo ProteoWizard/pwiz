@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using TestRunnerLib;
 
 namespace SkylineTester
 {
@@ -146,159 +142,70 @@ namespace SkylineTester
 
         private void KillTestProcess()
         {
-            if (_process != null)
+            if (_process != null && !_process.HasExited)
             {
                 ProcessUtilities.KillProcessTree(_process); 
-                _process = null;
 
                 var stopTimer = new Timer {Interval = 500};
                 stopTimer.Tick += (sender, args) =>
                 {
                     stopTimer.Stop();
-                    textBoxLog.AppendText("#  Stopped.\r\n");
+                    textBoxLog.AppendText("# Stopped." + Environment.NewLine);
                 };
                 stopTimer.Start();
             }
+
+            _process = null;
         }
 
-        private void CreateFormsTree()
+        private TabPage _runningTab;
+
+        private bool ToggleRunButtons(TabPage tab)
         {
-            FormsTree.Nodes.Clear();
-
-            var forms = new List<TreeNode>();
-            var skylinePath = File.Exists("Skyline.exe") ? "Skyline.exe" : "Skyline-daily.exe";
-            var assembly = Assembly.LoadFrom(skylinePath);
-            var types = assembly.GetTypes();
-            var formLookup = new FormLookup();
-
-            foreach (var type in types)
+            if (_runningTab != null || tab == null)
             {
-                if (type.IsSubclassOf(typeof (Form)) && !type.IsAbstract)
-                {
-                    var node = new TreeNode(type.Name);
-                    if (!formLookup.HasTest(type.Name))
-                        node.ForeColor = Color.Gray;
-                    forms.Add(node);
-                }
-            }
+                foreach (var runButton in _runButtons)
+                    runButton.Text = "Run";
+                buttonStopLog.Enabled = false;
 
-            forms = forms.OrderBy(node => node.Text).ToList();
-            FormsTree.Nodes.Add(new TreeNode("Skyline", forms.ToArray()));
-            FormsTree.ExpandAll();
-        }
-
-        private void runClick(object sender, EventArgs e)
-        {
-            foreach (var runButton in _runButtons)
-                runButton.Text = (_process == null) ? "Stop" : "Run";
-
-            if (_process != null)
-            {
                 KillTestProcess();
 
-                if (RegenerateCache.Checked)
-                    CreateFormsTree();
-
-                RegenerateCache.Checked = false;
-                buttonStopLog.Enabled = false;
-                return;
+                _runningTab = null;
+                return false;
             }
 
+            foreach (var runButton in _runButtons)
+                runButton.Text = "Stop";
             buttonStopLog.Enabled = true;
-            if (File.Exists(_logFile))
-                File.Delete(_logFile);
-            _appendToLog = false;
-
-            _process = CreateProcess("TestRunner.exe");
-            _buildDir = null;
-
-            var args = new StringBuilder("SkylineTester random=off results=\"");
-            args.Append(_resultsDir);
-            args.Append("\" ");
-            args.Append("log=\"");
-            args.Append(_logFile);
-            args.Append("\" ");
-            if (RunWithDebugger.Checked)
-                args.Append("Debug ");
-
-            switch (Tabs.SelectedIndex)
-            {
-                case 0:
-                    GetArgsForForms(args);
-                    break;
-
-                case 1:
-                    GetArgsForTutorials(args);
-                    break;
-
-                case 2:
-                    GetArgsForTests(args);
-                    break;
-
-                case 3:
-                    var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-                    _process.StartInfo.FileName = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
-                    if (!File.Exists(_process.StartInfo.FileName))
-                    {
-                        _process.StartInfo.FileName = Path.Combine(programFiles, @"VisualSVN\bin\svn.exe");
-                        if (!File.Exists(_process.StartInfo.FileName))
-                        {
-                            // TODO: Offer to install for the user.
-                            MessageBox.Show("Must install Subversion");
-                            _process = null;
-                            foreach (var runButton in _runButtons)
-                                runButton.Text = "Run";
-                            buttonStopLog.Enabled = false;
-                            return;
-                        }
-                    }
-                    args.Clear();
-                    args.Append(@"checkout https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz ");
-                    _buildDir = Environment.CurrentDirectory;
-                    _buildDir = Path.GetDirectoryName(_buildDir) ?? "";
-                    _buildDir = Path.Combine(_buildDir, "Build");
-                    args.Append(_buildDir);
-                    _appendToLog = true;
-                    break;
-
-                case 4:
-                    break;
-            }
-
-            MemoryChartWindow.Start("TestRunnerMemory.log");
 
             textBoxLog.Text = null;
-            StartProcess(args.ToString());
+            if (File.Exists(_logFile))
+                File.Delete(_logFile);
 
-            Tabs.SelectTab(tabOutput);
+            _runningTab = tab;
+            return true;
         }
 
-        private const int SB_VERT = 0x1;
-        private const int WM_VSCROLL = 0x115;
-        private const int SB_THUMBPOSITION = 0x4;
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern int GetScrollPos(IntPtr hWnd, int nBar);
-        [DllImport("user32.dll")]
-        private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
-        [DllImport("user32.dll")]
-        private static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
-        [DllImport("user32.dll")]
-        private static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
-        private void AppendTextToTextBox(MyTextBox textbox, string text, bool autoscroll)
+        private void RunTestRunner(string args)
         {
-            textbox.Suspend();
-            int savedVpos = GetScrollPos(textbox.Handle, SB_VERT);
-            textbox.AppendText(text);
-            if (autoscroll)
-            {
-                int VSmin, VSmax;
-                GetScrollRange(textbox.Handle, SB_VERT, out VSmin, out VSmax);
-                int sbOffset = (textbox.ClientSize.Height - SystemInformation.HorizontalScrollBarHeight) / (textbox.Font.Height);
-                savedVpos = VSmax - sbOffset;
-            }
-            SetScrollPos(textbox.Handle, SB_VERT, savedVpos, true);
-            PostMessageA(textbox.Handle, WM_VSCROLL, SB_THUMBPOSITION + 0x10000 * savedVpos, 0);
-            textbox.Resume();
+            Tabs.SelectTab(tabOutput);
+            MemoryChartWindow.Start("TestRunnerMemory.log");
+            _appendToLog = false;
+
+            var testRunnerArgs = new StringBuilder("SkylineTester random=off results=\"");
+            testRunnerArgs.Append(_resultsDir);
+            testRunnerArgs.Append("\" ");
+            testRunnerArgs.Append("log=\"");
+            testRunnerArgs.Append(_logFile);
+            testRunnerArgs.Append("\" ");
+            if (RunWithDebugger.Checked)
+                testRunnerArgs.Append("Debug ");
+            testRunnerArgs.Append(args);
+
+            StartProcess(
+                "TestRunner.exe",
+                testRunnerArgs.ToString(),
+                Environment.CurrentDirectory);
         }
 
         void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
@@ -310,8 +217,22 @@ namespace SkylineTester
                     File.AppendAllText(_logFile, line);
                 Invoke(new Action(() =>
                 {
-                    textBoxLog.Focus();
-                    AppendTextToTextBox(textBoxLog, line, false);
+                    int maxLineNumber = textBoxLog.GetLineFromCharIndex(textBoxLog.TextLength);
+                    int startChar = textBoxLog.GetFirstCharIndexFromLine(maxLineNumber);
+                    var point = textBoxLog.GetPositionFromCharIndex(startChar);
+                    var clientRectangle = textBoxLog.ClientRectangle;
+                    clientRectangle.Height += 60;
+                    if (clientRectangle.Contains(point))
+                    {
+                        textBoxLog.Focus();
+                        textBoxLog.AppendText(line);
+                    }
+                    else
+                    {
+                        textBoxLog.Parent.Focus();
+                        textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                        textBoxLog.SelectedText = line;
+                    }
                 }));
             }
 // ReSharper disable once EmptyGeneralCatchClause
@@ -346,15 +267,21 @@ namespace SkylineTester
             return process;
         }
 
-        private void StartProcess(string arguments)
+        private void StartProcess(
+            string exe, 
+            string arguments, 
+            string workingDirectory,
+            EventHandler processExitHandler = null,
+            bool appendToLog = false)
         {
+            _process = CreateProcess(exe, workingDirectory);
             _process.StartInfo.Arguments = arguments;
             if (!RunWithDebugger.Checked)
             {
                 _process.OutputDataReceived += ProcessOutputDataReceived;
                 _process.ErrorDataReceived += ProcessOutputDataReceived;
             }
-            _process.Exited += ProcessExit;
+            _process.Exited += processExitHandler ?? ProcessExit;
             _process.Start();
             if (!RunWithDebugger.Checked)
             {
@@ -365,23 +292,13 @@ namespace SkylineTester
 
         void ProcessExit(object sender, EventArgs e)
         {
-            if (_buildDir != null)
-            {
-                _process = CreateProcess(
-                    Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat"),
-                    _buildDir);
-                _buildDir = null;
-                StartProcess(@"32 --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog");
-                return;
-            }
-
             try
             {
                 Invoke(new Action(() =>
                 {
-                    foreach (var runButton in _runButtons)
-                        runButton.Text = "Run";
-                    buttonStopLog.Enabled = false;
+                    if (_runningTab == tabForms)
+                        ExitForms();
+                    ToggleRunButtons(null);
                     _process = null;
                 }));
             }
@@ -389,84 +306,6 @@ namespace SkylineTester
             catch (Exception)
             {
             }
-        }
-
-        private void GetArgsForForms(StringBuilder args)
-        {
-            if (RegenerateCache.Checked)
-            {
-                args.Append("loop=1 offscreen=off culture=en-US form=__REGEN__");
-                return;
-            }
-
-            // Create list of forms the user wants to see.
-            var formList = new List<string>();
-            var skylineNode = FormsTree.Nodes[0];
-            foreach (TreeNode node in skylineNode.Nodes)
-            {
-                if (node.Checked)
-                    formList.Add(node.Text);
-            }
-            args.Append("loop=1 offscreen=off culture=en-US form=");
-            args.Append(string.Join(",", formList));
-            int pauseSeconds = -1;
-            if (PauseFormDelay.Checked && !int.TryParse(PauseFormSeconds.Text, out pauseSeconds))
-                pauseSeconds = 0;
-            args.Append(" pause=");
-            args.Append(pauseSeconds);
-        }
-
-        private void GetArgsForTutorials(StringBuilder args)
-        {
-            var testList = new List<string>();
-            GetCheckedTests(TutorialsTree.TopNode, testList);
-
-            args.Append("offscreen=off loop=1 culture=en-US");
-            if (TutorialsDemoMode.Checked)
-                args.Append(" demo=on");
-            else
-            {
-                int pauseSeconds = -1;
-                if (!PauseTutorialsScreenShots.Checked && !int.TryParse(PauseTutorialsSeconds.Text, out pauseSeconds))
-                    pauseSeconds = 0;
-                args.Append(" pause=");
-                args.Append(pauseSeconds);
-            }
-            args.Append(" test=");
-            args.Append(string.Join(",", testList));
-        }
-
-        private void GetArgsForTests(StringBuilder args)
-        {
-            var testList = new List<string>();
-
-            foreach (TreeNode node in TestsTree.Nodes)
-                GetCheckedTests(node, testList, SkipCheckedTests.Checked);
-
-            args.Append("offscreen=");
-            args.Append(Offscreen.Checked);
-
-            if (!RunIndefinitely.Checked)
-            {
-                int loop;
-                if (!int.TryParse(RunLoopsCount.Text, out loop))
-                    loop = 1;
-                args.Append(" loop=");
-                args.Append(loop);
-            }
-
-            var cultures = new List<CultureInfo>();
-            if (CultureEnglish.Checked || !CultureFrench.Checked)
-                cultures.Add(new CultureInfo("en-US"));
-            if (CultureFrench.Checked)
-                cultures.Add(new CultureInfo("fr-FR"));
-
-            args.Append(" culture=");
-            args.Append(string.Join(",", cultures));
-            if (PauseTestsScreenShots.Checked)
-                args.Append(" pause=-1");
-            args.Append(" test=");
-            args.Append(string.Join(",", testList));
         }
 
         private void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)
@@ -508,39 +347,9 @@ namespace SkylineTester
             }
         }
 
-        private void checkAll_Click(object sender, EventArgs e)
-        {
-            foreach (var node in TestsTree.Nodes)
-            {
-                ((TreeNode) node).Checked = true;
-                CheckAllChildNodes((TreeNode) node, true);
-            }
-        }
-
-        private void uncheckAll_Click(object sender, EventArgs e)
-        {
-            foreach (var node in TestsTree.Nodes)
-            {
-                ((TreeNode)node).Checked = false;
-                CheckAllChildNodes((TreeNode)node, false);
-            }
-        }
-
         private void ViewMemoryUse(object sender, EventArgs e)
         {
             MemoryChartWindow.ShowMemoryChart();
-        }
-
-        private void pauseTestsForScreenShots_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PauseTestsScreenShots.Checked)
-                Offscreen.Checked = false;
-        }
-
-        private void offscreen_CheckedChanged(object sender, EventArgs e)
-        {
-            if (Offscreen.Checked)
-                PauseTestsScreenShots.Checked = false;
         }
 
         private void open_Click(object sender, EventArgs e)
@@ -694,27 +503,6 @@ namespace SkylineTester
         private void exit_Click(object sender, EventArgs e)
         {
             Close();
-        }
-
-        private void FormsTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            e.Node.Checked = !e.Node.Checked;
-            FormsTree.SelectedNode = null;
-        }
-
-        private void linkLogFile_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            if (!File.Exists(_logFile))
-                return;
-
-            var editLogFile = new Process
-            {
-                StartInfo =
-                {
-                    FileName = _logFile
-                }
-            };
-            editLogFile.Start();
         }
     }
 }

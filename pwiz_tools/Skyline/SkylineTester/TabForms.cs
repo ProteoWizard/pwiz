@@ -1,0 +1,89 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Windows.Forms;
+using TestRunnerLib;
+
+namespace SkylineTester
+{
+    public partial class SkylineTesterWindow
+    {
+        private void RunForms(object sender, EventArgs e)
+        {
+            if (!ToggleRunButtons(tabForms))
+                return;
+
+            var args = new StringBuilder("loop=1 offscreen=off culture=en-US ");
+
+            if (RegenerateCache.Checked)
+            {
+                args.Append("form=__REGEN__");
+            }
+            else
+            {
+                // Create list of forms the user wants to see.
+                var formList = new List<string>();
+                var skylineNode = FormsTree.Nodes[0];
+                foreach (TreeNode node in skylineNode.Nodes)
+                {
+                    if (node.Checked)
+                        formList.Add(node.Text);
+                }
+                args.Append("form=");
+                args.Append(string.Join(",", formList));
+                int pauseSeconds = -1;
+                if (PauseFormDelay.Checked && !int.TryParse(PauseFormSeconds.Text, out pauseSeconds))
+                    pauseSeconds = 0;
+                args.Append(" pause=");
+                args.Append(pauseSeconds);
+            }
+
+            RunTestRunner(args.ToString());
+        }
+
+        private void ExitForms()
+        {
+            if (RegenerateCache.Checked)
+            {
+                CreateFormsTree();
+                RegenerateCache.Checked = false;
+            }
+        }
+
+        private void CreateFormsTree()
+        {
+            FormsTree.Nodes.Clear();
+
+            var forms = new List<TreeNode>();
+            var skylinePath = File.Exists("Skyline.exe") ? "Skyline.exe" : "Skyline-daily.exe";
+            var assembly = Assembly.LoadFrom(skylinePath);
+            var types = assembly.GetTypes();
+            var formLookup = new FormLookup();
+
+            foreach (var type in types)
+            {
+                if (type.IsSubclassOf(typeof(Form)) && !type.IsAbstract)
+                {
+                    var node = new TreeNode(type.Name);
+                    if (!formLookup.HasTest(type.Name))
+                        node.ForeColor = Color.Gray;
+                    forms.Add(node);
+                }
+            }
+
+            forms = forms.OrderBy(node => node.Text).ToList();
+            FormsTree.Nodes.Add(new TreeNode("Skyline", forms.ToArray()));
+            FormsTree.ExpandAll();
+        }
+
+        private void FormsTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            e.Node.Checked = !e.Node.Checked;
+            FormsTree.SelectedNode = null;
+        }
+    }
+}

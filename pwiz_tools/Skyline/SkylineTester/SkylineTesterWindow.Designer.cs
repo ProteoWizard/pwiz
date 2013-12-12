@@ -92,7 +92,7 @@
             this.radioButton6 = new System.Windows.Forms.RadioButton();
             this.tabOutput = new System.Windows.Forms.TabPage();
             this.buttonStopLog = new System.Windows.Forms.Button();
-            this.textBoxLog = new MyTextBox();
+            this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.linkLogFile = new System.Windows.Forms.LinkLabel();
             this.label7 = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -200,7 +200,7 @@
             this.runForms.TabIndex = 19;
             this.runForms.Text = "Run";
             this.runForms.UseVisualStyleBackColor = true;
-            this.runForms.Click += new System.EventHandler(this.runClick);
+            this.runForms.Click += new System.EventHandler(this.RunForms);
             // 
             // groupBox1
             // 
@@ -366,7 +366,7 @@
             this.runTutorials.TabIndex = 22;
             this.runTutorials.Text = "Run";
             this.runTutorials.UseVisualStyleBackColor = true;
-            this.runTutorials.Click += new System.EventHandler(this.runClick);
+            this.runTutorials.Click += new System.EventHandler(this.RunTutorials);
             // 
             // tabTest
             // 
@@ -393,7 +393,7 @@
             this.runTests.TabIndex = 14;
             this.runTests.Text = "Run";
             this.runTests.UseVisualStyleBackColor = true;
-            this.runTests.Click += new System.EventHandler(this.runClick);
+            this.runTests.Click += new System.EventHandler(this.RunTests);
             // 
             // pauseGroup
             // 
@@ -610,7 +610,7 @@
             this.runBuild.TabIndex = 22;
             this.runBuild.Text = "Run";
             this.runBuild.UseVisualStyleBackColor = true;
-            this.runBuild.Click += new System.EventHandler(this.runClick);
+            this.runBuild.Click += new System.EventHandler(this.RunBuild);
             // 
             // groupBox6
             // 
@@ -715,7 +715,7 @@
             this.runQuality.TabIndex = 26;
             this.runQuality.Text = "Run";
             this.runQuality.UseVisualStyleBackColor = true;
-            this.runQuality.Click += new System.EventHandler(this.runClick);
+            this.runQuality.Click += new System.EventHandler(this.RunQuality);
             // 
             // groupBox8
             // 
@@ -861,7 +861,7 @@
             this.buttonStopLog.TabIndex = 27;
             this.buttonStopLog.Text = "Stop";
             this.buttonStopLog.UseVisualStyleBackColor = true;
-            this.buttonStopLog.Click += new System.EventHandler(this.runClick);
+            this.buttonStopLog.Click += new System.EventHandler(this.Stop);
             // 
             // textBoxLog
             // 
@@ -1205,7 +1205,7 @@
         private System.Windows.Forms.RadioButton radioButton6;
         private System.Windows.Forms.TabPage tabOutput;
         private System.Windows.Forms.Button buttonStopLog;
-        private MyTextBox textBoxLog;
+        private System.Windows.Forms.RichTextBox textBoxLog;
         private System.Windows.Forms.LinkLabel linkLogFile;
         private System.Windows.Forms.Label label7;
 
