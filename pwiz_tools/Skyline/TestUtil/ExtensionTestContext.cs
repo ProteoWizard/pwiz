@@ -50,26 +50,33 @@ namespace pwiz.SkylineTestUtil
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
         {
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
-            using (ZipFile zipFile = ZipFile.Read(pathZip))
+            try
             {
-                foreach (ZipEntry zipEntry in zipFile)
+                using (ZipFile zipFile = ZipFile.Read(pathZip))
                 {
-                    bool persist = false;
-                    if (persistentFiles != null)
+                    foreach (ZipEntry zipEntry in zipFile)
                     {
-                        foreach (var persistentFile in persistentFiles)
+                        bool persist = false;
+                        if (persistentFiles != null)
                         {
-                            if (zipEntry.FileName.Replace('\\', '/').Contains(persistentFile.Replace('\\', '/')))
+                            foreach (var persistentFile in persistentFiles)
                             {
-                                zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
-                                persist = true;
-                                break;
+                                if (zipEntry.FileName.Replace('\\', '/').Contains(persistentFile.Replace('\\', '/')))
+                                {
+                                    zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
+                                    persist = true;
+                                    break;
+                                }
                             }
                         }
+                        if (!persist)
+                            zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                     }
-                    if (!persist)
-                        zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
             }
         }
 
