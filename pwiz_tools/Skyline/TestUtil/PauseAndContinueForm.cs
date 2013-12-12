@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestUtil
             InitializeComponent();
             lblDescription.Text = description;
             if (description != null)
-                Height += 24;
+                Height += lblDescription.Height*2;
 
             // Adjust dialog width to accommodate description.
             if (lblDescription.Width > btnContinue.Width)
