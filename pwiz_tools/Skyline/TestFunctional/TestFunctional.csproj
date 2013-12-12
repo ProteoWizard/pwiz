@@ -159,6 +159,7 @@
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="ManageLibraryRunsTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
+    <Compile Include="MiscFormsTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />
     <Compile Include="NeutralLossTest.cs" />

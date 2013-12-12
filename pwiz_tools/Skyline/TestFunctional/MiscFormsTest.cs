@@ -16,28 +16,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
+using pwiz.SkylineTestUtil;
 
-namespace SkylineTester
+namespace pwiz.SkylineTestFunctional
 {
-    public partial class SkylineTesterWindow
+    [TestClass]
+    public class MiscFormsTest : AbstractFunctionalTest
     {
-        private void Stop(object sender, EventArgs e)
+        [TestMethod]
+        public void TestMiscForms()
         {
-            ToggleRunButtons(null);
+            RunFunctionalTest();
         }
 
-        private void linkLogFile_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        protected override void DoTest()
         {
-            if (File.Exists(_logFile))
+            // Show About dialog.
+            using (var about = new AboutDlg())
             {
-                var editLogFile = new Process {StartInfo = {FileName = _logFile}};
-                editLogFile.Start();
+                RunDlg<AboutDlg>(
+                    () => about.ShowDialog(Program.MainWindow),
+                    a => a.Close());
             }
         }
-
     }
 }
