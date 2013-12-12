@@ -85,9 +85,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return !Program.NoVendorReaders &&
-                    Equals(".", LocalizationHelper.OriginalCulture.NumberFormat.NumberDecimalSeparator) &&
-                    Equals(",", LocalizationHelper.OriginalCulture.TextInfo.ListSeparator);
+                return !Program.NoVendorReaders;
             }
         }
 

@@ -192,23 +192,6 @@ RawFileImpl::RawFileImpl(const string& filename)
     instrumentModel_(InstrumentModelType_Unknown),
     instrumentMethodParsed_(init_once_flag_proxy)
 {
-    // XRawfile requires '.' as a decimal separator
-    int decimalSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, 0, 0);
-    char* buf = new char[decimalSeparatorLength];
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buf, decimalSeparatorLength);
-    string decimalSeparator = buf;
-    delete buf;
-    if (decimalSeparator != ".")
-        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the decimal separator to be '.' (yours is '" + decimalSeparator + "') - adjust regional/language settings in the Control Panel.");
-
-    // XRawfile requires ',' as a list separator
-    int listSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SLIST, 0, 0);
-    buf = new char[listSeparatorLength];
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SLIST, buf, listSeparatorLength);
-    string listSeparator = buf;
-    delete buf;
-    if (listSeparator != ",")
-        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the list separator to be ',' (yours is '" + listSeparator + "') - adjust regional/language settings in the Control Panel.");
 
     COMInitializer::initialize();
 

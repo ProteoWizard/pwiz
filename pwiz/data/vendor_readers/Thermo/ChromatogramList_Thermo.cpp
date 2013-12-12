@@ -155,15 +155,15 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
             result->product.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
-            string q1 = (format("%.10g") % ci.q1).str();
-            string q3Range = (format("%.10g-%.10g")
+            string q1 = (format("%.10g", std::locale::classic()) % ci.q1).str();
+            string q3Range = (format("%.10g-%.10g", std::locale::classic())
                               % (ci.q3 - ci.q3Offset)
                               % (ci.q3 + ci.q3Offset)
                              ).str();
 
             ChromatogramDataPtr cd = rawfile_->getChromatogramData(
                 Type_MassRange, Operator_None, Type_MassRange,
-                "SRM ms2 " + q1, q3Range, "", 0,
+                "SRM ms2 " + q1 + " [" + q3Range + "]", q3Range, "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());
@@ -178,7 +178,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
             result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
             result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ci.q3Offset, MS_m_z);
 
-            string q1Range = (format("%.10g-%.10g")
+            string q1Range = (format("%.10g-%.10g", std::locale::classic())
                               % (ci.q1 - ci.q3Offset)
                               % (ci.q1 + ci.q3Offset)
                              ).str();
@@ -272,7 +272,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 if (config_.srmAsSpectra)
                                     break;
 
-                                string precursorMZ = (format("%.10g") % filterParser.precursorMZs_[0]).str();
+                                string precursorMZ = (format("%.10g", std::locale::classic()) % filterParser.precursorMZs_[0]).str();
                                 /*index_.push_back(IndexEntry());
                                 IndexEntry& ci = index_.back();
                                 ci.controllerType = (ControllerType) controllerType;
@@ -294,7 +294,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.index = index_.size()-1;
                                     ci.q1 = filterParser.precursorMZs_[0];
                                     ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
-                                    ci.id = (format("SRM SIC %s,%.10g")
+                                    ci.id = (format("SRM SIC %s,%.10g", std::locale::classic())
                                              % precursorMZ
                                              % ci.q3
                                             ).str();
@@ -320,7 +320,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
                                     ci.q1 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
-                                    ci.id = (format("SIM SIC %.10g")
+                                    ci.id = (format("SIM SIC %.10g", std::locale::classic())
                                              % ci.q1
                                             ).str();
                                     // this should be q1Offset

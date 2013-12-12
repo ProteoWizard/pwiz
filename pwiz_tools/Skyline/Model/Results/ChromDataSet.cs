@@ -801,12 +801,12 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ThermoZerosFix()
         {
-            // Check for interleaving zeros
-            if (!HasThermZerosBug)
-                return false;
+            bool fixedZeros = false;
             // Remove interleaving zeros
-            foreach (var chromData in _listChromData)
+            foreach (var chromData in _listChromData.Where(HasThermoZerosBug))
             {
+                fixedZeros = true;
+
                 var times = chromData.Times;
                 var intensities = chromData.Intensities;
                 var timesNew = new float[intensities.Length / 2];
@@ -818,32 +818,26 @@ namespace pwiz.Skyline.Model.Results
                 }
                 chromData.FixChromatogram(timesNew, intensitiesNew);
             }
-            return true;
+            return fixedZeros;
         }
 
-        private bool HasThermZerosBug
+        private bool HasThermoZerosBug(ChromData chromData)
         {
-            get
+            // Make sure the intensity arrays are not just empty to avoid
+            // an infinite loop.
+            // Check for interleaving zeros and non-zero values
+            bool seenData = false;
+            var intensities = chromData.Intensities;
+            for (int i = (intensities.Length > 0 && intensities[0] == 0 ? 0 : 1); i < intensities.Length; i += 2)
             {
-                // Make sure the intensity arrays are not just empty to avoid
-                // an infinite loop.
-                bool seenData = false;
-                // Check for interleaving zeros and non-zero values
-                foreach (var chromData in _listChromData)
-                {
-                    var intensities = chromData.Intensities;
-                    for (int i = (intensities.Length > 0 && intensities[0] == 0 ? 0 : 1); i < intensities.Length; i += 2)
-                    {
-                        if (intensities[i] != 0)
-                            return false;
-                        // Because WIFF files have lots of zeros
-                        if (i < intensities.Length - 1 && intensities[i + 1] == 0)
-                            return false;
-                        seenData = true;
-                    }
-                }
-                return seenData;
+                if (intensities[i] != 0)
+                    return false;
+                // Because WIFF files have lots of zeros
+                if (i < intensities.Length - 1 && intensities[i + 1] == 0)
+                    return false;
+                seenData = true;
             }
+            return seenData;
         }
 
         public const double MIN_PERCENT_OF_MAX = 0.01;

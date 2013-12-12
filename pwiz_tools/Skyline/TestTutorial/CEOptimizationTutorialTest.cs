@@ -172,9 +172,9 @@ namespace pwiz.SkylineTestTutorial
             {
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
-                importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).Take(5).ToArray();
+                importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets[0] =
-                     new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value); // Not L10N
+                     new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value.Take(5).ToArray()); // Not L10N
                 importResultsDlg.OkDialog();
             });
             RunUI(() => 
@@ -215,6 +215,8 @@ namespace pwiz.SkylineTestTutorial
 
             var graphRegression = ShowDialog<GraphRegression>(addItem.ShowGraph);
 
+            PauseForScreenShot();   // Collision Energy Regression graphs
+
             var graphDatas = graphRegression.RegressionGraphDatas.ToArray();
             Assert.AreEqual(2, graphDatas.Length);
 
@@ -231,8 +233,6 @@ namespace pwiz.SkylineTestTutorial
                                                                   Math.Round(graphDatas[1].RegressionLine.Slope, 4),
                                                                   Math.Round(graphDatas[1].RegressionLine.Intercept, 4)), 
                                                           });
-
-            PauseForScreenShot();   // Collision Energy Regression graphs
 
             RunUI(graphRegression.CloseDialog);
             WaitForClosedForm(graphRegression);
