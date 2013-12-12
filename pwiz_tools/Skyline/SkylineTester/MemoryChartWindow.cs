@@ -29,6 +29,7 @@ namespace SkylineTester
             _graphPane.IsFontsScaled = false;
             _graphPane.XAxis.Scale.MaxGrace = 0.05;
             _graphPane.YAxis.Scale.MaxGrace = 0.1;
+            _graphPane.XAxis.Scale.FontSpec.Angle = 90;
         }
 
         public static void Start(string logFile)

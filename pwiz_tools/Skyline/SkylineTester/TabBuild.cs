@@ -33,7 +33,7 @@ namespace SkylineTester
             StartProcess(
                 subversion,
                 @"checkout https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz " + _buildDir,
-                _buildDir,
+                null,
                 SubversionExit,
                 true);
         }

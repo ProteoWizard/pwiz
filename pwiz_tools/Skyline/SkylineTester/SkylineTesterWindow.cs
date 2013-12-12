@@ -142,7 +142,17 @@ namespace SkylineTester
 
         private void KillTestProcess()
         {
-            if (_process != null && !_process.HasExited)
+            bool processIsRunning;
+            try
+            {
+                processIsRunning = (_process != null && !_process.HasExited);
+            }
+            catch (Exception)
+            {
+                processIsRunning = false;
+            }
+
+            if (processIsRunning)
             {
                 ProcessUtilities.KillProcessTree(_process); 
 
