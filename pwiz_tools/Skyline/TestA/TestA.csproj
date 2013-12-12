@@ -232,6 +232,9 @@
     <None Include="Results\MsxTest.zip" />
     <EmbeddedResource Include="Results\MultiLabelCustomReports.skyr" />
     <EmbeddedResource Include="Results\MultiLabelWithResults.sky" />
+    <EmbeddedResource Include="Schemas\Skyline_1.5.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="SimpleDecoys.zip" />
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />

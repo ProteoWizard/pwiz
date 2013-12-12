@@ -190,8 +190,6 @@
     <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
     <None Include="TargetedMSMSViews.zip" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="GroupedStudiesViews.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

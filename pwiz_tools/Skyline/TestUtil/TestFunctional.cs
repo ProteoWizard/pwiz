@@ -314,7 +314,25 @@ namespace pwiz.SkylineTestUtil
             {
                 TDlg tForm = FindOpenForm<TDlg>();
                 if (tForm != null)
+                {
+                    string formType = typeof(TDlg).Name;
+                    if (Program.PauseForms != null && Program.PauseForms.Contains(formType))
+                    {
+// ReSharper disable LocalizableElement
+                        RunUI(() => tForm.Text += "  (" + formType + ")");
+// ReSharper restore LocalizableElement
+                        Program.PauseForms.Remove(formType);
+                        if (Program.PauseSeconds > 0)
+                            Thread.Sleep(Program.PauseSeconds * 1000);
+                        else if (Program.PauseSeconds < 0)
+                            PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
+                    }
+
+                    if (Program.ShownForms != null && !Program.ShownForms.Contains(formType))
+                        Program.ShownForms.Add(formType);
+
                     return tForm;
+                }
 
                 Thread.Sleep(SLEEP_INTERVAL);
                 Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
@@ -437,64 +455,10 @@ namespace pwiz.SkylineTestUtil
                 CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             if (IsDemoMode)
                 Thread.Sleep(3*1000);
-            else if (IsPauseForScreenShots)
-                PauseAndContinue(description);
-        }
-
-        private readonly object _pauseLock = new object();
-
-        public void PauseAndContinue(string description = null)
-        {
-            ClipboardEx.UseInternalClipboard(false);
-
-            RunUI(() =>
-            {
-                          SkylineWindow.UseKeysOverride = false;
-                          var dlg = new PauseAndContinueForm(description) {Left = SkylineWindow.Left};
-                          const int spacing = 15;
-                          var screen = Screen.FromControl(SkylineWindow);
-                          if (SkylineWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
-                              dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
-                          else if (SkylineWindow.Bottom + dlg.Height + spacing < screen.WorkingArea.Bottom)
-                              dlg.Top = SkylineWindow.Bottom + spacing;
-                          else
-                          {
-                              dlg.Top = SkylineWindow.Top;
-                              if (SkylineWindow.Left > screen.WorkingArea.Top + dlg.Width + spacing)
-                                  dlg.Left = SkylineWindow.Left - dlg.Width - spacing;
-                              else if (SkylineWindow.Right + dlg.Width + spacing < screen.WorkingArea.Right)
-                                  dlg.Left = SkylineWindow.Right + spacing;
-                              else
-                              {
-                                  // Can't fit on screen without overlap, so put in upper left of screen
-                                  // despite overlap
-                                  dlg.Top = screen.WorkingArea.Top;
-                                  dlg.Left = screen.WorkingArea.Left;
-                              }
-                          }
-                          dlg.FormClosed += PauseAndContinue_Closed;
-                          dlg.Show(SkylineWindow);
-                      });
-
-            lock (_pauseLock)
-            {
-                // Wait for an event on the pause lock, when the form is closed
-                Monitor.Wait(_pauseLock);
-                ClipboardEx.UseInternalClipboard();
-                RunUI(() => SkylineWindow.UseKeysOverride = true);
-            }
-        }
-
-        private void PauseAndContinue_Closed(object sender, FormClosedEventArgs e)
-        {
-            // Remove this event listener
-            ((Form) sender).FormClosed -= PauseAndContinue_Closed;
-
-            // Start the tests again
-            lock (_pauseLock)
-            {
-                Monitor.PulseAll(_pauseLock);
-            }
+            else if (Program.PauseSeconds > 0)
+                Thread.Sleep(Program.PauseSeconds*1000);
+            else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
+                PauseAndContinueForm.Show(description);
         }
 
         public static void OkDialog(Form form, Action okAction)

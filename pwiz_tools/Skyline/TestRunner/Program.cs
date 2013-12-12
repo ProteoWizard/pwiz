@@ -24,14 +24,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using log4net;
-using pwiz.Common.SystemUtil;
-using pwiz.Crawdad;
+//using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
 //         build from Visual Studio after a full bjam build removes all of the Skyline project
 //         root files from the Skyline bin directory, leaving it un-runnable until a full
@@ -39,62 +37,27 @@ using pwiz.Crawdad;
 //         testing this case and getting someone else to validate that you have fixed this
 //         problem.
 //using pwiz.SkylineTestUtil;
+using TestRunnerLib;
 
 namespace TestRunner
 {
     internal static class Program
     {
         private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
+        private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
         private static int _failureCount;
 
         [STAThread]
         static void Main(string[] args)
         {
-            SystemSleep.Disable();
-
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
-            // Get current SVN revision info.
-            var startDate = DateTime.Now.ToShortDateString();
-            int revision = 0;
-            try
-            {
-                string skylinePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
-                while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
-                    skylineDirectory = skylineDirectory.Parent;
-                if (skylineDirectory != null)
-                {
-                    Process svn = new Process
-                        {
-                            StartInfo =
-                                {
-                                    UseShellExecute = false,
-                                    RedirectStandardOutput = true,
-                                    FileName = @"c:\Program Files (x86)\VisualSVN\bin\svn.exe",
-                                    Arguments = @"info -r HEAD " + skylineDirectory.FullName
-                                }
-                        };
-                    svn.Start();
-                    string svnOutput = svn.StandardOutput.ReadToEnd();
-                    svn.WaitForExit();
-                    var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
-                    revision = int.Parse(revisionString);
-                }
-            }
-// ReSharper disable EmptyGeneralCatchClause
-            catch
-// ReSharper restore EmptyGeneralCatchClause
-            {
-            }
-
-
             // Parse command line args and initialize default values.
             const string commandLineOptions =
-                "?;/?;-?;help;" +
-                "test;skip;filter;" +
-                "loop=0;repeat=1;random=on;offscreen=on;multi=1;demo=off;" +
+                "?;/?;-?;help;skylinetester;debug;results;" +
+                "test;skip;filter;form;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log;summary";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -113,11 +76,58 @@ namespace TestRunner
                     return;
             }
 
-            Console.WriteLine("\n" + commandLineArgs.CommandLine);
-            Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
+            Console.WriteLine("\n" + string.Join(" ", args) + "\n");
+            //Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
+
+            if (commandLineArgs.HasArg("debug"))
+            {
+                Console.WriteLine("*** Launching debugger ***\n\n");
+
+                // NOTE: For efficient debugging of Skyline, it is most useful to choose a debugger
+                // that already has Skyline.sln loaded.  Otherwise, you might not be able to set
+                // breakpoints.
+                Debugger.Break();
+            }
+
+            var skylineDirectory = GetSkylineDirectory();
+
+            // Get current SVN revision info.
+            var startDate = DateTime.Now.ToShortDateString();
+            int revision = 0;
+            try
+            {
+                if (skylineDirectory != null)
+                {
+                    Process svn = new Process
+                    {
+                        StartInfo =
+                        {
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            FileName = @"c:\Program Files (x86)\VisualSVN\bin\svn.exe",
+                            Arguments = @"info -r HEAD " + skylineDirectory.FullName
+                        }
+                    };
+                    svn.Start();
+                    string svnOutput = svn.StandardOutput.ReadToEnd();
+                    svn.WaitForExit();
+                    var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
+                    revision = int.Parse(revisionString);
+                }
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch
+            // ReSharper restore EmptyGeneralCatchClause
+            {
+            }
 
             // Create log file.
-            var log = new StreamWriter(commandLineArgs.ArgAsString("log"));
+            var logStream = new FileStream(
+                commandLineArgs.ArgAsString("log"),
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.ReadWrite);
+            var log = new StreamWriter(logStream);
 
             int elapsedMinutes = 0;
             int testCount = 0;
@@ -166,31 +176,35 @@ namespace TestRunner
                 var passes = commandLineArgs.ArgAsLong("loop");
                 var repeat = commandLineArgs.ArgAsLong("repeat");
 
-                // Pause before first test for profiling.
-                bool profiling = commandLineArgs.ArgAsBool("profile");
-                if (profiling)
+                // Prevent system sleep.
+                using (new SystemSleep())
                 {
-                    Console.WriteLine("\nRunning each test once to warm up memory...\n");
-                    RunTests(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
-                    Console.WriteLine("\nTaking memory snapshot...\n");
-//                    MemoryProfiler.Snapshot();
-                    if (passes == 0)
-                        passes = 1;
-                }
+                    // Pause before first test for profiling.
+                    bool profiling = commandLineArgs.ArgAsBool("profile");
+                    if (profiling)
+                    {
+                        Console.WriteLine("\nRunning each test once to warm up memory...\n");
+                        RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
+                        Console.WriteLine("\nTaking memory snapshot...\n");
+//                        MemoryProfiler.Snapshot();
+                        if (passes == 0)
+                            passes = 1;
+                    }
 
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
+                    var stopwatch = new Stopwatch();
+                    stopwatch.Start();
 
-                RunTests(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
+                    RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
 
-                stopwatch.Stop();
-                elapsedMinutes = (int) (stopwatch.ElapsedMilliseconds/1000/60);
+                    stopwatch.Stop();
+                    elapsedMinutes = (int) (stopwatch.ElapsedMilliseconds/1000/60);
 
-                // Pause for profiling
-                if (profiling)
-                {
-                    Console.WriteLine("\nTaking second memory snapshot...\n");
-//                    MemoryProfiler.Snapshot();
+                    // Pause for profiling
+                    if (profiling)
+                    {
+                        Console.WriteLine("\nTaking second memory snapshot...\n");
+//                        MemoryProfiler.Snapshot();
+                    }
                 }
             }
             catch (Exception e)
@@ -253,53 +267,45 @@ namespace TestRunner
                 }
             }
 
-            SystemSleep.Enable();
+            // If the forms/tests cache was regenerated, copy it to Skyline directory.
+            if (commandLineArgs.ArgAsString("form") == "__REGEN__" && skylineDirectory != null)
+            {
+                var testRunnerDirectory = Path.Combine(skylineDirectory.FullName, "TestRunner");
+                if (Directory.Exists(testRunnerDirectory))
+                    FormLookup.CopyCacheFile(testRunnerDirectory);
+            }
 
             // Ungraceful exit to avoid unwinding errors
             Process.GetCurrentProcess().Kill();
         }
 
-        private static Assembly SkylineAssembly
+        private static DirectoryInfo GetSkylineDirectory()
         {
-            get
-            {
-                var skylinePath = GetAssemblyPath("Skyline-daily.exe");
-                if (!File.Exists(skylinePath))
-                    skylinePath = GetAssemblyPath("Skyline.exe");
-                var skyline = Assembly.LoadFrom(skylinePath);
-                return skyline;
-            }
+            string skylinePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
+            while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
+                skylineDirectory = skylineDirectory.Parent;
+            return skylineDirectory;
         }
 
         // Run all test passes.
-        private static void RunTests(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
+        private static void RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
         {
-            var randomOrder = commandLineArgs.ArgAsBool("random");
-            var process = Process.GetCurrentProcess();
-            
-            var program = SkylineAssembly.GetType("pwiz.Skyline.Program");
-            program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
+            bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
-            program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { !demoMode && commandLineArgs.ArgAsBool("offscreen") });
-            program.GetMethod("set_DemoMode").Invoke(null, new object[] { demoMode });
-            program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !commandLineArgs.ArgAsBool("vendors") });
-            program.GetMethod("set_NoSaveSettings").Invoke(null, new object[] { true });
-            program.GetMethod("set_UnitTestTimeoutMultiplier").Invoke(null, new object[] { (int)commandLineArgs.ArgAsLong("multi") });
-            program.GetMethod("get_Name").Invoke(null, null);
-            program.GetMethod("Init").Invoke(null, null);
+            bool offscreen = commandLineArgs.ArgAsBool("offscreen");
+            bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
+            int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
+            int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
+            var formList = commandLineArgs.ArgAsString("form");
+            var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
+            var results = commandLineArgs.ArgAsString("results");
 
-            // Get test results directory and provide it to tests via TestContext.
-            var testDirectoryCount = 1;
-            var testContext = new TestRunnerContext();
-            var testDir = SetTestDir(testContext, testDirectoryCount, process);
-            if (commandLineArgs.ArgAsBool("clipboardcheck"))
-            {
-                testContext.Properties["ClipboardCheck"] = "TestRunner clipboard check";
-            }
-            var context = new object[] { testContext };
+            var runTests = new RunTests(demoMode, offscreen, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
+                runTests.TestContext.Properties["ClipboardCheck"] = "TestRunner clipboard check";
                 Console.WriteLine("Checking clipboard use for {0} tests...\n", testList.Count);
                 loopCount = 1;
                 randomOrder = false;
@@ -313,195 +319,70 @@ namespace TestRunner
                     (repeat <= 1) ? "" : ", repeated " + repeat + " times each");
             }
 
-            // Initialize variables for all test passes.
-            _failureCount = 0;
-            var errorList = new Dictionary<string, int>();
-            var failureList = new Dictionary<string, int>();
-            var random = new Random();
-            var testOrder = new List<int>();
-            var stopwatch = new Stopwatch();
-            const double mb = 1024*1024;
-
-            foreach (var testInfo in testList)
-            {
-                failureList[testInfo.TestMethod.Name] = 0;
-            }
-
-            // Disable logging.
-            LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
-
             // Get list of cultures
             var cultures = commandLineArgs.ArgAsString("culture").Split(',');
-            var saveCulture = Thread.CurrentThread.CurrentCulture;
-            var saveUICulture = Thread.CurrentThread.CurrentUICulture;
+
+            List<string> shownForms = (formList == "__REGEN__") ? new List<string>() : null;
+            runTests.Skyline.Set("ShownForms", shownForms);
+
+            // Prepare for showing specific forms, if desired.
+            var formLookup = new FormLookup();
 
             // Run all test passes.
             for (var pass = 1; pass <= loopCount || loopCount == 0; pass++)
             {
-                var culture = new CultureInfo(cultures[(pass-1) % cultures.Length]);
-
-                // Create test order for this pass.
-                testOrder.AddRange(testList.Select((t, i) => i));
+                runTests.Culture = new CultureInfo(cultures[(pass-1) % cultures.Length]);
 
                 // Run each test in this test pass.
-                var testNumber = 0;
-                while (testOrder.Count > 0)
+                int testNumber = 0;
+                var testPass = randomOrder ? testList.RandomOrder() : testList;
+                foreach (var test in testPass)
                 {
                     testNumber++;
 
-                    // Choose next test in sequential or random order (each test executes exactly once per pass).
-                    var testOrderIndex = 0;
-                    if (randomOrder)
-                    {
-                        testOrderIndex = random.Next(testOrder.Count);
-                    }
-                    var testIndex = testOrder[testOrderIndex];
-                    testOrder.RemoveAt(testOrderIndex);
-                    var test = testList[testIndex];
-
                     for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
+                        runTests.Run(test, pass, testNumber);
+
+                    // Record which forms the test showed.
+                    if (shownForms != null)
                     {
-                        // Record information for this test.
-                        var testName = test.TestMethod.Name;
-                        var time = DateTime.Now;
-                        var info = string.Format(
-                            "[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
-                            time.Hour.ToString("D2"),
-                            time.Minute.ToString("D2"),
-                            pass,
-                            testNumber,
-                            testName,
-                            culture);
-                        Console.Write(info);
-                        log.Write(info);
-                        log.Flush();
-
-                        // Delete test directory.
-                        while (Directory.Exists(testDir))
-                        {
-                            try
-                            {
-                                // Try delete 4 times to give anti-virus software a chance to finish.
-// ReSharper disable AccessToModifiedClosure
-                                TryLoop.Try<IOException>(() => Directory.Delete(testDir, true), 4);
-// ReSharper restore AccessToModifiedClosure
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("\n\n" + e.Message);
-                                testDir = SetTestDir(testContext, ++testDirectoryCount, process);
-                            }
-                        }
-
-                        // Create test class.
-                        var testObject = Activator.CreateInstance(test.TestClassType);
-
-                        // Set the TestContext.
-                        if (test.SetTestContext != null)
-                        {
-                            test.SetTestContext.Invoke(testObject, context);
-                        }
-
-                        // Switch to selected culture.
-                        LocalizationHelper.CurrentCulture = culture;
-                        LocalizationHelper.InitThread();
-
-                        // Run the test and time it.
-                        Exception exception = null;
-                        stopwatch.Reset();
-                        stopwatch.Start();
-                        long totalLeakedBytes = 0;
-                        try
-                        {
-                            if (test.TestInitialize != null)
-                                test.TestInitialize.Invoke(testObject, null);
-
-                            if (pass > 1 || repeatCounter > 1)
-                                CrtDebugHeap.Checkpoint();
-                            test.TestMethod.Invoke(testObject, null);
-                            if (pass > 1 || repeatCounter > 1)
-                            {
-                                long leakedBytes = CrtDebugHeap.DumpLeaks(true);
-                                totalLeakedBytes += leakedBytes;
-                            }
-
-                            if (test.TestCleanup != null)
-                                test.TestCleanup.Invoke(testObject, null);
-                        }
-                        catch (Exception e)
-                        {
-                            exception = e;
-                        }
-                        stopwatch.Stop();
-
-                        // Restore culture.
-                        Thread.CurrentThread.CurrentCulture = saveCulture;
-                        Thread.CurrentThread.CurrentUICulture = saveUICulture;
-
-                        var managedMemory = GC.GetTotalMemory(false) / mb;
-                        process.Refresh();
-                        var totalMemory = process.PrivateMemorySize64 / mb;
-
-                        if (exception == null)
-                        {
-                            // Test succeeded.
-                            info = string.Format(
-                                "{0,3} failures, {1:0.0}/{2:0.0} MB{3}, {4} sec.", 
-                                _failureCount, 
-                                managedMemory, 
-                                totalMemory,
-                                totalLeakedBytes > 0 ? string.Format("  *** LEAKED {0} bytes ***", totalLeakedBytes) : "",
-                                stopwatch.ElapsedMilliseconds/1000);
-                            Console.WriteLine(info);
-                            log.WriteLine(info);
-                        }
-                        else
-                        {
-                            // Save failure information.
-                            _failureCount++;
-                            failureList[testName]++;
-                            info = testName + " {0} failures ({1:0.##}%)\n" +
-                                   exception.InnerException.Message + "\n" +
-                                   exception.InnerException.StackTrace;
-                            if (errorList.ContainsKey(info))
-                            {
-                                errorList[info]++;
-                            }
-                            else
-                            {
-                                errorList[info] = 1;
-                            }
-                            Console.WriteLine("*** FAILED {0:0.#}% ***", 100.0*failureList[testName]/pass);
-                            log.WriteLine("{0,3} failures, {1:0.0}/{2:0.0} MB\n*** failure {3}\n{4}\n{5}\n***",
-                                          _failureCount, managedMemory, totalMemory, errorList[info], exception.InnerException.Message,
-                                          exception.InnerException.StackTrace);
-                        }
-                        log.Flush();
-
-                        if (totalLeakedBytes > 0)
-                            Trace.WriteLine(string.Format("\n*** {0} leaked ***\n", testName));
+                        formLookup.AddForms(test.TestMethod.Name, runTests.LastTestDuration, shownForms);
+                        shownForms.Clear();
                     }
                 }
             }
-        }
 
-        private static string SetTestDir(TestContext testContext, int testDirectoryCount, Process process)
-        {
-            var now = DateTime.Now;
-            var testDirName = string.Format("TestRunner_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}_{5}-{6}",
-                                            now.Year, now.Month, now.Day, now.Hour, now.Minute, process.Id, testDirectoryCount);
-            var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
-            testContext.Properties["TestDir"] = testDir;
-            return testDir;
+            _failureCount = runTests.FailureCount;
         }
 
         // Load list of tests to be run into TestList.
         private static List<TestInfo> LoadTestList(CommandLineArgs commandLineArgs)
         {
+            List<string> testNames;
             var testList = new List<TestInfo>();
 
+            // Clear forms/tests cache if desired.
+            var formArg = commandLineArgs.ArgAsString("form");
+
             // Load lists of tests to run.
-            var testNames = LoadList(commandLineArgs.ArgAsString("test"));
+            if (string.IsNullOrEmpty(formArg))
+                testNames = LoadList(commandLineArgs.ArgAsString("test"));
+
+            // Find which tests best cover the desired forms.
+            else
+            {
+                if (formArg == "__REGEN__")
+                    FormLookup.ClearCache();
+                var formLookup = new FormLookup();
+                if (formLookup.IsEmpty)
+                    return GetTestList(FORMS_DLLS).OrderBy(e => e.TestMethod.Name).ToList();
+
+                List<string> uncoveredForms;
+                testNames = formLookup.FindTests(LoadList(formArg), out uncoveredForms);
+                if (uncoveredForms.Count > 0)
+                    MessageBox.Show("No tests found to show these Forms: " + string.Join(", ", uncoveredForms), "Warning");
+            }
+
             // Maintain order in list of explicitly specified tests
             var testDict = new Dictionary<string, int>();
             for (int i = 0; i < testNames.Count; i++)
@@ -513,10 +394,11 @@ namespace TestRunner
             // Find tests in the test dlls.
             foreach (var testDll in TEST_DLLS)
             {
-                foreach (var testInfo in GetTestInfos(testDll))
+                foreach (var testInfo in RunTests.GetTestInfos(testDll))
                 {
                     var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
-                    if (testNames.Count == 0 || testNames.Contains(testName) || testNames.Contains(testInfo.TestMethod.Name))
+                    if (testNames.Count == 0 || testNames.Contains(testName) ||
+                        testNames.Contains(testInfo.TestMethod.Name))
                     {
                         if (!skipList.Contains(testName) && !skipList.Contains(testInfo.TestMethod.Name))
                         {
@@ -533,65 +415,25 @@ namespace TestRunner
             }
             if (testNames.Count > 0)
                 testList.AddRange(testArray.Where(testInfo => testInfo != null));
-                
+
+            // Sort tests alphabetically.
+            return testList.OrderBy(e => e.TestMethod.Name).ToList();
+        }
+
+        private static List<TestInfo> GetTestList(IEnumerable<string> dlls)
+        {
+            var testList = new List<TestInfo>();
+
+            // Find tests in the test dlls.
+            foreach (var testDll in dlls)
+            {
+                testList.AddRange(RunTests.GetTestInfos(testDll));
+            }
+
             // Sort tests alphabetically.
             testList.Sort((x, y) => String.CompareOrdinal(x.TestMethod.Name, y.TestMethod.Name));
 
             return testList;
-        }
-
-        private static IEnumerable<TestInfo> GetTestInfos(string testDll)
-        {
-            var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
-            var types = assembly.GetTypes();
-
-            foreach (var type in types)
-            {
-                if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
-                {
-                    MethodInfo testInitializeMethod = null;
-                    MethodInfo testCleanupMethod = null;
-                    var methods = type.GetMethods();
-                    foreach (var method in methods)
-                    {
-                        if (HasAttribute(method, "TestInitializeAttribute"))
-                            testInitializeMethod = method;
-                        if (HasAttribute(method, "TestCleanupAttribute"))
-                            testCleanupMethod = method;
-                    }
-                    foreach (var method in methods)
-                    {
-                        if (HasAttribute(method, "TestMethodAttribute"))
-                            yield return new TestInfo(type, method, testInitializeMethod, testCleanupMethod);
-                    }
-                }
-            }
-        }
-
-        private static string GetAssemblyPath(string assembly)
-        {
-            var runnerExeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (runnerExeDirectory == null) throw new ApplicationException("Can't find path to TestRunner.exe");
-            return Path.Combine(runnerExeDirectory, assembly);
-        }
-
-        private static string GetProjectPath(string relativePath)
-        {
-            for (string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                 directory != null && directory.Length > 10;
-                 directory = Path.GetDirectoryName(directory))
-            {
-                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
-                    return Path.Combine(directory, relativePath);
-            }
-            return null;
-        }
-
-        // Determine if the given class or method from an assembly has the given attribute.
-        private static bool HasAttribute(MemberInfo info, string attributeName)
-        {
-            var attributes = info.GetCustomAttributes(false);
-            return attributes.Any(attribute => attribute.ToString().EndsWith(attributeName));
         }
 
         // Load a list of tests specified on the command line as a comma-separated list.  Any name prefixed with '@'
@@ -626,7 +468,7 @@ namespace TestRunner
                 }
                 else if (name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    foreach (var testInfo in GetTestInfos(name))
+                    foreach (var testInfo in RunTests.GetTestInfos(name))
                         outputList.Add(testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name);
                 }
                 else
@@ -681,7 +523,7 @@ namespace TestRunner
                 }
 
                 // Test information line.
-                else if (parts.Length > 6)
+                else if (line.StartsWith("[") && parts.Length > 6)
                 {
                     // Save previous memory use to calculate memory used by this test.
                     var lastManagedMemory = managedMemory;
@@ -839,28 +681,60 @@ Here is a list of recognized arguments:
 ");
         }
 
-        private class TestInfo
-        {
-            public readonly Type TestClassType;
-            public readonly MethodInfo TestMethod;
-            public readonly MethodInfo SetTestContext;
-            public readonly MethodInfo TestInitialize;
-            public readonly MethodInfo TestCleanup;
-
-            public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
-            {
-                TestClassType = testClass;
-                TestMethod = testMethod;
-                SetTestContext = testClass.GetMethod("set_TestContext");
-                TestInitialize = testInitializeMethod;
-                TestCleanup = testCleanupMethod;
-            }
-        }
-
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
             Console.WriteLine(e.Exception.Message);
             Console.WriteLine(e.Exception.StackTrace);
+        }
+
+        public static IEnumerable<TItem> RandomOrder<TItem>(this IList<TItem> list)
+        {
+            int count = list.Count;
+            var indexOrder = new int[count];
+            for (int i = 0; i < count; i++)
+                indexOrder[i] = i;
+            Random r = new Random();
+            for (int i = 0; i < count; i++)
+            {
+                int index = r.Next(count);
+                int swap = indexOrder[0];
+                indexOrder[0] = indexOrder[index];
+                indexOrder[index] = swap;
+            }
+            foreach (int i in indexOrder)
+            {
+                yield return list[i];
+            }
+        }
+
+    }
+
+    public class SystemSleep : IDisposable
+    {
+        public SystemSleep()
+        {
+            // Prevent system sleep.
+            SetThreadExecutionState(
+                EXECUTION_STATE.ES_AWAYMODE_REQUIRED |
+                EXECUTION_STATE.ES_CONTINUOUS |
+                EXECUTION_STATE.ES_SYSTEM_REQUIRED);
+        }
+
+
+        public void Dispose()
+        {
+            SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS);
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+
+        [Flags]
+        public enum EXECUTION_STATE : uint
+        {
+            ES_AWAYMODE_REQUIRED = 0x00000040,
+            ES_CONTINUOUS = 0x80000000,
+            ES_SYSTEM_REQUIRED = 0x00000001
         }
     }
 }

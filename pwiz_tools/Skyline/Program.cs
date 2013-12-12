@@ -50,7 +50,7 @@ namespace pwiz.Skyline
     {
         private const int LICENSE_VERSION_CURRENT = 4;
         
-        // Parameters for stress testing.
+        // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing.
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
@@ -58,6 +58,10 @@ namespace pwiz.Skyline
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
+        public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
+        public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
+        public static IList<string> ShownForms { get; set; }        // List of forms shown. 
+        
         private static bool _initialized;                           // Flag to do some initialization just once per process.
         private static string _name;                                // Program name.
 

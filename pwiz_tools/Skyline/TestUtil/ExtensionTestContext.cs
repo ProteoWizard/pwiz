@@ -34,24 +34,17 @@ namespace pwiz.SkylineTestUtil
 
         public static String GetProjectDirectory(this TestContext testContext, string relativePath)
         {
-            for (String directory = testContext.TestDir;
+            for (String directory = Environment.CurrentDirectory;
                     directory != null && directory.Length > 10;
                     directory = Path.GetDirectoryName(directory))
             {
+                var testZipFiles = Path.Combine(directory, "TestZipFiles");
+                if (Directory.Exists(testZipFiles))
+                    return Path.Combine(testZipFiles, relativePath);
                 if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
                     return Path.Combine(directory, relativePath);
             }
             return null;
-        }
-
-        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip)
-        {
-            testContext.ExtractTestFiles(relativePathZip, testContext.TestDir);
-        }
-
-        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir)
-        {
-            testContext.ExtractTestFiles(relativePathZip, testContext.TestDir, null, null);
         }
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)

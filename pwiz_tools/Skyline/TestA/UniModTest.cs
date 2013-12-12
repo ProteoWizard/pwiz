@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -110,7 +109,11 @@ namespace pwiz.SkylineTestA
 
         private static void WriteModListXml(string name, string tagName, IEnumerable<Dictionary<string, StaticMod>> dicts)
         {
-            FileStream fileStream = File.Create(GetProjectDirectory(string.Format(@"TestA\{0}", name)));
+            var modListPath = GetProjectDirectory(string.Format(@"TestA\{0}", name));
+            if (modListPath == null) // don't update mod list if running under SkylineTester
+                return;
+
+            FileStream fileStream = File.Create(modListPath);
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
@@ -128,9 +131,9 @@ namespace pwiz.SkylineTestA
             fileStream.Close();
         }
 
-        public static String GetProjectDirectory(string relativePath)
+        public static string GetProjectDirectory(string relativePath)
         {
-            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            for (string directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     directory != null && directory.Length > 10;
                     directory = Path.GetDirectoryName(directory))
             {

@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Schema;
@@ -45,12 +46,14 @@ namespace pwiz.SkylineTestA
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            var schemaFile = TestContext.GetProjectDirectory(@"TestA\Schemas\Skyline_1.5.xsd");
             var doc08Path = testFilesDir.GetTestPath("Study7_for_xml_validation.sky");
             var docCurrentPath = testFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
 
             // Test schema validation.
-            TestSchemaValidation(schemaFile, doc08Path, docCurrentPath);
+            var assembly = Assembly.GetAssembly(GetType());
+            var stream = assembly.GetManifestResourceStream(
+                GetType().Namespace + ".Schemas.Skyline_1.5.xsd");
+            TestSchemaValidation(stream, doc08Path, docCurrentPath);
 
             // Check explicit and implicit modifications in the current format.
             TestPeptideModifications(docCurrentPath);
@@ -125,7 +128,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual("electron multiplier", detector.FirstChild.Value);
         }
 
-        private void TestSchemaValidation(string schemaFile, string doc08Path, string docCurrentPath)
+        private void TestSchemaValidation(Stream schemaFile, string doc08Path, string docCurrentPath)
         {
             // get the schema
             XmlTextReader schemaReader = new XmlTextReader(schemaFile);

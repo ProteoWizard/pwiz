@@ -328,6 +328,8 @@ namespace pwiz.Skyline
             get { return _immediateWindow; }
         }
 
+        public bool DiscardChanges { get; set; }
+
         /// <summary>
         /// True if the active document has been modified.
         /// </summary>
@@ -335,7 +337,7 @@ namespace pwiz.Skyline
         {
             get
             {
-                return _documentUI != null && _savedVersion != _documentUI.RevisionIndex;
+                return !DiscardChanges && _documentUI != null && _savedVersion != _documentUI.RevisionIndex;
             }
         }
 

@@ -24,7 +24,7 @@ using System.Data;
 using System.Data.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestRunner
+namespace TestRunnerLib
 {
     class TestRunnerContext : TestContext
     {

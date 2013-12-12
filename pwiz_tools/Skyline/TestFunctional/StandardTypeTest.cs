@@ -146,6 +146,7 @@ namespace pwiz.SkylineTestFunctional
             if (IsEnableLiveReports)
             {
                 var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
+// ReSharper disable once UnusedVariable
                 var resultsGrid = resultsGridForm.DataGridView;
 
                 // TODO: Implement live report support

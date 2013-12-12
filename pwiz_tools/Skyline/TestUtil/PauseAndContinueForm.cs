@@ -18,29 +18,86 @@
  */
 
 using System;
+using System.Threading;
+using System.Windows.Forms;
+using pwiz.Skyline;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public partial class PauseAndContinueForm : FormEx
+    public partial class PauseAndContinueForm : Form
     {
         public PauseAndContinueForm(string description = null)
         {
             InitializeComponent();
-            if (description == null)
-                Height -= 15;
-            else
-            {
-                // Adjust dialog width to accommodate description.
-                lblDescription.Text = description;
-                if (lblDescription.Width > btnContinue.Width)
-                    Width = lblDescription.Width + 30;
-            }
+            lblDescription.Text = description;
+            if (description != null)
+                Height += 24;
+
+            // Adjust dialog width to accommodate description.
+            if (lblDescription.Width > btnContinue.Width)
+                Width = lblDescription.Width + 30;
         }
 
         private void btnContinue_Click(object sender, EventArgs e)
         {
             Close();
+
+            // Start the tests again
+            lock (_pauseLock)
+            {
+                Monitor.PulseAll(_pauseLock);
+            }
         }
+
+        private static readonly object _pauseLock = new object();
+
+        public static void Show(string description = null)
+        {
+            ClipboardEx.UseInternalClipboard(false);
+
+            RunUI(() =>
+            {
+                SkylineWindow.UseKeysOverride = false;
+                var dlg = new PauseAndContinueForm(description) { Left = SkylineWindow.Left };
+                const int spacing = 15;
+                var screen = Screen.FromControl(SkylineWindow);
+                if (SkylineWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
+                    dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
+                else if (SkylineWindow.Bottom + dlg.Height + spacing < screen.WorkingArea.Bottom)
+                    dlg.Top = SkylineWindow.Bottom + spacing;
+                else
+                {
+                    dlg.Top = SkylineWindow.Top;
+                    if (SkylineWindow.Left > screen.WorkingArea.Top + dlg.Width + spacing)
+                        dlg.Left = SkylineWindow.Left - dlg.Width - spacing;
+                    else if (SkylineWindow.Right + dlg.Width + spacing < screen.WorkingArea.Right)
+                        dlg.Left = SkylineWindow.Right + spacing;
+                    else
+                    {
+                        // Can't fit on screen without overlap, so put in upper left of screen
+                        // despite overlap
+                        dlg.Top = screen.WorkingArea.Top;
+                        dlg.Left = screen.WorkingArea.Left;
+                    }
+                }
+                dlg.Show(SkylineWindow);
+            });
+
+            lock (_pauseLock)
+            {
+                // Wait for an event on the pause lock, when the form is closed
+                Monitor.Wait(_pauseLock);
+                ClipboardEx.UseInternalClipboard();
+                RunUI(() => SkylineWindow.UseKeysOverride = true);
+            }
+        }
+
+        protected static void RunUI(Action act)
+        {
+            SkylineWindow.Invoke(act);
+        }
+
+        private static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
     }
 }

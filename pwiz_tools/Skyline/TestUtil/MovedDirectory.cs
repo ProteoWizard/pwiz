@@ -33,7 +33,6 @@ namespace pwiz.SkylineTestUtil
 
         public MovedDirectory(string dirPath, bool isLoopingTest)
         {
-            LoopingTest = isLoopingTest;
             if (isLoopingTest)
             {
                 SrcDirPath = dirPath;
@@ -48,13 +47,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public string SrcDirPath { get; private set; }
-        public string DestDirPath { get; private set; }
-        public bool LoopingTest { get; private set; }
+        private string SrcDirPath { get; set; }
+        private string DestDirPath { get; set; }
 
         public void Dispose()
         {
-            if (LoopingTest)
+            if (DestDirPath != null)
             {
                 if (Directory.Exists(SrcDirPath))
                     Helpers.TryTwice(() => Directory.Delete(SrcDirPath));

@@ -33,7 +33,7 @@ namespace TestRunner
             _originalArgs = new List<string>();
             foreach (var arg in args)
             {
-                _originalArgs.Add(arg.Split('=')[0]);
+                _originalArgs.Add(arg.Split('=')[0].ToLower());
             }
 
             _args = new Dictionary<string, string>();
@@ -41,7 +41,7 @@ namespace TestRunner
 
             foreach (var words in args.Select(arg => arg.Split('=')))
             {
-                if (!_args.ContainsKey(words[0]))
+                if (!_args.ContainsKey(words[0].ToLower()))
                 {
                     throw new ArgumentException(string.Format(@"Unrecognized argument: {0}. Run ""TestRunner help"" to see a list of arguments.", words[0]));
                 }
@@ -56,7 +56,7 @@ namespace TestRunner
 
         public bool HasArg(string argName)
         {
-            return _originalArgs.Contains(argName);
+            return _originalArgs.Contains(argName.ToLower());
         }
 
         public bool ArgAsBool(string argName)

@@ -49,18 +49,20 @@
             this.lblDescription.AutoSize = true;
             this.lblDescription.Location = new System.Drawing.Point(13, 13);
             this.lblDescription.Name = "lblDescription";
-            this.lblDescription.Size = new System.Drawing.Size(0, 13);
+            this.lblDescription.Size = new System.Drawing.Size(60, 13);
             this.lblDescription.TabIndex = 1;
+            this.lblDescription.Text = "Description";
             // 
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(101, 67);
+            this.ClientSize = new System.Drawing.Size(101, 69);
+            this.ControlBox = false;
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnContinue);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PauseAndContinueForm";

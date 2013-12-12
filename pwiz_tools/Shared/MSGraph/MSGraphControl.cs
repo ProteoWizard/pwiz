@@ -295,15 +295,18 @@ namespace pwiz.MSGraph
         #region MS graph management functions
         private static CurveItem makeMSGraphItem(IMSGraphItemInfo item)
         {
-            CurveItem newCurve = item.GraphItemDrawMethod == MSGraphItemDrawMethod.line ?
-                new LineItem( item.Title, new MSPointList( item.Points ), item.Color, SymbolType.None ) :
-                new StickItem( item.Title, new MSPointList( item.Points ), item.Color );
-
-            if( item.GraphItemDrawMethod == MSGraphItemDrawMethod.line )
-            {
-                ((LineItem) newCurve).Line.IsAntiAlias = true;
-            }
-
+            CurveItem newCurve = (item.GraphItemDrawMethod == MSGraphItemDrawMethod.line)
+                ? new LineItem(item.Title, new MSPointList(item.Points), item.Color, SymbolType.None)
+                    {
+                        Line = new Line
+                        {
+                            IsAntiAlias = true,
+                            Color = item.Color,
+                            Fill = new Fill(Color.FromArgb(20, item.Color), Color.FromArgb(0, item.Color), 90)
+                        }
+                    }
+                : new StickItem( item.Title, new MSPointList( item.Points ), item.Color );
+            
             IMSGraphItemExtended extended = item as IMSGraphItemExtended;
             if (extended != null)
                 extended.CustomizeCurve(newCurve);

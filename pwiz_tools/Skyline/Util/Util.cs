@@ -1488,6 +1488,16 @@ namespace pwiz.Skyline.Util
 
 
         /// <summary>
+        /// Try an action the might throw an IOException.  If it fails, sleep for 500 milliseconds and try
+        /// again.  See the comments above for more detail about why this is necessary.
+        /// </summary>
+        /// <param name="action">action to try</param>
+        public static void TryTwice(Action action)
+        {
+            Try<IOException>(action, 2);
+        }
+
+        /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
         /// try the action one more time.  This oddity is necessary because certain file system
         /// operations (like moving a directory) can fail due to temporary file locks held by
@@ -1495,28 +1505,25 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <typeparam name="TEx">type of exception to catch</typeparam>
         /// <param name="action">action to try</param>
+        /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        public static void TryTwice<TEx>(Action action, int milliseconds) where TEx : Exception
+        public static void Try<TEx>(Action action, int loopCount, int milliseconds = 500) where TEx : Exception
         {
-            try
+            for (int i = 1; i < loopCount; i++)
             {
-                action();
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (TEx)
+                {
+                    Thread.Sleep(milliseconds);
+                }
             }
-            catch (TEx)
-            {
-                Thread.Sleep(milliseconds);
-                action();
-            }
-        }
 
-        /// <summary>
-        /// Try an action the might throw an IOException.  If it fails, sleep for 500 milliseconds and try
-        /// again.  See the comments above for more detail about why this is necessary.
-        /// </summary>
-        /// <param name="action">action to try</param>
-        public static void TryTwice(Action action)
-        {
-            TryTwice<IOException>(action, 500);
+            // Try the last time, and let the exception go.
+            action();
         }
 
         public static double? ParseNullableDouble(string s)
