@@ -27,12 +27,14 @@
 #include "pwiz/utility/findmf/base/resample/bin1d.h"
 #include <stdint.h>
 #include <stdexcept>
+#include <boost/cstdint.hpp>
 
 namespace ralab{
   namespace base{
     namespace resample{
     /*!\given breaks and data compute frequencies in bins*/
-    struct Bucket1D
+typedef boost::uint32_t uint32_t    
+struct Bucket1D
     {
     private:
       std::vector<double> breaks_; // boundaries

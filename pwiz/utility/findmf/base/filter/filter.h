@@ -31,7 +31,7 @@
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/bind.hpp>
 #include <boost/math/distributions/normal.hpp>
-
+#include <boost/cstdint.hpp>
 
 
 #include "pwiz/utility/findmf/base/filter/utilities/preparedata.h"
@@ -44,6 +44,7 @@ namespace ralab
     namespace filter
     {
 
+      typedef boost::uint32_t uint32_t;
       template <typename TIterator, typename TFilterIterator, typename TOutputIterator>
       void filter_sequence(
           TIterator  dataBeg,   //!<[in] a univariate time series.
