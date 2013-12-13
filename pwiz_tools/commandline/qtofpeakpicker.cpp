@@ -29,7 +29,6 @@
 namespace b_po = boost::program_options;
 namespace b_fs = boost::filesystem;
 
-
 struct PPParams
 {
   std::string infile_;
@@ -95,8 +94,8 @@ inline int defineParameters(
     processing.add_options()
         ("resolution",b_po::value<double>()->default_value(20000.),
          "instrument resolution.")
-        ("area", b_po::value<bool>()->default_value(true),", otherwise store intensity.")
-        ("threshold", b_po::value<double>()->default_value(10.),"removes peaks < threshold times smallest intensity in spectrum")
+        ("area", b_po::value<bool>()->default_value(true),"default area, otherwise store intensity (0).")
+        ("threshold", b_po::value<double>()->default_value(10.),"removes peaks less than threshold times smallest intensity in spectrum")
         ;
 	b_po::options_description advancedprocessing("Advanced Processing Options:");
     advancedprocessing.add_options()("widthint,i", b_po::value<int>()->default_value(2),"peak apex +- integration width")

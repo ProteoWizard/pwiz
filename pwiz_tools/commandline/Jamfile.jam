@@ -152,7 +152,7 @@ exe pepcat
     : <include>../../..
     ;
 
-alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
+alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw qtofpeakpicker ;
 alias idtools : idconvert ;
 
 
