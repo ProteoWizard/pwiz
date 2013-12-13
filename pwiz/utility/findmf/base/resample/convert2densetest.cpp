@@ -19,12 +19,12 @@
 // limitations under the License.
 // 
 
-#include "pwiz/utility/findmf/base/resample/convert2dense.h"
+#include "pwiz/utility/findmf/base/resample/convert2dense.hpp"
 
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/findmf/base/base/base.h"
-#include "pwiz/utility/findmf/base/base/interpolate.h"
-#include "pwiz/utility/findmf/base/base/cumsum.h"
+#include "pwiz/utility/findmf/base/base/base.hpp"
+#include "pwiz/utility/findmf/base/base/interpolate.hpp"
+#include "pwiz/utility/findmf/base/base/cumsum.hpp"
 
 namespace{
 

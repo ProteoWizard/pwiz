@@ -22,9 +22,9 @@
 #ifndef GAUSS_H
 #define GAUSS_H
 
-#include "pwiz/utility/findmf/base/base/constants.h"
-#include "pwiz/utility/findmf/base/base/base.h"
-#include "pwiz/utility/findmf/base/base/scale.h"
+#include "pwiz/utility/findmf/base/base/constants.hpp"
+#include "pwiz/utility/findmf/base/base/base.hpp"
+#include "pwiz/utility/findmf/base/base/scale.hpp"
 
 namespace ralab{
   namespace base{

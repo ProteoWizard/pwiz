@@ -18,10 +18,10 @@
 // See the License for the specific language governing permissions and 
 // limitations under the License.
 //
-#include "pwiz/utility/findmf/base/base/interpolate.h"
+#include "pwiz/utility/findmf/base/base/interpolate.hpp"
 
-#include "pwiz/utility/findmf/base/base/base.h"
-#include "pwiz/utility/findmf/base/base/cumsum.h"
+#include "pwiz/utility/findmf/base/base/base.hpp"
+#include "pwiz/utility/findmf/base/base/cumsum.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 

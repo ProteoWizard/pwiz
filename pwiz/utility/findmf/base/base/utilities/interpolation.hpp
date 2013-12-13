@@ -23,7 +23,7 @@
 #ifndef INTERPOLATIONUTILITIES_H
 #define INTERPOLATIONUTILITIES_H
 
-#include "pwiz/utility/findmf/base/base/constants.h"
+#include "pwiz/utility/findmf/base/base/constants.hpp"
 #include <cmath>
 
 namespace ralab

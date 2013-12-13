@@ -33,7 +33,7 @@
 #include <cmath>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_integral.hpp>
-#include "pwiz/utility/findmf/base/base/utilities/base.h"
+#include "pwiz/utility/findmf/base/base/utilities/base.hpp"
 
 namespace ralab
 {

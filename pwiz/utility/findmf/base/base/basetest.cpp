@@ -20,7 +20,7 @@
 //
 
 
-#include "pwiz/utility/findmf/base/base/base.h"
+#include "pwiz/utility/findmf/base/base/base.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 namespace {

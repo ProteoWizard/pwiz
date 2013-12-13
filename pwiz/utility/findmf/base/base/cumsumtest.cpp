@@ -21,13 +21,13 @@
 
 
 
-#include "pwiz/utility/findmf/base/base/cumsum.h"
+#include "pwiz/utility/findmf/base/base/cumsum.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 #include <vector>
 #include <algorithm>
 
-#include "pwiz/utility/findmf/base/base/base.h"
+#include "pwiz/utility/findmf/base/base/base.hpp"
 
 
 namespace {

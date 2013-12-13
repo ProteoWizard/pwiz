@@ -3,7 +3,7 @@
 // Authors   : Witold Wolski
 // for full text refer to files: LICENSE, AUTHORS and COPYRIGHT
 
-#include "pwiz/utility/findmf/base/resample/determinebinwidth.h"
+#include "pwiz/utility/findmf/base/resample/determinebinwidth.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 

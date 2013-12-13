@@ -23,7 +23,7 @@
 #define GAUSSFILTERTYPES_H
 
 #include <boost/math/distributions/normal.hpp>
-#include "pwiz/utility/findmf/base/filter/utilities/gauss.h"
+#include "pwiz/utility/findmf/base/filter/utilities/gauss.hpp"
 
 
 namespace ralab{

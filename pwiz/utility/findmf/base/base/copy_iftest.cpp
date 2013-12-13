@@ -4,9 +4,9 @@
 // for full text refer to files: LICENSE, AUTHORS and COPYRIGHT
 
 
-#include "pwiz/utility/findmf/base/base/copyif.h"
+#include "pwiz/utility/findmf/base/base/copyif.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/findmf/base/resample/masscomparefunctors.h"
+#include "pwiz/utility/findmf/base/resample/masscomparefunctors.hpp"
 #include <boost/bind.hpp>
 #include <vector>
 

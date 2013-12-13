@@ -29,11 +29,11 @@
 #include "pwiz/data/msdata/SpectrumIterator.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include "pwiz/utility/findmf/base/ms/peakpickerqtof.h"
+#include "pwiz/utility/findmf/base/ms/peakpickerqtof.hpp"
 #include <boost/cstdint.hpp>
 
 namespace ralab{
-typedef boost::uint32_t uint32_t
+typedef boost::uint32_t uint32_t;
   /** This is used to write the filtered spectrum list*/
   struct QTOFPeakPickerFilter : pwiz::msdata::SpectrumListWrapper{
     double resolution_;

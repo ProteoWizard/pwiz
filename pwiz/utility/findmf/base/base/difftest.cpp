@@ -3,9 +3,9 @@
 // Authors   : Witold Wolski
 // for full text refer to files: LICENSE, AUTHORS and COPYRIGHT
 
-#include "gtest/gtest.h"
-#include "base/base/diff.h"
-#include "base/resample/masscomparefunctors.h"
+#include "gtest/gtest.hpp"
+#include "base/base/diff.hpp"
+#include "base/resample/masscomparefunctors.hpp"
 
 namespace {
 

@@ -26,9 +26,9 @@
 #include <iostream>
 #include <numeric>
 #include <boost/assert.hpp>
-#include "pwiz/utility/findmf/base/resample/masscomparefunctors.h"
-#include "pwiz/utility/findmf/base/resample/breakspec.h"
-#include "pwiz/utility/findmf/base/resample/bin1d.h"
+#include "pwiz/utility/findmf/base/resample/masscomparefunctors.hpp"
+#include "pwiz/utility/findmf/base/resample/breakspec.hpp"
+#include "pwiz/utility/findmf/base/resample/bin1d.hpp"
 
 
 namespace ralab

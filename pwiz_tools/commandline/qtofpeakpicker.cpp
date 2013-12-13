@@ -24,7 +24,7 @@
 #include <pwiz/data/msdata/MSDataFile.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include "pwiz/analysis/findmf/qtofpeakpickerfilter.h"
+#include "pwiz/analysis/findmf/qtofpeakpickerfilter.hpp"
 
 namespace b_po = boost::program_options;
 namespace b_fs = boost::filesystem;

@@ -34,7 +34,7 @@
 #include <boost/cstdint.hpp>
 
 
-#include "pwiz/utility/findmf/base/filter/utilities/preparedata.h"
+#include "pwiz/utility/findmf/base/filter/utilities/preparedata.hpp"
 
 
 namespace ralab

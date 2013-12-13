@@ -28,8 +28,8 @@
 #include <boost/bind.hpp>
 #include <algorithm>
 
-#include <pwiz/utility/findmf/base/base/diff.h>
-#include <pwiz/utility/findmf/base/resample/utilities/determinebinwidth.h>
+#include "pwiz/utility/findmf/base/base/diff.hpp"
+#include "pwiz/utility/findmf/base/resample/utilities/determinebinwidth.hpp"
 
 
 namespace ralab

@@ -12,7 +12,7 @@
 #include <functional>
 #include <numeric>
 #include <iterator>
-#include "pwiz/utility/findmf/base/base/base.h"
+#include "pwiz/utility/findmf/base/base/base.hpp"
 
 namespace ralab
 {

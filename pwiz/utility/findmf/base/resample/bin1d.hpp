@@ -29,6 +29,7 @@
 #include <vector>
 #include <utility>
 #include <stdexcept>
+#include <boost/cstdint.hpp>
 
 namespace ralab
 {
@@ -36,6 +37,7 @@ namespace ralab
   {
     namespace resample
     {
+      typedef boost::int32_t int32_t;
 
       //Class returns the index a value belongs too....
       struct Bin1D

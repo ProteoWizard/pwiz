@@ -19,15 +19,15 @@
 // limitations under the License.
 //
 
-#include "pwiz/utility/findmf/base/resample/bucket1d.h"
-#include "pwiz/utility/findmf/base/resample/bin1d.h"
+#include "pwiz/utility/findmf/base/resample/bucket1d.hpp"
+#include "pwiz/utility/findmf/base/resample/bin1d.hpp"
 
 #include <algorithm>
 #include <boost/timer.hpp>
 #include "pwiz/utility/misc/unit.hpp"
 
-#include "pwiz/utility/findmf/base/resample/breakspec.h"
-#include "pwiz/utility/findmf/base/resample/masscomparefunctors.h"
+#include "pwiz/utility/findmf/base/resample/breakspec.hpp"
+#include "pwiz/utility/findmf/base/resample/masscomparefunctors.hpp"
 
 namespace {
 

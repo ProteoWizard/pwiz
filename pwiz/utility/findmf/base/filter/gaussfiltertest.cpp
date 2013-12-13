@@ -19,11 +19,11 @@
 // limitations under the License.
 //
 
-#include "pwiz/utility/findmf/base/filter/gaussfilter.h"
+#include "pwiz/utility/findmf/base/filter/gaussfilter.hpp"
 
-#include "pwiz/utility/findmf/base/base/base.h"
-#include "pwiz/utility/findmf/base/base/cumsum.h"
-#include "pwiz/utility/findmf/base/resample/masscomparefunctors.h"
+#include "pwiz/utility/findmf/base/base/base.hpp"
+#include "pwiz/utility/findmf/base/base/cumsum.hpp"
+#include "pwiz/utility/findmf/base/resample/masscomparefunctors.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 namespace {
    using namespace pwiz::util;

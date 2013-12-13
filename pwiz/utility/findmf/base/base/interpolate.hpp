@@ -28,7 +28,7 @@
 #include <vector>
 #include <assert.h>
 
-#include "pwiz/utility/findmf/base/base/utilities/interpolation.h"
+#include "pwiz/utility/findmf/base/base/utilities/interpolation.hpp"
 
 
 /// EQUISPACEINTERPOL Interpolation on a equidistantly spaced grid.

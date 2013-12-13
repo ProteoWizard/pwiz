@@ -24,13 +24,13 @@
 
 #include <stdint.h>
 #include <boost/math/special_functions.hpp>
-#include "pwiz/utility/findmf/base/resample/convert2dense.h"
-#include "pwiz/utility/findmf/base/filter/filter.h"
-#include "pwiz/utility/findmf/base/ms/simplepicker.h"
-#include "pwiz/utility/findmf/base/filter/gaussfilter.h"
-#include "pwiz/utility/findmf/base/base/interpolate.h"
-#include "pwiz/utility/findmf/base/resample/determinebinwidth.h"
-#include "pwiz/utility/findmf/base/base/copyif.h"
+#include "pwiz/utility/findmf/base/resample/convert2dense.hpp"
+#include "pwiz/utility/findmf/base/filter/filter.hpp"
+#include "pwiz/utility/findmf/base/ms/simplepicker.hpp"
+#include "pwiz/utility/findmf/base/filter/gaussfilter.hpp"
+#include "pwiz/utility/findmf/base/base/interpolate.hpp"
+#include "pwiz/utility/findmf/base/resample/determinebinwidth.hpp"
+#include "pwiz/utility/findmf/base/base/copyif.hpp"
 
 namespace ralab{
   namespace base{
