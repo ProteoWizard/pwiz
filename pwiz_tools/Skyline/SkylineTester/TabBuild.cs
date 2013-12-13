@@ -26,21 +26,15 @@ namespace SkylineTester
     {
         private void RunBuild(object sender, EventArgs e)
         {
+            if (_subversion == null)
+            {
+                // TODO: Offer to install for the user.
+                MessageBox.Show("Must install Subversion");
+                return;
+            }
+
             if (!ToggleRunButtons(tabBuild))
                 return;
-
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            var subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
-            if (!File.Exists(subversion))
-            {
-                subversion = Path.Combine(programFiles, @"VisualSVN\bin\svn.exe");
-                if (!File.Exists(subversion))
-                {
-                    // TODO: Offer to install for the user.
-                    MessageBox.Show("Must install Subversion");
-                    return;
-                }
-            }
 
             Tabs.SelectTab(tabOutput);
 
@@ -48,25 +42,54 @@ namespace SkylineTester
             _buildDir = Path.Combine(_buildDir, "Build");
             _appendToLog = true;
 
-            StartProcess(
-                subversion,
-                @"checkout https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz " + _buildDir,
-                null,
-                SubversionExit,
-                true);
+            if (Directory.Exists(_buildDir))
+            {
+                Log(Environment.NewLine + "# Cleaning Skyline build directory" + Environment.NewLine);
+                StartProcess(
+                    _subversion,
+                    "cleanup " + _buildDir,
+                    null,
+                    CleanupDone,
+                    true);
+            }
+            else
+            {
+                CleanupDone(null, null);
+            }
         }
 
-        private void SubversionExit(object sender, EventArgs e)
+        private void CleanupDone(object sender, EventArgs e)
         {
-            if (!buttonStopLog.Enabled)
+            if (_runningTab == null)
                 return;
 
-            StartProcess(
-                Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat"),
-                @"32 --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
-                _buildDir,
-                ProcessExit,
-                true);
+            Invoke(new Action(() =>
+            {
+                Log(Environment.NewLine + "# Checking out Skyline source files..." + Environment.NewLine);
+                StartProcess(
+                    _subversion,
+                    @"checkout https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz " + _buildDir,
+                    null,
+                    CheckoutDone,
+                    true);
+            }));
+        }
+
+        private void CheckoutDone(object sender, EventArgs e)
+        {
+            if (_runningTab == null)
+                return;
+
+            Invoke(new Action(() =>
+            {
+                Log(Environment.NewLine + "# Building Skyline..." + Environment.NewLine);
+                StartProcess(
+                    Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat"),
+                    @"32 --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
+                    _buildDir,
+                    ProcessExit,
+                    true);
+            }));
         }
     }
 }

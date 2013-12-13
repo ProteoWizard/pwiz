@@ -42,7 +42,11 @@ namespace SkylineTester
         private string _buildDir;
         private readonly string _logFile;
         private bool _appendToLog;
- 
+        private TabPage _runningTab;
+        private string _subversion;
+
+        #region Create and load window
+
         public SkylineTesterWindow()
         {
             InitializeComponent();
@@ -68,6 +72,16 @@ namespace SkylineTester
             {
                 runForms, runTutorials, runTests, runBuild, runQuality
             };
+
+            // Try to find where subversion is available.
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            _subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
+            if (!File.Exists(_subversion))
+            {
+                _subversion = Path.Combine(programFiles, @"VisualSVN\bin\svn.exe");
+                if (!File.Exists(_subversion))
+                    _subversion = null;
+            }
 
             linkLogFile.Text = _logFile;
 
@@ -152,6 +166,8 @@ namespace SkylineTester
             return attributes.Any(attribute => attribute.ToString().EndsWith(attributeName));
         }
 
+        #endregion
+
         protected override void OnClosed(EventArgs e)
         {
             KillTestProcess();
@@ -174,19 +190,17 @@ namespace SkylineTester
             {
                 ProcessUtilities.KillProcessTree(_process); 
 
-                var stopTimer = new Timer {Interval = 500};
+                var stopTimer = new Timer {Interval = 400};
                 stopTimer.Tick += (sender, args) =>
                 {
                     stopTimer.Stop();
-                    textBoxLog.AppendText("# Stopped." + Environment.NewLine);
+                    Log(Environment.NewLine + "# Stopped." + Environment.NewLine, true);
                 };
                 stopTimer.Start();
             }
 
             _process = null;
         }
-
-        private TabPage _runningTab;
 
         private bool ToggleRunButtons(TabPage tab)
         {
@@ -238,6 +252,9 @@ namespace SkylineTester
 
         void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            if (_runningTab == null)
+                return;
+
             try
             {
                 var line = e.Data + Environment.NewLine;
@@ -250,22 +267,29 @@ namespace SkylineTester
                     var point = textBoxLog.GetPositionFromCharIndex(startChar);
                     var clientRectangle = textBoxLog.ClientRectangle;
                     clientRectangle.Height += 60;
-                    if (clientRectangle.Contains(point))
-                    {
-                        textBoxLog.Focus();
-                        textBoxLog.AppendText(line);
-                    }
-                    else
-                    {
-                        textBoxLog.Parent.Focus();
-                        textBoxLog.SelectionStart = textBoxLog.Text.Length;
-                        textBoxLog.SelectedText = line;
-                    }
+                    Log(line, clientRectangle.Contains(point));
                 }));
             }
 // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
             {
+            }
+        }
+
+        private void Log(string text, bool autoScroll = true)
+        {
+            buttonStopLog.Focus();  // text box scrolls if it has focus!
+
+            if (autoScroll)
+            {
+                textBoxLog.AppendText(text);
+                textBoxLog.Select(textBoxLog.Text.Length - 1, 0);
+                textBoxLog.ScrollToCaret();
+            }
+            else
+            {
+                textBoxLog.SelectionStart = textBoxLog.Text.Length;
+                textBoxLog.SelectedText = text;
             }
         }
 
