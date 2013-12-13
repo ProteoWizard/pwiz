@@ -502,10 +502,13 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                // For single case, review all possible matches for the one closest to the
+                // For single (Targeted) case, review all possible matches for the one closest to the
                 // desired precursor m/z value.
-                SpectrumFilterPair filterPairBest = null;
+                // per "Issue 263: Too strict about choosing only one precursor for every MS/MS scan in Targeted MS/MS",
+                // if more than one match at this m/z value return a list
+
                 double minMzDelta = double.MaxValue;
+                double mzDeltaEpsilon = Math.Min(_instrument.MzMatchTolerance,.0001); 
 
                 // Isolation width for single is based on the instrument m/z match tolerance
                 double isoTargMz = isoWin.IsolationMz.Value;
@@ -514,15 +517,24 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var filterPair in FindFilterPairs(isoWin, FullScanAcquisitionMethod.DIA, true))
                 {
                     double mzDelta = Math.Abs(isoTargMz - filterPair.Q1);
-                    if (mzDelta < minMzDelta)
+                    if (mzDelta < minMzDelta) // new best match
                     {
                         minMzDelta = mzDelta;
-                        filterPairBest = filterPair;
+                        // are any existing matches no longer within epsilion of new best match?
+                        for (int n= filterPairs.Count; n-->0;)
+                        {
+                            if ((Math.Abs(isoTargMz - filterPairs[n].Q1) - minMzDelta) > mzDeltaEpsilon)
+                            {
+                                filterPairs.RemoveAt(n);  // no longer a match by our new standard
+                            }
+                        }
+                        filterPairs.Add(filterPair);  
+                    }
+                    else if ((mzDelta - minMzDelta) <= mzDeltaEpsilon) 
+                    {
+                        filterPairs.Add(filterPair);  // not the best, but close to it
                     }
                 }
-
-                if (filterPairBest != null)
-                    filterPairs.Add(filterPairBest);
             }
 
             _filterPairDictionary[isoWin] = filterPairs;
