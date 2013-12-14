@@ -51,7 +51,7 @@ namespace SkylineTester
 
             if (BuildClean.Checked)
             {
-                Log(Environment.NewLine + "# Deleting old Skyline build directory" + Environment.NewLine);
+                LogComment("# Deleting old Skyline build directory...");
                 var deleteTask = new BackgroundWorker();
                 deleteTask.DoWork += (o, args) =>
                 {
@@ -71,7 +71,7 @@ namespace SkylineTester
             }
             else
             {
-                Log(Environment.NewLine + "# Cleaning Skyline build directory" + Environment.NewLine);
+                LogComment("# Cleaning Skyline build directory...");
                 StartProcess(
                     _subversion,
                     "cleanup " + _buildDir,
@@ -88,7 +88,7 @@ namespace SkylineTester
 
             Invoke(new Action(() =>
             {
-                Log(Environment.NewLine + "# Checking out Skyline source files..." + Environment.NewLine);
+                LogComment("# Checking out Skyline source files...");
                 var branch = BuildTrunk.Checked
                     ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
                     : BranchUrl.Text;
@@ -108,7 +108,7 @@ namespace SkylineTester
 
             Invoke(new Action(() =>
             {
-                Log(Environment.NewLine + "# Building Skyline..." + Environment.NewLine);
+                LogComment("# Building Skyline...");
                 var architecture = Build32.Checked ? 32 : 64;
                 StartProcess(
                     Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat"),
@@ -126,7 +126,7 @@ namespace SkylineTester
 
             Invoke(new Action(() =>
             {
-                Log(Environment.NewLine + "# Build done." + Environment.NewLine);
+                LogComment("# Build done.");
 
                 ProcessExit(sender, e);
 

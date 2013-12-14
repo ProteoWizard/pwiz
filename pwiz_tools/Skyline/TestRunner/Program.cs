@@ -76,7 +76,7 @@ namespace TestRunner
                     return;
             }
 
-            Console.WriteLine("\n" + string.Join(" ", args) + "\n");
+            Console.WriteLine("\nTestRunner " + string.Join(" ", args) + "\n");
             //Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
 
             if (commandLineArgs.HasArg("debug"))

@@ -27,7 +27,7 @@ namespace SkylineTester
     {
         private void Stop(object sender, EventArgs e)
         {
-            ToggleRunButtons(null);
+            ToggleRunButtons(tabOutput);
         }
 
         private void linkLogFile_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

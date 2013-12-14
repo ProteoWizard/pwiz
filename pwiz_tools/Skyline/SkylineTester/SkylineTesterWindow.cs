@@ -100,6 +100,15 @@ namespace SkylineTester
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync();
+
+            textBoxLog.HScroll += TextBoxLogOnScroll;
+            textBoxLog.VScroll += TextBoxLogOnScroll;
+        }
+
+        private bool _logWasScrolled;
+        private void TextBoxLogOnScroll(object sender, EventArgs eventArgs)
+        {
+            _logWasScrolled = true;
         }
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
@@ -204,33 +213,21 @@ namespace SkylineTester
 
         protected override void OnClosed(EventArgs e)
         {
+            _runningTab = null;
             KillTestProcess();
             base.OnClosed(e);
         }
 
         private void KillTestProcess()
         {
-            bool processIsRunning;
             try
             {
-                processIsRunning = (_process != null && !_process.HasExited);
+                if (_process != null && !_process.HasExited)
+                    ProcessUtilities.KillProcessTree(_process); 
             }
+// ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
             {
-                processIsRunning = false;
-            }
-
-            if (processIsRunning)
-            {
-                ProcessUtilities.KillProcessTree(_process); 
-
-                var stopTimer = new Timer {Interval = 400};
-                stopTimer.Tick += (sender, args) =>
-                {
-                    stopTimer.Stop();
-                    Log(Environment.NewLine + "# Stopped." + Environment.NewLine);
-                };
-                stopTimer.Start();
             }
 
             _process = null;
@@ -238,27 +235,36 @@ namespace SkylineTester
 
         private bool ToggleRunButtons(TabPage tab)
         {
+            // Stop running task.
             if (_runningTab != null || tab == null)
             {
+                _runningTab = null;
+
                 foreach (var runButton in _runButtons)
                     runButton.Text = "Run";
                 buttonStopLog.Enabled = false;
 
-                KillTestProcess();
+                if (tab != null)
+                {
+                    KillTestProcess();
+                    LogComment("# Stopped.");
+                }
 
-                _runningTab = null;
+                FinishLog();
                 return false;
             }
 
+            // Prepare to start task.
+            _runningTab = tab;
             foreach (var runButton in _runButtons)
                 runButton.Text = "Stop";
             buttonStopLog.Enabled = true;
 
+            // Clear log.
             textBoxLog.Text = null;
             if (File.Exists(_logFile))
                 File.Delete(_logFile);
 
-            _runningTab = tab;
             return true;
         }
 
@@ -268,7 +274,7 @@ namespace SkylineTester
             MemoryChartWindow.Start("TestRunnerMemory.log");
             _appendToLog = false;
 
-            var testRunnerArgs = new StringBuilder("SkylineTester random=off results=\"");
+            var testRunnerArgs = new StringBuilder("random=off results=\"");
             testRunnerArgs.Append(_resultsDir);
             testRunnerArgs.Append("\" ");
             testRunnerArgs.Append("log=\"");
@@ -284,67 +290,91 @@ namespace SkylineTester
                 _exeDir);
         }
 
-        void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (_runningTab == null)
-                return;
+        private readonly StringBuilder _logBuffer = new StringBuilder();
 
-            try
+        private void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (_runningTab != null)
+                AddLine(e.Data);
+        }
+
+        private void AddLine(string line)
+        {
+            lock (_logBuffer)
             {
-                var line = e.Data + Environment.NewLine;
-                Invoke(new Action(() =>
-                {
-                    if (_appendToLog)
-                        File.AppendAllText(_logFile, line);
-                    int maxLineNumber = textBoxLog.GetLineFromCharIndex(textBoxLog.TextLength);
-                    int startChar = textBoxLog.GetFirstCharIndexFromLine(maxLineNumber);
-                    var point = textBoxLog.GetPositionFromCharIndex(startChar);
-                    var clientRectangle = textBoxLog.ClientRectangle;
-                    clientRectangle.Height += 60;
-                    Log(line, clientRectangle.Contains(point));
-                }));
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
-            {
+                _logBuffer.Append(line);
+                _logBuffer.Append(Environment.NewLine);
             }
         }
 
-        private void Log(string text, bool autoScroll = true)
+        private void UpdateLog(object sender, EventArgs eventArgs)
         {
+            if (_logWasScrolled)
+            {
+                _logWasScrolled = false;
+                return;
+            }
+
+            string logLines;
+            lock (_logBuffer)
+            {
+                if (_logBuffer.Length == 0)
+                    return;
+                logLines = _logBuffer.ToString();
+                _logBuffer.Clear();
+            }
+
+            Log(logLines);
+        }
+
+        private void Log(string text)
+        {
+            if (_appendToLog)
+                File.AppendAllText(_logFile, text);
+
+            // Scroll if text box is already scrolled to bottom.
+            int previousLength = textBoxLog.TextLength;
+            var point = textBoxLog.GetPositionFromCharIndex(previousLength-1);
+            bool autoScroll = (textBoxLog.ClientRectangle.Bottom >= point.Y);
+
             buttonStopLog.Focus(); // text box scrolls if it has focus!
+            textBoxLog.AppendText(text);
 
             if (autoScroll)
             {
-                textBoxLog.AppendText(text);
                 textBoxLog.Select(textBoxLog.Text.Length - 1, 0);
                 textBoxLog.ScrollToCaret();
             }
-            else
-            {
-                textBoxLog.SelectionStart = textBoxLog.Text.Length;
-                textBoxLog.SelectedText = text;
-            }
 
-            ColorText(text,
-                "#", Color.Green,
-                "...skipped", Color.Orange,
-                "...failed", Color.Red);
+            textBoxLog.DoPaint = false;
+            ColorText(previousLength, "\n#", Color.DarkGreen);
+            if (_runningTab == tabBuild)
+            {
+                ColorText(previousLength, "\n...skipped", Color.Orange);
+                ColorText(previousLength, "\n...failed", Color.Red);
+            }
+            textBoxLog.DoPaint = true;
         }
 
-        private void ColorText(string text, params object[] args)
+        private void ColorText(int previousLength, string text, Color color)
         {
-            for (int i = 0; i < args.Length; i += 2)
+            while (true)
             {
-                if (text.Trim().StartsWith((string) args[i]))
-                {
-                    text = text.Replace("\r\n", "\n");
-                    textBoxLog.DoPaint = false;
-                    textBoxLog.Select(textBoxLog.Text.Length - text.Length, text.Length);
-                    textBoxLog.SelectionColor = (Color) args[i+1];
-                    textBoxLog.DoPaint = true;
-                }
+                int startIndex = textBoxLog.Text.IndexOf(text, previousLength, StringComparison.InvariantCulture);
+                if (startIndex < 0)
+                    return;
+                int endIndex = textBoxLog.Text.IndexOf('\n', startIndex + 1);
+                if (endIndex < 0)
+                    return;
+                textBoxLog.Select(startIndex, endIndex - startIndex);
+                textBoxLog.SelectionColor = color;
+                previousLength = endIndex;
             }
+        }
+
+        private void LogComment(string text)
+        {
+            AddLine(Environment.NewLine + text);
         }
 
         private Process CreateProcess(string fileName, string workingDirectory = null)
@@ -394,10 +424,19 @@ namespace SkylineTester
                 _process.BeginOutputReadLine();
                 _process.BeginErrorReadLine();
             }
+
+            _outputTimer = new Timer {Interval = 500};
+            _outputTimer.Tick += UpdateLog;
+            _outputTimer.Start();
         }
+
+        private Timer _outputTimer;
 
         void ProcessExit(object sender, EventArgs e)
         {
+            if (_runningTab == null)
+                return;
+
             try
             {
                 Invoke(new Action(() =>
@@ -405,6 +444,7 @@ namespace SkylineTester
                     if (_runningTab == tabForms)
                         ExitForms();
                     ToggleRunButtons(null);
+                    FinishLog();
                     _process = null;
                 }));
             }
@@ -412,6 +452,19 @@ namespace SkylineTester
             catch (Exception)
             {
             }
+        }
+
+        private void FinishLog()
+        {
+            if (_outputTimer != null)
+            {
+                _outputTimer.Stop();
+                _outputTimer = null;
+            }
+
+            // Show final log output.
+            _logWasScrolled = false;
+            UpdateLog(null, null);
         }
 
         private void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)
