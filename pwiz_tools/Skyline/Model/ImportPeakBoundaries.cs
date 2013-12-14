@@ -73,7 +73,8 @@ namespace pwiz.Skyline.Model
         {
             long linesRead = 0;
             int progressPercent = 0;
-            var docNew = Document;
+            var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
+            var docReference = docNew;
             var sequenceToNode = new Dictionary<string, IdentityPath>();
             var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
             // Make the dictionary of modified peptide strings to doc nodes and paths
@@ -271,11 +272,10 @@ namespace pwiz.Skyline.Model
                                                         modifiedPeptideString, fileName, linesRead));
                 }
             }
-            if (docNew != null)
-            {
-                Document = docNew;
-            }
-            return docNew;
+            // If nothing has changed, return the old Document before ChangeIgnoreChangingChildren was turned off
+            if (!ReferenceEquals(docNew, docReference))
+                Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
+            return Document;
         }
 
         private class DataFields

@@ -6128,6 +6128,9 @@ Are you sure you want to continue?</value>
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards" xml:space="preserve">
     <value>Peak Area Ratio To Global Standards</value>
   </data>
+  <data name="DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_" xml:space="preserve">
+    <value>Line {0} has {1} fields when {2} expected.</value>
+  </data>
   <data name="ToolDescription_RunTool_Please_check_the_External_Tools_Store_on_the_Skyline_web_site_for_the_most_recent_version_of_the_QuaSAR_external_tool_" xml:space="preserve">
     <value>Please check the External Tools Store on the Skyline web site for the most recent version of the QuaSAR external tool.</value>
   </data>

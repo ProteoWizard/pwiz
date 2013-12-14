@@ -257,4 +257,121 @@ namespace pwiz.Skyline.Util.Extensions
             return string.Join("|", listFilters);
         }
     }
+
+    /// <summary>
+    /// Reads a comma-separated variable file, assuming the first line contains
+    /// the names of the columns, and all following lines contain data for each column
+    /// </summary>
+    public class CsvFileReader : DsvFileReader
+    {
+        public CsvFileReader(string fileName) :
+            base(fileName, TextUtil.CsvSeparator)
+        {
+        }
+
+        public CsvFileReader(TextReader reader) :
+            base(reader, TextUtil.CsvSeparator)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Reads a delimiter-separated variable file, assuming the first line contains
+    /// the names of the columns, and all following lines contain data for each column
+    /// </summary>
+    public class DsvFileReader
+    {
+        private char _separator;
+        private string[] _currentFields;
+        private TextReader _reader;
+        
+        public int NumberOfFields { get; private set; }
+        public Dictionary<string, int> FieldDict { get; private set; }
+
+        public DsvFileReader(string fileName, char separator) : 
+            this(new StreamReader(fileName), separator)
+        {
+        }
+
+        public DsvFileReader(TextReader reader, char separator)
+        {
+            Initialize(reader, separator);
+        }
+
+        public void Initialize(TextReader reader, char separator)
+        {
+            _separator = separator;
+            _reader = reader;
+            FieldDict = new Dictionary<string, int>();
+            string titleLine = _reader.ReadLine();
+            var fields = titleLine.ParseDsvFields(separator);
+            NumberOfFields = fields.Length;
+            for (int i = 0; i < fields.Length; ++i)
+            {
+                FieldDict[fields[i]] = i;
+            }
+        }
+
+        /// <summary>
+        /// Read a line of text, storing the fields by name for retrieval using GetFieldByName.
+        /// Outputs a list of fields (not indexed by name)
+        /// </summary>
+        /// <returns></returns>
+        public string[] ReadLine()
+        {
+            var line = _reader.ReadLine();
+            if (line == null)
+                return null;
+            _currentFields = line.ParseDsvFields(_separator);
+            if (_currentFields.Length != NumberOfFields)
+            {
+                throw new IOException(string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_, line, _currentFields.Length, NumberOfFields));
+            }
+            return _currentFields;
+        }
+
+
+        /// <summary>
+        /// For the current line, outputs the field corresponding to the column name fieldName, or null if
+        /// there is no such field name.
+        /// </summary>
+        /// <param name="fieldName">Title of the column for which to get current line data</param>
+        /// <returns></returns>
+        public string GetFieldByName(string fieldName)
+        {
+            int fieldIndex = GetFieldIndex(fieldName);
+            return GetFieldByIndex(fieldIndex);
+        }
+
+        /// <summary>
+        /// For the current line, outputs the field numbered fieldIndex
+        /// </summary>
+        /// <param name="fieldIndex">Index of the field on the current line to be output</param>
+        /// <returns></returns>
+        public string GetFieldByIndex(int fieldIndex)
+        {
+            return -1 < fieldIndex && fieldIndex < _currentFields.Length ?_currentFields[fieldIndex] : null;
+        }
+
+        /// <summary>
+        /// Get the index of the field corresponding to the column title fieldName
+        /// </summary>
+        /// <param name="fieldName">Column title.</param>
+        /// <returns></returns>
+        public int GetFieldIndex(string fieldName)
+        {
+            if (!FieldDict.ContainsKey(fieldName))
+                return -1;
+            return FieldDict[fieldName];
+        }
+
+        /// <summary>
+        /// If loading from a file, use this to dispose the text reader.
+        /// </summary>
+        public void Dispose()
+        {
+            _reader.Dispose();
+        }
+
+    }
 }

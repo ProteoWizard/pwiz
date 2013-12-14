@@ -259,6 +259,14 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Turn ignore changing children on and off for bulk operations
+        /// </summary>
+        public DocNodeParent ChangeIgnoreChangingChildren(bool ignore)
+        {
+            return ChangeProp(ImClone(this), im => im._ignoreChildrenChanging = ignore);
+        }
+
+        /// <summary>
         /// Adds all children to a map by their <see cref="Identity"/> itself,
         /// and not the <see cref="Identity.GlobalIndex"/>.  Callers should be
         /// sure that the <see cref="Identity"/> subclass provides a useful

@@ -91,7 +91,8 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument ChangePeaks(double qValueCutoff, IProgressMonitor progressMonitor = null)
         {
-            SrmDocument docNew = Document;
+            SrmDocument docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
+            var docReference = docNew;
             var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
                                   where def.AnnotationTargets.Contains( AnnotationDef.AnnotationTarget.precursor_result)
                                   select def.Name;
@@ -100,7 +101,7 @@ namespace pwiz.Skyline.Model
             var status = new ProgressStatus(Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries);
             foreach (var transitionGroupFeatures in _features)
             {
-                if (progressMonitor != null)
+                if (progressMonitor != null && i % 10 == 0)
                     progressMonitor.UpdateProgress(status = status.ChangePercentComplete(100 * i / (_qValues.Count + 1)));
                 // Pick the highest-scoring peak
                 var bestIndex = _bestIndices[i];
@@ -143,7 +144,8 @@ namespace pwiz.Skyline.Model
                 }
                 ++i;
             }
-            Document = docNew;
+            if (!ReferenceEquals(docNew, docReference))
+                Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
         }
 

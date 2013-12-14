@@ -3397,6 +3397,15 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Line {0} has {1} fields when {2} expected..
+        /// </summary>
+        public static string DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_ {
+            get {
+                return ResourceManager.GetString("DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_", resourceCulture);
+            }
+        }
+        
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);

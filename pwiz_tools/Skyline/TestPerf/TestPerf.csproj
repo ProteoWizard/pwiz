@@ -133,6 +133,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PeakScoreCompareTest.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
   </ItemGroup>
   <ItemGroup>
