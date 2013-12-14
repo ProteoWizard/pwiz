@@ -111,6 +111,9 @@
     <Compile Include="MemoryChartWindow.Designer.cs">
       <DependentUpon>MemoryChartWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="MyTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MyTreeView.cs">
       <SubType>Component</SubType>
     </Compile>

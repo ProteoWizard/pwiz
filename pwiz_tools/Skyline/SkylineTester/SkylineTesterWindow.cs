@@ -20,12 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using Microsoft.Win32;
 
 namespace SkylineTester
 {
@@ -44,6 +46,9 @@ namespace SkylineTester
         private bool _appendToLog;
         private TabPage _runningTab;
         private string _subversion;
+        private readonly string _exeDir;
+        private readonly string _rootDir;
+        private readonly string _openFile;
 
         #region Create and load window
 
@@ -56,11 +61,13 @@ namespace SkylineTester
         {
             InitializeComponent();
 
-            _resultsDir = (args.Length > 0)
-                ? args[0]
-                : Path.Combine(Environment.CurrentDirectory, "SkylineTester Results");
-            _logFile = Path.GetDirectoryName(Environment.CurrentDirectory) ?? "";
-            _logFile = Path.Combine(_logFile, "SkylineTester.log");
+            string exeFile = Assembly.GetExecutingAssembly().Location;
+            _exeDir = Path.GetDirectoryName(exeFile);
+            _rootDir = Path.GetDirectoryName(_exeDir) ?? "";
+            _resultsDir = Path.Combine(_rootDir, "SkylineTester Results");
+            _logFile = Path.Combine(_rootDir, "SkylineTester.log");
+            if (args.Length > 0)
+                _openFile = args[0];
         }
 
         private void SkylineTesterWindow_Load(object sender, EventArgs e)
@@ -68,6 +75,11 @@ namespace SkylineTester
             if (!Program.IsRunning)
                 return; // design mode
 
+            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null, 
+                Assembly.GetExecutingAssembly().Location + @" ""%1""");
+            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skyt", null, "SkylineTester");
+            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skytr", null, "SkylineTester");
+            
             _runButtons = new[]
             {
                 runForms, runTutorials, runTests, runBuild, runQuality
@@ -138,11 +150,33 @@ namespace SkylineTester
             {
                 MessageBox.Show(ex.Message);
             }
+
+            if (_openFile != null)
+            {
+                Invoke(new Action(() =>
+                {
+                    OpenFile(_openFile);
+                    if (Path.GetExtension(_openFile) == ".skytr")
+                    {
+                        if (Tabs.SelectedTab == tabForms)
+                            RunForms(null, null);
+                        else if (Tabs.SelectedTab == tabTutorials)
+                            RunTutorials(null, null);
+                        else if (Tabs.SelectedTab == tabTest)
+                            RunTests(null, null);
+                        else if (Tabs.SelectedTab == tabBuild)
+                            RunBuild(null, null);
+                        else if (Tabs.SelectedTab == tabQuality)
+                            RunQuality(null, null);
+                    }
+                }));
+            }
         }
 
-        public static IEnumerable<string> GetTestInfos(string testDll)
+        public IEnumerable<string> GetTestInfos(string testDll)
         {
-            var assembly = Assembly.LoadFrom(testDll);
+            var dllPath = Path.Combine(_exeDir, testDll);
+            var assembly = Assembly.LoadFrom(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)
@@ -194,7 +228,7 @@ namespace SkylineTester
                 stopTimer.Tick += (sender, args) =>
                 {
                     stopTimer.Stop();
-                    Log(Environment.NewLine + "# Stopped." + Environment.NewLine, true);
+                    Log(Environment.NewLine + "# Stopped." + Environment.NewLine);
                 };
                 stopTimer.Start();
             }
@@ -247,7 +281,7 @@ namespace SkylineTester
             StartProcess(
                 "TestRunner.exe",
                 testRunnerArgs.ToString(),
-                Environment.CurrentDirectory);
+                _exeDir);
         }
 
         void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
@@ -258,10 +292,10 @@ namespace SkylineTester
             try
             {
                 var line = e.Data + Environment.NewLine;
-                if (_appendToLog)
-                    File.AppendAllText(_logFile, line);
                 Invoke(new Action(() =>
                 {
+                    if (_appendToLog)
+                        File.AppendAllText(_logFile, line);
                     int maxLineNumber = textBoxLog.GetLineFromCharIndex(textBoxLog.TextLength);
                     int startChar = textBoxLog.GetFirstCharIndexFromLine(maxLineNumber);
                     var point = textBoxLog.GetPositionFromCharIndex(startChar);
@@ -278,7 +312,7 @@ namespace SkylineTester
 
         private void Log(string text, bool autoScroll = true)
         {
-            buttonStopLog.Focus();  // text box scrolls if it has focus!
+            buttonStopLog.Focus(); // text box scrolls if it has focus!
 
             if (autoScroll)
             {
@@ -290,6 +324,26 @@ namespace SkylineTester
             {
                 textBoxLog.SelectionStart = textBoxLog.Text.Length;
                 textBoxLog.SelectedText = text;
+            }
+
+            ColorText(text,
+                "#", Color.Green,
+                "...skipped", Color.Orange,
+                "...failed", Color.Red);
+        }
+
+        private void ColorText(string text, params object[] args)
+        {
+            for (int i = 0; i < args.Length; i += 2)
+            {
+                if (text.Trim().StartsWith((string) args[i]))
+                {
+                    text = text.Replace("\r\n", "\n");
+                    textBoxLog.DoPaint = false;
+                    textBoxLog.Select(textBoxLog.Text.Length - text.Length, text.Length);
+                    textBoxLog.SelectionColor = (Color) args[i+1];
+                    textBoxLog.DoPaint = true;
+                }
             }
         }
 
@@ -406,11 +460,14 @@ namespace SkylineTester
 
         private void open_Click(object sender, EventArgs e)
         {
-            var openFileDialog = new OpenFileDialog { Filter = "Skyline Tester (*.skyt)|*.skyt" };
-            if (openFileDialog.ShowDialog() == DialogResult.Cancel)
-                return;
+            var openFileDialog = new OpenFileDialog {Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr"};
+            if (openFileDialog.ShowDialog() != DialogResult.Cancel)
+                OpenFile(openFileDialog.FileName);
+        }
 
-            var doc = XDocument.Load(openFileDialog.FileName);
+        private void OpenFile(string file)
+        {
+            var doc = XDocument.Load(file);
             foreach (var element in doc.Descendants())
             {
                 var control = Controls.Find(element.Name.ToString(), true).FirstOrDefault();
@@ -466,7 +523,7 @@ namespace SkylineTester
 
         private void save_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog {Filter = "Skyline Tester (*.skyt)|*.skyt"};
+            var saveFileDialog = new SaveFileDialog { Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr" };
             if (saveFileDialog.ShowDialog() == DialogResult.Cancel)
                 return;
 
@@ -497,7 +554,24 @@ namespace SkylineTester
                 CultureFrench,
                 TestsTree,
                 RunCheckedTests,
-                SkipCheckedTests);
+                SkipCheckedTests,
+                
+                // Build
+                Build32,
+                Build64,
+                BuildTrunk,
+                BuildBranch,
+                BranchUrl,
+
+                // Quality
+                QualityStartNow,
+                QualityStartLater,
+                QualityStartTime,
+                QualityEndTime,
+                QualityBuildFirst,
+                QualityCurrentBuild,
+                QualityAllTests,
+                QualityChooseTests);
 
             XDocument doc = new XDocument(root);
             File.WriteAllText(saveFileDialog.FileName, doc.ToString());

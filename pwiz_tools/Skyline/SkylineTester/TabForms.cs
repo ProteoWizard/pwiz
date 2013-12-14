@@ -77,7 +77,9 @@ namespace SkylineTester
             FormsTree.Nodes.Clear();
 
             var forms = new List<TreeNode>();
-            var skylinePath = File.Exists("Skyline.exe") ? "Skyline.exe" : "Skyline-daily.exe";
+            var skylinePath = Path.Combine(_exeDir, "Skyline.exe");
+            var skylineDailyPath = Path.Combine(_exeDir, "Skyline-daily.exe");
+            skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = Assembly.LoadFrom(skylinePath);
             var types = assembly.GetTypes();
             var formLookup = new FormLookup();

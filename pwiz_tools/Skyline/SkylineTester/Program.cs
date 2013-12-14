@@ -39,13 +39,7 @@ namespace SkylineTester
             {
                 var restartSkylineTester = new Process
                 {
-                    StartInfo =
-                    {
-                        UseShellExecute = false,
-                        FileName = NestedSkylineTester,
-                        Arguments = "\"" + Path.Combine(Environment.CurrentDirectory, "SkylineTester Results") + "\"",
-                        WorkingDirectory = Path.GetFullPath("SkylineTester Files")
-                    }
+                    StartInfo = { FileName = NestedSkylineTester }
                 };
                 restartSkylineTester.Start();
                 return;

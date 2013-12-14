@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
@@ -38,11 +40,36 @@ namespace SkylineTester
 
             Tabs.SelectTab(tabOutput);
 
-            _buildDir = Path.GetDirectoryName(Environment.CurrentDirectory) ?? "";
-            _buildDir = Path.Combine(_buildDir, "Build");
+            _buildDir = Path.Combine(_rootDir, "Build");
             _appendToLog = true;
 
-            if (Directory.Exists(_buildDir))
+            if (!Directory.Exists(_buildDir))
+            {
+                CleanupDone(null, null);
+                return;
+            }
+
+            if (BuildClean.Checked)
+            {
+                Log(Environment.NewLine + "# Deleting old Skyline build directory" + Environment.NewLine);
+                var deleteTask = new BackgroundWorker();
+                deleteTask.DoWork += (o, args) =>
+                {
+                    try
+                    {
+                        Directory.Delete(_buildDir, true);
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Can't delete " + _buildDir);
+                        ProcessExit(null, null);
+                        return;
+                    }
+                    CleanupDone(null, null);
+                };
+                deleteTask.RunWorkerAsync();
+            }
+            else
             {
                 Log(Environment.NewLine + "# Cleaning Skyline build directory" + Environment.NewLine);
                 StartProcess(
@@ -51,10 +78,6 @@ namespace SkylineTester
                     null,
                     CleanupDone,
                     true);
-            }
-            else
-            {
-                CleanupDone(null, null);
             }
         }
 
@@ -66,9 +89,12 @@ namespace SkylineTester
             Invoke(new Action(() =>
             {
                 Log(Environment.NewLine + "# Checking out Skyline source files..." + Environment.NewLine);
+                var branch = BuildTrunk.Checked
+                    ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
+                    : BranchUrl.Text;
                 StartProcess(
                     _subversion,
-                    @"checkout https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz " + _buildDir,
+                    string.Format("checkout {0} {1}", branch, _buildDir),
                     null,
                     CheckoutDone,
                     true);
@@ -83,12 +109,41 @@ namespace SkylineTester
             Invoke(new Action(() =>
             {
                 Log(Environment.NewLine + "# Building Skyline..." + Environment.NewLine);
+                var architecture = Build32.Checked ? 32 : 64;
                 StartProcess(
                     Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat"),
-                    @"32 --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
+                    architecture + @" --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
                     _buildDir,
-                    ProcessExit,
+                    BuildDone,
                     true);
+            }));
+        }
+
+        private void BuildDone(object sender, EventArgs e)
+        {
+            if (_runningTab == null)
+                return;
+
+            Invoke(new Action(() =>
+            {
+                Log(Environment.NewLine + "# Build done." + Environment.NewLine);
+
+                ProcessExit(sender, e);
+
+                if (StartSln.Checked)
+                {
+                    var slnDirectory = Path.Combine(_buildDir, @"pwiz_tools\Skyline");
+                    var process = new Process
+                    {
+                        StartInfo =
+                        {
+                            FileName = Path.Combine(slnDirectory, "Skyline.sln"),
+                            WorkingDirectory = slnDirectory,
+                            UseShellExecute = true,
+                        }
+                    };
+                    process.Start();
+                }
             }));
         }
     }
