@@ -856,7 +856,7 @@
     <value>0, 0</value>
   </data>
   <data name="listNeutralLosses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>214, 70</value>
+    <value>206, 70</value>
   </data>
   <data name="listNeutralLosses.TabIndex" type="System.Int32, mscorlib">
     <value>25</value>
@@ -910,10 +910,7 @@
     <value>Magenta</value>
   </data>
   <data name="tbbAddLoss.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="tbbAddLoss.Text" xml:space="preserve">
-    <value>tbbAddLoss</value>
+    <value>29, 20</value>
   </data>
   <data name="tbbAddLoss.ToolTipText" xml:space="preserve">
     <value>Add neutral loss</value>
@@ -925,10 +922,7 @@
     <value>Magenta</value>
   </data>
   <data name="tbbEditLoss.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="tbbEditLoss.Text" xml:space="preserve">
-    <value>tbbEditLoss</value>
+    <value>29, 20</value>
   </data>
   <data name="tbbEditLoss.ToolTipText" xml:space="preserve">
     <value>Edit neutral loss</value>
@@ -940,19 +934,16 @@
     <value>Magenta</value>
   </data>
   <data name="tbbDeleteLoss.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="tbbDeleteLoss.Text" xml:space="preserve">
-    <value>tbbDelete</value>
+    <value>23, 20</value>
   </data>
   <data name="tbbDeleteLoss.ToolTipText" xml:space="preserve">
     <value>Delete neutral loss</value>
   </data>
   <data name="toolBarLosses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>214, 0</value>
+    <value>206, 0</value>
   </data>
   <data name="toolBarLosses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 70</value>
+    <value>32, 70</value>
   </data>
   <data name="toolBarLosses.TabIndex" type="System.Int32, mscorlib">
     <value>26</value>

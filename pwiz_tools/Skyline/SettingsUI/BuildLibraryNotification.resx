@@ -213,7 +213,7 @@
     <value>6</value>
   </data>
   <data name="LibraryNameLabel.Text" xml:space="preserve">
-    <value>label1</value>
+    <value>message placeholder</value>
   </data>
   <data name="&gt;&gt;LibraryNameLabel.Name" xml:space="preserve">
     <value>LibraryNameLabel</value>
@@ -285,7 +285,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>154, 102</value>
+    <value>150, 98</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>Manual</value>
@@ -294,6 +294,6 @@
     <value>BuildLibraryNotification</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

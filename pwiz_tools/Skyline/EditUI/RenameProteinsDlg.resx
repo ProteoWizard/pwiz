@@ -232,7 +232,7 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="currentNameDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
-    <value>CurrentName</value>
+    <value>Current Name</value>
   </data>
   <data name="newNameDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
     <value>NewName</value>

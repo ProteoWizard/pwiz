@@ -129,10 +129,7 @@
     <value>Magenta</value>
   </data>
   <data name="tbbOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="tbbOk.Text" xml:space="preserve">
-    <value>toolStripButton3</value>
+    <value>29, 20</value>
   </data>
   <data name="tbbOk.ToolTipText" xml:space="preserve">
     <value>OK</value>
@@ -141,19 +138,19 @@
     <value>Magenta</value>
   </data>
   <data name="tbbCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="tbbCancel.ToolTipText" xml:space="preserve">
     <value>Cancel</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>29, 6</value>
   </data>
   <data name="tbbFilter.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="tbbFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="tbbFilter.ToolTipText" xml:space="preserve">
     <value>Filter</value>
@@ -162,16 +159,16 @@
     <value>Magenta</value>
   </data>
   <data name="tbbAutoManageChildren.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>29, 6</value>
   </data>
   <data name="tbbFind.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="tbbFind.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="tbbFind.ToolTipText" xml:space="preserve">
     <value>Find (Ctrl + F)</value>
@@ -180,7 +177,7 @@
     <value>0, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 249</value>
+    <value>32, 249</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
@@ -373,6 +370,6 @@
     <value>PopupPickList</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

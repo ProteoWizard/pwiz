@@ -697,15 +697,6 @@
   <data name="CopyGraphDataToolStripMenuItem_CopyGraphData_Failed_setting_data_to_clipboard" xml:space="preserve">
     <value>Failed setting data to clipboard.</value>
   </data>
-  <data name="EditPepModsDlg_GetStaticName_Prefix_Static_Name" xml:space="preserve">
-    <value>comboStatic</value>
-  </data>
-  <data name="EditPepModsDlg_GetHeavyName_Prefix_Heavy_Name" xml:space="preserve">
-    <value>comboHeavy</value>
-  </data>
-  <data name="EditPepModsDlg_GetIsotopeLabelName_Prefix_Label_Name" xml:space="preserve">
-    <value>labelHeavy1</value>
-  </data>
   <data name="EditPepModsDlg_GetIsotopeLabelText_Isotope__0__" xml:space="preserve">
     <value>Isotope {0}:</value>
   </data>
@@ -1658,9 +1649,6 @@ Are you sure you want to continue?</value>
   <data name="UnintegratedTransitionFinder_Match_Unintegrated_transition" xml:space="preserve">
     <value>Unintegrated transition</value>
   </data>
-  <data name="ColumnSet_GetColumnInfos_Must_be_a_SimpleReport" xml:space="preserve">
-    <value>Must be a SimpleReport</value>
-  </data>
   <data name="ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_" xml:space="preserve">
     <value>Unable to find table for {0}</value>
   </data>
@@ -2130,15 +2118,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only__2__" xml:space="preserve">
     <value>Node reported {0} descendants at depth {1}, but found only {2}.</value>
-  </data>
-  <data name="DocNodeParent_InsertAll_Invalid_operation_InsertAll_before_children_set" xml:space="preserve">
-    <value>Invalid operation InsertAll before children set.</value>
-  </data>
-  <data name="DocNodeParent_ReplaceChild_Invalid_operation_ReplaceChild_before_children_set" xml:space="preserve">
-    <value>Invalid operation ReplaceChild before children set.</value>
-  </data>
-  <data name="DocNodeParent_RemoveChild_Invalid_operation_RemoveChild_before_children_set" xml:space="preserve">
-    <value>Invalid operation RemoveChild before children set.</value>
   </data>
   <data name="ExportProperties_ExportFile_Unrecognized_instrument_type__0__" xml:space="preserve">
     <value>Unrecognized instrument type {0}.</value>
@@ -6136,5 +6115,8 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_" xml:space="preserve">
     <value>Support for the GenePattern version of QuaSAR has been discontinued.</value>
+  </data>
+  <data name="ColumnSet_GetColumnInfos_Unexpected_report_type" xml:space="preserve">
+    <value>Unexpected report type</value>
   </data>
 </root>

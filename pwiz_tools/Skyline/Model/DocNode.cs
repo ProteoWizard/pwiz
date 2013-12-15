@@ -614,7 +614,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent InsertAll(Identity idBefore, IEnumerable<DocNode> childrenAdd, bool after)
         {
             if (Children == null)
-                throw new InvalidOperationException(Resources.DocNodeParent_InsertAll_Invalid_operation_InsertAll_before_children_set);
+                throw new InvalidOperationException("Invalid operation InsertAll before children set."); // Not L10N
 
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -784,7 +784,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent ReplaceChild(DocNode childReplace)
         {
             if (Children == null)
-                throw new InvalidOperationException(Resources.DocNodeParent_ReplaceChild_Invalid_operation_ReplaceChild_before_children_set);
+                throw new InvalidOperationException("Invalid operation ReplaceChild before children set."); // Not L10N
 
             DocNode[] childrenNew = new DocNode[Children.Count];
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -846,7 +846,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent RemoveChild(DocNode childRemove)
         {
             if (Children == null)
-                throw new InvalidOperationException(Resources.DocNodeParent_RemoveChild_Invalid_operation_RemoveChild_before_children_set);
+                throw new InvalidOperationException("Invalid operation RemoveChild before children set.");  // Not L10N
 
             List<DocNode> childrenNew = new List<DocNode>();
             List<int> nodeCountStack = new List<int>(_nodeCountStack);

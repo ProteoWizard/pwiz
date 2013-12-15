@@ -2306,20 +2306,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Must be a SimpleReport.
-        /// </summary>
-        public static string ColumnSet_GetColumnInfos_Must_be_a_SimpleReport {
-            get {
-                return ResourceManager.GetString("ColumnSet_GetColumnInfos_Must_be_a_SimpleReport", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to find table for {0}.
         /// </summary>
         public static string ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_ {
             get {
                 return ResourceManager.GetString("ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected report type.
+        /// </summary>
+        public static string ColumnSet_GetColumnInfos_Unexpected_report_type {
+            get {
+                return ResourceManager.GetString("ColumnSet_GetColumnInfos_Unexpected_report_type", resourceCulture);
             }
         }
         
@@ -3326,33 +3326,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only" +
                         "__2__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid operation InsertAll before children set..
-        /// </summary>
-        public static string DocNodeParent_InsertAll_Invalid_operation_InsertAll_before_children_set {
-            get {
-                return ResourceManager.GetString("DocNodeParent_InsertAll_Invalid_operation_InsertAll_before_children_set", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid operation RemoveChild before children set..
-        /// </summary>
-        public static string DocNodeParent_RemoveChild_Invalid_operation_RemoveChild_before_children_set {
-            get {
-                return ResourceManager.GetString("DocNodeParent_RemoveChild_Invalid_operation_RemoveChild_before_children_set", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid operation ReplaceChild before children set..
-        /// </summary>
-        public static string DocNodeParent_ReplaceChild_Invalid_operation_ReplaceChild_before_children_set {
-            get {
-                return ResourceManager.GetString("DocNodeParent_ReplaceChild_Invalid_operation_ReplaceChild_before_children_set", resourceCulture);
             }
         }
         
@@ -4371,38 +4344,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to comboHeavy.
-        /// </summary>
-        public static string EditPepModsDlg_GetHeavyName_Prefix_Heavy_Name {
-            get {
-                return ResourceManager.GetString("EditPepModsDlg_GetHeavyName_Prefix_Heavy_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to labelHeavy1.
-        /// </summary>
-        public static string EditPepModsDlg_GetIsotopeLabelName_Prefix_Label_Name {
-            get {
-                return ResourceManager.GetString("EditPepModsDlg_GetIsotopeLabelName_Prefix_Label_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Isotope {0}:.
         /// </summary>
         public static string EditPepModsDlg_GetIsotopeLabelText_Isotope__0__ {
             get {
                 return ResourceManager.GetString("EditPepModsDlg_GetIsotopeLabelText_Isotope__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to comboStatic.
-        /// </summary>
-        public static string EditPepModsDlg_GetStaticName_Prefix_Static_Name {
-            get {
-                return ResourceManager.GetString("EditPepModsDlg_GetStaticName_Prefix_Static_Name", resourceCulture);
             }
         }
         

@@ -36,11 +36,10 @@ namespace pwiz.Skyline.EditUI
         private const int VSPACE = 3;
         private const int HSPACE = 10;
 
-        //TODO: Not L10N?
-        private const string PREFIX_STATIC_NAME = "comboStatic";
-        private const string PREFIX_HEAVY_NAME = "comboHeavy";
+        private const string PREFIX_STATIC_NAME = "comboStatic";    // Not L10N
+        private const string PREFIX_HEAVY_NAME = "comboHeavy";    // Not L10N
 
-        private const string PREFIX_LABEL_NAME = "labelHeavy1";
+        private const string PREFIX_LABEL_NAME = "labelHeavy1";    // Not L10N
 
         private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)"); // Not L10N
 

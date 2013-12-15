@@ -48,7 +48,9 @@
             this.sequenceTree.HideSelection = false;
             this.sequenceTree.ItemHeight = 16;
             this.sequenceTree.LabelEdit = true;
+            this.sequenceTree.LockDefaultExpansion = false;
             this.sequenceTree.Name = "sequenceTree";
+            this.sequenceTree.RestoredFromPersistentString = false;
             this.sequenceTree.UseKeysOverride = false;
             // 
             // toolBarResults

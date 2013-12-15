@@ -133,13 +133,13 @@
     <value>50, 40</value>
   </data>
   <data name="labelLink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 13</value>
+    <value>23, 13</value>
   </data>
   <data name="labelLink.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="labelLink.Text" xml:space="preserve">
-    <value>labelLink</value>
+    <value>link</value>
   </data>
   <data name="&gt;&gt;labelLink.Name" xml:space="preserve">
     <value>labelLink</value>
@@ -160,13 +160,13 @@
     <value>50, 11</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>72, 13</value>
+    <value>49, 13</value>
   </data>
   <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>labelMessage</value>
+    <value>message</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>

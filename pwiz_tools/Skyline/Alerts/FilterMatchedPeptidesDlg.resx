@@ -268,7 +268,7 @@
     <value>0</value>
   </data>
   <data name="msgUnmatchedPeptides.Text" xml:space="preserve">
-    <value>label2</value>
+    <value>message placeholder 2</value>
   </data>
   <data name="&gt;&gt;msgUnmatchedPeptides.Name" xml:space="preserve">
     <value>msgUnmatchedPeptides</value>
@@ -295,7 +295,7 @@
     <value>5</value>
   </data>
   <data name="msgDuplicatePeptides.Text" xml:space="preserve">
-    <value>label1</value>
+    <value>message placeholder 1</value>
   </data>
   <data name="&gt;&gt;msgDuplicatePeptides.Name" xml:space="preserve">
     <value>msgDuplicatePeptides</value>
@@ -322,7 +322,7 @@
     <value>0</value>
   </data>
   <data name="msgFilteredPeptides.Text" xml:space="preserve">
-    <value>label3</value>
+    <value>message placeholder 3</value>
   </data>
   <data name="&gt;&gt;msgFilteredPeptides.Name" xml:space="preserve">
     <value>msgFilteredPeptides</value>

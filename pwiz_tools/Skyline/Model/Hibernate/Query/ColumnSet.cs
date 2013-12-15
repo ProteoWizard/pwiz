@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             // CONSIDER: Why have the base class?
             if (!(report is SimpleReport))
             {
-                throw new InvalidOperationException(Resources.ColumnSet_GetColumnInfos_Must_be_a_SimpleReport);
+                throw new InvalidOperationException(Resources.ColumnSet_GetColumnInfos_Unexpected_report_type);
             }
             SimpleReport simpleReport = (SimpleReport) report;
             columnInfos = new List<NodeData>();
