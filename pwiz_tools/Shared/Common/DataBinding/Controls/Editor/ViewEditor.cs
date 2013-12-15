@@ -112,11 +112,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             get
             {
-                return ViewInfo.Name;
+                return tbxViewName.Text;
             }
             set
             {
-                SetViewInfo(new ViewInfo(ViewInfo.ParentColumn, ViewInfo.GetViewSpec().SetName(value)), SelectedPaths);
+                tbxViewName.Text = value;
             }
         }
 
@@ -140,7 +140,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             ViewInfo = undoEntry.Key;
             _selectedPaths = undoEntry.Value;
-            tbxViewName.Text = ViewSpec.Name ?? string.Empty;
             toolButtonUndo.Enabled = _undoIndex > 1;
             toolButtonRedo.Enabled = _undoIndex < _undoStack.Count;
             if (ViewChange != null)
@@ -242,7 +241,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
-            var name = ViewSpec.Name;
+            var name = tbxViewName.Text;
             string errorMessage = null;
             if (string.IsNullOrEmpty(name))
             {

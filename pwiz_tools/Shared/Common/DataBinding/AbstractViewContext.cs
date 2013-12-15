@@ -193,18 +193,33 @@ namespace pwiz.Common.DataBinding
                 FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
             })
             {
-                if (saveFileDialog.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
+                if (saveFileDialog.ShowDialog(owner) == DialogResult.Cancel)
                 {
                     return;
                 }
                 var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                RunLongJob(owner, progressMonitor =>
+                using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName),
+                    new UTF8Encoding(false)))
                 {
-                    using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName), new UTF8Encoding(false)))
+                    var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
+                    if (null == cloneableRowSource)
                     {
+                        var progressMonitor = new UncancellableProgressMonitor();
                         WriteData(progressMonitor, writer, bindingListSource, dataFormat.GetDsvWriter());
                     }
-                });
+                    else
+                    {
+                        var clonedList = cloneableRowSource.DeepClone();
+                        RunLongJob(owner, progressMonitor =>
+                        {
+                            using (var clonedBindingList = new BindingListSource())
+                            {
+                                clonedBindingList.SetView(bindingListSource.ViewInfo, clonedList);
+                                WriteData(progressMonitor, writer, clonedBindingList, dataFormat.GetDsvWriter());
+                            }
+                        });
+                    }
+                }
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
             }
         }
@@ -301,7 +316,9 @@ namespace pwiz.Common.DataBinding
                     return null;
                 }
                 // Consider: if save fails, reshow CustomizeViewForm?
-                return SaveView(customizeViewForm.ViewInfo, originalName).ViewSpec;
+                ViewInfo viewInfo = customizeViewForm.ViewInfo;
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(customizeViewForm.ViewName));
+                return SaveView(viewInfo, originalName).ViewSpec;
             }
         }
 
@@ -568,6 +585,23 @@ namespace pwiz.Common.DataBinding
 
         public virtual void Preview(Control owner, ViewInfo viewInfo)
         {
+        }
+
+        private class UncancellableProgressMonitor : IProgressMonitor
+        {
+            public bool IsCanceled
+            {
+                get { return false; }
+            }
+
+            public void UpdateProgress(ProgressStatus status)
+            {
+            }
+
+            public bool HasUI
+            {
+                get { return false; }
+            }
         }
     }
 }
