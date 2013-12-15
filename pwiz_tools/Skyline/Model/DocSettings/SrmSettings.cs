@@ -404,21 +404,27 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Cached standard types
         /// </summary>
         private ImmutableDictionary<string, ReadOnlyCollection<PeptideDocNode>> _cachedPeptideStandards;
+        private static readonly PeptideDocNode[] EMPTY_STANDARDS = new PeptideDocNode[0];
 
         public IEnumerable<PeptideDocNode> GetPeptideStandards(string standardType)
         {
             ReadOnlyCollection<PeptideDocNode> standardPeptides;
             if (_cachedPeptideStandards == null || !_cachedPeptideStandards.TryGetValue(standardType, out standardPeptides))
-                return new PeptideDocNode[0];
+                return EMPTY_STANDARDS; // So that emptiness is reference equal
 
             return standardPeptides;
         }
 
-        public SrmSettings CachePeptideStandards(IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes)
+        public SrmSettings CachePeptideStandards(IList<DocNode> peptideGroupDocNodesOrig,
+                                                 IList<DocNode> peptideGroupDocNodes)
         {
+            // First check to see if anything could have possibly changed to avoid work, if nothing could have
+            if (!IsStandardsChange(peptideGroupDocNodesOrig, peptideGroupDocNodes))
+                return this;
+
             // Build an initial mutable dictionay and lists
             var cachedPeptideStandards = new Dictionary<string, IList<PeptideDocNode>>();
-            foreach (var nodePepGroup in peptideGroupDocNodes)
+            foreach (PeptideGroupDocNode nodePepGroup in peptideGroupDocNodes)
             {
                 foreach (var nodePep in nodePepGroup.Peptides)
                 {
@@ -459,6 +465,43 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             var prop = new ImmutableDictionary<string, ReadOnlyCollection<PeptideDocNode>>(cachedPeptideStandardsRo);
             return ChangeProp(ImClone(this), im => im._cachedPeptideStandards = prop);
+        }
+
+        /// <summary>
+        /// Returns true, if the change could have impacted the Global Standard Type cache.
+        /// Used to short-circuit a full recalculation of the cache when nothing could have changed.
+        /// </summary>
+        private bool IsStandardsChange(IList<DocNode> peptideGroupDocNodesOrig,
+                                       IList<DocNode> peptideGroupDocNodes)
+        {
+            if (peptideGroupDocNodes.Count != peptideGroupDocNodesOrig.Count)
+                return true;
+            for (int i = 0; i < peptideGroupDocNodes.Count; i++)
+            {
+                var nodePepGroup = (PeptideGroupDocNode) peptideGroupDocNodes[i];
+                var nodePepGroupOrig = (PeptideGroupDocNode) peptideGroupDocNodesOrig[i];
+                if (ReferenceEquals(nodePepGroup, nodePepGroupOrig))
+                    continue;
+                if (!ReferenceEquals(nodePepGroup.Id, nodePepGroupOrig.Id))
+                    return true;
+                var peptideDocNodes = nodePepGroup.Children;
+                var peptideDocNodesOrig = nodePepGroupOrig.Children;
+                if (peptideDocNodes.Count != peptideDocNodesOrig.Count)
+                    return true;
+                for (int j = 0; j < peptideDocNodes.Count; j++)
+                {
+                    var nodePep = (PeptideDocNode) peptideDocNodes[j];
+                    var nodePepOrig = (PeptideDocNode) peptideDocNodesOrig[j];
+                    if (ReferenceEquals(nodePep, nodePepOrig))
+                        continue;
+                    if (!ReferenceEquals(nodePep.Id, nodePepOrig.Id) ||
+                        !Equals(nodePep.GlobalStandardType, nodePepOrig.GlobalStandardType))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public bool HasGlobalStandardArea

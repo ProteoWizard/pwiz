@@ -98,12 +98,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Set Normalization type
             RunUI(() => SetPeptideStandardType(1, 0, 3, PeptideDocNode.STANDARD_TYPE_NORMALIZAITON));
-
             RunUI(() =>
             {
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.AreEqual(5e+6, pane.YAxis.Scale.Max, 1);
+                Assert.IsTrue(pane.YAxis.Scale.Max > 3e+6);
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area));
 
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
@@ -117,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.AreEqual(0.1, pane.YAxis.Scale.Max, 1e-5);
+                Assert.IsTrue(pane.YAxis.Scale.Max < 0.12);
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(5, SkylineWindow.GraphPeakArea.CurveCount);
 
@@ -133,7 +132,8 @@ namespace pwiz.SkylineTestFunctional
                 // Should stay ratio to global standards
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.AreEqual(0.2, pane.YAxis.Scale.Max, 1e-5);
+                double yMax = pane.YAxis.Scale.Max;
+                Assert.IsTrue(0.14 <= yMax && yMax  <= 0.22, string.Format("{0} not between 0.14 and 0.22", yMax));  // Not L10N
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(2, SkylineWindow.GraphPeakArea.CurveCount);
             });

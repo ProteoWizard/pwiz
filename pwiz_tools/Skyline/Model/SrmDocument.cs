@@ -418,7 +418,7 @@ namespace pwiz.Skyline.Model
             docClone.RevisionIndex = RevisionIndex + 1;
 
             // Make sure peptide standards lists are up to date
-            docClone.Settings = Settings.CachePeptideStandards(docClone.PeptideGroups);
+            docClone.Settings = Settings.CachePeptideStandards(Children, docClone.Children);
 
             // If this document has associated results, update the results
             // for any peptides that have changed.
@@ -1338,7 +1338,7 @@ namespace pwiz.Skyline.Model
             else
             {
                 // Make sure peptide standards lists are up to date
-                Settings = Settings.CachePeptideStandards(children);
+                Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));                
             }
