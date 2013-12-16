@@ -179,6 +179,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
                 Assert.IsNotNull(findResultsForm);
+// ReSharper disable once PossibleNullReferenceException
                 Assert.AreEqual(findResultsForm.ItemCount, 6);
                 for (int i = 0; i < 6; ++i)
                 {

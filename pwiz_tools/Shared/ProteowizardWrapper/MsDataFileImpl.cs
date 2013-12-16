@@ -400,7 +400,7 @@ namespace pwiz.ProteowizardWrapper
                     return false;
                 if (! precursors.All(prec=> prec.PrecursorMz.HasValue))
                     return false;
-                var precMzs = precursors.Select(p => p.PrecursorMz);
+                var precMzs = precursors.Select(p => p.PrecursorMz).ToList();
                 var currentPrecursorsMax = precMzs.Max();
                 var currentPrecursorsMin = precMzs.Min();
                 if (currentPrecursorsMin < prevMax)

@@ -164,7 +164,8 @@ namespace pwiz.Skyline.Model.Results
                               };
 
                 var sbOut = new StringBuilder();
-                var proc = Process.Start(psi);
+                var proc = new Process {StartInfo = psi};
+                proc.Start();
 
                 var reader = new ProcessStreamReader(proc);
                 string line;
@@ -260,7 +261,8 @@ namespace pwiz.Skyline.Model.Results
             };
 
             var sbOut = new StringBuilder();
-            var proc = Process.Start(psi);
+            var proc = new Process { StartInfo = psi };
+            proc.Start();
 
             var reader = new ProcessStreamReader(proc);
             string line;
@@ -338,7 +340,8 @@ namespace pwiz.Skyline.Model.Results
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
-            var proc = Process.Start(psi);
+            var proc = new Process { StartInfo = psi };
+            proc.Start();
 
             // CompassXport starts by calculating a hash of the input file.  This takes a long time, and there is
             // no intermediate output during this time.  So we set the progress bar some fraction of the way and

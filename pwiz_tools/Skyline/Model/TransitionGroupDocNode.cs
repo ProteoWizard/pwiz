@@ -941,7 +941,8 @@ namespace pwiz.Skyline.Model
                         iResultOld = -1;
                     else
                     {
-                        Debug.Assert(settingsOld != null && settingsOld.HasResults);
+                        Assume.IsNotNull(settingsOld);
+                        Assume.IsTrue(settingsOld.HasResults);
 
                         // If there is existing results information, and it was set
                         // by the user, then preserve it, and skip automatic peak picking
@@ -957,6 +958,7 @@ namespace pwiz.Skyline.Model
                                  // or not forcing a full recalc of all peaks, chromatograms have not
                                  // changed and the node has not otherwise changed yet.
                                  // (happens while loading results)
+// ReSharper disable once ConditionIsAlwaysTrueOrFalse
                                  (!diff.DiffResultsAll && settingsOld != null &&
                                   ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
                                   Equals(this, nodePrevious))))
