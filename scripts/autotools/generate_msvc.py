@@ -296,6 +296,8 @@ zlibPath = ""
 
 for line in buildlog_lines:
 	line = line.rstrip('\r\n')
+	if "]: " in line : # strip the timestamp if any
+		line = line.split("]: ")[1]
 	if dbug :
 		print line
 	if ("ProteoWizard " in line and "last committed" in line) :
@@ -311,10 +313,13 @@ for line in buildlog_lines:
 			addShipDir(ipath)
 			if "libraries\\zlib" in line :
 				zlibPath = ipath
-		if ((".cpp" in line or ".cxx" in line) and ac.isWelcomeSrcDir(line) and ac.isNotForbidden(line)) :
-			file = absname(line.replace('"',''))
-			if ac.isSrcFile(file) or ac.isExampleFile(file):
-				addFile(file)
+		if (".cpp" in line or ".cxx" in line) :
+			if ("-F" in line) : # strip inlined compiler args if any
+				line = line.split("-F")[0].strip()
+			if (ac.isWelcomeSrcDir(line) and ac.isNotForbidden(line)) :
+				file = absname(line.replace('"',''))
+				if ac.isSrcFile(file) or ac.isExampleFile(file):
+					addFile(file)
 	elif ".test\\" in line and '.exe" ' in line and "2>&1" in line : # running a test
 		import shlex
 		test = shlex.split(line.partition(" > ")[0])
@@ -514,7 +519,13 @@ for shipdir in shipdirs :
 		break
 for d in ["pwiz_aux"] : # any others not mentioned?
 	addShipDir(ac.get_pwizroot()+"\\"+d,addTree=True)
+if (dbug) :
+	print 'processing directories:'
+	print shipdirs
+
 for shipdir in shipdirs :
+	if (dbug) :
+		print 'processing directory %s'%shipdir
 	for file in os.listdir(shipdir) :
 		f = shipdir+"\\"+file
 		ext = file.partition(".")[2]
