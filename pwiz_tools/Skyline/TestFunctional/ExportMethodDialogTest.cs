@@ -547,6 +547,7 @@ namespace pwiz.SkylineTestFunctional
             string brukerActualMeth = TestFilesDir.GetTestPath("brukermethodexport.m");
             string brukerExpectedMeth = TestFilesDir.GetTestPath("BrukerExpected.Method");
             string brukerTemplateMeth = TestFilesDir.GetTestPath("Bruker Template Scheduled Precursor List.m");
+            WaitForDocumentLoaded();
 
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
                     exportMethodDlg =>
@@ -571,6 +572,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mods_shortNameTest.sky")));
             string modsShortNameExpected = TestFilesDir.GetTestPath("ModShortName.csv");
             string modsShortNameActual = TestFilesDir.GetTestPath("ModShortName-Actual.csv");
+            WaitForDocumentLoaded();
+
             {
                 var exportMethodDlg =
                     ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));

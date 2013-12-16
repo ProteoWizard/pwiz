@@ -37,6 +37,19 @@ namespace SkylineTesterInstall
                 Console.WriteLine("SkylineTester.exe");
                 zipFile.AddFile("SkylineTester.exe");
 
+                var solutionDirectory = Environment.CurrentDirectory;
+                while (!File.Exists(Path.Combine(solutionDirectory, "Skyline.sln")))
+                {
+                    solutionDirectory = Path.GetDirectoryName(solutionDirectory);
+                    if (solutionDirectory == null)
+                        throw new ApplicationException("Can't find solution directory");
+                }
+
+                // Add .skytr files at top level of zip file.
+                var skytrDirectory = Path.Combine(solutionDirectory, @"SkylineTester\Run files");
+                foreach (var skytrFile in Directory.EnumerateFiles(skytrDirectory, "*.skytr"))
+                    AddFile(skytrFile, zipFile, ".");
+
                 // Add each subdirectory in the bin directory.
                 foreach (var directory in Directory.EnumerateDirectories("."))
                 {
@@ -58,13 +71,6 @@ namespace SkylineTesterInstall
                 }
 
                 // Add test zip files.
-                var solutionDirectory = Environment.CurrentDirectory;
-                while (!File.Exists(Path.Combine(solutionDirectory, "Skyline.sln")))
-                {
-                    solutionDirectory = Path.GetDirectoryName(solutionDirectory);
-                    if (solutionDirectory == null)
-                        throw new ApplicationException("Can't find solution directory");
-                }
                 var zipFilesList = new List<string>();
                 FindZipFiles(solutionDirectory, zipFilesList);
                 var zipFilesDirectory = Path.Combine(FilesDir, "TestZipFiles");

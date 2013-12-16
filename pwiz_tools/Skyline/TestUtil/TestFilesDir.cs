@@ -75,6 +75,10 @@ namespace pwiz.SkylineTestUtil
                 ? Path.Combine(directoryName, zipBaseName)
                 : zipBaseName;
             FullPath = TestContext.GetTestPath(directoryName);
+            if (Directory.Exists(FullPath))
+            {
+                Helpers.TryTwice(() => Directory.Delete(FullPath, true));
+            }
             // where to place persistent (usually large, expensive to extract) files if any>
             PersistentFiles = persistentFiles;
             PersistentFilesDir = Path.GetDirectoryName(relativePathZip);

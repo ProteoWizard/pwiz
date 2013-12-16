@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -158,6 +159,9 @@ namespace pwiz.SkylineTestA
             // 8. Verify that chosen peaks and q values are the same as those in mProphet paper: 
             // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information
             // TODO: Grab this data from the mProphet paper
+
+            // Release open streams
+            docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docContainer.Document, false);
         }
 
 

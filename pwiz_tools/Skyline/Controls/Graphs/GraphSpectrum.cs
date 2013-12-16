@@ -182,6 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
                 ZoomSpectrumToSettings();
+                _spectra = null;
                 UpdateUI();
             }
         }
