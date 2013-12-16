@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -38,7 +37,6 @@ namespace SkylineTester
         private static readonly string[] TUTORIAL_DLLS = { "TestTutorial.dll" };
         private Button[] _runButtons;
 
-        private Process _process;
         private List<string> _formsTestList;
         private readonly string _resultsDir;
         private readonly string _buildDir;
@@ -264,9 +262,9 @@ namespace SkylineTester
             Tabs.SelectTab(tabOutput);
             MemoryChartWindow.Start("TestRunnerMemory.log");
 
-            var architecture = Build32.Checked ? "x86" : "x64";
-            string testRunner = Path.Combine(_buildDir,
-                @"pwiz_tools\Skyline\bin\" + architecture + @"\Release\TestRunner.exe");
+            var testRunner = Path.Combine(
+                _buildDir, 
+                string.Format(@"pwiz_tools\Skyline\bin\{0}\Release\TestRunner.exe", Build32.Checked ? "x86" : "x64"));
             if (!File.Exists(testRunner))
                 testRunner = Path.Combine(_exeDir, "TestRunner.exe");
             commandShell.Add("{0} random=off results={1} log={2} {3} {4}",

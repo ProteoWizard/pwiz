@@ -49,7 +49,7 @@ namespace pwiz.SkylineTest.Results
             var listChromatograms = new List<ChromatogramSet>();
             const string path = @"AMultiplePeptidesSameMz\ljz_20131201k_Newvariant_standards_braf.mzML";
             listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
-                    new ChromatogramSet((Path.GetFileName(path) ?? "").Replace('.', '_'), new[] { path }));
+                    new ChromatogramSet(Path.GetFileName(path).Replace('.', '_'), new[] { path }));
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
             docContainer.AssertComplete();

@@ -31,10 +31,9 @@ namespace SkylineTester
                 return;
             Tabs.SelectTab(tabOutput);
 
-//            if (QualityBuildFirst.Checked)
-//                StartBuild();
-//            else
-//                StartQualityChecks();
+            if (QualityBuildFirst.Checked)
+                GenerateBuildCommands();
+            RunTestRunner("offscreen=on culture=en-US,fr-FR");
         }
     }
 }

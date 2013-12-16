@@ -21,7 +21,6 @@ using System.IO;
 using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 
 namespace pwiz.SkylineTestUtil
