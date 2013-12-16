@@ -333,8 +333,7 @@ namespace pwiz.Skyline.FileUI
             {
                 folderPath += folderPathSegments[i] + "/"; // Not L10N
             }
-            // Folder paths cannot have spaces
-            return Uri.EscapeUriString(folderPath);
+            return folderPath;
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -419,11 +418,17 @@ namespace pwiz.Skyline.FileUI
 
         private Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
         {
-            string relativeUri = "labkey/" + controller + "/" + (folderPath ?? string.Empty) +
+            string path = "labkey/" + controller + "/" + (folderPath ?? string.Empty) +
                 method + (isApi ? ".api" : ".view");
-            if (!string.IsNullOrEmpty(query))
-                relativeUri += "?" + query;
-            return new Uri(serverUri, relativeUri);
+
+            if(string.IsNullOrEmpty(query))
+            {
+                return new UriBuilder(serverUri.Scheme, serverUri.Host, serverUri.Port, path).Uri;  
+            }
+            else
+            {
+                return new UriBuilder(serverUri.Scheme, serverUri.Host, serverUri.Port, path, "?" + query).Uri;   
+            }
         }
 
         public JToken GetInfoForFolders(Server server)
@@ -459,8 +464,11 @@ namespace pwiz.Skyline.FileUI
 
                 // Upload Url minus the name of the zip file.
                 var baseUploadUri = new Uri(server.URI, webDavUrl);
-                var tmpUploadUri = new Uri(baseUploadUri, Uri.EscapeUriString(zipFileName) + ".part");
-                var uploadUri = new Uri(baseUploadUri, Uri.EscapeUriString(zipFileName));
+                // Use Uri.EscapeDataString instead of Uri.EscapleUriString.  
+                // The latter will not escape characters such as '+' or '#' 
+                var escapedZipFileName = Uri.EscapeDataString(zipFileName);
+                var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + ".part");
+                var uploadUri = new Uri(baseUploadUri, escapedZipFileName);
 
                 lock (this)
                 {
@@ -549,13 +557,14 @@ namespace pwiz.Skyline.FileUI
 
         private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader)
         {
-            var request = (HttpWebRequest) WebRequest.Create(sourceUri.ToString());
+            var request = (HttpWebRequest) WebRequest.Create(sourceUri);
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
             // Specify the method.
             request.Method = "MOVE";
 
-            // Destination URI.
-            request.Headers.Add("Destination", destUri.ToString());
+            // Destination URI.  
+            // NOTE: Do not use Uri.ToString since it does not return the escaped version.
+            request.Headers.Add("Destination", destUri.AbsoluteUri);
 
             // If a file already exists at the destination URI, it will not be overwritten.  
             // The server would return a 412 Precondition Failed status code.
