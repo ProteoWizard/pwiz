@@ -38,11 +38,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             int currentPeptide = 0;
             var status = new ProgressStatus(string.Empty);
 
-            // Exclude RT standard peptides
-            RetentionTimeRegression rtRegression = null;
-            if (document.Settings.PeptideSettings.Prediction.RetentionTime != null)
-                rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
-
             // Set up run ID dictionary
             var runEnumDict = new Dictionary<int, int>();
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
@@ -58,7 +53,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     if (nodePep.TransitionGroupCount == 0)
                         continue;
 
-                    if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
+                    // Exclude standard peptides
+                    if (nodePep.GlobalStandardType != null)
                         continue;
 
                     if (progressMonitor != null)

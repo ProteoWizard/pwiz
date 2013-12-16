@@ -562,15 +562,11 @@ namespace pwiz.Skyline.Model
 
         public static int CountDecoys(SrmDocument document)
         {
-            // Exclude RT standard peptides
-            RetentionTimeRegression rtRegression = null;
-            if (document.Settings.PeptideSettings.Prediction.RetentionTime != null)
-                rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
-
             int count = 0;
             foreach (var nodePep in document.Peptides)
             {
-                if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
+                // Exclude standard peptides
+                if (nodePep.GlobalStandardType != null)
                     continue;
 
                 count += PeakFeatureEnumerator.ComparableGroups(nodePep).Count();
@@ -581,11 +577,6 @@ namespace pwiz.Skyline.Model
         private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, bool multiCycle,
                                                       Func<SequenceMods, SequenceMods> genDecoySequence)
         {
-            // Exclude RT standard peptides
-            RetentionTimeRegression rtRegression = null;
-            if (document.Settings.PeptideSettings.Prediction.RetentionTime != null)
-                rtRegression = document.Settings.PeptideSettings.Prediction.RetentionTime;
-
             // Loop through the existing tree in random order creating decoys
             var decoyNodePepList = new List<PeptideDocNode>();
             var setDecoyKeys = new HashSet<PeptideModKey>();
@@ -597,7 +588,8 @@ namespace pwiz.Skyline.Model
                     if (numDecoys == 0)
                         break;
 
-                    if (rtRegression != null && rtRegression.IsStandardPeptide(nodePep))
+                    // Decoys should not be based on standard peptides
+                    if (nodePep.GlobalStandardType != null)
                         continue;
 
                     var seqMods = new SequenceMods(nodePep);
