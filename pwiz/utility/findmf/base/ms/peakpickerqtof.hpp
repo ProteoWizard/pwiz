@@ -22,7 +22,6 @@
 #ifndef PEAKPICKER_H
 #define PEAKPICKER_H
 
-#include <stdint.h>
 #include <boost/math/special_functions.hpp>
 #include "pwiz/utility/findmf/base/resample/convert2dense.hpp"
 #include "pwiz/utility/findmf/base/filter/filter.hpp"
@@ -35,6 +34,7 @@
 namespace ralab{
   namespace base{
     namespace ms{
+
 
       /// resamples spectrum, apply smoothing,
       /// determines zero crossings,

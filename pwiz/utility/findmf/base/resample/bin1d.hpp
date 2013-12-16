@@ -38,6 +38,7 @@ namespace ralab
     namespace resample
     {
       typedef boost::int32_t int32_t;
+      typedef boost::int64_t int64_t;
 
       //Class returns the index a value belongs too....
       struct Bin1D

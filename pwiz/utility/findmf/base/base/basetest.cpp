@@ -19,12 +19,14 @@
 // limitations under the License.
 //
 
+#include <boost/cstdint.hpp>
 
 #include "pwiz/utility/findmf/base/base/base.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 namespace {
   using namespace pwiz::util;
+	typedef boost::int32_t int32_t;
   // Tests that the Foo::Bar() method does Abc.
   void testseq() {
     std::vector<double> res;
