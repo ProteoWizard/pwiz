@@ -60,16 +60,15 @@ namespace SkylineTester
                 args.Append(pauseSeconds);
             }
 
-            RunTestRunner(args.ToString());
+            RunTestRunner(args.ToString(), DoneForms);
         }
 
-        private void ExitForms()
+        private void DoneForms(bool success)
         {
-            if (RegenerateCache.Checked)
-            {
+            if (success && RegenerateCache.Checked)
                 CreateFormsTree();
-                RegenerateCache.Checked = false;
-            }
+            RegenerateCache.Checked = false;
+            TestRunnerDone(success);
         }
 
         private void CreateFormsTree()

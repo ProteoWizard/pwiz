@@ -96,6 +96,5 @@ namespace SkylineTester
             if (Offscreen.Checked)
                 PauseTestsScreenShots.Checked = false;
         }
-
     }
 }

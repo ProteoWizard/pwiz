@@ -105,14 +105,14 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandShell.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MemoryChartWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MemoryChartWindow.Designer.cs">
       <DependentUpon>MemoryChartWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MyTextBox.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="MyTreeView.cs">
       <SubType>Component</SubType>

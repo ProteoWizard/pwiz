@@ -20,10 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -41,13 +41,12 @@ namespace SkylineTester
         private Process _process;
         private List<string> _formsTestList;
         private readonly string _resultsDir;
-        private string _buildDir;
+        private readonly string _buildDir;
         private readonly string _logFile;
-        private bool _appendToLog;
         private TabPage _runningTab;
         private string _subversion;
+        private string _devenv;
         private readonly string _exeDir;
-        private readonly string _rootDir;
         private readonly string _openFile;
 
         #region Create and load window
@@ -63,9 +62,10 @@ namespace SkylineTester
 
             string exeFile = Assembly.GetExecutingAssembly().Location;
             _exeDir = Path.GetDirectoryName(exeFile);
-            _rootDir = Path.GetDirectoryName(_exeDir) ?? "";
-            _resultsDir = Path.Combine(_rootDir, "SkylineTester Results");
-            _logFile = Path.Combine(_rootDir, "SkylineTester.log");
+            string rootDir = Path.GetDirectoryName(_exeDir) ?? "";
+            _buildDir = Path.Combine(rootDir, "Build");
+            _resultsDir = Path.Combine(rootDir, "SkylineTester Results");
+            _logFile = Path.Combine(rootDir, "SkylineTester.log");
             if (args.Length > 0)
                 _openFile = args[0];
         }
@@ -75,11 +75,17 @@ namespace SkylineTester
             if (!Program.IsRunning)
                 return; // design mode
 
-            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null, 
+            // Register file/exe/icon associations.
+            var checkRegistry = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTesterx\shell\open\command", null, null);
+            Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null,
                 Assembly.GetExecutingAssembly().Location + @" ""%1""");
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skyt", null, "SkylineTester");
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skytr", null, "SkylineTester");
             
+            // Refresh shell if association changed.
+            if (checkRegistry == null)
+                SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+
             _runButtons = new[]
             {
                 runForms, runTutorials, runTests, runBuild, runQuality
@@ -95,21 +101,26 @@ namespace SkylineTester
                     _subversion = null;
             }
 
+            // Find Visual Studio, if available.
+            _devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
+            if (!File.Exists(_devenv))
+            {
+                _devenv = null;
+                StartSln.Enabled = false;
+                QualityBuildFirst.Enabled = false;
+                QualityCurrentBuild.Checked = true;
+            }
+
             linkLogFile.Text = _logFile;
+            commandShell.StopButton = buttonStop;
 
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync();
-
-            textBoxLog.HScroll += TextBoxLogOnScroll;
-            textBoxLog.VScroll += TextBoxLogOnScroll;
         }
 
-        private bool _logWasScrolled;
-        private void TextBoxLogOnScroll(object sender, EventArgs eventArgs)
-        {
-            _logWasScrolled = true;
-        }
+        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
         {
@@ -214,23 +225,8 @@ namespace SkylineTester
         protected override void OnClosed(EventArgs e)
         {
             _runningTab = null;
-            KillTestProcess();
+            commandShell.Stop();
             base.OnClosed(e);
-        }
-
-        private void KillTestProcess()
-        {
-            try
-            {
-                if (_process != null && !_process.HasExited)
-                    ProcessUtilities.KillProcessTree(_process); 
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
-            {
-            }
-
-            _process = null;
         }
 
         private bool ToggleRunButtons(TabPage tab)
@@ -242,15 +238,11 @@ namespace SkylineTester
 
                 foreach (var runButton in _runButtons)
                     runButton.Text = "Run";
-                buttonStopLog.Enabled = false;
+                buttonStop.Enabled = false;
 
                 if (tab != null)
-                {
-                    KillTestProcess();
-                    LogComment("# Stopped.");
-                }
+                    commandShell.Stop();
 
-                FinishLog();
                 return false;
             }
 
@@ -258,214 +250,43 @@ namespace SkylineTester
             _runningTab = tab;
             foreach (var runButton in _runButtons)
                 runButton.Text = "Stop";
-            buttonStopLog.Enabled = true;
-
-            // Clear log.
-            textBoxLog.Text = null;
-            if (File.Exists(_logFile))
-                File.Delete(_logFile);
+            buttonStop.Enabled = true;
 
             return true;
         }
 
-        private void RunTestRunner(string args)
+        private Action<bool> _doneAction;
+
+        private void RunTestRunner(string args, Action<bool> doneAction = null)
         {
+            _doneAction = doneAction;
+
             Tabs.SelectTab(tabOutput);
             MemoryChartWindow.Start("TestRunnerMemory.log");
-            _appendToLog = false;
 
-            var testRunnerArgs = new StringBuilder("random=off results=\"");
-            testRunnerArgs.Append(_resultsDir);
-            testRunnerArgs.Append("\" ");
-            testRunnerArgs.Append("log=\"");
-            testRunnerArgs.Append(_logFile);
-            testRunnerArgs.Append("\" ");
-            if (RunWithDebugger.Checked)
-                testRunnerArgs.Append("Debug ");
-            testRunnerArgs.Append(args);
+            var architecture = Build32.Checked ? "x86" : "x64";
+            string testRunner = Path.Combine(_buildDir,
+                @"pwiz_tools\Skyline\bin\" + architecture + @"\Release\TestRunner.exe");
+            if (!File.Exists(testRunner))
+                testRunner = Path.Combine(_exeDir, "TestRunner.exe");
+            commandShell.Add("{0} random=off results={1} log={2} {3} {4}",
+                Quote(testRunner),
+                Quote(_resultsDir),
+                Quote(_logFile),
+                RunWithDebugger.Checked ? "Debug" : "",
+                args);
 
-            StartProcess(
-                "TestRunner.exe",
-                testRunnerArgs.ToString(),
-                _exeDir);
+            commandShell.LogFile = null;
+            commandShell.Run(TestRunnerDone);
         }
 
-        private readonly StringBuilder _logBuffer = new StringBuilder();
-
-        private void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
+        private void TestRunnerDone(bool success)
         {
-            if (_runningTab != null)
-                AddLine(e.Data);
+            ToggleRunButtons(null);
+            if (_doneAction != null)
+                _doneAction(success);
         }
 
-        private void AddLine(string line)
-        {
-            lock (_logBuffer)
-            {
-                _logBuffer.Append(line);
-                _logBuffer.Append(Environment.NewLine);
-            }
-        }
-
-        private void UpdateLog(object sender, EventArgs eventArgs)
-        {
-            if (_logWasScrolled)
-            {
-                _logWasScrolled = false;
-                return;
-            }
-
-            string logLines;
-            lock (_logBuffer)
-            {
-                if (_logBuffer.Length == 0)
-                    return;
-                logLines = _logBuffer.ToString();
-                _logBuffer.Clear();
-            }
-
-            Log(logLines);
-        }
-
-        private void Log(string text)
-        {
-            if (_appendToLog)
-                File.AppendAllText(_logFile, text);
-
-            // Scroll if text box is already scrolled to bottom.
-            int previousLength = textBoxLog.TextLength;
-            var point = textBoxLog.GetPositionFromCharIndex(previousLength-1);
-            bool autoScroll = (textBoxLog.ClientRectangle.Bottom >= point.Y);
-
-            buttonStopLog.Focus(); // text box scrolls if it has focus!
-            textBoxLog.AppendText(text);
-
-            if (autoScroll)
-            {
-                textBoxLog.Select(textBoxLog.Text.Length - 1, 0);
-                textBoxLog.ScrollToCaret();
-            }
-
-            textBoxLog.DoPaint = false;
-            ColorText(previousLength, "\n#", Color.DarkGreen);
-            if (_runningTab == tabBuild)
-            {
-                ColorText(previousLength, "\n...skipped", Color.Orange);
-                ColorText(previousLength, "\n...failed", Color.Red);
-            }
-            textBoxLog.DoPaint = true;
-        }
-
-        private void ColorText(int previousLength, string text, Color color)
-        {
-            while (true)
-            {
-                int startIndex = textBoxLog.Text.IndexOf(text, previousLength, StringComparison.InvariantCulture);
-                if (startIndex < 0)
-                    return;
-                int endIndex = textBoxLog.Text.IndexOf('\n', startIndex + 1);
-                if (endIndex < 0)
-                    return;
-                textBoxLog.Select(startIndex, endIndex - startIndex);
-                textBoxLog.SelectionColor = color;
-                previousLength = endIndex;
-            }
-        }
-
-        private void LogComment(string text)
-        {
-            AddLine(Environment.NewLine + text);
-        }
-
-        private Process CreateProcess(string fileName, string workingDirectory = null)
-        {
-            var process = new Process
-            {
-                StartInfo =
-                {
-                    FileName = fileName,
-                    UseShellExecute = false,
-                },
-                EnableRaisingEvents = true
-            };
-
-            if (!RunWithDebugger.Checked)
-            {
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-            }
-
-            if (workingDirectory != null)
-                process.StartInfo.WorkingDirectory = workingDirectory;
-
-            return process;
-        }
-
-        private void StartProcess(
-            string exe, 
-            string arguments, 
-            string workingDirectory,
-            EventHandler processExitHandler = null,
-            bool appendToLog = false)
-        {
-            _process = CreateProcess(exe, workingDirectory);
-            _process.StartInfo.Arguments = arguments;
-            if (!RunWithDebugger.Checked)
-            {
-                _process.OutputDataReceived += ProcessOutputDataReceived;
-                _process.ErrorDataReceived += ProcessOutputDataReceived;
-            }
-            _process.Exited += processExitHandler ?? ProcessExit;
-            _process.Start();
-            if (!RunWithDebugger.Checked)
-            {
-                _process.BeginOutputReadLine();
-                _process.BeginErrorReadLine();
-            }
-
-            _outputTimer = new Timer {Interval = 500};
-            _outputTimer.Tick += UpdateLog;
-            _outputTimer.Start();
-        }
-
-        private Timer _outputTimer;
-
-        void ProcessExit(object sender, EventArgs e)
-        {
-            if (_runningTab == null)
-                return;
-
-            try
-            {
-                Invoke(new Action(() =>
-                {
-                    if (_runningTab == tabForms)
-                        ExitForms();
-                    ToggleRunButtons(null);
-                    FinishLog();
-                    _process = null;
-                }));
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
-            {
-            }
-        }
-
-        private void FinishLog()
-        {
-            if (_outputTimer != null)
-            {
-                _outputTimer.Stop();
-                _outputTimer = null;
-            }
-
-            // Show final log output.
-            _logWasScrolled = false;
-            UpdateLog(null, null);
-        }
 
         private void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)
         {
@@ -547,6 +368,11 @@ namespace SkylineTester
                 if (treeView != null)
                     CheckNodes(treeView, element.Value.Split(','));
             }
+
+            if (_devenv == null)
+            {
+                QualityCurrentBuild.Checked = true;
+            }
         }
 
         private static void CheckNodes(TreeView treeView, ICollection<string> checkedNames)
@@ -615,6 +441,8 @@ namespace SkylineTester
                 BuildTrunk,
                 BuildBranch,
                 BranchUrl,
+                BuildClean,
+                StartSln,
 
                 // Quality
                 QualityStartNow,

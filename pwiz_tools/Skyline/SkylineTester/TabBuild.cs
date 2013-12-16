@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -26,125 +25,98 @@ namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private bool HasBuildPrerequisites
+        {
+            get
+            {
+                if (_subversion == null)
+                {
+                    MessageBox.Show(
+                        "Subversion is required to build Skyline.  You can install it from http://sourceforge.net/projects/win32svn/");
+                    return false;
+                }
+
+                if (_devenv == null)
+                {
+                    MessageBox.Show("Visual Studio 10.0 is required to build Skyline.");
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         private void RunBuild(object sender, EventArgs e)
         {
-            if (_subversion == null)
-            {
-                // TODO: Offer to install for the user.
-                MessageBox.Show("Must install Subversion");
-                return;
-            }
-
-            if (!ToggleRunButtons(tabBuild))
+            if (!HasBuildPrerequisites || !ToggleRunButtons(tabBuild))
                 return;
 
+            _runningTab = tabBuild;
             Tabs.SelectTab(tabOutput);
 
-            _buildDir = Path.Combine(_rootDir, "Build");
-            _appendToLog = true;
+            GenerateBuildCommands();
+            commandShell.LogFile = _logFile;
+            commandShell.Run(BuildDone);
+        }
 
-            if (!Directory.Exists(_buildDir))
-            {
-                CleanupDone(null, null);
-                return;
-            }
+        private void BuildDone(bool success)
+        {
+            ToggleRunButtons(null);
 
-            if (BuildClean.Checked)
+            if (success && StartSln.Checked && _devenv != null)
             {
-                LogComment("# Deleting old Skyline build directory...");
-                var deleteTask = new BackgroundWorker();
-                deleteTask.DoWork += (o, args) =>
+                var slnDirectory = Path.Combine(_buildDir, @"pwiz_tools\Skyline");
+                var process = new Process
                 {
-                    try
+                    StartInfo =
                     {
-                        Directory.Delete(_buildDir, true);
+                        FileName = Path.Combine(slnDirectory, "Skyline.sln"),
+                        WorkingDirectory = slnDirectory,
+                        UseShellExecute = true,
                     }
-                    catch (Exception)
-                    {
-                        MessageBox.Show("Can't delete " + _buildDir);
-                        ProcessExit(null, null);
-                        return;
-                    }
-                    CleanupDone(null, null);
                 };
-                deleteTask.RunWorkerAsync();
-            }
-            else
-            {
-                LogComment("# Cleaning Skyline build directory...");
-                StartProcess(
-                    _subversion,
-                    "cleanup " + _buildDir,
-                    null,
-                    CleanupDone,
-                    true);
+                process.Start();
             }
         }
 
-        private void CleanupDone(object sender, EventArgs e)
+        private void GenerateBuildCommands()
         {
-            if (_runningTab == null)
-                return;
+            commandShell.Add("# Build Skyline {0}-bit...", Build32.Checked ? 32 : 64);
 
-            Invoke(new Action(() =>
+            if (Directory.Exists(_buildDir))
             {
-                LogComment("# Checking out Skyline source files...");
-                var branch = BuildTrunk.Checked
-                    ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
-                    : BranchUrl.Text;
-                StartProcess(
-                    _subversion,
-                    string.Format("checkout {0} {1}", branch, _buildDir),
-                    null,
-                    CheckoutDone,
-                    true);
-            }));
-        }
-
-        private void CheckoutDone(object sender, EventArgs e)
-        {
-            if (_runningTab == null)
-                return;
-
-            Invoke(new Action(() =>
-            {
-                LogComment("# Building Skyline...");
-                var architecture = Build32.Checked ? 32 : 64;
-                StartProcess(
-                    Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat"),
-                    architecture + @" --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
-                    _buildDir,
-                    BuildDone,
-                    true);
-            }));
-        }
-
-        private void BuildDone(object sender, EventArgs e)
-        {
-            if (_runningTab == null)
-                return;
-
-            Invoke(new Action(() =>
-            {
-                LogComment("# Build done.");
-
-                ProcessExit(sender, e);
-
-                if (StartSln.Checked)
+                if (BuildClean.Checked)
                 {
-                    var slnDirectory = Path.Combine(_buildDir, @"pwiz_tools\Skyline");
-                    var process = new Process
-                    {
-                        StartInfo =
-                        {
-                            FileName = Path.Combine(slnDirectory, "Skyline.sln"),
-                            WorkingDirectory = slnDirectory,
-                            UseShellExecute = true,
-                        }
-                    };
-                    process.Start();
+                    commandShell.Add("# Deleting old Skyline build directory...");
+                    commandShell.Add("rmdir /s {0}", Quote(_buildDir));
                 }
-            }));
+                else
+                {
+                    commandShell.Add("# Cleaning Skyline build directory...");
+                    commandShell.Add("{0} cleanup {1}", Quote(_subversion), Quote(_buildDir));
+                }
+            }
+
+            commandShell.Add("# Checking out Skyline source files...");
+            commandShell.Add("{0} checkout {1} {2}", 
+                Quote(_subversion),
+                Quote(BuildTrunk.Checked
+                    ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
+                    : BranchUrl.Text),
+                Quote(_buildDir));
+
+            commandShell.Add("# Building Skyline...");
+            commandShell.Add("cd {0}", Quote(_buildDir));
+            commandShell.Add("{0} {1} --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
+                Quote(Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat")),
+                Build32.Checked ? 32 : 64);
+
+            commandShell.Add("# Build done.");
+        }
+
+        private string Quote(string s)
+        {
+            return "\"" + s + "\"";
         }
     }
 }

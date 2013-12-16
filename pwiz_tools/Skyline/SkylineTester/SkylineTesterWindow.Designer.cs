@@ -72,6 +72,9 @@
             this.button3 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.tabBuild = new System.Windows.Forms.TabPage();
+            this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.BuildClean = new System.Windows.Forms.CheckBox();
+            this.StartSln = new System.Windows.Forms.CheckBox();
             this.runBuild = new System.Windows.Forms.Button();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.BuildBranch = new System.Windows.Forms.RadioButton();
@@ -96,8 +99,8 @@
             this.QualityBuildFirst = new System.Windows.Forms.RadioButton();
             this.QualityCurrentBuild = new System.Windows.Forms.RadioButton();
             this.tabOutput = new System.Windows.Forms.TabPage();
-            this.buttonStopLog = new System.Windows.Forms.Button();
-            this.textBoxLog = new SkylineTester.MyTextBox();
+            this.buttonStop = new System.Windows.Forms.Button();
+            this.commandShell = new SkylineTester.CommandShell();
             this.linkLogFile = new System.Windows.Forms.LinkLabel();
             this.label7 = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -115,9 +118,6 @@
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.groupBox10 = new System.Windows.Forms.GroupBox();
-            this.StartSln = new System.Windows.Forms.CheckBox();
-            this.BuildClean = new System.Windows.Forms.CheckBox();
             this.mainPanel.SuspendLayout();
             this.Tabs.SuspendLayout();
             this.tabForms.SuspendLayout();
@@ -133,6 +133,7 @@
             this.iterationsGroup.SuspendLayout();
             this.testsGroup.SuspendLayout();
             this.tabBuild.SuspendLayout();
+            this.groupBox10.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.tabQuality.SuspendLayout();
@@ -141,7 +142,6 @@
             this.groupBox7.SuspendLayout();
             this.tabOutput.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            this.groupBox10.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -697,6 +697,43 @@
             this.tabBuild.TabIndex = 3;
             this.tabBuild.Text = "Build";
             // 
+            // groupBox10
+            // 
+            this.groupBox10.Controls.Add(this.BuildClean);
+            this.groupBox10.Controls.Add(this.StartSln);
+            this.groupBox10.Location = new System.Drawing.Point(9, 230);
+            this.groupBox10.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox10.Name = "groupBox10";
+            this.groupBox10.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox10.Size = new System.Drawing.Size(589, 86);
+            this.groupBox10.TabIndex = 24;
+            this.groupBox10.TabStop = false;
+            this.groupBox10.Text = "Options";
+            // 
+            // BuildClean
+            // 
+            this.BuildClean.AutoSize = true;
+            this.BuildClean.Checked = true;
+            this.BuildClean.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.BuildClean.Location = new System.Drawing.Point(9, 22);
+            this.BuildClean.Name = "BuildClean";
+            this.BuildClean.Size = new System.Drawing.Size(100, 21);
+            this.BuildClean.TabIndex = 25;
+            this.BuildClean.Text = "Clean build";
+            this.BuildClean.UseVisualStyleBackColor = true;
+            // 
+            // StartSln
+            // 
+            this.StartSln.AutoSize = true;
+            this.StartSln.Checked = true;
+            this.StartSln.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.StartSln.Location = new System.Drawing.Point(9, 49);
+            this.StartSln.Name = "StartSln";
+            this.StartSln.Size = new System.Drawing.Size(282, 21);
+            this.StartSln.TabIndex = 24;
+            this.StartSln.Text = "Open Skyline in Visual Studio after build";
+            this.StartSln.UseVisualStyleBackColor = true;
+            // 
             // runBuild
             // 
             this.runBuild.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -974,8 +1011,8 @@
             // tabOutput
             // 
             this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(190)))), ((int)(((byte)(210)))));
-            this.tabOutput.Controls.Add(this.buttonStopLog);
-            this.tabOutput.Controls.Add(this.textBoxLog);
+            this.tabOutput.Controls.Add(this.buttonStop);
+            this.tabOutput.Controls.Add(this.commandShell);
             this.tabOutput.Controls.Add(this.linkLogFile);
             this.tabOutput.Controls.Add(this.label7);
             this.tabOutput.Location = new System.Drawing.Point(4, 31);
@@ -986,32 +1023,35 @@
             this.tabOutput.TabIndex = 5;
             this.tabOutput.Text = "Output";
             // 
-            // buttonStopLog
+            // buttonStop
             // 
-            this.buttonStopLog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStopLog.Enabled = false;
-            this.buttonStopLog.Location = new System.Drawing.Point(619, 476);
-            this.buttonStopLog.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonStopLog.Name = "buttonStopLog";
-            this.buttonStopLog.Size = new System.Drawing.Size(100, 28);
-            this.buttonStopLog.TabIndex = 27;
-            this.buttonStopLog.Text = "Stop";
-            this.buttonStopLog.UseVisualStyleBackColor = true;
-            this.buttonStopLog.Click += new System.EventHandler(this.Stop);
+            this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonStop.Enabled = false;
+            this.buttonStop.Location = new System.Drawing.Point(619, 476);
+            this.buttonStop.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonStop.Name = "buttonStop";
+            this.buttonStop.Size = new System.Drawing.Size(100, 28);
+            this.buttonStop.TabIndex = 27;
+            this.buttonStop.Text = "Stop";
+            this.buttonStop.UseVisualStyleBackColor = true;
+            this.buttonStop.Click += new System.EventHandler(this.Stop);
             // 
-            // textBoxLog
+            // commandShell
             // 
-            this.textBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.commandShell.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxLog.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxLog.Location = new System.Drawing.Point(17, 34);
-            this.textBoxLog.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.textBoxLog.Name = "textBoxLog";
-            this.textBoxLog.Size = new System.Drawing.Size(701, 435);
-            this.textBoxLog.TabIndex = 2;
-            this.textBoxLog.Text = "";
-            this.textBoxLog.WordWrap = false;
+            this.commandShell.DefaultDirectory = null;
+            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.commandShell.Location = new System.Drawing.Point(17, 34);
+            this.commandShell.LogFile = null;
+            this.commandShell.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.commandShell.Name = "commandShell";
+            this.commandShell.Size = new System.Drawing.Size(701, 435);
+            this.commandShell.StopButton = null;
+            this.commandShell.TabIndex = 2;
+            this.commandShell.Text = "";
+            this.commandShell.WordWrap = false;
             // 
             // linkLogFile
             // 
@@ -1164,43 +1204,6 @@
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // groupBox10
-            // 
-            this.groupBox10.Controls.Add(this.BuildClean);
-            this.groupBox10.Controls.Add(this.StartSln);
-            this.groupBox10.Location = new System.Drawing.Point(9, 230);
-            this.groupBox10.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox10.Size = new System.Drawing.Size(589, 86);
-            this.groupBox10.TabIndex = 24;
-            this.groupBox10.TabStop = false;
-            this.groupBox10.Text = "Options";
-            // 
-            // StartSln
-            // 
-            this.StartSln.AutoSize = true;
-            this.StartSln.Checked = true;
-            this.StartSln.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.StartSln.Location = new System.Drawing.Point(9, 49);
-            this.StartSln.Name = "StartSln";
-            this.StartSln.Size = new System.Drawing.Size(282, 21);
-            this.StartSln.TabIndex = 24;
-            this.StartSln.Text = "Open Skyline in Visual Studio after build";
-            this.StartSln.UseVisualStyleBackColor = true;
-            // 
-            // BuildClean
-            // 
-            this.BuildClean.AutoSize = true;
-            this.BuildClean.Checked = true;
-            this.BuildClean.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.BuildClean.Location = new System.Drawing.Point(9, 22);
-            this.BuildClean.Name = "BuildClean";
-            this.BuildClean.Size = new System.Drawing.Size(100, 21);
-            this.BuildClean.TabIndex = 25;
-            this.BuildClean.Text = "Clean build";
-            this.BuildClean.UseVisualStyleBackColor = true;
-            // 
             // SkylineTesterWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -1240,6 +1243,8 @@
             this.testsGroup.ResumeLayout(false);
             this.testsGroup.PerformLayout();
             this.tabBuild.ResumeLayout(false);
+            this.groupBox10.ResumeLayout(false);
+            this.groupBox10.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.groupBox5.ResumeLayout(false);
@@ -1255,8 +1260,6 @@
             this.tabOutput.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.groupBox10.ResumeLayout(false);
-            this.groupBox10.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1340,8 +1343,8 @@
         private System.Windows.Forms.RadioButton QualityBuildFirst;
         private System.Windows.Forms.RadioButton QualityCurrentBuild;
         private System.Windows.Forms.TabPage tabOutput;
-        private System.Windows.Forms.Button buttonStopLog;
-        private MyTextBox textBoxLog;
+        private System.Windows.Forms.Button buttonStop;
+        private CommandShell commandShell;
         private System.Windows.Forms.LinkLabel linkLogFile;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.RadioButton Build64;

@@ -24,9 +24,17 @@ namespace SkylineTester
     {
         private void RunQuality(object sender, EventArgs e)
         {
+            if (QualityBuildFirst.Checked && !HasBuildPrerequisites)
+                return;
+
             if (!ToggleRunButtons(tabQuality))
                 return;
             Tabs.SelectTab(tabOutput);
+
+//            if (QualityBuildFirst.Checked)
+//                StartBuild();
+//            else
+//                StartQualityChecks();
         }
     }
 }
