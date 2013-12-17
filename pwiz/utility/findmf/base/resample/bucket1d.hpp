@@ -24,10 +24,11 @@
 #define BUCKET1D_H
 
 #include <vector>
-#include "pwiz/utility/findmf/base/resample/bin1d.hpp"
-#include <stdint.h>
 #include <stdexcept>
 #include <boost/cstdint.hpp>
+
+#include "pwiz/utility/findmf/base/resample/bin1d.hpp"
+
 
 namespace ralab{
   namespace base{
