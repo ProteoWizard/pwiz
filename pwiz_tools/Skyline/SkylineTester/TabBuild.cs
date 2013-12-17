@@ -60,7 +60,6 @@ namespace SkylineTester
             Tabs.SelectTab(tabOutput);
 
             GenerateBuildCommands();
-            commandShell.LogFile = _logFile;
             commandShell.Run(BuildDone);
         }
 

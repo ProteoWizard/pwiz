@@ -38,9 +38,10 @@ namespace SkylineTester
         private Button[] _runButtons;
 
         private List<string> _formsTestList;
+        private readonly string _rootDir;
         private readonly string _resultsDir;
         private readonly string _buildDir;
-        private readonly string _logFile;
+        private string _logFile;
         private TabPage _runningTab;
         private string _subversion;
         private string _devenv;
@@ -60,10 +61,9 @@ namespace SkylineTester
 
             string exeFile = Assembly.GetExecutingAssembly().Location;
             _exeDir = Path.GetDirectoryName(exeFile);
-            string rootDir = Path.GetDirectoryName(_exeDir) ?? "";
-            _buildDir = Path.Combine(rootDir, "Build");
-            _resultsDir = Path.Combine(rootDir, "SkylineTester Results");
-            _logFile = Path.Combine(rootDir, "SkylineTester.log");
+            _rootDir = Path.GetDirectoryName(_exeDir) ?? "";
+            _buildDir = Path.Combine(_rootDir, "Build");
+            _resultsDir = Path.Combine(_rootDir, "SkylineTester Results");
             if (args.Length > 0)
                 _openFile = args[0];
         }
@@ -109,7 +109,6 @@ namespace SkylineTester
                 QualityCurrentBuild.Checked = true;
             }
 
-            linkLogFile.Text = _logFile;
             commandShell.StopButton = buttonStop;
 
             var loader = new BackgroundWorker();
@@ -255,12 +254,8 @@ namespace SkylineTester
             return true;
         }
 
-        private Action<bool> _doneAction;
-
         private void StartTestRunner(string args, Action<bool> doneAction = null)
         {
-            _doneAction = doneAction;
-
             Tabs.SelectTab(tabOutput);
             MemoryChartWindow.Start("TestRunnerMemory.log");
 
@@ -272,15 +267,13 @@ namespace SkylineTester
             _stopTestRunner = Path.Combine(Path.GetDirectoryName(testRunner) ?? "", "StopTestRunner.txt");
             if (File.Exists(_stopTestRunner))
                 File.Delete(_stopTestRunner);
-            commandShell.Add("{0} random=off results={1} log={2} {3} {4}",
+            commandShell.Add("{0} random=off results={1} {2} {3}",
                 Quote(testRunner),
                 Quote(_resultsDir),
-                Quote(_logFile),
                 RunWithDebugger.Checked ? "Debug" : "",
                 args);
 
-            commandShell.LogFile = null;
-            commandShell.Run(TestRunnerDone);
+            commandShell.Run(doneAction ?? TestRunnerDone);
         }
 
         private string _stopTestRunner;
@@ -528,6 +521,14 @@ namespace SkylineTester
         private void exit_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void TabChanged(object sender, EventArgs e)
+        {
+            if (Tabs.SelectedTab == tabQuality)
+                OpenQuality();
+            else if (Tabs.SelectedTab == tabOutput)
+                OpenOutput();
         }
     }
 }

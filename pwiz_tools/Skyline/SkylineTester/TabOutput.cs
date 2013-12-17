@@ -25,6 +25,14 @@ namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private void OpenOutput()
+        {
+            if (_logFile == null)
+                _logFile = Path.Combine(_rootDir, "SkylineTester.log");
+            linkLogFile.Text = _logFile;
+            commandShell.LogFile = _logFile;
+        }
+
         private void Stop(object sender, EventArgs e)
         {
             Run(_runningTab);

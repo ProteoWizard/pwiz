@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -92,7 +91,7 @@ namespace TestRunner
             var skylineDirectory = GetSkylineDirectory();
 
             // Get current SVN revision info.
-            var startDate = DateTime.Now.ToShortDateString();
+            var startDate = DateTime.Now;
             int revision = 0;
             try
             {
@@ -131,7 +130,7 @@ namespace TestRunner
             var log = new StreamWriter(logStream);
 
             int elapsedMinutes = 0;
-            int testCount = 0;
+            int testsRun = 0;
             try
             {
                 // Load list of tests.
@@ -167,8 +166,7 @@ namespace TestRunner
                     }
                 }
 
-                testCount = testList.Count;
-                if (testCount == 0)
+                if (testList.Count == 0)
                 {
                     Console.WriteLine("No tests found");
                     return;
@@ -195,7 +193,7 @@ namespace TestRunner
                     var stopwatch = new Stopwatch();
                     stopwatch.Start();
 
-                    RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
+                    testsRun = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
 
                     stopwatch.Stop();
                     elapsedMinutes = (int) (stopwatch.ElapsedMilliseconds/1000/60);
@@ -227,45 +225,24 @@ namespace TestRunner
 
             if (commandLineArgs.HasArg("summary"))
             {
-                var summaryFile = commandLineArgs.ArgAsString("summary");
-                var sb = new StringBuilder();
-                if (!File.Exists(summaryFile))
-                    sb.AppendLine("Date,Revision,Run time (minutes),Number of tests,Number of failures,Managed memory,Unmanaged memory");
-
                 const double mb = 1024 * 1024;
-                var managedMemory = (int) Math.Round(GC.GetTotalMemory(true) / mb);
-                var totalMemory = (int) Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / mb);
+                var managedMemory = (int)Math.Round(GC.GetTotalMemory(true) / mb);
+                var totalMemory = (int)Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / mb);
 
-                sb.Append(startDate);
-                sb.Append(",");
-                sb.Append(revision);
-                sb.Append(",");
-                sb.Append(elapsedMinutes);
-                sb.Append(",");
-                sb.Append(testCount);
-                sb.Append(",");
-                sb.Append(_failureCount);
-                sb.Append(",");
-                sb.Append(managedMemory);
-                sb.Append(",");
-                sb.Append(totalMemory);
-                sb.AppendLine();
-
-                var originalSummaryFile = summaryFile;
-                for (int i = 1; i < 1000; i++)
+                var summaryFile = commandLineArgs.ArgAsString("summary");
+                var summary = new Summary();
+                summary.Load(summaryFile);
+                summary.Runs.Add(new Summary.Run
                 {
-                    try
-                    {
-                        File.AppendAllText(summaryFile, sb.ToString());
-                        break;
-                    }
-// ReSharper disable EmptyGeneralCatchClause
-                    catch
-// ReSharper restore EmptyGeneralCatchClause
-                    {
-                    }
-                    summaryFile = Path.GetFileNameWithoutExtension(originalSummaryFile) + "-" + i + Path.GetExtension(originalSummaryFile);
-                }
+                    Date = startDate,
+                    Revision = revision,
+                    RunMinutes = elapsedMinutes,
+                    TestsRun = testsRun,
+                    Failures = _failureCount,
+                    ManagedMemory = managedMemory,
+                    TotalMemory = totalMemory
+                });
+                summary.Save(summaryFile);
             }
 
             // If the forms/tests cache was regenerated, copy it to Skyline directory.
@@ -290,7 +267,7 @@ namespace TestRunner
         }
 
         // Run all test passes.
-        private static void RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
+        private static int RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
         {
             bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
@@ -333,6 +310,7 @@ namespace TestRunner
             var formLookup = new FormLookup();
 
             // Run all test passes.
+            int testsRun = 0;
             for (var pass = 1; pass <= loopCount || loopCount == 0; pass++)
             {
                 runTests.Culture = new CultureInfo(cultures[(pass-1) % cultures.Length]);
@@ -347,6 +325,7 @@ namespace TestRunner
                     for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                     {
                         runTests.Run(test, pass, testNumber);
+                        testsRun++;
                         if (File.Exists(stopTestRunner))
                             break;
                     }
@@ -367,6 +346,7 @@ namespace TestRunner
             }
 
             _failureCount = runTests.FailureCount;
+            return testsRun;
         }
 
         // Load list of tests to be run into TestList.

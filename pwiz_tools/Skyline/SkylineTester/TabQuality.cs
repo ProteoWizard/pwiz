@@ -17,14 +17,29 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using System.Windows.Forms;
+using TestRunnerLib;
 
 namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private const string QualityLogsDirectory = "Quality logs";
+        private const string SummaryLog = "Summary.log";
+
         private Timer _startTimer;
         private Timer _endTimer;
+
+        private void OpenQuality()
+        {
+            var summaryLog = Path.Combine(_rootDir, QualityLogsDirectory, SummaryLog);
+            if (!File.Exists(summaryLog))
+                return;
+
+            var summary = new Summary();
+            summary.Load(summaryLog);
+        }
 
         private void RunQuality(object sender, EventArgs e)
         {
@@ -51,6 +66,7 @@ namespace SkylineTester
                 return;
             }
 
+            _logFile = "";
             Tabs.SelectTab(tabOutput);
             commandShell.ClearLog();
 
@@ -110,12 +126,23 @@ namespace SkylineTester
 
         private void StartQuality()
         {
+            var qualityDirectory = Path.Combine(_rootDir, QualityLogsDirectory);
+            if (!Directory.Exists(qualityDirectory))
+                Directory.CreateDirectory(qualityDirectory);
+            var summaryLog = Path.Combine(qualityDirectory, SummaryLog);
+            var now = DateTime.Now;
+            _logFile = Path.Combine(
+                qualityDirectory,
+                string.Format("{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}.log", 
+                    now.Year, now.Month, now.Day, now.Hour, now.Minute));
+            OpenOutput();
+
             if (QualityBuildFirst.Checked)
                 GenerateBuildCommands();
 
             StartTestRunner(
-                "offscreen=on culture=en-US,fr-FR" +
-                (QualityChooseTests.Checked ? GetTestList() : ""),
+                string.Format("offscreen=on culture=en-US,fr-FR summary={0}", Quote(summaryLog)) +
+                    (QualityChooseTests.Checked ? GetTestList() : ""),
                 DoneQuality);
         }
 
