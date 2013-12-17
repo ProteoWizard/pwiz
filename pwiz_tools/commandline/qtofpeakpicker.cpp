@@ -21,6 +21,7 @@
 //
 
 #include <fstream>
+#include <boost/cstdint.hpp>
 #include <pwiz/data/msdata/MSDataFile.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -36,7 +37,7 @@ struct PPParams
   //uint32_t nrthreads;
   double resolution_; // with of mz bins in ppms
   double smoothwidth_;
-  uint32_t integrationwidth_;
+  boost::uint32_t integrationwidth_;
   bool area_;
   double threshold_;
 
