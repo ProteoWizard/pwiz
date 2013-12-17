@@ -2328,6 +2328,25 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Editing support
 
+        public ScaledRetentionTime FindAnnotatedPeakRetentionTime(double time,
+                                                                   out TransitionGroupDocNode nodeGroup,
+                                                                   out TransitionDocNode nodeTran)
+        {
+            foreach (var graphItem in GraphItems)
+            {
+                var peakRT = graphItem.FindPeakRetentionTime(time);
+                if (!peakRT.IsZero)
+                {
+                    nodeGroup = graphItem.TransitionGroupNode;
+                    nodeTran = graphItem.TransitionNode;
+                    return peakRT;
+                }
+            }
+            nodeGroup = null;
+            nodeTran = null;
+            return ScaledRetentionTime.ZERO;
+        }
+
         private ScaledRetentionTime FindAnnotatedPeakRetentionTime(TextObj label,
                                                                    out TransitionGroupDocNode nodeGroup,
                                                                    out TransitionDocNode nodeTran)

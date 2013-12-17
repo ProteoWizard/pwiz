@@ -246,7 +246,9 @@ namespace Crawdad {
 					itPeak->stop_rt_idx = Math::Max(_widthDataWings, Math::Min(stop_rt, itPeak->stop_rt_idx));
 					itPeak->stop_rt_idx -= _widthDataWings;
 
-					result->Add(gcnew CrawdadPeak(*itPeak));
+					CrawdadPeak^ peak = gcnew CrawdadPeak(*itPeak);
+					peak->SetIdentified(idIndices);
+					result->Add(peak);
 
 					totalArea += itPeak->peak_area;
 				}
@@ -264,23 +266,18 @@ namespace Crawdad {
             float intensityCutoff = 0;
             FindIntensityCutoff(result, 0, (float)(totalArea/lenResult)*2, max, 1, intensityCutoff, lenResult);
 
-    	    List<KeyValuePair<CrawdadPeak^, bool>>^ resultFiltered =
-                gcnew List<KeyValuePair<CrawdadPeak^, bool>>(lenResult);
+    	    List<CrawdadPeak^>^ resultFiltered = gcnew List<CrawdadPeak^>(lenResult);
             for (int i = 0, lenOrig = result->Count; i < lenOrig; i++)
             {
                 CrawdadPeak^ peak = result[i];
-                bool isIdentified = peak->IsIdentified(idIndices);
-                if (isIdentified || peak->Area >= intensityCutoff || intensityCutoff == 0)
-                    resultFiltered->Add(KeyValuePair<CrawdadPeak^, bool>(peak, isIdentified));
+                if (peak->Identified || peak->Area >= intensityCutoff || intensityCutoff == 0)
+                    resultFiltered->Add(peak);
             }
 
-            resultFiltered->Sort(gcnew Comparison<KeyValuePair<CrawdadPeak^, bool>>(OrderIdAreaDesc));
+            resultFiltered->Sort(gcnew Comparison<CrawdadPeak^>(OrderIdAreaDesc));
             if (max < resultFiltered->Count)
                 resultFiltered->RemoveRange(max, resultFiltered->Count - max);
-
-            result = gcnew List<CrawdadPeak^>(resultFiltered->Count);
-            for each (KeyValuePair<CrawdadPeak^, bool> peakId in resultFiltered)
-                result->Add(peakId.Key);
+			result = resultFiltered;
         }
 
         return result;
@@ -316,16 +313,15 @@ namespace Crawdad {
         return nonNoise;
     }
 
-    int CrawdadPeakFinder::OrderIdAreaDesc(KeyValuePair<CrawdadPeak^, bool> peakId1,
-                                         KeyValuePair<CrawdadPeak^, bool> peakId2)
+    int CrawdadPeakFinder::OrderIdAreaDesc(CrawdadPeak^ peak1, CrawdadPeak^ peak2)
     {
         // Identified peaks come first
-        bool id1 = peakId1.Value, id2 = peakId2.Value;
+        bool id1 = peak1->Identified, id2 = peak2->Identified;
         if (id1 != id2)
             return id1 ? -1 : 1;
 
         // Then area descending
-        float a1 = peakId1.Key->Area, a2 = peakId2.Key->Area;
+        float a1 = peak1->Area, a2 = peak2->Area;
         return (a1 > a2 ? -1 : (a1 < a2 ? 1 : 0));
     }
 }

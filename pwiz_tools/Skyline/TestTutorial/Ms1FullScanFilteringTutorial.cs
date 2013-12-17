@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(libraryExplorer, libraryExplorer.CancelDialog);
 
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 51, 52, 156);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[0]), 48, 49, 0, 143, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[0]), 49, 50, 0, 146, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[1]), 49, 50, 0, 143, 0);
 
             // Select the first transition group.

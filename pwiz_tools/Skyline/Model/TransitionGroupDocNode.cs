@@ -1882,7 +1882,6 @@ namespace pwiz.Skyline.Model
         {
             int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
             
-            bool integrateAll = settings.TransitionSettings.Integration.IsIntegrateAll;
             // Find the index of the peak group referenced by this retention time.
             int indexPeakBest = -1;
             // Use the peak closest to the time passed in.
@@ -1898,8 +1897,6 @@ namespace pwiz.Skyline.Model
                 if (indexPeak == -1)
                     continue;
                 var peak = chromInfo.GetPeak(indexPeak);
-                if (!integrateAll && peak.IsForcedIntegration)
-                    continue;
                 double deltaRT = Math.Abs(retentionTime - peak.RetentionTime);
                 if (deltaRT < minDeltaRT)
                 {
@@ -1917,7 +1914,7 @@ namespace pwiz.Skyline.Model
                 if (chromInfo == null)
                     continue;
                 ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
-                if (peakNew.IsEmpty || (!integrateAll && peakNew.IsForcedIntegration))
+                if (peakNew.IsEmpty)
                     continue;
                 startMin = Math.Min(startMin, peakNew.StartTime);
                 endMax = Math.Max(endMax, peakNew.EndTime);

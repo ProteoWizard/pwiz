@@ -379,9 +379,7 @@ namespace pwiz.Skyline.Model.Results
                 hasDocNode && chromData.Key.Source == ChromSource.fragment));
 
             // Merge sort all peaks into a single list
-            IList<ChromDataPeak> allPeaks = MergePeaks();
-            // Move all the MS1 peaks to the end, they should only be used to form peak groups if all others have been exhausted
-            allPeaks = allPeaks.OrderByDescending(IsMs2).ThenByDescending(peak => peak.Peak.Area).ToList();
+            IList<ChromDataPeak> allPeaks = SplitMS(MergePeaks());
 
             // Inspect 20 most intense peak regions
             var listRank = new List<double>();
@@ -396,7 +394,7 @@ namespace pwiz.Skyline.Model.Results
                 // If peptide ID retention times are present, allow
                 // peaks greater than 20, but only if they contain
                 // an ID retention time.
-                if (i >= 20 && !peak.IsIdentifiedTime(retentionTimes))
+                if (i >= 20 && !peak.Peak.Identified)
                     continue;
 
                 ChromDataPeakList peakSet = FindCoelutingPeaks(peak, allPeaks);
@@ -476,13 +474,6 @@ namespace pwiz.Skyline.Model.Results
 
             RemoveNonOverlappingPeaks(_listPeakSets, iRemove);
 
-            // Add small peaks under the chosen peaks, to make adding them easier
-            foreach (var peak in allPeaks)
-            {
-                if (IsOverlappingPeak(peak, _listPeakSets, iRemove))
-                    _listPeakSets.Add(new ChromDataPeakList(peak, _listChromData));
-            }
-
             // Since Crawdad can have a tendency to pick peaks too narrow,
             // use the peak group information to extend the peaks to make
             // them wider.
@@ -500,9 +491,32 @@ namespace pwiz.Skyline.Model.Results
 //                Console.WriteLine("Idenifications outside peaks.");
         }
 
-        public int IsMs2(ChromDataPeak peak)
+        /// <summary>
+        /// Takes sorted list of peaks and puts MS1 peaks after MS2 peaks, preserving the order within
+        /// the groups.
+        /// </summary>
+        private IList<ChromDataPeak> SplitMS(IList<ChromDataPeak> allPeaks)
         {
-            return peak.Data.Key.Source == ChromSource.ms1 ? 0 : 1;
+            int len = allPeaks.Count;
+            var allPeaksNew = new List<ChromDataPeak>(len);
+            // First add back all MS/MS peaks
+            foreach (var peak in allPeaks)
+            {
+                if (IsMs2(peak))
+                    allPeaksNew.Add(peak);
+            }
+            // Then add all MS1 peaks
+            foreach (var peak in allPeaks)
+            {
+                if (!IsMs2(peak))
+                    allPeaksNew.Add(peak);
+            }
+            return allPeaksNew;
+        }
+
+        public bool IsMs2(ChromDataPeak peak)
+        {
+            return peak.Data.Key.Source == ChromSource.fragment;
         }
 
         public int ComparePeakLists(ChromDataPeakList p1, ChromDataPeakList p2)
@@ -643,6 +657,7 @@ namespace pwiz.Skyline.Model.Results
             while (listEnumerators.Count > 0)
             {
                 float maxIntensity = 0;
+                int maxId = 0;
                 int iMaxEnumerator = -1;
 
                 for (int i = 0; i < listEnumerators.Count; i++)
@@ -651,8 +666,10 @@ namespace pwiz.Skyline.Model.Results
                     if (peak == null)
                         throw new InvalidOperationException(Resources.ChromDataSet_MergePeaks_Unexpected_null_peak);
                     float intensity = peak.Area;
-                    if (intensity > maxIntensity)
+                    int isId = peak.Identified ? 1 : 0;
+                    if (isId > maxId  || (isId == maxId && intensity > maxIntensity))
                     {
+                        maxId = isId;
                         maxIntensity = intensity;
                         iMaxEnumerator = i;
                     }

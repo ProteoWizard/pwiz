@@ -53,6 +53,7 @@
             this.modificationsListBox.CheckOnClick = true;
             this.modificationsListBox.FormattingEnabled = true;
             this.modificationsListBox.Name = "modificationsListBox";
+            this.modificationsListBox.Sorted = true;
             // 
             // labelModifications
             // 

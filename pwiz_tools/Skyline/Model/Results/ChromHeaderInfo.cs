@@ -1826,15 +1826,20 @@ namespace pwiz.Skyline.Model.Results
 
         public int IndexOfPeak(double retentionTime)
         {
-            int i = 0;
+            // Find the closest peak within a tolerance of 0.001 (near the precision of a float)
+            int i = 0, iMin = -1;
+            double minDelta = double.MaxValue;
             foreach (var peak in Peaks)
             {
-                // Should never be searching for forced integration peaks in this way
-                if (!peak.IsForcedIntegration && peak.ContainsTime((float)retentionTime))
-                    return i;
+                double delta = Math.Abs(peak.RetentionTime - retentionTime);
+                if (delta < minDelta)
+                {
+                    minDelta = delta;
+                    iMin = i;
+                }
                 i++;
             }
-            return -1;
+            return minDelta < 0.001 ? iMin : -1;
         }
 
         public void AsArrays(out double[] times, out double[] intensities)

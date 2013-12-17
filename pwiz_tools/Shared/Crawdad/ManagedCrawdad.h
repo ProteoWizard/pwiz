@@ -65,6 +65,7 @@ namespace Crawdad {
         property float Height { float get() { return _height; } }
         property float Fwhm { float get() { return _fwhm; } }
         property bool FwhmDegenerate { bool get() { return _fwhmDegenerate; } }
+        property bool Identified { bool get() { return _identified; } }
 
         void ResetBoundaries(int startIndex, int endIndex)
         {
@@ -74,6 +75,18 @@ namespace Crawdad {
             _endIndex = endIndex;
         }
 
+        void SetIdentified(array<int>^ idIndices)
+        {
+            _identified = IsIdentified(idIndices);
+        }
+
+        virtual String^ ToString() override
+        {
+            return String::Format("a = {0}{1}, bg = {2}, s = {3}, e = {4}, r = {5}",
+                _area, _identified ? "*" : "", _backgroundArea, _startIndex, _endIndex, _timeIndex);
+        }
+
+    private:
         bool IsIdentified(array<int>^ idIndices)
         {
             for each (int idIndex in idIndices)
@@ -84,13 +97,6 @@ namespace Crawdad {
             return false;
         }
 
-        virtual String^ ToString() override
-        {
-            return String::Format("a = {0}, bg = {1}, s = {2}, e = {3}, r = {4}",
-                _area, _backgroundArea, _startIndex, _endIndex, _timeIndex);
-        }
-
-    private:
         int _timeIndex;
         int _startIndex;
         int _endIndex;
@@ -99,6 +105,7 @@ namespace Crawdad {
         float _height;
         float _fwhm;
         bool _fwhmDegenerate;
+        bool _identified;
     };
 
     public ref class CrawdadPeakFinder
@@ -150,8 +157,7 @@ namespace Crawdad {
         static void FindIntensityCutoff(List<CrawdadPeak^>^ listPeaks, float left, float right,
             int minPeaks, int calls, float& cutoff, int& len);
         static int FilterPeaks(List<CrawdadPeak^>^ listPeaks, float intensityCutoff);
-        static int OrderIdAreaDesc(KeyValuePair<CrawdadPeak^, bool> peakId1,
-                                 KeyValuePair<CrawdadPeak^, bool> peakId2);
+        static int OrderIdAreaDesc(CrawdadPeak^ peak1, CrawdadPeak^ peak2);
         
     private:
 		// Padding data added before and after real data to ensure peaks
