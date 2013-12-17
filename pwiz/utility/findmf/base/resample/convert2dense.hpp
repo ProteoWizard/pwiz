@@ -26,6 +26,7 @@
 #include <iostream>
 #include <numeric>
 #include <boost/assert.hpp>
+#include <boost/cstdint.hpp>
 #include "pwiz/utility/findmf/base/resample/masscomparefunctors.hpp"
 #include "pwiz/utility/findmf/base/resample/breakspec.hpp"
 #include "pwiz/utility/findmf/base/resample/bin1d.hpp"
@@ -37,6 +38,7 @@ namespace ralab
   {
     namespace resample
     {
+      typedef boost::int32_t int32_t;
       struct Convert2Dense
       {
         ralab::base::resample::Bin1D bin_;
