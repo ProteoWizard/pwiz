@@ -35,6 +35,7 @@ namespace {
 
 using namespace pwiz::util;
 typedef boost::uint32_t uint32_t;
+typedef boost::int32_t int32_t;
   void testBin1D(){
     double ref [] = {2., 2.1 , 5. , 5.1 , 7.1 , 7.15 , 10. , 10.1};
     std::vector<double> breaks;
