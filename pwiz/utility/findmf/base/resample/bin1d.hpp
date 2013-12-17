@@ -1,5 +1,5 @@
 //
-// $Id:  $
+// $Id$
 //
 //
 // Original author: Witold Wolski <wewolski@gmail.com>
