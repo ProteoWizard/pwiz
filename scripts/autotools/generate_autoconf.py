@@ -260,12 +260,14 @@ if (not dryrun) :
 	addShipDir(ac.get_pwizroot())
 	# include the doxygen stuff
 	addShipDir(ac.get_pwizroot()+"/doc/dox")
-	# include the whole boost_aux tree
-	for shipdir in shipdirs :
-		if "boost_aux" in shipdir : # recurse into this one
-			addShipDir(shipdir,addTree=True)
-			break
-	for d in ["pwiz_aux"] : # any others not mentioned?
+	# include the whole boost_aux tree, and others with depth but no -I reference
+	for tree in ac.complicatedTrees:
+		for shipdir in shipdirs :
+			if tree in shipdir :
+				addShipDir(shipdir,addTree=True)
+				break
+			
+	for d in ac.subtleIncludes : # any others not mentioned?
 		addShipDir(ac.get_pwizroot()+"/"+d,addTree=True)
 
 	fz = args[3]

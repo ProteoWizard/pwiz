@@ -512,12 +512,14 @@ fz="%s\\build-nt-x86\\libpwiz_msvc_%s.zip"%(ac.get_pwizroot(),buildversion)
 print "creating MSVC source build distribution kit %s"%(fz)
 z = zipfile.ZipFile(fz,"w",zipfile.ZIP_DEFLATED)
 exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt","inl"]
-# include the whole boost_aux tree
-for shipdir in shipdirs :
-	if "boost_aux" in shipdir :
-		addShipDir(shipdir,addTree=True)
-		break
-for d in ["pwiz_aux"] : # any others not mentioned?
+
+# include the whole boost_aux tree, and others with depth but no -I reference
+for tree in ac.complicatedTrees:
+	for shipdir in shipdirs :
+		if tree in shipdir :
+			addShipDir(shipdir,addTree=True)
+			break
+for d in ac.subtleIncludes : # any others not mentioned?
 	addShipDir(ac.get_pwizroot()+"\\"+d,addTree=True)
 if (dbug) :
 	print 'processing directories:'
