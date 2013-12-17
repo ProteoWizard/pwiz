@@ -27,7 +27,10 @@ namespace SkylineTester
         private void RunTutorials(object sender, EventArgs e)
         {
             if (!ToggleRunButtons(tabTutorials))
+            {
+                commandShell.Stop();
                 return;
+            }
 
             Tabs.SelectTab(tabOutput);
 
@@ -48,7 +51,7 @@ namespace SkylineTester
             args.Append(" test=");
             args.Append(string.Join(",", testList));
 
-            RunTestRunner(args.ToString());
+            StartTestRunner(args.ToString());
         }
     }
 }

@@ -29,7 +29,10 @@ namespace SkylineTester
         private void RunTests(object sender, EventArgs e)
         {
             if (!ToggleRunButtons(tabTest))
+            {
+                commandShell.Stop();
                 return;
+            }
 
             Tabs.SelectTab(tabOutput);
 
@@ -58,13 +61,19 @@ namespace SkylineTester
             if (PauseTestsScreenShots.Checked)
                 args.Append(" pause=-1");
 
+            args.Append(GetTestList());
+
+            StartTestRunner(args.ToString());
+        }
+
+        private string GetTestList()
+        {
             var testList = new List<string>();
             foreach (TreeNode node in TestsTree.Nodes)
                 GetCheckedTests(node, testList, SkipCheckedTests.Checked);
-            args.Append(" test=");
-            args.Append(string.Join(",", testList));
-
-            RunTestRunner(args.ToString());
+            if (testList.Count == 0)
+                return "";
+            return " test=" + string.Join(",", testList);
         }
 
         private void checkAll_Click(object sender, EventArgs e)

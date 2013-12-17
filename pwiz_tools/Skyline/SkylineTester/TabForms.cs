@@ -33,7 +33,10 @@ namespace SkylineTester
         private void RunForms(object sender, EventArgs e)
         {
             if (!ToggleRunButtons(tabForms))
+            {
+                commandShell.Stop();
                 return;
+            }
 
             var args = new StringBuilder("loop=1 offscreen=off culture=en-US ");
 
@@ -60,7 +63,7 @@ namespace SkylineTester
                 args.Append(pauseSeconds);
             }
 
-            RunTestRunner(args.ToString(), DoneForms);
+            StartTestRunner(args.ToString(), DoneForms);
         }
 
         private void DoneForms(bool success)

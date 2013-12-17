@@ -17,23 +17,111 @@
  * limitations under the License.
  */
 using System;
+using System.Windows.Forms;
 
 namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private Timer _startTimer;
+        private Timer _endTimer;
+
         private void RunQuality(object sender, EventArgs e)
         {
             if (QualityBuildFirst.Checked && !HasBuildPrerequisites)
                 return;
 
             if (!ToggleRunButtons(tabQuality))
+            {
+                if (_endTimer != null)
+                {
+                    _endTimer.Stop();
+                    _endTimer = null;
+                }
+                if (_startTimer != null)
+                {
+                    _startTimer.Stop();
+                    _startTimer = null;
+                    commandShell.AddImmediate("# Stopped.");
+                }
+                else
+                {
+                    StopTestRunner();
+                }
                 return;
-            Tabs.SelectTab(tabOutput);
+            }
 
+            Tabs.SelectTab(tabOutput);
+            commandShell.ClearLog();
+
+            if (QualityStartNow.Checked)
+            {
+                StartQuality();
+                return;
+            }
+
+            commandShell.AddImmediate(Environment.NewLine + "# Waiting until {0} to start quality pass...", QualityStartTime.Text);
+
+            var startTime = GetDateTime(QualityStartTime.Text);
+            if (startTime < DateTime.Now)
+                startTime = startTime.AddDays(1);
+            var endTime = GetDateTime(QualityEndTime.Text);
+            while (endTime < startTime)
+                endTime = endTime.AddDays(1);
+            _startTimer = new Timer
+            {
+                Interval = (int)(startTime - DateTime.Now).TotalMilliseconds
+            };
+            _startTimer.Tick += (o, args) =>
+            {
+                _startTimer.Stop();
+                _startTimer = null;
+                StartQuality();
+                ScheduleEnd(endTime);
+            };
+            _startTimer.Start();
+        }
+
+        private DateTime GetDateTime(string time)
+        {
+            var timeParts = time.Split(':');
+            var hour = int.Parse(timeParts[0]);
+            if (timeParts[1].ToLower().Contains("pm"))
+                hour += 12;
+            var minute = int.Parse(timeParts[1].Split(' ')[0]);
+            var now = DateTime.Now;
+            return new DateTime(now.Year, now.Month, now.Day, hour, minute, 0);
+        }
+
+        private void ScheduleEnd(DateTime endTime)
+        {
+            _endTimer = new Timer
+            {
+                Interval = (int)(endTime - DateTime.Now).TotalMilliseconds
+            };
+            _endTimer.Tick += (o, args) =>
+            {
+                _endTimer.Stop();
+                _endTimer = null;
+                Invoke(new Action(() => Stop(null, null)));
+            };
+            _endTimer.Start();
+        }
+
+        private void StartQuality()
+        {
             if (QualityBuildFirst.Checked)
                 GenerateBuildCommands();
-            RunTestRunner("offscreen=on culture=en-US,fr-FR");
+
+            StartTestRunner(
+                "offscreen=on culture=en-US,fr-FR" +
+                (QualityChooseTests.Checked ? GetTestList() : ""),
+                DoneQuality);
+        }
+
+        private void DoneQuality(bool success)
+        {
+            TestRunnerDone(success);
         }
     }
 }

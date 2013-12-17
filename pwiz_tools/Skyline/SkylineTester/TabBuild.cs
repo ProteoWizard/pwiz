@@ -48,8 +48,13 @@ namespace SkylineTester
 
         private void RunBuild(object sender, EventArgs e)
         {
-            if (!HasBuildPrerequisites || !ToggleRunButtons(tabBuild))
+            if (!HasBuildPrerequisites)
                 return;
+            if (!ToggleRunButtons(tabBuild))
+            {
+                commandShell.Stop();
+                return;
+            }
 
             _runningTab = tabBuild;
             Tabs.SelectTab(tabOutput);

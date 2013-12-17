@@ -104,6 +104,7 @@ namespace TestRunner
                         {
                             UseShellExecute = false,
                             RedirectStandardOutput = true,
+                            RedirectStandardError = true,
                             FileName = @"c:\Program Files (x86)\VisualSVN\bin\svn.exe",
                             Arguments = @"info -r HEAD " + skylineDirectory.FullName
                         }
@@ -300,6 +301,9 @@ namespace TestRunner
             var formList = commandLineArgs.ArgAsString("form");
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
+            var stopTestRunner = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
+                "StopTestRunner.txt");
 
             var runTests = new RunTests(demoMode, offscreen, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
 
@@ -341,7 +345,11 @@ namespace TestRunner
                     testNumber++;
 
                     for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
+                    {
                         runTests.Run(test, pass, testNumber);
+                        if (File.Exists(stopTestRunner))
+                            break;
+                    }
 
                     // Record which forms the test showed.
                     if (shownForms != null)
@@ -349,7 +357,13 @@ namespace TestRunner
                         formLookup.AddForms(test.TestMethod.Name, runTests.LastTestDuration, shownForms);
                         shownForms.Clear();
                     }
+
+                    if (File.Exists(stopTestRunner))
+                        break;
                 }
+
+                if (File.Exists(stopTestRunner))
+                    break;
             }
 
             _failureCount = runTests.FailureCount;

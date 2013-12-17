@@ -64,6 +64,20 @@ namespace SkylineTester
             _commands.Add(string.Format(command, args));
         }
 
+        public void AddImmediate(string command, params object[] args)
+        {
+            Log(string.Format(command, args) + Environment.NewLine);
+            UpdateLog(null, null);
+        }
+
+        public void ClearLog()
+        {
+            Clear();
+            _logEmpty = true;
+            if (LogFile != null && File.Exists(LogFile))
+                File.Delete(LogFile);
+        }
+
         /// <summary>
         /// Run commands accumulated by one or more calls to Add.  An optional
         /// argument specifies a method to call when the commands are done
@@ -75,11 +89,7 @@ namespace SkylineTester
             _doneAction = doneAction;
             _commandIndex = 0;
 
-            // Clear log.
-            Text = null;
-            _logEmpty = true;
-            if (LogFile != null && File.Exists(LogFile))
-                File.Delete(LogFile);
+            ClearLog();
 
             _outputTimer = new Timer { Interval = 500 };
             _outputTimer.Tick += UpdateLog;
@@ -305,7 +315,7 @@ namespace SkylineTester
                 {
                     Invoke(new Action(() => CommandsDone(false)));
                 }
-                    // ReSharper disable once EmptyGeneralCatchClause
+// ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)
                 {
                 }

@@ -176,19 +176,24 @@ namespace SkylineTester
                     OpenFile(_openFile);
                     if (Path.GetExtension(_openFile) == ".skytr")
                     {
-                        if (Tabs.SelectedTab == tabForms)
-                            RunForms(null, null);
-                        else if (Tabs.SelectedTab == tabTutorials)
-                            RunTutorials(null, null);
-                        else if (Tabs.SelectedTab == tabTest)
-                            RunTests(null, null);
-                        else if (Tabs.SelectedTab == tabBuild)
-                            RunBuild(null, null);
-                        else if (Tabs.SelectedTab == tabQuality)
-                            RunQuality(null, null);
+                        Run(Tabs.SelectedTab);
                     }
                 }));
             }
+        }
+
+        private void Run(TabPage tab)
+        {
+            if (tab == tabForms)
+                RunForms(null, null);
+            else if (tab == tabTutorials)
+                RunTutorials(null, null);
+            else if (tab == tabTest)
+                RunTests(null, null);
+            else if (tab == tabBuild)
+                RunBuild(null, null);
+            else if (tab == tabQuality)
+                RunQuality(null, null);
         }
 
         public IEnumerable<string> GetTestInfos(string testDll)
@@ -238,9 +243,6 @@ namespace SkylineTester
                     runButton.Text = "Run";
                 buttonStop.Enabled = false;
 
-                if (tab != null)
-                    commandShell.Stop();
-
                 return false;
             }
 
@@ -255,7 +257,7 @@ namespace SkylineTester
 
         private Action<bool> _doneAction;
 
-        private void RunTestRunner(string args, Action<bool> doneAction = null)
+        private void StartTestRunner(string args, Action<bool> doneAction = null)
         {
             _doneAction = doneAction;
 
@@ -267,6 +269,9 @@ namespace SkylineTester
                 string.Format(@"pwiz_tools\Skyline\bin\{0}\Release\TestRunner.exe", Build32.Checked ? "x86" : "x64"));
             if (!File.Exists(testRunner))
                 testRunner = Path.Combine(_exeDir, "TestRunner.exe");
+            _stopTestRunner = Path.Combine(Path.GetDirectoryName(testRunner) ?? "", "StopTestRunner.txt");
+            if (File.Exists(_stopTestRunner))
+                File.Delete(_stopTestRunner);
             commandShell.Add("{0} random=off results={1} log={2} {3} {4}",
                 Quote(testRunner),
                 Quote(_resultsDir),
@@ -278,11 +283,26 @@ namespace SkylineTester
             commandShell.Run(TestRunnerDone);
         }
 
+        private string _stopTestRunner;
+        private WaitWindow _waitWindow;
+
+        private void StopTestRunner()
+        {
+            File.WriteAllText(_stopTestRunner, "");
+            _waitWindow = new WaitWindow();
+            _waitWindow.Show();
+        }
+
         private void TestRunnerDone(bool success)
         {
+            if (_waitWindow != null)
+            {
+                _waitWindow.Close();
+                _waitWindow.Dispose();
+                _waitWindow = null;
+            }
+
             ToggleRunButtons(null);
-            if (_doneAction != null)
-                _doneAction(success);
         }
 
 
