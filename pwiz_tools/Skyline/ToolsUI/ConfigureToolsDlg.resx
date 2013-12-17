@@ -841,31 +841,25 @@ All URLs must start with http: or https: to function properly.</value>
     <value>931, 17</value>
   </metadata>
   <data name="customAddContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="customAddContextMenuItem.Text" xml:space="preserve">
     <value>Custom...</value>
   </data>
   <data name="fromFileAddContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="fromFileAddContextMenuItem.Text" xml:space="preserve">
     <value>From File...</value>
   </data>
-  <data name="fromWebAddContextMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="fromWebAddContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>168, 22</value>
   </data>
   <data name="fromWebAddContextMenuItem.Text" xml:space="preserve">
-    <value>From Web...</value>
-  </data>
-  <data name="fromWebAddContextMenuItem.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+    <value>From Tool Store...</value>
   </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>153, 92</value>
+    <value>169, 92</value>
   </data>
   <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
     <value>contextMenuAdd</value>
@@ -877,19 +871,19 @@ All URLs must start with http: or https: to function properly.</value>
     <value>1102, 17</value>
   </metadata>
   <data name="browseToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 24</value>
+    <value>140, 22</value>
   </data>
   <data name="browseToolStripMenuItem.Text" xml:space="preserve">
     <value>Browse...</value>
   </data>
   <data name="editMacroToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 24</value>
+    <value>140, 22</value>
   </data>
   <data name="editMacroToolStripMenuItem.Text" xml:space="preserve">
     <value>Edit Macro...</value>
   </data>
   <data name="contextMenuCommand.Size" type="System.Drawing.Size, System.Drawing">
-    <value>160, 52</value>
+    <value>141, 48</value>
   </data>
   <data name="&gt;&gt;contextMenuCommand.Name" xml:space="preserve">
     <value>contextMenuCommand</value>

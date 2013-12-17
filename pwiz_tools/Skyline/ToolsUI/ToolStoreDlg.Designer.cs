@@ -41,6 +41,11 @@
             this.textBoxAuthors = new System.Windows.Forms.TextBox();
             this.linkLabelProvider = new System.Windows.Forms.LinkLabel();
             this.textBoxStatus = new System.Windows.Forms.TextBox();
+            this.textBoxOrganization = new System.Windows.Forms.TextBox();
+            this.labelOrganization = new System.Windows.Forms.Label();
+            this.textBoxLanguages = new System.Windows.Forms.TextBox();
+            this.labelLanguages = new System.Windows.Forms.Label();
+            this.buttonToolStore = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxTool)).BeginInit();
             this.SuspendLayout();
             // 
@@ -117,11 +122,45 @@
             this.textBoxStatus.Name = "textBoxStatus";
             this.textBoxStatus.ReadOnly = true;
             // 
+            // textBoxOrganization
+            // 
+            resources.ApplyResources(this.textBoxOrganization, "textBoxOrganization");
+            this.textBoxOrganization.Name = "textBoxOrganization";
+            this.textBoxOrganization.ReadOnly = true;
+            // 
+            // labelOrganization
+            // 
+            resources.ApplyResources(this.labelOrganization, "labelOrganization");
+            this.labelOrganization.Name = "labelOrganization";
+            // 
+            // textBoxLanguages
+            // 
+            resources.ApplyResources(this.textBoxLanguages, "textBoxLanguages");
+            this.textBoxLanguages.Name = "textBoxLanguages";
+            this.textBoxLanguages.ReadOnly = true;
+            // 
+            // labelLanguages
+            // 
+            resources.ApplyResources(this.labelLanguages, "labelLanguages");
+            this.labelLanguages.Name = "labelLanguages";
+            // 
+            // buttonToolStore
+            // 
+            resources.ApplyResources(this.buttonToolStore, "buttonToolStore");
+            this.buttonToolStore.Name = "buttonToolStore";
+            this.buttonToolStore.UseVisualStyleBackColor = true;
+            this.buttonToolStore.Click += new System.EventHandler(this.buttonToolStore_Click);
+            // 
             // ToolStoreDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonExit;
+            this.Controls.Add(this.buttonToolStore);
+            this.Controls.Add(this.textBoxLanguages);
+            this.Controls.Add(this.labelLanguages);
+            this.Controls.Add(this.textBoxOrganization);
+            this.Controls.Add(this.labelOrganization);
             this.Controls.Add(this.textBoxStatus);
             this.Controls.Add(this.linkLabelProvider);
             this.Controls.Add(this.textBoxAuthors);
@@ -159,5 +198,10 @@
         private System.Windows.Forms.TextBox textBoxAuthors;
         private System.Windows.Forms.LinkLabel linkLabelProvider;
         private System.Windows.Forms.TextBox textBoxStatus;
+        private System.Windows.Forms.TextBox textBoxOrganization;
+        private System.Windows.Forms.Label labelOrganization;
+        private System.Windows.Forms.TextBox textBoxLanguages;
+        private System.Windows.Forms.Label labelLanguages;
+        private System.Windows.Forms.Button buttonToolStore;
     }
 }

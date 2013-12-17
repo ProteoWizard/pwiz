@@ -21,9 +21,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
+using Newtonsoft.Json;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
@@ -66,14 +69,21 @@ namespace pwiz.Skyline.ToolsUI
         private void UpdateDisplayedTool()
         {
             var toolStoreItem = _tools[listBoxTools.SelectedIndex];
+            toolStoreItem.IconLoadComplete = null;
+            if (toolStoreItem.IconDownloading)
+            {
+                toolStoreItem.IconLoadComplete = () => Invoke(new Action(() => pictureBoxTool.Image = toolStoreItem.ToolImage));
+            }
             pictureBoxTool.Image = toolStoreItem.ToolImage;
+            textBoxOrganization.Text = toolStoreItem.Organization;
             textBoxAuthors.Text = toolStoreItem.Authors;
 
             linkLabelProvider.Text = toolStoreItem.Provider;
             linkLabelProvider.LinkArea = new LinkArea(0, linkLabelProvider.Text.Length);
             linkLabelProvider.Links.Clear();
             linkLabelProvider.Links.Add(0, linkLabelProvider.Text.Length, linkLabelProvider.Text);
-            
+
+            textBoxLanguages.Text = toolStoreItem.Languages;
             textBoxStatus.Text = FormatVersionText(toolStoreItem);
             textBoxDescription.Text = FormatDescriptionText(toolStoreItem.Description);
 
@@ -107,6 +117,9 @@ namespace pwiz.Skyline.ToolsUI
 
         private static string FormatDescriptionText(string description)
         {
+            if (description == null)
+                return null;
+
             description = description.Trim();
             
             if (description.StartsWith("\"") && description.EndsWith("\"")) // Not L10N
@@ -145,6 +158,11 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        private void buttonToolStore_Click(object sender, EventArgs e)
+        {
+            WebHelpers.OpenLink(this, _tools[listBoxTools.SelectedIndex].FilePath);
+        }
+
         private void linkLabelProvider_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             WebHelpers.OpenLink(this, e.Link.LinkData as string);
@@ -159,7 +177,7 @@ namespace pwiz.Skyline.ToolsUI
             return _tools.Select(tool => new ToolStoreItem(tool));
         }
 
-        #endregion 
+        #endregion
     }
 
     public interface IToolStoreClient
@@ -311,19 +329,57 @@ namespace pwiz.Skyline.ToolsUI
 
     public class WebToolStoreClient : IToolStoreClient
     {
+        public static readonly Uri TOOL_STORE_URI = new Uri("https://skyline.gs.washington.edu");
+        protected const string GET_TOOLS_URL = "/labkey/skyts/home/getToolsApi.view";  // Not L10N
+        protected const string DOWNLOAD_TOOL_URL = "/labkey/skyts/home/downloadTool.view";  // Not L10N
+        public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";  // Not L10N
+
+        protected Dictionary<String, Version> latestVersions_ = null;
+        protected struct ToolStoreVersion
+        {
+            public string Identifier;
+            public string Version;
+        }
+
         public IList<ToolStoreItem> GetToolStoreItems()
         {
-            throw new NotImplementedException();
+            return JsonConvert.DeserializeObject<ToolStoreItem[]>(GetToolsJson());
         }
 
         public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
         {
-            throw new NotImplementedException();
+            WebClient webClient = new WebClient();
+            UriBuilder uri = new UriBuilder(TOOL_STORE_URI)
+                {
+                    Path = DOWNLOAD_TOOL_URL,
+                    Query = "lsid=" + packageIdentifier
+                };
+            byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);  // Not L10N
+            string contentDisposition = webClient.ResponseHeaders.Get("Content-Disposition");   // Not L10N
+            // contentDisposition is filename="ToolBasename.zip"
+            Match match = Regex.Match(contentDisposition, "^filename=\"(.+)\"$", RegexOptions.IgnoreCase);  // Not L10N
+            string downloadedFile = directory + match.Groups[1].Value;
+            File.WriteAllBytes(downloadedFile, toolZip);
+            return downloadedFile;
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)
         {
-            throw new NotImplementedException();
+            if (latestVersions_ == null)
+            {
+                latestVersions_ = new Dictionary<string, Version>();
+                var toolInfo = JsonConvert.DeserializeObject<ToolStoreVersion[]>(GetToolsJson());
+                foreach (var info in toolInfo)
+                    latestVersions_.Add(info.Identifier, new Version(info.Version));
+            }
+
+            return (latestVersions_.ContainsKey(identifier)) && version < latestVersions_[identifier];
+        }
+
+        protected string GetToolsJson()
+        {
+            WebClient webClient = new WebClient();
+            return webClient.DownloadString(TOOL_STORE_URI + GET_TOOLS_URL);
         }
     }
 
@@ -331,30 +387,44 @@ namespace pwiz.Skyline.ToolsUI
     {
         public string Name { get; private set; }
         public string Authors { get; private set; }
+        public string Organization { get; private set; }
         public string Provider { get; private set; }
         public string Version { get; private set; }
         public string Description { get; private set; }
         public string Identifier { get; private set; }
+        public string Languages { get; private set; }
         public Image ToolImage { get; private set; }
         public bool Installed { get; private set; }
         public bool IsMostRecentVersion { get; private set; }
         public string FilePath { get; private set; }
+
+        public bool IconDownloading { get; private set; }
+        public Action IconLoadComplete { get; set; }
         
         public ToolStoreItem(ToolStoreItem item)
         {
             Name = item.Name;
             Authors = item.Authors;
+            Organization = item.Organization;
             Provider = item.Provider;
             Version = item.Version;
             Description = item.Description;
             Identifier = item.Identifier;
+            Languages = item.Languages;
             ToolImage = item.ToolImage;
             Installed = item.Installed;
             IsMostRecentVersion = item.IsMostRecentVersion;
             FilePath = item.FilePath;
         }
-        
-        public ToolStoreItem(string name, string authors, string providers, string version, string description, string identifier, Image toolImage, string filePath = null)
+
+        public ToolStoreItem(string name,
+                             string authors,
+                             string providers,
+                             string version,
+                             string description,
+                             string identifier,
+                             Image toolImage,
+                             string filePath = null)
         {
             Name = name;
             Authors = authors;
@@ -366,6 +436,56 @@ namespace pwiz.Skyline.ToolsUI
             Installed = ToolStoreUtil.IsInstalled(identifier);
             IsMostRecentVersion = ToolStoreUtil.IsMostRecentVersion(identifier, version);
             FilePath = filePath;
+        }
+
+        [JsonConstructor]
+        public ToolStoreItem(string name,
+                             string authors,
+                             string organization,
+                             string provider,
+                             string version,
+                             string description,
+                             string identifier,
+                             string languages,
+                             string iconUrl,
+                             string downloadUrl)
+        {
+            Name = name;
+            Authors = authors;
+            Organization = organization;
+            Provider = provider;
+            Version = version;
+            Description = description != null ? description.Replace("\n", Environment.NewLine) : null;  // Not L10N
+            Identifier = identifier;
+            Languages = languages;
+            ToolImage = ToolStoreUtil.DefaultImage;
+            if (iconUrl != null)
+            {
+                IconDownloading = true;
+                var iconUri = new Uri(WebToolStoreClient.TOOL_STORE_URI + iconUrl);
+                var webClient = new WebClient();
+                webClient.DownloadDataCompleted += DownloadIconDone;
+                webClient.DownloadDataAsync(iconUri);
+            }
+            Installed = ToolStoreUtil.IsInstalled(identifier);
+            IsMostRecentVersion = ToolStoreUtil.IsMostRecentVersion(identifier, version);
+            UriBuilder uri = new UriBuilder(WebToolStoreClient.TOOL_STORE_URI)
+                {
+                    Path = WebToolStoreClient.TOOL_DETAILS_URL,
+                    Query = "name=" + Uri.EscapeDataString(name)
+                };
+            FilePath = uri.Uri.AbsoluteUri; // Not L10N
+        }
+
+        protected void DownloadIconDone(object sender, DownloadDataCompletedEventArgs downloadDataCompletedEventArgs)
+        {
+            using (MemoryStream ms = new MemoryStream(downloadDataCompletedEventArgs.Result))
+            {
+                ToolImage = Image.FromStream(ms);
+            }
+            IconDownloading = false;
+            if (IconLoadComplete != null)
+                IconLoadComplete();
         }
     }
 
@@ -379,9 +499,8 @@ namespace pwiz.Skyline.ToolsUI
         // for testing, return a TestToolStoreClient with the desired attributes and a path to a local directory with which to populate the store, updates etc.
         public static IToolStoreClient CreateClient()
         {
-//            return new WebToolStoreClient();
+            return new WebToolStoreClient();
 //            return new TestToolStoreClient(@"C:\proj\pwiz\pwiz_tools\Skyline\Executables\Tools\ToolStore");
-            return null;
         }
 
         /// <returns>True if the a tool with the given identifier is installed.</returns>

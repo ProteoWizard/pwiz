@@ -2456,7 +2456,7 @@ namespace pwiz.Skyline
                         {
                             item = new ToolStripMenuItem(spliced[i])
                                 {
-                                    Image = tool.UpdateAvailable ? SystemIcons.Exclamation.ToBitmap() : null
+                                    Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null
                                 };
                             if (current == toolsMenu)
                             {
@@ -2478,7 +2478,7 @@ namespace pwiz.Skyline
                     ToolMenuItem menuItem = new ToolMenuItem(tool, this)
                         {
                             Text = tool.Title, 
-                            Image = tool.UpdateAvailable ? SystemIcons.Exclamation.ToBitmap() : null
+                            Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null
                         };
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++ , menuItem);
                 }

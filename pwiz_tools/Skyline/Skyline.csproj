@@ -1133,6 +1133,7 @@
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
     <EmbeddedResource Include="Resources\PeptideQc.bmp" />
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
+    <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
