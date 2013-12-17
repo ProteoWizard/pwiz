@@ -22,8 +22,9 @@
 #define DETERMINEBINWIDTHUTILITIES_H
 
 #include <functional>
-#include <stdint.h>
+#include <booost/cstdint.h>
 #include <algorithm>
+
 namespace ralab
 {
   namespace base
@@ -31,6 +32,7 @@ namespace ralab
     namespace resample
     {
 
+      typedef boost::int32_t int32_t;
       namespace utilities{
 
         template<class T>
