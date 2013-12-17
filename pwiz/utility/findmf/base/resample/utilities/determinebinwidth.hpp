@@ -22,7 +22,7 @@
 #define DETERMINEBINWIDTHUTILITIES_H
 
 #include <functional>
-#include <boost/cstdint.h>
+#include <boost/cstdint.hpp>
 #include <algorithm>
 
 namespace ralab
