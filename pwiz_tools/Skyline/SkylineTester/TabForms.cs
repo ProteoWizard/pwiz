@@ -101,11 +101,5 @@ namespace SkylineTester
             FormsTree.Nodes.Add(new TreeNode("Skyline", forms.ToArray()));
             FormsTree.ExpandAll();
         }
-
-        private void FormsTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            e.Node.Checked = !e.Node.Checked;
-            FormsTree.SelectedNode = null;
-        }
     }
 }

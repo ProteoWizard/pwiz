@@ -17,9 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using TestRunnerLib;
+using ZedGraph;
 
 namespace SkylineTester
 {
@@ -31,14 +34,60 @@ namespace SkylineTester
         private Timer _startTimer;
         private Timer _endTimer;
 
+        private void InitQuality()
+        {
+            InitGraph(graphMemory, "Memory used");
+            graphMemory.GraphPane.XAxis.IsVisible = false;
+            graphMemory.GraphPane.YAxis.IsVisible = true;
+            graphMemory.GraphPane.YAxis.Title.Text = "MB";
+            graphMemory.GraphPane.YAxis.MinorTic.IsAllTics = false;
+            graphMemory.GraphPane.YAxis.Scale.FontSpec.Angle = 90;
+            InitGraph(graphTestsRun, "Tests run");
+            InitGraph(graphDuration, "Duration");
+            InitGraph(graphFailures, "Failures");
+            InitGraph(graphMemoryHistory, "Memory used");
+        }
+
+        private void InitGraph(ZedGraphControl graph, string title = null)
+        {
+            var pane = graph.GraphPane;
+            if (title != null)
+                pane.Title.Text = title;
+            pane.Chart.Border.IsVisible = false;
+            pane.YAxis.IsVisible = false;
+            pane.X2Axis.IsVisible = false;
+            pane.Y2Axis.IsVisible = false;
+            pane.XAxis.MajorTic.IsOpposite = false;
+            pane.YAxis.MajorTic.IsOpposite = false;
+            pane.XAxis.MinorTic.IsOpposite = false;
+            pane.YAxis.MinorTic.IsOpposite = false;
+            pane.XAxis.MinorTic.IsAllTics = false;
+            pane.XAxis.Title.IsVisible = false;
+            pane.IsFontsScaled = false;
+            pane.XAxis.Scale.MaxGrace = 0.05;
+            pane.YAxis.Scale.MaxGrace = 0.1;
+            pane.XAxis.Scale.FontSpec.Angle = 90;
+        }
+
+        private Summary _summary;
+
         private void OpenQuality()
         {
             var summaryLog = Path.Combine(_rootDir, QualityLogsDirectory, SummaryLog);
             if (!File.Exists(summaryLog))
                 return;
 
-            var summary = new Summary();
-            summary.Load(summaryLog);
+            _summary = new Summary();
+            _summary.Load(summaryLog);
+            comboRunDate.Items.Clear();
+
+            // Show latest 30 runs, max.
+            if (_summary.Runs.Count > 30)
+                _summary.Runs.RemoveRange(0, _summary.Runs.Count - 30);
+            _summary.Runs.Reverse();
+            foreach (var run in _summary.Runs)
+                comboRunDate.Items.Add(run.Date);
+            comboRunDate.SelectedIndex = 0;
         }
 
         private void RunQuality(object sender, EventArgs e)
@@ -130,11 +179,7 @@ namespace SkylineTester
             if (!Directory.Exists(qualityDirectory))
                 Directory.CreateDirectory(qualityDirectory);
             var summaryLog = Path.Combine(qualityDirectory, SummaryLog);
-            var now = DateTime.Now;
-            _logFile = Path.Combine(
-                qualityDirectory,
-                string.Format("{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}.log", 
-                    now.Year, now.Month, now.Day, now.Hour, now.Minute));
+            _logFile = Path.Combine(qualityDirectory, GetLogFile(DateTime.Now));
             OpenOutput();
 
             if (QualityBuildFirst.Checked)
@@ -149,6 +194,37 @@ namespace SkylineTester
         private void DoneQuality(bool success)
         {
             TestRunnerDone(success);
+        }
+
+        private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int index = comboRunDate.SelectedIndex;
+            var run = _summary.Runs[index];
+            labelRevision.Text = run.Revision.ToString(CultureInfo.InvariantCulture);
+            labelDuration.Text = (run.RunMinutes / 60) + ":" + (run.RunMinutes % 60).ToString("D2");
+            labelTestsRun.Text = run.TestsRun.ToString(CultureInfo.InvariantCulture);
+            labelFailures.Text = run.Failures.ToString(CultureInfo.InvariantCulture);
+            labelLeaks.Text = run.Leaks.ToString(CultureInfo.InvariantCulture);
+            var logFile = Path.Combine(_rootDir, QualityLogsDirectory, GetLogFile(run.Date));
+            linkQualityLog.Enabled = File.Exists(logFile);
+        }
+
+        private string GetLogFile(DateTime date)
+        {
+            return string.Format("{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}.log",
+                date.Year, date.Month, date.Day, date.Hour, date.Minute);
+        }
+
+        private void linkQualityLog_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            int index = comboRunDate.SelectedIndex;
+            var run = _summary.Runs[index];
+            var logFile = Path.Combine(_rootDir, QualityLogsDirectory, GetLogFile(run.Date));
+            if (File.Exists(logFile))
+            {
+                var editLogFile = new Process { StartInfo = { FileName = logFile } };
+                editLogFile.Start();
+            }
         }
     }
 }

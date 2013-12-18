@@ -254,7 +254,7 @@ namespace TestRunner
             }
 
             // Ungraceful exit to avoid unwinding errors
-            Process.GetCurrentProcess().Kill();
+            //Process.GetCurrentProcess().Kill();
         }
 
         private static DirectoryInfo GetSkylineDirectory()

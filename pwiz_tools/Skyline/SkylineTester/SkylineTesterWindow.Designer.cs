@@ -1,4 +1,6 @@
-﻿namespace SkylineTester
+﻿using ZedGraph;
+
+namespace SkylineTester
 {
     partial class SkylineTesterWindow
     {
@@ -84,6 +86,26 @@
             this.Build64 = new System.Windows.Forms.RadioButton();
             this.Build32 = new System.Windows.Forms.RadioButton();
             this.tabQuality = new System.Windows.Forms.TabPage();
+            this.groupBox12 = new System.Windows.Forms.GroupBox();
+            this.graphMemoryHistory = new ZedGraph.ZedGraphControl();
+            this.graphFailures = new ZedGraph.ZedGraphControl();
+            this.graphDuration = new ZedGraph.ZedGraphControl();
+            this.graphTestsRun = new ZedGraph.ZedGraphControl();
+            this.groupBox11 = new System.Windows.Forms.GroupBox();
+            this.labelLeaks = new System.Windows.Forms.Label();
+            this.labelFailures = new System.Windows.Forms.Label();
+            this.labelRevision = new System.Windows.Forms.Label();
+            this.labelTestsRun = new System.Windows.Forms.Label();
+            this.labelDuration = new System.Windows.Forms.Label();
+            this.graphMemory = new ZedGraph.ZedGraphControl();
+            this.linkQualityLog = new System.Windows.Forms.LinkLabel();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.comboRunDate = new System.Windows.Forms.ComboBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.groupBox9 = new System.Windows.Forms.GroupBox();
             this.QualityAllTests = new System.Windows.Forms.RadioButton();
             this.QualityChooseTests = new System.Windows.Forms.RadioButton();
@@ -100,9 +122,9 @@
             this.QualityCurrentBuild = new System.Windows.Forms.RadioButton();
             this.tabOutput = new System.Windows.Forms.TabPage();
             this.buttonStop = new System.Windows.Forms.Button();
-            this.commandShell = new SkylineTester.CommandShell();
             this.linkLogFile = new System.Windows.Forms.LinkLabel();
             this.label7 = new System.Windows.Forms.Label();
+            this.commandShell = new SkylineTester.CommandShell();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -137,6 +159,8 @@
             this.groupBox6.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.tabQuality.SuspendLayout();
+            this.groupBox12.SuspendLayout();
+            this.groupBox11.SuspendLayout();
             this.groupBox9.SuspendLayout();
             this.groupBox8.SuspendLayout();
             this.groupBox7.SuspendLayout();
@@ -152,7 +176,7 @@
             this.mainPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainPanel.Location = new System.Drawing.Point(0, 0);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(571, 488);
+            this.mainPanel.Size = new System.Drawing.Size(737, 675);
             this.mainPanel.TabIndex = 0;
             // 
             // Tabs
@@ -170,8 +194,9 @@
             this.Tabs.Name = "Tabs";
             this.Tabs.Padding = new System.Drawing.Point(20, 6);
             this.Tabs.SelectedIndex = 0;
-            this.Tabs.Size = new System.Drawing.Size(577, 464);
+            this.Tabs.Size = new System.Drawing.Size(743, 651);
             this.Tabs.TabIndex = 4;
+            this.Tabs.SelectedIndexChanged += new System.EventHandler(this.TabChanged);
             // 
             // tabForms
             // 
@@ -182,8 +207,8 @@
             this.tabForms.Controls.Add(this.groupBox2);
             this.tabForms.Location = new System.Drawing.Point(4, 28);
             this.tabForms.Name = "tabForms";
-            this.tabForms.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabForms.Size = new System.Drawing.Size(569, 432);
+            this.tabForms.Padding = new System.Windows.Forms.Padding(3);
+            this.tabForms.Size = new System.Drawing.Size(735, 619);
             this.tabForms.TabIndex = 1;
             this.tabForms.Text = "Forms";
             // 
@@ -191,7 +216,7 @@
             // 
             this.RegenerateCache.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.RegenerateCache.AutoSize = true;
-            this.RegenerateCache.Location = new System.Drawing.Point(261, 367);
+            this.RegenerateCache.Location = new System.Drawing.Point(261, 578);
             this.RegenerateCache.Name = "RegenerateCache";
             this.RegenerateCache.Size = new System.Drawing.Size(137, 17);
             this.RegenerateCache.TabIndex = 20;
@@ -201,7 +226,7 @@
             // runForms
             // 
             this.runForms.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runForms.Location = new System.Drawing.Point(466, 386);
+            this.runForms.Location = new System.Drawing.Point(650, 574);
             this.runForms.Name = "runForms";
             this.runForms.Size = new System.Drawing.Size(75, 23);
             this.runForms.TabIndex = 19;
@@ -217,7 +242,7 @@
             this.groupBox1.Controls.Add(this.FormsTree);
             this.groupBox1.Location = new System.Drawing.Point(255, 6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(292, 353);
+            this.groupBox1.Size = new System.Drawing.Size(470, 562);
             this.groupBox1.TabIndex = 18;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Forms";
@@ -230,7 +255,7 @@
             this.FormsTree.CheckBoxes = true;
             this.FormsTree.Location = new System.Drawing.Point(6, 19);
             this.FormsTree.Name = "FormsTree";
-            this.FormsTree.Size = new System.Drawing.Size(280, 328);
+            this.FormsTree.Size = new System.Drawing.Size(458, 537);
             this.FormsTree.TabIndex = 15;
             this.FormsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             this.FormsTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FormsTree_AfterSelect);
@@ -296,8 +321,8 @@
             this.tabTutorials.Controls.Add(this.runTutorials);
             this.tabTutorials.Location = new System.Drawing.Point(4, 28);
             this.tabTutorials.Name = "tabTutorials";
-            this.tabTutorials.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabTutorials.Size = new System.Drawing.Size(569, 432);
+            this.tabTutorials.Padding = new System.Windows.Forms.Padding(3);
+            this.tabTutorials.Size = new System.Drawing.Size(735, 619);
             this.tabTutorials.TabIndex = 2;
             this.tabTutorials.Text = "Tutorials";
             // 
@@ -309,7 +334,7 @@
             this.groupBox3.Controls.Add(this.TutorialsTree);
             this.groupBox3.Location = new System.Drawing.Point(255, 6);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(290, 375);
+            this.groupBox3.Size = new System.Drawing.Size(470, 562);
             this.groupBox3.TabIndex = 24;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Tutorials";
@@ -322,7 +347,7 @@
             this.TutorialsTree.CheckBoxes = true;
             this.TutorialsTree.Location = new System.Drawing.Point(6, 19);
             this.TutorialsTree.Name = "TutorialsTree";
-            this.TutorialsTree.Size = new System.Drawing.Size(278, 349);
+            this.TutorialsTree.Size = new System.Drawing.Size(458, 536);
             this.TutorialsTree.TabIndex = 15;
             this.TutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
@@ -392,7 +417,7 @@
             // runTutorials
             // 
             this.runTutorials.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runTutorials.Location = new System.Drawing.Point(464, 387);
+            this.runTutorials.Location = new System.Drawing.Point(650, 574);
             this.runTutorials.Name = "runTutorials";
             this.runTutorials.Size = new System.Drawing.Size(75, 23);
             this.runTutorials.TabIndex = 22;
@@ -411,15 +436,15 @@
             this.tabTest.Controls.Add(this.testsGroup);
             this.tabTest.Location = new System.Drawing.Point(4, 28);
             this.tabTest.Name = "tabTest";
-            this.tabTest.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabTest.Size = new System.Drawing.Size(569, 432);
+            this.tabTest.Padding = new System.Windows.Forms.Padding(3);
+            this.tabTest.Size = new System.Drawing.Size(735, 619);
             this.tabTest.TabIndex = 0;
             this.tabTest.Text = "Tests";
             // 
             // runTests
             // 
             this.runTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runTests.Location = new System.Drawing.Point(464, 387);
+            this.runTests.Location = new System.Drawing.Point(650, 574);
             this.runTests.Name = "runTests";
             this.runTests.Size = new System.Drawing.Size(75, 23);
             this.runTests.TabIndex = 14;
@@ -568,7 +593,7 @@
             this.testsGroup.Controls.Add(this.button2);
             this.testsGroup.Location = new System.Drawing.Point(255, 6);
             this.testsGroup.Name = "testsGroup";
-            this.testsGroup.Size = new System.Drawing.Size(290, 375);
+            this.testsGroup.Size = new System.Drawing.Size(470, 562);
             this.testsGroup.TabIndex = 16;
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
@@ -581,7 +606,7 @@
             this.TestsTree.CheckBoxes = true;
             this.TestsTree.Location = new System.Drawing.Point(6, 19);
             this.TestsTree.Name = "TestsTree";
-            this.TestsTree.Size = new System.Drawing.Size(278, 270);
+            this.TestsTree.Size = new System.Drawing.Size(458, 457);
             this.TestsTree.TabIndex = 15;
             this.TestsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
@@ -589,7 +614,7 @@
             // 
             this.SkipCheckedTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SkipCheckedTests.AutoSize = true;
-            this.SkipCheckedTests.Location = new System.Drawing.Point(6, 346);
+            this.SkipCheckedTests.Location = new System.Drawing.Point(6, 533);
             this.SkipCheckedTests.Name = "SkipCheckedTests";
             this.SkipCheckedTests.Size = new System.Drawing.Size(116, 17);
             this.SkipCheckedTests.TabIndex = 14;
@@ -601,7 +626,7 @@
             this.RunCheckedTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.RunCheckedTests.AutoSize = true;
             this.RunCheckedTests.Checked = true;
-            this.RunCheckedTests.Location = new System.Drawing.Point(6, 322);
+            this.RunCheckedTests.Location = new System.Drawing.Point(6, 509);
             this.RunCheckedTests.Name = "RunCheckedTests";
             this.RunCheckedTests.Size = new System.Drawing.Size(115, 17);
             this.RunCheckedTests.TabIndex = 13;
@@ -612,7 +637,7 @@
             // button3
             // 
             this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button3.Location = new System.Drawing.Point(85, 296);
+            this.button3.Location = new System.Drawing.Point(85, 483);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 12;
@@ -623,7 +648,7 @@
             // button2
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button2.Location = new System.Drawing.Point(4, 296);
+            this.button2.Location = new System.Drawing.Point(4, 483);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 11;
@@ -639,10 +664,10 @@
             this.tabBuild.Controls.Add(this.groupBox6);
             this.tabBuild.Controls.Add(this.groupBox5);
             this.tabBuild.Location = new System.Drawing.Point(4, 28);
-            this.tabBuild.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabBuild.Margin = new System.Windows.Forms.Padding(2);
             this.tabBuild.Name = "tabBuild";
-            this.tabBuild.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabBuild.Size = new System.Drawing.Size(569, 432);
+            this.tabBuild.Padding = new System.Windows.Forms.Padding(2);
+            this.tabBuild.Size = new System.Drawing.Size(735, 619);
             this.tabBuild.TabIndex = 3;
             this.tabBuild.Text = "Build";
             // 
@@ -650,9 +675,9 @@
             // 
             this.groupBox10.Controls.Add(this.BuildClean);
             this.groupBox10.Controls.Add(this.StartSln);
-            this.groupBox10.Location = new System.Drawing.Point(7, 187);
+            this.groupBox10.Location = new System.Drawing.Point(7, 170);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(442, 70);
+            this.groupBox10.Size = new System.Drawing.Size(442, 64);
             this.groupBox10.TabIndex = 24;
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "Options";
@@ -663,7 +688,7 @@
             this.BuildClean.Checked = true;
             this.BuildClean.CheckState = System.Windows.Forms.CheckState.Checked;
             this.BuildClean.Location = new System.Drawing.Point(7, 18);
-            this.BuildClean.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.BuildClean.Margin = new System.Windows.Forms.Padding(2);
             this.BuildClean.Name = "BuildClean";
             this.BuildClean.Size = new System.Drawing.Size(78, 17);
             this.BuildClean.TabIndex = 25;
@@ -676,7 +701,7 @@
             this.StartSln.Checked = true;
             this.StartSln.CheckState = System.Windows.Forms.CheckState.Checked;
             this.StartSln.Location = new System.Drawing.Point(7, 40);
-            this.StartSln.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.StartSln.Margin = new System.Windows.Forms.Padding(2);
             this.StartSln.Name = "StartSln";
             this.StartSln.Size = new System.Drawing.Size(213, 17);
             this.StartSln.TabIndex = 24;
@@ -686,7 +711,7 @@
             // runBuild
             // 
             this.runBuild.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runBuild.Location = new System.Drawing.Point(464, 387);
+            this.runBuild.Location = new System.Drawing.Point(650, 574);
             this.runBuild.Name = "runBuild";
             this.runBuild.Size = new System.Drawing.Size(75, 23);
             this.runBuild.TabIndex = 22;
@@ -699,9 +724,9 @@
             this.groupBox6.Controls.Add(this.BuildBranch);
             this.groupBox6.Controls.Add(this.BuildTrunk);
             this.groupBox6.Controls.Add(this.BranchUrl);
-            this.groupBox6.Location = new System.Drawing.Point(7, 82);
+            this.groupBox6.Location = new System.Drawing.Point(7, 74);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(442, 98);
+            this.groupBox6.Size = new System.Drawing.Size(442, 90);
             this.groupBox6.TabIndex = 21;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Source";
@@ -710,7 +735,7 @@
             // 
             this.BuildBranch.AutoSize = true;
             this.BuildBranch.Location = new System.Drawing.Point(7, 41);
-            this.BuildBranch.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.BuildBranch.Margin = new System.Windows.Forms.Padding(2);
             this.BuildBranch.Name = "BuildBranch";
             this.BuildBranch.Size = new System.Drawing.Size(59, 17);
             this.BuildBranch.TabIndex = 4;
@@ -722,7 +747,7 @@
             this.BuildTrunk.AutoSize = true;
             this.BuildTrunk.Checked = true;
             this.BuildTrunk.Location = new System.Drawing.Point(7, 19);
-            this.BuildTrunk.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.BuildTrunk.Margin = new System.Windows.Forms.Padding(2);
             this.BuildTrunk.Name = "BuildTrunk";
             this.BuildTrunk.Size = new System.Drawing.Size(53, 17);
             this.BuildTrunk.TabIndex = 3;
@@ -732,10 +757,10 @@
             // 
             // BranchUrl
             // 
-            this.BranchUrl.Location = new System.Drawing.Point(22, 67);
-            this.BranchUrl.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.BranchUrl.Location = new System.Drawing.Point(25, 59);
+            this.BranchUrl.Margin = new System.Windows.Forms.Padding(2);
             this.BranchUrl.Name = "BranchUrl";
-            this.BranchUrl.Size = new System.Drawing.Size(416, 20);
+            this.BranchUrl.Size = new System.Drawing.Size(410, 20);
             this.BranchUrl.TabIndex = 2;
             this.BranchUrl.Text = "https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME";
             // 
@@ -745,7 +770,7 @@
             this.groupBox5.Controls.Add(this.Build32);
             this.groupBox5.Location = new System.Drawing.Point(7, 6);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(442, 70);
+            this.groupBox5.Size = new System.Drawing.Size(442, 62);
             this.groupBox5.TabIndex = 20;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Architecture";
@@ -755,7 +780,7 @@
             this.Build64.AutoSize = true;
             this.Build64.Checked = true;
             this.Build64.Location = new System.Drawing.Point(7, 37);
-            this.Build64.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Build64.Margin = new System.Windows.Forms.Padding(2);
             this.Build64.Name = "Build64";
             this.Build64.Size = new System.Drawing.Size(51, 17);
             this.Build64.TabIndex = 5;
@@ -767,7 +792,7 @@
             // 
             this.Build32.AutoSize = true;
             this.Build32.Location = new System.Drawing.Point(7, 17);
-            this.Build32.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Build32.Margin = new System.Windows.Forms.Padding(2);
             this.Build32.Name = "Build32";
             this.Build32.Size = new System.Drawing.Size(51, 17);
             this.Build32.TabIndex = 4;
@@ -777,17 +802,280 @@
             // tabQuality
             // 
             this.tabQuality.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(228)))), ((int)(((byte)(222)))), ((int)(((byte)(190)))));
+            this.tabQuality.Controls.Add(this.groupBox12);
+            this.tabQuality.Controls.Add(this.groupBox11);
             this.tabQuality.Controls.Add(this.groupBox9);
             this.tabQuality.Controls.Add(this.runQuality);
             this.tabQuality.Controls.Add(this.groupBox8);
             this.tabQuality.Controls.Add(this.groupBox7);
             this.tabQuality.Location = new System.Drawing.Point(4, 28);
-            this.tabQuality.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabQuality.Margin = new System.Windows.Forms.Padding(2);
             this.tabQuality.Name = "tabQuality";
-            this.tabQuality.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabQuality.Size = new System.Drawing.Size(569, 432);
+            this.tabQuality.Padding = new System.Windows.Forms.Padding(2);
+            this.tabQuality.Size = new System.Drawing.Size(735, 619);
             this.tabQuality.TabIndex = 4;
             this.tabQuality.Text = "Quality";
+            // 
+            // groupBox12
+            // 
+            this.groupBox12.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox12.Controls.Add(this.graphMemoryHistory);
+            this.groupBox12.Controls.Add(this.graphFailures);
+            this.groupBox12.Controls.Add(this.graphDuration);
+            this.groupBox12.Controls.Add(this.graphTestsRun);
+            this.groupBox12.Location = new System.Drawing.Point(6, 297);
+            this.groupBox12.Name = "groupBox12";
+            this.groupBox12.Size = new System.Drawing.Size(719, 271);
+            this.groupBox12.TabIndex = 29;
+            this.groupBox12.TabStop = false;
+            this.groupBox12.Text = "History";
+            // 
+            // graphMemoryHistory
+            // 
+            this.graphMemoryHistory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.graphMemoryHistory.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphMemoryHistory.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphMemoryHistory.IsEnableVPan = false;
+            this.graphMemoryHistory.IsEnableVZoom = false;
+            this.graphMemoryHistory.Location = new System.Drawing.Point(540, 19);
+            this.graphMemoryHistory.Name = "graphMemoryHistory";
+            this.graphMemoryHistory.ScrollGrace = 0D;
+            this.graphMemoryHistory.ScrollMaxX = 0D;
+            this.graphMemoryHistory.ScrollMaxY = 0D;
+            this.graphMemoryHistory.ScrollMaxY2 = 0D;
+            this.graphMemoryHistory.ScrollMinX = 0D;
+            this.graphMemoryHistory.ScrollMinY = 0D;
+            this.graphMemoryHistory.ScrollMinY2 = 0D;
+            this.graphMemoryHistory.Size = new System.Drawing.Size(172, 245);
+            this.graphMemoryHistory.TabIndex = 3;
+            // 
+            // graphFailures
+            // 
+            this.graphFailures.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.graphFailures.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphFailures.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphFailures.IsEnableVPan = false;
+            this.graphFailures.IsEnableVZoom = false;
+            this.graphFailures.Location = new System.Drawing.Point(362, 19);
+            this.graphFailures.Name = "graphFailures";
+            this.graphFailures.ScrollGrace = 0D;
+            this.graphFailures.ScrollMaxX = 0D;
+            this.graphFailures.ScrollMaxY = 0D;
+            this.graphFailures.ScrollMaxY2 = 0D;
+            this.graphFailures.ScrollMinX = 0D;
+            this.graphFailures.ScrollMinY = 0D;
+            this.graphFailures.ScrollMinY2 = 0D;
+            this.graphFailures.Size = new System.Drawing.Size(172, 245);
+            this.graphFailures.TabIndex = 2;
+            // 
+            // graphDuration
+            // 
+            this.graphDuration.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.graphDuration.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphDuration.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphDuration.IsEnableVPan = false;
+            this.graphDuration.IsEnableVZoom = false;
+            this.graphDuration.Location = new System.Drawing.Point(184, 19);
+            this.graphDuration.Name = "graphDuration";
+            this.graphDuration.ScrollGrace = 0D;
+            this.graphDuration.ScrollMaxX = 0D;
+            this.graphDuration.ScrollMaxY = 0D;
+            this.graphDuration.ScrollMaxY2 = 0D;
+            this.graphDuration.ScrollMinX = 0D;
+            this.graphDuration.ScrollMinY = 0D;
+            this.graphDuration.ScrollMinY2 = 0D;
+            this.graphDuration.Size = new System.Drawing.Size(172, 245);
+            this.graphDuration.TabIndex = 1;
+            // 
+            // graphTestsRun
+            // 
+            this.graphTestsRun.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.graphTestsRun.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphTestsRun.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphTestsRun.IsEnableVPan = false;
+            this.graphTestsRun.IsEnableVZoom = false;
+            this.graphTestsRun.Location = new System.Drawing.Point(6, 19);
+            this.graphTestsRun.Name = "graphTestsRun";
+            this.graphTestsRun.ScrollGrace = 0D;
+            this.graphTestsRun.ScrollMaxX = 0D;
+            this.graphTestsRun.ScrollMaxY = 0D;
+            this.graphTestsRun.ScrollMaxY2 = 0D;
+            this.graphTestsRun.ScrollMinX = 0D;
+            this.graphTestsRun.ScrollMinY = 0D;
+            this.graphTestsRun.ScrollMinY2 = 0D;
+            this.graphTestsRun.Size = new System.Drawing.Size(172, 245);
+            this.graphTestsRun.TabIndex = 0;
+            // 
+            // groupBox11
+            // 
+            this.groupBox11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox11.Controls.Add(this.labelLeaks);
+            this.groupBox11.Controls.Add(this.labelFailures);
+            this.groupBox11.Controls.Add(this.labelRevision);
+            this.groupBox11.Controls.Add(this.labelTestsRun);
+            this.groupBox11.Controls.Add(this.labelDuration);
+            this.groupBox11.Controls.Add(this.graphMemory);
+            this.groupBox11.Controls.Add(this.linkQualityLog);
+            this.groupBox11.Controls.Add(this.label12);
+            this.groupBox11.Controls.Add(this.label13);
+            this.groupBox11.Controls.Add(this.label11);
+            this.groupBox11.Controls.Add(this.label10);
+            this.groupBox11.Controls.Add(this.label9);
+            this.groupBox11.Controls.Add(this.comboRunDate);
+            this.groupBox11.Controls.Add(this.label8);
+            this.groupBox11.Location = new System.Drawing.Point(190, 6);
+            this.groupBox11.Name = "groupBox11";
+            this.groupBox11.Size = new System.Drawing.Size(535, 284);
+            this.groupBox11.TabIndex = 28;
+            this.groupBox11.TabStop = false;
+            this.groupBox11.Text = "Run results";
+            // 
+            // labelLeaks
+            // 
+            this.labelLeaks.AutoSize = true;
+            this.labelLeaks.Location = new System.Drawing.Point(270, 67);
+            this.labelLeaks.Name = "labelLeaks";
+            this.labelLeaks.Size = new System.Drawing.Size(13, 13);
+            this.labelLeaks.TabIndex = 12;
+            this.labelLeaks.Text = "0";
+            // 
+            // labelFailures
+            // 
+            this.labelFailures.AutoSize = true;
+            this.labelFailures.Location = new System.Drawing.Point(270, 44);
+            this.labelFailures.Name = "labelFailures";
+            this.labelFailures.Size = new System.Drawing.Size(13, 13);
+            this.labelFailures.TabIndex = 11;
+            this.labelFailures.Text = "0";
+            // 
+            // labelRevision
+            // 
+            this.labelRevision.AutoSize = true;
+            this.labelRevision.Location = new System.Drawing.Point(270, 21);
+            this.labelRevision.Name = "labelRevision";
+            this.labelRevision.Size = new System.Drawing.Size(13, 13);
+            this.labelRevision.TabIndex = 10;
+            this.labelRevision.Text = "0";
+            // 
+            // labelTestsRun
+            // 
+            this.labelTestsRun.AutoSize = true;
+            this.labelTestsRun.Location = new System.Drawing.Point(62, 68);
+            this.labelTestsRun.Name = "labelTestsRun";
+            this.labelTestsRun.Size = new System.Drawing.Size(13, 13);
+            this.labelTestsRun.TabIndex = 9;
+            this.labelTestsRun.Text = "0";
+            // 
+            // labelDuration
+            // 
+            this.labelDuration.AutoSize = true;
+            this.labelDuration.Location = new System.Drawing.Point(62, 44);
+            this.labelDuration.Name = "labelDuration";
+            this.labelDuration.Size = new System.Drawing.Size(28, 13);
+            this.labelDuration.TabIndex = 8;
+            this.labelDuration.Text = "0:00";
+            // 
+            // graphMemory
+            // 
+            this.graphMemory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.graphMemory.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphMemory.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphMemory.IsEnableVPan = false;
+            this.graphMemory.IsEnableVZoom = false;
+            this.graphMemory.Location = new System.Drawing.Point(9, 88);
+            this.graphMemory.Name = "graphMemory";
+            this.graphMemory.ScrollGrace = 0D;
+            this.graphMemory.ScrollMaxX = 0D;
+            this.graphMemory.ScrollMaxY = 0D;
+            this.graphMemory.ScrollMaxY2 = 0D;
+            this.graphMemory.ScrollMinX = 0D;
+            this.graphMemory.ScrollMinY = 0D;
+            this.graphMemory.ScrollMinY2 = 0D;
+            this.graphMemory.Size = new System.Drawing.Size(519, 190);
+            this.graphMemory.TabIndex = 7;
+            // 
+            // linkQualityLog
+            // 
+            this.linkQualityLog.AutoSize = true;
+            this.linkQualityLog.Location = new System.Drawing.Point(435, 20);
+            this.linkQualityLog.Name = "linkQualityLog";
+            this.linkQualityLog.Size = new System.Drawing.Size(50, 13);
+            this.linkQualityLog.TabIndex = 7;
+            this.linkQualityLog.TabStop = true;
+            this.linkQualityLog.Text = "Open log";
+            this.linkQualityLog.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkQualityLog_LinkClicked);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(220, 67);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(39, 13);
+            this.label12.TabIndex = 6;
+            this.label12.Text = "Leaks:";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(220, 44);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(46, 13);
+            this.label13.TabIndex = 5;
+            this.label13.Text = "Failures:";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(220, 21);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(51, 13);
+            this.label11.TabIndex = 4;
+            this.label11.Text = "Revision:";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(6, 67);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(54, 13);
+            this.label10.TabIndex = 3;
+            this.label10.Text = "Tests run:";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(6, 44);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(50, 13);
+            this.label9.TabIndex = 2;
+            this.label9.Text = "Duration:";
+            // 
+            // comboRunDate
+            // 
+            this.comboRunDate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRunDate.FormattingEnabled = true;
+            this.comboRunDate.Location = new System.Drawing.Point(64, 17);
+            this.comboRunDate.Name = "comboRunDate";
+            this.comboRunDate.Size = new System.Drawing.Size(135, 21);
+            this.comboRunDate.TabIndex = 1;
+            this.comboRunDate.SelectedIndexChanged += new System.EventHandler(this.comboRunDate_SelectedIndexChanged);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 21);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(54, 13);
+            this.label8.TabIndex = 0;
+            this.label8.Text = "Run date:";
             // 
             // groupBox9
             // 
@@ -795,7 +1083,7 @@
             this.groupBox9.Controls.Add(this.QualityChooseTests);
             this.groupBox9.Location = new System.Drawing.Point(7, 214);
             this.groupBox9.Name = "groupBox9";
-            this.groupBox9.Size = new System.Drawing.Size(228, 76);
+            this.groupBox9.Size = new System.Drawing.Size(177, 76);
             this.groupBox9.TabIndex = 27;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "Test selection";
@@ -825,7 +1113,7 @@
             // runQuality
             // 
             this.runQuality.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.runQuality.Location = new System.Drawing.Point(464, 387);
+            this.runQuality.Location = new System.Drawing.Point(650, 574);
             this.runQuality.Name = "runQuality";
             this.runQuality.Size = new System.Drawing.Size(75, 23);
             this.runQuality.TabIndex = 26;
@@ -843,7 +1131,7 @@
             this.groupBox8.Controls.Add(this.QualityStartLater);
             this.groupBox8.Location = new System.Drawing.Point(7, 6);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(228, 119);
+            this.groupBox8.Size = new System.Drawing.Size(177, 119);
             this.groupBox8.TabIndex = 25;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Schedule";
@@ -851,7 +1139,7 @@
             // QualityEndTime
             // 
             this.QualityEndTime.Location = new System.Drawing.Point(76, 88);
-            this.QualityEndTime.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.QualityEndTime.Margin = new System.Windows.Forms.Padding(2);
             this.QualityEndTime.Name = "QualityEndTime";
             this.QualityEndTime.Size = new System.Drawing.Size(53, 20);
             this.QualityEndTime.TabIndex = 5;
@@ -880,7 +1168,7 @@
             // QualityStartTime
             // 
             this.QualityStartTime.Location = new System.Drawing.Point(76, 65);
-            this.QualityStartTime.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.QualityStartTime.Margin = new System.Windows.Forms.Padding(2);
             this.QualityStartTime.Name = "QualityStartTime";
             this.QualityStartTime.Size = new System.Drawing.Size(53, 20);
             this.QualityStartTime.TabIndex = 2;
@@ -914,7 +1202,7 @@
             this.groupBox7.Controls.Add(this.QualityCurrentBuild);
             this.groupBox7.Location = new System.Drawing.Point(7, 131);
             this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(228, 76);
+            this.groupBox7.Size = new System.Drawing.Size(177, 76);
             this.groupBox7.TabIndex = 24;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Build options";
@@ -945,14 +1233,14 @@
             // 
             this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(190)))), ((int)(((byte)(210)))));
             this.tabOutput.Controls.Add(this.buttonStop);
-            this.tabOutput.Controls.Add(this.commandShell);
             this.tabOutput.Controls.Add(this.linkLogFile);
             this.tabOutput.Controls.Add(this.label7);
+            this.tabOutput.Controls.Add(this.commandShell);
             this.tabOutput.Location = new System.Drawing.Point(4, 28);
-            this.tabOutput.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabOutput.Margin = new System.Windows.Forms.Padding(2);
             this.tabOutput.Name = "tabOutput";
-            this.tabOutput.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabOutput.Size = new System.Drawing.Size(569, 432);
+            this.tabOutput.Padding = new System.Windows.Forms.Padding(2);
+            this.tabOutput.Size = new System.Drawing.Size(735, 619);
             this.tabOutput.TabIndex = 5;
             this.tabOutput.Text = "Output";
             // 
@@ -960,30 +1248,13 @@
             // 
             this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonStop.Enabled = false;
-            this.buttonStop.Location = new System.Drawing.Point(464, 387);
+            this.buttonStop.Location = new System.Drawing.Point(650, 574);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 27;
             this.buttonStop.Text = "Stop";
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.Stop);
-            // 
-            // commandShell
-            // 
-            this.commandShell.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.commandShell.DefaultDirectory = null;
-            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.commandShell.Location = new System.Drawing.Point(13, 28);
-            this.commandShell.LogFile = null;
-            this.commandShell.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.commandShell.Name = "commandShell";
-            this.commandShell.Size = new System.Drawing.Size(527, 354);
-            this.commandShell.StopButton = null;
-            this.commandShell.TabIndex = 2;
-            this.commandShell.Text = "";
-            this.commandShell.WordWrap = false;
             // 
             // linkLogFile
             // 
@@ -1007,6 +1278,23 @@
             this.label7.TabIndex = 0;
             this.label7.Text = "Output log:";
             // 
+            // commandShell
+            // 
+            this.commandShell.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.commandShell.DefaultDirectory = null;
+            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.commandShell.Location = new System.Drawing.Point(13, 28);
+            this.commandShell.LogFile = null;
+            this.commandShell.Margin = new System.Windows.Forms.Padding(2);
+            this.commandShell.Name = "commandShell";
+            this.commandShell.Size = new System.Drawing.Size(712, 541);
+            this.commandShell.StopButton = null;
+            this.commandShell.TabIndex = 2;
+            this.commandShell.Text = "";
+            this.commandShell.WordWrap = false;
+            // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1014,7 +1302,7 @@
             this.viewToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(571, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(737, 24);
             this.menuStrip1.TabIndex = 8;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -1142,7 +1430,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ClientSize = new System.Drawing.Size(571, 488);
+            this.ClientSize = new System.Drawing.Size(737, 675);
             this.Controls.Add(this.mainPanel);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -1182,6 +1470,9 @@
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.tabQuality.ResumeLayout(false);
+            this.groupBox12.ResumeLayout(false);
+            this.groupBox11.ResumeLayout(false);
+            this.groupBox11.PerformLayout();
             this.groupBox9.ResumeLayout(false);
             this.groupBox9.PerformLayout();
             this.groupBox8.ResumeLayout(false);
@@ -1287,6 +1578,26 @@
         private System.Windows.Forms.GroupBox groupBox10;
         private System.Windows.Forms.CheckBox BuildClean;
         private System.Windows.Forms.CheckBox StartSln;
+        private System.Windows.Forms.GroupBox groupBox12;
+        private ZedGraphControl graphMemoryHistory;
+        private ZedGraphControl graphFailures;
+        private ZedGraphControl graphDuration;
+        private ZedGraphControl graphTestsRun;
+        private ZedGraphControl graphMemory;
+        private System.Windows.Forms.GroupBox groupBox11;
+        private System.Windows.Forms.LinkLabel linkQualityLog;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.ComboBox comboRunDate;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label labelLeaks;
+        private System.Windows.Forms.Label labelFailures;
+        private System.Windows.Forms.Label labelRevision;
+        private System.Windows.Forms.Label labelTestsRun;
+        private System.Windows.Forms.Label labelDuration;
 
     }
 }

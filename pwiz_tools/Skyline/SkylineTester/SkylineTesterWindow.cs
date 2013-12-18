@@ -114,6 +114,8 @@ namespace SkylineTester
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync();
+
+            InitQuality();
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -529,6 +531,12 @@ namespace SkylineTester
                 OpenQuality();
             else if (Tabs.SelectedTab == tabOutput)
                 OpenOutput();
+        }
+
+        private void FormsTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            e.Node.Checked = !e.Node.Checked;
+            FormsTree.SelectedNode = null;
         }
     }
 }
