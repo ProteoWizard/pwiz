@@ -18,8 +18,10 @@
  */
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using TestRunnerLib;
 using ZedGraph;
@@ -37,11 +39,20 @@ namespace SkylineTester
         private void InitQuality()
         {
             InitGraph(graphMemory, "Memory used");
-            graphMemory.GraphPane.XAxis.IsVisible = false;
-            graphMemory.GraphPane.YAxis.IsVisible = true;
-            graphMemory.GraphPane.YAxis.Title.Text = "MB";
-            graphMemory.GraphPane.YAxis.MinorTic.IsAllTics = false;
-            graphMemory.GraphPane.YAxis.Scale.FontSpec.Angle = 90;
+            var pane = graphMemory.GraphPane;
+            pane.XAxis.MajorTic.IsAllTics = false;
+            pane.XAxis.MinorTic.IsAllTics = false;
+            pane.XAxis.Scale.IsVisible = false;
+            pane.XAxis.Scale.Format = "#";
+            pane.XAxis.Scale.Mag = 0;
+            pane.YAxis.IsVisible = true;
+            pane.YAxis.MinorTic.IsAllTics = false;
+            pane.YAxis.Title.Text = "MB";
+            pane.YAxis.Scale.Format = "#";
+            pane.YAxis.Scale.Mag = 0;
+            pane.Legend.IsVisible = true;
+            pane.YAxis.Scale.FontSpec.Angle = 90;
+
             InitGraph(graphTestsRun, "Tests run");
             InitGraph(graphDuration, "Duration");
             InitGraph(graphFailures, "Failures");
@@ -64,9 +75,10 @@ namespace SkylineTester
             pane.XAxis.MinorTic.IsAllTics = false;
             pane.XAxis.Title.IsVisible = false;
             pane.IsFontsScaled = false;
-            pane.XAxis.Scale.MaxGrace = 0.05;
-            pane.YAxis.Scale.MaxGrace = 0.1;
+            pane.XAxis.Scale.MaxGrace = 0.0;
+            pane.YAxis.Scale.MaxGrace = 0.05;
             pane.XAxis.Scale.FontSpec.Angle = 90;
+            pane.Legend.IsVisible = false;
         }
 
         private Summary _summary;
@@ -84,10 +96,42 @@ namespace SkylineTester
             // Show latest 30 runs, max.
             if (_summary.Runs.Count > 30)
                 _summary.Runs.RemoveRange(0, _summary.Runs.Count - 30);
+            var runsChronological = new Summary.Run[_summary.Runs.Count];
+            _summary.Runs.CopyTo(runsChronological);
             _summary.Runs.Reverse();
             foreach (var run in _summary.Runs)
                 comboRunDate.Items.Add(run.Date);
             comboRunDate.SelectedIndex = 0;
+
+            var labels = _summary.Runs.Select(run => run.Date.Month + "/" + run.Date.Day).ToArray();
+            
+            CreateGraph("Tests run", graphTestsRun, Color.LightSeaGreen,
+                labels,
+                runsChronological.Select(run => (double)run.TestsRun).ToArray());
+
+            CreateGraph("Duration", graphDuration, Color.LightSteelBlue,
+                labels,
+                runsChronological.Select(run => (double)run.RunMinutes).ToArray());
+
+            CreateGraph("Failures", graphFailures, Color.LightCoral,
+                labels,
+                runsChronological.Select(run => (double)run.Failures).ToArray());
+
+            CreateGraph("Duration", graphMemoryHistory, Color.MediumPurple,
+                labels,
+                runsChronological.Select(run => (double)run.TotalMemory).ToArray());
+        }
+
+        private void CreateGraph(string name, ZedGraphControl graph, Color color, string[] labels, double[] data)
+        {
+            var pane = graph.GraphPane;
+            pane.CurveList.Clear();
+            var bars = pane.AddBar(name, null, data, color);
+            bars.Bar.Fill = new Fill(color);
+            pane.XAxis.Scale.TextLabels = labels;
+            pane.XAxis.Type = AxisType.Text;
+            pane.AxisChange();
+            graph.Refresh();
         }
 
         private void RunQuality(object sender, EventArgs e)
@@ -206,7 +250,39 @@ namespace SkylineTester
             labelFailures.Text = run.Failures.ToString(CultureInfo.InvariantCulture);
             labelLeaks.Text = run.Leaks.ToString(CultureInfo.InvariantCulture);
             var logFile = Path.Combine(_rootDir, QualityLogsDirectory, GetLogFile(run.Date));
-            linkQualityLog.Enabled = File.Exists(logFile);
+            bool hasLogFile = linkQualityLog.Enabled = File.Exists(logFile);
+
+            if (hasLogFile)
+            {
+                var managedPointList = new PointPairList();
+                var totalPointList = new PointPairList();
+
+                var logLines = File.ReadAllLines(logFile);
+                foreach (var line in logLines)
+                {
+                    if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')
+                    {
+                        var i = line.IndexOf("failures, ", StringComparison.OrdinalIgnoreCase);
+                        var memory = line.Substring(i + 10).Split('/');
+                        var managedMemory = double.Parse(memory[0]);
+                        var totalMemory = double.Parse(memory[1].Split(' ')[0]);
+                        managedPointList.Add(managedPointList.Count, managedMemory);
+                        totalPointList.Add(totalPointList.Count, totalMemory);
+                    }
+                }
+
+                var pane = graphMemory.GraphPane;
+                pane.CurveList.Clear();
+                var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Green, SymbolType.None);
+                var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Purple, SymbolType.None);
+                managedMemoryCurve.Line.Width = 2;
+                totalMemoryCurve.Line.Width = 2;
+                managedMemoryCurve.Line.Fill = new Fill(Color.Green, Color.LightGreen, -90);
+                totalMemoryCurve.Line.Fill = new Fill(Color.Purple, Color.MediumPurple, -90);
+
+                pane.AxisChange();
+                graphMemory.Refresh();
+            }
         }
 
         private string GetLogFile(DateTime date)
