@@ -1829,12 +1829,15 @@ namespace pwiz.Skyline.Model.Results
             // Find the closest peak within a tolerance of 0.001 (near the precision of a float)
             int i = 0, iMin = -1;
             double minDelta = double.MaxValue;
+            int maxUnforced = 0;
             foreach (var peak in Peaks)
             {
                 double delta = Math.Abs(peak.RetentionTime - retentionTime);
-                if (delta < minDelta)
+                int unforced = peak.IsForcedIntegration ? 0 : 1;
+                if (unforced > maxUnforced || (unforced == maxUnforced && delta < minDelta))
                 {
                     minDelta = delta;
+                    maxUnforced = unforced;
                     iMin = i;
                 }
                 i++;
