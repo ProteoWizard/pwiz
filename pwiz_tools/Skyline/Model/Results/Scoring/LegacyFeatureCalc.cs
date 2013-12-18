@@ -74,7 +74,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            // Note: legacy scores must not be NA to allow them to sum correctly always
+            if (!summaryPeakData.TransitionGroupPeakData.Where(IsIncludedGroup).Any())
+                return float.NaN;
             return (float) summaryPeakData.TransitionGroupPeakData.Where(IsIncludedGroup).Sum(pd => CalcCountScore(pd));
         }
 

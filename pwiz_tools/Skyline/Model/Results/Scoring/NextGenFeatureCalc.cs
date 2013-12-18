@@ -54,6 +54,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             if (massErrors.Count == 0)
                 return float.NaN;
+            if (weights.All(weight => weight == 0))
+                weights = weights.ConvertAll(weight => 1.0);
             var massStats = new Statistics(massErrors);
             var weightsStats = new Statistics(weights);
             return (float) massStats.Mean(weightsStats);
@@ -78,7 +80,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
-            return !nodeTran.IsMs1;
+            return nodeTran != null && !nodeTran.IsMs1;
         }
     }
 
@@ -91,7 +93,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
-            return nodeTran.IsMs1;
+            return nodeTran != null && nodeTran.IsMs1;
         }
     }
 
@@ -115,7 +117,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var weights = new List<double>();
             foreach (var pdGroup in tranGroupPeakDatas)
             {
-                var pds = pdGroup.TranstionPeakData.Where(pd => pd.NodeTran.HasDistInfo).ToList();
+                var pds = pdGroup.TranstionPeakData.Where(pd => pd.NodeTran != null && pd.NodeTran.HasDistInfo).ToList();
                 if (!pds.Any())
                     continue;
                 var peakAreas = pds.Select(pd => (double)pd.PeakData.Area);
@@ -124,11 +126,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var statIsotopeProportions = new Statistics(isotopeProportions);
                 var isotopeDotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statIsotopeProportions);
                 double weight = statPeakAreas.Sum();
+                if (double.IsNaN(isotopeDotProduct))
+                    isotopeDotProduct = 0;
                 isotopeDotProducts.Add(isotopeDotProduct);
                 weights.Add(weight);
             }
             if (isotopeDotProducts.Count == 0)
                 return float.NaN;
+            // If all weights are zero, return zero instead of NaN
+            if (weights.All(weight => weight == 0))
+                return 0;
             var idotpStats = new Statistics(isotopeDotProducts);
             var weightsStats = new Statistics(weights);
             return (float)idotpStats.Mean(weightsStats);
@@ -191,6 +198,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return float.NaN;
             var snStats = new Statistics(snValues);
             var weightsStats = new Statistics(weights);
+            if (weights.All(weight => weight == 0))
+                return 0;
             return (float)snStats.Mean(weightsStats);
         }
 
@@ -206,16 +215,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
             int startNoiseCalc = Math.Max(peakData.StartIndex - halfRange, 0);
             int endNoiseCalc = Math.Min(peakData.EndIndex + halfRange, peakData.Intensities.Length);
             if (peakData.StartIndex > peakData.Intensities.Length || peakData.StartIndex == -1 || peakData.EndIndex == -1)
-                return double.NaN;
+                return null;
             for (int i = startNoiseCalc; i < peakData.StartIndex; ++i)
                 intensityList.Add(peakData.Intensities[i]);
             for (int i = peakData.EndIndex; i < endNoiseCalc; ++i)
                 intensityList.Add(peakData.Intensities[i]);
             if (intensityList.Count == 0)
-                return double.NaN;
+                return null;
             double peakHeight = Math.Max(peakData.Intensities[peakData.TimeIndex], 1);
             // If there is no medianNoise, set it to 1.0
             double medianNoise = Math.Max(GetMedian(intensityList), 1);
+            if (peakHeight == 0)
+                return 0;
             return Math.Log10(peakHeight / medianNoise);
 
         }

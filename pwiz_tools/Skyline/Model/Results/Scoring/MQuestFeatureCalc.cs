@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // If there are no light transition groups with library intensities,
             // then this score does not apply.
-            if (tranGroupPeakDatas.Length == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup.LibInfo == null))
+            if (tranGroupPeakDatas.Length == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup == null || pd.NodeGroup.LibInfo == null))
                 return float.NaN;
 
             // Using linq expressions showed up in a profiler
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
-            return !nodeTran.IsMs1;
+            return nodeTran != null && !nodeTran.IsMs1;
         }
 
     }
@@ -294,10 +294,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 crossCorrMatrix = new MQuestAnalyteCrossCorrelations(lightTransitionPeakData);
                 context.AddInfo(crossCorrMatrix);
             }
+            if (!crossCorrMatrix.CrossCorrelations.Any())
+                return float.NaN;
+            MaxPossibleShift = lightTransitionPeakData.Max(pd => pd.PeakData.Length);
 
             var statValues = crossCorrMatrix.GetStats(GetValue, FilterIons);
             var statWeights = crossCorrMatrix.GetStats(GetWeight, FilterIons);
-            return Calculate(statValues, statWeights);
+            return statValues.Length == 0 ? float.NaN : Calculate(statValues, statWeights);
         }
 
         protected abstract float Calculate(Statistics statValues, Statistics statWeigths);
@@ -314,6 +317,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return crossCorrMatrix.Where(xcorr => xcorr.TranPeakData1.NodeTran != null && xcorr.TranPeakData2.NodeTran != null)
                                   .Where(xcorr => !xcorr.TranPeakData1.NodeTran.IsMs1 && !xcorr.TranPeakData2.NodeTran.IsMs1);
         }
+
+        /// <summary>
+        /// For assigning the worst possible score when all weights are zero
+        /// </summary>
+        protected int MaxPossibleShift { get; private set; }
     }
 
     /// <summary>
@@ -328,7 +336,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
-                return float.NaN;
+                return 0;
             return (float) result;
         }
 
@@ -368,7 +376,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return float.NaN;
+                return MaxPossibleShift;
             return (float) result;
         }
 
@@ -487,10 +495,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 crossCorrMatrix = new MQuestReferenceCrossCorrelations(summaryPeakData.TransitionGroupPeakData);
                 context.AddInfo(crossCorrMatrix);
             }
+            if (!crossCorrMatrix.CrossCorrelations.Any())
+                return float.NaN;
+
+            var transitionPeakDatas = summaryPeakData.TransitionGroupPeakData.SelectMany(pd => pd.TranstionPeakData);
+            MaxPossibleShift = transitionPeakDatas.Max(pd => pd.PeakData.Length);
 
             var statValues = crossCorrMatrix.GetStats(GetValue, FilterIons);
             var statWeights = crossCorrMatrix.GetStats(GetWeight, FilterIons);
-            return Calculate(statValues, statWeights);
+            return statValues.Length == 0 ? float.NaN : Calculate(statValues, statWeights);
         }
 
         protected abstract float Calculate(Statistics statValues, Statistics statWeigths);
@@ -507,6 +520,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return crossCorrMatrix.Where(xcorr => xcorr.TranPeakData1.NodeTran != null && xcorr.TranPeakData2.NodeTran != null)
                                   .Where(xcorr => !xcorr.TranPeakData1.NodeTran.IsMs1 && !xcorr.TranPeakData2.NodeTran.IsMs1);
         }
+
+        /// <summary>
+        /// For assigning the worst possible score when all weights are zero
+        /// </summary>
+        protected int MaxPossibleShift { get; private set; }
     }
 
     /// <summary>
@@ -521,7 +539,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
-                return float.NaN;
+                return 0;
             return (float) result;
         }
 
@@ -559,7 +577,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return float.NaN;
+                return MaxPossibleShift;
             return (float) result;
         }
 

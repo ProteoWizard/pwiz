@@ -336,7 +336,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => SkylineWindow.Document.PeptideCount < 120);
             RunUI(() =>
             {
-                Assert.AreEqual(111, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(113, SkylineWindow.Document.PeptideCount);
 
                 // Scheduling for Efficient Acquisition, p. 17 
                 SkylineWindow.Undo();

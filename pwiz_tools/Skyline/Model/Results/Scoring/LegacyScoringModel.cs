@@ -32,11 +32,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel__defaultName_Skyline_Legacy;
 
+        public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6};
+
+        public static LinearModelParams DEFAULT_PARAMS { get { return new LinearModelParams(DEFAULT_WEIGHTS); } }
+
         // Weighting coefficients.
         private const double W0 = 1.0;  // Log unforced area
         private const double W1 = 1.0;  // Unforced count score
-        private const double W2 = LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER;    // Unforced count score standard
+        private const double W2 = LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Unforced count score standard
         private const double W3 = 20.0; // Identified count
+        private const double W4 = 3.0; // Library intensity correlation
+        private const double W5 = 4.0; // Shape score
+        private const double W6 = -0.05; // Co-elution (weighted)
 
         public static double Score(double logUnforcedArea,
                                    double unforcedCountScore,
@@ -73,7 +80,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     new LegacyLogUnforcedAreaCalc(),
                     new LegacyUnforcedCountScoreCalc(),
                     new LegacyUnforcedCountScoreStandardCalc(),
-                    new LegacyIdentifiedCountCalc()
+                    new LegacyIdentifiedCountCalc(),
+                    new MQuestIntensityCorrelationCalc(),
+                    new MQuestWeightedShapeCalc(),
+                    new MQuestWeightedCoElutionCalc(), 
                 });
         } 
 
@@ -81,7 +91,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return ChangeProp(ImClone(this), im =>
                 {
-                    var parameters = new LinearModelParams(new[] { W0, W1, W2, W3 });
+                    var parameters = new LinearModelParams(DEFAULT_WEIGHTS);
                     ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
                     ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets);
                     targetTransitionGroups.ScorePeaks(parameters.Weights);

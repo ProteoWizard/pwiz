@@ -190,6 +190,9 @@ namespace pwiz.SkylineTestA
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc"" weight=""7.77""/>
                 </legacy_peak_scoring_model>";
             AssertEx.Serialization<LegacyScoringModel>(testRoundTrip, AssertEx.Cloned);
 

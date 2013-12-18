@@ -525,25 +525,17 @@ namespace pwiz.Skyline.Model.Results
             return Comparer<double>.Default.Compare(p2.CombinedScore, p1.CombinedScore);
         }
 
-        /// <summary>
-        /// Store the final peaks back on the individual <see cref="ChromDataSet"/> objects
-        /// </summary>
-        public void StorePeaks()
+        public void SetPeakSet(ChromDataPeakList peakSet, int index)
         {
-            // If there are no peaks to store, do nothing.
-            if (_listPeakSets.Count == 0)
-                return;
+            _listPeakSets[index] = peakSet;
+        }
 
-            // Pick the maximum peak by the product score
-            ChromDataPeakList peakSetMax = _listPeakSets[0];
-
-            // Sort them back into retention time order
-            _listPeakSets.Sort((l1, l2) =>
-                (l1[0].Peak != null ? l1[0].Peak.StartIndex : 0) -
-                (l2[0].Peak != null ? l2[0].Peak.StartIndex : 0));
-
+        /// <summary>
+        /// Generate <see cref="ChromDataPeak"/> objects to make peaks scorable
+        /// </summary>
+        public void GeneratePeakData()
+        {
             // Set the processed peaks back to the chromatogram data
-            int maxPeakIndex = _listPeakSets.IndexOf(peakSetMax);
             HashSet<ChromKey> primaryPeakKeys = new HashSet<ChromKey>();
             for (int i = 0, len = _listPeakSets.Count; i < len; i++)
             {
@@ -560,11 +552,6 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (var peak in peakSet)
                 {
-                    // Set the max peak index on the data for each transition,
-                    // but only the first time through.
-                    if (i == 0)
-                        peak.Data.MaxPeakIndex = maxPeakIndex;
-
                     // Reintegrate a new peak based on the max peak
                     ChromPeak.FlagValues flags = 0;
                     // If the entire peak set is a result of forced integration from peptide
@@ -586,10 +573,44 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromPeak.FlagValues.contains_id;
                     if (peakSet.IsAlignedIdentified)
                         flags |= ChromPeak.FlagValues.used_id_alignment;
-                    peak.Data.Peaks.Add(peak.CalcChromPeak(peakMax, flags));
+                    peak.CalcChromPeak(peakMax, flags);
                 }
             }
         }
+
+
+        /// <summary>
+        /// Sort the final peaks by retention time and make a pointer to the best peak
+        /// </summary>
+        public void StorePeaks()
+        {
+            // If there are no peaks to store, do nothing.
+            if (_listPeakSets.Count == 0)
+                return;
+
+            // Pick the maximum peak by the product score
+            ChromDataPeakList peakSetMax = _listPeakSets[0];
+
+            // Sort them back into retention time order
+            _listPeakSets.Sort((l1, l2) =>
+                (l1[0].Peak != null ? l1[0].Peak.StartIndex : 0) -
+                (l2[0].Peak != null ? l2[0].Peak.StartIndex : 0));
+
+            // Set the processed peaks back to the chromatogram data
+            int maxPeakIndex = _listPeakSets.IndexOf(peakSetMax);
+            int i = 0;
+            foreach (var peakSet in _listPeakSets)
+            {
+                foreach (var peak in peakSet)
+                {
+                    peak.Data.Peaks.Add(peak.DataPeak);
+                    // Set the max peak index on the data for each transition
+                    if (i == 0)
+                        peak.Data.MaxPeakIndex = maxPeakIndex;
+                }
+                ++i;
+            }   
+    }
 
         private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets,
                                                            double[] retentionTimes,

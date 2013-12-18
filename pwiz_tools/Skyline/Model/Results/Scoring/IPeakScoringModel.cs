@@ -317,6 +317,69 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected abstract float Calculate(PeakScoringContext context, IPeptidePeakData<IDetailedPeakData> summaryPeakData);
     }
 
+    /// <summary>
+    /// Wrapper class to convert between IPeptidePeakData templated types
+    /// </summary>
+    public class PeptidePeakDataConverter<TData> : IPeptidePeakData<ISummaryPeakData> where TData : ISummaryPeakData
+    {
+        public PeptidePeakDataConverter(IPeptidePeakData<TData> peptidePeakData)
+        {
+            _peptidePeakData = peptidePeakData;
+            var groupPeakData = _peptidePeakData.TransitionGroupPeakData;
+            TransitionGroupPeakData = groupPeakData == null ? new List<ITransitionGroupPeakData<ISummaryPeakData>>() 
+                                        : groupPeakData.Select(gp => 
+                                            new TransitionGroupPeakDataConverter<TData>(gp) as ITransitionGroupPeakData<ISummaryPeakData>).ToList();
+        }
+
+        private readonly IPeptidePeakData<TData> _peptidePeakData;
+
+        public PeptideDocNode NodePep { get { return _peptidePeakData.NodePep; } }
+
+        public ChromFileInfo FileInfo { get { return _peptidePeakData.FileInfo; } }
+
+        public IList<ITransitionGroupPeakData<ISummaryPeakData>> TransitionGroupPeakData { get; private set; }
+    }
+
+    /// <summary>
+    /// Wrapper class to convert between ITransitionGroupPeakData templated types
+    /// </summary>
+    public class TransitionGroupPeakDataConverter<TData> : ITransitionGroupPeakData<ISummaryPeakData> where TData : ISummaryPeakData
+    {
+        public TransitionGroupPeakDataConverter(ITransitionGroupPeakData<TData> groupPeakData)
+        {
+            _groupPeakData = groupPeakData;
+            var transPeakData = _groupPeakData.TranstionPeakData;
+            TranstionPeakData = transPeakData == null ? new List<ITransitionPeakData<ISummaryPeakData>>()
+                                              : _groupPeakData.TranstionPeakData.Select(tp => 
+                                                  new TransitionPeakDataConverter<TData>(tp) as ITransitionPeakData<ISummaryPeakData>).ToList();
+        }
+
+        private readonly ITransitionGroupPeakData<TData> _groupPeakData;
+
+        public TransitionGroupDocNode NodeGroup { get { return _groupPeakData.NodeGroup; } }
+
+        public bool IsStandard { get { return _groupPeakData.IsStandard; } }
+
+        public IList<ITransitionPeakData<ISummaryPeakData>> TranstionPeakData { get; private set; }
+    }
+
+    /// <summary>
+    /// Wrapper class to convert between ITransitionPeakData templated types
+    /// </summary>
+    public class TransitionPeakDataConverter<TData> : ITransitionPeakData<ISummaryPeakData> where TData : ISummaryPeakData
+    {
+        public TransitionPeakDataConverter(ITransitionPeakData<TData> transitionPeakData)
+        {
+            _transitionPeakData = transitionPeakData;
+        }
+
+        private readonly ITransitionPeakData<TData> _transitionPeakData;
+
+        public TransitionDocNode NodeTran { get { return _transitionPeakData.NodeTran; } }
+
+        public ISummaryPeakData PeakData { get { return _transitionPeakData.PeakData; } }
+    }
+
     public interface IPeptidePeakData
     {
         PeptideDocNode NodePep { get; }

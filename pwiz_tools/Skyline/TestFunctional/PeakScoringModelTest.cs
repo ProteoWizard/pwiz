@@ -216,16 +216,22 @@ namespace pwiz.SkylineTestFunctional
 
             var calculatorsLegacy = (new LegacyScoringModel("dummy")).PeakFeatureCalculators.ToArray();
             var gridGen = new GridDataGenerator(calculatorsLegacy, _format, _percentFormat);
-            gridGen.AddRow(true, 0.5954, 0.5708);
-            gridGen.AddRow(true, 0.5954, 0.2602);
-            gridGen.AddRow(true, 0.7144, 0.1690);
-            gridGen.AddRow(false, 11.9072, 0.000);
+            gridGen.AddRow(true, 0.5827, 0.3909);
+            gridGen.AddRow(true, 0.5827, 0.1606);
+            gridGen.AddRow(true, 0.6993, 0.1299);
+            gridGen.AddRow(false, 11.6548, 0.000);
+            gridGen.AddRow(true, 1.7482, 0.0492);
+            gridGen.AddRow(true, 2.3310, 0.2264);
+            gridGen.AddRow(true, -0.0291, 0.0429);
             var cellValuesLegacy = gridGen.Rows;
             var gridGenNew = new GridDataGenerator(calculatorsLegacy, _format, _percentFormat);
-            gridGenNew.AddRow(true, 0.5716, 0.6172);
-            gridGenNew.AddRow(true, 0.5716, 0.2237);
-            gridGenNew.AddRow(true, 0.6859, 0.1591);
-            gridGenNew.AddRow(false, 11.4310, 0.0000);
+            gridGenNew.AddRow(true, 0.4410, 0.4303);
+            gridGenNew.AddRow(true, 0.4410, 0.1724);
+            gridGenNew.AddRow(true, 0.5291, 0.1125);
+            gridGenNew.AddRow(false, 8.8190, 0.0000);
+            gridGenNew.AddRow(true, 1.3229, 0.0153);
+            gridGenNew.AddRow(true, 1.7638, 0.2360);
+            gridGenNew.AddRow(true, -0.0220, 0.0330);
             var cellValuesLegacyNew = gridGenNew.Rows;
             RunUI(() =>
             {
@@ -234,12 +240,12 @@ namespace pwiz.SkylineTestFunctional
                 editDlg.SelectedModelItem = "Skyline Legacy";
                 Assert.AreEqual(editDlg.PeakScoringModelName, "legacy1");
                 editDlg.TrainModelClick();
-                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -6.603204, 1e-5);
+                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -8.741136, 1e-5);
                 VerifyCellValues(editDlg, cellValuesLegacy);
                 editDlg.UsesSecondBest = true;
                 editDlg.UsesDecoys = false;
                 editDlg.TrainModelClick();
-                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -7.175833, 1e-5);
+                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -7.65547, 1e-5);
                 VerifyCellValues(editDlg, cellValuesLegacyNew);
                 editDlg.UsesSecondBest = false;
                 peakScoringModelBase = editDlg.PeakScoringModel as LegacyScoringModel;

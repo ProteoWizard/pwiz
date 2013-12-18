@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     editDlg.TrainModel();
-                    Assert.AreEqual(0.622, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005);
+                    Assert.AreEqual(0.712, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005);
                 });
             PauseForScreenShot("p6 -- peak scoring dialog trained");
 
@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // The rows which the tutorial says are missing scores are in fact missing scores
-                foreach (int i in new[] { 2, 7, 8, 9, 10 })
+                foreach (int i in new[] { 2, 7, 8, 11, 12, 13, 14, 15 })
                 {
                     Assert.IsFalse(editDlg.IsActiveCell(i, 0));
                 }
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlgLibrary = ShowDialog<EditPeakScoringModelDlg>(editListLibrary.EditItem);
             RunUI(() =>
                 {
-                    foreach (int i in new[] { 2, 8, 9, 10 })
+                    foreach (int i in new[] { 2, 8, 9, 10, 11 })
                     {
                         Assert.IsTrue(editDlgLibrary.IsActiveCell(i, 0));
                         Assert.IsFalse(editDlgLibrary.PeakCalculatorsGrid.Items[i].IsEnabled);
@@ -224,16 +224,12 @@ namespace pwiz.SkylineTestTutorial
                 {
                     Assert.IsFalse(editDlgNew.UsesSecondBest);
                     Assert.IsTrue(editDlgNew.UsesDecoys);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[4].IsEnabled);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[6].IsEnabled);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[4].PercentContribution < 0);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[6].PercentContribution < 0);
                     editDlgNew.UsesSecondBest = true;
-                    editDlgNew.PeakCalculatorsGrid.Items[4].IsEnabled = false;
                     editDlgNew.PeakCalculatorsGrid.Items[6].IsEnabled = false;
                     editDlgNew.TrainModel(true);
                     // Check that these cells are still active even though they've been unchecked
-                    Assert.IsTrue(editDlgNew.IsActiveCell(4, 0));
                     Assert.IsTrue(editDlgNew.IsActiveCell(6, 0));
                 });
             PauseForScreenShot("p10 - peak scoring dialog with second best");
@@ -307,21 +303,20 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsDlgDia.EditPeakScoringModel);
             RunUI(() => editListDia.SelectItem("test1"));
             var editDlgFromSrm = ShowDialog<EditPeakScoringModelDlg>(editListDia.EditItem);
+            PauseForScreenShot("p17 -- SRM model applied to DIA data");
             RunUI(() =>
                 {
                     int i = 0;
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.4653, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, -1.4503, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.3076, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, -1.2378, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 7.0011, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.0203, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.0526, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.2283, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 8.6914, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.0383, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.1641, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.1669, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.3851, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
@@ -344,7 +339,6 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i, 0));
                 });
-            PauseForScreenShot("p17 -- SRM model applied to DIA data");
             
             OkDialog(editDlgFromSrm, editDlgFromSrm.CancelDialog);
             OkDialog(editListDia, editListDia.CancelDialog);
@@ -361,14 +355,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     int i = 0;
-                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 0.2574, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 0.2572, 1e-3);
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 5.4837, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, -0.0216, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 0.6757, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 1.0838, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 5.484, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, -0.0217, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 0.6755, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, 1.0835, 1e-3);
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);

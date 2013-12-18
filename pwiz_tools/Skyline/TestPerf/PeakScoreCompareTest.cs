@@ -43,6 +43,7 @@ namespace TestPerf
         //[TestMethod]
         public void TestPeakScoreCompare()
         {
+            //IsPauseForScreenShots = true;
             TestFilesZip = @"http://proteome.gs.washington.edu/software/test/skyline-perf/PeakScoreCompare.zip";
             RunFunctionalTest();
         }
@@ -55,40 +56,73 @@ namespace TestPerf
         protected override void DoTest()
         {
             const bool rescore = false;
-            var filter = new PeakSourceFilter("m_score", 0.01);
-            
+            var filter01 = new PeakSourceFilter("m_score", 0.01);
+            var filter05 = new PeakSourceFilter("m_score", 0.05);
             // OpenSWATH dataset (water background)
             var dataSetComparer = new DataSetComparer(MakePeakBoundarySource("AQUA4_Water_picked_hroest.sky", true, "Manual"));
             dataSetComparer.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_water_peakgroups.txt", false, "OpenSWATH"));
-            dataSetComparer.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_water_peakgroups.txt", false, "OpenSWATH0.01", filter));
-            dataSetComparer = RunFullTestDataSet(dataSetComparer, "AQUA4_Water_picked_hroest_full_rescore.sky", rescore, false, true);
+            dataSetComparer.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_water_peakgroups.txt", false, "OpenSWATH0.01", filter01));
+            dataSetComparer.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_water_peakgroups.txt", false, "OpenSWATH0.05", filter05));
+            dataSetComparer = RunFullTestDataSet(dataSetComparer, "AQUA4_Water_picked_hroest_full_rescore_iRT_plus.sky", rescore, true, false, "iRT_plus");
+            dataSetComparer = RunFullTestDataSet(dataSetComparer, "AQUA4_Water_picked_hroest_full_rescore_iRT.sky", rescore, true, false, "_iRT");
             dataSetComparer.ExportResults(GetTestPath("AQUA4_Water_picked_hroest.txt"));
 
             // OpenSWATH dataset (yeast background)
             var dataSetComparerYeast = new DataSetComparer(MakePeakBoundarySource("AQUA4_Yeast_picked_georger_2.sky", true, "Manual"));
             dataSetComparerYeast.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_yeast_peakgroups.txt", false, "OpenSWATH"));
-            dataSetComparerYeast.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_yeast_peakgroups.txt", false, "OpenSWATH0.01", filter));
-            dataSetComparerYeast = RunFullTestDataSet(dataSetComparerYeast, "AQUA4_Yeast_picked_georger_2_full_rescore.sky", rescore, false, true);
+            dataSetComparerYeast.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_yeast_peakgroups.txt", false, "OpenSWATH0.01", filter01));
+            dataSetComparerYeast.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_yeast_peakgroups.txt", false, "OpenSWATH0.05", filter05));
+            dataSetComparerYeast = RunFullTestDataSet(dataSetComparerYeast, "AQUA4_Yeast_picked_georger_2_full_rescore_iRT_plus.sky", rescore, true, false, "_iRT_plus");
+            dataSetComparerYeast = RunFullTestDataSet(dataSetComparerYeast, "AQUA4_Yeast_picked_georger_2_full_rescore_iRT.sky", rescore, true, false, "_iRT");
             dataSetComparerYeast.ExportResults(GetTestPath("AQUA4_Yeast_picked_georger_2.txt"));
 
-            // OpenSWATh dataset (human background)
+            // OpenSWATH dataset (human background)
             var dataSetComparerHuman = new DataSetComparer(MakePeakBoundarySource("AQUA4_Human_picked_napedro2.sky", true, "Manual"));
             dataSetComparerHuman.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_human_peakgroups.txt", false, "OpenSWATH"));
-            dataSetComparerHuman.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_human_peakgroups.txt", false, "OpenSWATH0.01", filter));
-            dataSetComparerHuman = RunFullTestDataSet(dataSetComparerHuman, "AQUA4_Human_picked_napedro2_full_rescore.sky", rescore, false, true);
+            dataSetComparerHuman.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_human_peakgroups.txt", false, "OpenSWATH0.01", filter01));
+            dataSetComparerHuman.Add(MakePeakBoundarySource("OpenSWATH_SM3_GoldStandardAutomatedResults_human_peakgroups.txt", false, "OpenSWATH0.05", filter05));
+            dataSetComparerHuman = RunFullTestDataSet(dataSetComparerHuman, "AQUA4_Human_picked_napedro2_full_rescore_iRT_plus.sky", rescore, true, false, "_iRT_plus");
+            dataSetComparerHuman = RunFullTestDataSet(dataSetComparerHuman, "AQUA4_Human_picked_napedro2_full_rescore_iRT.sky", rescore, true, false, "_iRT");
             dataSetComparerHuman.ExportResults(GetTestPath("AQUA4_Human_picked_napedro2.txt"));
 
-            // mProphet gold dataset
-            var dataSetComparerMprophet = new DataSetComparer(MakePeakBoundarySource("MProphetGold.sky", true, "Manual"));
-            dataSetComparerMprophet.Add(MakePeakBoundarySource("MProphetGold-rescore.sky", true, "SkylineDefault"));
-            dataSetComparerMprophet = RunFullTestDataSet(dataSetComparerMprophet, "MProphetGold-rescore.sky");
-            dataSetComparerMprophet.ExportResults(GetTestPath("MProphetGold.txt"));
+            // Olga_srm_vantage
+            var dataSetComparerOlgaSV = new DataSetComparer(new PeakBoundsSource(QuickLoadDocument("SRMCourse_DosR-hDP__TSQv_true.sky"), "Manual"));
+            dataSetComparerOlgaSV = RunFullTestDataSet(dataSetComparerOlgaSV, "SRMCourse_DosR-hDP__TSQv_base.sky", false, true, false, null, true);
+            dataSetComparerOlgaSV.ExportResults(GetTestPath("Olga_SRM_course_vantage.txt"));
+
+            // Olga_srm
+            var dataSetComparerOlgaS = new DataSetComparer(new PeakBoundsSource(QuickLoadDocument("SRMCourse_DosR-hDP__20130501_true.sky"), "Manual"));
+            dataSetComparerOlgaS = RunFullTestDataSet(dataSetComparerOlgaS, "SRMCourse_DosR-hDP__20130501_base.sky", false, true, false, null, true);
+            dataSetComparerOlgaS.ExportResults(GetTestPath("Olga_SRM_course.txt"));
+
+            // Heart Failure
+            var dataSetComparerHeartFailure = new DataSetComparer(new PeakBoundsSource(QuickLoadDocument("Rat_plasma_true.sky"), "Manual"));
+            dataSetComparerHeartFailure = RunFullTestDataSet(dataSetComparerHeartFailure, "Rat_plasma_base.sky", false, false, true, null, true);
+            dataSetComparerHeartFailure.ExportResults(GetTestPath("HeartFailure.txt"));
+
+            // Ovarian Cancer
+            var dataSetComparerOvarianCancer = new DataSetComparer(new PeakBoundsSource(QuickLoadDocument("Human_plasma_base.sky"), "Manual"));
+            dataSetComparerOvarianCancer = RunFullTestDataSet(dataSetComparerOvarianCancer, "Human_plasma_no_heavy.sky", false, false, true, null, true);
+            dataSetComparerOvarianCancer.ExportResults(GetTestPath("OvarianCancer.txt"));
+
+            // mProphet Gold Standard
 
             // Demux dataset (10 mz)
 
             // Demux dataset (20 mz)
 
             // Demux dataset (demux)
+
+            PauseForScreenShot("All tasks completed.");
+        }
+
+        private SrmDocument QuickLoadDocument(string documentLocation)
+        {
+            SrmDocument docTrue = null;
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(documentLocation)));
+            WaitForDocumentLoaded();
+            RunUI(() => docTrue = SkylineWindow.Document);
+            return docTrue;
         }
 
         private PeakBoundsSource MakePeakBoundarySource(string file, bool isSrmDocument, string name, PeakSourceFilter filter = null)
@@ -102,13 +136,31 @@ namespace TestPerf
             return RunFullTestDataSet(dataSetComparer, documentFile);
         }
 
-        public DataSetComparer RunFullTestDataSet(DataSetComparer dataSetComparer, string documentFile, bool rescore = false, bool usesDecoys = true, bool usesSecondBest = false)
+        public DataSetComparer RunFullTestDataSet(DataSetComparer dataSetComparer, string documentFile, bool rescore = false, bool usesDecoys = true, bool usesSecondBest = false, string appendText = null,
+            bool reimport=false)
         {
             Settings.Default.PeakScoringModelList.Clear();
             var document = GetTestPath(documentFile);
             // Open the document
             RunUI(() => SkylineWindow.OpenFile(document));
             WaitForDocumentLoaded();
+
+            if (appendText == null)
+                appendText = "";
+
+            if (reimport)
+            {
+                var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                RunUI(() =>
+                {
+                    manageResults.SelectedChromatograms = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
+                    manageResults.ReimportResults();
+                    manageResults.OkDialog();
+                });
+                WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
+                WaitForDocumentLoaded(400000);
+            }
+           
 
             // Rescore the document
             if (rescore)
@@ -121,7 +173,7 @@ namespace TestPerf
                 WaitForClosedForm(rescoreResultsDlg);
                 WaitForClosedForm(manageResults);
             }
-            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineDefault")));
+            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineDefault" + appendText)));
 
             // Train a model
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -136,13 +188,14 @@ namespace TestPerf
             });
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            WaitForDocumentLoaded();
 
             // Reintegrate
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() => reintegrateDlg.ReintegrateAll = true);
             OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
 
-            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrateAll")));
+            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrateAll" + appendText)));
 
             // Reintegrate with q=0.01
             var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -150,7 +203,16 @@ namespace TestPerf
             RunUI(() => reintegrateDlgQ.Cutoff = 0.01);
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
 
-            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrate0.01")));
+            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrate0.01" + appendText)));
+
+            // Reintegrate with q=0.05
+            var reintegrateDlgQQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            RunUI(() => reintegrateDlgQQ.ReintegrateAll = false);
+            RunUI(() => reintegrateDlgQQ.Cutoff = 0.05);
+            OkDialog(reintegrateDlgQQ, reintegrateDlgQQ.OkDialog);
+
+            RunUI(() => dataSetComparer.Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrate0.05" + appendText)));
+
             Settings.Default.PeakScoringModelList.Clear();
             return dataSetComparer;
         }
@@ -214,7 +276,8 @@ namespace TestPerf
                     "Incorrect",
                     "FalseNegative",
                     "FalsePositive",
-                    "TrueNegative"
+                    "TrueNegative",
+                    "FDR"
                 };
             foreach (var name in namesArray)
             {
@@ -237,6 +300,7 @@ namespace TestPerf
                     Convert.ToString(comparer.FalseNegatives, cultureInfo),
                     Convert.ToString(comparer.FalsePositives, cultureInfo),
                     Convert.ToString(comparer.TrueNegatives, cultureInfo),
+                    Convert.ToString(comparer.FDR, cultureInfo)
                 };
             foreach (var name in fieldsArray)
             {
@@ -263,6 +327,7 @@ namespace TestPerf
         public double TrueNegatives { get; private set; }
         public double TotalAnnotated { get; private set; }
         public double TotalCalls{ get; private set; }
+        public double FDR { get; private set; }
 
 
         public PeakBoundsComparer(PeakBoundsSource pickedSource, PeakBoundsSource trueSource)
@@ -285,7 +350,6 @@ namespace TestPerf
                 if (!truePeaks.ContainsKey(peakDataKey))
                 {
                     Unmatched.Add(peakDataKey);
-                    pickedPeaks.Remove(peakDataKey);
                 }
             }
         }
@@ -301,6 +365,7 @@ namespace TestPerf
             TrueNegatives = _peakBoundsMatchList.Count(match => match.IsMutualMissing);
             TotalAnnotated = _peakBoundsMatchList.Count(match => !match.IsMissingTrue);
             TotalCalls = _peakBoundsMatchList.Count(match => !match.IsMissingPicked);
+            FDR = (IncorrectCalls + FalsePositives)/TotalCalls;
         }
 
         public void ExportResults(string fileName)
@@ -525,6 +590,8 @@ namespace TestPerf
             foreach (var nodePep in document.Peptides)
             {
                 var peptideModifiedSequence = nodePep.ModifiedSequence;
+                if (nodePep.IsDecoy)
+                    continue;
                 foreach (var nodeGroups in PeakFeatureEnumerator.ComparableGroups(nodePep))
                 {
                     var nodeGroup = nodeGroups.FirstOrDefault();

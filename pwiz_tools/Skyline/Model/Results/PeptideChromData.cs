@@ -132,10 +132,27 @@ namespace pwiz.Skyline.Model.Results
 
             // Adjust peak dimensions based on peak picking
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.StorePeaks();
+                chromDataSet.GeneratePeakData();
 
-            // Produce all detailed peak scores based on adjusted peak sets
-            ScorePeptidePeaks();
+            var detailedCalcs = DetailedPeakFeatureCalculators.Select(calc => (IPeakFeatureCalculator)calc).ToList();
+            foreach (var listPeakSets in _listListPeakSets)
+            {
+                // Score the peaks under the legacy model score
+                foreach (var peakSet in listPeakSets)
+                {
+                    peakSet.ScorePeptideSets(detailedCalcs, _document);
+                }
+
+                // Sort descending by the peak picking score
+                listPeakSets.Sort(ComparePeakLists);
+            }
+
+            // Propagate sorting down to precursor level
+            UpdatePrecursorsFromPeptidePeaks();
+
+            // Sort transition group level peaks by retention time and record the best peak
+            foreach (var chromDataSet in _dataSets)
+                chromDataSet.StorePeaks();
         }
 
         private bool ThermoZerosFix()
@@ -406,9 +423,6 @@ namespace pwiz.Skyline.Model.Results
                 listPeakSets.Add(peakSetNext);
             }
 
-            // Sort descending by the peak picking score
-            listPeakSets.Sort(ComparePeakLists);
-
             // Reset best picked peaks and reintegrate if necessary
             for (int i = 0; i < listPeakSets.Count; i++)
             {
@@ -420,7 +434,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // Ignore precursors with unknown relative RT. They do not participate
                     // in peptide peak matching.
-                    if (peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown)
+                    if (peak.Data.NodeGroup != null && peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown)
                         continue;
 
                     peak.SetBestPeak(peakBest, i);
@@ -441,7 +455,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     foreach (var peak in peakSet)
                     {
-                        if (peak.Length == peakNarrowest.Length || peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown)
+                        if (peak.Length == peakNarrowest.Length ||
+                            (peak.Data.NodeGroup != null && peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown))
                             continue;
                         peak.Data.NarrowPeak(peak.PeakGroup, peakNarrowest, i);
                     }
@@ -457,12 +472,32 @@ namespace pwiz.Skyline.Model.Results
 
         public int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
         {
+            // TODO: Do we want to keep this?
             // All identified peaks come first
             if (p1.IsIdentified != p2.IsIdentified)
                 return p1.IsIdentified ? -1 : 1;
 
             // Then order by CombinedScore descending
             return Comparer<double>.Default.Compare(p2.CombinedScore, p1.CombinedScore);
+        }
+
+        /// <summary>
+        /// Propagate the best peaks chosen at the peptide level down to the 
+        /// precursor level, in the same order
+        /// </summary>
+        public void UpdatePrecursorsFromPeptidePeaks()
+        {
+            foreach (var listPeakSets in _listListPeakSets)
+            {
+                for (int i = 0; i < listPeakSets.Count; i++)
+                {
+                    var peakSet = listPeakSets[i];
+                    foreach (var peptideChromDataPeak in peakSet)
+                    {
+                        peptideChromDataPeak.Data.SetPeakSet(peptideChromDataPeak.PeakGroup, i);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -612,31 +647,6 @@ namespace pwiz.Skyline.Model.Results
             }
             return allPeaks;
         }
-
-        private void ScorePeptidePeaks()
-        {
-            foreach (var listPeakSets in _listListPeakSets)
-            {
-                foreach (var peakSet in listPeakSets)
-                {
-                    // Calculate scores to be saved in the cache
-                    var scores = new List<float>();
-                    // Use a single context for all scores for a peak group to allow information sharing
-                    var context = new PeakScoringContext(_document);
-                    foreach (var calc in DetailedPeakFeatureCalculators)
-                    {
-                        scores.Add(calc.Calculate(context, peakSet));
-                    }
-                    // Assign the calculated scores to all transition group peak data objects
-                    // so they can be written out to the chromatogram cache.  The writer will
-                    // take care of this duplication before writing.
-                    foreach (var tranGroupPeakData in peakSet)
-                    {
-                        tranGroupPeakData.PeakGroup.DetailScores = scores;
-                    }
-                }            
-            }
-        }
     }
 
     /// <summary>
@@ -718,6 +728,7 @@ namespace pwiz.Skyline.Model.Results
             NodePep = nodePep;
             FileInfo = fileInfo;
             TransitionGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
+            ScoringModel = new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME, LegacyScoringModel.DEFAULT_PARAMS);
 
             Add(peak);
         }
@@ -726,12 +737,10 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromFileInfo FileInfo { get; private set; }
 
+        public IPeakScoringModel ScoringModel { get; private set; }
+
         public IList<ITransitionGroupPeakData<IDetailedPeakData>> TransitionGroupPeakData { get; private set; }
 
-        private double PeakCount { get; set; }
-        private double TotalArea { get; set; }
-        private double PeakCountStandard { get; set; }
-        private double TotalAreaStandard { get; set; }
         private int IdentifiedCount { get; set; }
 
         public double CombinedScore { get; private set; }
@@ -748,64 +757,62 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void AddPeak(PeptideChromDataPeak dataPeak)
+        public void ScorePeptideSets(IList<IPeakFeatureCalculator> detailFeatureCalculators, SrmDocument document)
         {
-            if (dataPeak.PeakGroup != null)
+            var modelCalcs = ScoringModel.PeakFeatureCalculators;
+            var detailFeatures = new float [detailFeatureCalculators.Count];
+            var modelFeatures = new double [modelCalcs.Count];
+            var context = new PeakScoringContext(document);
+            // Here we score both the detailFeatureCalculators (for storage) 
+            // and the peak calculators of the legacy model (for import-stage peak scoring)
+            var allFeatureCalculators = detailFeatureCalculators.Union(modelCalcs);
+            foreach (var calc in allFeatureCalculators)
             {
-                if (dataPeak.IsStandard)
+                double feature;
+                var summaryCalc = calc as SummaryPeakFeatureCalculator;
+                if (summaryCalc != null)
                 {
-                    PeakCountStandard += dataPeak.PeakGroup.PeakCountScore;
-                    TotalAreaStandard += dataPeak.PeakGroup.TotalArea;
+                    var summaryData = new PeptidePeakDataConverter<IDetailedPeakData>(this);
+                    feature = summaryCalc.Calculate(context, summaryData);
                 }
                 else
                 {
-                    PeakCount += dataPeak.PeakGroup.PeakCountScore;
-                    TotalArea += dataPeak.PeakGroup.TotalArea;
+                    feature = calc.Calculate(context, this);
                 }
-                if (dataPeak.PeakGroup.IsIdentified)
-                    IdentifiedCount++;
-
-                CombinedScore = ScorePeak(TotalArea, PeakCount, TotalAreaStandard, PeakCountStandard, IdentifiedCount);
+                int detailIndex = detailFeatureCalculators.IndexOf(calc);
+                if (detailIndex != -1)
+                {
+                    detailFeatures[detailIndex] = (float)feature;
+                }
+                int modelIndex = modelCalcs.IndexOf(calc);
+                if (modelIndex != -1)
+                {
+                    modelFeatures[modelIndex] = double.IsNaN(feature) ? 0 : feature;
+                }
+            }
+            CombinedScore = ScoringModel.Score(modelFeatures);
+            foreach (var peak in this)
+            {
+                peak.PeakGroup.DetailScores = detailFeatures;
             }
         }
 
-        private static double ScorePeak(double totalArea,
-                                        double peakCount,
-                                        double totalAreaStandard,
-                                        double peakCountStandard,
-                                        int identifiedCount)
+        private void AddPeak(PeptideChromDataPeak dataPeak)
         {
-            double logUnforcedArea = LegacyLogUnforcedAreaCalc.Score(totalArea, totalAreaStandard);
-            return LegacyScoringModel.Score(logUnforcedArea, peakCount, peakCountStandard, identifiedCount);
+            if (dataPeak.PeakGroup != null && dataPeak.PeakGroup.IsIdentified)
+                IdentifiedCount++;
         }
 
         private void SubtractPeak(PeptideChromDataPeak dataPeak)
         {
-            if (dataPeak.PeakGroup != null)
-            {
-                if (dataPeak.IsStandard)
-                {
-                    PeakCountStandard--;
-                    TotalAreaStandard -= dataPeak.PeakGroup.TotalArea;
-                }
-                else
-                {
-                    PeakCount--;
-                    TotalArea -= dataPeak.PeakGroup.TotalArea;
-                }
-                if (dataPeak.PeakGroup.IsIdentified)
-                    IdentifiedCount--;
-
-                CombinedScore = ScorePeak(TotalArea, PeakCount, TotalAreaStandard, PeakCountStandard, IdentifiedCount);
-            }
+            if (dataPeak.PeakGroup != null && dataPeak.PeakGroup.IsIdentified)
+                IdentifiedCount--;
         }
 
         protected override void ClearItems()
         {
-            PeakCount = 0;
-            TotalArea = 0;
             CombinedScore = 0;
-
+            IdentifiedCount = 0;
             TransitionGroupPeakData.Clear();
             base.ClearItems();
         }

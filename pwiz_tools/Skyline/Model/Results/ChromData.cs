@@ -325,6 +325,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromData Data { get; private set; }
+        public ChromPeak DataPeak {get { return _chromPeak; }}
         public CrawdadPeak Peak { get { return _crawPeak; } }
 
         public TransitionDocNode NodeTran { get { return Data.DocNode; } }
@@ -689,8 +690,7 @@ namespace pwiz.Skyline.Model.Results
         private void SubtractPeak(ChromDataPeak dataPeak)
         {
             // Avoid using optimization data in scoring
-            // Don't count MS1 ions in area
-            if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData && dataPeak.Data.DocNode != null && !dataPeak.Data.DocNode.IsMs1)
+            if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
