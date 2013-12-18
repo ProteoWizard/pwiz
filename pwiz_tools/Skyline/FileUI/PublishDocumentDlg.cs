@@ -473,6 +473,9 @@ namespace pwiz.Skyline.FileUI
                 lock (this)
                 {
                     // Write to a temp file first. This will be renamed after a successful upload or deleted if the upload is canceled.
+                    // Add a "Temporary" header so that LabKey marks this as a temporary file.
+                    // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
+                    _webClient.Headers.Add("Temporary", "T"); 
                     _webClient.UploadFileAsync(tmpUploadUri, "PUT", zipFilePath); // Not L10N
 
                     // Wait for the upload to complete

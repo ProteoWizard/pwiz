@@ -1182,6 +1182,7 @@ namespace pwiz.Skyline.Model
         {
             // Not L10N
             public const string format_version = "format_version";
+            public const string software_version = "software_version";
             public const string name = "name";
             public const string category = "category";
             public const string description = "description";
@@ -2252,6 +2253,8 @@ namespace pwiz.Skyline.Model
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttribute(ATTR.format_version, FORMAT_VERSION);
+            writer.WriteAttribute(ATTR.software_version, Install.ProgramNameAndVersion);
+                
             writer.WriteElement(Settings);
             foreach (PeptideGroupDocNode nodeGroup in Children)
             {

@@ -29,10 +29,7 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            labelSoftwareVersion.Text = string.Format("{0}{1} {2}", // Not L10N
-                    Program.Name,
-                    (Install.Is64Bit ? " (64-bit)" : string.Empty), // Not L10N
-                    (ApplicationDeployment.IsNetworkDeployed ? Install.Version : string.Empty));
+            labelSoftwareVersion.Text = Install.ProgramNameAndVersion;
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

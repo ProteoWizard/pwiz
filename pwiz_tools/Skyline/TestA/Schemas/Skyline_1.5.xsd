@@ -15,6 +15,7 @@
                 maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="format_version" type="xs:string" use="required"/>
+        <xs:attribute name="software_version" type="xs:string" use="required"/>
     </xs:complexType>
     <xs:element name="srm_settings" type="srm_settings_type"> </xs:element>
     <!-- ================================================================== -->

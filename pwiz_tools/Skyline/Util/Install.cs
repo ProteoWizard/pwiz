@@ -98,5 +98,16 @@ namespace pwiz.Skyline.Util
                               : "";
             }
         }
+
+        public static string ProgramNameAndVersion
+        {
+            get
+            {
+                return string.Format("{0}{1} {2}", // Not L10N
+                                     Program.Name,
+                                     (Is64Bit ? " (64-bit)" : string.Empty), // Not L10N
+                                     (ApplicationDeployment.IsNetworkDeployed ? Version : string.Empty));
+            } 
+        }
     }
 }
