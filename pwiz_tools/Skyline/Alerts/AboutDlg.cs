@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Deployment.Application;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 

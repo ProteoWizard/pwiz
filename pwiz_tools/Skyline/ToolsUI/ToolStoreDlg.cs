@@ -334,7 +334,7 @@ namespace pwiz.Skyline.ToolsUI
         protected const string DOWNLOAD_TOOL_URL = "/labkey/skyts/home/downloadTool.view";  // Not L10N
         public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";  // Not L10N
 
-        protected Dictionary<String, Version> latestVersions_ = null;
+        protected Dictionary<String, Version> latestVersions_;
         protected struct ToolStoreVersion
         {
             public string Identifier;

@@ -110,6 +110,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

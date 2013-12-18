@@ -1707,41 +1707,13 @@ namespace pwiz.Skyline.Controls.Graphs
                             sumInfo = info;
                         else
                         {
-                            // We need to sum the *intersection* of these two transitions.  To make that
-                            // easier, we arrange for the one with the earliest start time to be in times1/intensities1.
-                            bool swap = info.Times[0] < sumInfo.Times[0];
-                            float[] times1 = swap ? info.Times : sumInfo.Times;
-                            float[] times2 = swap ? sumInfo.Times : info.Times;
-                            float[] intensities1 = swap ? info.Intensities : sumInfo.Intensities;
-                            float[] intensities2 = swap ? sumInfo.Intensities : info.Intensities;
-                            
-                            // Find the time/index at the beginning of the intersection.
-                            int index = 0;
-                            float minTime2 = times2[0];
-                            while (index < times1.Length && times1[index] < minTime2)
-                                index++;
-                            if (index == times1.Length)
-                                continue;   // no intersection!
-                           
-                            // Find the time/index at the end of the intersection.
-                            int endIndex = times1.Length - 1;
-                            float maxTime2 = times2[times2.Length - 1];
-                            while (endIndex >= 0 && times1[endIndex] > maxTime2)
-                                endIndex--;
-                            endIndex++;
-
-                            // Now add the intensities within the intersection.
-                            var times = new float[endIndex - index];
-                            var intensities = new float[times.Length];
-                            for (int i = 0; i < times.Length; i++)
-                            {
-                                // TODO: handle case where times are not equal (interpolation may be needed)
-                                Assume.IsTrue(times1[index].Equals(times2[i]));
-                                times[i] = times2[i];
-                                intensities[i] = intensities2[i] + intensities1[index++];
-                            }
-
-                            sumInfo = new ChromatogramInfo(times, intensities);
+                            float[] sumTimes;
+                            float[] sumIntensities;
+                            if (!AddTransitions.Add(
+                                info.Times, info.Intensities, sumInfo.Times, sumInfo.Intensities,
+                                out sumTimes, out sumIntensities))
+                                continue;
+                            sumInfo = new ChromatogramInfo(sumTimes, sumIntensities);
                         }
 
                         // Keep track of which chromatogram owns the tallest member of
@@ -2931,6 +2903,83 @@ namespace pwiz.Skyline.Controls.Graphs
                 iCharge++;
             }
             return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
+        }
+    }
+
+    public static class AddTransitions
+    {
+        /// <summary>
+        /// Add intensitites of two transitions where they overlap in time.
+        /// </summary>
+        /// <param name="times1">Times for first transition.</param>
+        /// <param name="intensities1">Intensities for first transition.</param>
+        /// <param name="times2">Times for second transition.</param>
+        /// <param name="intensities2">Intensities for second transition.</param>
+        /// <param name="sumTimes">Times for summed transition.</param>
+        /// <param name="sumIntensities">Intensities for summed transition.</param>
+        /// <returns>True if a sum is returned, false if there was no overlap.</returns>
+        public static bool Add(
+            float[] times1, float[] intensities1,
+            float[] times2, float[] intensities2,
+            out float[] sumTimes, out float[] sumIntensities)
+        {
+            sumTimes = null;
+            sumIntensities = null;
+
+            if (times1.Length == 0 || times2.Length == 0)
+                return false;   // nothing to add
+
+            // We need to sum the *intersection* of these two transitions.  To make that
+            // easier, we arrange for the one with the earliest start time to be in times1/intensities1.
+            if (times1[0] > times2[0])
+            {
+                Helpers.Swap(ref times1, ref times2);
+                Helpers.Swap(ref intensities1, ref intensities2);
+            }
+
+            float maxTime1 = times1[times1.Length - 1];
+            if (times2[0] > maxTime1)
+                return false;   // no intersection
+
+            // No interpolation needed for single point.
+            if (times1.Length == 1)
+            {
+                if (times1[0].Equals(times2[0]))
+                {
+                    sumTimes = new[] {times1[0]};
+                    sumIntensities = new[] {intensities1[0] + intensities2[0]};
+                    return true;
+                }
+                return false;
+            }
+
+            // Count number of points to sum.
+            int count = times2.Length - 1;
+            while (times2[count] > maxTime1)
+                count--;
+            count++;
+
+            // Now add the intensities within the intersection.
+            // Currently, we select the transition with the greater starting time to
+            // determine sampling.  A better choice might be the transition with the
+            // higher sampling rate, but that is more difficult to write.
+            sumTimes = new float[count];
+            sumIntensities = new float[count];
+            float interval1 = times1[1] - times1[0];
+            int index1 = 1;
+            for (int i = 0; i < count; i++)
+            {
+                // Select the next point to interpolate from in the times1 array.
+                while (index1 < times1.Length && times1[index1] <= times2[i])
+                    index1++;
+                sumTimes[i] = times2[i];
+                double interp = (times2[i] - times1[index1-1]) / interval1;
+                sumIntensities[i] = (float)
+                    (intensities2[i] + (1.0 - interp) * intensities1[index1 - 1] + 
+                    ((index1 < intensities1.Length) ? interp * intensities1[index1] : 0));
+            }
+
+            return true;
         }
     }
 
