@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -26,9 +27,18 @@ namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private void OpenTests()
+        {
+            var languages = GetLanguageNames().ToList();
+
+            checkBoxTestsEnglish.Enabled = languages.Contains("English");
+            checkBoxTestsChinese.Enabled = languages.Contains("Chinese");
+            checkBoxTestsJapanese.Enabled = languages.Contains("Japanese");
+        }
+
         private void RunTests(object sender, EventArgs e)
         {
-            if (!ToggleRunButtons(tabTest))
+            if (!ToggleRunButtons(tabTests))
             {
                 commandShell.Stop();
                 return;
@@ -51,10 +61,14 @@ namespace SkylineTester
             }
 
             var cultures = new List<CultureInfo>();
-            if (CultureEnglish.Checked || !CultureFrench.Checked)
+            if (CultureEnglish.Checked || checkBoxTestsEnglish.Checked)
                 cultures.Add(new CultureInfo("en-US"));
             if (CultureFrench.Checked)
                 cultures.Add(new CultureInfo("fr-FR"));
+            if (checkBoxTestsChinese.Enabled && checkBoxTestsChinese.Checked)
+                cultures.Add(new CultureInfo("zh"));
+            if (checkBoxTestsJapanese.Enabled && checkBoxTestsJapanese.Checked)
+                cultures.Add(new CultureInfo("ja"));
 
             args.Append(" culture=");
             args.Append(string.Join(",", cultures));

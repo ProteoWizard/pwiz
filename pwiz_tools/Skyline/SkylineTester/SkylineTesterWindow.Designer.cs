@@ -34,6 +34,8 @@ namespace SkylineTester
             this.mainPanel = new System.Windows.Forms.Panel();
             this.Tabs = new System.Windows.Forms.TabControl();
             this.tabForms = new System.Windows.Forms.TabPage();
+            this.groupBox13 = new System.Windows.Forms.GroupBox();
+            this.comboBoxFormsLanguage = new System.Windows.Forms.ComboBox();
             this.RegenerateCache = new System.Windows.Forms.CheckBox();
             this.runForms = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -44,6 +46,8 @@ namespace SkylineTester
             this.PauseFormDelay = new System.Windows.Forms.RadioButton();
             this.PauseFormButton = new System.Windows.Forms.RadioButton();
             this.tabTutorials = new System.Windows.Forms.TabPage();
+            this.groupBox14 = new System.Windows.Forms.GroupBox();
+            this.comboBoxTutorialsLanguage = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.TutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
@@ -53,7 +57,11 @@ namespace SkylineTester
             this.PauseTutorialsDelay = new System.Windows.Forms.RadioButton();
             this.PauseTutorialsScreenShots = new System.Windows.Forms.RadioButton();
             this.runTutorials = new System.Windows.Forms.Button();
-            this.tabTest = new System.Windows.Forms.TabPage();
+            this.tabTests = new System.Windows.Forms.TabPage();
+            this.groupBox15 = new System.Windows.Forms.GroupBox();
+            this.checkBoxTestsJapanese = new System.Windows.Forms.CheckBox();
+            this.checkBoxTestsChinese = new System.Windows.Forms.CheckBox();
+            this.checkBoxTestsEnglish = new System.Windows.Forms.CheckBox();
             this.runTests = new System.Windows.Forms.Button();
             this.pauseGroup = new System.Windows.Forms.GroupBox();
             this.PauseTestsScreenShots = new System.Windows.Forms.CheckBox();
@@ -143,12 +151,15 @@ namespace SkylineTester
             this.mainPanel.SuspendLayout();
             this.Tabs.SuspendLayout();
             this.tabForms.SuspendLayout();
+            this.groupBox13.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabTutorials.SuspendLayout();
+            this.groupBox14.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            this.tabTest.SuspendLayout();
+            this.tabTests.SuspendLayout();
+            this.groupBox15.SuspendLayout();
             this.pauseGroup.SuspendLayout();
             this.cultureGroup.SuspendLayout();
             this.windowsGroup.SuspendLayout();
@@ -186,7 +197,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.Tabs.Controls.Add(this.tabForms);
             this.Tabs.Controls.Add(this.tabTutorials);
-            this.Tabs.Controls.Add(this.tabTest);
+            this.Tabs.Controls.Add(this.tabTests);
             this.Tabs.Controls.Add(this.tabBuild);
             this.Tabs.Controls.Add(this.tabQuality);
             this.Tabs.Controls.Add(this.tabOutput);
@@ -201,6 +212,7 @@ namespace SkylineTester
             // tabForms
             // 
             this.tabForms.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
+            this.tabForms.Controls.Add(this.groupBox13);
             this.tabForms.Controls.Add(this.RegenerateCache);
             this.tabForms.Controls.Add(this.runForms);
             this.tabForms.Controls.Add(this.groupBox1);
@@ -211,6 +223,26 @@ namespace SkylineTester
             this.tabForms.Size = new System.Drawing.Size(735, 619);
             this.tabForms.TabIndex = 1;
             this.tabForms.Text = "Forms";
+            // 
+            // groupBox13
+            // 
+            this.groupBox13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
+            this.groupBox13.Controls.Add(this.comboBoxFormsLanguage);
+            this.groupBox13.Location = new System.Drawing.Point(8, 85);
+            this.groupBox13.Name = "groupBox13";
+            this.groupBox13.Size = new System.Drawing.Size(228, 56);
+            this.groupBox13.TabIndex = 21;
+            this.groupBox13.TabStop = false;
+            this.groupBox13.Text = "Language";
+            // 
+            // comboBoxFormsLanguage
+            // 
+            this.comboBoxFormsLanguage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFormsLanguage.FormattingEnabled = true;
+            this.comboBoxFormsLanguage.Location = new System.Drawing.Point(7, 20);
+            this.comboBoxFormsLanguage.Name = "comboBoxFormsLanguage";
+            this.comboBoxFormsLanguage.Size = new System.Drawing.Size(150, 21);
+            this.comboBoxFormsLanguage.TabIndex = 0;
             // 
             // RegenerateCache
             // 
@@ -316,6 +348,7 @@ namespace SkylineTester
             // tabTutorials
             // 
             this.tabTutorials.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(225)))));
+            this.tabTutorials.Controls.Add(this.groupBox14);
             this.tabTutorials.Controls.Add(this.groupBox3);
             this.tabTutorials.Controls.Add(this.groupBox4);
             this.tabTutorials.Controls.Add(this.runTutorials);
@@ -325,6 +358,26 @@ namespace SkylineTester
             this.tabTutorials.Size = new System.Drawing.Size(735, 619);
             this.tabTutorials.TabIndex = 2;
             this.tabTutorials.Text = "Tutorials";
+            // 
+            // groupBox14
+            // 
+            this.groupBox14.BackColor = System.Drawing.Color.Transparent;
+            this.groupBox14.Controls.Add(this.comboBoxTutorialsLanguage);
+            this.groupBox14.Location = new System.Drawing.Point(8, 106);
+            this.groupBox14.Name = "groupBox14";
+            this.groupBox14.Size = new System.Drawing.Size(228, 56);
+            this.groupBox14.TabIndex = 25;
+            this.groupBox14.TabStop = false;
+            this.groupBox14.Text = "Language";
+            // 
+            // comboBoxTutorialsLanguage
+            // 
+            this.comboBoxTutorialsLanguage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxTutorialsLanguage.FormattingEnabled = true;
+            this.comboBoxTutorialsLanguage.Location = new System.Drawing.Point(7, 20);
+            this.comboBoxTutorialsLanguage.Name = "comboBoxTutorialsLanguage";
+            this.comboBoxTutorialsLanguage.Size = new System.Drawing.Size(150, 21);
+            this.comboBoxTutorialsLanguage.TabIndex = 0;
             // 
             // groupBox3
             // 
@@ -425,21 +478,67 @@ namespace SkylineTester
             this.runTutorials.UseVisualStyleBackColor = true;
             this.runTutorials.Click += new System.EventHandler(this.RunTutorials);
             // 
-            // tabTest
+            // tabTests
             // 
-            this.tabTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-            this.tabTest.Controls.Add(this.runTests);
-            this.tabTest.Controls.Add(this.pauseGroup);
-            this.tabTest.Controls.Add(this.cultureGroup);
-            this.tabTest.Controls.Add(this.windowsGroup);
-            this.tabTest.Controls.Add(this.iterationsGroup);
-            this.tabTest.Controls.Add(this.testsGroup);
-            this.tabTest.Location = new System.Drawing.Point(4, 28);
-            this.tabTest.Name = "tabTest";
-            this.tabTest.Padding = new System.Windows.Forms.Padding(3);
-            this.tabTest.Size = new System.Drawing.Size(735, 619);
-            this.tabTest.TabIndex = 0;
-            this.tabTest.Text = "Tests";
+            this.tabTests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.tabTests.Controls.Add(this.groupBox15);
+            this.tabTests.Controls.Add(this.runTests);
+            this.tabTests.Controls.Add(this.pauseGroup);
+            this.tabTests.Controls.Add(this.cultureGroup);
+            this.tabTests.Controls.Add(this.windowsGroup);
+            this.tabTests.Controls.Add(this.iterationsGroup);
+            this.tabTests.Controls.Add(this.testsGroup);
+            this.tabTests.Location = new System.Drawing.Point(4, 28);
+            this.tabTests.Name = "tabTests";
+            this.tabTests.Padding = new System.Windows.Forms.Padding(3);
+            this.tabTests.Size = new System.Drawing.Size(735, 619);
+            this.tabTests.TabIndex = 0;
+            this.tabTests.Text = "Tests";
+            // 
+            // groupBox15
+            // 
+            this.groupBox15.BackColor = System.Drawing.Color.Transparent;
+            this.groupBox15.Controls.Add(this.checkBoxTestsJapanese);
+            this.groupBox15.Controls.Add(this.checkBoxTestsChinese);
+            this.groupBox15.Controls.Add(this.checkBoxTestsEnglish);
+            this.groupBox15.Location = new System.Drawing.Point(8, 265);
+            this.groupBox15.Name = "groupBox15";
+            this.groupBox15.Size = new System.Drawing.Size(228, 92);
+            this.groupBox15.TabIndex = 26;
+            this.groupBox15.TabStop = false;
+            this.groupBox15.Text = "Language";
+            // 
+            // checkBoxTestsJapanese
+            // 
+            this.checkBoxTestsJapanese.AutoSize = true;
+            this.checkBoxTestsJapanese.Location = new System.Drawing.Point(7, 65);
+            this.checkBoxTestsJapanese.Name = "checkBoxTestsJapanese";
+            this.checkBoxTestsJapanese.Size = new System.Drawing.Size(72, 17);
+            this.checkBoxTestsJapanese.TabIndex = 3;
+            this.checkBoxTestsJapanese.Text = "Japanese";
+            this.checkBoxTestsJapanese.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxTestsChinese
+            // 
+            this.checkBoxTestsChinese.AutoSize = true;
+            this.checkBoxTestsChinese.Location = new System.Drawing.Point(7, 42);
+            this.checkBoxTestsChinese.Name = "checkBoxTestsChinese";
+            this.checkBoxTestsChinese.Size = new System.Drawing.Size(64, 17);
+            this.checkBoxTestsChinese.TabIndex = 2;
+            this.checkBoxTestsChinese.Text = "Chinese";
+            this.checkBoxTestsChinese.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxTestsEnglish
+            // 
+            this.checkBoxTestsEnglish.AutoSize = true;
+            this.checkBoxTestsEnglish.Checked = true;
+            this.checkBoxTestsEnglish.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxTestsEnglish.Location = new System.Drawing.Point(7, 19);
+            this.checkBoxTestsEnglish.Name = "checkBoxTestsEnglish";
+            this.checkBoxTestsEnglish.Size = new System.Drawing.Size(60, 17);
+            this.checkBoxTestsEnglish.TabIndex = 1;
+            this.checkBoxTestsEnglish.Text = "English";
+            this.checkBoxTestsEnglish.UseVisualStyleBackColor = true;
             // 
             // runTests
             // 
@@ -482,7 +581,7 @@ namespace SkylineTester
             this.cultureGroup.Size = new System.Drawing.Size(228, 70);
             this.cultureGroup.TabIndex = 19;
             this.cultureGroup.TabStop = false;
-            this.cultureGroup.Text = "Culture";
+            this.cultureGroup.Text = "Number format";
             // 
             // CultureFrench
             // 
@@ -1444,14 +1543,18 @@ namespace SkylineTester
             this.Tabs.ResumeLayout(false);
             this.tabForms.ResumeLayout(false);
             this.tabForms.PerformLayout();
+            this.groupBox13.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.tabTutorials.ResumeLayout(false);
+            this.groupBox14.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
-            this.tabTest.ResumeLayout(false);
+            this.tabTests.ResumeLayout(false);
+            this.groupBox15.ResumeLayout(false);
+            this.groupBox15.PerformLayout();
             this.pauseGroup.ResumeLayout(false);
             this.pauseGroup.PerformLayout();
             this.cultureGroup.ResumeLayout(false);
@@ -1500,7 +1603,7 @@ namespace SkylineTester
         private System.Windows.Forms.ToolStripMenuItem memoryUseToolStripMenuItem;
         private System.Windows.Forms.Button runTests;
         private System.Windows.Forms.TabControl Tabs;
-        private System.Windows.Forms.TabPage tabTest;
+        private System.Windows.Forms.TabPage tabTests;
         private System.Windows.Forms.GroupBox testsGroup;
         private MyTreeView TestsTree;
         private System.Windows.Forms.RadioButton SkipCheckedTests;
@@ -1598,6 +1701,14 @@ namespace SkylineTester
         private System.Windows.Forms.Label labelRevision;
         private System.Windows.Forms.Label labelTestsRun;
         private System.Windows.Forms.Label labelDuration;
+        private System.Windows.Forms.GroupBox groupBox13;
+        private System.Windows.Forms.ComboBox comboBoxFormsLanguage;
+        private System.Windows.Forms.GroupBox groupBox14;
+        private System.Windows.Forms.ComboBox comboBoxTutorialsLanguage;
+        private System.Windows.Forms.GroupBox groupBox15;
+        private System.Windows.Forms.CheckBox checkBoxTestsJapanese;
+        private System.Windows.Forms.CheckBox checkBoxTestsChinese;
+        private System.Windows.Forms.CheckBox checkBoxTestsEnglish;
 
     }
 }

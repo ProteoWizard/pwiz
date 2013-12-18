@@ -116,6 +116,7 @@ namespace SkylineTester
             loader.RunWorkerAsync();
 
             InitQuality();
+            OpenForms();
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -189,7 +190,7 @@ namespace SkylineTester
                 RunForms(null, null);
             else if (tab == tabTutorials)
                 RunTutorials(null, null);
-            else if (tab == tabTest)
+            else if (tab == tabTests)
                 RunTests(null, null);
             else if (tab == tabBuild)
                 RunBuild(null, null);
@@ -256,16 +257,35 @@ namespace SkylineTester
             return true;
         }
 
+        private string GetCurrentBuildDirectory()
+        {
+            var testRunner32 = Path.Combine(
+                _buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe");
+            var testRunner64 = Path.Combine(
+                _buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe");
+            var testRunner = testRunner32;
+            if (File.Exists(testRunner32))
+            {
+                if (File.Exists(testRunner64))
+                {
+                    testRunner = File.GetCreationTime(testRunner32) > File.GetCreationTime(testRunner64)
+                        ? testRunner32
+                        : testRunner64;
+                }
+            }
+            else if (File.Exists(testRunner64))
+                testRunner = testRunner64;
+            else
+                testRunner = Path.Combine(_exeDir, "TestRunner.exe");
+            return Path.GetDirectoryName(testRunner);
+        }
+
         private void StartTestRunner(string args, Action<bool> doneAction = null)
         {
             Tabs.SelectTab(tabOutput);
             MemoryChartWindow.Start("TestRunnerMemory.log");
 
-            var testRunner = Path.Combine(
-                _buildDir, 
-                string.Format(@"pwiz_tools\Skyline\bin\{0}\Release\TestRunner.exe", Build32.Checked ? "x86" : "x64"));
-            if (!File.Exists(testRunner))
-                testRunner = Path.Combine(_exeDir, "TestRunner.exe");
+            var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");
             _stopTestRunner = Path.Combine(Path.GetDirectoryName(testRunner) ?? "", "StopTestRunner.txt");
             if (File.Exists(_stopTestRunner))
                 File.Delete(_stopTestRunner);
@@ -527,7 +547,13 @@ namespace SkylineTester
 
         private void TabChanged(object sender, EventArgs e)
         {
-            if (Tabs.SelectedTab == tabQuality)
+            if (Tabs.SelectedTab == tabForms)
+                OpenForms();
+            else if (Tabs.SelectedTab == tabTutorials)
+                OpenTutorials();
+            else if (Tabs.SelectedTab == tabTests)
+                OpenTests();
+            else if (Tabs.SelectedTab == tabQuality)
                 OpenQuality();
             else if (Tabs.SelectedTab == tabOutput)
                 OpenOutput();
@@ -537,6 +563,54 @@ namespace SkylineTester
         {
             e.Node.Checked = !e.Node.Checked;
             FormsTree.SelectedNode = null;
+        }
+
+        private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
+        {
+            {"en", "English"},
+            {"ja", "Japanese"},
+            {"zh", "Chinese"}
+        };
+
+        private IEnumerable<string> GetLanguageNames()
+        {
+            foreach (var language in GetLanguages())
+            {
+                string name;
+                if (_languageNames.TryGetValue(language, out name))
+                    yield return name;
+            }
+        }
+
+        private IEnumerable<string> GetLanguages()
+        {
+            yield return "en";  // always English
+
+            var exeDir = GetCurrentBuildDirectory();
+            foreach (var resourcesDll in Directory.EnumerateFiles(exeDir, "*.resources.dll", SearchOption.AllDirectories))
+            {
+                if (string.Equals(resourcesDll, "Skyline.resources.dll", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(resourcesDll, "Skyline-daily.resources.dll", StringComparison.OrdinalIgnoreCase))
+                {
+                    var language = Path.GetFileName(Path.GetDirectoryName(resourcesDll));
+                    if (language != "en")
+                        yield return language;
+                }
+            }
+        }
+
+        private void InitLanguages(ComboBox comboBox)
+        {
+            comboBox.Items.Clear();
+            var languages = GetLanguageNames().ToList();
+            foreach (var language in languages)
+                comboBox.Items.Add(language);
+            comboBox.SelectedIndex = 0;
+        }
+
+        private string GetCulture(ComboBox comboBox)
+        {
+            return _languageNames.First(x => x.Value == (string) comboBox.SelectedItem).Key;
         }
     }
 }

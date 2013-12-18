@@ -30,6 +30,11 @@ namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private void OpenForms()
+        {
+            InitLanguages(comboBoxFormsLanguage);
+        }
+
         private void RunForms(object sender, EventArgs e)
         {
             if (!ToggleRunButtons(tabForms))
@@ -38,11 +43,11 @@ namespace SkylineTester
                 return;
             }
 
-            var args = new StringBuilder("loop=1 offscreen=off culture=en-US ");
-
+            var args = new StringBuilder("loop=1 offscreen=off culture=");
+            args.Append(GetCulture(comboBoxFormsLanguage));
             if (RegenerateCache.Checked)
             {
-                args.Append("form=__REGEN__");
+                args.Append(" form=__REGEN__");
             }
             else
             {
@@ -54,7 +59,7 @@ namespace SkylineTester
                     if (node.Checked)
                         formList.Add(node.Text);
                 }
-                args.Append("form=");
+                args.Append(" form=");
                 args.Append(string.Join(",", formList));
                 int pauseSeconds = -1;
                 if (PauseFormDelay.Checked && !int.TryParse(PauseFormSeconds.Text, out pauseSeconds))
