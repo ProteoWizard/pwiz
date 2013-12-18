@@ -27,7 +27,7 @@ namespace TestRunnerLib
             foreach (var run in Runs)
             {
                 var runElement = new XElement("Run");
-                runElement.Add(new XElement("Date", run.Date));
+                runElement.Add(new XElement("Date", run.Date.ToString("g")));
                 runElement.Add(new XElement("Revision", run.Revision));
                 runElement.Add(new XElement("RunMinutes", run.RunMinutes));
                 runElement.Add(new XElement("TestsRun", run.TestsRun));

@@ -363,7 +363,7 @@ namespace SkylineTester
             }
 
             // Add to log file.
-            if (LogFile != null)
+            if (!string.IsNullOrEmpty(LogFile))
                 File.AppendAllText(LogFile, logLines);
 
             // Scroll if text box is already scrolled to bottom.

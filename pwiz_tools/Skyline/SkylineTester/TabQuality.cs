@@ -103,7 +103,7 @@ namespace SkylineTester
                 comboRunDate.Items.Add(run.Date);
             comboRunDate.SelectedIndex = 0;
 
-            var labels = _summary.Runs.Select(run => run.Date.Month + "/" + run.Date.Day).ToArray();
+            var labels = runsChronological.Select(run => run.Date.Month + "/" + run.Date.Day).ToArray();
             
             CreateGraph("Tests run", graphTestsRun, Color.LightSeaGreen,
                 labels,
@@ -117,7 +117,7 @@ namespace SkylineTester
                 labels,
                 runsChronological.Select(run => (double)run.Failures).ToArray());
 
-            CreateGraph("Duration", graphMemoryHistory, Color.MediumPurple,
+            CreateGraph("Duration", graphMemoryHistory, Color.FromArgb(160, 120, 160),
                 labels,
                 runsChronological.Select(run => (double)run.TotalMemory).ToArray());
         }
@@ -226,6 +226,8 @@ namespace SkylineTester
             _logFile = Path.Combine(qualityDirectory, GetLogFile(DateTime.Now));
             OpenOutput();
 
+            commandShell.Add("# Quality run started {0}" + Environment.NewLine, DateTime.Now.ToString("f"));
+
             if (QualityBuildFirst.Checked)
                 GenerateBuildCommands();
 
@@ -252,6 +254,9 @@ namespace SkylineTester
             var logFile = Path.Combine(_rootDir, QualityLogsDirectory, GetLogFile(run.Date));
             bool hasLogFile = linkQualityLog.Enabled = File.Exists(logFile);
 
+            var pane = graphMemory.GraphPane;
+            pane.CurveList.Clear();
+
             if (hasLogFile)
             {
                 var managedPointList = new PointPairList();
@@ -263,6 +268,8 @@ namespace SkylineTester
                     if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')
                     {
                         var i = line.IndexOf("failures, ", StringComparison.OrdinalIgnoreCase);
+                        if (i < 0)
+                            continue;
                         var memory = line.Substring(i + 10).Split('/');
                         var managedMemory = double.Parse(memory[0]);
                         var totalMemory = double.Parse(memory[1].Split(' ')[0]);
@@ -271,18 +278,14 @@ namespace SkylineTester
                     }
                 }
 
-                var pane = graphMemory.GraphPane;
-                pane.CurveList.Clear();
-                var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Green, SymbolType.None);
-                var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Purple, SymbolType.None);
-                managedMemoryCurve.Line.Width = 2;
-                totalMemoryCurve.Line.Width = 2;
-                managedMemoryCurve.Line.Fill = new Fill(Color.Green, Color.LightGreen, -90);
-                totalMemoryCurve.Line.Fill = new Fill(Color.Purple, Color.MediumPurple, -90);
-
-                pane.AxisChange();
-                graphMemory.Refresh();
+                var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
+                var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
+                managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
+                totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
             }
+
+            pane.AxisChange();
+            graphMemory.Refresh();
         }
 
         private string GetLogFile(DateTime date)
