@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilterTab));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -53,8 +53,7 @@
             // 
             // splitContainerFilter
             // 
-            this.splitContainerFilter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerFilter.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.splitContainerFilter, "splitContainerFilter");
             this.splitContainerFilter.Name = "splitContainerFilter";
             // 
             // splitContainerFilter.Panel1
@@ -66,45 +65,29 @@
             // 
             this.splitContainerFilter.Panel2.Controls.Add(this.dataGridViewFilter);
             this.splitContainerFilter.Panel2.Controls.Add(this.toolStripFilter);
-            this.splitContainerFilter.Size = new System.Drawing.Size(881, 307);
-            this.splitContainerFilter.SplitterDistance = 370;
-            this.splitContainerFilter.TabIndex = 2;
             // 
             // availableFieldsTreeFilter
             // 
             this.availableFieldsTreeFilter.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
-            this.availableFieldsTreeFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.availableFieldsTreeFilter, "availableFieldsTreeFilter");
             this.availableFieldsTreeFilter.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
             this.availableFieldsTreeFilter.HideSelection = false;
-            this.availableFieldsTreeFilter.ImageIndex = 0;
-            this.availableFieldsTreeFilter.Location = new System.Drawing.Point(0, 0);
             this.availableFieldsTreeFilter.Name = "availableFieldsTreeFilter";
             this.availableFieldsTreeFilter.RootColumn = null;
-            this.availableFieldsTreeFilter.SelectedImageIndex = 0;
             this.availableFieldsTreeFilter.ShowAdvancedFields = false;
-            this.availableFieldsTreeFilter.Size = new System.Drawing.Size(314, 307);
-            this.availableFieldsTreeFilter.TabIndex = 0;
             this.availableFieldsTreeFilter.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.AvailableFieldsTreeFilterOnAfterSelect);
             this.availableFieldsTreeFilter.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.AvailableFieldsTreeFilterOnNodeMouseDoubleClick);
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.btnAddFilter);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panel1.Location = new System.Drawing.Point(314, 0);
+            resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(56, 307);
-            this.panel1.TabIndex = 1;
             // 
             // btnAddFilter
             // 
-            this.btnAddFilter.AutoSize = true;
-            this.btnAddFilter.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnAddFilter.Location = new System.Drawing.Point(3, 134);
+            resources.ApplyResources(this.btnAddFilter, "btnAddFilter");
             this.btnAddFilter.Name = "btnAddFilter";
-            this.btnAddFilter.Size = new System.Drawing.Size(51, 23);
-            this.btnAddFilter.TabIndex = 0;
-            this.btnAddFilter.Text = "Add >>";
             this.btnAddFilter.UseVisualStyleBackColor = true;
             this.btnAddFilter.Click += new System.EventHandler(this.BtnAddFilterOnClick);
             // 
@@ -133,8 +116,7 @@
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewFilter.DefaultCellStyle = dataGridViewCellStyle2;
-            this.dataGridViewFilter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewFilter.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.dataGridViewFilter, "dataGridViewFilter");
             this.dataGridViewFilter.Name = "dataGridViewFilter";
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
@@ -146,8 +128,6 @@
             this.dataGridViewFilter.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridViewFilter.RowHeadersVisible = false;
             this.dataGridViewFilter.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridViewFilter.Size = new System.Drawing.Size(483, 307);
-            this.dataGridViewFilter.TabIndex = 0;
             this.dataGridViewFilter.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellDoubleClick);
             this.dataGridViewFilter.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellEndEdit);
             this.dataGridViewFilter.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridViewFilterOnCellEnter);
@@ -157,51 +137,44 @@
             // 
             // colFilterColumn
             // 
-            this.colFilterColumn.HeaderText = "Column";
+            resources.ApplyResources(this.colFilterColumn, "colFilterColumn");
             this.colFilterColumn.Name = "colFilterColumn";
             this.colFilterColumn.ReadOnly = true;
             // 
             // colFilterOperation
             // 
             this.colFilterOperation.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colFilterOperation.HeaderText = "Operation";
+            resources.ApplyResources(this.colFilterOperation, "colFilterOperation");
             this.colFilterOperation.Name = "colFilterOperation";
             // 
             // colFilterOperand
             // 
-            this.colFilterOperand.HeaderText = "Value";
+            resources.ApplyResources(this.colFilterOperand, "colFilterOperand");
             this.colFilterOperand.Name = "colFilterOperand";
             this.colFilterOperand.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colFilterOperand.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // toolStripFilter
             // 
-            this.toolStripFilter.Dock = System.Windows.Forms.DockStyle.Right;
+            resources.ApplyResources(this.toolStripFilter, "toolStripFilter");
             this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnDeleteFilter});
-            this.toolStripFilter.Location = new System.Drawing.Point(483, 0);
             this.toolStripFilter.Name = "toolStripFilter";
-            this.toolStripFilter.Size = new System.Drawing.Size(24, 307);
-            this.toolStripFilter.TabIndex = 1;
-            this.toolStripFilter.Text = "toolStrip1";
             // 
             // btnDeleteFilter
             // 
             this.btnDeleteFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnDeleteFilter.Image = global::pwiz.Common.Properties.Resources.Delete;
-            this.btnDeleteFilter.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnDeleteFilter, "btnDeleteFilter");
             this.btnDeleteFilter.Name = "btnDeleteFilter";
-            this.btnDeleteFilter.Size = new System.Drawing.Size(21, 20);
-            this.btnDeleteFilter.Text = "Delete";
             this.btnDeleteFilter.Click += new System.EventHandler(this.BtnDeleteFilterOnClick);
             // 
             // FilterTab
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.splitContainerFilter);
             this.Name = "FilterTab";
-            this.Size = new System.Drawing.Size(881, 307);
             this.splitContainerFilter.Panel1.ResumeLayout(false);
             this.splitContainerFilter.Panel2.ResumeLayout(false);
             this.splitContainerFilter.Panel2.PerformLayout();

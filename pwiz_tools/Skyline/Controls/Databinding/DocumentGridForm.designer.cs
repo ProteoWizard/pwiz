@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DocumentGridForm));
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.boundDataGridView = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
@@ -38,13 +39,10 @@
             // 
             // navBar
             // 
-            this.navBar.AutoSize = true;
+            resources.ApplyResources(this.navBar, "navBar");
             this.navBar.BindingListSource = this.bindingListSource;
-            this.navBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.navBar.Location = new System.Drawing.Point(0, 0);
             this.navBar.Name = "navBar";
-            this.navBar.Size = new System.Drawing.Size(772, 25);
-            this.navBar.TabIndex = 0;
+            this.navBar.ShowViewsButton = true;
             // 
             // bindingListSource
             // 
@@ -56,23 +54,17 @@
             this.boundDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.boundDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridView.DataSource = this.bindingListSource;
-            this.boundDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.boundDataGridView.Location = new System.Drawing.Point(0, 25);
+            resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.Name = "boundDataGridView";
-            this.boundDataGridView.Size = new System.Drawing.Size(772, 356);
-            this.boundDataGridView.TabIndex = 1;
             // 
             // DocumentGridForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(772, 381);
             this.Controls.Add(this.boundDataGridView);
             this.Controls.Add(this.navBar);
             this.Name = "DocumentGridForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.TabText = "Document Grid";
-            this.Text = "Document Grid";
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             this.ResumeLayout(false);

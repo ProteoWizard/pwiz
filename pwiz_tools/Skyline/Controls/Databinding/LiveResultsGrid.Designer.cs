@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LiveResultsGrid));
             this.boundDataGridView = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
@@ -42,36 +43,29 @@
             this.boundDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.boundDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridView.DataSource = this.bindingListSource;
-            this.boundDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.boundDataGridView.Location = new System.Drawing.Point(0, 25);
+            resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.Name = "boundDataGridView";
-            this.boundDataGridView.Size = new System.Drawing.Size(673, 433);
-            this.boundDataGridView.TabIndex = 0;
             // 
             // bindingListSource
             // 
+            this.bindingListSource.RowSource = new object[0];
             this.bindingListSource.CurrentChanged += new System.EventHandler(this.bindingListSource_CurrentChanged);
             // 
             // navBar
             // 
-            this.navBar.AutoSize = true;
+            resources.ApplyResources(this.navBar, "navBar");
             this.navBar.BindingListSource = this.bindingListSource;
-            this.navBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.navBar.Location = new System.Drawing.Point(0, 0);
             this.navBar.Name = "navBar";
-            this.navBar.Size = new System.Drawing.Size(673, 25);
-            this.navBar.TabIndex = 1;
+            this.navBar.ShowViewsButton = true;
             // 
             // LiveResultsGrid
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(673, 458);
             this.Controls.Add(this.boundDataGridView);
             this.Controls.Add(this.navBar);
             this.Name = "LiveResultsGrid";
-            this.TabText = "Results Grid";
-            this.Text = "Results Grid";
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             this.ResumeLayout(false);

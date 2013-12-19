@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ExportLiveReportDlg));
             this.btnImport = new System.Windows.Forms.Button();
             this.btnShare = new System.Windows.Forms.Button();
             this.btnPreview = new System.Windows.Forms.Button();
@@ -40,100 +41,64 @@
             // 
             // btnImport
             // 
-            this.btnImport.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnImport.Location = new System.Drawing.Point(235, 125);
+            resources.ApplyResources(this.btnImport, "btnImport");
             this.btnImport.Name = "btnImport";
-            this.btnImport.Size = new System.Drawing.Size(75, 23);
-            this.btnImport.TabIndex = 5;
-            this.btnImport.Text = "&Import...";
             this.btnImport.UseVisualStyleBackColor = true;
             this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // btnShare
             // 
-            this.btnShare.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnShare.Location = new System.Drawing.Point(235, 96);
+            resources.ApplyResources(this.btnShare, "btnShare");
             this.btnShare.Name = "btnShare";
-            this.btnShare.Size = new System.Drawing.Size(75, 23);
-            this.btnShare.TabIndex = 4;
-            this.btnShare.Text = "&Share...";
             this.btnShare.UseVisualStyleBackColor = true;
             this.btnShare.Click += new System.EventHandler(this.btnShare_Click);
             // 
             // btnPreview
             // 
-            this.btnPreview.Enabled = false;
-            this.btnPreview.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnPreview.Location = new System.Drawing.Point(235, 22);
+            resources.ApplyResources(this.btnPreview, "btnPreview");
             this.btnPreview.Name = "btnPreview";
-            this.btnPreview.Size = new System.Drawing.Size(75, 23);
-            this.btnPreview.TabIndex = 2;
-            this.btnPreview.Text = "&Preview...";
             this.btnPreview.UseVisualStyleBackColor = true;
             this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
             // 
             // btnEdit
             // 
-            this.btnEdit.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnEdit.Location = new System.Drawing.Point(235, 67);
+            resources.ApplyResources(this.btnEdit, "btnEdit");
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(75, 23);
-            this.btnEdit.TabIndex = 3;
-            this.btnEdit.Text = "&Edit list...";
             this.btnEdit.UseVisualStyleBackColor = true;
             this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label1.Location = new System.Drawing.Point(7, 6);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(42, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Report:";
             // 
             // listboxReports
             // 
             this.listboxReports.FormattingEnabled = true;
-            this.listboxReports.Location = new System.Drawing.Point(7, 22);
+            resources.ApplyResources(this.listboxReports, "listboxReports");
             this.listboxReports.Name = "listboxReports";
-            this.listboxReports.Size = new System.Drawing.Size(221, 225);
-            this.listboxReports.TabIndex = 1;
             this.listboxReports.SelectedIndexChanged += new System.EventHandler(this.listboxReports_SelectedIndexChanged);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(234, 260);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 7;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnExport
             // 
-            this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExport.Enabled = false;
-            this.btnExport.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnExport.Location = new System.Drawing.Point(153, 260);
+            resources.ApplyResources(this.btnExport, "btnExport");
             this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(75, 23);
-            this.btnExport.TabIndex = 6;
-            this.btnExport.Text = "Exp&ort";
             this.btnExport.UseVisualStyleBackColor = true;
             this.btnExport.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // ExportLiveReportDlg
             // 
             this.AcceptButton = this.btnExport;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(316, 288);
             this.Controls.Add(this.btnImport);
             this.Controls.Add(this.btnShare);
             this.Controls.Add(this.btnPreview);
@@ -142,9 +107,10 @@
             this.Controls.Add(this.listboxReports);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnExport);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "ExportLiveReportDlg";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Export Report";
+            this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();
 
