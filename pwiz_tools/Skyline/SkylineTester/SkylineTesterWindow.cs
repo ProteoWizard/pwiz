@@ -589,8 +589,10 @@ namespace SkylineTester
             var exeDir = GetCurrentBuildDirectory();
             foreach (var resourcesDll in Directory.EnumerateFiles(exeDir, "*.resources.dll", SearchOption.AllDirectories))
             {
-                if (string.Equals(resourcesDll, "Skyline.resources.dll", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(resourcesDll, "Skyline-daily.resources.dll", StringComparison.OrdinalIgnoreCase))
+                var file = Path.GetFileName(resourcesDll);
+                if (file == null)
+                    continue;
+                if (file.ToLower().StartsWith("skyline"))
                 {
                     var language = Path.GetFileName(Path.GetDirectoryName(resourcesDll));
                     if (language != "en")
