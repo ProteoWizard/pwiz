@@ -129,6 +129,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Summary.cs" />
     <Compile Include="TabBuild.cs">
       <SubType>Form</SubType>
     </Compile>

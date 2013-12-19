@@ -75,8 +75,6 @@ namespace SkylineTester
         {
             Clear();
             _logEmpty = true;
-            if (LogFile != null && File.Exists(LogFile))
-                File.Delete(LogFile);
         }
 
         /// <summary>

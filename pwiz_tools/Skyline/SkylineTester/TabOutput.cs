@@ -46,6 +46,5 @@ namespace SkylineTester
                 editLogFile.Start();
             }
         }
-
     }
 }

@@ -121,8 +121,11 @@ namespace SkylineTester
 
                     if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
                     {
-                        _lastTestResult = line;
-                        _testsRun++;
+                        lock (_newQualityRun)
+                        {
+                            _lastTestResult = line;
+                            _testsRun++;
+                        }
                     }
                 }
                 return true;
@@ -300,7 +303,6 @@ namespace SkylineTester
 
         private void StartTestRunner(string args, Action<bool> doneAction = null)
         {
-            Tabs.SelectTab(tabOutput);
             MemoryChartWindow.Start("TestRunnerMemory.log");
 
             var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");

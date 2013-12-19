@@ -77,6 +77,7 @@ namespace SkylineTester
 
             args.Append(GetTestList());
 
+            Tabs.SelectTab(tabOutput);
             StartTestRunner(args.ToString());
         }
 
