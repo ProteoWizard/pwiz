@@ -349,16 +349,10 @@
   <data name="SkylineWindow_Copy_Failed_setting_data_to_the_clipboard" xml:space="preserve">
     <value>Failed setting data to the clipboard.</value>
   </data>
-  <data name="SkylineWindow_Proteins_Selected_Equals" xml:space="preserve">
-    <value>proteins-selected=</value>
-  </data>
-  <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+    <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
     <value>Failed getting data from the clipboard.</value>
   </data>
-  <data name="SkylineWindow_Proteins_Selected_False" xml:space="preserve">
-    <value>proteins-selected=False</value>
-  </data>
-  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+    <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
     <value>proteins</value>
   </data>
   <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">

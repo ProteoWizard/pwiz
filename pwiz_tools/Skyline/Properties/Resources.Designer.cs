@@ -14282,24 +14282,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to proteins-selected=.
-        /// </summary>
-        public static string SkylineWindow_Proteins_Selected_Equals {
-            get {
-                return ResourceManager.GetString("SkylineWindow_Proteins_Selected_Equals", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to proteins-selected=False.
-        /// </summary>
-        public static string SkylineWindow_Proteins_Selected_False {
-            get {
-                return ResourceManager.GetString("SkylineWindow_Proteins_Selected_False", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error retrieving server information: {0}.
         /// </summary>
         public static string SkylineWindow_Publish_Error_retrieving_server_information__0__ {
