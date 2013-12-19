@@ -406,19 +406,20 @@ namespace pwiz.Skyline.Model
         /// scheduling peak times.
         /// </summary>
         public static ScheduleTimes GetSchedulingPeakTimes(IEnumerable<TransitionGroupDocNode> schedulingGroups,
-            SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum)
+            SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
         {
             var arrayScheduleTimes = schedulingGroups.Select(nodeGroup =>
-                    nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum))
+                    nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum, replicateFilter))
                 .Where(scheduleTimes => scheduleTimes != null)
                 .ToArray();
             if (arrayScheduleTimes.Length < 2)
                 return arrayScheduleTimes.FirstOrDefault();
 
+            
             // If multiple matching times, prefer any that matched the specified replicate
             if (replicateNum.HasValue)
             {
-                var matchingTimes = arrayScheduleTimes.Where(t => Equals(t.ReplicateNum, replicateNum)).ToArray();
+                var matchingTimes = arrayScheduleTimes.Where(t => t.ReplicateNum == replicateNum).ToArray();
                 if (matchingTimes.Length > 0)
                     arrayScheduleTimes = matchingTimes;
             }
@@ -428,7 +429,7 @@ namespace pwiz.Skyline.Model
                        };
         }
 
-        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum)
+        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum, Predicate<ChromatogramSet> replicateFilter)
         {
             if (!HasResults)
                 return null;
@@ -452,6 +453,9 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < Results.Count; i++)
                 {
                     var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
+                    if (replicateFilter != null && !replicateFilter(chromatogramSet))
+                        continue;
+
                     if (chromatogramSet.OptimizationFunction == null)
                         AddSchedulingTimes(i, ref valCount, ref valTotal);
                     else

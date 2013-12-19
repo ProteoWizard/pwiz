@@ -228,6 +228,8 @@ namespace pwiz.Skyline.Model.Results
 
         public OptimizableRegression OptimizationFunction { get; private set; }
 
+        public bool UseForRetentionTimeFilter { get; private set; }
+
         public ChromFileInfo GetFileInfo(ChromFileInfoId fileId)
         {
             return GetFileInfo(IndexOfId(fileId));
@@ -371,6 +373,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), (im, v) => im.Annotations = v, prop);
         }
 
+        public ChromatogramSet ChangeUseForRetentionTimeFilter(bool value)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.UseForRetentionTimeFilter = v, value);
+        }
+
         #endregion
 
         /// <summary>
@@ -443,7 +450,8 @@ namespace pwiz.Skyline.Model.Results
             acquired_time,
             cvid,
             name,
-            value
+            value,
+            use_for_retention_time_prediction,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -456,7 +464,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Read tag attributes
             base.ReadXml(reader);
-
+            UseForRetentionTimeFilter = reader.GetBoolAttribute(ATTR.use_for_retention_time_prediction, false);
             // Consume tag
             reader.Read();
 
@@ -496,6 +504,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Write tag attributes
             base.WriteXml(writer);
+            writer.WriteAttribute(ATTR.use_for_retention_time_prediction, false);
 
             // Write optimization element, if present
             if (OptimizationFunction != null)
@@ -584,7 +593,8 @@ namespace pwiz.Skyline.Model.Results
             // Why isn't "OptimizationFunction" included in "Equals"?
             return base.Equals(obj) 
                 && ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos) 
-                && Equals(obj.Annotations, Annotations);
+                && Equals(obj.Annotations, Annotations)
+                && obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter;
         }
 
         public override bool Equals(object obj)
@@ -601,6 +611,7 @@ namespace pwiz.Skyline.Model.Results
                 int result = base.GetHashCode();
                 result = result*397 + MSDataFileInfos.GetHashCodeDeep();
                 result = result*397 + Annotations.GetHashCode();
+                result = result*397 + UseForRetentionTimeFilter.GetHashCode();
                 return result;
             }
         }

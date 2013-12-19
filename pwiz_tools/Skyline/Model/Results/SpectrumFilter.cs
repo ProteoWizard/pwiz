@@ -103,12 +103,6 @@ namespace pwiz.Skyline.Model.Results
                 // TODO: Figure out a way to turn off time sharing on first SIM scan so that
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule;
-                int? replicateNum = null;
-                if (document.Settings.HasResults)
-                    replicateNum = document.Settings.MeasuredResults.Chromatograms.Count - 1;
-                var schedulingAlgorithm = replicateNum.HasValue
-                    ? ExportSchedulingAlgorithm.Single
-                    : ExportSchedulingAlgorithm.Average;
                 foreach (var nodePep in document.Peptides)
                 {
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
@@ -122,8 +116,12 @@ namespace pwiz.Skyline.Model.Results
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {
                                 double windowRT;
-                                double? centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTime(
-                                    document, nodePep, nodeGroup, replicateNum, schedulingAlgorithm, false, out windowRT);
+                                double? centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
+                                    document, nodePep, nodeGroup, out windowRT);
+                                if (_fullScan.RetentionTimeFilterLength != 0)
+                                {
+                                    windowRT = _fullScan.RetentionTimeFilterLength * 2;
+                                }
                                 if (centerTime != null)
                                 {
                                     double startTime = centerTime.Value - windowRT / 2;

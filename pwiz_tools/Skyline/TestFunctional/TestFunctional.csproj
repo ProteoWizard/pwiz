@@ -171,6 +171,7 @@
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="RetentionTimeAlignmentTest.cs" />
+    <Compile Include="RetentionTimeFilterTest.cs" />
     <Compile Include="RInstallerTest.cs" />
     <Compile Include="ScheduleMethodDlgTest.cs" />
     <Compile Include="ShareDocumentTest.cs" />
@@ -249,6 +250,7 @@
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
+    <None Include="RetentionTimeFilterTest.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="StandardTypeTest.zip" />
     <None Include="SynchSiblingsTest.zip" />

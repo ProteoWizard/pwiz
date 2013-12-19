@@ -1491,6 +1491,10 @@ namespace pwiz.Skyline
             {
                 return;
             }
+            if (!CheckRetentionTimeFilter(DocumentUI))
+            {
+                return;
+            }
 
             using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
             {
@@ -1515,6 +1519,63 @@ namespace pwiz.Skyline
                     if (ComboResults.Visible)
                         ComboResults.SelectedItem = namedResults[0].Key;
                 }
+            }
+        }
+
+        /// <summary>
+        /// If the Transition Full Scan settings are such that the time window for extracting
+        /// chromatograms depends on a set of replicates, then this function shows the
+        /// ChooseSchedulingReplicatesDlg.
+        /// Returns false if the user cancels the dialog, or cannot import chromatograms.
+        /// </summary>
+        public bool CheckRetentionTimeFilter(SrmDocument document)
+        {
+            var settings = document.Settings;
+            var fullScan = settings.TransitionSettings.FullScan;
+            if (!fullScan.IsEnabled)
+            {
+                return true;
+            }
+            if (fullScan.RetentionTimeFilterType != RetentionTimeFilterType.scheduling_windows)
+            {
+                return true;
+            }
+            if (!fullScan.IsEnabledMsMs && !document.Transitions.Any(transition => transition.IsMs1))
+            {
+                return true;
+            }
+            var prediction = settings.PeptideSettings.Prediction;
+            bool anyImportedResults = settings.HasResults && settings.MeasuredResults.Chromatograms.Any();
+            bool canChooseReplicatesForCalibration = anyImportedResults &&
+                                                        (prediction.UseMeasuredRTs ||
+                                                         prediction.RetentionTime != null &&
+                                                         prediction.RetentionTime.IsAutoCalculated);
+            if (null == prediction.RetentionTime)
+            {
+                if (!prediction.UseMeasuredRTs || !anyImportedResults)
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm);
+                    return false;
+                }
+            }
+            else if (!prediction.RetentionTime.IsUsable)
+            {
+                if (!canChooseReplicatesForCalibration)
+                {
+                    if (MessageBox.Show(this, Resources.SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction,
+                        Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    {
+                        return false;
+                    }
+                }
+            }
+            if (!canChooseReplicatesForCalibration)
+            {
+                return true;
+            }
+            using (var dlg = new ChooseSchedulingReplicatesDlg(this))
+            {
+                return dlg.ShowDialog(this) == DialogResult.OK;
             }
         }
 

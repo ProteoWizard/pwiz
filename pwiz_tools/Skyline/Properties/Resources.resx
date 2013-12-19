@@ -6038,8 +6038,8 @@ Are you sure you want to continue?</value>
   <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
     <value>Preview: </value>
   </data>
-  <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files">
-    <value xml:space="preserve">Skyline Files</value>
+  <data name="SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files" xml:space="preserve">
+    <value>Skyline Files</value>
   </data>
   <data name="PeptideIrt" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptideirt.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -6121,5 +6121,30 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ToolUpdateAvailable" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ToolUpdateAvailable.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_The_set_of_replicates_in_this_document_has_changed___Please_choose_again_which_replicates_to_use_for_the_retention_time_filter_" xml:space="preserve">
+    <value>The set of replicates in this document has changed.  Please choose again which replicates to use for the retention time filter.</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates" xml:space="preserve">
+    <value>Choose retention time filter replicates</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
+    <value>You must choose at least one replicate</value>
+  </data>
+  <data name="SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction" xml:space="preserve">
+    <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but the prediction algorithm has not been calibrated.  Do you want to generate full gradient chromatograms?</value>
+  </data>
+  <data name="SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm" xml:space="preserve">
+    <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but no prediction algorithm has been specified.
+Go to the Peptide Settings Prediction tab to fix.</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_" xml:space="preserve">
+    <value>This document does not contain any spectral libraries.</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_" xml:space="preserve">
+    <value>None of the spectral libraries in this document contain any retention times for any of the peptides in this document.</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
+    <value>Full gradient chromatograms will take longer to import, consume more disk space, and may make peak picking less effective.</value>
   </data>
 </root>

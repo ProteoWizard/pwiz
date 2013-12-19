@@ -28,8 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FullScanSettingsControl));
             this.groupBoxRetentionTimeToKeep = new System.Windows.Forms.GroupBox();
+            this.flowLayoutPanelUseSchedulingWindow = new System.Windows.Forms.FlowLayoutPanel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tbxTimeAroundPrediction = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.radioTimeAroundMs2Ids = new System.Windows.Forms.RadioButton();
             this.flowLayoutPanelTimeAroundMs2Ids = new System.Windows.Forms.FlowLayoutPanel();
             this.labelTimeAroundMs2Ids1 = new System.Windows.Forms.Label();
@@ -66,7 +71,9 @@
             this.label20 = new System.Windows.Forms.Label();
             this.lblPrecursorCharges = new System.Windows.Forms.Label();
             this.textPrecursorCharges = new System.Windows.Forms.TextBox();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.groupBoxRetentionTimeToKeep.SuspendLayout();
+            this.flowLayoutPanelUseSchedulingWindow.SuspendLayout();
             this.flowLayoutPanelTimeAroundMs2Ids.SuspendLayout();
             this.groupBoxMS1.SuspendLayout();
             this.groupBoxMS2.SuspendLayout();
@@ -74,6 +81,7 @@
             // 
             // groupBoxRetentionTimeToKeep
             // 
+            this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanelUseSchedulingWindow);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioTimeAroundMs2Ids);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanelTimeAroundMs2Ids);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioUseSchedulingWindow);
@@ -81,6 +89,29 @@
             resources.ApplyResources(this.groupBoxRetentionTimeToKeep, "groupBoxRetentionTimeToKeep");
             this.groupBoxRetentionTimeToKeep.Name = "groupBoxRetentionTimeToKeep";
             this.groupBoxRetentionTimeToKeep.TabStop = false;
+            // 
+            // flowLayoutPanelUseSchedulingWindow
+            // 
+            resources.ApplyResources(this.flowLayoutPanelUseSchedulingWindow, "flowLayoutPanelUseSchedulingWindow");
+            this.flowLayoutPanelUseSchedulingWindow.Controls.Add(this.label1);
+            this.flowLayoutPanelUseSchedulingWindow.Controls.Add(this.tbxTimeAroundPrediction);
+            this.flowLayoutPanelUseSchedulingWindow.Controls.Add(this.label2);
+            this.flowLayoutPanelUseSchedulingWindow.Name = "flowLayoutPanelUseSchedulingWindow";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // tbxTimeAroundPrediction
+            // 
+            resources.ApplyResources(this.tbxTimeAroundPrediction, "tbxTimeAroundPrediction");
+            this.tbxTimeAroundPrediction.Name = "tbxTimeAroundPrediction";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
             // 
             // radioTimeAroundMs2Ids
             // 
@@ -119,6 +150,7 @@
             this.radioUseSchedulingWindow.Name = "radioUseSchedulingWindow";
             this.radioUseSchedulingWindow.TabStop = true;
             this.radioUseSchedulingWindow.UseVisualStyleBackColor = true;
+            this.radioUseSchedulingWindow.CheckedChanged += new System.EventHandler(this.radioUseSchedulingWindow_CheckedChanged);
             // 
             // radioKeepAllTime
             // 
@@ -126,6 +158,7 @@
             this.radioKeepAllTime.Name = "radioKeepAllTime";
             this.radioKeepAllTime.TabStop = true;
             this.radioKeepAllTime.UseVisualStyleBackColor = true;
+            this.radioKeepAllTime.CheckedChanged += new System.EventHandler(this.radioKeepAllTime_CheckedChanged);
             // 
             // groupBoxMS1
             // 
@@ -321,7 +354,6 @@
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
             this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this.textPrecursorCharges);
             this.Controls.Add(this.lblPrecursorCharges);
@@ -331,6 +363,8 @@
             this.Name = "FullScanSettingsControl";
             this.groupBoxRetentionTimeToKeep.ResumeLayout(false);
             this.groupBoxRetentionTimeToKeep.PerformLayout();
+            this.flowLayoutPanelUseSchedulingWindow.ResumeLayout(false);
+            this.flowLayoutPanelUseSchedulingWindow.PerformLayout();
             this.flowLayoutPanelTimeAroundMs2Ids.ResumeLayout(false);
             this.flowLayoutPanelTimeAroundMs2Ids.PerformLayout();
             this.groupBoxMS1.ResumeLayout(false);
@@ -381,6 +415,11 @@
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Label lblPrecursorCharges;
         private System.Windows.Forms.TextBox textPrecursorCharges;
+        private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelUseSchedulingWindow;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox tbxTimeAroundPrediction;
+        private System.Windows.Forms.Label label2;
 
     }
 }

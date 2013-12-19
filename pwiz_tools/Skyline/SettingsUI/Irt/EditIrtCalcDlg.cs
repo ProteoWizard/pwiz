@@ -340,10 +340,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                DialogResult result = MessageBox.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
-                                                                          CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES,
-                                                                          StandardPeptideList.Count),
-                                                      Program.Name, MessageBoxButtons.YesNo);
+                string messageTooFewPeptides = string.Format(Resources
+                    .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
+                    CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
+
+                DialogResult result;
+                using (var dlg = new MultiButtonMsgDlg(messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                {
+                    result = dlg.ShowDialog(this);
+                }
+
                 if (result != DialogResult.Yes)
                 {
                     gridViewStandard.Focus();

@@ -1772,6 +1772,12 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("transition_full_scan")]
     public sealed class TransitionFullScan : Immutable, IValidating, IXmlSerializable
     {
+        public static readonly TransitionFullScan DEFAULT = new TransitionFullScan
+        {
+            RetentionTimeFilterType = RetentionTimeFilterType.ms2_ids,
+            RetentionTimeFilterLength = DEFAULT_TIME_AROUND_MS2_IDS,
+        };
+        
         // Calculate precursor single filter window values by doubling match tolerance values
         public const double MIN_PRECURSOR_MULTI_FILTER = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE*2;
         public const double MAX_PRECURSOR_MULTI_FILTER = 10*1000;
@@ -1802,6 +1808,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly string[] MASS_ANALYZERS = {QIT, TOF, ORBITRAP, FT_ICR};
         public static readonly double[] DEFAULT_RES_VALUES = {0.7, 10*1000, 60*1000, 100*1000};
         public static readonly double DEFAULT_RES_QIT = DEFAULT_RES_VALUES[0];
+        public const double DEFAULT_TIME_AROUND_MS2_IDS = 5.0;
 
         private double _cachedPrecursorRes;
         private double _cachedProductRes;
@@ -2118,6 +2125,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     im.IsotopeEnrichments = null;
                 }
+            });
+        }
+
+        public TransitionFullScan ChangeRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType,
+            double retentionTimeFilterLength)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.RetentionTimeFilterType = retentionTimeFilterType;
+                im.RetentionTimeFilterLength = retentionTimeFilterLength;
             });
         }
 

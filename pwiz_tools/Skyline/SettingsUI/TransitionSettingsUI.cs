@@ -45,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
+        public const double DEFAULT_TIME_AROUND_PREDICTION = 5;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {

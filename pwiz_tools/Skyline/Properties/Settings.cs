@@ -1780,7 +1780,7 @@ namespace pwiz.Skyline.Properties
                         null,  // MinTime
                         null   // MaxTime
                     ),
-                    new TransitionFullScan()
+                    TransitionFullScan.DEFAULT
                 ),
                 new DataSettings(new AnnotationDef[0]),
                 DocumentRetentionTimes.EMPTY

@@ -1744,8 +1744,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             for (int i = 0; i < measuredResultsNew.Chromatograms.Count; i++)
             {
-                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY);
-                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY);
+                var chromatogramSetNew = measuredResultsNew.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false);
+                var chromatogramSetOld = measuredResultsOld.Chromatograms[i].ChangeAnnotations(Annotations.EMPTY).ChangeUseForRetentionTimeFilter(false);
                 if (!chromatogramSetNew.Equals(chromatogramSetOld))
                 {
                     return false;

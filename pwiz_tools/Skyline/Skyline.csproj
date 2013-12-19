@@ -465,6 +465,12 @@
     <Compile Include="EditUI\SchedulingGraphPropertyDlg.Designer.cs">
       <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\ChooseSchedulingReplicatesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ChooseSchedulingReplicatesDlg.Designer.cs">
+      <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ExportChromatogramDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1148,6 +1154,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.resx">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
+      <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Skyline_Daily.ico" />
     <EmbeddedResource Include="Alerts\AboutDlg.resx">

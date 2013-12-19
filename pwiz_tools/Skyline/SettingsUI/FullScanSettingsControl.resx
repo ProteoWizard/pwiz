@@ -117,23 +117,143 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="flowLayoutPanelUseSchedulingWindow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="radioTimeAroundMs2Ids.AutoSize" type="System.Boolean, mscorlib">
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="radioTimeAroundMs2Ids.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 3</value>
+  </data>
+  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 3, 0, 3</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Use only scans within</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>flowLayoutPanelUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tbxTimeAroundPrediction.Location" type="System.Drawing.Point, System.Drawing">
+    <value>109, 0</value>
+  </data>
+  <data name="tbxTimeAroundPrediction.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="tbxTimeAroundPrediction.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 20</value>
+  </data>
+  <data name="tbxTimeAroundPrediction.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;tbxTimeAroundPrediction.Name" xml:space="preserve">
+    <value>tbxTimeAroundPrediction</value>
+  </data>
+  <data name="&gt;&gt;tbxTimeAroundPrediction.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxTimeAroundPrediction.Parent" xml:space="preserve">
+    <value>flowLayoutPanelUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;tbxTimeAroundPrediction.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>158, 3</value>
+  </data>
+  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 3, 3, 3</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>minutes of predicted RT</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>flowLayoutPanelUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="flowLayoutPanelUseSchedulingWindow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 44</value>
+  </data>
+  <data name="flowLayoutPanelUseSchedulingWindow.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="flowLayoutPanelUseSchedulingWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>301, 24</value>
+  </data>
+  <data name="flowLayoutPanelUseSchedulingWindow.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Name" xml:space="preserve">
+    <value>flowLayoutPanelUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Parent" xml:space="preserve">
+    <value>groupBoxRetentionTimeToKeep</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioTimeAroundMs2Ids.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioTimeAroundMs2Ids.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="radioTimeAroundMs2Ids.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 65</value>
+    <value>9, 22</value>
+  </data>
+  <data name="radioTimeAroundMs2Ids.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 2, 3</value>
   </data>
   <data name="radioTimeAroundMs2Ids.Size" type="System.Drawing.Size, System.Drawing">
     <value>14, 13</value>
   </data>
   <data name="radioTimeAroundMs2Ids.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;radioTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>radioTimeAroundMs2Ids</value>
@@ -145,7 +265,7 @@
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
   <data name="&gt;&gt;radioTimeAroundMs2Ids.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="flowLayoutPanelTimeAroundMs2Ids.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -157,10 +277,10 @@
     <value>NoControl</value>
   </data>
   <data name="labelTimeAroundMs2Ids1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>0, 3</value>
   </data>
   <data name="labelTimeAroundMs2Ids1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 3, 0, 3</value>
   </data>
   <data name="labelTimeAroundMs2Ids1.Size" type="System.Drawing.Size, System.Drawing">
     <value>109, 13</value>
@@ -184,7 +304,7 @@
     <value>0</value>
   </data>
   <data name="tbxTimeAroundMs2Ids.Location" type="System.Drawing.Point, System.Drawing">
-    <value>115, 0</value>
+    <value>109, 0</value>
   </data>
   <data name="tbxTimeAroundMs2Ids.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -214,10 +334,10 @@
     <value>NoControl</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>167, 3</value>
+    <value>158, 3</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 3, 3, 3</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
@@ -241,13 +361,16 @@
     <value>2</value>
   </data>
   <data name="flowLayoutPanelTimeAroundMs2Ids.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 63</value>
+    <value>25, 19</value>
+  </data>
+  <data name="flowLayoutPanelTimeAroundMs2Ids.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="flowLayoutPanelTimeAroundMs2Ids.Size" type="System.Drawing.Size, System.Drawing">
-    <value>303, 22</value>
+    <value>301, 22</value>
   </data>
   <data name="flowLayoutPanelTimeAroundMs2Ids.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
@@ -259,7 +382,7 @@
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="radioUseSchedulingWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -268,16 +391,13 @@
     <value>NoControl</value>
   </data>
   <data name="radioUseSchedulingWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 42</value>
+    <value>9, 47</value>
   </data>
   <data name="radioUseSchedulingWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>272, 17</value>
+    <value>14, 13</value>
   </data>
   <data name="radioUseSchedulingWindow.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="radioUseSchedulingWindow.Text" xml:space="preserve">
-    <value>Use only scans in retention time scheduling windows</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;radioUseSchedulingWindow.Name" xml:space="preserve">
     <value>radioUseSchedulingWindow</value>
@@ -289,7 +409,7 @@
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
   <data name="&gt;&gt;radioUseSchedulingWindow.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="radioKeepAllTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -298,13 +418,13 @@
     <value>NoControl</value>
   </data>
   <data name="radioKeepAllTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 19</value>
+    <value>9, 70</value>
   </data>
   <data name="radioKeepAllTime.Size" type="System.Drawing.Size, System.Drawing">
     <value>150, 17</value>
   </data>
   <data name="radioKeepAllTime.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>4</value>
   </data>
   <data name="radioKeepAllTime.Text" xml:space="preserve">
     <value>Include all matching scans</value>
@@ -319,13 +439,13 @@
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
   <data name="&gt;&gt;radioKeepAllTime.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="groupBoxRetentionTimeToKeep.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 385</value>
+    <value>17, 380</value>
   </data>
   <data name="groupBoxRetentionTimeToKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 92</value>
+    <value>326, 97</value>
   </data>
   <data name="groupBoxRetentionTimeToKeep.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -745,7 +865,7 @@
     <value>3</value>
   </data>
   <data name="comboIsolationScheme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 110</value>
+    <value>14, 111</value>
   </data>
   <data name="comboIsolationScheme.Size" type="System.Drawing.Size, System.Drawing">
     <value>111, 21</value>
@@ -772,7 +892,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelProductAt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>245, 94</value>
+    <value>245, 95</value>
   </data>
   <data name="labelProductAt.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -796,7 +916,7 @@
     <value>1</value>
   </data>
   <data name="textProductAt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>244, 111</value>
+    <value>244, 112</value>
   </data>
   <data name="textProductAt.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 20</value>
@@ -823,7 +943,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelProductTh.Location" type="System.Drawing.Point, System.Drawing">
-    <value>289, 114</value>
+    <value>289, 115</value>
   </data>
   <data name="labelProductTh.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -850,7 +970,7 @@
     <value>False</value>
   </data>
   <data name="textProductRes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 111</value>
+    <value>153, 112</value>
   </data>
   <data name="textProductRes.Size" type="System.Drawing.Size, System.Drawing">
     <value>85, 20</value>
@@ -877,7 +997,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelProductRes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>150, 94</value>
+    <value>150, 95</value>
   </data>
   <data name="labelProductRes.Size" type="System.Drawing.Size, System.Drawing">
     <value>89, 13</value>
@@ -961,7 +1081,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelIsolationScheme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 94</value>
+    <value>11, 95</value>
   </data>
   <data name="labelIsolationScheme.Size" type="System.Drawing.Size, System.Drawing">
     <value>89, 13</value>
@@ -1039,7 +1159,7 @@
     <value>17, 232</value>
   </data>
   <data name="groupBoxMS2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 145</value>
+    <value>326, 142</value>
   </data>
   <data name="groupBoxMS2.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1113,14 +1233,26 @@
   <data name="&gt;&gt;textPrecursorCharges.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
+  <data name="$this.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 521</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
+    <value>toolTip</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FullScanSettingsControl</value>

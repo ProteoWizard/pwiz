@@ -30,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -274,11 +275,31 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public double? PredictRetentionTime(SrmDocument document,
+            PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            int? replicateNum,
+            ExportSchedulingAlgorithm algorithm,
+            bool singleWindow,
+            out double windowRT)
+        {
+            return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, replicateNum, algorithm,
+                singleWindow, null, out windowRT);
+        }
+
+        public double? PredictRetentionTimeForChromImport(SrmDocument document, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, out double windowRt)
+        {
+            return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, null,
+                ExportSchedulingAlgorithm.Average, false, chromatogramSet => chromatogramSet.UseForRetentionTimeFilter, out windowRt);
+        }
+
+        private double? PredictRetentionTimeUsingSpecifiedReplicates(SrmDocument document,
                                             PeptideDocNode nodePep,
                                             TransitionGroupDocNode nodeGroup,
                                             int? replicateNum,
                                             ExportSchedulingAlgorithm algorithm,
                                             bool singleWindow,
+                                            Predicate<ChromatogramSet> replicateFilter, 
                                             out double windowRT)
         {
             // Safe defaults
@@ -289,7 +310,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (useMeasured)
             {
                 var schedulingGroups = GetSchedulingGroups(nodePep, nodeGroup);
-                var peakTime = TransitionGroupDocNode.GetSchedulingPeakTimes(schedulingGroups, document, algorithm, replicateNum);
+                var peakTime = TransitionGroupDocNode.GetSchedulingPeakTimes(schedulingGroups, document, algorithm, replicateNum, replicateFilter);
                 if (peakTime != null)
                     predictedRT = peakTime.CenterTime;
                 if (predictedRT.HasValue)
@@ -302,7 +323,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (!ReferenceEquals(nodeGroup, nodeGroupOther))
                         {
-                            peakTime = nodeGroupOther.GetSchedulingPeakTimes(document, algorithm, replicateNum);
+                            peakTime = nodeGroupOther.GetSchedulingPeakTimes(document, algorithm, replicateNum, replicateFilter);
                             if (peakTime != null)
                                 predictedRT = peakTime.CenterTime;
 
@@ -322,7 +343,39 @@ namespace pwiz.Skyline.Model.DocSettings
                 // variable scheduling windows
                 if (!useMeasured || !singleWindow || MeasuredRTWindow == RetentionTime.TimeWindow)
                 {
-                    predictedRT = RetentionTime.GetRetentionTime(document.Settings.GetModifiedSequence(nodePep));
+                    string modifiedSequence = document.Settings.GetModifiedSequence(nodePep);
+                    if (null != replicateFilter && document.Settings.HasResults)
+                    {
+                        var retentionTimes = new List<double>();
+                        foreach (var chromSet in document.Settings.MeasuredResults.Chromatograms)
+                        {
+                            if (!replicateFilter(chromSet))
+                            {
+                                continue;
+                            }
+                            foreach (ChromFileInfo chromFileInfo in chromSet.MSDataFileInfos)
+                            {
+                                var conversion = RetentionTime.GetConversion(chromFileInfo.FileId);
+                                if (null == conversion)
+                                {
+                                    continue;
+                                }
+                                double? time = RetentionTime.GetRetentionTime(modifiedSequence, conversion);
+                                if (time.HasValue)
+                                {
+                                    retentionTimes.Add(time.Value);
+                                }
+                            }
+                        }
+                        if (retentionTimes.Count > 0)
+                        {
+                            predictedRT = retentionTimes.Average();
+                        }
+                    }
+                    if (!predictedRT.HasValue)
+                    {
+                        predictedRT = RetentionTime.GetRetentionTime(modifiedSequence);
+                    }
                     windowRT = RetentionTime.TimeWindow;
                 }
             }

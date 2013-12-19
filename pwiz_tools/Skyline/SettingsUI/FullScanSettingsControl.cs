@@ -18,7 +18,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -83,6 +86,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
+                if (null == comboAcquisitionMethod.SelectedItem)
+                {
+                    return FullScanAcquisitionMethod.None;
+                }
                 return FullScanAcquisitionExtension.GetEnum(comboAcquisitionMethod.SelectedItem.ToString(),
                     FullScanAcquisitionMethod.None);
             }
@@ -269,6 +276,7 @@ namespace pwiz.Skyline.SettingsUI
                 textPrecursorIsotopeFilter.Enabled = true;
                 comboPrecursorAnalyzerType.Enabled = true;
             }
+            UpdateRetentionTimeFilterUi();
         }
 
         private void comboPrecursorAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)
@@ -306,8 +314,8 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
 
             RetentionTimeFilterType retentionTimeFilterType = RetentionTimeFilterType;
-            double timeAroundMs2Ids;
-            if (!ValidateTimeAroundMs2Ids(out timeAroundMs2Ids))
+            double retentionTimeFilterLength;
+            if (!ValidateRetentionTimeFilterLength(out retentionTimeFilterLength))
                 return false;
 
             fullScanSettings = new TransitionFullScan(AcquisitionMethod,
@@ -322,7 +330,7 @@ namespace pwiz.Skyline.SettingsUI
                                                   precursorResMz,
                                                   Enrichments,
                                                   retentionTimeFilterType,
-                                                  timeAroundMs2Ids);
+                                                  retentionTimeFilterLength);
             return true;
         }
 
@@ -530,6 +538,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 comboProductAnalyzerType.Enabled = true;
             }
+            UpdateRetentionTimeFilterUi();
         }
 
         private void EnableIsolationScheme(bool enable)
@@ -668,16 +677,20 @@ namespace pwiz.Skyline.SettingsUI
         {
             tbxTimeAroundMs2Ids.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_MS2_IDS.ToString(CultureInfo.CurrentUICulture);
             tbxTimeAroundMs2Ids.Enabled = false;
+            tbxTimeAroundPrediction.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_PREDICTION
+                .ToString(CultureInfo.CurrentUICulture);
+            tbxTimeAroundPrediction.Enabled = false;
             if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
             {
                 radioUseSchedulingWindow.Checked = true;
+                tbxTimeAroundPrediction.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
+                Debug.Assert(tbxTimeAroundPrediction.Enabled);
             }
             else if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 radioTimeAroundMs2Ids.Checked = true;
                 tbxTimeAroundMs2Ids.Text =
                     FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
-                tbxTimeAroundMs2Ids.Enabled = true;
             }
             else
             {
@@ -685,20 +698,23 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
+        public bool ValidateRetentionTimeFilterLength(out double retentionTimeFilterLength)
         {
-            tbxTimeAroundMs2Ids.Enabled = radioTimeAroundMs2Ids.Checked;
-        }
-
-        public bool ValidateTimeAroundMs2Ids(out double timeAroundMs2Ids)
-        {
-            timeAroundMs2Ids = 0;
+            retentionTimeFilterLength = 0;
             if (radioTimeAroundMs2Ids.Checked)
             {
-                if (!double.TryParse(tbxTimeAroundMs2Ids.Text, out timeAroundMs2Ids) || timeAroundMs2Ids < 0)
+                if (!double.TryParse(tbxTimeAroundMs2Ids.Text, out retentionTimeFilterLength) || retentionTimeFilterLength < 0)
                 {
                     MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
                     tbxTimeAroundMs2Ids.Focus();
+                    return false;
+                }
+            }
+            else if (radioUseSchedulingWindow.Checked)
+            {
+                if (!double.TryParse(tbxTimeAroundPrediction.Text, out retentionTimeFilterLength) || retentionTimeFilterLength < 0)
+                {
+                    tbxTimeAroundPrediction.Focus();
                     return false;
                 }
             }
@@ -820,6 +836,101 @@ namespace pwiz.Skyline.SettingsUI
             // Select defaults
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
             radioTimeAroundMs2Ids.Checked = true;
+        }
+
+        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
+        {
+            UpdateRetentionTimeFilterUi();
+        }
+
+        private void radioKeepAllTime_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateRetentionTimeFilterUi();
+        }
+
+        private void radioUseSchedulingWindow_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateRetentionTimeFilterUi();
+        }
+
+        private void UpdateRetentionTimeFilterUi()
+        {
+            bool disabled = AcquisitionMethod == FullScanAcquisitionMethod.None &&
+                            PrecursorIsotopesCurrent == FullScanPrecursorIsotopes.None;
+            if (disabled)
+            {
+                groupBoxRetentionTimeToKeep.Enabled = false;
+            }
+            else
+            {
+                groupBoxRetentionTimeToKeep.Enabled = true;
+            }
+            if (radioKeepAllTime.Checked && !disabled)
+            {
+                radioKeepAllTime.ForeColor = Color.Red;
+                toolTip.SetToolTip(radioKeepAllTime,
+                    Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
+            }
+            else
+            {
+                radioKeepAllTime.ForeColor = DefaultForeColor;
+                toolTip.SetToolTip(radioKeepAllTime, null);
+            }
+            var timeAroundMs2IdsControls = new List<Control>();
+            timeAroundMs2IdsControls.Add(radioTimeAroundMs2Ids);
+            timeAroundMs2IdsControls.AddRange(flowLayoutPanelTimeAroundMs2Ids.Controls.Cast<Control>());
+            if (radioTimeAroundMs2Ids.Checked && !disabled)
+            {
+                string strWarning = null;
+                var document = SkylineWindow.DocumentUI;
+                if (radioTimeAroundMs2Ids.Checked)
+                {
+                    tbxTimeAroundMs2Ids.Enabled = true;
+                    if (document.PeptideCount > 0)
+                    {
+                        if (!document.Settings.HasLibraries)
+                        {
+                            strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
+                        }
+                        else if (
+                            document.Peptides.All(
+                                peptide =>
+                                    document.Settings.GetUnalignedRetentionTimes(peptide.Peptide.Sequence,
+                                        peptide.ExplicitMods).Length == 0))
+                        {
+                            strWarning =
+                                Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
+                        }
+                    }
+                }
+                else
+                {
+                    tbxTimeAroundMs2Ids.Enabled = false;
+                }
+                Color foreColor = strWarning == null ? DefaultForeColor : Color.Red;
+                foreach (var control in timeAroundMs2IdsControls)
+                {
+                    control.ForeColor = foreColor;
+                    toolTip.SetToolTip(control, strWarning);
+                }
+            }
+            else
+            {
+                tbxTimeAroundMs2Ids.Enabled = false;
+                foreach (var control in timeAroundMs2IdsControls)
+                {
+                    control.ForeColor = DefaultForeColor;
+                    toolTip.SetToolTip(control, null);
+                }
+            }
+            if (radioUseSchedulingWindow.Checked && !disabled)
+            {
+                tbxTimeAroundPrediction.Enabled = true;
+            }
+            else
+            {
+                tbxTimeAroundPrediction.Enabled = false;
+            }
         }
     }
 }
