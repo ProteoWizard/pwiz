@@ -40,6 +40,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class RetentionTimeFilterTest : AbstractFunctionalTest
     {
+        private const string extension = ".mz5";
         [TestMethod]
         public void TestRetentionTimeFilter()
         {
@@ -82,8 +83,8 @@ namespace pwiz.SkylineTestFunctional
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() =>
                 {
-                    openDataSourceDialog.SelectFile("200fmol.raw");
-                    openDataSourceDialog.SelectFile("20fmol.raw");
+                    openDataSourceDialog.SelectFile("200fmol" + extension);
+                    openDataSourceDialog.SelectFile("20fmol" + extension);
                 });
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
@@ -120,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
                     chromSetForScheduling, true)));
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(chooseSchedulingReplicatesDlg.OkDialog);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-                RunUI(()=>openDataSourceDialog.SelectFile("40fmol.raw"));
+                RunUI(()=>openDataSourceDialog.SelectFile("40fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             WaitForResultsImport();
@@ -181,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
                 var chooseSchedulingReplicatesDlg = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
                 var importResultsDlg = ShowDialog<ImportResultsDlg>(chooseSchedulingReplicatesDlg.OkDialog);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-                RunUI(() => openDataSourceDialog.SelectFile("8fmol.raw"));
+                RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
                 WaitForResultsImport();
                 var document = SkylineWindow.Document;
