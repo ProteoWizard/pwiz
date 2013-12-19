@@ -34,6 +34,7 @@ namespace SkylineTester
         public string DefaultDirectory { get; set; }
         public string LogFile { get; set; }
         public Button StopButton { get; set; }
+        public Func<string, bool> FilterFunc { get; set; } 
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
@@ -282,7 +283,10 @@ namespace SkylineTester
         /// </summary>
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
-            Log(e.Data);
+            var line = e.Data;
+            if (FilterFunc != null && !FilterFunc(line))
+                return;
+            Log(line);
         }
 
         /// <summary>

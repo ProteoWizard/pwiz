@@ -35,6 +35,7 @@ namespace TestRunnerLib
     {
         private readonly Process _process;
         private readonly StreamWriter _log;
+        private readonly bool _showStatus;
 
         public readonly TestContext TestContext;
         public CultureInfo Culture = new CultureInfo("en-US");
@@ -48,6 +49,7 @@ namespace TestRunnerLib
         public RunTests(
             bool demoMode,
             bool offscreen,
+            bool showStatus,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -57,6 +59,7 @@ namespace TestRunnerLib
         {
             _log = log;
             _process = Process.GetCurrentProcess();
+            _showStatus = showStatus;
             TestContext = new TestRunnerContext();
             SetTestDir(TestContext, results);
 
@@ -107,15 +110,18 @@ namespace TestRunnerLib
 
         public bool Run(TestInfo test, int pass, int testNumber)
         {
+            if (_showStatus)
+                Log("#@ {0} ({1})\n", test.TestMethod.Name, Culture.TwoLetterISOLanguageName);
+
             var time = DateTime.Now;
-            Log(string.Format(
+            Log(
                 "[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
                 time.Hour.ToString("D2"),
                 time.Minute.ToString("D2"),
                 pass,
                 testNumber,
                 test.TestMethod.Name,
-                Culture));
+                Culture.TwoLetterISOLanguageName);
 
             // Create test class.
             var testObject = Activator.CreateInstance(test.TestClassType);
@@ -170,13 +176,13 @@ namespace TestRunnerLib
             if (exception == null)
             {
                 // Test succeeded.
-                Log(string.Format(
+                Log(
                     "{0,3} failures, {1}/{2} MB{3}, {4} sec.\r\n", 
                     FailureCount, 
                     managedMemory, 
                     TotalMemory,
                     crtLeakedBytes > 0 ? string.Format("  *** LEAKED {0} bytes ***", crtLeakedBytes) : "",
-                    LastTestDuration));
+                    LastTestDuration);
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
                 {
@@ -200,11 +206,11 @@ namespace TestRunnerLib
             else
                 ErrorCounts[failureInfo] = 1;
 
-            Log(string.Format(
+            Log(
                 "{0,3} failures, {1:0.0}/{2:0.0} MB\r\n\r\n*** failure {3}\r\n{4}\r\n{5}\r\n***\r\n\r\n",
                 FailureCount, managedMemory, TotalMemory, ErrorCounts[failureInfo],
                 exception.InnerException.Message,
-                exception.InnerException.StackTrace));
+                exception.InnerException.StackTrace);
             return false;
         }
 
@@ -240,12 +246,12 @@ namespace TestRunnerLib
             }
         }
 
-        private void Log(string info)
+        private void Log(string info, params object[] args)
         {
-            Console.Write(info);
+            Console.Write(info, args);
             if (_log != null)
             {
-                _log.Write(info);
+                _log.Write(info, args);
                 _log.Flush();
             }
         }

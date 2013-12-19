@@ -47,6 +47,8 @@ namespace SkylineTester
         private string _devenv;
         private readonly string _exeDir;
         private readonly string _openFile;
+        private bool _runningTestRunner;
+        private string _lastTestResult;
 
         #region Create and load window
 
@@ -91,13 +93,9 @@ namespace SkylineTester
 
             // Try to find where subversion is available.
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            _subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
-            if (!File.Exists(_subversion))
-            {
-                _subversion = Path.Combine(programFiles, @"VisualSVN\bin\svn.exe");
-                if (!File.Exists(_subversion))
-                    _subversion = null;
-            }
+            _subversion = ChooseMostRecentFile(
+                Path.Combine(programFiles, @"Subversion\bin\svn.exe"),
+                Path.Combine(programFiles, @"VisualSVN\bin\svn.exe"));
 
             // Find Visual Studio, if available.
             _devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
@@ -110,6 +108,25 @@ namespace SkylineTester
             }
 
             commandShell.StopButton = buttonStop;
+            commandShell.FilterFunc = line =>
+            {
+                if (_runningTestRunner && line != null)
+                {
+                    if (line.StartsWith("#@ "))
+                    {
+                        var testName = line.Substring(3);
+                        Invoke(new Action(() => statusLabel.Text = "Running " + testName + " ..."));
+                        return false;
+                    }
+
+                    if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
+                    {
+                        _lastTestResult = line;
+                        _testsRun++;
+                    }
+                }
+                return true;
+            };
 
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
@@ -117,6 +134,7 @@ namespace SkylineTester
 
             InitQuality();
             OpenForms();
+            statusLabel.Text = "";
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -259,25 +277,25 @@ namespace SkylineTester
 
         private string GetCurrentBuildDirectory()
         {
-            var testRunner32 = Path.Combine(
-                _buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe");
-            var testRunner64 = Path.Combine(
-                _buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe");
-            var testRunner = testRunner32;
-            if (File.Exists(testRunner32))
-            {
-                if (File.Exists(testRunner64))
-                {
-                    testRunner = File.GetCreationTime(testRunner32) > File.GetCreationTime(testRunner64)
-                        ? testRunner32
-                        : testRunner64;
-                }
-            }
-            else if (File.Exists(testRunner64))
-                testRunner = testRunner64;
-            else
-                testRunner = Path.Combine(_exeDir, "TestRunner.exe");
+            var testRunner = ChooseMostRecentFile(
+                Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe"),
+                Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe"),
+                Path.Combine(_exeDir, "TestRunner.exe"));
             return Path.GetDirectoryName(testRunner);
+        }
+
+        private string ChooseMostRecentFile(params string[] files)
+        {
+            string mostRecent = null;
+            foreach (var file in files)
+            {
+                if (!File.Exists(file))
+                    continue;
+                if (mostRecent != null && File.GetCreationTime(file) < File.GetCreationTime(mostRecent))
+                    continue;
+                mostRecent = file;
+            }
+            return mostRecent;
         }
 
         private void StartTestRunner(string args, Action<bool> doneAction = null)
@@ -286,37 +304,20 @@ namespace SkylineTester
             MemoryChartWindow.Start("TestRunnerMemory.log");
 
             var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");
-            _stopTestRunner = Path.Combine(Path.GetDirectoryName(testRunner) ?? "", "StopTestRunner.txt");
-            if (File.Exists(_stopTestRunner))
-                File.Delete(_stopTestRunner);
-            commandShell.Add("{0} random=off results={1} {2} {3}",
+            commandShell.Add("{0} random=off status=on results={1} {2} {3}",
                 Quote(testRunner),
                 Quote(_resultsDir),
                 RunWithDebugger.Checked ? "Debug" : "",
                 args);
 
+            _runningTestRunner = true;
             commandShell.Run(doneAction ?? TestRunnerDone);
-        }
-
-        private string _stopTestRunner;
-        private WaitWindow _waitWindow;
-
-        private void StopTestRunner()
-        {
-            File.WriteAllText(_stopTestRunner, "");
-            _waitWindow = new WaitWindow();
-            _waitWindow.Show();
         }
 
         private void TestRunnerDone(bool success)
         {
-            if (_waitWindow != null)
-            {
-                _waitWindow.Close();
-                _waitWindow.Dispose();
-                _waitWindow = null;
-            }
-
+            _runningTestRunner = false;
+            statusLabel.Text = "";
             ToggleRunButtons(null);
         }
 

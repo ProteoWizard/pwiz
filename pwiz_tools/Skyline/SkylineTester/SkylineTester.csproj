@@ -147,12 +147,6 @@
     <Compile Include="TabTutorials.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="WaitWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WaitWindow.Designer.cs">
-      <DependentUpon>WaitWindow.cs</DependentUpon>
-    </Compile>
     <Content Include="SkylineTester.ico" />
     <EmbeddedResource Include="MemoryChartWindow.resx">
       <DependentUpon>MemoryChartWindow.cs</DependentUpon>
@@ -170,9 +164,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="WaitWindow.resx">
-      <DependentUpon>WaitWindow.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

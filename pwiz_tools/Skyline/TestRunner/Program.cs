@@ -44,7 +44,6 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
         private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
-        private static int _failureCount;
 
         [STAThread]
         static void Main(string[] args)
@@ -56,9 +55,9 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
-                "log=TestRunner.log;report=TestRunner.log;summary";
+                "log=TestRunner.log;report=TestRunner.log";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
@@ -90,37 +89,6 @@ namespace TestRunner
 
             var skylineDirectory = GetSkylineDirectory();
 
-            // Get current SVN revision info.
-            var startDate = DateTime.Now;
-            int revision = 0;
-            try
-            {
-                if (skylineDirectory != null)
-                {
-                    Process svn = new Process
-                    {
-                        StartInfo =
-                        {
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            FileName = @"c:\Program Files (x86)\VisualSVN\bin\svn.exe",
-                            Arguments = @"info -r HEAD " + skylineDirectory.FullName
-                        }
-                    };
-                    svn.Start();
-                    string svnOutput = svn.StandardOutput.ReadToEnd();
-                    svn.WaitForExit();
-                    var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
-                    revision = int.Parse(revisionString);
-                }
-            }
-            // ReSharper disable EmptyGeneralCatchClause
-            catch
-            // ReSharper restore EmptyGeneralCatchClause
-            {
-            }
-
             // Create log file.
             var logStream = new FileStream(
                 commandLineArgs.ArgAsString("log"),
@@ -129,8 +97,6 @@ namespace TestRunner
                 FileShare.ReadWrite);
             var log = new StreamWriter(logStream);
 
-            int elapsedMinutes = 0;
-            int testsRun = 0;
             try
             {
                 // Load list of tests.
@@ -190,13 +156,7 @@ namespace TestRunner
                             passes = 1;
                     }
 
-                    var stopwatch = new Stopwatch();
-                    stopwatch.Start();
-
-                    testsRun = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
-
-                    stopwatch.Stop();
-                    elapsedMinutes = (int) (stopwatch.ElapsedMilliseconds/1000/60);
+                    RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
 
                     // Pause for profiling
                     if (profiling)
@@ -223,28 +183,6 @@ namespace TestRunner
             Console.WriteLine("\n");
             Report(commandLineArgs.ArgAsString("log"));
 
-            if (commandLineArgs.HasArg("summary"))
-            {
-                const double mb = 1024 * 1024;
-                var managedMemory = (int)Math.Round(GC.GetTotalMemory(true) / mb);
-                var totalMemory = (int)Math.Round(Process.GetCurrentProcess().PrivateMemorySize64 / mb);
-
-                var summaryFile = commandLineArgs.ArgAsString("summary");
-                var summary = new Summary();
-                summary.Load(summaryFile);
-                summary.Runs.Add(new Summary.Run
-                {
-                    Date = startDate,
-                    Revision = revision,
-                    RunMinutes = elapsedMinutes,
-                    TestsRun = testsRun,
-                    Failures = _failureCount,
-                    ManagedMemory = managedMemory,
-                    TotalMemory = totalMemory
-                });
-                summary.Save(summaryFile);
-            }
-
             // If the forms/tests cache was regenerated, copy it to Skyline directory.
             if (commandLineArgs.ArgAsString("form") == "__REGEN__" && skylineDirectory != null)
             {
@@ -267,22 +205,21 @@ namespace TestRunner
         }
 
         // Run all test passes.
-        private static int RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
+        private static void RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
         {
             bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
+            bool showStatus = commandLineArgs.ArgAsBool("status");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
-            var stopTestRunner = Path.Combine(
-                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                "StopTestRunner.txt");
 
-            var runTests = new RunTests(demoMode, offscreen, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
+            var runTests = new RunTests(demoMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
+            var random = new Random(397);   // fixed order random numbers for repeatability
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
@@ -310,11 +247,8 @@ namespace TestRunner
             var formLookup = new FormLookup();
 
             // Run all test passes.
-            int testsRun = 0;
             for (var pass = 1; pass <= loopCount || loopCount == 0; pass++)
             {
-                runTests.Culture = new CultureInfo(cultures[(pass-1) % cultures.Length]);
-
                 // Run each test in this test pass.
                 int testNumber = 0;
                 var testPass = randomOrder ? testList.RandomOrder() : testList;
@@ -324,10 +258,9 @@ namespace TestRunner
 
                     for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                     {
+                        var randomIndex = random.Next(cultures.Length);
+                        runTests.Culture = new CultureInfo(cultures[randomIndex]);
                         runTests.Run(test, pass, testNumber);
-                        testsRun++;
-                        if (File.Exists(stopTestRunner))
-                            break;
                     }
 
                     // Record which forms the test showed.
@@ -336,17 +269,8 @@ namespace TestRunner
                         formLookup.AddForms(test.TestMethod.Name, runTests.LastTestDuration, shownForms);
                         shownForms.Clear();
                     }
-
-                    if (File.Exists(stopTestRunner))
-                        break;
                 }
-
-                if (File.Exists(stopTestRunner))
-                    break;
             }
-
-            _failureCount = runTests.FailureCount;
-            return testsRun;
         }
 
         // Load list of tests to be run into TestList.

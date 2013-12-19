@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using TestRunnerLib;
 using ZedGraph;
@@ -154,7 +156,7 @@ namespace SkylineTester
                 }
                 else
                 {
-                    StopTestRunner();
+                    commandShell.Stop();
                 }
                 return;
             }
@@ -219,27 +221,111 @@ namespace SkylineTester
 
         private void StartQuality()
         {
+            _qualityStartDate = DateTime.Now;
+            _testsRun = 0;
+            _lastTestResult = null;
+
+            var revisionWorker = new BackgroundWorker();
+            revisionWorker.DoWork += (sender, args) => _revision = GetRevision();
+            revisionWorker.RunWorkerAsync();
+
             var qualityDirectory = Path.Combine(_rootDir, QualityLogsDirectory);
             if (!Directory.Exists(qualityDirectory))
                 Directory.CreateDirectory(qualityDirectory);
-            var summaryLog = Path.Combine(qualityDirectory, SummaryLog);
-            _logFile = Path.Combine(qualityDirectory, GetLogFile(DateTime.Now));
+            _logFile = Path.Combine(qualityDirectory, GetLogFile(_qualityStartDate));
             OpenOutput();
 
-            commandShell.Add("# Quality run started {0}" + Environment.NewLine, DateTime.Now.ToString("f"));
+            commandShell.Add("# Quality run started {0}" + Environment.NewLine, _qualityStartDate.ToString("f"));
 
             if (QualityBuildFirst.Checked)
                 GenerateBuildCommands();
 
             StartTestRunner(
-                string.Format("offscreen=on culture=en-US,fr-FR summary={0}", Quote(summaryLog)) +
-                    (QualityChooseTests.Checked ? GetTestList() : ""),
+                "offscreen=on culture=en-US,fr-FR" + (QualityChooseTests.Checked ? GetTestList() : ""),
                 DoneQuality);
         }
 
+        private DateTime _qualityStartDate;
+        private int _testsRun;
+        private int _revision;
+
         private void DoneQuality(bool success)
         {
+            if (_lastTestResult != null)
+            {
+                var elapsedMinutes = (DateTime.Now - _qualityStartDate).TotalMinutes;
+                var qualityDirectory = Path.Combine(_rootDir, QualityLogsDirectory);
+                var summaryLog = Path.Combine(qualityDirectory, SummaryLog);
+
+                var line = Regex.Replace(_lastTestResult, @"\s+", " ").Trim();
+                var parts = line.Split(' ');
+                var failures = int.Parse(parts[4]);
+                var managedMemory = Double.Parse(parts[6].Split('/')[0]);
+                var totalMemory = Double.Parse(parts[6].Split('/')[1]);
+
+                var summary = new Summary();
+                summary.Load(summaryLog);
+                summary.Runs.Add(new Summary.Run
+                {
+                    Date = _qualityStartDate,
+                    Revision = _revision,
+                    RunMinutes = (int) elapsedMinutes,
+                    TestsRun = _testsRun,
+                    Failures = failures,
+                    ManagedMemory = (int) managedMemory,
+                    TotalMemory = (int) totalMemory
+                });
+                summary.Save(summaryLog);
+            }
+
             TestRunnerDone(success);
+        }
+
+        private int GetRevision()
+        {
+            // Get current SVN revision info.
+            int revision = 0;
+            try
+            {
+                var skylineDirectory = GetSkylineDirectory();
+
+                if (skylineDirectory != null)
+                {
+                    Process svn = new Process
+                    {
+                        StartInfo =
+                        {
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            FileName = _subversion,
+                            Arguments = @"info -r HEAD " + skylineDirectory.FullName,
+                            CreateNoWindow = true
+                        }
+                    };
+                    svn.Start();
+                    string svnOutput = svn.StandardOutput.ReadToEnd();
+                    svn.WaitForExit();
+                    var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
+                    revision = int.Parse(revisionString);
+                }
+            }
+            // ReSharper disable EmptyGeneralCatchClause
+            catch
+            // ReSharper restore EmptyGeneralCatchClause
+            {
+            }
+
+            return revision;
+        }
+
+        private DirectoryInfo GetSkylineDirectory()
+        {
+            string skylinePath = GetCurrentBuildDirectory();
+            var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
+            while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
+                skylineDirectory = skylineDirectory.Parent;
+            return skylineDirectory;
         }
 
         private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
@@ -282,6 +368,11 @@ namespace SkylineTester
                 var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
                 managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
                 totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+                pane.XAxis.Scale.Max = managedPointList.Count;
+                pane.XAxis.Scale.MinGrace = 0;
+                pane.XAxis.Scale.MaxGrace = 0;
+                pane.YAxis.Scale.MinGrace = 0.05;
+                pane.YAxis.Scale.MaxGrace = 0.05;
             }
 
             pane.AxisChange();
