@@ -3478,11 +3478,11 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__" xml:space="preserve">
     <value>Page {0} of {1}</value>
   </data>
-  <data name="ViewLibraryDlg_UpdateUI_File__0__" xml:space="preserve">
-    <value>File: {0}</value>
+  <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
+    <value>File</value>
   </data>
-  <data name="ViewLibraryDlg_UpdateUI_RT__0__" xml:space="preserve">
-    <value>RT: {0}</value>
+    <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
+    <value>RT</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
     <value>Failure loading spectrum. Library may be corrupted.</value>

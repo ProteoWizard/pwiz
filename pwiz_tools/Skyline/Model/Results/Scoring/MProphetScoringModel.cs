@@ -37,6 +37,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     [XmlRoot("mprophet_peak_scoring_model")] // Not L10N
     public class MProphetPeakScoringModel : PeakScoringModelSpec
     {
+        public const string NAME = "mProphet";  // Not L10N : Proper name not localized
+
         private ReadOnlyCollection<IPeakFeatureCalculator> _peakFeatureCalculators;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.

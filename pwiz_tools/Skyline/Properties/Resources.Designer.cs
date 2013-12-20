@@ -18161,20 +18161,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File: {0}.
+        ///   Looks up a localized string similar to File.
         /// </summary>
-        public static string ViewLibraryDlg_UpdateUI_File__0__ {
+        public static string ViewLibraryDlg_UpdateUI_File {
             get {
-                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_File__0__", resourceCulture);
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_File", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RT: {0}.
+        ///   Looks up a localized string similar to RT.
         /// </summary>
-        public static string ViewLibraryDlg_UpdateUI_RT__0__ {
+        public static string ViewLibraryDlg_UpdateUI_RT {
             get {
-                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_RT__0__", resourceCulture);
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_RT", resourceCulture);
             }
         }
         

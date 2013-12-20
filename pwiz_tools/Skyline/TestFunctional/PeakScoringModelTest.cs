@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(editDlg.PeakScoringModelName, "");
                 editDlg.PeakScoringModelName = "legacy1"; // Not L10N
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 Assert.AreEqual(editDlg.PeakScoringModelName, "legacy1");
                 editDlg.TrainModelClick();
                 Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -8.741136, 1e-5);

@@ -760,12 +760,6 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;lblColinearWarning.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="comboModel.Items" xml:space="preserve">
-    <value>mProphet</value>
-  </data>
-  <data name="comboModel.Items1" xml:space="preserve">
-    <value>Default</value>
-  </data>
   <data name="comboModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 77</value>
   </data>

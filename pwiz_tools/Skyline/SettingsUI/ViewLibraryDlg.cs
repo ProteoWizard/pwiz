@@ -57,6 +57,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         // Used to parse the modification string in a given sequence
         private const string REGEX_MODIFICATION_PATTERN = @"\[[^\]]*\]"; // Not L10N
+        private const string COLON_SEP = ": ";  // Not L10N
 
         protected internal const int PADDING = 3;
         private const TextFormatFlags FORMAT_PLAIN = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
@@ -690,12 +691,11 @@ namespace pwiz.Skyline.SettingsUI
 
                             if (!string.IsNullOrEmpty(filename))
                             {
-                                labelFilename.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_File__0__,
-                                                                   filename);
+                                labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP + filename;
                             }
                             if (rt.HasValue)
                             {
-                                labelRT.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_RT__0__, rt);
+                                labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt;
                             }
                         }
                         if (null == libraryChromGroup)
@@ -1792,7 +1792,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             return string.IsNullOrEmpty(label.Text)
                     ? string.Empty
-                    : label.Text.Split(new[] { ": " }, StringSplitOptions.None)[1];
+                    : label.Text.Split(new[] { COLON_SEP }, StringSplitOptions.None)[1];
         }
 
         public bool HasMatches

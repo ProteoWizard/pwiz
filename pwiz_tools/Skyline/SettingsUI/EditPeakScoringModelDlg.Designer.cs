@@ -371,9 +371,6 @@
             // 
             this.comboModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboModel.FormattingEnabled = true;
-            this.comboModel.Items.AddRange(new object[] {
-            resources.GetString("comboModel.Items"),
-            resources.GetString("comboModel.Items1")});
             resources.ApplyResources(this.comboModel, "comboModel");
             this.comboModel.Name = "comboModel";
             // 

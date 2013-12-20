@@ -85,6 +85,8 @@ namespace pwiz.Skyline.SettingsUI
             lblColinearWarning.Visible = false;
             toolStripFind.Visible = false;
 
+            comboModel.Items.Add(MProphetPeakScoringModel.NAME);
+            comboModel.Items.Add(LegacyScoringModel.DEFAULT_NAME);
             gridPeakCalculators.DataBindingComplete += OnDataBindingComplete;
             comboModel.SelectedIndexChanged += comboModel_SelectedIndexChanged;
         }
