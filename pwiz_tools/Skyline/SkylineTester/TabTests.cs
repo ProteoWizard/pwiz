@@ -44,6 +44,7 @@ namespace SkylineTester
                 return;
             }
 
+            commandShell.LogFile = _defaultLogFile;
             Tabs.SelectTab(tabOutput);
 
             var args = new StringBuilder();

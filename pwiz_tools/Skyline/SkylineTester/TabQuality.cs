@@ -145,7 +145,7 @@ namespace SkylineTester
                 return;
             }
 
-            _defaultLogFile = "";
+            commandShell.LogFile = null;
             commandShell.ClearLog();
 
             if (QualityStartNow.Checked)

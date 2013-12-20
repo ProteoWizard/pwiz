@@ -37,9 +37,9 @@ namespace SkylineTester
 
         private void linkLogFile_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (File.Exists(_defaultLogFile))
+            if (File.Exists(commandShell.LogFile))
             {
-                var editLogFile = new Process {StartInfo = {FileName = _defaultLogFile}};
+                var editLogFile = new Process {StartInfo = {FileName = commandShell.LogFile}};
                 editLogFile.Start();
             }
         }

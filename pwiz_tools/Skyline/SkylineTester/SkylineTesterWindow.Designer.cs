@@ -41,7 +41,6 @@ namespace SkylineTester
             this.RegenerateCache = new System.Windows.Forms.CheckBox();
             this.runForms = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.FormsTree = new SkylineTester.MyTreeView();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.PauseFormSeconds = new System.Windows.Forms.TextBox();
@@ -51,7 +50,6 @@ namespace SkylineTester
             this.groupBox14 = new System.Windows.Forms.GroupBox();
             this.comboBoxTutorialsLanguage = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.TutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.TutorialsDemoMode = new System.Windows.Forms.RadioButton();
             this.label5 = new System.Windows.Forms.Label();
@@ -78,7 +76,6 @@ namespace SkylineTester
             this.RunLoops = new System.Windows.Forms.RadioButton();
             this.RunIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
-            this.TestsTree = new SkylineTester.MyTreeView();
             this.SkipCheckedTests = new System.Windows.Forms.RadioButton();
             this.RunCheckedTests = new System.Windows.Forms.RadioButton();
             this.button3 = new System.Windows.Forms.Button();
@@ -133,7 +130,6 @@ namespace SkylineTester
             this.buttonStop = new System.Windows.Forms.Button();
             this.linkLogFile = new System.Windows.Forms.LinkLabel();
             this.label7 = new System.Windows.Forms.Label();
-            this.commandShell = new SkylineTester.CommandShell();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -148,8 +144,13 @@ namespace SkylineTester
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
-            this.myTreeView1 = new SkylineTester.MyTreeView();
             this.createInstallerZipFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.FormsTree = new SkylineTester.MyTreeView();
+            this.TutorialsTree = new SkylineTester.MyTreeView();
+            this.TestsTree = new SkylineTester.MyTreeView();
+            this.commandShell = new SkylineTester.CommandShell();
+            this.myTreeView1 = new SkylineTester.MyTreeView();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.Tabs.SuspendLayout();
@@ -302,19 +303,6 @@ namespace SkylineTester
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Forms";
             // 
-            // FormsTree
-            // 
-            this.FormsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.FormsTree.CheckBoxes = true;
-            this.FormsTree.Location = new System.Drawing.Point(6, 19);
-            this.FormsTree.Name = "FormsTree";
-            this.FormsTree.Size = new System.Drawing.Size(458, 536);
-            this.FormsTree.TabIndex = 15;
-            this.FormsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
-            this.FormsTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FormsTree_AfterSelect);
-            // 
             // groupBox2
             // 
             this.groupBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
@@ -414,18 +402,6 @@ namespace SkylineTester
             this.groupBox3.TabIndex = 24;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Tutorials";
-            // 
-            // TutorialsTree
-            // 
-            this.TutorialsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.TutorialsTree.CheckBoxes = true;
-            this.TutorialsTree.Location = new System.Drawing.Point(6, 19);
-            this.TutorialsTree.Name = "TutorialsTree";
-            this.TutorialsTree.Size = new System.Drawing.Size(458, 535);
-            this.TutorialsTree.TabIndex = 15;
-            this.TutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
             // groupBox4
             // 
@@ -719,18 +695,6 @@ namespace SkylineTester
             this.testsGroup.TabIndex = 16;
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
-            // 
-            // TestsTree
-            // 
-            this.TestsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.TestsTree.CheckBoxes = true;
-            this.TestsTree.Location = new System.Drawing.Point(6, 19);
-            this.TestsTree.Name = "TestsTree";
-            this.TestsTree.Size = new System.Drawing.Size(458, 456);
-            this.TestsTree.TabIndex = 15;
-            this.TestsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
             // SkipCheckedTests
             // 
@@ -1395,24 +1359,6 @@ namespace SkylineTester
             this.label7.TabIndex = 0;
             this.label7.Text = "Output log:";
             // 
-            // commandShell
-            // 
-            this.commandShell.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.commandShell.DefaultDirectory = null;
-            this.commandShell.FilterFunc = null;
-            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.commandShell.Location = new System.Drawing.Point(13, 28);
-            this.commandShell.LogFile = null;
-            this.commandShell.Margin = new System.Windows.Forms.Padding(2);
-            this.commandShell.Name = "commandShell";
-            this.commandShell.Size = new System.Drawing.Size(712, 540);
-            this.commandShell.StopButton = null;
-            this.commandShell.TabIndex = 2;
-            this.commandShell.Text = "";
-            this.commandShell.WordWrap = false;
-            // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1430,6 +1376,8 @@ namespace SkylineTester
             this.openToolStripMenuItem,
             this.saveToolStripMenuItem,
             this.exitToolStripMenuItem1,
+            this.createInstallerZipFileToolStripMenuItem,
+            this.toolStripSeparator1,
             this.exitToolStripMenuItem2});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -1438,26 +1386,26 @@ namespace SkylineTester
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.openToolStripMenuItem.Text = "Open...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.open_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.saveToolStripMenuItem.Text = "Save...";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.save_Click);
             // 
             // exitToolStripMenuItem1
             // 
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(109, 6);
+            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(186, 6);
             // 
             // exitToolStripMenuItem2
             // 
             this.exitToolStripMenuItem2.Name = "exitToolStripMenuItem2";
-            this.exitToolStripMenuItem2.Size = new System.Drawing.Size(112, 22);
+            this.exitToolStripMenuItem2.Size = new System.Drawing.Size(189, 22);
             this.exitToolStripMenuItem2.Text = "Exit";
             this.exitToolStripMenuItem2.Click += new System.EventHandler(this.exit_Click);
             // 
@@ -1465,8 +1413,7 @@ namespace SkylineTester
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.memoryUseToolStripMenuItem,
-            this.RunWithDebugger,
-            this.createInstallerZipFileToolStripMenuItem});
+            this.RunWithDebugger});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.viewToolStripMenuItem.Text = "Options";
@@ -1474,7 +1421,7 @@ namespace SkylineTester
             // memoryUseToolStripMenuItem
             // 
             this.memoryUseToolStripMenuItem.Name = "memoryUseToolStripMenuItem";
-            this.memoryUseToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.memoryUseToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.memoryUseToolStripMenuItem.Text = "Show memory graph";
             this.memoryUseToolStripMenuItem.Click += new System.EventHandler(this.ViewMemoryUse);
             // 
@@ -1482,7 +1429,7 @@ namespace SkylineTester
             // 
             this.RunWithDebugger.CheckOnClick = true;
             this.RunWithDebugger.Name = "RunWithDebugger";
-            this.RunWithDebugger.Size = new System.Drawing.Size(189, 22);
+            this.RunWithDebugger.Size = new System.Drawing.Size(185, 22);
             this.RunWithDebugger.Text = "Run with debugger";
             // 
             // radioButton3
@@ -1532,6 +1479,73 @@ namespace SkylineTester
             this.radioButton5.Text = "Pause for screenshot";
             this.radioButton5.UseVisualStyleBackColor = true;
             // 
+            // createInstallerZipFileToolStripMenuItem
+            // 
+            this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
+            this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.createInstallerZipFileToolStripMenuItem.Text = "Create installer zip file";
+            this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.CreateInstallerZipFile);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
+            // 
+            // FormsTree
+            // 
+            this.FormsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.FormsTree.CheckBoxes = true;
+            this.FormsTree.Location = new System.Drawing.Point(6, 19);
+            this.FormsTree.Name = "FormsTree";
+            this.FormsTree.Size = new System.Drawing.Size(458, 536);
+            this.FormsTree.TabIndex = 15;
+            this.FormsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            this.FormsTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FormsTree_AfterSelect);
+            // 
+            // TutorialsTree
+            // 
+            this.TutorialsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TutorialsTree.CheckBoxes = true;
+            this.TutorialsTree.Location = new System.Drawing.Point(6, 19);
+            this.TutorialsTree.Name = "TutorialsTree";
+            this.TutorialsTree.Size = new System.Drawing.Size(458, 535);
+            this.TutorialsTree.TabIndex = 15;
+            this.TutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            // 
+            // TestsTree
+            // 
+            this.TestsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TestsTree.CheckBoxes = true;
+            this.TestsTree.Location = new System.Drawing.Point(6, 19);
+            this.TestsTree.Name = "TestsTree";
+            this.TestsTree.Size = new System.Drawing.Size(458, 456);
+            this.TestsTree.TabIndex = 15;
+            this.TestsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            // 
+            // commandShell
+            // 
+            this.commandShell.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.commandShell.DefaultDirectory = null;
+            this.commandShell.FilterFunc = null;
+            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.commandShell.Location = new System.Drawing.Point(13, 28);
+            this.commandShell.LogFile = null;
+            this.commandShell.Margin = new System.Windows.Forms.Padding(2);
+            this.commandShell.Name = "commandShell";
+            this.commandShell.Size = new System.Drawing.Size(712, 540);
+            this.commandShell.StopButton = null;
+            this.commandShell.TabIndex = 2;
+            this.commandShell.Text = "";
+            this.commandShell.WordWrap = false;
+            // 
             // myTreeView1
             // 
             this.myTreeView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -1543,13 +1557,6 @@ namespace SkylineTester
             this.myTreeView1.Name = "myTreeView1";
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
-            // 
-            // createInstallerZipFileToolStripMenuItem
-            // 
-            this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
-            this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.createInstallerZipFileToolStripMenuItem.Text = "Create installer zip file";
-            this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.CreateInstallerZipFile);
             // 
             // SkylineTesterWindow
             // 
@@ -1740,6 +1747,7 @@ namespace SkylineTester
         private System.Windows.Forms.Button buttonDeleteRun;
         private System.Windows.Forms.Button buttonOpenLog;
         private System.Windows.Forms.ToolStripMenuItem createInstallerZipFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
 
     }
 }

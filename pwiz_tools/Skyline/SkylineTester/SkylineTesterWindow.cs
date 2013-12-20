@@ -640,6 +640,7 @@ namespace SkylineTester
             }
 
             var zipFile = Path.Combine(zipDirectory, "SkylineTester.zip");
+            commandShell.LogFile = _defaultLogFile;
             Tabs.SelectTab(tabOutput);
             commandShell.Add("{0} {1}", Quote(Assembly.GetExecutingAssembly().Location), Quote(zipFile));
             commandShell.Run();
