@@ -94,10 +94,6 @@ namespace SkylineTester
             this.Build32 = new System.Windows.Forms.RadioButton();
             this.tabQuality = new System.Windows.Forms.TabPage();
             this.groupBox12 = new System.Windows.Forms.GroupBox();
-            this.graphMemoryHistory = new ZedGraph.ZedGraphControl();
-            this.graphFailures = new ZedGraph.ZedGraphControl();
-            this.graphDuration = new ZedGraph.ZedGraphControl();
-            this.graphTestsRun = new ZedGraph.ZedGraphControl();
             this.groupBox11 = new System.Windows.Forms.GroupBox();
             this.buttonDeleteRun = new System.Windows.Forms.Button();
             this.buttonOpenLog = new System.Windows.Forms.Button();
@@ -135,6 +131,8 @@ namespace SkylineTester
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.createInstallerZipFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.memoryUseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -144,8 +142,11 @@ namespace SkylineTester
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
-            this.createInstallerZipFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.graphTestsRun = new ZedGraph.ZedGraphControl();
+            this.graphDuration = new ZedGraph.ZedGraphControl();
+            this.graphFailures = new ZedGraph.ZedGraphControl();
+            this.graphMemoryHistory = new ZedGraph.ZedGraphControl();
             this.FormsTree = new SkylineTester.MyTreeView();
             this.TutorialsTree = new SkylineTester.MyTreeView();
             this.TestsTree = new SkylineTester.MyTreeView();
@@ -181,6 +182,7 @@ namespace SkylineTester
             this.groupBox7.SuspendLayout();
             this.tabOutput.SuspendLayout();
             this.menuStrip1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -907,100 +909,13 @@ namespace SkylineTester
             this.groupBox12.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox12.Controls.Add(this.graphMemoryHistory);
-            this.groupBox12.Controls.Add(this.graphFailures);
-            this.groupBox12.Controls.Add(this.graphDuration);
-            this.groupBox12.Controls.Add(this.graphTestsRun);
+            this.groupBox12.Controls.Add(this.tableLayoutPanel1);
             this.groupBox12.Location = new System.Drawing.Point(6, 297);
             this.groupBox12.Name = "groupBox12";
             this.groupBox12.Size = new System.Drawing.Size(719, 270);
             this.groupBox12.TabIndex = 29;
             this.groupBox12.TabStop = false;
             this.groupBox12.Text = "History";
-            // 
-            // graphMemoryHistory
-            // 
-            this.graphMemoryHistory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.graphMemoryHistory.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphMemoryHistory.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphMemoryHistory.IsEnableVPan = false;
-            this.graphMemoryHistory.IsEnableVZoom = false;
-            this.graphMemoryHistory.Location = new System.Drawing.Point(540, 19);
-            this.graphMemoryHistory.Margin = new System.Windows.Forms.Padding(4);
-            this.graphMemoryHistory.Name = "graphMemoryHistory";
-            this.graphMemoryHistory.ScrollGrace = 0D;
-            this.graphMemoryHistory.ScrollMaxX = 0D;
-            this.graphMemoryHistory.ScrollMaxY = 0D;
-            this.graphMemoryHistory.ScrollMaxY2 = 0D;
-            this.graphMemoryHistory.ScrollMinX = 0D;
-            this.graphMemoryHistory.ScrollMinY = 0D;
-            this.graphMemoryHistory.ScrollMinY2 = 0D;
-            this.graphMemoryHistory.Size = new System.Drawing.Size(172, 244);
-            this.graphMemoryHistory.TabIndex = 3;
-            // 
-            // graphFailures
-            // 
-            this.graphFailures.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.graphFailures.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphFailures.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphFailures.IsEnableVPan = false;
-            this.graphFailures.IsEnableVZoom = false;
-            this.graphFailures.Location = new System.Drawing.Point(362, 19);
-            this.graphFailures.Margin = new System.Windows.Forms.Padding(4);
-            this.graphFailures.Name = "graphFailures";
-            this.graphFailures.ScrollGrace = 0D;
-            this.graphFailures.ScrollMaxX = 0D;
-            this.graphFailures.ScrollMaxY = 0D;
-            this.graphFailures.ScrollMaxY2 = 0D;
-            this.graphFailures.ScrollMinX = 0D;
-            this.graphFailures.ScrollMinY = 0D;
-            this.graphFailures.ScrollMinY2 = 0D;
-            this.graphFailures.Size = new System.Drawing.Size(172, 244);
-            this.graphFailures.TabIndex = 2;
-            // 
-            // graphDuration
-            // 
-            this.graphDuration.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.graphDuration.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphDuration.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphDuration.IsEnableVPan = false;
-            this.graphDuration.IsEnableVZoom = false;
-            this.graphDuration.Location = new System.Drawing.Point(184, 19);
-            this.graphDuration.Margin = new System.Windows.Forms.Padding(4);
-            this.graphDuration.Name = "graphDuration";
-            this.graphDuration.ScrollGrace = 0D;
-            this.graphDuration.ScrollMaxX = 0D;
-            this.graphDuration.ScrollMaxY = 0D;
-            this.graphDuration.ScrollMaxY2 = 0D;
-            this.graphDuration.ScrollMinX = 0D;
-            this.graphDuration.ScrollMinY = 0D;
-            this.graphDuration.ScrollMinY2 = 0D;
-            this.graphDuration.Size = new System.Drawing.Size(172, 244);
-            this.graphDuration.TabIndex = 1;
-            // 
-            // graphTestsRun
-            // 
-            this.graphTestsRun.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.graphTestsRun.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphTestsRun.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphTestsRun.IsEnableVPan = false;
-            this.graphTestsRun.IsEnableVZoom = false;
-            this.graphTestsRun.Location = new System.Drawing.Point(6, 19);
-            this.graphTestsRun.Margin = new System.Windows.Forms.Padding(4);
-            this.graphTestsRun.Name = "graphTestsRun";
-            this.graphTestsRun.ScrollGrace = 0D;
-            this.graphTestsRun.ScrollMaxX = 0D;
-            this.graphTestsRun.ScrollMaxY = 0D;
-            this.graphTestsRun.ScrollMaxY2 = 0D;
-            this.graphTestsRun.ScrollMinX = 0D;
-            this.graphTestsRun.ScrollMinY = 0D;
-            this.graphTestsRun.ScrollMinY2 = 0D;
-            this.graphTestsRun.Size = new System.Drawing.Size(172, 244);
-            this.graphTestsRun.TabIndex = 0;
             // 
             // groupBox11
             // 
@@ -1402,6 +1317,18 @@ namespace SkylineTester
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
             this.exitToolStripMenuItem1.Size = new System.Drawing.Size(186, 6);
             // 
+            // createInstallerZipFileToolStripMenuItem
+            // 
+            this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
+            this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.createInstallerZipFileToolStripMenuItem.Text = "Create installer zip file";
+            this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.CreateInstallerZipFile);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
+            // 
             // exitToolStripMenuItem2
             // 
             this.exitToolStripMenuItem2.Name = "exitToolStripMenuItem2";
@@ -1479,17 +1406,108 @@ namespace SkylineTester
             this.radioButton5.Text = "Pause for screenshot";
             this.radioButton5.UseVisualStyleBackColor = true;
             // 
-            // createInstallerZipFileToolStripMenuItem
+            // tableLayoutPanel1
             // 
-            this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
-            this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.createInstallerZipFileToolStripMenuItem.Text = "Create installer zip file";
-            this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.CreateInstallerZipFile);
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel1.ColumnCount = 4;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.Controls.Add(this.graphMemoryHistory, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.graphFailures, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.graphDuration, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.graphTestsRun, 0, 0);
+            this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(2, 19);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(714, 248);
+            this.tableLayoutPanel1.TabIndex = 4;
             // 
-            // toolStripSeparator1
+            // graphTestsRun
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
+            this.graphTestsRun.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphTestsRun.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphTestsRun.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphTestsRun.IsEnableVPan = false;
+            this.graphTestsRun.IsEnableVZoom = false;
+            this.graphTestsRun.Location = new System.Drawing.Point(182, 4);
+            this.graphTestsRun.Margin = new System.Windows.Forms.Padding(4);
+            this.graphTestsRun.Name = "graphTestsRun";
+            this.graphTestsRun.ScrollGrace = 0D;
+            this.graphTestsRun.ScrollMaxX = 0D;
+            this.graphTestsRun.ScrollMaxY = 0D;
+            this.graphTestsRun.ScrollMaxY2 = 0D;
+            this.graphTestsRun.ScrollMinX = 0D;
+            this.graphTestsRun.ScrollMinY = 0D;
+            this.graphTestsRun.ScrollMinY2 = 0D;
+            this.graphTestsRun.Size = new System.Drawing.Size(170, 240);
+            this.graphTestsRun.TabIndex = 1;
+            // 
+            // graphDuration
+            // 
+            this.graphDuration.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphDuration.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphDuration.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphDuration.IsEnableVPan = false;
+            this.graphDuration.IsEnableVZoom = false;
+            this.graphDuration.Location = new System.Drawing.Point(4, 4);
+            this.graphDuration.Margin = new System.Windows.Forms.Padding(4);
+            this.graphDuration.Name = "graphDuration";
+            this.graphDuration.ScrollGrace = 0D;
+            this.graphDuration.ScrollMaxX = 0D;
+            this.graphDuration.ScrollMaxY = 0D;
+            this.graphDuration.ScrollMaxY2 = 0D;
+            this.graphDuration.ScrollMinX = 0D;
+            this.graphDuration.ScrollMinY = 0D;
+            this.graphDuration.ScrollMinY2 = 0D;
+            this.graphDuration.Size = new System.Drawing.Size(170, 240);
+            this.graphDuration.TabIndex = 2;
+            // 
+            // graphFailures
+            // 
+            this.graphFailures.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphFailures.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphFailures.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphFailures.IsEnableVPan = false;
+            this.graphFailures.IsEnableVZoom = false;
+            this.graphFailures.Location = new System.Drawing.Point(538, 4);
+            this.graphFailures.Margin = new System.Windows.Forms.Padding(4);
+            this.graphFailures.Name = "graphFailures";
+            this.graphFailures.ScrollGrace = 0D;
+            this.graphFailures.ScrollMaxX = 0D;
+            this.graphFailures.ScrollMaxY = 0D;
+            this.graphFailures.ScrollMaxY2 = 0D;
+            this.graphFailures.ScrollMinX = 0D;
+            this.graphFailures.ScrollMinY = 0D;
+            this.graphFailures.ScrollMinY2 = 0D;
+            this.graphFailures.Size = new System.Drawing.Size(172, 240);
+            this.graphFailures.TabIndex = 3;
+            // 
+            // graphMemoryHistory
+            // 
+            this.graphMemoryHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphMemoryHistory.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphMemoryHistory.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphMemoryHistory.IsEnableVPan = false;
+            this.graphMemoryHistory.IsEnableVZoom = false;
+            this.graphMemoryHistory.Location = new System.Drawing.Point(360, 4);
+            this.graphMemoryHistory.Margin = new System.Windows.Forms.Padding(4);
+            this.graphMemoryHistory.Name = "graphMemoryHistory";
+            this.graphMemoryHistory.ScrollGrace = 0D;
+            this.graphMemoryHistory.ScrollMaxX = 0D;
+            this.graphMemoryHistory.ScrollMaxY = 0D;
+            this.graphMemoryHistory.ScrollMaxY2 = 0D;
+            this.graphMemoryHistory.ScrollMinX = 0D;
+            this.graphMemoryHistory.ScrollMinY = 0D;
+            this.graphMemoryHistory.ScrollMinY2 = 0D;
+            this.graphMemoryHistory.Size = new System.Drawing.Size(170, 240);
+            this.graphMemoryHistory.TabIndex = 4;
             // 
             // FormsTree
             // 
@@ -1622,6 +1640,7 @@ namespace SkylineTester
             this.tabOutput.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -1718,10 +1737,6 @@ namespace SkylineTester
         private System.Windows.Forms.CheckBox BuildClean;
         private System.Windows.Forms.CheckBox StartSln;
         private System.Windows.Forms.GroupBox groupBox12;
-        private ZedGraphControl graphMemoryHistory;
-        private ZedGraphControl graphFailures;
-        private ZedGraphControl graphDuration;
-        private ZedGraphControl graphTestsRun;
         private ZedGraphControl graphMemory;
         private System.Windows.Forms.GroupBox groupBox11;
         private System.Windows.Forms.Label label12;
@@ -1748,6 +1763,11 @@ namespace SkylineTester
         private System.Windows.Forms.Button buttonOpenLog;
         private System.Windows.Forms.ToolStripMenuItem createInstallerZipFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private ZedGraphControl graphMemoryHistory;
+        private ZedGraphControl graphFailures;
+        private ZedGraphControl graphDuration;
+        private ZedGraphControl graphTestsRun;
 
     }
 }
