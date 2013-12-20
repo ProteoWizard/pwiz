@@ -232,7 +232,7 @@
     <value>0</value>
   </data>
   <data name="PageCount.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top</value>
+    <value>Top,Left</value>
   </data>
   <data name="PageCount.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
