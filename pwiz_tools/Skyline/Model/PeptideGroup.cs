@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter)
+        public IEnumerable<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter, string peptideSequence)
         {
             PeptideSettings pepSettings = settings.PeptideSettings;
             DigestSettings digest = pepSettings.DigestSettings;
@@ -220,22 +220,26 @@ namespace pwiz.Skyline.Model
 
             foreach (var peptide in pepSettings.Enzyme.Digest(this, digest))
             {
+                if (null != peptideSequence && peptideSequence != peptide.Sequence)
+                {
+                    continue;
+                }
                 foreach (var nodePep in peptide.CreateDocNodes(settings, filter))
                     yield return nodePep;
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter)
+        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter, string peptideSequence)
         {
             if (settings.PeptideSettings.Libraries.RankId == null)
             {
-                foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter))
+                foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter, peptideSequence))
                     yield return nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL);
             }
             else
             {
                 var listDocNodes = new List<DocNode>();
-                foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter))
+                foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter, peptideSequence))
                     listDocNodes.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
 
                 // Rank and filter peptides by rank.
@@ -247,7 +251,7 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode CreateFullPeptideDocNode(SrmSettings settings, String peptideSequence)
         {
             peptideSequence = StripModifications(peptideSequence);
-            foreach (var peptideDocNode in CreateFullPeptideDocNodes(settings, false))
+            foreach (var peptideDocNode in CreateFullPeptideDocNodes(settings, false, peptideSequence))
             {
                 if (peptideSequence == peptideDocNode.Peptide.Sequence)
                     return peptideDocNode;

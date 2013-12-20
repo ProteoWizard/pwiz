@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model
             FastaSequence fastaSeq = Id as FastaSequence;
             if (fastaSeq != null)
             {
-                foreach (PeptideDocNode nodePep in fastaSeq.CreatePeptideDocNodes(settings, useFilter))
+                foreach (PeptideDocNode nodePep in fastaSeq.CreatePeptideDocNodes(settings, useFilter, null))
                     yield return nodePep;
             }
                 // Peptide lists without variable modifications just return their existing children.
