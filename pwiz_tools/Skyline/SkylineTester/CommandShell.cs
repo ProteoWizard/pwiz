@@ -120,6 +120,7 @@ namespace SkylineTester
 
                 // Execute a command.
                 Log("> " + line);
+                UpdateLog(null, null);
 
                 // Break apart arguments on space boundaries, but allow
                 // quoted arguments to contain spaces.
@@ -219,13 +220,14 @@ namespace SkylineTester
         {
             if (!success)
                 Log("# Stopped." + Environment.NewLine + Environment.NewLine);
+            Invoke(new Action(() => UpdateLog(null, null)));
             _commands.Clear();
             _doneAction(success);
         }
 
         public void Done(bool success)
         {
-            FinishLog();
+            Invoke(new Action(FinishLog));
             _process = null;
         }
         #endregion

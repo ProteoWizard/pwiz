@@ -461,83 +461,93 @@ namespace TestRunner
             return outputList;
         }
 
+        private class LeakingTest
+        {
+            public string TestName;
+            public long LeakSize;
+        }
+
         // Generate a summary report of errors and memory leaks from a log file.
         private static void Report(string logFile)
         {
-            var logStream = new StreamReader(logFile);
-            var errorList = new Dictionary<string, int>();
+            var logLines = File.ReadAllLines(logFile);
 
-            var leakList = new List<string>();
-            var crtLeakList = new List<string>();
+            var errorList = new List<string>();
+            var leakList = new List<LeakingTest>();
+            var crtLeakList = new List<LeakingTest>();
 
-            while (true)
+            string error = null;
+            foreach (var line in logLines)
             {
-                var line = logStream.ReadLine();
-                if (line == null) break;
-                line = Regex.Replace(line, @"\s+", " ").Trim();
-                var parts = line.Split(' ');
+                if (error != null)
+                {
+                    if (line == "!!!")
+                    {
+                        errorList.Add(error);
+                        error = null;
+                    }
+                    else
+                    {
+                        error += "# " + line + "\n";
+                    }
+                    continue;
+                }
+
+                var parts = Regex.Replace(line, @"\s+", " ").Trim().Split(' ');
 
                 // Is it an error line?
                 if (parts[0] == "!!!")
                 {
                     var test = parts[1];
                     var failureType = parts[2];
+                   
                     if (failureType == "LEAKED")
                     {
-                        leakList.Add(test);
+                        var leakSize = long.Parse(parts[3]);
+                        leakList.Add(new LeakingTest { TestName = test, LeakSize = leakSize });
                         continue;
                     }
+                   
                     if (failureType == "CRT-LEAKED")
                     {
-                        crtLeakList.Add(test);
+                        var leakSize = long.Parse(parts[3]);
+                        crtLeakList.Add(new LeakingTest { TestName = test, LeakSize = leakSize });
                         continue;
                     }
-                    var error = "# " + test + " FAILED:\n";
-                    while (true)
-                    {
-                        line = logStream.ReadLine();
-                        if (line == null || line.StartsWith("!!!")) break;
-                        error += "# " + line + "\n";
-                    }
-                    if (line == null) break;
-
-                    if (errorList.ContainsKey(error))
-                    {
-                        errorList[error]++;
-                    }
-                    else
-                    {
-                        errorList[error] = 1;
-                    }
+                    
+                    error = "# " + test + " FAILED:\n";
                 }
             }
 
             // Print list of errors sorted in descending order of frequency.
             Console.WriteLine();
             if (errorList.Count == 0)
-            {
                 Console.WriteLine("# No failures.\n");
-            }
-            foreach (KeyValuePair<string, int> item in errorList.OrderByDescending(x => x.Value))
-            {
-                var errorInfo = item.Key;
-                Console.WriteLine(errorInfo);
-            }
+            foreach (var failure in errorList)
+                Console.WriteLine(failure);
 
             if (leakList.Count > 0)
             {
                 Console.WriteLine();
-                Console.WriteLine("# Leaking tests:");
-                foreach (var leakTest in leakList)
-                    Console.WriteLine("#    " + leakTest);
+                Console.WriteLine("# Leaking tests (bytes leaked per run):");
+                ReportLeaks(leakList);
             }
 
             if (crtLeakList.Count > 0)
             {
                 Console.WriteLine();
                 Console.WriteLine("# Tests leaking unmanaged memory:");
-                foreach (var leakTest in crtLeakList)
-                    Console.WriteLine("#    " + leakTest);
+                ReportLeaks(crtLeakList);
+            }
+        }
+
+        private static void ReportLeaks(IEnumerable<LeakingTest> leakList)
+        {
+            foreach (var leakTest in leakList.OrderByDescending(test => test.LeakSize))
+            {
+                Console.WriteLine("#    {0,-36} {1,10:N0}",
+                    leakTest.TestName.Substring(0, Math.Min(36, leakTest.TestName.Length)),
+                    leakTest.LeakSize);
             }
         }
 
