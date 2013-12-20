@@ -82,12 +82,13 @@ namespace SkylineTester
         /// (through successful completion, abort due to error, or abort due to
         /// user interrupt request).
         /// </summary>
-        public void Run(Action<bool> doneAction = null)
+        public void Run(Action<bool> doneAction = null, bool clearLog = true)
         {
-            _doneAction = doneAction;
+            _doneAction = doneAction ?? Done;
             _commandIndex = 0;
 
-            ClearLog();
+            if (clearLog)
+                ClearLog();
 
             _outputTimer = new Timer { Interval = 500 };
             _outputTimer.Tick += UpdateLog;
@@ -216,15 +217,17 @@ namespace SkylineTester
         /// </summary>
         private void CommandsDone(bool success)
         {
-            _commands.Clear();
-            if (_doneAction != null)
-                _doneAction(success);
             if (!success)
-                Log("# Stopped.");
+                Log("# Stopped." + Environment.NewLine + Environment.NewLine);
+            _commands.Clear();
+            _doneAction(success);
+        }
+
+        public void Done(bool success)
+        {
             FinishLog();
             _process = null;
         }
-
         #endregion
 
         #region Manage processes
@@ -408,6 +411,7 @@ namespace SkylineTester
             ColorText(previousLength, "\n> ", Color.FromArgb(120, 120, 120));
             ColorText(previousLength, "\n...skipped ", Color.Orange);
             ColorText(previousLength, "\n...failed ", Color.Red);
+            ColorText(previousLength, "\n!!!", Color.Red);
             DoPaint = true;
         }
 

@@ -231,7 +231,7 @@ namespace SkylineTester
                 GenerateBuildCommands();
 
             StartTestRunner(
-                "offscreen=on culture=en-US,fr-FR" + (QualityChooseTests.Checked ? GetTestList() : ""),
+                "offscreen=on quality=on" + (QualityChooseTests.Checked ? GetTestList() : ""),
                 DoneQuality);
 
             _qualityTimer = new Timer {Interval = 1000};

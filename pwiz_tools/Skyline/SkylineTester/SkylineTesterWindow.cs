@@ -27,6 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using Microsoft.Win32;
+using TestRunnerLib;
 
 namespace SkylineTester
 {
@@ -41,7 +42,7 @@ namespace SkylineTester
         private readonly string _rootDir;
         private readonly string _resultsDir;
         private readonly string _buildDir;
-        private string _defaultLogFile;
+        private readonly string _defaultLogFile;
         private TabPage _runningTab;
         private string _subversion;
         private string _devenv;
@@ -121,13 +122,21 @@ namespace SkylineTester
                         return false;
                     }
 
-                    if (_newQualityRun != null &&
-                        line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
+                    if (_newQualityRun != null)
                     {
-                        lock (_newQualityRun)
+                        if (line.StartsWith("!!! "))
                         {
-                            _lastTestResult = line;
-                            _testsRun++;
+                            var parts = line.Split(' ');
+                            if (parts[2] == "LEAKED" || parts[2] == "CRT-LEAKED")
+                                _newQualityRun.Leaks++;
+                        }
+                        else if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
+                        {
+                            lock (_newQualityRun)
+                            {
+                                _lastTestResult = line;
+                                _testsRun++;
+                            }
                         }
                     }
                 }
@@ -314,7 +323,6 @@ namespace SkylineTester
                 Quote(_resultsDir),
                 RunWithDebugger.Checked ? "Debug" : "",
                 args);
-
             _runningTestRunner = true;
             commandShell.Run(doneAction ?? TestRunnerDone);
         }
@@ -323,6 +331,14 @@ namespace SkylineTester
         {
             _runningTestRunner = false;
             statusLabel.Text = "";
+            var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");
+            commandShell.Add("{0} report={1}", Quote(testRunner), Quote(commandShell.LogFile));
+            commandShell.Run(ReportDone, false);
+        }
+
+        private void ReportDone(bool success)
+        {
+            commandShell.Done(success);
             ToggleRunButtons(null);
         }
 
@@ -590,21 +606,7 @@ namespace SkylineTester
 
         private IEnumerable<string> GetLanguages()
         {
-            yield return "en";  // always English
-
-            var exeDir = GetCurrentBuildDirectory();
-            foreach (var resourcesDll in Directory.EnumerateFiles(exeDir, "*.resources.dll", SearchOption.AllDirectories))
-            {
-                var file = Path.GetFileName(resourcesDll);
-                if (file == null)
-                    continue;
-                if (file.ToLower().StartsWith("skyline"))
-                {
-                    var language = Path.GetFileName(Path.GetDirectoryName(resourcesDll));
-                    if (language != "en")
-                        yield return language;
-                }
-            }
+            return (new FindLanguages(GetCurrentBuildDirectory(), "en", "fr").Enumerate());
         }
 
         private void InitLanguages(ComboBox comboBox)

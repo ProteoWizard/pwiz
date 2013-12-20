@@ -39,7 +39,7 @@ namespace TestRunnerLib
 
         public readonly TestContext TestContext;
         public CultureInfo Culture = new CultureInfo("en-US");
-        public bool CheckCrtLeaks = false;
+        public long CheckCrtLeaks;
         public int FailureCount { get; private set; }
         public readonly Dictionary<string, int> ErrorCounts = new Dictionary<string, int>();
         public readonly Dictionary<string, int> FailureCounts = new Dictionary<string, int>();
@@ -150,10 +150,10 @@ namespace TestRunnerLib
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
-                if (CheckCrtLeaks)
+                if (CheckCrtLeaks > 0)
                     CrtDebugHeap.Checkpoint();
                 test.TestMethod.Invoke(testObject, null);
-                if (CheckCrtLeaks)
+                if (CheckCrtLeaks > 0)
                     crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
 
                 if (test.TestCleanup != null)
@@ -177,12 +177,14 @@ namespace TestRunnerLib
             {
                 // Test succeeded.
                 Log(
-                    "{0,3} failures, {1}/{2} MB{3}, {4} sec.\r\n", 
+                    "{0,3} failures, {1}/{2} MB, {3} sec.\r\n", 
                     FailureCount, 
                     managedMemory, 
                     TotalMemory,
-                    crtLeakedBytes > 0 ? string.Format("  *** LEAKED {0} bytes ***", crtLeakedBytes) : "",
                     LastTestDuration);
+                if (crtLeakedBytes > CheckCrtLeaks)
+                    Log("!!! {0} CRT-LEAKED {1} bytes", test.TestMethod.Name, crtLeakedBytes);
+
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
                 {
@@ -197,8 +199,7 @@ namespace TestRunnerLib
                 FailureCounts[test.TestMethod.Name]++;
             else
                 FailureCounts[test.TestMethod.Name] = 1;
-            var failureInfo = test.TestMethod.Name +
-                " {0} failures ({1:0.##}%)\n" +
+            var failureInfo = "# " + test.TestMethod.Name + "FAILED:\n" +
                 exception.InnerException.Message + "\n" +
                 exception.InnerException.StackTrace;
             if (ErrorCounts.ContainsKey(failureInfo))
@@ -207,8 +208,8 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo] = 1;
 
             Log(
-                "{0,3} failures, {1:0.0}/{2:0.0} MB\r\n\r\n*** failure {3}\r\n{4}\r\n{5}\r\n***\r\n\r\n",
-                FailureCount, managedMemory, TotalMemory, ErrorCounts[failureInfo],
+                "{0,3} failures, {1:0.0}/{2:0.0} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
+                FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
                 exception.InnerException.Message,
                 exception.InnerException.StackTrace);
             return false;
@@ -239,14 +240,21 @@ namespace TestRunnerLib
         {
             get
             {
-                _process.Refresh();
                 const int mb = 1024*1024;
-                var totalMemory = _process.PrivateMemorySize64 / mb;
-                return (int) totalMemory;
+                return (int) (TotalMemoryBytes / mb);
             }
         }
 
-        private void Log(string info, params object[] args)
+        public long TotalMemoryBytes
+        {
+            get
+            {
+                _process.Refresh();
+                return _process.PrivateMemorySize64;
+            }
+        }
+
+        public void Log(string info, params object[] args)
         {
             Console.Write(info, args);
             if (_log != null)

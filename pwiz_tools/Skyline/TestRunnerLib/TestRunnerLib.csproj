@@ -65,6 +65,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FindLanguages.cs" />
     <Compile Include="FormLookup.cs" />
     <Compile Include="InvokeSkyline.cs" />
     <Compile Include="RunTests.cs" />

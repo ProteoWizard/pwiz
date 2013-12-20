@@ -44,6 +44,9 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
         private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
+        private const int LeakThreshold = 2000;
+        private const int CrtLeakThreshold = 1000;
+        private const int LeakCheckIterations = 4;
 
         [STAThread]
         static void Main(string[] args)
@@ -55,7 +58,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;quality=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -212,6 +215,7 @@ namespace TestRunner
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
+            bool qualityMode = commandLineArgs.ArgAsBool("quality");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
@@ -246,8 +250,67 @@ namespace TestRunner
             // Prepare for showing specific forms, if desired.
             var formLookup = new FormLookup();
 
+            var executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var qualityCultures = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();
+            var removeList = new List<TestInfo>();
+
+            int pass = 1;
+
+            if (qualityMode)
+            {
+                int testNumber = 0;
+                int qualityPasses = Math.Max(LeakCheckIterations, qualityCultures.Length);
+                foreach (var test in testList)
+                {
+                    testNumber++;
+
+                    // Run first in French number format, checking for CRT leaks
+                    runTests.Culture = new CultureInfo("fr");
+                    runTests.CheckCrtLeaks = CrtLeakThreshold;
+                    if (!runTests.Run(test, 1, testNumber))
+                    {
+                        removeList.Add(test);
+                        continue;
+                    }
+
+                    // Check for memory leak by noting memory size increase over multiple runs.
+                    runTests.CheckCrtLeaks = 0;
+                    long memorySize = runTests.TotalMemoryBytes;
+                    bool failed = false;
+                    for (int i = 0; i < qualityPasses; i++)
+                    {
+                        runTests.Culture = new CultureInfo(qualityCultures[i % qualityCultures.Length]);
+                        if (!runTests.Run(test, 2+i, testNumber))
+                        {
+                            failed = true;
+                            break;
+                        }
+                    }
+                    if (failed)
+                    {
+                        removeList.Add(test);
+                        continue;
+                    }
+
+                    long leakedPerPass = (runTests.TotalMemoryBytes - memorySize) / qualityPasses;
+                    if (leakedPerPass > LeakThreshold)
+                    {
+                        runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, leakedPerPass);
+                        removeList.Add(test);
+                        //continue;
+                    }
+                }
+
+                foreach (var removeTest in removeList)
+                    testList.Remove(removeTest);
+
+                pass += 1 + qualityPasses;
+            }
+
+            runTests.CheckCrtLeaks = 0;
+
             // Run all test passes.
-            for (var pass = 1; pass <= loopCount || loopCount == 0; pass++)
+            for (; pass <= loopCount || loopCount == 0; pass++)
             {
                 // Run each test in this test pass.
                 int testNumber = 0;
@@ -403,13 +466,9 @@ namespace TestRunner
         {
             var logStream = new StreamReader(logFile);
             var errorList = new Dictionary<string, int>();
-            var managedMemoryUse = new Dictionary<string, List<double>>();
-            var totalMemoryUse = new Dictionary<string, List<double>>();
 
-            var test = "";
-            var managedMemory = 0.0;
-            var totalMemory = 0.0;
-            int pass = 1;
+            var leakList = new List<string>();
+            var crtLeakList = new List<string>();
 
             while (true)
             {
@@ -419,13 +478,25 @@ namespace TestRunner
                 var parts = line.Split(' ');
 
                 // Is it an error line?
-                if (parts[0] == "***")
+                if (parts[0] == "!!!")
                 {
-                    var error = test + "  # {0} failures ({1:0.##}%)\n";
+                    var test = parts[1];
+                    var failureType = parts[2];
+                    if (failureType == "LEAKED")
+                    {
+                        leakList.Add(test);
+                        continue;
+                    }
+                    if (failureType == "CRT-LEAKED")
+                    {
+                        crtLeakList.Add(test);
+                        continue;
+                    }
+                    var error = "# " + test + " FAILED:\n";
                     while (true)
                     {
                         line = logStream.ReadLine();
-                        if (line == null || line.StartsWith("***")) break;
+                        if (line == null || line.StartsWith("!!!")) break;
                         error += "# " + line + "\n";
                     }
                     if (line == null) break;
@@ -439,35 +510,10 @@ namespace TestRunner
                         errorList[error] = 1;
                     }
                 }
-
-                // Test information line.
-                else if (line.StartsWith("[") && parts.Length > 6)
-                {
-                    // Save previous memory use to calculate memory used by this test.
-                    var lastManagedMemory = managedMemory;
-                    var lastTotalMemory = totalMemory;
-
-                    pass = int.Parse(parts[1].Split('.')[0]);
-                    var testParts = parts[2].Split('.');
-                    test = testParts[testParts.Length - 1];
-                    managedMemory = Double.Parse(parts[6].Split('/')[0]);
-                    totalMemory = Double.Parse(parts[6].Split('/')[1]);
-
-                    // Only collect memory leak information starting on pass 2.
-                    if (pass < 2)
-                    {
-                        managedMemoryUse[test] = new List<double>();
-                        totalMemoryUse[test] = new List<double>();
-                    }
-                    else
-                    {
-                        managedMemoryUse[test].Add(managedMemory - lastManagedMemory);
-                        totalMemoryUse[test].Add(totalMemory - lastTotalMemory);
-                    }
-                }
             }
 
             // Print list of errors sorted in descending order of frequency.
+            Console.WriteLine();
             if (errorList.Count == 0)
             {
                 Console.WriteLine("# No failures.\n");
@@ -475,33 +521,23 @@ namespace TestRunner
             foreach (KeyValuePair<string, int> item in errorList.OrderByDescending(x => x.Value))
             {
                 var errorInfo = item.Key;
-                var errorCount = item.Value;
-                Console.WriteLine(errorInfo, errorCount, 100.0 * errorCount / pass);
+                Console.WriteLine(errorInfo);
             }
 
-            // Print top memory leaks, unless they are less than 0.1 MB.
-            ReportLeaks(managedMemoryUse, "# Top managed memory leaks (in MB per execution):");
-            ReportLeaks(totalMemoryUse, "# Top total memory leaks (in MB per execution):");
-        }
-
-        private static void ReportLeaks(Dictionary<string, List<double>> memoryUse, string title)
-        {
-            var leaks = "";
-            int leakCount = 0;
-            foreach (var item in memoryUse.OrderByDescending(x => x.Value.Count > 0 ? x.Value.Average() : 0.0))
+            if (leakList.Count > 0)
             {
-                if (item.Value.Count == 0) break;
-                var min = Math.Max(0, item.Value.Min());
-                var max = item.Value.Max();
-                var mean = item.Value.Average();
-                if (++leakCount > 5 || mean < 0.1) break;
-                leaks += string.Format("  {0,-40} #  min={1:0.00}  max={2:0.00}  mean={3:0.00}\n",
-                                       item.Key, min, max, mean);
+                Console.WriteLine();
+                Console.WriteLine("# Leaking tests:");
+                foreach (var leakTest in leakList)
+                    Console.WriteLine("#    " + leakTest);
             }
-            if (leaks != "")
+
+            if (crtLeakList.Count > 0)
             {
-                Console.WriteLine(title);
-                Console.WriteLine(leaks);
+                Console.WriteLine();
+                Console.WriteLine("# Tests leaking unmanaged memory:");
+                foreach (var leakTest in crtLeakList)
+                    Console.WriteLine("#    " + leakTest);
             }
         }
 
