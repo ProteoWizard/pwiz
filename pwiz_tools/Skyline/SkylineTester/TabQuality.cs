@@ -223,6 +223,7 @@ namespace SkylineTester
             if (!Directory.Exists(qualityDirectory))
                 Directory.CreateDirectory(qualityDirectory);
             commandShell.LogFile = _summary.GetLogFile(_newQualityRun);
+            linkLogFile.Text = commandShell.LogFile;
 
             commandShell.Add("# Quality run started {0}" + Environment.NewLine, _newQualityRun.Date.ToString("f"));
 
