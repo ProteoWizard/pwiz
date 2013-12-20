@@ -68,6 +68,7 @@ namespace SkylineTester
                 args.Append(pauseSeconds);
             }
 
+            commandShell.LogFile = _defaultLogFile;
             StartTestRunner(args.ToString(), DoneForms);
         }
 

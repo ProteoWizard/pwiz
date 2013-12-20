@@ -27,10 +27,7 @@ namespace SkylineTester
     {
         private void OpenOutput()
         {
-            if (_logFile == null)
-                _logFile = Path.Combine(_rootDir, "SkylineTester.log");
-            linkLogFile.Text = _logFile;
-            commandShell.LogFile = _logFile;
+            linkLogFile.Text = commandShell.LogFile;
         }
 
         private void Stop(object sender, EventArgs e)
@@ -40,9 +37,9 @@ namespace SkylineTester
 
         private void linkLogFile_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (File.Exists(_logFile))
+            if (File.Exists(_defaultLogFile))
             {
-                var editLogFile = new Process {StartInfo = {FileName = _logFile}};
+                var editLogFile = new Process {StartInfo = {FileName = _defaultLogFile}};
                 editLogFile.Start();
             }
         }

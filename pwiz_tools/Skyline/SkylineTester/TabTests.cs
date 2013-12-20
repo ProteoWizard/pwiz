@@ -77,6 +77,7 @@ namespace SkylineTester
 
             args.Append(GetTestList());
 
+            commandShell.LogFile = _defaultLogFile;
             Tabs.SelectTab(tabOutput);
             StartTestRunner(args.ToString());
         }

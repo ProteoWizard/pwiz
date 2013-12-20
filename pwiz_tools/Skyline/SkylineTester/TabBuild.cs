@@ -57,6 +57,7 @@ namespace SkylineTester
             }
 
             _runningTab = tabBuild;
+            commandShell.LogFile = _defaultLogFile;
             Tabs.SelectTab(tabOutput);
 
             GenerateBuildCommands();

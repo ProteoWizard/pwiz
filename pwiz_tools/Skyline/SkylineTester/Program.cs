@@ -49,6 +49,12 @@ namespace SkylineTester
                 return;
             }
 
+            if (args.Length == 1 && args[0].EndsWith(".zip"))
+            {
+                CreateZipInstallerWindow.CreateZipFile(args[0]);
+                return;
+            }
+
             IsRunning = true;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

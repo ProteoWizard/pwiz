@@ -149,6 +149,7 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.createInstallerZipFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.Tabs.SuspendLayout();
@@ -1464,7 +1465,8 @@ namespace SkylineTester
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.memoryUseToolStripMenuItem,
-            this.RunWithDebugger});
+            this.RunWithDebugger,
+            this.createInstallerZipFileToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.viewToolStripMenuItem.Text = "Options";
@@ -1472,7 +1474,7 @@ namespace SkylineTester
             // memoryUseToolStripMenuItem
             // 
             this.memoryUseToolStripMenuItem.Name = "memoryUseToolStripMenuItem";
-            this.memoryUseToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.memoryUseToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.memoryUseToolStripMenuItem.Text = "Show memory graph";
             this.memoryUseToolStripMenuItem.Click += new System.EventHandler(this.ViewMemoryUse);
             // 
@@ -1480,7 +1482,7 @@ namespace SkylineTester
             // 
             this.RunWithDebugger.CheckOnClick = true;
             this.RunWithDebugger.Name = "RunWithDebugger";
-            this.RunWithDebugger.Size = new System.Drawing.Size(185, 22);
+            this.RunWithDebugger.Size = new System.Drawing.Size(189, 22);
             this.RunWithDebugger.Text = "Run with debugger";
             // 
             // radioButton3
@@ -1541,6 +1543,13 @@ namespace SkylineTester
             this.myTreeView1.Name = "myTreeView1";
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
+            // 
+            // createInstallerZipFileToolStripMenuItem
+            // 
+            this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
+            this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.createInstallerZipFileToolStripMenuItem.Text = "Create installer zip file";
+            this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.CreateInstallerZipFile);
             // 
             // SkylineTesterWindow
             // 
@@ -1730,6 +1739,7 @@ namespace SkylineTester
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
         private System.Windows.Forms.Button buttonDeleteRun;
         private System.Windows.Forms.Button buttonOpenLog;
+        private System.Windows.Forms.ToolStripMenuItem createInstallerZipFileToolStripMenuItem;
 
     }
 }

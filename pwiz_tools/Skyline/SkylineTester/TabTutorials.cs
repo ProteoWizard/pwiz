@@ -37,8 +37,6 @@ namespace SkylineTester
                 return;
             }
 
-            Tabs.SelectTab(tabOutput);
-
             var testList = new List<string>();
             GetCheckedTests(TutorialsTree.TopNode, testList);
 
@@ -57,6 +55,7 @@ namespace SkylineTester
             args.Append(" test=");
             args.Append(string.Join(",", testList));
 
+            commandShell.LogFile = _defaultLogFile;
             StartTestRunner(args.ToString());
         }
     }

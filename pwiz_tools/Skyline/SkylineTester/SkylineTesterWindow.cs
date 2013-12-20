@@ -41,7 +41,7 @@ namespace SkylineTester
         private readonly string _rootDir;
         private readonly string _resultsDir;
         private readonly string _buildDir;
-        private string _logFile;
+        private string _defaultLogFile;
         private TabPage _runningTab;
         private string _subversion;
         private string _devenv;
@@ -66,6 +66,8 @@ namespace SkylineTester
             _rootDir = Path.GetDirectoryName(_exeDir) ?? "";
             _buildDir = Path.Combine(_rootDir, "Build");
             _resultsDir = Path.Combine(_rootDir, "SkylineTester Results");
+            _defaultLogFile = Path.Combine(_rootDir, "SkylineTester.log");
+
             if (args.Length > 0)
                 _openFile = args[0];
         }
@@ -119,7 +121,8 @@ namespace SkylineTester
                         return false;
                     }
 
-                    if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
+                    if (_newQualityRun != null &&
+                        line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
                     {
                         lock (_newQualityRun)
                         {
@@ -616,6 +619,30 @@ namespace SkylineTester
         private string GetCulture(ComboBox comboBox)
         {
             return _languageNames.First(x => x.Value == (string) comboBox.SelectedItem).Key;
+        }
+
+        private void CreateInstallerZipFile(object sender, EventArgs e)
+        {
+            var skylineDirectory = GetSkylineDirectory(_exeDir);
+            if (skylineDirectory == null)
+            {
+                MessageBox.Show(this,
+                    "The zip file can only be created if you're running SkylineTester from the bin directory of the Skyline project directory.");
+                return;
+            }
+
+            string zipDirectory;
+            using (var dlg = new CreateZipInstallerWindow())
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                zipDirectory = dlg.ZipDirectory;
+            }
+
+            var zipFile = Path.Combine(zipDirectory, "SkylineTester.zip");
+            Tabs.SelectTab(tabOutput);
+            commandShell.Add("{0} {1}", Quote(Assembly.GetExecutingAssembly().Location), Quote(zipFile));
+            commandShell.Run();
         }
     }
 }

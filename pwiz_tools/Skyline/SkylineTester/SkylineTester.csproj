@@ -94,6 +94,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -107,6 +108,12 @@
   <ItemGroup>
     <Compile Include="CommandShell.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CreateZipInstallerWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateZipInstallerWindow.Designer.cs">
+      <DependentUpon>CreateZipInstallerWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="MemoryChartWindow.cs">
       <SubType>Form</SubType>
@@ -149,6 +156,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Content Include="SkylineTester.ico" />
+    <EmbeddedResource Include="CreateZipInstallerWindow.resx">
+      <DependentUpon>CreateZipInstallerWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MemoryChartWindow.resx">
       <DependentUpon>MemoryChartWindow.cs</DependentUpon>
     </EmbeddedResource>

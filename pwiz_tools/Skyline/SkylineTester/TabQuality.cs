@@ -145,7 +145,7 @@ namespace SkylineTester
                 return;
             }
 
-            _logFile = "";
+            _defaultLogFile = "";
             commandShell.ClearLog();
 
             if (QualityStartNow.Checked)
@@ -222,8 +222,7 @@ namespace SkylineTester
             var qualityDirectory = Path.Combine(_rootDir, QualityLogsDirectory);
             if (!Directory.Exists(qualityDirectory))
                 Directory.CreateDirectory(qualityDirectory);
-            _logFile = _summary.GetLogFile(_newQualityRun);
-            OpenOutput();
+            commandShell.LogFile = _summary.GetLogFile(_newQualityRun);
 
             commandShell.Add("# Quality run started {0}" + Environment.NewLine, _newQualityRun.Date.ToString("f"));
 
@@ -416,7 +415,12 @@ namespace SkylineTester
 
         private DirectoryInfo GetSkylineDirectory()
         {
-            string skylinePath = GetCurrentBuildDirectory();
+            return GetSkylineDirectory(GetCurrentBuildDirectory());
+        }
+
+        private DirectoryInfo GetSkylineDirectory(string startDirectory)
+        {
+            string skylinePath = startDirectory;
             var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
             while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
                 skylineDirectory = skylineDirectory.Parent;

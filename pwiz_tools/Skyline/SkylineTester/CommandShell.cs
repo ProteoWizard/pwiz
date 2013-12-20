@@ -32,7 +32,6 @@ namespace SkylineTester
     public class CommandShell : RichTextBox
     {
         public string DefaultDirectory { get; set; }
-        public string LogFile { get; set; }
         public Button StopButton { get; set; }
         public Func<string, bool> FilterFunc { get; set; } 
 
@@ -327,6 +326,28 @@ namespace SkylineTester
         #endregion
 
         #region Display/scroll log
+
+        private string _logFile;
+
+        public string LogFile
+        {
+            get { return _logFile; }
+            set
+            {
+                _logFile = value;
+                if (File.Exists(_logFile))
+                {
+                    try
+                    {
+                        File.Delete(_logFile);
+                    }
+// ReSharper disable once EmptyGeneralCatchClause
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Add a line to the log buffer.
