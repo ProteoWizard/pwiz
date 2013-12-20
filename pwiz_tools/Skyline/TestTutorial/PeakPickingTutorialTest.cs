@@ -138,9 +138,8 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("p5 -- main window");
 
             // Train the peak scoring model
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration);
-            var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
+            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() =>
                 {
                     editDlg.TrainModel();
@@ -166,7 +165,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("p8 -- peak scoring dialog find missing");
 
             OkDialog(editDlg, editDlg.OkDialog);
-            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
 
             PauseForScreenShot("p8 -- find results form");
 
@@ -195,10 +194,9 @@ namespace pwiz.SkylineTestTutorial
                 RemovePeptide(missingPeptides[i], isDecoys[i]);
             }
 
-            var peptideSettingsDlgNew = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsDlgNew.SelectedTab = PeptideSettingsUI.TABS.Integration);
+            var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             var editListLibrary = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
-                peptideSettingsDlgNew.EditPeakScoringModel);
+                reintegrateDlgNew.EditPeakScoringModel);
 
             RunUI(() => editListLibrary.SelectItem("test1"));
             var editDlgLibrary = ShowDialog<EditPeakScoringModelDlg>(editListLibrary.EditItem);
@@ -235,15 +233,18 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("p10 - peak scoring dialog with second best");
 
             OkDialog(editDlgNew, editDlgNew.CancelDialog);
-            OkDialog(editListLibrary, editListLibrary.CancelDialog);
-            OkDialog(peptideSettingsDlgNew, peptideSettingsDlgNew.OkDialog);
+            OkDialog(editListLibrary, editListLibrary.OkDialog);
 
             // Apply the model to reintegrate peaks
-            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            RunUI(() => reintegrateDlg.ReintegrateAll = true);
+            RunUI(() =>
+            {
+                reintegrateDlgNew.ComboPeakScoringModelSelected = "test1";
+                reintegrateDlgNew.ReintegrateAll = true;
+                reintegrateDlgNew.OverwriteManual = true;
+            });
             PauseForScreenShot("p11 -- reintegrate");
 
-            OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
+            OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
             RunUI(() =>
             {
                 var nodeGroup = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[64];
@@ -256,13 +257,14 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("p12 -- main window");
 
             // Reintegrate slightly differently, with a q value cutoff
-            var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() =>
                 {
-                    reintegrateDlgNew.ReintegrateAll = false;
-                    reintegrateDlgNew.Cutoff = 0.001;
+                    reintegrateDlgQ.ReintegrateAll = false;
+                    reintegrateDlgQ.Cutoff = 0.001;
+                    reintegrateDlgQ.OverwriteManual = true;
                 });
-            OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
+            OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
             PauseForScreenShot("p13 -- main window with some null peaks");
 
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p14.view"));
@@ -295,28 +297,29 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(manageResults);
 
             // Train the peak scoring model for the DIA dataset
-            var peptideSettingsDlgDia = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsDlgDia.SelectedTab = PeptideSettingsUI.TABS.Integration);
+            var reintegrateDlgDia = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
 
             // Open the previous scoring model for use with the DIA dataset
             var editListDia = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
-                    peptideSettingsDlgDia.EditPeakScoringModel);
+                    reintegrateDlgDia.EditPeakScoringModel);
             RunUI(() => editListDia.SelectItem("test1"));
             var editDlgFromSrm = ShowDialog<EditPeakScoringModelDlg>(editListDia.EditItem);
             PauseForScreenShot("p17 -- SRM model applied to DIA data");
             RunUI(() =>
                 {
                     int i = 0;
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.3076, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, -1.2378, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.5594, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, -1.3175, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 1.9797, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.7591, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.0526, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.0589, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, -0.1885, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 8.6914, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.0383, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.1641, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.1669, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
-                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.7519, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 7.5683, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, -0.0784, 1e-3);
+                    AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, 0.4576, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgFromSrm.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
@@ -344,7 +347,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editListDia, editListDia.CancelDialog);
 
             // Train a new model for the DIA dataset
-            var editDlgDia = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlgDia.AddPeakScoringModel);
+            var editDlgDia = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgDia.AddPeakScoringModel);
             RunUI(() =>
                 {
                     editDlgDia.UsesDecoys = false;
@@ -382,16 +385,16 @@ namespace pwiz.SkylineTestTutorial
                     editDlgDia.PeakScoringModelName = "testDIA";
                 });
             OkDialog(editDlgDia, editDlgDia.OkDialog);
-            OkDialog(peptideSettingsDlgDia, peptideSettingsDlgDia.OkDialog);
+            RunUI(() =>
+            {
+                reintegrateDlgDia.ReintegrateAll = true;
+                reintegrateDlgDia.OverwriteManual = true;
+            });
+            OkDialog(reintegrateDlgDia, reintegrateDlgDia.OkDialog);
 
             findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             Assert.IsNotNull(findResultsForm);
             Assert.AreEqual(findResultsForm.ItemCount, 34);
-
-            // Reintegrate
-            var reintegrateDlgDia = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            RunUI(() => reintegrateDlgDia.ReintegrateAll = true);
-            OkDialog(reintegrateDlgDia, reintegrateDlgDia.OkDialog);
         }
     }
 }

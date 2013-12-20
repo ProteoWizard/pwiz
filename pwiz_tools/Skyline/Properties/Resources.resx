@@ -5267,9 +5267,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ManageResults_The_document_must_contain_mass_spec_data_to_manage_results_" xml:space="preserve">
     <value>The document must contain mass spec data to manage results.</value>
   </data>
-  <data name="LegacyScoringModel__defaultName_Skyline_Legacy" xml:space="preserve">
-    <value>Skyline Legacy</value>
-  </data>
   <data name="ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools" xml:space="preserve">
     <value>Error unpacking zipped tools</value>
   </data>
@@ -6113,6 +6110,9 @@ Are you sure you want to continue?</value>
   <data name="ColumnSet_GetColumnInfos_Unexpected_report_type" xml:space="preserve">
     <value>Unexpected report type</value>
   </data>
+  <data name="LegacyScoringModel_DEFAULT_NAME_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
   <data name="ToolUpdateAvailable" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ToolUpdateAvailable.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -6140,5 +6140,32 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
     <value>Full gradient chromatograms will take longer to import, consume more disk space, and may make peak picking less effective.</value>
+  </data>
+  <data name="ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_" xml:space="preserve">
+    <value>You must train and select a model in order to reintegrate peaks.</value>
+  </data>
+  <data name="MProphetResultsHandler_Q_VALUE_ANNOTATION_Q_Value" xml:space="preserve">
+    <value>Q Value</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides" xml:space="preserve">
+    <value>Q values of target peptides</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution" xml:space="preserve">
+    <value>Train a model to see Q value distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution" xml:space="preserve">
+    <value>Train a model to see P value distribution</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides" xml:space="preserve">
+    <value>P values of target peptides</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value" xml:space="preserve">
+    <value>P Value</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value" xml:space="preserve">
+    <value>Q value</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_" xml:space="preserve">
+    <value>Pi zero (expected nulls)</value>
   </data>
 </root>

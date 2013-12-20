@@ -95,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
         /// Walks the node tree, and removes any annotation values whose name is not
         /// in "annotationNamesToKeep".  Returns true if the node was modified.
         /// </summary>
-        private static DocNode StripAnnotationValues(ICollection<string> annotationNamesToKeep, DocNode docNode)
+        public static DocNode StripAnnotationValues(ICollection<string> annotationNamesToKeep, DocNode docNode)
         {
             var annotations = docNode.Annotations;
             if (StripAnnotationValues(annotationNamesToKeep, ref annotations))

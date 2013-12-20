@@ -17,6 +17,9 @@
  * limitations under the License.
  */
 
+using System.Collections;
+using System.Collections.Generic;
+
 namespace pwiz.Skyline.Model.DocSettings.Extensions
 {
     /// <summary>
@@ -97,6 +100,18 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
             ChangeFunc<TransitionFullScan> change)
         {
             return settings.ChangeTransitionSettings(setT => setT.ChangeFullScan(change(setT.FullScan)));
+        }
+
+        public static SrmSettings ChangeDataSettings(this SrmSettings settings,
+            ChangeFunc<DataSettings> change)
+        {
+            return settings.ChangeDataSettings(change(settings.DataSettings));
+        }
+
+        public static SrmSettings ChangeAnnotationDefs(this SrmSettings settings,
+            ChangeFunc<IList<AnnotationDef>> change)
+        {
+            return settings.ChangeDataSettings(setD => setD.ChangeAnnotationDefs(change(setD.AnnotationDefs)));
         }
     }
 }

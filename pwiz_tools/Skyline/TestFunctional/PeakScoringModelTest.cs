@@ -73,14 +73,10 @@ namespace pwiz.SkylineTestFunctional
         {
 
             // Display integration tab.
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
-            {
-                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration;
-            });
+            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
 
             {
-                var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
+                var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
 
                 // Check default values.
                 RunUI(() =>
@@ -115,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
 
             var editList =
                 ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
-                    peptideSettingsDlg.EditPeakScoringModel);
+                    reintegrateDlg.EditPeakScoringModel);
 
             RunUI(() => editList.SelectItem("test1")); // Not L10N
 
@@ -196,7 +192,8 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(editDlg, editDlg.CancelDialog);
                 OkDialog(editList, editList.OkDialog);
-                OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+                RunUI(() => reintegrateDlg.ComboPeakScoringModelSelected = "test2");
+                OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
             }
         }
 
@@ -210,9 +207,8 @@ namespace pwiz.SkylineTestFunctional
             LegacyScoringModel peakScoringModelBase = null;
             
             // Test legacy model
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration);
-            var editDlg = ShowDialog<EditPeakScoringModelDlg>(peptideSettingsDlg.AddPeakScoringModel);
+            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
 
             var calculatorsLegacy = (new LegacyScoringModel("dummy")).PeakFeatureCalculators.ToArray();
             var gridGen = new GridDataGenerator(calculatorsLegacy, _format, _percentFormat);
@@ -237,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(editDlg.PeakScoringModelName, "");
                 editDlg.PeakScoringModelName = "legacy1"; // Not L10N
-                editDlg.SelectedModelItem = "Skyline Legacy";
+                editDlg.SelectedModelItem = "Default";
                 Assert.AreEqual(editDlg.PeakScoringModelName, "legacy1");
                 editDlg.TrainModelClick();
                 Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -8.741136, 1e-5);
@@ -259,8 +255,8 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
             OkDialog(editDlg, editDlg.OkDialog);
-            RunUI(() => peptideSettingsDlg.ComboPeakScoringModelSelected = "legacy1");
-            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            RunUI(() => reintegrateDlg.ComboPeakScoringModelSelected = "legacy1");
+            OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
             RunUI(() =>
             {
                 // Test modification of legacy scoring model
@@ -423,9 +419,15 @@ namespace pwiz.SkylineTestFunctional
             gridGen.AddRow(false, weights[i++], double.NaN);
             gridGen.AddRow(false, weights[i++], double.NaN);
             gridGen.AddRow(false, weights[i], double.NaN);
-            var cellValuesIncompatible = gridGen.Rows; 
+            var cellValuesIncompatible = gridGen.Rows;
 
-            RunEditPeakScoringDlg("incompatible", editDlgTemp =>
+            var reintegrateDlgIncompatible = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+
+            var editList = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
+                    reintegrateDlgIncompatible.EditPeakScoringModel);
+            RunUI(() => editList.SelectItem("incompatible")); // Not L10N           
+            
+            RunDlg<EditPeakScoringModelDlg>(editList.EditItem, editDlgTemp =>
             {
                 // All of the percentage fields should be null
                 VerifyCellValues(editDlgTemp, cellValuesIncompatible, 0.0);
@@ -437,16 +439,16 @@ namespace pwiz.SkylineTestFunctional
                 VerifyCellValues(editDlgTemp, _cellValuesOriginal);
                 editDlgTemp.CancelDialog();
             });
+            OkDialog(editList, editList.OkDialog);
             // Trying to reintegrate gives an error because the model is incompatible
-            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            RunDlg<MessageDlg>(reintegrateDlg.OkDialog, messageDlg =>
+            RunDlg<MessageDlg>(reintegrateDlgIncompatible.OkDialog, messageDlg =>
             {
                 Assert.AreEqual(TextUtil.LineSeparate(string.Format(Resources.ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_),
                                                       Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_),
                                 messageDlg.Message);
                 messageDlg.OkDialog();
             });
-            OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
+            OkDialog(reintegrateDlgIncompatible, reintegrateDlgIncompatible.CancelDialog);
         }
 
         /// <summary>
@@ -517,26 +519,21 @@ namespace pwiz.SkylineTestFunctional
         // Conveniently opens/closes all the intermediate dialogs to open and run a EditPeakScoringModelDlg 
         protected static void RunEditPeakScoringDlg(string editName, Action<EditPeakScoringModelDlg> act)
         {
-            // Display integration tab.
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
-            {
-                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Integration;
-            });
+            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
 
             if (editName != null)
             {
                 var editList = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
-                    peptideSettingsDlg.EditPeakScoringModel);
+                    reintegrateDlg.EditPeakScoringModel);
                 RunUI(() => editList.SelectItem(editName)); // Not L10N
                 RunDlg(editList.EditItem, act);
                 OkDialog(editList, editList.OkDialog);
             }
             else
             {
-                RunDlg(peptideSettingsDlg.AddPeakScoringModel, act);
+                RunDlg(reintegrateDlg.AddPeakScoringModel, act);
             }
-            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
         }
 
         private class GridDataGenerator

@@ -55,6 +55,10 @@
             this.toolStripFind = new System.Windows.Forms.ToolStrip();
             this.findPeptidesButton = new System.Windows.Forms.ToolStripButton();
             this.zedGraphSelectedCalculator = new ZedGraph.ZedGraphControl();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.zedGraphPValues = new ZedGraph.ZedGraphControl();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.zedGraphQValues = new ZedGraph.ZedGraphControl();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.decoyCheckBox = new System.Windows.Forms.CheckBox();
@@ -72,6 +76,8 @@
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.toolStripFind.SuspendLayout();
+            this.tabPage4.SuspendLayout();
+            this.tabPage3.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -197,6 +203,8 @@
             resources.ApplyResources(this.tabControl1, "tabControl1");
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Controls.Add(this.tabPage4);
+            this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             // 
@@ -269,6 +277,56 @@
             this.zedGraphSelectedCalculator.ScrollMinY2 = 0D;
             this.zedGraphSelectedCalculator.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
             this.zedGraphSelectedCalculator.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphSelectedCalculator_MouseMoveEvent);
+            // 
+            // tabPage4
+            // 
+            this.tabPage4.Controls.Add(this.zedGraphPValues);
+            resources.ApplyResources(this.tabPage4, "tabPage4");
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // zedGraphPValues
+            // 
+            resources.ApplyResources(this.zedGraphPValues, "zedGraphPValues");
+            this.zedGraphPValues.IsEnableHPan = false;
+            this.zedGraphPValues.IsEnableHZoom = false;
+            this.zedGraphPValues.IsEnableVPan = false;
+            this.zedGraphPValues.IsEnableVZoom = false;
+            this.zedGraphPValues.IsEnableWheelZoom = false;
+            this.zedGraphPValues.IsShowCopyMessage = false;
+            this.zedGraphPValues.Name = "zedGraphPValues";
+            this.zedGraphPValues.ScrollGrace = 0D;
+            this.zedGraphPValues.ScrollMaxX = 0D;
+            this.zedGraphPValues.ScrollMaxY = 0D;
+            this.zedGraphPValues.ScrollMaxY2 = 0D;
+            this.zedGraphPValues.ScrollMinX = 0D;
+            this.zedGraphPValues.ScrollMinY = 0D;
+            this.zedGraphPValues.ScrollMinY2 = 0D;
+            // 
+            // tabPage3
+            // 
+            this.tabPage3.Controls.Add(this.zedGraphQValues);
+            resources.ApplyResources(this.tabPage3, "tabPage3");
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // zedGraphQValues
+            // 
+            resources.ApplyResources(this.zedGraphQValues, "zedGraphQValues");
+            this.zedGraphQValues.IsEnableHPan = false;
+            this.zedGraphQValues.IsEnableHZoom = false;
+            this.zedGraphQValues.IsEnableVPan = false;
+            this.zedGraphQValues.IsEnableVZoom = false;
+            this.zedGraphQValues.IsEnableWheelZoom = false;
+            this.zedGraphQValues.IsShowCopyMessage = false;
+            this.zedGraphQValues.Name = "zedGraphQValues";
+            this.zedGraphQValues.ScrollGrace = 0D;
+            this.zedGraphQValues.ScrollMaxX = 0D;
+            this.zedGraphQValues.ScrollMaxY = 0D;
+            this.zedGraphQValues.ScrollMaxY2 = 0D;
+            this.zedGraphQValues.ScrollMinX = 0D;
+            this.zedGraphQValues.ScrollMinY = 0D;
+            this.zedGraphQValues.ScrollMinY2 = 0D;
             // 
             // label3
             // 
@@ -384,6 +442,8 @@
             this.tabPage2.PerformLayout();
             this.toolStripFind.ResumeLayout(false);
             this.toolStripFind.PerformLayout();
+            this.tabPage4.ResumeLayout(false);
+            this.tabPage3.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
@@ -422,5 +482,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.TabPage tabPage3;
+        private ZedGraph.ZedGraphControl zedGraphQValues;
+        private System.Windows.Forms.TabPage tabPage4;
+        private ZedGraph.ZedGraphControl zedGraphPValues;
     }
 }

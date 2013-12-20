@@ -987,11 +987,6 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_);
                 return;
             }
-            if (documentOrig.Settings.PeptideSettings.Integration.PeakScoringModel is LegacyScoringModel)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_);
-                return;
-            }
             if (!documentOrig.IsLoaded)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_);

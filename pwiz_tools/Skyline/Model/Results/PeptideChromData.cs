@@ -728,7 +728,7 @@ namespace pwiz.Skyline.Model.Results
             NodePep = nodePep;
             FileInfo = fileInfo;
             TransitionGroupPeakData = new List<ITransitionGroupPeakData<IDetailedPeakData>>();
-            ScoringModel = new LegacyScoringModel(LegacyScoringModel.DEFAULT_NAME, LegacyScoringModel.DEFAULT_PARAMS);
+            ScoringModel = LegacyScoringModel.DEFAULT_MODEL;
 
             Add(peak);
         }

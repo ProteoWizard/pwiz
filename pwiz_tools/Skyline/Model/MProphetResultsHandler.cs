@@ -24,9 +24,11 @@ using System.IO;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -44,7 +46,9 @@ namespace pwiz.Skyline.Model
         private readonly IList<IPeakFeatureCalculator> _calcs;
         private IEnumerable<PeakTransitionGroupFeatures> _features;
 
-        private const string Q_VALUE_ANNOTATION = "Q Value";
+        private const string Q_VALUE_ANNOTATION = "Q Value"; // Not L10N : for now, we are not localizing column headers
+
+        public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; }}
 
         public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel)
         {
@@ -89,14 +93,36 @@ namespace pwiz.Skyline.Model
             return _qValues.Any(double.IsNaN);
         }
 
-        public SrmDocument ChangePeaks(double qValueCutoff, IProgressMonitor progressMonitor = null)
+        public SrmDocument ChangePeaks(double qValueCutoff, bool overrideManual = true, bool addAnnotation = false, IProgressMonitor progressMonitor = null)
         {
+            var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
+                                  where def.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.precursor_result)
+                                  select def.Name;
+            var containsQAnnotation = annotationNames.Contains(AnnotationName);
+            if (!containsQAnnotation && addAnnotation)
+            {
+                var annotationTargets = AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.precursor_result);
+                var newAnnotationDef = new AnnotationDef(AnnotationName, annotationTargets, AnnotationDef.AnnotationType.number, new string[0]);
+                Document = Document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
+                {
+                    var defsNew = defs.ToList();
+                    defsNew.Add(newAnnotationDef);
+                    return defsNew;
+                }));
+            }
+            else if (containsQAnnotation && !addAnnotation)
+            {
+                Document = Document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
+                {
+                    var defsNew = defs.ToList();
+                    defsNew.RemoveAll(def => Equals(def.Name, AnnotationName));
+                    return defsNew;
+                }));
+                var annotationNamesToKeep = Document.Settings.DataSettings.AnnotationDefs.Select(def => def.Name).ToList();
+                Document = (SrmDocument) ChooseAnnotationsDlg.StripAnnotationValues(annotationNamesToKeep, Document);
+            }
             SrmDocument docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
-            var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
-                                  where def.AnnotationTargets.Contains( AnnotationDef.AnnotationTarget.precursor_result)
-                                  select def.Name;
-            var containsQAnnotation = annotationNames.Contains(Q_VALUE_ANNOTATION);
             int i = 0;
             var status = new ProgressStatus(Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries);
             foreach (var transitionGroupFeatures in _features)
@@ -130,14 +156,18 @@ namespace pwiz.Skyline.Model
                         var pepGroupPath = new IdentityPath(IdentityPath.ROOT, nodePepGroup.Id);
                         var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
                         var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                        var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath);
                         // TODO: HACK To annotate peaks with q values.  This is crappy and should be removed in the long run.
-                        if (containsQAnnotation)
+                        if(addAnnotation)
                         {
-                            var annotations = new Dictionary<string, string> { { Q_VALUE_ANNOTATION, _qValues[i].ToString(CultureInfo.CurrentCulture) } };
-                            var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath);
+                            var annotations = new Dictionary<string, string> { { AnnotationName, _qValues[i].ToString(CultureInfo.CurrentCulture) } };
                             docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
                         }
                         // end HACK
+                        var groupInfo = groupNode.ChromInfos.First(info => Equals(info.FileId.GlobalIndex, fileId.GlobalIndex));
+                        // If not overriding manual annotations, skip groups that have been set manually
+                        if (groupInfo.IsUserSetManual && !overrideManual)
+                            continue;
                         docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
                                                    null, startTime, endTime, UserSet.REINTEGRATED, null, false);
                     }

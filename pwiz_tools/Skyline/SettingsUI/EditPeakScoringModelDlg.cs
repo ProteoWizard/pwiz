@@ -78,7 +78,10 @@ namespace pwiz.Skyline.SettingsUI
 
             InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score);
             InitGraphPane(zedGraphSelectedCalculator.GraphPane);
-
+            InitGraphPane(zedGraphPValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution, 
+                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value);
+            InitGraphPane(zedGraphQValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution,
+                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value);
             lblColinearWarning.Visible = false;
             toolStripFind.Visible = false;
 
@@ -349,10 +352,10 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Initialize the given Zedgraph pane.
         /// </summary>
-        private static void InitGraphPane(GraphPane graphPane, string titleName = null)
+        private static void InitGraphPane(GraphPane graphPane, string titleName = null, string xAxis = null)
         {
             graphPane.Title.Text = titleName ?? "";
-            graphPane.XAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Score;
+            graphPane.XAxis.Title.Text = xAxis ?? Resources.EditPeakScoringModelDlg_InitGraphPane_Score;
             graphPane.YAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Peak_count;
             graphPane.XAxis.MinSpace = 50;
             graphPane.XAxis.MajorTic.IsAllTics = false;
@@ -366,45 +369,62 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.IsFontsScaled = false;
         }
 
+        public static void ClearGraphPane(GraphPane graphPane)
+        {
+            graphPane.CurveList.Clear();
+            graphPane.GraphObjList.Clear();
+        }
+
         /// <summary>
         /// Redraw the main model graph.
         /// </summary>
         private void UpdateModelGraph()
         {
             var graphPane = zedGraphMProphet.GraphPane;
-            graphPane.CurveList.Clear();
-            graphPane.GraphObjList.Clear();
+            var graphPaneQ = zedGraphQValues.GraphPane;
+            var graphPaneP = zedGraphPValues.GraphPane;
+            ClearGraphPane(graphPane);
+            ClearGraphPane(graphPaneQ);
+            ClearGraphPane(graphPaneP);
 
             // Nothing to draw if we don't have a trained model yet.
             if (PeakScoringModel.Parameters == null || PeakScoringModel.Parameters.Weights == null)
             {
                 zedGraphMProphet.Refresh();
+                zedGraphQValues.Refresh();
+                tabControl1.Refresh();
                 return;
             }
 
             // Get binned scores for targets and decoys.
-            PointPairList targetPoints;
-            PointPairList decoyPoints;
-            PointPairList secondBestPoints;
-            double min;
-            double max;
-            bool hasUnknownScores;
-            bool allUnknownScores;
-            GetPoints(
-                -1,
-                out targetPoints,
-                out decoyPoints,
-                out secondBestPoints,
-                out min,
-                out max,
-                out hasUnknownScores,
-                out allUnknownScores);
+            HistogramGroup modelHistograms;
+            HistogramGroup pHistograms;
+            HistogramGroup qHistograms;
+            PointPairList piZeroLine;
+            GetPoints(-1, out modelHistograms, out pHistograms, out qHistograms, out piZeroLine);
+            bool hasUnknownScores = modelHistograms.HasUnknownScores;
+            bool allUnknownScores = modelHistograms.AllUnknownScores;
+            var targetPoints = modelHistograms.BinGroups[0];
+            var decoyPoints = modelHistograms.BinGroups[1];
+            var secondBestPoints = modelHistograms.BinGroups[2];
+            var min = modelHistograms.Min;
+            var max = modelHistograms.Max;
+            var minQ = qHistograms.Min;
+            var maxQ = qHistograms.Max;
+            var minP = pHistograms.Min;
+            var maxP = pHistograms.Max;
 
             // If there are unknown composite scores, display the model graph but warn the user
             // that the model does not apply to this data and the model should be retrained
             graphPane.Title.Text = hasUnknownScores ? 
                                                     Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_: 
                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_;
+            graphPaneQ.Title.Text = hasUnknownScores ?
+                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
+                                                    Resources.EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides;
+            graphPaneP.Title.Text = hasUnknownScores ?
+                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_ :
+                                                    Resources.EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides;
 
             // Add bar graphs.
             if (decoyCheckBox.Checked)
@@ -412,6 +432,18 @@ namespace pwiz.Skyline.SettingsUI
             if (secondBestCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, secondBestPoints, _secondBestColor);
             graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
+
+            // Add bar graphs for p values.
+            if (decoyCheckBox.Checked)
+                graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, pHistograms.BinGroups[1], _decoyColor);
+            if (secondBestCheckBox.Checked)
+                graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, pHistograms.BinGroups[2], _secondBestColor);
+            graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, pHistograms.BinGroups[0], _targetColor);
+
+            // Add bar graph for q values.
+            graphPaneQ.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, qHistograms.BinGroups[0], _targetColor);
+            var piZeroCurve = new LineItem(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_, piZeroLine, Color.Black, SymbolType.None, 3);
+            graphPaneP.CurveList.Add(piZeroCurve);
 
             // Graph normal curve if the model is trained and at least some composite scores are valid
             if (_peakScoringModel.Parameters != null && !allUnknownScores)
@@ -490,7 +522,16 @@ namespace pwiz.Skyline.SettingsUI
                 graphPane.CurveList.Add(curve);
             }
 
-            // Set graph axis range.
+            ScaleGraph(graphPane, min, max, hasUnknownScores);
+            ScaleGraph(graphPaneQ, minQ, maxQ, hasUnknownScores);
+            ScaleGraph(graphPaneP, minP, maxP, hasUnknownScores);
+            zedGraphMProphet.Refresh();
+            zedGraphQValues.Refresh();
+            tabControl1.Refresh();
+        }
+
+        private static void ScaleGraph(GraphPane graphPane, double min, double max, bool hasUnknownScores)
+        {
             if (min == max)
             {
                 min -= 1;
@@ -498,15 +539,11 @@ namespace pwiz.Skyline.SettingsUI
             }
             graphPane.XAxis.Scale.Min = min - (max - min) / HISTOGRAM_BAR_COUNT;
             graphPane.XAxis.Scale.Max = max;
-
-            // If the calculator produces unknown scores, split the graph and show a histogram
-            // of the unknown scores on the right side of the graph.
-            // Unlike the calculator graph, the model graph should ONLY produce unknown scores when a model is applied to an incompatible dataset
             if (hasUnknownScores)
+            {
                 CreateUnknownLabel(graphPane);
-
+            }
             graphPane.AxisChange();
-            zedGraphMProphet.Refresh();
         }
 
         /// <summary>
@@ -524,49 +561,30 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             var graphPane = zedGraphSelectedCalculator.GraphPane;
-            graphPane.CurveList.Clear();
-            graphPane.GraphObjList.Clear();
+            ClearGraphPane(graphPane);
 
-            PointPairList targetPoints;
-            PointPairList decoyPoints;
-            PointPairList secondBestPoints;
-            double min;
-            double max;
-            GetPoints(
-                _selectedCalculator,
-                out targetPoints,
-                out decoyPoints,
-                out secondBestPoints,
-                out min, 
-                out max,
-                out _hasUnknownScores,
-                out _allUnknownScores);
+            HistogramGroup modelHistograms;
+            HistogramGroup pHistograms;
+            HistogramGroup qHistograms;
+            PointPairList nullDensity;
+            GetPoints(_selectedCalculator, out modelHistograms, out pHistograms, out qHistograms, out nullDensity);
+            var targetPoints = modelHistograms.BinGroups[0];
+            var decoyPoints = modelHistograms.BinGroups[1];
+            var secondBestPoints = modelHistograms.BinGroups[2];
+            _hasUnknownScores = modelHistograms.HasUnknownScores;
+            _allUnknownScores = modelHistograms.AllUnknownScores;
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, secondBestPoints, _secondBestColor);
             graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
-            if (min == max)
-            {
-                min -= 1;
-                max += 1;
-            }
-
-            graphPane.XAxis.Scale.Min = min - (max - min) / HISTOGRAM_BAR_COUNT;
-            graphPane.XAxis.Scale.Max = max;
-
-            // If the calculator produces unknown scores, split the graph and show a histogram
-            // of the unknown scores on the right side of the graph.
-            if (_hasUnknownScores)
-                CreateUnknownLabel(graphPane);
+            ScaleGraph(graphPane, modelHistograms.Min, modelHistograms.Max, _hasUnknownScores);
 
             // Change the graph title
             if(_selectedCalculator >= 0)
                 graphPane.Title.Text = gridPeakCalculators.Rows[_selectedCalculator].Cells[(int)ColumnNames.calculator_name].Value.ToString();
 
-            // Calculate the Axis Scale Ranges
-            graphPane.AxisChange();
             zedGraphSelectedCalculator.Refresh();
         }
 
@@ -611,22 +629,16 @@ namespace pwiz.Skyline.SettingsUI
         /// Get graph points for the selected calculator.
         /// </summary>
         /// <param name="selectedCalculator">Calculator index or -1 to get graph points for the composite scoring model.</param>
-        /// <param name="targetBins">Binned score data points for target scores.</param>
-        /// <param name="decoyBins">Binned score data points for decoys.</param>
-        /// <param name="secondBestBins">Binned score data points for "false targets" -- second highest scoring peaks in target records.</param>
-        /// <param name="min">Min score.</param>
-        /// <param name="max">Max score.</param>
-        /// <param name="hasUnknownScores">Returns true if the calculator returns unknown scores.</param>
-        /// <param name="allUnknownScores">Returns true if all scores in the calculator are unknown.</param>
+        /// <param name="scoreHistograms">Histogram group containing model score histograms for targets, decoys, and second best peaks</param>
+        /// <param name="pValueHistograms">Histogram group containing p-value histograms for targets, decoys, and second best peaks</param>
+        /// <param name="qValueHistograms">Histogram group containing q-value histograms for targets, decoys, and second best peaks</param>
+        /// <param name="piZeroLine">Line showing the expected nulls, for display in p-value plot</param>
         private void GetPoints(
             int selectedCalculator, 
-            out PointPairList targetBins, 
-            out PointPairList decoyBins,
-            out PointPairList secondBestBins,
-            out double min, 
-            out double max,
-            out bool hasUnknownScores,
-            out bool allUnknownScores)
+            out HistogramGroup scoreHistograms,
+            out HistogramGroup pValueHistograms,
+            out HistogramGroup qValueHistograms,
+            out PointPairList piZeroLine)
         {
             var modelParameters = _peakScoringModel.IsTrained ? _peakScoringModel.Parameters : new LinearModelParams(_peakScoringModel.PeakFeatureCalculators.Count);
             LinearModelParams calculatorParameters = selectedCalculator == -1 ? modelParameters : CreateParametersSelect(selectedCalculator);
@@ -638,80 +650,114 @@ namespace pwiz.Skyline.SettingsUI
             bool invert = selectedCalculator != -1 && _peakScoringModel.PeakFeatureCalculators[selectedCalculator].IsReversedScore;
             // Evaluate each score on the best peak according to that score (either individual calculator or composite)
             _targetDecoyGenerator.GetScores(calculatorParameters, calculatorParameters, out targetScores, out decoyScores, out secondBestScores, invert);
-            
-            // Find score range for targets and decoys
-            min = float.MaxValue;
-            max = float.MinValue;
-            int countUnknownTargetScores = 0;
-            int countUnknownDecoyScores = 0;
-            int countUnknownSecondBestScores = 0;
-            foreach (var score in targetScores)
-                ProcessScores(score, ref min, ref max, ref countUnknownTargetScores);
-            foreach (var score in decoyScores)
-                ProcessScores(score, ref min, ref max, ref countUnknownDecoyScores);
-            foreach (var score in secondBestScores)
-                ProcessScores(score, ref min, ref max, ref countUnknownSecondBestScores);
-
-            // Sort scores into bins.
-            targetBins = new PointPairList();
-            decoyBins = new PointPairList();
-            secondBestBins = new PointPairList();
-            double binWidth = (max - min)/HISTOGRAM_BAR_COUNT;
-
-            allUnknownScores = countUnknownTargetScores == targetScores.Count &&
-                               countUnknownDecoyScores == decoyScores.Count &&
-                               countUnknownSecondBestScores == secondBestScores.Count;
-            if (allUnknownScores)
+            var scoreGroups = new List<List<double>> {targetScores, decoyScores, secondBestScores};
+            scoreHistograms = new HistogramGroup(scoreGroups);
+            if (selectedCalculator == -1)
             {
-                min = -1;
-                max = 1;
-                binWidth = 2.0/HISTOGRAM_BAR_COUNT;
-            }
+                var pValueGroups = scoreGroups.Select(group => 
+                                                  group.Select(score => 1 - Statistics.PNorm(score)).ToList()).ToList();
+                // Compute q values for targets only
+                var pStats = new Statistics(pValueGroups[0]);
+                var qValueGroup = pStats.Qvalues().ToList();
+                var qValueGroups = new[] {qValueGroup};
+                
+                pValueHistograms = new HistogramGroup(pValueGroups);
+                qValueHistograms = new HistogramGroup(qValueGroups);
 
+                // Proportion of expected nulls
+                double piZero = pStats.PiZero();
+                // Density of expected nulls
+                double nullDensity = piZero * targetScores.Count / HISTOGRAM_BAR_COUNT;
+                piZeroLine = new PointPairList {{-0.1, nullDensity}, {1.1, nullDensity}};
+            }
             else
             {
-                for (int i = 0; i < HISTOGRAM_BAR_COUNT; i++)
+                pValueHistograms = qValueHistograms = null;
+                piZeroLine = null;
+            }
+        }
+
+        private class HistogramGroup
+        {
+            public double Min { get; private set; }
+            public double Max { get; private set; }
+            public bool AllUnknownScores { get; private set; }
+            public bool HasUnknownScores { get; private set; }
+            public IList<PointPairList> BinGroups { get; private set; }
+
+            public HistogramGroup(ICollection<List<double>> scoreGroups)
+            {
+                int nGroups = scoreGroups.Count;
+                var histogramList = scoreGroups.Select(scoreGroup => new HistogramData(scoreGroup)).ToList();
+                Min = histogramList.Select(histogram => histogram.Min).Min();
+                Max = histogramList.Select(histogram => histogram.Max).Max();
+                BinGroups = scoreGroups.Select(group => new PointPairList()).ToList();
+                double binWidth = (Max - Min) / HISTOGRAM_BAR_COUNT;
+                AllUnknownScores = histogramList.All(histogram => histogram.Scores.Count == histogram.CountUnknowns);
+                if (AllUnknownScores)
                 {
-                    targetBins.Add(new PointPair(min + i * binWidth + binWidth / 2, 0));
-                    decoyBins.Add(new PointPair(min + i * binWidth + binWidth / 2, 0));
-                    secondBestBins.Add(new PointPair(min + i * binWidth + binWidth / 2, 0));
+                    Min = -1;
+                    Max = 1;
+                    binWidth = 2.0 / HISTOGRAM_BAR_COUNT;
+                }
+                else
+                {
+                    double minTemp = Min;
+                    BinGroups = histogramList.Select(histogram => histogram.ComputeHistogram(minTemp, binWidth, HISTOGRAM_BAR_COUNT)).ToList();
+                }
+                HasUnknownScores = histogramList.Sum(histogram => histogram.CountUnknowns) > 0;
+                if (HasUnknownScores)
+                {
+                    Max += (Max - Min) * 0.2;
+                    for (int i = 0; i < nGroups; ++i)
+                    {
+                        BinGroups[i].Add(new PointPair(Max, histogramList[i].CountUnknowns));
+                    }
+                    Max += binWidth;
+                }
+            }
+        }
+
+        private class HistogramData
+        {
+            public double Min { get; private set; }
+            public double Max { get; private set; }
+            public int CountUnknowns { get; private set; }
+            public IList<double> Scores { get; private set; }
+
+            public HistogramData(IList<double> scores)
+            {
+                Scores = scores;
+                int countUnknowns = 0;
+                double min = float.MaxValue;
+                double max = float.MinValue;
+                foreach (var score in scores)
+                    ProcessScores(score, ref min, ref max, ref countUnknowns);
+                Min = min;
+                Max = max;
+                CountUnknowns = countUnknowns;
+            }
+
+            public PointPairList ComputeHistogram(double min, double binWidth, int barCount)
+            {
+                var listBins = new PointPairList();
+                for (int i = 0; i < barCount; i++)
+                {
+                    listBins.Add(new PointPair(min + i * binWidth + binWidth / 2, 0));
                     if (binWidth.Equals(0))
                     {
                         binWidth = 1; // prevent divide by zero below for a single bin
                         break;
                     }
                 }
-                foreach (var score in targetScores)
+                foreach (var score in Scores)
                 {
                     if (IsUnknown(score))
                         continue;
-                    int bin = Math.Min(targetBins.Count - 1, (int) ((score - min)/binWidth));
-                    targetBins[bin].Y++;
+                    int bin = Math.Max(0, Math.Min(listBins.Count - 1, (int)((score - min) / binWidth)));
+                    listBins[bin].Y++;
                 }
-                foreach (var score in decoyScores)
-                {
-                    if (IsUnknown(score))
-                        continue;
-                    int bin = Math.Min(decoyBins.Count - 1, (int) ((score - min)/binWidth));
-                    decoyBins[bin].Y++;
-                }
-                foreach (var score in secondBestScores)
-                {
-                    if (IsUnknown(score))
-                        continue;
-                    int bin = Math.Min(secondBestBins.Count - 1, (int)((score - min) / binWidth));
-                    secondBestBins[bin].Y++;
-                }
-            }
-
-            hasUnknownScores = (countUnknownTargetScores + countUnknownDecoyScores + countUnknownSecondBestScores > 0);
-            if (hasUnknownScores)
-            {
-                max += (max - min)*0.2;
-                targetBins.Add(new PointPair(max, countUnknownTargetScores));
-                decoyBins.Add(new PointPair(max, countUnknownDecoyScores));
-                secondBestBins.Add(new PointPair(max, countUnknownSecondBestScores));
-                max += binWidth;
+                return listBins;
             }
         }
 

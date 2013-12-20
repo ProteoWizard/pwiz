@@ -30,11 +30,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
     [XmlRoot("legacy_peak_scoring_model")] // Not L10N
     public class LegacyScoringModel : PeakScoringModelSpec
     {
-        public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel__defaultName_Skyline_Legacy;
+        public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel_DEFAULT_NAME_Default;
 
         public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6};
 
         public static LinearModelParams DEFAULT_PARAMS { get { return new LinearModelParams(DEFAULT_WEIGHTS); } }
+
+        public static LegacyScoringModel DEFAULT_MODEL { get; private set; }
+
+        static LegacyScoringModel()
+        {
+            DEFAULT_MODEL =  new LegacyScoringModel(DEFAULT_NAME, DEFAULT_PARAMS);
+        }
 
         // Weighting coefficients.
         private const double W0 = 1.0;  // Log unforced area

@@ -25,7 +25,10 @@ using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -36,11 +39,16 @@ namespace pwiz.Skyline.EditUI
 
         public SrmDocument Document { get; private set; }
 
+        private readonly SettingsListComboDriver<PeakScoringModelSpec> _driverPeakScoringModel;
+
         public ReintegrateDlg(SrmDocument document)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
             Document = document;
+            _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboBoxScoringModel, Settings.Default.PeakScoringModelList);
+            var peakScoringModel = document.Settings.PeptideSettings.Integration.PeakScoringModel;
+            _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -68,7 +76,11 @@ namespace pwiz.Skyline.EditUI
             {
                 try
                 {
-                    var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                    if (_driverPeakScoringModel.SelectedItem == null || !_driverPeakScoringModel.SelectedItem.IsTrained)
+                    {
+                        throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_);
+                    }
+                    var scoringModel = _driverPeakScoringModel.SelectedItem;
                     var resultsHandler = new MProphetResultsHandler(Document, scoringModel);
                     longWaitDlg.PerformWork(this, 1000, pm =>
                         {
@@ -77,7 +89,7 @@ namespace pwiz.Skyline.EditUI
                             {
                                 throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_);
                             }
-                            Document = resultsHandler.ChangePeaks(qCutoff, pm);
+                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, checkBoxAnnotation.Checked, pm);
                         });
                     if (longWaitDlg.IsCanceled)
                         return;
@@ -90,6 +102,12 @@ namespace pwiz.Skyline.EditUI
                     return;
                 }
             }
+            var settings = Document.Settings;
+            var peptideSettings = settings.PeptideSettings;
+            peptideSettings = peptideSettings.ChangeIntegration(new PeptideIntegration(_driverPeakScoringModel.SelectedItem));
+            settings = settings.ChangePeptideSettings(peptideSettings);
+            Document = Document.ChangeSettings(settings);
+
             DialogResult = DialogResult.OK;
         }
 
@@ -101,6 +119,18 @@ namespace pwiz.Skyline.EditUI
             set { textBoxCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool OverwriteManual
+        {
+            get { return checkBoxOverwrite.Checked; }
+            set { checkBoxOverwrite.Checked = value; }
+        }
+
+        public bool AddAnnotation
+        {
+            get { return checkBoxAnnotation.Checked; }
+            set { checkBoxAnnotation.Checked = value; }
+        }
+
         public bool ReintegrateAll
         {
             get { return reintegrateAllPeaks.Checked; }
@@ -108,6 +138,33 @@ namespace pwiz.Skyline.EditUI
             { 
                 reintegrateAllPeaks.Checked = value;
                 reintegrateQCutoff.Checked = !value;
+            }
+        }
+
+        public void AddPeakScoringModel()
+        {
+            _driverPeakScoringModel.AddItem();
+        }
+
+        public void EditPeakScoringModel()
+        {
+            _driverPeakScoringModel.EditList();
+        }
+
+        public string ComboPeakScoringModelSelected
+        {
+            get { return comboBoxScoringModel.SelectedItem.ToString(); }
+            set
+            {
+                foreach (var item in comboBoxScoringModel.Items)
+                {
+                    if (item.ToString() == value)
+                    {
+                        comboBoxScoringModel.SelectedItem = item;
+                        return;
+                    }
+                }
+                throw new InvalidDataException(Resources.EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection);
             }
         }
 
@@ -123,6 +180,16 @@ namespace pwiz.Skyline.EditUI
             textBoxCutoff.Enabled = reintegrateQCutoff.Checked;
         }
 
+        private void comboBoxScoringModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if ((_driverPeakScoringModel.EditCurrentSelected() || _driverPeakScoringModel.AddItemSelected()) &&
+                    Document.Settings.MeasuredResults == null)
+            {
+                MessageDlg.Show(this, Resources.PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_);
+                return;
+            }
+            _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
+        }
 
     }
 }

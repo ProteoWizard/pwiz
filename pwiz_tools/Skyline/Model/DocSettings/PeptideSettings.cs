@@ -113,6 +113,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Modifications = prop);
         }
 
+        public PeptideSettings ChangeIntegration(PeptideIntegration prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Integration = prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable

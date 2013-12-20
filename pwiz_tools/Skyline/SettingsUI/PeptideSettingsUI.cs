@@ -134,6 +134,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);
 
             IsShowLibraryExplorer = false;
+            tabControl1.TabPages.Remove(tabIntegration);
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
