@@ -52,8 +52,7 @@ namespace SkylineTester
             using (var dlg = new FolderBrowserDialog
             {
                 Description = "Select a folder to contain the zip file.",
-                ShowNewFolderButton = true,
-                RootFolder = Environment.SpecialFolder.Personal
+                ShowNewFolderButton = true
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)

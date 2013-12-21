@@ -178,7 +178,7 @@ namespace SkylineTester
             statusLabel.Text = "Waiting to run quality pass at " + QualityStartTime.Text;
             _startTimer = new Timer
             {
-                Interval = (int)(startTime - DateTime.Now).TotalMilliseconds + 5000
+                Interval = (int)(startTime - now).TotalMilliseconds + 5000
             };
             _startTimer.Tick += (o, args) =>
             {
