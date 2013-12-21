@@ -127,6 +127,8 @@ namespace SkylineTester
 
             if (!ToggleRunButtons(tabQuality))
             {
+                statusLabel.Text = null;
+
                 if (_endTimer != null)
                 {
                     _endTimer.Stop();
@@ -148,13 +150,21 @@ namespace SkylineTester
             commandShell.LogFile = null;
             commandShell.ClearLog();
 
-            if (QualityStartNow.Checked)
+            if (QualityRunOne.Checked || QualityRunContinuously.Checked)
             {
                 StartQuality();
                 return;
             }
 
+            RunSchedule();
+        }
+
+        private void RunSchedule()
+        {
+            _scheduleStop = false;
+            commandShell.ClearLog();
             commandShell.AddImmediate(Environment.NewLine + "# Waiting until {0} to start quality pass...", QualityStartTime.Text);
+            statusLabel.Text = "Waiting to run quality pass at " + QualityStartTime.Text;
 
             var startTime = GetDateTime(QualityStartTime.Text);
             if (startTime < DateTime.Now)
@@ -197,6 +207,7 @@ namespace SkylineTester
             {
                 _endTimer.Stop();
                 _endTimer = null;
+                _scheduleStop = true;
                 Invoke(new Action(() => Stop(null, null)));
             };
             _endTimer.Start();
@@ -214,9 +225,10 @@ namespace SkylineTester
             };
             _summary.Runs.Add(_newQualityRun);
             AddRun(_newQualityRun);
+            _scheduleStop = false;
 
             var revisionWorker = new BackgroundWorker();
-            revisionWorker.DoWork += (sender, args) => _revision = GetRevision();
+            revisionWorker.DoWork += (s, a) => _revision = GetRevision();
             revisionWorker.RunWorkerAsync();
 
             var qualityDirectory = Path.Combine(_rootDir, QualityLogsDirectory);
@@ -230,12 +242,13 @@ namespace SkylineTester
             if (QualityBuildFirst.Checked)
                 GenerateBuildCommands();
 
+            var args = "offscreen=on quality=on loop=" + (QualityRunOne.Checked ? 1 : 0);
             StartTestRunner(
-                "offscreen=on quality=on" + (QualityChooseTests.Checked ? GetTestList() : ""),
+                args + (QualityChooseTests.Checked ? GetTestList() : ""),
                 DoneQuality);
 
             _qualityTimer = new Timer {Interval = 1000};
-            _qualityTimer.Tick += (sender, args) => Invoke(new Action(UpdateQuality));
+            _qualityTimer.Tick += (s, a) => Invoke(new Action(UpdateQuality));
             _qualityTimer.Start();
         }
 
@@ -269,6 +282,7 @@ namespace SkylineTester
                 labelTestsRun.Text = "";
                 labelFailures.Text = "";
                 labelLeaks.Text = "";
+                graphMemory.Refresh();
                 return;
             }
 
@@ -348,7 +362,19 @@ namespace SkylineTester
             _summary.Save();
             _newQualityRun = null;
 
+            _reportDone = QualityRestart;
             TestRunnerDone(success);
+        }
+
+        private bool _scheduleStop;
+
+        private void QualityRestart(bool success)
+        {
+            commandShell.UpdateLog();
+            ReportDone(success);
+
+            if (_scheduleStop)
+                RunQuality(null, null);
         }
 
         private void UpdateRun()

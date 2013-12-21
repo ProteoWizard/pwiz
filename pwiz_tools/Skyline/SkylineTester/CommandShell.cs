@@ -67,7 +67,7 @@ namespace SkylineTester
         public void AddImmediate(string command, params object[] args)
         {
             Log(string.Format(command, args) + Environment.NewLine);
-            UpdateLog(null, null);
+            UpdateLog();
         }
 
         public void ClearLog()
@@ -120,7 +120,7 @@ namespace SkylineTester
 
                 // Execute a command.
                 Log("> " + line);
-                UpdateLog(null, null);
+                UpdateLog();
 
                 // Break apart arguments on space boundaries, but allow
                 // quoted arguments to contain spaces.
@@ -220,7 +220,7 @@ namespace SkylineTester
         {
             if (!success)
                 Log("# Stopped." + Environment.NewLine + Environment.NewLine);
-            Invoke(new Action(() => UpdateLog(null, null)));
+            Invoke(new Action(UpdateLog));
             _commands.Clear();
             _doneAction(success);
         }
@@ -367,6 +367,11 @@ namespace SkylineTester
             }
         }
 
+        public void UpdateLog()
+        {
+            UpdateLog(null, null);
+        }
+
         /// <summary>
         /// Append buffered output to displayed log (and possibly to a log file).
         /// </summary>
@@ -430,7 +435,7 @@ namespace SkylineTester
 
             // Show final log output.
             _logWasScrolled = false;
-            UpdateLog(null, null);
+            UpdateLog();
         }
 
         /// <summary>

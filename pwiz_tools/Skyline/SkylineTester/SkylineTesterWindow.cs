@@ -327,13 +327,15 @@ namespace SkylineTester
             commandShell.Run(doneAction ?? TestRunnerDone);
         }
 
+        private Action<bool> _reportDone;
+
         private void TestRunnerDone(bool success)
         {
             _runningTestRunner = false;
             statusLabel.Text = "";
             var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");
             commandShell.Add("{0} report={1}", Quote(testRunner), Quote(commandShell.LogFile));
-            commandShell.Run(ReportDone, false);
+            commandShell.Run(_reportDone ?? ReportDone, false);
         }
 
         private void ReportDone(bool success)
@@ -500,8 +502,8 @@ namespace SkylineTester
                 StartSln,
 
                 // Quality
-                QualityStartNow,
-                QualityStartLater,
+                QualityRunOne,
+                QualityRunAt,
                 QualityStartTime,
                 QualityEndTime,
                 QualityBuildFirst,

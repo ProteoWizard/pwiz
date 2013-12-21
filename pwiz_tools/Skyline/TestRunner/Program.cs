@@ -280,7 +280,7 @@ namespace TestRunner
                     for (int i = 0; i < qualityPasses; i++)
                     {
                         runTests.Culture = new CultureInfo(qualityCultures[i % qualityCultures.Length]);
-                        if (!runTests.Run(test, 2+i, testNumber))
+                        if (!runTests.Run(test, 1, testNumber))
                         {
                             failed = true;
                             break;
@@ -304,7 +304,7 @@ namespace TestRunner
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
 
-                pass += 1 + qualityPasses;
+                pass++;
             }
 
             runTests.CheckCrtLeaks = 0;
