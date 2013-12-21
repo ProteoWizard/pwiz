@@ -88,14 +88,14 @@ namespace pwiz.Skyline.Controls.Databinding
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataboundGridForm));
-            this.SuspendLayout();
+            SuspendLayout();
             // 
             // DataboundGridForm
             // 
             resources.ApplyResources(this, "$this");
-            this.Name = "DataboundGridForm";
-            this.ShowInTaskbar = false;
-            this.ResumeLayout(false);
+            Name = "DataboundGridForm";
+            ShowInTaskbar = false;
+            ResumeLayout(false);
 
         }
     }

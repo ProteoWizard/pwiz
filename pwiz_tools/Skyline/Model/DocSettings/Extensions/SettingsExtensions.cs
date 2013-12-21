@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.DocSettings.Extensions

@@ -151,50 +151,42 @@ namespace SkylineTester
             commandShell.ClearLog();
 
             if (QualityRunOne.Checked || QualityRunContinuously.Checked)
-            {
                 StartQuality();
-                return;
-            }
-
-            RunSchedule();
+            else
+                RunSchedule();
         }
 
         private void RunSchedule()
         {
             _scheduleStop = false;
             commandShell.ClearLog();
+
+            var startTime = DateTime.Parse(QualityStartTime.Text);
+            var endTime = DateTime.Parse(QualityEndTime.Text);
+            if (endTime < startTime)
+                endTime = endTime.AddDays(1);
+            ScheduleEnd(endTime);
+
+            var now = DateTime.Now;
+            if (startTime <= now && now < endTime)
+            {
+                StartQuality();
+                return;
+            }
+
             commandShell.AddImmediate(Environment.NewLine + "# Waiting until {0} to start quality pass...", QualityStartTime.Text);
             statusLabel.Text = "Waiting to run quality pass at " + QualityStartTime.Text;
-
-            var startTime = GetDateTime(QualityStartTime.Text);
-            if (startTime < DateTime.Now)
-                startTime = startTime.AddDays(1);
-            var endTime = GetDateTime(QualityEndTime.Text);
-            while (endTime < startTime)
-                endTime = endTime.AddDays(1);
             _startTimer = new Timer
             {
-                Interval = (int)(startTime - DateTime.Now).TotalMilliseconds
+                Interval = (int)(startTime - DateTime.Now).TotalMilliseconds + 5000
             };
             _startTimer.Tick += (o, args) =>
             {
                 _startTimer.Stop();
                 _startTimer = null;
                 StartQuality();
-                ScheduleEnd(endTime);
             };
             _startTimer.Start();
-        }
-
-        private DateTime GetDateTime(string time)
-        {
-            var timeParts = time.Split(':');
-            var hour = int.Parse(timeParts[0]);
-            if (timeParts[1].ToLower().Contains("pm"))
-                hour += 12;
-            var minute = int.Parse(timeParts[1].Split(' ')[0]);
-            var now = DateTime.Now;
-            return new DateTime(now.Year, now.Month, now.Day, hour, minute, 0);
         }
 
         private void ScheduleEnd(DateTime endTime)
