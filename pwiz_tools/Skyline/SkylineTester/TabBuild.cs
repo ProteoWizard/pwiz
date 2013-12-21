@@ -25,6 +25,15 @@ namespace SkylineTester
 {
     public partial class SkylineTesterWindow
     {
+        private void OpenBuild()
+        {
+            var testRunner32 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe");
+            var testRunner64 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe");
+
+            buttonDeleteBuild32.Enabled = File.Exists(testRunner32);
+            buttonDeleteBuild64.Enabled = File.Exists(testRunner64);
+        }
+
         private bool HasBuildPrerequisites
         {
             get
@@ -122,6 +131,21 @@ namespace SkylineTester
         private string Quote(string s)
         {
             return "\"" + s + "\"";
+        }
+
+
+        private void buttonDeleteBuild32_Click(object sender, EventArgs e)
+        {
+            var testRunner32 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe");
+            File.Delete(testRunner32);
+            buttonDeleteBuild32.Enabled = false;
+        }
+
+        private void buttonDeleteBuild64_Click(object sender, EventArgs e)
+        {
+            var testRunner64 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe");
+            File.Delete(testRunner64);
+            buttonDeleteBuild64.Enabled = false;
         }
     }
 }

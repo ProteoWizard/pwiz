@@ -93,6 +93,8 @@ namespace SkylineTester
             this.BuildTrunk = new System.Windows.Forms.RadioButton();
             this.BranchUrl = new System.Windows.Forms.TextBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.buttonDeleteBuild64 = new System.Windows.Forms.Button();
+            this.buttonDeleteBuild32 = new System.Windows.Forms.Button();
             this.Build64 = new System.Windows.Forms.RadioButton();
             this.Build32 = new System.Windows.Forms.RadioButton();
             this.tabQuality = new System.Windows.Forms.TabPage();
@@ -121,6 +123,7 @@ namespace SkylineTester
             this.QualityChooseTests = new System.Windows.Forms.RadioButton();
             this.runQuality = new System.Windows.Forms.Button();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.QualityRunContinuously = new System.Windows.Forms.RadioButton();
             this.QualityEndTime = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -152,7 +155,6 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.QualityRunContinuously = new System.Windows.Forms.RadioButton();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.Tabs.SuspendLayout();
@@ -801,7 +803,7 @@ namespace SkylineTester
             // 
             this.groupBox10.Controls.Add(this.BuildClean);
             this.groupBox10.Controls.Add(this.StartSln);
-            this.groupBox10.Location = new System.Drawing.Point(7, 170);
+            this.groupBox10.Location = new System.Drawing.Point(7, 185);
             this.groupBox10.Name = "groupBox10";
             this.groupBox10.Size = new System.Drawing.Size(442, 64);
             this.groupBox10.TabIndex = 24;
@@ -824,8 +826,6 @@ namespace SkylineTester
             // StartSln
             // 
             this.StartSln.AutoSize = true;
-            this.StartSln.Checked = true;
-            this.StartSln.CheckState = System.Windows.Forms.CheckState.Checked;
             this.StartSln.Location = new System.Drawing.Point(7, 40);
             this.StartSln.Margin = new System.Windows.Forms.Padding(2);
             this.StartSln.Name = "StartSln";
@@ -850,7 +850,7 @@ namespace SkylineTester
             this.groupBox6.Controls.Add(this.BuildBranch);
             this.groupBox6.Controls.Add(this.BuildTrunk);
             this.groupBox6.Controls.Add(this.BranchUrl);
-            this.groupBox6.Location = new System.Drawing.Point(7, 74);
+            this.groupBox6.Location = new System.Drawing.Point(7, 89);
             this.groupBox6.Name = "groupBox6";
             this.groupBox6.Size = new System.Drawing.Size(442, 90);
             this.groupBox6.TabIndex = 21;
@@ -892,20 +892,44 @@ namespace SkylineTester
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add(this.buttonDeleteBuild64);
+            this.groupBox5.Controls.Add(this.buttonDeleteBuild32);
             this.groupBox5.Controls.Add(this.Build64);
             this.groupBox5.Controls.Add(this.Build32);
             this.groupBox5.Location = new System.Drawing.Point(7, 6);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(442, 62);
+            this.groupBox5.Size = new System.Drawing.Size(442, 77);
             this.groupBox5.TabIndex = 20;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Architecture";
+            // 
+            // buttonDeleteBuild64
+            // 
+            this.buttonDeleteBuild64.Enabled = false;
+            this.buttonDeleteBuild64.Location = new System.Drawing.Point(78, 43);
+            this.buttonDeleteBuild64.Name = "buttonDeleteBuild64";
+            this.buttonDeleteBuild64.Size = new System.Drawing.Size(102, 23);
+            this.buttonDeleteBuild64.TabIndex = 27;
+            this.buttonDeleteBuild64.Text = "Delete build";
+            this.buttonDeleteBuild64.UseVisualStyleBackColor = true;
+            this.buttonDeleteBuild64.Click += new System.EventHandler(this.buttonDeleteBuild64_Click);
+            // 
+            // buttonDeleteBuild32
+            // 
+            this.buttonDeleteBuild32.Enabled = false;
+            this.buttonDeleteBuild32.Location = new System.Drawing.Point(78, 14);
+            this.buttonDeleteBuild32.Name = "buttonDeleteBuild32";
+            this.buttonDeleteBuild32.Size = new System.Drawing.Size(102, 23);
+            this.buttonDeleteBuild32.TabIndex = 26;
+            this.buttonDeleteBuild32.Text = "Delete build";
+            this.buttonDeleteBuild32.UseVisualStyleBackColor = true;
+            this.buttonDeleteBuild32.Click += new System.EventHandler(this.buttonDeleteBuild32_Click);
             // 
             // Build64
             // 
             this.Build64.AutoSize = true;
             this.Build64.Checked = true;
-            this.Build64.Location = new System.Drawing.Point(7, 37);
+            this.Build64.Location = new System.Drawing.Point(7, 46);
             this.Build64.Margin = new System.Windows.Forms.Padding(2);
             this.Build64.Name = "Build64";
             this.Build64.Size = new System.Drawing.Size(51, 17);
@@ -1274,6 +1298,16 @@ namespace SkylineTester
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Run options";
             // 
+            // QualityRunContinuously
+            // 
+            this.QualityRunContinuously.AutoSize = true;
+            this.QualityRunContinuously.Location = new System.Drawing.Point(6, 40);
+            this.QualityRunContinuously.Name = "QualityRunContinuously";
+            this.QualityRunContinuously.Size = new System.Drawing.Size(107, 17);
+            this.QualityRunContinuously.TabIndex = 6;
+            this.QualityRunContinuously.Text = "Run continuously";
+            this.QualityRunContinuously.UseVisualStyleBackColor = true;
+            // 
             // QualityEndTime
             // 
             this.QualityEndTime.Location = new System.Drawing.Point(76, 109);
@@ -1320,6 +1354,7 @@ namespace SkylineTester
             this.QualityRunOne.Name = "QualityRunOne";
             this.QualityRunOne.Size = new System.Drawing.Size(91, 17);
             this.QualityRunOne.TabIndex = 1;
+            this.QualityRunOne.TabStop = true;
             this.QualityRunOne.Text = "Run one pass";
             this.QualityRunOne.UseVisualStyleBackColor = true;
             // 
@@ -1360,10 +1395,10 @@ namespace SkylineTester
             this.QualityCurrentBuild.Checked = true;
             this.QualityCurrentBuild.Location = new System.Drawing.Point(6, 19);
             this.QualityCurrentBuild.Name = "QualityCurrentBuild";
-            this.QualityCurrentBuild.Size = new System.Drawing.Size(105, 17);
+            this.QualityCurrentBuild.Size = new System.Drawing.Size(127, 17);
             this.QualityCurrentBuild.TabIndex = 0;
             this.QualityCurrentBuild.TabStop = true;
-            this.QualityCurrentBuild.Text = "Use current build";
+            this.QualityCurrentBuild.Text = "Use most recent build";
             this.QualityCurrentBuild.UseVisualStyleBackColor = true;
             // 
             // tabOutput
@@ -1577,16 +1612,6 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // QualityRunContinuously
-            // 
-            this.QualityRunContinuously.AutoSize = true;
-            this.QualityRunContinuously.Location = new System.Drawing.Point(6, 40);
-            this.QualityRunContinuously.Name = "QualityRunContinuously";
-            this.QualityRunContinuously.Size = new System.Drawing.Size(107, 17);
-            this.QualityRunContinuously.TabIndex = 6;
-            this.QualityRunContinuously.Text = "Run continuously";
-            this.QualityRunContinuously.UseVisualStyleBackColor = true;
-            // 
             // SkylineTesterWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1780,6 +1805,8 @@ namespace SkylineTester
         private ZedGraphControl graphDuration;
         private ZedGraphControl graphTestsRun;
         private System.Windows.Forms.RadioButton QualityRunContinuously;
+        private System.Windows.Forms.Button buttonDeleteBuild64;
+        private System.Windows.Forms.Button buttonDeleteBuild32;
 
     }
 }

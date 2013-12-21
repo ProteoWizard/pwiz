@@ -259,45 +259,78 @@ namespace TestRunner
             if (qualityMode)
             {
                 int testNumber = 0;
-                int qualityPasses = Math.Max(LeakCheckIterations, qualityCultures.Length);
+
+                // Pass zero tests French number format with no vendor readers.
+                runTests.Log("# Test pass 0 runs French number format with vendor readers disabled.\r\n");
+
+                runTests.Culture = new CultureInfo("fr");
+                runTests.CheckCrtLeaks = CrtLeakThreshold;
+                runTests.Skyline.Set("NoVendorReaders", true);
                 foreach (var test in testList)
                 {
                     testNumber++;
 
-                    // Run first in French number format, checking for CRT leaks
-                    runTests.Culture = new CultureInfo("fr");
+                    if (!runTests.Run(test, 0, testNumber))
+                        removeList.Add(test);
+                }
+                runTests.CheckCrtLeaks = 0;
+                runTests.Skyline.Set("NoVendorReaders", false);
+
+                // Pass 1 looks for cumulative leaks when test is run multiple times.
+                int qualityPasses = Math.Max(LeakCheckIterations, qualityCultures.Length);
+                testNumber = 0;
+                foreach (var test in testList)
+                {
+                    testNumber++;
+
+                    runTests.Culture = new CultureInfo("en");
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
                     if (!runTests.Run(test, 1, testNumber))
                     {
                         removeList.Add(test);
                         continue;
                     }
+                    runTests.CheckCrtLeaks = 0;
 
                     // Check for memory leak by noting memory size increase over multiple runs.
-                    runTests.CheckCrtLeaks = 0;
-                    long memorySize = runTests.TotalMemoryBytes;
-                    bool failed = false;
-                    for (int i = 0; i < qualityPasses; i++)
+                    // Check leaks up to 3 times to make sure the test is actually leaking, because
+                    // memory reporting is pretty squishy.
+                    long leakSize = 0;
+                    for (int leakCheck = 0; leakCheck < 3; leakCheck++)
                     {
-                        runTests.Culture = new CultureInfo(qualityCultures[i % qualityCultures.Length]);
-                        if (!runTests.Run(test, 1, testNumber))
+                        long memorySize = runTests.TotalMemoryBytes;
+                        bool failed = false;
+                        for (int i = 1; i <= qualityPasses; i++)
                         {
-                            failed = true;
+                            runTests.Culture = new CultureInfo(qualityCultures[i%qualityCultures.Length]);
+                            if (!runTests.Run(test, 1, testNumber))
+                            {
+                                failed = true;
+                                break;
+                            }
+                        }
+                        if (failed)
+                        {
+                            removeList.Add(test);
                             break;
                         }
-                    }
-                    if (failed)
-                    {
-                        removeList.Add(test);
-                        continue;
+
+                        long leakedPerPass = (runTests.TotalMemoryBytes - memorySize)/qualityPasses;
+                        if (leakedPerPass < LeakThreshold)
+                        {
+                            leakSize = 0;
+                            break;
+                        }
+                        if (leakSize == 0)
+                            leakSize = leakedPerPass;
+                        if (leakSize > leakedPerPass)
+                            leakSize = leakedPerPass;
                     }
 
-                    long leakedPerPass = (runTests.TotalMemoryBytes - memorySize) / qualityPasses;
-                    if (leakedPerPass > LeakThreshold)
+                    if (leakSize > LeakThreshold)
                     {
-                        runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, leakedPerPass);
+                        runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, leakSize);
                         removeList.Add(test);
-                        //continue;
                     }
                 }
 
@@ -314,7 +347,7 @@ namespace TestRunner
             {
                 // Run each test in this test pass.
                 int testNumber = 0;
-                var testPass = randomOrder ? testList.RandomOrder() : testList;
+                var testPass = randomOrder || qualityMode ? testList.RandomOrder() : testList;
                 foreach (var test in testPass)
                 {
                     testNumber++;

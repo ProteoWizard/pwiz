@@ -306,8 +306,13 @@ namespace SkylineTester
             {
                 if (!File.Exists(file))
                     continue;
-                if (mostRecent != null && File.GetCreationTime(file) < File.GetCreationTime(mostRecent))
-                    continue;
+                if (mostRecent != null)
+                {
+                    var fileDate = File.GetLastWriteTime(file);
+                    var otherDate = File.GetLastWriteTime(mostRecent);
+                    if (fileDate < otherDate)
+                        continue;
+                }
                 mostRecent = file;
             }
             return mostRecent;
@@ -577,6 +582,8 @@ namespace SkylineTester
                 OpenTutorials();
             else if (Tabs.SelectedTab == tabTests)
                 OpenTests();
+            else if (Tabs.SelectedTab == tabBuild)
+                OpenBuild();
             else if (Tabs.SelectedTab == tabQuality)
                 OpenQuality();
             else if (Tabs.SelectedTab == tabOutput)
