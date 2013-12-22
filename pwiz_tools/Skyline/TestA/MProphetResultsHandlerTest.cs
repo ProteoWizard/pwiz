@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestA
             // TODO: Grab this data from the mProphet paper
 
             // Release open streams
-            docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docContainer.Document, false);
+            docContainer.Release();
         }
 
 

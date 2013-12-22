@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -141,6 +142,12 @@ namespace pwiz.SkylineTestUtil
             Assert.IsTrue(SetDocument(docLibraries, doc, libSpecs.Count > 0));
             AssertComplete();
             return Document;
+        }
+
+        public void Release()
+        {
+            var docEmpty = new SrmDocument(SrmSettingsList.GetDefault());
+            Assert.IsTrue(SetDocument(docEmpty, Document));            
         }
     }
 

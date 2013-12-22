@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestA
             }
 
             // Release open streams
-            docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docLibraryChanged, false);
+            docContainer.Release();
         }
     }
 }

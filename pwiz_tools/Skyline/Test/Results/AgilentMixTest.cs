@@ -70,8 +70,7 @@ namespace pwiz.SkylineTest.Results
                 doc.PeptideCount, doc.TransitionGroupCount, 0, doc.TransitionCount, 0);
 
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(doc, docResults));
-
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 

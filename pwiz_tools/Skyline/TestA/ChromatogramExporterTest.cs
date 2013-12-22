@@ -99,8 +99,7 @@ namespace pwiz.SkylineTestA
             AssertEx.FileEquals(fileExpectedAll, fileActualAll);
 
             // Close the .skyd file
-            var docEmpty = new SrmDocument(SrmSettingsList.GetDefault());
-            Assert.IsTrue(docContainer.SetDocument(docEmpty, docContainer.Document));
+            docContainer.Release();
         }
 
         private static string GetActualName(string fileExpected)

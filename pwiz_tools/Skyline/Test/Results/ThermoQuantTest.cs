@@ -85,7 +85,7 @@ namespace pwiz.SkylineTest.Results
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
                                         2, 0);
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));                
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 
@@ -286,7 +286,7 @@ namespace pwiz.SkylineTest.Results
             Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
 
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 

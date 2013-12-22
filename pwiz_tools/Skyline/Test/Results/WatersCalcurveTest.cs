@@ -266,9 +266,8 @@ namespace pwiz.SkylineTest.Results
                 AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(path));
             }
 
-            // Going back to the orignal document should allow the removal of the .skyd files
-            Assert.IsTrue(docContainer.SetDocument(docOriginal, docContainer.Document));
-
+            // Release the .skyd file
+            docContainer.Release();
             foreach (var cachePath in listCachePaths)
             {
                 // Cache files should be closed now, and delete successfully.
@@ -356,7 +355,7 @@ namespace pwiz.SkylineTest.Results
             }
 
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 
@@ -375,7 +374,7 @@ namespace pwiz.SkylineTest.Results
                                             testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML"),
                                             -1, 0);
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 
@@ -558,7 +557,7 @@ namespace pwiz.SkylineTest.Results
                 Assert.IsFalse(File.Exists(testFilesDir.GetTestPath(cacheName)));
 
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 

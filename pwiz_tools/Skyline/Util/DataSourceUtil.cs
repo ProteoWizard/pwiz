@@ -137,7 +137,8 @@ namespace pwiz.Skyline.Util
                 DtdProcessing = DtdProcessing.Prohibit,
                 XmlResolver = null
             };
-            using (XmlReader reader = XmlReader.Create(new StreamReader(filepath, true), settings))
+            using (var stream = new StreamReader(filepath, true))
+            using (var reader = XmlReader.Create(stream, settings))
             {
                 try
                 {

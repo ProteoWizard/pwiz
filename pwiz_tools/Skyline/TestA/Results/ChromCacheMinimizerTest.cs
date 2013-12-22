@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(1.0, statsMissingFirstProteinKeepAll.MinimizedRatio);
             Assert.AreEqual(100, statsWithOnlyFirstProteinKeepAll.PercentComplete);
             Assert.AreEqual(1.0, statsWithOnlyFirstProteinKeepAll.MinimizedRatio);
-            CloseDocumentContainer(docContainer);
+            docContainer.Release();
         }
 
         /// <summary>
@@ -189,9 +189,9 @@ namespace pwiz.SkylineTestA.Results
                     CollectionAssert.AreEqual(times, timesSorted);
                 }
             }
-            CloseDocumentContainer(docContainer);
-            CloseDocumentContainer(docContainerMinimized1Min);
-            CloseDocumentContainer(docContainerMinimized2Min);
+            docContainer.Release();
+            docContainerMinimized1Min.Release();
+            docContainerMinimized2Min.Release();
         }
 
         private static ResultsTestDocumentContainer MinimizeCacheFile(SrmDocument document,
@@ -217,11 +217,6 @@ namespace pwiz.SkylineTestA.Results
             var container = new ResultsTestDocumentContainer(document, skyFilePath, false);
             Assert.IsTrue(container.SetDocument(ResultsUtil.DeserializeDocument(skyFilePath), document, true));
             return container;
-        }
-
-        private static void CloseDocumentContainer(IDocumentContainer container)
-        {
-            Assert.IsTrue(container.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), container.Document));
         }
     }
 }

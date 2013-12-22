@@ -263,7 +263,7 @@ namespace pwiz.SkylineTestA
             // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
 
             // Release open streams
-            docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docResults, false);
+            docContainer.Release();
 
             // Now check a file that has peptide ID's, and see that they're properly ported
             var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestA
                 _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
 
             // Release open streams
-            docContainerId.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), docResultsId, false);
+            docContainerId.Release();
         }
 
         private ReportSpec MakeReportSpec()

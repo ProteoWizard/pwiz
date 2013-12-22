@@ -64,7 +64,10 @@ namespace pwiz.SkylineTestUtil
             set { TestFilesZipPaths = new[] {value}; }
         }
 
-        // optional list of files to be retained from run to run (useful for really large data files which are expensive to extract and keep as local copies)
+        /// <summary>
+        /// Optional list of files to be retained from run to run. Useful for really
+        /// large data files which are expensive to extract and keep as local copies.
+        /// </summary>
         public string[] TestFilesPersistent { get; set; }
 
         public string[] TestFilesZipPaths

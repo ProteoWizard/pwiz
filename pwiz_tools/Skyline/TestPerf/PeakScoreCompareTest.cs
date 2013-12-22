@@ -579,7 +579,7 @@ namespace TestPerf
             docContainer.AssertComplete();
             var document = docContainer.Document;
             // Release open streams
-            docContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), document, false);
+            docContainer.Release();
             return document;
         }
 

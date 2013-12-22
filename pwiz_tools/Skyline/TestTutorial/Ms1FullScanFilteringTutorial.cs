@@ -31,6 +31,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -225,7 +226,7 @@ namespace pwiz.SkylineTestTutorial
                         SkylineWindow.Height = 792;
                     }
                 });
-            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p13.view"), FileMode.Open)));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p13.view"));
             PauseForScreenShot("page 13 - imported data");   // p. 12
 
             doc = SkylineWindow.Document;
@@ -241,7 +242,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChange(doc);
             PauseForScreenShot("page 14 - peak are view");   // p. 14
 
-            RunUI(() => SkylineWindow.LoadLayout(new FileStream(TestFilesDirs[1].GetTestPath(@"p15.view"), FileMode.Open)));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p15.view"));
             RunUI(() =>
             {
                 SkylineWindow.AutoZoomBestPeak();
@@ -356,8 +357,11 @@ namespace pwiz.SkylineTestTutorial
             // Eliminate extraneous chromatogram data.
             doc = SkylineWindow.Document;
             var minimizedFile = GetTestPath("Ms1FilteringTutorial-2min.sky"); // Not L10N
-            var cacheFile = minimizedFile + "d"; // Not L10N
+            var cacheFile = Path.ChangeExtension(minimizedFile, ChromatogramCache.EXT);
             {
+                // TODO: Figure out why the minimize fails to unlock the .skyd file, if not minimized to current file
+                RunUI(() => SkylineWindow.SaveDocument(minimizedFile));
+
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                 var minimizeResultsDlg = ShowDialog<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults);
                 RunUI(() =>

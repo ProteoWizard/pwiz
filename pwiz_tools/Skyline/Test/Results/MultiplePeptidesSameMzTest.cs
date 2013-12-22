@@ -77,7 +77,7 @@ namespace pwiz.SkylineTest.Results
             }
             Assert.AreEqual(3, nPeptides); // without the fix this will give just one result
             // Release file handles
-            Assert.IsTrue(docContainer.SetDocument(document, docContainer.Document));
+            docContainer.Release();
             testFilesDir.Dispose();
         }
 
