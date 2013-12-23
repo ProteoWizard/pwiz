@@ -2409,6 +2409,16 @@ namespace pwiz.Skyline
             }
         }
 
+        private void toolStoreMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowToolStoreDlg();
+        }
+
+        public void ShowToolStoreDlg()
+        {
+            ToolInstallUI.InstallZipFromWeb(this, InstallProgram);
+        }
+
         private void configureToolsMenuItem_Click(object sender, EventArgs e)
         {
             ShowConfigureToolsDlg();
@@ -2429,8 +2439,8 @@ namespace pwiz.Skyline
 
         public void PopulateToolsMenu()
         {
-            // Remove all items from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], updatesToolsMenuItem) && !(ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem)))
+            // Remove all tools from the toolToolStripMenuItem.
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], updatesToolsMenuItem))
             {
                 toolsMenu.DropDownItems.RemoveAt(0);
                 //Consider: (danny) When we remove menu items do we have to dispose of them?

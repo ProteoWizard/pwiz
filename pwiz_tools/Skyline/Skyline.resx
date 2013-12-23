@@ -2511,6 +2511,12 @@
   <data name="updatesToolsMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="toolStoreMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>178, 22</value>
+  </data>
+  <data name="toolStoreMenuItem.Text" xml:space="preserve">
+    <value>&amp;Tool Store...</value>
+  </data>
   <data name="configureToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 22</value>
   </data>
@@ -4702,6 +4708,12 @@
     <value>updatesToolsMenuItem</value>
   </data>
   <data name="&gt;&gt;updatesToolsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStoreMenuItem.Name" xml:space="preserve">
+    <value>toolStoreMenuItem</value>
+  </data>
+  <data name="&gt;&gt;toolStoreMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;configureToolsMenuItem.Name" xml:space="preserve">

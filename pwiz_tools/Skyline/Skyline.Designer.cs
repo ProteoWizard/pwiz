@@ -391,6 +391,7 @@ namespace pwiz.Skyline
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updatesToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStoreMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
             this.immediateWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2943,6 +2944,7 @@ namespace pwiz.Skyline
             this.toolsMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.placeholderToolsMenuItem,
             this.updatesToolsMenuItem,
+            this.toolStoreMenuItem,
             this.configureToolsMenuItem,
             this.toolStripSeparator46,
             this.immediateWindowToolStripMenuItem,
@@ -2962,6 +2964,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.updatesToolsMenuItem, "updatesToolsMenuItem");
             this.updatesToolsMenuItem.Name = "updatesToolsMenuItem";
             this.updatesToolsMenuItem.Click += new System.EventHandler(this.updatesToolsMenuItem_Click);
+            // 
+            // toolStoreMenuItem
+            // 
+            this.toolStoreMenuItem.Name = "toolStoreMenuItem";
+            resources.ApplyResources(this.toolStoreMenuItem, "toolStoreMenuItem");
+            this.toolStoreMenuItem.Click += new System.EventHandler(this.toolStoreMenuItem_Click);
             // 
             // configureToolsMenuItem
             // 
@@ -3448,6 +3456,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem normStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem qcStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem irtStandardMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStoreMenuItem;
     }
 }
 
