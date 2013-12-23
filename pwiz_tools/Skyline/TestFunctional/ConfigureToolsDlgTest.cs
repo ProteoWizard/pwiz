@@ -220,6 +220,19 @@ namespace pwiz.SkylineTestFunctional
             string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank" //Not L10N
                 .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
+            // Make sure the running EXE does not cause test to fail, because it is locked.
+            WaitForCondition(() =>
+            {
+                try
+                {
+                    File.Delete(exePath);
+                    return !File.Exists(exePath);
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            });
             RunUI(() => SkylineWindow.ImmediateWindow.Clear());            
         }
 

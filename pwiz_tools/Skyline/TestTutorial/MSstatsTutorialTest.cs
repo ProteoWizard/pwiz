@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
             if (IsPauseForScreenShots)
             {
                 var rInstaller =
-                    ShowDialog<RInstaller>(() => configureToolsDlg.UnpackZipTool(GetTestPath(installZipName))); // Not L10
+                    ShowDialog<RInstaller>(() => configureToolsDlg.InstallZipTool(GetTestPath(installZipName))); // Not L10
 
                 PauseForScreenShot("p. 3 - r Installer"); // Not L10
 
@@ -91,9 +91,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // bypass the R installer dialogue
-                configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
+                configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
-                configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
+                configureToolsDlg.InstallZipTool(GetTestPath(installZipName));
                 AssertToolEquality(MSSTATS_QC, configureToolsDlg.ToolList[0]);
                 AssertToolEquality(MSSTATS_GC, configureToolsDlg.ToolList[1]);
                 AssertToolEquality(MSSTATS_DSS, configureToolsDlg.ToolList[2]);

@@ -22,11 +22,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Kajabity.Tools.Java;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -210,20 +215,20 @@ namespace pwiz.Skyline.Model.Tools
         #endregion //Accessors
     }
     /// <summary>
-    /// shouldOverwrite - Function that when given a list of tools and a list of reports that would be removed by an installation
+    /// ShouldOverwrite - Function that when given a list of tools and a list of reports that would be removed by an installation
     ///  it returns a bool, true for overwrite, false for in parallel and null for cancel installation.
-    /// installProgram - Function that finds a program path given a program path container.
+    /// InstallProgram - Function that finds a program path given a program path container.
     /// </summary>
     public interface IUnpackZipToolSupport
     {
-        bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations);
-        bool? shouldOverwrite(string toolCollectionName,
+        bool? ShouldOverwriteAnnotations(List<AnnotationDef> annotations);
+        bool? ShouldOverwrite(string toolCollectionName,
                               string toolCollectionVersion,
                               List<ReportSpec> reportList,
                               string foundVersion,
                               string newCollectionName);
 
-        string installProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript);
+        string InstallProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript);
     }
     
     public static class ToolInstaller
@@ -303,7 +308,7 @@ namespace pwiz.Skyline.Model.Tools
                 // Handle info.properties
                 var toolInfo = GetToolInfo(toolInfDir, retval);
 
-                if (!HandleAnnotations(unpackSupport.shouldOverwriteAnnotations, toolInfDir))
+                if (!HandleAnnotations(unpackSupport.ShouldOverwriteAnnotations, toolInfDir))
                     return null;
 
                 HandleLegacyQuaSAR(toolInfo);
@@ -313,7 +318,7 @@ namespace pwiz.Skyline.Model.Tools
                 List<ReportSpec> newReports;
                 var existingReports = FindReportConflicts(toolInfDir, tempToolPath, out newReports);
 
-                bool? overwrite = IsOverwrite(unpackSupport.shouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
+                bool? overwrite = IsOverwrite(unpackSupport.ShouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
                 if (!overwrite.HasValue)
                 {
                     // User canceled installation.
@@ -383,7 +388,7 @@ namespace pwiz.Skyline.Model.Tools
                             }
                         }
 
-                        string path = unpackSupport.installProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
+                        string path = unpackSupport.InstallProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
                         if (path == null)
                         {
                             // Cancel installation
@@ -677,7 +682,13 @@ namespace pwiz.Skyline.Model.Tools
             return existingReports;
         }
 
-        private static bool? IsOverwrite(Func<string, string, List<ReportSpec>, string, string, bool?> shouldOverwrite,
+        private delegate bool? ShouldOverwrite(string toolCollectionName,
+                              string toolCollectionVersion,
+                              List<ReportSpec> reportList,
+                              string foundVersion,
+                              string newCollectionName);
+
+        private static bool? IsOverwrite(ShouldOverwrite shouldOverwrite,
                                         List<ToolDescription> toolsToBeOverwritten,
                                         List<ReportSpec> existingReports,
                                         ToolInfo toolInfo)

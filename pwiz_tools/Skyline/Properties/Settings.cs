@@ -824,8 +824,7 @@ namespace pwiz.Skyline.Properties
         public override ToolDescription CopyItem(ToolDescription item)
         {   throw new InvalidOperationException(); }
 
-
-        public ToolList CopyTools(IEnumerable<ToolDescription> list)
+        public static ToolList CopyTools(IEnumerable<ToolDescription> list)
         {
             var listCopy = new ToolList();
             listCopy.AddRange(from t in list

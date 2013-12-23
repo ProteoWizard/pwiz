@@ -91,18 +91,18 @@ namespace pwiz.SkylineTestFunctional
 
         private class UnpackZipToolTestSupport: IUnpackZipToolSupport
         {
-            public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
+            public bool? ShouldOverwriteAnnotations(List<AnnotationDef> annotations)
             {
                 return false;
             }
 
-            public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion,
+            public bool? ShouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion,
                                          string newCollectionName)
             {
                 return true;
             }
 
-            public string installProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript)
+            public string InstallProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript)
             {
                 return string.Empty;
             }
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                         configureToolsDlg.RemoveAllTools();
                         configureToolsDlg.SaveTools();
-                        configureToolsDlg.UnpackZipTool(version1);
+                        configureToolsDlg.InstallZipTool(version1);
                         Assert.AreEqual("Counter", configureToolsDlg.textTitle.Text);
                         Assert.AreEqual("$(ToolDir)\\NumberWriter.exe", configureToolsDlg.textCommand.Text);
                         Assert.AreEqual("100 100", configureToolsDlg.textArguments.Text);
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
             }
             {
                 var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version1), messageDlg =>
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version1), messageDlg =>
                     {
                         string messageForm =
                             TextUtil.LineSeparate(
@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 WaitForConditionUI(3*1000, () => configureToolsDlg.ToolList.Count == 2);
                 string version2 = TestFilesDir.GetTestPath("TestToolVersioning\\1.0.2\\Counter.zip");
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version2), messageDlg =>
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version2), messageDlg =>
                     {
 
                         string messageForm =TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestFunctional
             }
             {
                 var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version1), messageDlg =>
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version1), messageDlg =>
                 {
                     string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_,
                                 string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_);
@@ -209,10 +209,10 @@ namespace pwiz.SkylineTestFunctional
                 string versionDifferent = TestFilesDir.GetTestPath("TestToolVersioning\\Differentidentifier\\Counter.zip");
                 
                 //Testing recognition of a different unique identifier when zip has the same name
-                RunUI(()=>configureToolsDlg.UnpackZipTool(versionDifferent)); 
+                RunUI(()=>configureToolsDlg.InstallZipTool(versionDifferent)); 
                 WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 4);
                 string version3 = TestFilesDir.GetTestPath("TestToolVersioning\\1.2.0\\Counter.zip");
-                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(version3), messageDlg =>
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(version3), messageDlg =>
                 {
                     string messageForm = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty,
                             Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_);
@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string path = TestFilesDir.GetTestPath("TestLocateFileDlg.zip");
             RunUI(configureToolsDlg.RemoveAllTools);
-            RunDlg<LocateFileDlg>(() => configureToolsDlg.UnpackZipTool(path), locateFileDlg =>
+            RunDlg<LocateFileDlg>(() => configureToolsDlg.InstallZipTool(path), locateFileDlg =>
                 {
                     AssertEx.AreComparableStrings(TextUtil.LineSeparate(
                         Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0_version_1,
@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.SaveTools();
                 });
 
-            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoCommandPath), messageDlg =>
+            RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(toolNoCommandPath), messageDlg =>
                 {
                     AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_Tool_Description_in_file__0__,
                                                                         Resources.ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required,
@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.OkDialog();
                 });
             string toolNoTitlePath = TestFilesDir.GetTestPath("ToolNoTitle.zip");
-            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoTitlePath), messageDlg =>
+            RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(toolNoTitlePath), messageDlg =>
                 {
                     AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_Tool_Description_in_file__0__,
                                                                         Resources.ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required,
@@ -347,21 +347,21 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.OkDialog();
                 });
             string toolNoName = TestFilesDir.GetTestPath("NoName.zip");
-            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoName), messageDlg =>
+            RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(toolNoName), messageDlg =>
             {
                 AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_, 
                             Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_), messageDlg.Message,2);
                 messageDlg.OkDialog();
             });
             string toolNoVersion = TestFilesDir.GetTestPath("NoVersion.zip");
-            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoVersion), messageDlg =>
+            RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(toolNoVersion), messageDlg =>
             {
                 AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
                             Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_), messageDlg.Message, 2);
                 messageDlg.OkDialog();
             });
             string toolNoIdentifier = TestFilesDir.GetTestPath("NoIdentifier.zip");
-            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(toolNoIdentifier), messageDlg =>
+            RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(toolNoIdentifier), messageDlg =>
             {
                 AssertEx.AreComparableStrings(TextUtil.LineSeparate(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
                             Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_), messageDlg.Message, 2);
@@ -379,7 +379,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();
                 });
-            RunDlg<LocateFileDlg>(() => configureToolsDlg.UnpackZipTool(allCommandTypesPath), dlg => dlg.OkDialog());
+            RunDlg<LocateFileDlg>(() => configureToolsDlg.InstallZipTool(allCommandTypesPath), dlg => dlg.OkDialog());
             WaitForConditionUI(1*1000, ()=>configureToolsDlg.listTools.Items.Count == 3);
             RunUI(()=>
                 {
@@ -433,7 +433,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();                    
                 });
-            RunDlg<MessageDlg>(() => configureToolsDlg.UnpackZipTool(testSkylineReportsPath), messageDlgReportNotProvided =>
+            RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(testSkylineReportsPath), messageDlgReportNotProvided =>
                 {
                     AssertEx.AreComparableStrings(
                         Resources.UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_,
@@ -452,7 +452,7 @@ namespace pwiz.SkylineTestFunctional
                 });
             string uniqueReportPath = TestFilesDir.GetTestPath("UniqueReport.zip");
             RunUI(() => configureToolsDlg.SaveTools());
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict =>
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath), resolveReportConflict =>
                 {
                     string messageForm =
                         TextUtil.LineSeparate(
@@ -473,7 +473,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
                     configureToolsDlg.SaveTools();
                 });
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict2 =>
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath), resolveReportConflict2 =>
                 {
                     string messageForm =
                         TextUtil.LineSeparate(
@@ -497,7 +497,7 @@ namespace pwiz.SkylineTestFunctional
                     toolDir = configureToolsDlg.ToolDir;
                     Assert.IsTrue(Directory.Exists(toolDir));
                 });
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath), resolveReportConflict3 =>
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath), resolveReportConflict3 =>
                 {
                     string messageForm =
                             TextUtil.LineSeparate(
@@ -520,7 +520,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
                     Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
                 });
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(uniqueReportPath),
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath),
                                       resolveReportConflict4 => resolveReportConflict4.Btn1Click());
             WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 3);
             RunUI(() =>
@@ -569,7 +569,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ConfigureToolsDlg>(() => SkylineWindow.ShowConfigureToolsDlg(), dlg =>
             {
                 dlg.RemoveAllTools();
-                dlg.UnpackZipTool(testAnnotationsPath);
+                dlg.InstallZipTool(testAnnotationsPath);
                 WaitForConditionUI(3 * 1000, () => dlg.ToolList.Count == 4);
 
                 ToolDescription t0 = dlg.ToolList[0];
@@ -597,11 +597,11 @@ namespace pwiz.SkylineTestFunctional
             // Test conflicting annotations
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             string conflictAnnotationsPath = TestFilesDir.GetTestPath("ConflictAnnotations.zip"); // Not L10N
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(conflictAnnotationsPath),
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
                                       messageDlg => messageDlg.Btn1Click()); // keep existing annotations
             WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 5);
             Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleId));
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.UnpackZipTool(conflictAnnotationsPath),
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
                                       dlg => dlg.Btn0Click());
             RunDlg<MultiButtonMsgDlg>(() => FindOpenForm<MultiButtonMsgDlg>(), messageDlg => messageDlg.Btn0Click());
             // overwrite existing annotations
@@ -648,7 +648,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     configureToolsDlg.RemoveAllTools();
-                    configureToolsDlg.UnpackZipTool(path1);
+                    configureToolsDlg.InstallZipTool(path1);
                     Assert.AreEqual("TestToolDirMacro", configureToolsDlg.textTitle.Text);
                     Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
                     Assert.AreEqual("$(ToolDir)\\MSStatsDSS.r", configureToolsDlg.textArguments.Text);
@@ -690,7 +690,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     configureToolsDlg.RemoveAllTools();
-                    configureToolsDlg.UnpackZipTool(path1);
+                    configureToolsDlg.InstallZipTool(path1);
                     Assert.AreEqual("TestArgCollector", configureToolsDlg.textTitle.Text);
                     Assert.AreEqual("$(ToolDir)\\ArgstoOut.exe", configureToolsDlg.textCommand.Text);
                     Assert.AreEqual("SomeArgs $(CollectedArgs) SomeMoreArgs", configureToolsDlg.textArguments.Text);

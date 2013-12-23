@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
             const string errorMessage = "error message";    // Not L10N
            
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            configureToolsDlg.ToolStoreClient = new TestToolStoreClient(Path.GetTempPath())
+            ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(Path.GetTempPath())
                 {
                     FailToConnect = true,
                     FailToConnectMessage = errorMessage
@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestFunctional
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
                 {
-                    configureToolsDlg.ToolStoreClient = new TestToolStoreClient(TestFilesDir.GetTestPath("TestBasicPopulation"));
+                    ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(TestFilesDir.GetTestPath("TestBasicPopulation"));
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();
                 });
@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestFunctional
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
                 {
-                    configureToolsDlg.ToolStoreClient = new TestToolStoreClient(TestFilesDir.GetTestPath("TestBasicPopulation"));
+                    ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(TestFilesDir.GetTestPath("TestBasicPopulation"));
                 });
             var toolStoreDlg = ShowDialog<ToolStoreDlg>(configureToolsDlg.AddFromWeb);
             var reinstallDlg = ShowDialog<MultiButtonMsgDlg>(toolStoreDlg.DownloadSelectedTool);

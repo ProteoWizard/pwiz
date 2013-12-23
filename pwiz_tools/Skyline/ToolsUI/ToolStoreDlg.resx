@@ -119,12 +119,15 @@
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="pictureBoxTool.Location" type="System.Drawing.Point, System.Drawing">
-    <value>132, 15</value>
-  </data>
-  <data name="pictureBoxTool.Size" type="System.Drawing.Size, System.Drawing">
-    <value>128, 128</value>
+    <value>176, 18</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="pictureBoxTool.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
+  <data name="pictureBoxTool.Size" type="System.Drawing.Size, System.Drawing">
+    <value>171, 158</value>
+  </data>
   <data name="pictureBoxTool.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
     <value>Zoom</value>
   </data>
@@ -148,10 +151,13 @@
     <value>True</value>
   </data>
   <data name="labelAuthors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>265, 54</value>
+    <value>353, 66</value>
+  </data>
+  <data name="labelAuthors.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="labelAuthors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 13</value>
+    <value>61, 17</value>
   </data>
   <data name="labelAuthors.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -175,13 +181,16 @@
     <value>True</value>
   </data>
   <data name="labelProvider.Location" type="System.Drawing.Point, System.Drawing">
-    <value>130, 146</value>
+    <value>173, 180</value>
+  </data>
+  <data name="labelProvider.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="labelProvider.Size" type="System.Drawing.Size, System.Drawing">
-    <value>89, 13</value>
+    <value>118, 17</value>
   </data>
   <data name="labelProvider.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="labelProvider.Text" xml:space="preserve">
     <value>More Information:</value>
@@ -202,10 +211,13 @@
     <value>True</value>
   </data>
   <data name="labelDescription.Location" type="System.Drawing.Point, System.Drawing">
-    <value>130, 218</value>
+    <value>173, 268</value>
+  </data>
+  <data name="labelDescription.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="labelDescription.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 13</value>
+    <value>83, 17</value>
   </data>
   <data name="labelDescription.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -229,7 +241,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="textBoxDescription.Location" type="System.Drawing.Point, System.Drawing">
-    <value>132, 234</value>
+    <value>176, 288</value>
+  </data>
+  <data name="textBoxDescription.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="textBoxDescription.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -238,7 +253,7 @@
     <value>Vertical</value>
   </data>
   <data name="textBoxDescription.Size" type="System.Drawing.Size, System.Drawing">
-    <value>443, 120</value>
+    <value>589, 147</value>
   </data>
   <data name="textBoxDescription.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -258,11 +273,17 @@
   <data name="listBoxTools.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left</value>
   </data>
+  <data name="listBoxTools.ItemHeight" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
   <data name="listBoxTools.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 12</value>
+    <value>16, 15</value>
+  </data>
+  <data name="listBoxTools.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="listBoxTools.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 342</value>
+    <value>125, 420</value>
   </data>
   <data name="listBoxTools.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -283,10 +304,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="buttonExit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>499, 366</value>
+    <value>665, 450</value>
+  </data>
+  <data name="buttonExit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="buttonExit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="buttonExit.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -310,10 +334,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="buttonInstallUpdate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>418, 366</value>
+    <value>557, 450</value>
+  </data>
+  <data name="buttonInstallUpdate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="buttonInstallUpdate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="buttonInstallUpdate.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
@@ -340,10 +367,13 @@
     <value>True</value>
   </data>
   <data name="labelStatus.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 179</value>
+    <value>172, 220</value>
+  </data>
+  <data name="labelStatus.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="labelStatus.Size" type="System.Drawing.Size, System.Drawing">
-    <value>40, 13</value>
+    <value>52, 17</value>
   </data>
   <data name="labelStatus.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -367,10 +397,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxAuthors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>268, 70</value>
+    <value>357, 86</value>
+  </data>
+  <data name="textBoxAuthors.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="textBoxAuthors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>306, 20</value>
+    <value>407, 22</value>
   </data>
   <data name="textBoxAuthors.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -394,13 +427,16 @@
     <value>NoControl</value>
   </data>
   <data name="linkLabelProvider.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 159</value>
+    <value>172, 196</value>
+  </data>
+  <data name="linkLabelProvider.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="linkLabelProvider.Size" type="System.Drawing.Size, System.Drawing">
-    <value>446, 20</value>
+    <value>595, 25</value>
   </data>
   <data name="linkLabelProvider.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="linkLabelProvider.Text" xml:space="preserve">
     <value>www.provider.com</value>
@@ -421,10 +457,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxStatus.Location" type="System.Drawing.Point, System.Drawing">
-    <value>132, 195</value>
+    <value>176, 240</value>
+  </data>
+  <data name="textBoxStatus.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="textBoxStatus.Size" type="System.Drawing.Size, System.Drawing">
-    <value>442, 20</value>
+    <value>588, 22</value>
   </data>
   <data name="textBoxStatus.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -445,10 +484,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxOrganization.Location" type="System.Drawing.Point, System.Drawing">
-    <value>268, 31</value>
+    <value>357, 38</value>
+  </data>
+  <data name="textBoxOrganization.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="textBoxOrganization.Size" type="System.Drawing.Size, System.Drawing">
-    <value>306, 20</value>
+    <value>407, 22</value>
   </data>
   <data name="textBoxOrganization.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -472,10 +514,13 @@
     <value>NoControl</value>
   </data>
   <data name="labelOrganization.Location" type="System.Drawing.Point, System.Drawing">
-    <value>265, 15</value>
+    <value>353, 18</value>
+  </data>
+  <data name="labelOrganization.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="labelOrganization.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 13</value>
+    <value>93, 17</value>
   </data>
   <data name="labelOrganization.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -499,13 +544,16 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxLanguages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>268, 109</value>
+    <value>357, 134</value>
+  </data>
+  <data name="textBoxLanguages.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="textBoxLanguages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>307, 20</value>
+    <value>408, 22</value>
   </data>
   <data name="textBoxLanguages.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;textBoxLanguages.Name" xml:space="preserve">
     <value>textBoxLanguages</value>
@@ -529,13 +577,16 @@
     <value>NoControl</value>
   </data>
   <data name="labelLanguages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>265, 93</value>
+    <value>353, 114</value>
+  </data>
+  <data name="labelLanguages.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="labelLanguages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 13</value>
+    <value>83, 17</value>
   </data>
   <data name="labelLanguages.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>5</value>
   </data>
   <data name="labelLanguages.Text" xml:space="preserve">
     <value>Languages:</value>
@@ -556,16 +607,19 @@
     <value>Bottom, Left</value>
   </data>
   <data name="buttonToolStore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>132, 366</value>
+    <value>176, 450</value>
+  </data>
+  <data name="buttonToolStore.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="buttonToolStore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="buttonToolStore.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
   <data name="buttonToolStore.Text" xml:space="preserve">
-    <value>Tool Store...</value>
+    <value>&amp;Tool Store...</value>
   </data>
   <data name="&gt;&gt;buttonToolStore.Name" xml:space="preserve">
     <value>buttonToolStore</value>
@@ -583,16 +637,19 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>587, 398</value>
+    <value>783, 490</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>External Tool Store</value>
+    <value>Install from Tool Store</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolStoreDlg</value>

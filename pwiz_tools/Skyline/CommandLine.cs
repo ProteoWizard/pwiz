@@ -2706,7 +2706,7 @@ namespace pwiz.Skyline
             packagesHandled = arePackagesHandled;
         }
 
-        public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reports,
+        public bool? ShouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reports,
                                      string foundVersion,
                                      string newCollectionName)
         {
@@ -2786,7 +2786,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public string installProgram(ProgramPathContainer missingProgramPathContainer, ICollection<ToolPackage> packages, string pathToInstallScript)
+        public string InstallProgram(ProgramPathContainer missingProgramPathContainer, ICollection<ToolPackage> packages, string pathToInstallScript)
         {
             if (packages.Count > 0 && !packagesHandled)
             {
@@ -2798,7 +2798,7 @@ namespace pwiz.Skyline
             return Settings.Default.ToolFilePaths.TryGetValue(missingProgramPathContainer, out path) ? path : FindProgramPath(missingProgramPathContainer);
         }
 
-        public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
+        public bool? ShouldOverwriteAnnotations(List<AnnotationDef> annotations)
         {
             if (overwriteAnnotations == null)
             {

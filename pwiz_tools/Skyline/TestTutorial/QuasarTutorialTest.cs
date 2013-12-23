@@ -44,6 +44,7 @@ namespace pwiz.SkylineTestTutorial
         static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
         const int WM_KEYDOWN	= 0x100;
         private const int WM_KEYUP = 0x101;
+
         [TestMethod]
         public void TestQuasarTutorial()
         {
@@ -86,7 +87,7 @@ namespace pwiz.SkylineTestTutorial
                     {
                         configureToolsDlg.RemoveAllTools();
                         configureToolsDlg.SaveTools();
-                        configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
+                        configureToolsDlg.InstallZipTool(GetTestPath(installZipName));
                     });
 
                 PauseForScreenShot("p. 3 - R Installer");
@@ -98,9 +99,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     // bypass the R installer dialogue
-                    configureToolsDlg.TestFindProgramPath = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
+                    configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
 
-                    configureToolsDlg.UnpackZipTool(GetTestPath(installZipName));
+                    configureToolsDlg.InstallZipTool(GetTestPath(installZipName));
                     var installedQuaSAR = configureToolsDlg.ToolList[0];
                     Assert.AreEqual(QUASAR.Title, installedQuaSAR.Title);
                     Assert.AreEqual(QUASAR.Command, installedQuaSAR.Command);

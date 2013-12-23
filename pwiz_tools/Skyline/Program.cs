@@ -228,7 +228,7 @@ namespace pwiz.Skyline
                 broker.ProgressValue = progressValue;                
             }
             Directory.Move(tempOutterToolsFolderPath, outerToolsFolderPath);
-            Settings.Default.ToolList = Settings.Default.ToolList.CopyTools(toolList);
+            Settings.Default.ToolList = ToolList.CopyTools(toolList);
         }
 
         public static void Init()

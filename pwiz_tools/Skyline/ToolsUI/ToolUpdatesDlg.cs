@@ -179,12 +179,12 @@ namespace pwiz.Skyline.ToolsUI
                         string.Format(Resources.ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_,
                                       tool._packageName);
 
-                    var toolList = Settings.Default.ToolList.CopyTools(Settings.Default.ToolList);
+                    var toolList = ToolList.CopyTools(Settings.Default.ToolList);
                     bool exceptionThrown = false;
                     ToolInstaller.UnzipToolReturnAccumulator result = null;
                     try
                     {
-                        result = _updateHelper.UnpackZipTool(tool.FilePath, new ConfigureToolsDlg.UnpackZipToolHelper(_parent, null));
+                        result = _updateHelper.UnpackZipTool(tool.FilePath, new ToolInstallUI.InstallZipToolHelper(_parent.InstallProgram));
                     }
                     catch (MessageException x)
                     {

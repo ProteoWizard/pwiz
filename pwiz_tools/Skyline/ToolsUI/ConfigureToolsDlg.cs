@@ -22,10 +22,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -51,24 +49,31 @@ namespace pwiz.Skyline.ToolsUI
             //           some day, though.
             _driverReportSpec = new SettingsListComboDriver<ReportSpec>(comboReport,
                 Settings.Default.ReportSpecList, false);
+
+            if (ToolStoreUtil.ToolStoreClient != null)
+                fromWebAddContextMenuItem.Visible = fromWebAddContextMenuItem.Enabled = true;
+
+            Removelist = new List<ToolDescription>();
+            Init(false);
+        }
+
+        private void Init(bool selectEnd)
+        {
+            // Initialize the report comboBox.
             _driverReportSpec.LoadList(string.Empty);
             comboReport.Items.Insert(0, string.Empty);
             comboReport.SelectedItem = string.Empty;
 
-            ToolStoreClient = ToolStoreUtil.CreateClient();
-            if (ToolStoreClient != null)
-                fromWebAddContextMenuItem.Visible = fromWebAddContextMenuItem.Enabled = true;
-            
             // Value for keeping track of the previously selected tool 
             // Used to check if the tool meets requirements before allowing you to navigate away from it.
             PreviouslySelectedIndex = -1;
 
+            // Reload the tool list
+            Removelist.Clear();
             ToolList = Settings.Default.ToolList
-                       .Select(t => new ToolDescription(t))
-                       .ToList();
-
+                               .Select(t => new ToolDescription(t))
+                               .ToList();
             RefreshListBox();
-
             if (ToolList.Count == 0)
             {
                 listTools.SelectedIndex = -1;
@@ -78,10 +83,10 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                listTools.SelectedIndex = 0;
+                listTools.SelectedIndex = selectEnd ? ToolList.Count - 1 : 0;
+                btnRemove.Enabled = true;
             }
             Unsaved = false;
-            Removelist = new List<ToolDescription>();
         }
 
         private IList<ToolDescription> Removelist { get; set; } 
@@ -98,15 +103,6 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public List<ToolDescription> ToolList { get; private set; }
-
-        private static ToolList CopyTools(IEnumerable<ToolDescription> list)
-        {
-            var listCopy = new ToolList();
-            listCopy.AddRange(from t in list
-                              where !Equals(t, ToolDescription.EMPTY)
-                              select new ToolDescription(t));
-            return listCopy;
-        }
 
         private bool _unsaved;
 
@@ -656,7 +652,7 @@ namespace pwiz.Skyline.ToolsUI
                     }    
                 }
 
-                Settings.Default.ToolList = CopyTools(ToolList); 
+                Settings.Default.ToolList = Properties.ToolList.CopyTools(ToolList); 
                 Unsaved = false;
                 Removelist = new List<ToolDescription>();
                 return true;
@@ -946,77 +942,45 @@ namespace pwiz.Skyline.ToolsUI
 
         public void AddFromWeb()
         {
-            AddViaZip(GetZipFromWeb);
+            AddFromZip(ToolInstallUI.InstallZipFromWeb);
         }
 
         public void AddFromFile()
         {
-            AddViaZip(GetZipFromFile);
+            AddFromZip(ToolInstallUI.InstallZipFromFile);
         }
+
+        public void InstallZipTool(string fullpath)
+        {
+            AddFromZip((p, i) => ToolInstallUI.InstallZipTool(p, fullpath, i));
+        }
+
+        private ToolInstallUI.InstallProgram InstallProgramFile
+        {
+            get { return TestInstallProgram ?? SkylineWindowParent.InstallProgram; }
+        }
+
+        private delegate void AddToolFromFile(Control parent, ToolInstallUI.InstallProgram install);
         
-        private void AddViaZip(Action addTool)
+        private void AddFromZip(AddToolFromFile addTool)
         {
-            if (CheckPassTool(PreviouslySelectedIndex))
+            if (CheckPassTool(PreviouslySelectedIndex) && PromptForSave())
             {
-                if (PromptForSave())
+                addTool(this, InstallProgramFile);
+
+                // Re-initialize the form from the ToolsList
+                Init(true);
+
+                if (ToolList.Count == 1)
                 {
-                    addTool.Invoke();
-                    if (ToolList.Count == 1)
-                    {
-                        PreviouslySelectedIndex = 0;
-                    }
+                    PreviouslySelectedIndex = 0;
                 }
             }
         }
 
-        private void GetZipFromFile()
-        {
-            using (var dlg = new OpenFileDialog
-            {
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
-                Multiselect = false
-            })
-            {
-                if (dlg.ShowDialog() == DialogResult.OK)
-                    UnpackZipTool(dlg.FileName);
-            }
-        }
-
-        public IToolStoreClient ToolStoreClient { get; set; }
-
-        private void GetZipFromWeb()
-        {
-            try
-            {
-                IList<ToolStoreItem> toolStoreItems = null;
-                using (var dlg = new LongWaitDlg { Message = Resources.ConfigureToolsDlg_AddFromWeb_Contacting_the_server })
-                {
-                    dlg.PerformWork(this, 1000, () =>
-                        {
-                            toolStoreItems = ToolStoreClient.GetToolStoreItems();
-                        });
-                }
-                if (toolStoreItems == null || toolStoreItems.Count == 0)
-                {
-                    MessageDlg.Show(this, Resources.ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store);
-                }
-                using (var dlg = new ToolStoreDlg(ToolStoreClient, toolStoreItems))
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
-                        UnpackZipTool(dlg.DownloadPath);
-                }
-            }
-            catch (TargetInvocationException x)
-            {
-                if (x.InnerException.GetType() == typeof(MessageException))
-                    MessageDlg.Show(this, string.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
-                else
-                    throw;
-            }
-        }
-
-        // returns true if the tools are saved
+        /// <summary>
+        /// Returns true if the tools are saved
+        /// </summary>
         private bool PromptForSave()
         {
             if (Unsaved)
@@ -1034,115 +998,6 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             return true;
-        }
-        public class UnpackZipToolHelper : IUnpackZipToolSupport
-        {
-            public UnpackZipToolHelper(SkylineWindow parentWindow, Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> testFindProgramPath)
-            {
-                parent = parentWindow;
-                _testFindProgramPath = testFindProgramPath;
-            }
-            private SkylineWindow parent { get; set; }
-            private Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> _testFindProgramPath { get; set; }
-
-            public bool? shouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion, string newCollectionName)
-            {
-                return OverwriteOrInParallel(toolCollectionName, toolCollectionVersion, reportList, foundVersion, newCollectionName);
-            }
-
-            public string installProgram(ProgramPathContainer programPathContainer, ICollection<ToolPackage> packages, string pathToInstallScript)
-            {
-                return _testFindProgramPath == null ? parent.InstallProgram(programPathContainer, packages, pathToInstallScript) : _testFindProgramPath(programPathContainer, packages, pathToInstallScript);
-            }
-
-            public bool? shouldOverwriteAnnotations(List<AnnotationDef> annotations)
-            {
-                return OverwriteAnnotations(annotations);
-            }
-
-            public string FindProgramPath(ProgramPathContainer programPathContainer)
-            {
-                return parent.FindProgramPath(programPathContainer);
-            }
-        }
-
-        /// <summary>
-        /// Copy a zip file's contents to the tools folder and loop through its .properties
-        /// files adding the tools to the tools menu.
-        /// </summary>
-        /// <param name="fullpath"> The full path to the ziped folder containing the tools</param>
-        public void UnpackZipTool(string fullpath)
-        {
-            ToolInstaller.UnzipToolReturnAccumulator result = null;
-            try
-            {
-                result = ToolInstaller.UnpackZipTool(fullpath, new UnpackZipToolHelper(SkylineWindowParent, TestFindProgramPath));
-            }
-            catch (MessageException x)
-            {
-                MessageDlg.Show(this, x.Message);
-            }
-            catch (IOException x)
-            {
-                MessageDlg.Show(this, TextUtil.LineSeparate(string.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), x.Message));
-            }
-
-            if (result != null)
-            {
-                foreach (var message in result.MessagesThrown)
-                {
-                    MessageDlg.Show(this, message);
-                }
-            }
-            else
-            {
-                // If result is Null than we want to discard changes made to the toolsList
-                // SaveTools will overwrite Settings tools list with whatever we have in the Dialog toolList
-                SaveTools();
-            }
-            //Reload the report dropdown menu!
-            _driverReportSpec.LoadList(string.Empty);
-            comboReport.Items.Insert(0, string.Empty);
-            comboReport.SelectedItem = string.Empty;
-
-            //Reload the tool list
-            RemoveAllTools();
-            Removelist.Clear();
-            ToolList = Settings.Default.ToolList
-                               .Select(t => new ToolDescription(t))
-                               .ToList();
-            RefreshListBox();
-            if (ToolList.Count == 0)
-            {
-                listTools.SelectedIndex = -1;
-                btnRemove.Enabled = false;
-                btnMoveUp.Enabled = false;
-                btnMoveDown.Enabled = false;
-            }
-            else
-            {
-                listTools.SelectedIndex = ToolList.Count - 1;
-                btnRemove.Enabled = true;
-            }
-            Unsaved = false;
-        }
-
-        public void RemoveAllTools()
-        {
-            // Remove one at a time to be sure necessary events fire.
-            while (ToolList.Count > 0)
-            {
-                Remove();
-            }
-            RefreshListBox();
-        }
-
-        public enum RelativeVersion
-        {
-            upgrade,
-            reinstall,
-            olderversion,
-            unknown
         }
 
         #region Functional test support
@@ -1177,141 +1032,17 @@ namespace pwiz.Skyline.ToolsUI
             get { return ToolList[listTools.SelectedIndex]; }
         }
 
-        public Func<ProgramPathContainer, ICollection<ToolPackage>, string, string> TestFindProgramPath { get; set; }
+        public void RemoveAllTools()
+        {
+            // Remove one at a time to be sure necessary events fire.
+            while (ToolList.Count > 0)
+                Remove();
+            RefreshListBox();
+        }
+
+        public ToolInstallUI.InstallProgram TestInstallProgram { get; set; }
 
         #endregion
 
-        public static bool? OverwriteOrInParallel(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion, string newCollectionName)
-        {
-            string message;
-            string buttonText;
-            if (toolCollectionName != null)
-            {
-                RelativeVersion relativeVersion = DetermineRelativeVersion(toolCollectionVersion, foundVersion);
-                string toolMessage;
-                switch (relativeVersion)
-                {
-                    case RelativeVersion.upgrade:
-                        toolMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_currently_installed_, string.Empty, 
-                            string.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_upgrade_to__0__or_install_in_parallel_, foundVersion));                        
-                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Upgrade;
-                        break;
-                    case RelativeVersion.olderversion:
-                        toolMessage =
-                            TextUtil.LineSeparate(
-                                string.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_, foundVersion, "{0}"), //Not L10N
-                                string.Empty, 
-                                string.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_,
-                                foundVersion));
-                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite;
-                        break;
-                    case RelativeVersion.reinstall:
-                        toolMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_, 
-                            string.Empty,
-                            Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_reinstall_or_install_in_parallel_);                        
-                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Reinstall;
-                        break;
-                    default:
-                        toolMessage =
-                            TextUtil.LineSeparate(
-                                Resources
-                                    .ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation,
-                                string.Empty,
-                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
-                        buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite; // Or update?
-                        break;
-                }
-                message = string.Format(toolMessage, toolCollectionName);
-            }
-            else //Warn about overwritng report.
-            {
-                List<string> reportTitles = reportList.Select(sp => sp.GetKey()).ToList();
-            
-                string reportMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports, string.Empty,
-                                                              "{0}", string.Empty); //Not L10N
-                string reportSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_, string.Empty);
-                
-                string reportMessage = reportList.Count == 1 ? reportSingleMessage : reportMultiMessage;
-                string question = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_;
-                buttonText = Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite;
-                string reportMessageFormat = TextUtil.LineSeparate(reportMessage, question);
-                message = string.Format(reportMessageFormat, TextUtil.LineSeparate(reportTitles));
-            }
-
-            using (
-                var dlg = new MultiButtonMsgDlg(message, buttonText,
-                                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true))
-            {
-                DialogResult result = dlg.ShowDialog();
-                switch (result)
-                {
-                    case DialogResult.Cancel:
-                        return null;
-                    case DialogResult.Yes:
-                        return true;
-                    case DialogResult.No:
-                        return false;
-                }
-            }
-            return false;
-        }
-
-
-        public static RelativeVersion DetermineRelativeVersion(string versionToCompare, string foundVersion)
-        {
-            if (!string.IsNullOrEmpty(foundVersion) && !string.IsNullOrEmpty(versionToCompare))
-            {
-                Version current = new Version(versionToCompare);
-                Version found = new Version(foundVersion);
-                if (current > found) //Installing an olderversion.
-                {
-                    return RelativeVersion.olderversion;
-                }
-                else if (current == found) // Installing the same version.
-                {
-                    return RelativeVersion.reinstall;
-                }
-                else if (found > current)
-                {
-                    return RelativeVersion.upgrade;
-                }
-            }
-            return RelativeVersion.unknown;
-        }
-
-        public static bool? OverwriteAnnotations(List<AnnotationDef> annotations)
-        {
-            List<string> annotationTitles = annotations.Select(annotation => annotation.GetKey()).ToList();
-            
-            string annotationMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_, string.Empty,
-                                                    "{0}", string.Empty);
-
-            string annotationSingleMessage =
-                TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_, string.Empty, "{0}", string.Empty);
-
-            string annotationMessage = annotations.Count == 1 ? annotationSingleMessage : annotationMultiMessage;
-            string question = Resources.ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_;
-
-            string messageFormat = TextUtil.LineSeparate(annotationMessage, question);
-
-            using (var dlg =
-                new MultiButtonMsgDlg(
-                    string.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)),
-                    Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite,
-                    Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true))
-            {
-                DialogResult result = dlg.ShowDialog();
-                switch (result)
-                {
-                    case DialogResult.Cancel:
-                        return null;
-                    case DialogResult.Yes:
-                        return true;
-                    case DialogResult.No:
-                        return false;
-                }
-            }
-            return false;
-        }
     }
 }

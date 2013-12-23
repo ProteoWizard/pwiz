@@ -496,11 +496,18 @@ namespace pwiz.Skyline.ToolsUI
             get { return Resources.ExternalTool; }
         }
 
+        public static IToolStoreClient ToolStoreClient { get; set; }
+
         // for testing, return a TestToolStoreClient with the desired attributes and a path to a local directory with which to populate the store, updates etc.
         public static IToolStoreClient CreateClient()
         {
             return new WebToolStoreClient();
 //            return new TestToolStoreClient(@"C:\proj\pwiz\pwiz_tools\Skyline\Executables\Tools\ToolStore");
+        }
+
+        static ToolStoreUtil()
+        {
+            ToolStoreClient = CreateClient();
         }
 
         /// <returns>True if the a tool with the given identifier is installed.</returns>
