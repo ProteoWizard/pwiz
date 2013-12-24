@@ -84,11 +84,9 @@ namespace pwiz.SkylineTestUtil
             {
                 bindingListSource.SetViewContext(new SkylineViewContext(viewInfo.ParentColumn, GetRowSource(viewInfo)),
                     viewInfo);
-                PropertyDescriptorCollection properties;
-                IList resultRows;
                 var oldCaptions = resultSet.ColumnInfos.Select(columnInfo => columnInfo.Caption).ToArray();
-                properties = bindingListSource.GetItemProperties(null);
-                resultRows = bindingListSource;
+                var properties = bindingListSource.GetItemProperties(null);
+                IList resultRows = bindingListSource;
                 var newCaptions = properties.Cast<PropertyDescriptor>().Select(pd => pd.DisplayName).ToArray();
                 if (!oldCaptions.SequenceEqual(newCaptions))
                 {

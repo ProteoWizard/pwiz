@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
                 if (i > 0)
                     writer.Write(separator);
-                writer.Write(columnInfo.Caption);
+                writer.WriteDsvField(columnInfo.Caption, separator);
             }
             writer.WriteLine();
             for (int iRow = 0; iRow < results.RowCount; iRow++)
