@@ -194,6 +194,7 @@ namespace SkylineTester
         private void StartQuality()
         {
             _startTimer = null;
+            statusLabel.Text = "Running quality pass...";
             _testsRun = 0;
             _lastTestResult = null;
             _newQualityRun = new Summary.Run
