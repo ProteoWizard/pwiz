@@ -286,8 +286,6 @@ namespace SkylineTester
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
             var line = e.Data;
-            if (FilterFunc != null && !FilterFunc(line))
-                return;
             Log(line);
         }
 
@@ -359,6 +357,12 @@ namespace SkylineTester
         /// </summary>
         private void Log(string line)
         {
+            if (line == null)
+                return;
+
+            if (FilterFunc != null && !FilterFunc(line.Trim()))
+                return;
+
             lock (_logBuffer)
             {
                 if (_logBuffer.Length == 0 && _logEmpty)

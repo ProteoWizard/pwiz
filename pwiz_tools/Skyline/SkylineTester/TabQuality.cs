@@ -34,11 +34,13 @@ namespace SkylineTester
         private const string QualityLogsDirectory = "Quality logs";
         private const string SummaryLog = "Summary.log";
 
-        private Timer _startTimer;
-        private Timer _endTimer;
+        private WakeupTimer _endTimer;
+        private WakeupTimer _startTimer;
 
         private void InitQuality()
         {
+            BuildType.SelectedIndex = 0;
+
             InitGraph(graphMemory, "Memory used");
             var pane = graphMemory.GraphPane;
             pane.XAxis.MajorTic.IsAllTics = false;
@@ -122,7 +124,7 @@ namespace SkylineTester
 
         private void RunQuality(object sender, EventArgs e)
         {
-            if (QualityBuildFirst.Checked && !HasBuildPrerequisites)
+            if (BuildType.SelectedIndex >= 3 && !HasBuildPrerequisites)
                 return;
 
             if (!ToggleRunButtons(tabQuality))
@@ -134,6 +136,8 @@ namespace SkylineTester
                     _endTimer.Stop();
                     _endTimer = null;
                 }
+
+                // Schedule stopped before it started.
                 if (_startTimer != null)
                 {
                     _startTimer.Stop();
@@ -156,16 +160,21 @@ namespace SkylineTester
                 RunSchedule();
         }
 
+        private bool _scheduleEnd;
+
         private void RunSchedule()
         {
-            _scheduleStop = false;
             commandShell.ClearLog();
 
             var startTime = DateTime.Parse(QualityStartTime.Text);
             var endTime = DateTime.Parse(QualityEndTime.Text);
             if (endTime < startTime)
                 endTime = endTime.AddDays(1);
-            ScheduleEnd(endTime);
+            _endTimer = new WakeupTimer(endTime, () =>
+            {
+                _scheduleEnd = true;
+                Stop(null, null);
+            });
 
             var now = DateTime.Now;
             if (startTime <= now && now < endTime)
@@ -176,39 +185,15 @@ namespace SkylineTester
 
             commandShell.AddImmediate(Environment.NewLine + "# Waiting until {0} to start quality pass...", QualityStartTime.Text);
             statusLabel.Text = "Waiting to run quality pass at " + QualityStartTime.Text;
-            _startTimer = new Timer
-            {
-                Interval = (int)(startTime - now).TotalMilliseconds + 5000
-            };
-            _startTimer.Tick += (o, args) =>
-            {
-                _startTimer.Stop();
-                _startTimer = null;
-                StartQuality();
-            };
-            _startTimer.Start();
-        }
 
-        private void ScheduleEnd(DateTime endTime)
-        {
-            _endTimer = new Timer
-            {
-                Interval = (int)(endTime - DateTime.Now).TotalMilliseconds
-            };
-            _endTimer.Tick += (o, args) =>
-            {
-                _endTimer.Stop();
-                _endTimer = null;
-                _scheduleStop = true;
-                Invoke(new Action(() => Stop(null, null)));
-            };
-            _endTimer.Start();
+            _startTimer = new WakeupTimer(startTime, StartQuality);
         }
 
         private Summary.Run _newQualityRun;
 
         private void StartQuality()
         {
+            _startTimer = null;
             _testsRun = 0;
             _lastTestResult = null;
             _newQualityRun = new Summary.Run
@@ -217,7 +202,6 @@ namespace SkylineTester
             };
             _summary.Runs.Add(_newQualityRun);
             AddRun(_newQualityRun);
-            _scheduleStop = false;
 
             var revisionWorker = new BackgroundWorker();
             revisionWorker.DoWork += (s, a) => _revision = GetRevision();
@@ -231,8 +215,10 @@ namespace SkylineTester
 
             commandShell.Add("# Quality run started {0}" + Environment.NewLine, _newQualityRun.Date.ToString("f"));
 
-            if (QualityBuildFirst.Checked)
-                GenerateBuildCommands();
+            if (BuildType.SelectedIndex == 3)
+                GenerateBuildCommands(new[] {32});
+            if (BuildType.SelectedIndex == 4)
+                GenerateBuildCommands(new[] {64});
 
             var args = "offscreen=on quality=on loop=" + (QualityRunOne.Checked ? 1 : 0);
             StartTestRunner(
@@ -354,19 +340,21 @@ namespace SkylineTester
             _summary.Save();
             _newQualityRun = null;
 
-            _reportDone = QualityRestart;
+            _reportDone = null;
+            if (_scheduleEnd)
+            {
+                _scheduleEnd = false;
+                success = true;
+                _reportDone = QualityRestart;
+            }
             TestRunnerDone(success);
         }
-
-        private bool _scheduleStop;
 
         private void QualityRestart(bool success)
         {
             commandShell.UpdateLog();
             ReportDone(success);
-
-            if (_scheduleStop)
-                RunQuality(null, null);
+            RunQuality(null, null);
         }
 
         private void UpdateRun()

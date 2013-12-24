@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -27,11 +29,7 @@ namespace SkylineTester
     {
         private void OpenBuild()
         {
-            var testRunner32 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe");
-            var testRunner64 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe");
-
-            buttonDeleteBuild32.Enabled = File.Exists(testRunner32);
-            buttonDeleteBuild64.Enabled = File.Exists(testRunner64);
+            buttonDeleteBuild.Enabled = Directory.Exists(_buildDir);
         }
 
         private bool HasBuildPrerequisites
@@ -59,6 +57,17 @@ namespace SkylineTester
         {
             if (!HasBuildPrerequisites)
                 return;
+            var architectures = new List<int>();
+            if (Build32.Checked)
+                architectures.Add(32);
+            if (Build64.Checked)
+                architectures.Add(64);
+            if (architectures.Count == 0)
+            {
+                MessageBox.Show("Select 32 or 64 bit architecture (or both).");
+                return;
+            }
+
             if (!ToggleRunButtons(tabBuild))
             {
                 commandShell.Stop();
@@ -69,7 +78,7 @@ namespace SkylineTester
             commandShell.LogFile = _defaultLogFile;
             Tabs.SelectTab(tabOutput);
 
-            GenerateBuildCommands();
+            GenerateBuildCommands(architectures);
             commandShell.Run(BuildDone);
         }
 
@@ -93,38 +102,50 @@ namespace SkylineTester
             }
         }
 
-        private void GenerateBuildCommands()
+        private void GenerateBuildCommands(IList<int> architectures)
         {
-            commandShell.Add("# Build Skyline {0}-bit...", Build32.Checked ? 32 : 64);
+            var architectureList = string.Join("- and ", architectures);
+            commandShell.Add("# Build Skyline {0}-bit...", architectureList);
 
             if (Directory.Exists(_buildDir))
             {
-                if (BuildClean.Checked)
+                if (NukeBuild.Checked)
                 {
+                    commandShell.Add("#@ Deleting Build directory...\n");
                     commandShell.Add("# Deleting old Skyline build directory...");
                     commandShell.Add("rmdir /s {0}", Quote(_buildDir));
                 }
-                else
+                else if (UpdateBuild.Checked)
                 {
+                    commandShell.Add("#@ Cleaning Build directory...\n");
                     commandShell.Add("# Cleaning Skyline build directory...");
                     commandShell.Add("{0} cleanup {1}", Quote(_subversion), Quote(_buildDir));
                 }
             }
 
-            commandShell.Add("# Checking out Skyline source files...");
-            commandShell.Add("{0} checkout {1} {2}", 
-                Quote(_subversion),
-                Quote(BuildTrunk.Checked
-                    ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
-                    : BranchUrl.Text),
-                Quote(_buildDir));
+            if (NukeBuild.Checked)
+            {
+                commandShell.Add("#@ Checking out Skyline source files...\n");
+                commandShell.Add("# Checking out Skyline source files...");
+                commandShell.Add("{0} checkout {1} {2}",
+                    Quote(_subversion),
+                    Quote(BuildTrunk.Checked
+                        ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
+                        : BranchUrl.Text),
+                    Quote(_buildDir));
+            }
 
             commandShell.Add("# Building Skyline...");
             commandShell.Add("cd {0}", Quote(_buildDir));
-            commandShell.Add("{0} {1} --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
-                Quote(Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat")),
-                Build32.Checked ? 32 : 64);
+            foreach (int architecture in architectures)
+            {
+                commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
+                commandShell.Add("{0} {1} --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
+                    Quote(Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat")),
+                    architecture);
+            }
 
+            commandShell.Add("#@ Build done.\n");
             commandShell.Add("# Build done.");
         }
 
@@ -134,18 +155,20 @@ namespace SkylineTester
         }
 
 
-        private void buttonDeleteBuild32_Click(object sender, EventArgs e)
+        private void buttonDeleteBuild_Click(object sender, EventArgs e)
         {
-            var testRunner32 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe");
-            File.Delete(testRunner32);
-            buttonDeleteBuild32.Enabled = false;
-        }
-
-        private void buttonDeleteBuild64_Click(object sender, EventArgs e)
-        {
-            var testRunner64 = Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe");
-            File.Delete(testRunner64);
-            buttonDeleteBuild64.Enabled = false;
+            if (Directory.Exists(_buildDir))
+            {
+                statusLabel.Text = "Deleting Build folder...";
+                var task = new BackgroundWorker();
+                task.DoWork += (o, args) =>
+                {
+                    Directory.Delete(_buildDir, true);
+                    Invoke(new Action(() => statusLabel.Text = ""));
+                };
+                task.RunWorkerAsync();
+            }
+            buttonDeleteBuild.Enabled = false;
         }
     }
 }

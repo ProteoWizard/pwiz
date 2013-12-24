@@ -103,12 +103,7 @@ namespace SkylineTester
             // Find Visual Studio, if available.
             _devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
             if (!File.Exists(_devenv))
-            {
                 _devenv = null;
-                StartSln.Enabled = false;
-                QualityBuildFirst.Enabled = false;
-                QualityCurrentBuild.Checked = true;
-            }
 
             commandShell.StopButton = buttonStop;
             commandShell.FilterFunc = line =>
@@ -117,8 +112,8 @@ namespace SkylineTester
                 {
                     if (line.StartsWith("#@ "))
                     {
-                        var testName = line.Substring(3);
-                        Invoke(new Action(() => statusLabel.Text = "Running " + testName + " ..."));
+                        // Update status.
+                        Invoke(new Action(() => statusLabel.Text = line.Substring(3)));
                         return false;
                     }
 
@@ -430,11 +425,6 @@ namespace SkylineTester
                 if (treeView != null)
                     CheckNodes(treeView, element.Value.Split(','));
             }
-
-            if (_devenv == null)
-            {
-                QualityCurrentBuild.Checked = true;
-            }
         }
 
         private static void CheckNodes(TreeView treeView, ICollection<string> checkedNames)
@@ -503,7 +493,6 @@ namespace SkylineTester
                 BuildTrunk,
                 BuildBranch,
                 BranchUrl,
-                BuildClean,
                 StartSln,
 
                 // Quality
@@ -511,8 +500,6 @@ namespace SkylineTester
                 QualityRunAt,
                 QualityStartTime,
                 QualityEndTime,
-                QualityBuildFirst,
-                QualityCurrentBuild,
                 QualityAllTests,
                 QualityChooseTests);
 

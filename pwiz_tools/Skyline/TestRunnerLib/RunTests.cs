@@ -111,7 +111,7 @@ namespace TestRunnerLib
         public bool Run(TestInfo test, int pass, int testNumber)
         {
             if (_showStatus)
-                Log("#@ {0} ({1})\n", test.TestMethod.Name, Culture.TwoLetterISOLanguageName);
+                Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Culture.TwoLetterISOLanguageName);
 
             var time = DateTime.Now;
             Log(
