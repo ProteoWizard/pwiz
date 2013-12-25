@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestFunctional
         private void CompareStates()
         {
             // selected node of the TreeView should be part of the TreeViewMS' selected nodes
-            Assert.IsTrue(SkylineWindow.SelectedNode.IsInSelection);
+            Assert.IsTrue(SkylineWindow.SelectedNode == null || SkylineWindow.SelectedNode.IsInSelection);
 
             // proper scrolling
             Assert.AreEqual(SkylineWindow.SequenceTree.TopNode.Text, _topNode);
@@ -254,7 +254,8 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.AreEqual(GetExpandedNodes(SkylineWindow.SequenceTree.Nodes).ToArray(), _expandedNodes.ToArray());
 
             // selections are equal (equivalency is used because the order of selected nodes in the list may differ when restored)
-            Assert.AreEqual(SkylineWindow.SelectedNode.Text, _selectedNode);
+            if (SkylineWindow.SelectedNode != null && _selectedNode != null)
+                Assert.AreEqual(SkylineWindow.SelectedNode.Text, _selectedNode);
             Assert.AreEqual(GetSelectedNodes().Count, _selectedNodes.Count);
             CollectionAssert.AreEquivalent(GetSelectedNodes().ToArray(), _selectedNodes.ToArray());
 
@@ -264,7 +265,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void SetCurrentState()
         {
-            _selectedNode = SkylineWindow.SelectedNode.Text;
+            _selectedNode = SkylineWindow.SelectedNode != null ? SkylineWindow.SelectedNode.Text : null;
             _topNode = SkylineWindow.SequenceTree.TopNode.Text;
             _selectedNodes = GetSelectedNodes();
             _expandedNodes = GetExpandedNodes(SkylineWindow.SequenceTree.Nodes);

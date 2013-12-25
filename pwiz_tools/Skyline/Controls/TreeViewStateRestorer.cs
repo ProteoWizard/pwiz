@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Controls
 
             // select first element separately, returning if it is not a valid node
             int selectedIndex = int.Parse(selections[0]);
-            if (selectedIndex >= nodeCount)
+            if (selectedIndex < 0 || selectedIndex >= nodeCount)
                 return;
             _tree.SelectedNode = visualOrder[selectedIndex];
 

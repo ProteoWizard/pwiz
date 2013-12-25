@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Util
 
         protected override bool ShowWithoutActivation
         {
-            get { return false /*Program.FunctionalTest*/; }
+            get { return Program.FunctionalTest; }
         }
 
         protected override void Dispose(bool disposing)
