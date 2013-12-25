@@ -184,7 +184,8 @@ namespace TestRunner
             // Display report.
             log.Close();
             Console.WriteLine("\n");
-            Report(commandLineArgs.ArgAsString("log"));
+            if (!commandLineArgs.ArgAsBool("quality"))
+                Report(commandLineArgs.ArgAsString("log"));
 
             // If the forms/tests cache was regenerated, copy it to Skyline directory.
             if (commandLineArgs.ArgAsString("form") == "__REGEN__" && skylineDirectory != null)
@@ -276,6 +277,10 @@ namespace TestRunner
                 runTests.CheckCrtLeaks = 0;
                 runTests.Skyline.Set("NoVendorReaders", false);
 
+                foreach (var removeTest in removeList)
+                    testList.Remove(removeTest);
+                removeList.Clear();
+
                 // Pass 1 looks for cumulative leaks when test is run multiple times.
                 int qualityPasses = Math.Max(LeakCheckIterations, qualityCultures.Length);
                 testNumber = 0;
@@ -336,6 +341,7 @@ namespace TestRunner
 
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
+                removeList.Clear();
 
                 pass++;
             }
@@ -345,6 +351,9 @@ namespace TestRunner
             // Run all test passes.
             for (; pass <= loopCount || loopCount == 0; pass++)
             {
+                if (testList.Count == 0)
+                    break;
+
                 // Run each test in this test pass.
                 int testNumber = 0;
                 var testPass = randomOrder || qualityMode ? testList.RandomOrder() : testList;
@@ -356,7 +365,8 @@ namespace TestRunner
                     {
                         var randomIndex = random.Next(cultures.Length);
                         runTests.Culture = new CultureInfo(cultures[randomIndex]);
-                        runTests.Run(test, pass, testNumber);
+                        if (!runTests.Run(test, pass, testNumber))
+                            removeList.Add(test);
                     }
 
                     // Record which forms the test showed.
@@ -366,6 +376,10 @@ namespace TestRunner
                         shownForms.Clear();
                     }
                 }
+
+                foreach (var removeTest in removeList)
+                    testList.Remove(removeTest);
+                removeList.Clear();
             }
         }
 
