@@ -170,6 +170,11 @@ namespace SkylineTester
             var endTime = DateTime.Parse(QualityEndTime.Text);
             if (endTime < startTime)
                 endTime = endTime.AddDays(1);
+            if (endTime <= DateTime.Now)
+            {
+                startTime = startTime.AddDays(1);
+                endTime = endTime.AddDays(1);
+            }
             _endTimer = new WakeupTimer(endTime, () =>
             {
                 _scheduleEnd = true;
