@@ -39,7 +39,7 @@ namespace SkylineTester
 
         private void InitQuality()
         {
-            BuildType.SelectedIndex = 0;
+            QualityBuildType.SelectedIndex = 0;
 
             InitGraph(graphMemory, "Memory used");
             var pane = graphMemory.GraphPane;
@@ -124,7 +124,7 @@ namespace SkylineTester
 
         private void RunQuality(object sender, EventArgs e)
         {
-            if (BuildType.SelectedIndex >= 3 && !HasBuildPrerequisites)
+            if (QualityBuildType.SelectedIndex >= 3 && !HasBuildPrerequisites)
                 return;
 
             if (!ToggleRunButtons(tabQuality))
@@ -221,9 +221,9 @@ namespace SkylineTester
 
             commandShell.Add("# Quality run started {0}" + Environment.NewLine, _newQualityRun.Date.ToString("f"));
 
-            if (BuildType.SelectedIndex == 3)
+            if (QualityBuildType.SelectedIndex == 3)
                 GenerateBuildCommands(new[] {32});
-            if (BuildType.SelectedIndex == 4)
+            if (QualityBuildType.SelectedIndex == 4)
                 GenerateBuildCommands(new[] {64});
 
             var args = "offscreen=on quality=on loop=" + (QualityRunOne.Checked ? 1 : 0);

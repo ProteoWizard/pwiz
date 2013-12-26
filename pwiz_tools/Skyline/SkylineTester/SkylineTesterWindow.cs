@@ -421,6 +421,10 @@ namespace SkylineTester
                 if (textBox != null)
                     textBox.Text = element.Value;
 
+                var comboBox = control as ComboBox;
+                if (comboBox != null)
+                    comboBox.SelectedItem = element.Value;
+
                 var treeView = control as TreeView;
                 if (treeView != null)
                     CheckNodes(treeView, element.Value.Split(','));
@@ -466,6 +470,7 @@ namespace SkylineTester
                 PauseFormDelay,
                 PauseFormSeconds,
                 PauseFormButton,
+                FormsLanguage,
                 FormsTree,
 
                 // Tutorials
@@ -473,6 +478,7 @@ namespace SkylineTester
                 PauseTutorialsSeconds,
                 PauseTutorialsScreenShots,
                 TutorialsDemoMode,
+                TutorialsLanguage,
                 TutorialsTree,
 
                 // Tests
@@ -481,8 +487,10 @@ namespace SkylineTester
                 RunLoops,
                 RunLoopsCount,
                 RunIndefinitely,
-                CultureEnglish,
-                CultureFrench,
+                TestsEnglish,
+                TestsChinese,
+                TestsFrench,
+                TestsJapanese,
                 TestsTree,
                 RunCheckedTests,
                 SkipCheckedTests,
@@ -493,6 +501,9 @@ namespace SkylineTester
                 BuildTrunk,
                 BuildBranch,
                 BranchUrl,
+                NukeBuild,
+                UpdateBuild,
+                IncrementalBuild,
                 StartSln,
 
                 // Quality
@@ -500,6 +511,7 @@ namespace SkylineTester
                 QualityRunAt,
                 QualityStartTime,
                 QualityEndTime,
+                QualityBuildType,
                 QualityAllTests,
                 QualityChooseTests);
 
@@ -527,6 +539,10 @@ namespace SkylineTester
                 var textBox = child as TextBox;
                 if (textBox != null)
                     element.Add(new XElement(textBox.Name, textBox.Text));
+
+                var comboBox = child as ComboBox;
+                if (comboBox != null)
+                    element.Add(new XElement(comboBox.Name, comboBox.SelectedItem));
 
                 var treeView = child as TreeView;
                 if (treeView != null)
@@ -586,6 +602,7 @@ namespace SkylineTester
         private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
         {
             {"en", "English"},
+            {"fr", "French"},
             {"ja", "Japanese"},
             {"zh", "Chinese"}
         };

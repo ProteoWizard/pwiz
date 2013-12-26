@@ -32,7 +32,7 @@ namespace SkylineTester
     {
         private void OpenForms()
         {
-            InitLanguages(comboBoxFormsLanguage);
+            InitLanguages(FormsLanguage);
         }
 
         private void RunForms(object sender, EventArgs e)
@@ -44,7 +44,7 @@ namespace SkylineTester
             }
 
             var args = new StringBuilder("loop=1 offscreen=off culture=");
-            args.Append(GetCulture(comboBoxFormsLanguage));
+            args.Append(GetCulture(FormsLanguage));
             if (RegenerateCache.Checked)
             {
                 args.Append(" form=__REGEN__");

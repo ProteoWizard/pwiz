@@ -26,7 +26,7 @@ namespace SkylineTester
     {
         private void OpenTutorials()
         {
-            InitLanguages(comboBoxTutorialsLanguage);
+            InitLanguages(TutorialsLanguage);
         }
 
         private void RunTutorials(object sender, EventArgs e)
@@ -41,7 +41,7 @@ namespace SkylineTester
             GetCheckedTests(TutorialsTree.TopNode, testList);
 
             var args = new StringBuilder("offscreen=off loop=1 culture=");
-            args.Append(GetCulture(comboBoxTutorialsLanguage));
+            args.Append(GetCulture(TutorialsLanguage));
             if (TutorialsDemoMode.Checked)
                 args.Append(" demo=on");
             else

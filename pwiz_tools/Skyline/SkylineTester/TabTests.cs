@@ -29,11 +29,6 @@ namespace SkylineTester
     {
         private void OpenTests()
         {
-            var languages = GetLanguageNames().ToList();
-
-            checkBoxTestsEnglish.Enabled = languages.Contains("English");
-            checkBoxTestsChinese.Enabled = languages.Contains("Chinese");
-            checkBoxTestsJapanese.Enabled = languages.Contains("Japanese");
         }
 
         private void RunTests(object sender, EventArgs e)
@@ -62,13 +57,13 @@ namespace SkylineTester
             }
 
             var cultures = new List<CultureInfo>();
-            if (CultureEnglish.Checked || checkBoxTestsEnglish.Checked)
+            if (TestsEnglish.Checked)
                 cultures.Add(new CultureInfo("en-US"));
-            if (CultureFrench.Checked)
-                cultures.Add(new CultureInfo("fr-FR"));
-            if (checkBoxTestsChinese.Enabled && checkBoxTestsChinese.Checked)
+            if (TestsChinese.Checked)
                 cultures.Add(new CultureInfo("zh"));
-            if (checkBoxTestsJapanese.Enabled && checkBoxTestsJapanese.Checked)
+            if (TestsFrench.Checked)
+                cultures.Add(new CultureInfo("fr-FR"));
+            if (TestsJapanese.Checked)
                 cultures.Add(new CultureInfo("ja"));
 
             args.Append(" culture=");
