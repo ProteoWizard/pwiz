@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -675,7 +674,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeRetentionTimeFilterUI()
         {
-            tbxTimeAroundMs2Ids.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_MS2_IDS.ToString(CultureInfo.CurrentUICulture);
+            tbxTimeAroundMs2Ids.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_MS2_IDS
+                .ToString(CultureInfo.CurrentUICulture);
             tbxTimeAroundMs2Ids.Enabled = false;
             tbxTimeAroundPrediction.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_PREDICTION
                 .ToString(CultureInfo.CurrentUICulture);
@@ -684,13 +684,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 radioUseSchedulingWindow.Checked = true;
                 tbxTimeAroundPrediction.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
-                Debug.Assert(tbxTimeAroundPrediction.Enabled);
             }
             else if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 radioTimeAroundMs2Ids.Checked = true;
-                tbxTimeAroundMs2Ids.Text =
-                    FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
+                tbxTimeAroundMs2Ids.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
             }
             else
             {
@@ -825,12 +823,13 @@ namespace pwiz.Skyline.SettingsUI
             groupBoxMS2.Hide();
 
             // Reduce and reposition Retention time filtering groupbox.
-            int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
-            int radioTimeAroundTopDifference = radioTimeAroundMs2Ids.Top - newRadioTimeAroundTop;
             groupBoxRetentionTimeToKeep.Top = groupBoxMS1.Bottom + precursorChargesShift;
+
+            int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
+            int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
             radioUseSchedulingWindow.Hide();
-            radioTimeAroundMs2Ids.Top = newRadioTimeAroundTop;
-            flowLayoutPanelTimeAroundMs2Ids.Top -= radioTimeAroundTopDifference;
+            flowLayoutPanelUseSchedulingWindow.Hide();
+            radioKeepAllTime.Top = newRadioTimeAroundTop;
             groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
 
             // Select defaults
@@ -838,7 +837,7 @@ namespace pwiz.Skyline.SettingsUI
             radioTimeAroundMs2Ids.Checked = true;
         }
 
-        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
+        private void radioTimeAroundMs2Ids_CheckedChanged(object sender, EventArgs e)
         {
             UpdateRetentionTimeFilterUi();
         }
@@ -876,53 +875,39 @@ namespace pwiz.Skyline.SettingsUI
                 radioKeepAllTime.ForeColor = DefaultForeColor;
                 toolTip.SetToolTip(radioKeepAllTime, null);
             }
-            var timeAroundMs2IdsControls = new List<Control>();
-            timeAroundMs2IdsControls.Add(radioTimeAroundMs2Ids);
+            var timeAroundMs2IdsControls = new List<Control> {radioTimeAroundMs2Ids};
             timeAroundMs2IdsControls.AddRange(flowLayoutPanelTimeAroundMs2Ids.Controls.Cast<Control>());
+            string strWarning = null;
             if (radioTimeAroundMs2Ids.Checked && !disabled)
             {
-                string strWarning = null;
+                tbxTimeAroundMs2Ids.Enabled = true;
+
                 var document = SkylineWindow.DocumentUI;
-                if (radioTimeAroundMs2Ids.Checked)
+                if (document.PeptideCount > 0)
                 {
-                    tbxTimeAroundMs2Ids.Enabled = true;
-                    if (document.PeptideCount > 0)
+                    if (!document.Settings.HasLibraries)
                     {
-                        if (!document.Settings.HasLibraries)
-                        {
-                            strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
-                        }
-                        else if (
-                            document.Peptides.All(
-                                peptide =>
-                                    document.Settings.GetUnalignedRetentionTimes(peptide.Peptide.Sequence,
-                                        peptide.ExplicitMods).Length == 0))
-                        {
-                            strWarning =
-                                Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
-                        }
+                        strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
-                }
-                else
-                {
-                    tbxTimeAroundMs2Ids.Enabled = false;
-                }
-                Color foreColor = strWarning == null ? DefaultForeColor : Color.Red;
-                foreach (var control in timeAroundMs2IdsControls)
-                {
-                    control.ForeColor = foreColor;
-                    toolTip.SetToolTip(control, strWarning);
+                    else if (document.Peptides.All(
+                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.Peptide.Sequence, peptide.ExplicitMods).Length == 0))
+                    {
+                        strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
+                    }
                 }
             }
             else
             {
                 tbxTimeAroundMs2Ids.Enabled = false;
-                foreach (var control in timeAroundMs2IdsControls)
-                {
-                    control.ForeColor = DefaultForeColor;
-                    toolTip.SetToolTip(control, null);
-                }
             }
+
+            Color foreColor = strWarning == null ? DefaultForeColor : Color.Red;
+            foreach (var control in timeAroundMs2IdsControls)
+            {
+                control.ForeColor = foreColor;
+                toolTip.SetToolTip(control, strWarning);
+            }
+
             if (radioUseSchedulingWindow.Checked && !disabled)
             {
                 tbxTimeAroundPrediction.Enabled = true;

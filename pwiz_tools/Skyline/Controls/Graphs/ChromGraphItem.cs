@@ -474,13 +474,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_arrayLabelIndexes[i] == -1)
                     continue;
 
-                ChromPeak peak = Chromatogram.GetPeak(i);
-                if (peak.IsForcedIntegration)
-                    continue;
-
                 double maxIntensity = _intensities[_arrayLabelIndexes[i]];
 
                 // Show peak extent indicators, if they are far enough apart
+                ChromPeak peak = Chromatogram.GetPeak(i);
                 AddPeakBoundaries(graphPane, annotations, false,
                                   ScaleRetentionTime(peak.StartTime), ScaleRetentionTime(peak.EndTime), maxIntensity);
             }

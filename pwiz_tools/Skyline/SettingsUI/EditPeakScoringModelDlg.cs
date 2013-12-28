@@ -660,14 +660,16 @@ namespace pwiz.Skyline.SettingsUI
                                                   group.Select(score => 1 - Statistics.PNorm(score)).ToList()).ToList();
                 // Compute q values for targets only
                 var pStats = new Statistics(pValueGroups[0]);
-                var qValueGroup = pStats.Qvalues().ToList();
+                // Calculating lambda from the data is expensive, so do it only once
+                double lambda = pStats.CalcPiZeroLambda();
+                var qValueGroup = pStats.Qvalues(lambda).ToList();
                 var qValueGroups = new[] {qValueGroup};
                 
                 pValueHistograms = new HistogramGroup(pValueGroups);
                 qValueHistograms = new HistogramGroup(qValueGroups);
 
                 // Proportion of expected nulls
-                double piZero = pStats.PiZero();
+                double piZero = pStats.PiZero(lambda);
                 // Density of expected nulls
                 double nullDensity = piZero * targetScores.Count / HISTOGRAM_BAR_COUNT;
                 piZeroLine = new PointPairList {{-0.1, nullDensity}, {1.1, nullDensity}};
@@ -827,25 +829,34 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializeCalculatorGrid()
         {
             // Create list of calculators and their corresponding weights.
-            PeakCalculatorWeights.Clear();
-            for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
+            _gridViewDriver.Items.RaiseListChangedEvents = false;
+            try
             {
-                bool isNanWeight = !_peakScoringModel.IsTrained ||
-                                   double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
-
-                var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
-                double? weight = null, normalWeight = null;
-                if (!isNanWeight)
+                PeakCalculatorWeights.Clear();
+                for (int i = 0; i < _peakScoringModel.PeakFeatureCalculators.Count; i++)
                 {
-                    weight = _peakScoringModel.Parameters.Weights[i];
-                    normalWeight = GetPercentContribution(i);
+                    bool isNanWeight = !_peakScoringModel.IsTrained ||
+                                       double.IsNaN(_peakScoringModel.Parameters.Weights[i]);
+
+                    var name = _peakScoringModel.PeakFeatureCalculators[i].Name;
+                    double? weight = null, normalWeight = null;
+                    if (!isNanWeight)
+                    {
+                        weight = _peakScoringModel.Parameters.Weights[i];
+                        normalWeight = GetPercentContribution(i);
+                    }
+                    // If the score is not eligible (e.g. has unknown values), definitely don't enable it
+                    // If it is eligible, enable if untrained or if trained and not nan
+                    bool enabled = _targetDecoyGenerator.EligibleScores[i] &&
+                                  (!_peakScoringModel.IsTrained || !double.IsNaN(_peakScoringModel.Parameters.Weights[i]));
+                    PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
                 }
-                // If the score is not eligible (e.g. has unknown values), definitely don't enable it
-                // If it is eligible, enable if untrained or if trained and not nan
-                bool enabled = _targetDecoyGenerator.EligibleScores[i] && 
-                              (!_peakScoringModel.IsTrained || !double.IsNaN(_peakScoringModel.Parameters.Weights[i]));
-                PeakCalculatorWeights.Add(new PeakCalculatorWeight(name, weight, normalWeight, enabled));
             }
+            finally
+            {
+                _gridViewDriver.Items.RaiseListChangedEvents = true;
+            }
+            _gridViewDriver.Items.ResetBindings();
         }
 
         private double? GetPercentContribution(int index)

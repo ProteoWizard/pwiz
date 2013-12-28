@@ -654,7 +654,36 @@ namespace pwiz.Skyline.Util
         /// <returns>Pi-zero estimation</returns>
         public double PiZero(double lambda)
         {
-            return _list.Count(v => v > lambda)/(_list.Length*(1 - lambda));
+            int aboveLambda = 0;
+            for (int i = 0; i < _list.Length; i++)
+            {
+                if (_list[i] > lambda)
+                    aboveLambda++;
+            }
+            return aboveLambda/(_list.Length*(1 - lambda));
+        }
+
+        /// <summary>
+        /// Returns an array of pi-zero values, given a list of lambdas in sorted order
+        /// </summary>
+        public double[] PiZeros(double[] lambdas)
+        {
+            var aboveLambdaCounts = new int[lambdas.Length];
+            for (int i = 0; i < _list.Length; i++)
+            {
+                for (int j = 0; j < lambdas.Length; j++)
+                {
+                    if (_list[i] <= lambdas[j])
+                        break;
+                     aboveLambdaCounts[j]++;
+                }
+            }
+            var piZeros = new double[lambdas.Length];
+            for (int j = 0; j < lambdas.Length; j++)
+            {
+                piZeros[j] = aboveLambdaCounts[j]/(_list.Length*(1 - lambdas[j]));
+            }
+            return piZeros;
         }
 
         private const int RANDOM_CYCLE_COUNT = 100;
@@ -665,10 +694,17 @@ namespace pwiz.Skyline.Util
             if (lambda.HasValue)
                 return PiZero(lambda.Value);
 
+            lambda = CalcPiZeroLambda();
+            return Math.Max(0.0, Math.Min(1.0, PiZero(lambda)));
+        }
+
+        public double CalcPiZeroLambda()
+        {
             // As in Storey and Tibshirani 2003 calculate Pi-zero across a range of
             // p value cut-offs.
             var lambdas = PiZeroLambdas.ToArray();
-            double minPi0 = lambdas.Select(PiZero).Min();
+            var piZeros = PiZeros(lambdas);
+            double minPi0 = piZeros.Min();
 
             // Because the spline fitting described in Storey and Tibshirani 2003
             // is non-trivial to implement in C#, the method in use in Percolator
@@ -683,20 +719,19 @@ namespace pwiz.Skyline.Util
             {
                 // Create an array of p-values randomly drawn from the current set
                 var statBoot = new Statistics(RandomDraw(rand).Take(numDraw));
+                piZeros = statBoot.PiZeros(lambdas);
                 for (int i = 0; i < lambdas.Length; ++i)
                 {
-                    double pi0Boot = statBoot.PiZero(lambdas[i]);
+                    double pi0Boot = piZeros[i];
                     // Estimated mean-squared error.
-                    arrayMse[i] += (pi0Boot - minPi0)*(pi0Boot - minPi0);
+                    arrayMse[i] += (pi0Boot - minPi0) * (pi0Boot - minPi0);
                 }
             }
 
             // Use the original estimate for the lambda that produced
             // the minimum mean-squared error for the random draw iterations
             int iMin = arrayMse.IndexOf(v => v == arrayMse.Min());
-            double pi0 = Math.Max(0.0, Math.Min(1.0, PiZero(lambdas[iMin])));
-
-            return pi0;
+            return lambdas[iMin];
         }
 
         private IEnumerable<double> RandomDraw(Random rand)

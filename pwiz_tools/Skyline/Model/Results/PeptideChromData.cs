@@ -143,8 +143,7 @@ namespace pwiz.Skyline.Model.Results
                     peakSet.ScorePeptideSets(detailedCalcs, _document);
                 }
 
-                // Sort descending by the peak picking score
-                listPeakSets.Sort(ComparePeakLists);
+                SortAndLimitPeaks(listPeakSets);
             }
 
             // Propagate sorting down to precursor level
@@ -153,6 +152,41 @@ namespace pwiz.Skyline.Model.Results
             // Sort transition group level peaks by retention time and record the best peak
             foreach (var chromDataSet in _dataSets)
                 chromDataSet.StorePeaks();
+        }
+
+        private void SortAndLimitPeaks(List<PeptideChromDataPeakList> listPeakSets)
+        {
+            // Sort descending by the peak picking score
+            listPeakSets.Sort(ComparePeakLists);
+
+            // Remove peaks contained in higher scoring peaks and limit to max peaks
+            int i = 0;
+            while (i < listPeakSets.Count)
+            {
+                var peakSet = listPeakSets[i];
+                if (i >= MAX_PEAK_GROUPS || ContainedPeak(peakSet, listPeakSets, i))
+                {
+                    // Remove peaks from their data sets
+                    foreach (var chromDataPeak in peakSet)
+                        chromDataPeak.Data.RemovePeak(chromDataPeak.PeakGroup);
+                    listPeakSets.RemoveAt(i);
+                    continue;
+                }
+                i++;
+            }
+        }
+
+        private bool ContainedPeak(IEnumerable<PeptideChromDataPeak> peakSet, List<PeptideChromDataPeakList> listPeakSets, int peakIndex)
+        {
+            // O(n^2) algorithm, but for never more than 10 items
+            var peak = peakSet.First();
+            for (int i = 0; i < peakIndex; i++)
+            {
+                var peakBetter = listPeakSets[i].First();
+                if (peakBetter.StartIndex <= peak.TimeIndex && peak.TimeIndex <= peakBetter.EndIndex)
+                    return true;
+            }
+            return false;
         }
 
         private bool ThermoZerosFix()
@@ -401,8 +435,6 @@ namespace pwiz.Skyline.Model.Results
                 var dataSet = dataSets.First();
                 // Truncate to maximum peak groups, unless this is a summary chromatogram
                 // where we want to leave more annotated peaks
-                if (dataSet.PrecursorMz != 0)
-                    dataSet.TruncatePeakSets(MAX_PEAK_GROUPS);
                 listPeakSets.AddRange(dataSet.PeakSets.Select(p =>
                     new PeptideChromDataPeakList(NodePep, FileInfo, new PeptideChromDataPeak(dataSet, p))));
                 return listPeakSets;
@@ -414,7 +446,7 @@ namespace pwiz.Skyline.Model.Results
                 return listPeakSets;
 
             // Create coeluting groups
-            while (allPeakGroups.Count > 0 && listPeakSets.Count < MAX_PEAK_GROUPS)
+            while (allPeakGroups.Count > 0)
             {
                 var peakNext = allPeakGroups[0];
                 allPeakGroups.RemoveAt(0);

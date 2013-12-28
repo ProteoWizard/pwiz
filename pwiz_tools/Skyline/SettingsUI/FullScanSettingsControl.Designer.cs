@@ -119,7 +119,7 @@
             this.radioTimeAroundMs2Ids.Name = "radioTimeAroundMs2Ids";
             this.radioTimeAroundMs2Ids.TabStop = true;
             this.radioTimeAroundMs2Ids.UseVisualStyleBackColor = true;
-            this.radioTimeAroundMs2Ids.CheckedChanged += new System.EventHandler(this.RadioNoiseAroundMs2IdsCheckedChanged);
+            this.radioTimeAroundMs2Ids.CheckedChanged += new System.EventHandler(this.radioTimeAroundMs2Ids_CheckedChanged);
             // 
             // flowLayoutPanelTimeAroundMs2Ids
             // 

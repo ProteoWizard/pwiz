@@ -1140,6 +1140,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int i = 0; i < numPeaks; i++)
                     peakAreas[i] = new double[numTrans];
             }
+
+            // Find the transition with the maximum peak height for the best peak
+            for (int i = 0; i < numTrans; i++)
+            {
+                var nodeTran = displayTrans[i];
+                int step = (numSteps > 0 ? i - numSteps : 0);
+                var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, step);
+                if (transitionChromInfo == null)
+                    continue;
+
+                if (maxPeakHeight < transitionChromInfo.Height)
+                {
+                    maxPeakHeight = transitionChromInfo.Height;
+                    bestPeakTran = i;
+                    tranPeakInfo = transitionChromInfo;
+                }
+                AddBestPeakTimes(transitionChromInfo, ref bestStartTime, ref bestEndTime);
+            }
+
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
@@ -1160,18 +1179,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Apply any active transform
                 info.Transform(transform);
 
-                int step = (numSteps > 0 ? i - numSteps : 0);
-                var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, step);
-
                 for (int j = 0; j < numPeaks; j++)
                 {
                     var peak = info.GetPeak(j);
-                    // If the user clicks on a peak, all of the forced-integration peaks will be activated
-//                    if (peak.IsForcedIntegration && !DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll)
-//                        continue;
 
                     // Exclude any peaks between the boundaries of the chosen peak.
-                    if (IntersectPeaks(peak, transitionChromInfo))
+                    if (IntersectPeaks(peak, tranPeakInfo))
                         continue;
 
                     // Store peak intensity for dot-product
@@ -1185,16 +1198,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         maxPeakTrans[j] = i;
                     }
                 }
-
-                if (transitionChromInfo == null)
-                    continue;
-                if (maxPeakHeight < transitionChromInfo.Height)
-                {
-                    maxPeakHeight = transitionChromInfo.Height;
-                    bestPeakTran = i;
-                    tranPeakInfo = transitionChromInfo;
-                }
-                AddBestPeakTimes(transitionChromInfo, ref bestStartTime, ref bestEndTime);
             }
 
             // Calculate library dot-products, if possible

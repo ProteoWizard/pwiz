@@ -359,15 +359,16 @@ namespace pwiz.SkylineTestTutorial
                         Assert.IsNotNull(nodeGroup);
                         var nodeTran = document.FindNode(SkylineWindow.SelectedPath) as TransitionDocNode;
                         Assert.IsNotNull(nodeTran);
-                        TransitionGroupDocNode nodeGroupGraph;
-                        TransitionDocNode nodeTranGraph;
                         var graph = SkylineWindow.GetGraphChrom(MULTI_FILE_REPLICATE_NAME);
-                        var scaledRT = graph.FindAnnotatedPeakRetentionTime(19.8, out nodeGroupGraph, out nodeTranGraph);
-                        Assert.AreSame(nodeGroup, nodeGroupGraph);
-                        // TODO(brendanx): Fix this
+                        // New peak picking picks correct peak
+                        Assert.AreEqual(19.8, graph.BestPeakTime.Value, 0.05);
+//                        TransitionGroupDocNode nodeGroupGraph;
+//                        TransitionDocNode nodeTranGraph;
+//                        var scaledRT = graph.FindAnnotatedPeakRetentionTime(19.8, out nodeGroupGraph, out nodeTranGraph);
+//                        Assert.AreSame(nodeGroup, nodeGroupGraph);
 //                        Assert.AreNotSame(nodeTran, nodeTranGraph);
 //                        Assert.AreEqual(7, nodeTranGraph.Transition.Ordinal);   // y7
-                        graph.FirePickedPeak(nodeGroupGraph, nodeTranGraph, scaledRT);
+//                        graph.FirePickedPeak(nodeGroupGraph, nodeTranGraph, scaledRT);
                     });
                 }
                 if (i == 5)

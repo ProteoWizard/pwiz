@@ -76,6 +76,11 @@ namespace pwiz.Skyline.Model.Results
             _listChromData.Add(chromData);
         }
 
+        public void RemovePeak(ChromDataPeakList peakGroup)
+        {
+            _listPeakSets.Remove(peakGroup);
+        }
+
         /// <summary>
         /// Offset applied to transform StartIndex, EndIndex and TimeIndex to peptide
         /// coordinate system shared by all transition groups of a peptide.
