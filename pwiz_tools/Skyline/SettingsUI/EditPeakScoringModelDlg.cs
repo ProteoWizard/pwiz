@@ -75,13 +75,7 @@ namespace pwiz.Skyline.SettingsUI
 
             _gridViewDriver = new PeakCalculatorGridViewDriver(gridPeakCalculators, bindingPeakCalculators,
                                                             new SortableBindingList<PeakCalculatorWeight>());
-
-            InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score);
-            InitGraphPane(zedGraphSelectedCalculator.GraphPane);
-            InitGraphPane(zedGraphPValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution, 
-                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value);
-            InitGraphPane(zedGraphQValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution,
-                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value);
+            InitializeGraphPanes();
             lblColinearWarning.Visible = false;
             toolStripFind.Visible = false;
 
@@ -106,6 +100,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void SetScoringModel(IPeakScoringModel scoringModel)
         {
+            InitializeGraphPanes();
             _peakScoringModel = scoringModel;
             ModelName = _peakScoringModel.Name;
             if (_originalName == null)
@@ -350,6 +345,19 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #region Graphs
+
+        /// <summary>
+        /// Initialize all the graph panes
+        /// </summary>
+        private void InitializeGraphPanes()
+        {
+            InitGraphPane(zedGraphMProphet.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score);
+            InitGraphPane(zedGraphSelectedCalculator.GraphPane);
+            InitGraphPane(zedGraphPValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution, 
+                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value);
+            InitGraphPane(zedGraphQValues.GraphPane, Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution,
+                                                     Resources.EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value);
+        }
 
         /// <summary>
         /// Initialize the given Zedgraph pane.
@@ -660,16 +668,16 @@ namespace pwiz.Skyline.SettingsUI
                                                   group.Select(score => 1 - Statistics.PNorm(score)).ToList()).ToList();
                 // Compute q values for targets only
                 var pStats = new Statistics(pValueGroups[0]);
-                // Calculating lambda from the data is expensive, so do it only once
-                double lambda = pStats.CalcPiZeroLambda();
-                var qValueGroup = pStats.Qvalues(lambda).ToList();
+                var qValueGroup = pStats.Qvalues(MProphetPeakScoringModel.DEFAULT_R_LAMBDA, MProphetPeakScoringModel.PI_ZERO_MIN).ToList();
                 var qValueGroups = new[] {qValueGroup};
                 
                 pValueHistograms = new HistogramGroup(pValueGroups);
                 qValueHistograms = new HistogramGroup(qValueGroups);
 
                 // Proportion of expected nulls
-                double piZero = pStats.PiZero(lambda);
+                double piZero = pStats.PiZero(MProphetPeakScoringModel.DEFAULT_R_LAMBDA);
+                // Enforced minimum for piZero
+                piZero = Math.Max(piZero, MProphetPeakScoringModel.PI_ZERO_MIN);
                 // Density of expected nulls
                 double nullDensity = piZero * targetScores.Count / HISTOGRAM_BAR_COUNT;
                 piZeroLine = new PointPairList {{-0.1, nullDensity}, {1.1, nullDensity}};

@@ -212,7 +212,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 RemoveColumn(columnDescriptor.PropertyPath);
             }
         }
-        private void AddColumn(PropertyPath propertyPath)
+        public void AddColumn(PropertyPath propertyPath)
         {
             List<ColumnSpec> columnSpecs = new List<ColumnSpec>(VisibleColumns.Select(col=>col.ColumnSpec));
             var newColumn = new ColumnSpec(propertyPath);

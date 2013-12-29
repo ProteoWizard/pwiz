@@ -36,6 +36,10 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class ReintegrateDlg : FormEx
     {
+        /// <summary>
+        /// For performance tests only: add an annotation for combined score?
+        /// </summary>
+        private bool _scoreAnnotation;
 
         public SrmDocument Document { get; private set; }
 
@@ -46,6 +50,7 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
             Icon = Resources.Skyline;
             Document = document;
+            _scoreAnnotation = false;
             _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboBoxScoringModel, Settings.Default.PeakScoringModelList);
             var peakScoringModel = document.Settings.PeptideSettings.Integration.PeakScoringModel;
             _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);
@@ -89,7 +94,7 @@ namespace pwiz.Skyline.EditUI
                             {
                                 throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_);
                             }
-                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, checkBoxAnnotation.Checked, pm);
+                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, checkBoxAnnotation.Checked, pm, _scoreAnnotation);
                         });
                     if (longWaitDlg.IsCanceled)
                         return;
@@ -139,6 +144,12 @@ namespace pwiz.Skyline.EditUI
                 reintegrateAllPeaks.Checked = value;
                 reintegrateQCutoff.Checked = !value;
             }
+        }
+
+        public bool ScoreAnnotation
+        {
+            get { return _scoreAnnotation; }
+            set { _scoreAnnotation = value; }
         }
 
         public void AddPeakScoringModel()

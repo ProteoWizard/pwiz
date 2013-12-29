@@ -466,17 +466,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
             LabelType = labelType;
             ChromatogramSet = chromatogramSet;
             FilePath = chromGroupInfo.FilePath;
-            var fileId = chromatogramSet.FindFile(chromGroupInfo);
-            Run = runEnumDict[fileId.GlobalIndex];
+            FileId = chromatogramSet.FindFile(chromGroupInfo);
+            Run = runEnumDict[FileId.GlobalIndex];
         }
 
         public PeptideGroupDocNode NodePepGroup { get; private set; }
         public PeptideDocNode NodePep { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public ChromatogramSet ChromatogramSet { get; private set; }
+        public ChromFileInfoId FileId { get; private set; }
         public string FilePath { get; private set; }
         public int Run { get; private set; }
 
+        /// <summary>
+        /// Guaranteed unique key for internal use
+        /// </summary>
+        public PeakTransitionGroupIdKey Key
+        {
+            get { return new PeakTransitionGroupIdKey(NodePep.Id.GlobalIndex, FileId.GlobalIndex); }
+        }
+
+        /// <summary>
+        /// Mostly unique string identifier for external use with R version of mProphet
+        /// </summary>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -487,6 +499,37 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 sb.Append("_").Append(LabelType);
             sb.Append("_run").Append(Run);
             return sb.ToString();
+        }
+    }
+
+    public struct PeakTransitionGroupIdKey
+    {
+        public PeakTransitionGroupIdKey(int pepIndex, int fileIndex) : this()
+        {
+            PepIndex = pepIndex;
+            FileIndex = fileIndex;
+        }
+
+        public int PepIndex { get; private set; }
+        public int FileIndex { get; private set; }
+
+        public bool Equals(PeakTransitionGroupIdKey other)
+        {
+            return PepIndex == other.PepIndex && FileIndex == other.FileIndex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is PeakTransitionGroupIdKey && Equals((PeakTransitionGroupIdKey) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (PepIndex*397) ^ FileIndex;
+            }
         }
     }
 

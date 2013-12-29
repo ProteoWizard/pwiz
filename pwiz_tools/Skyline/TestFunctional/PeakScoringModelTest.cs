@@ -215,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
             gridGen.AddRow(true, 0.5827, 0.3909);
             gridGen.AddRow(true, 0.5827, 0.1606);
             gridGen.AddRow(true, 0.6993, 0.1299);
-            gridGen.AddRow(false, 11.6548, 0.000);
+            gridGen.AddRow(false, double.NaN, double.NaN);
             gridGen.AddRow(true, 1.7482, 0.0492);
             gridGen.AddRow(true, 2.3310, 0.2264);
             gridGen.AddRow(true, -0.0291, 0.0429);
@@ -224,7 +224,7 @@ namespace pwiz.SkylineTestFunctional
             gridGenNew.AddRow(true, 0.4410, 0.4303);
             gridGenNew.AddRow(true, 0.4410, 0.1724);
             gridGenNew.AddRow(true, 0.5291, 0.1125);
-            gridGenNew.AddRow(false, 8.8190, 0.0000);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(true, 1.3229, 0.0153);
             gridGenNew.AddRow(true, 1.7638, 0.2360);
             gridGenNew.AddRow(true, -0.0220, 0.0330);

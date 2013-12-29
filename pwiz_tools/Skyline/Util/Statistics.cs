@@ -758,9 +758,9 @@ namespace pwiz.Skyline.Util
         ///           cut-off.
         /// </summary>
         /// <returns>New statistics containing q values for the p values in this set</returns>
-        public double[] Qvalues(double? lambda = null)
+        public double[] Qvalues(double? lambda = null, double minPiZero = 0)
         {
-            double pi0 = PiZero(lambda);
+            double pi0 = Math.Max(PiZero(lambda), minPiZero);
             var ordered = OrderedIndexedList();
             int n = _list.Length;
             var qlist = new double[n];

@@ -129,8 +129,9 @@ namespace pwiz.SkylineTestA
             var handlerAllNull = new MProphetResultsHandler(docOriginal, peakScoringModel);
             handlerAllNull.ScoreFeatures();
             var docNull = handlerAllNull.ChangePeaks(-0.001);
-            foreach (var chromInfo in docNull.Transitions.SelectMany(transition => transition.ChromInfos))
-                Assert.IsTrue(chromInfo.IsEmpty);
+            foreach (var transitionNode in docNull.Transitions)
+                foreach(var chromInfo in transitionNode.ChromInfos)
+                    Assert.IsTrue(chromInfo.IsEmpty || transitionNode.IsDecoy);
 
             // 6. Reintegration adjusts example peak to null at q=0.01 cutoff, but adjusts it to a non-null peak at q=0.05
             const int groupNum = 11;

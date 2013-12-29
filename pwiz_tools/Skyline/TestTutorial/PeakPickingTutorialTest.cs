@@ -23,11 +23,15 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -140,14 +144,21 @@ namespace pwiz.SkylineTestTutorial
 
             // Train the peak scoring model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            PauseForScreenShot("p5 -- reintegrate form");
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
             PauseForScreenShot("p6 -- peak scoring dialog trained");
             RunUI(() => Assert.AreEqual(0.679, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
+            RunUI(() => editDlg.SelectedGraphTab = 2);
+            PauseForScreenShot("p7 -- p value graph");
+
+            RunUI(() => editDlg.SelectedGraphTab = 3);
+            PauseForScreenShot("p8 -- q value graph");
+
             RunUI(() => editDlg.SelectedGraphTab = 1);
             RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(2));
-            PauseForScreenShot("p7 -- peak scoring dialog feature score");
+            PauseForScreenShot("p9 -- peak scoring dialog feature score");
 
             RunUI(() =>
             {
@@ -160,12 +171,12 @@ namespace pwiz.SkylineTestTutorial
                 editDlg.FindMissingValues(2);
                 editDlg.PeakScoringModelName = "test1";
             });
-            PauseForScreenShot("p8 -- peak scoring dialog find missing");
+            PauseForScreenShot("p10 -- peak scoring dialog find missing");
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
 
-            PauseForScreenShot("p8 -- find results form");
+            PauseForScreenShot("p11 -- find results form");
 
             // Remove the peptide with no library dot product, and train again
             FindResultsForm findResultsForm = null;
@@ -208,7 +219,10 @@ namespace pwiz.SkylineTestTutorial
                     }
                     editDlgLibrary.TrainModel(true);
                 });
-            PauseForScreenShot("p9 - peak scoring dialog with library score");
+            PauseForScreenShot("p12 - peak scoring dialog with library score");
+
+            RunUI(() => editDlgLibrary.SelectedGraphTab = 3);
+            PauseForScreenShot("p12 - q values with library score");
 
             OkDialog(editDlgLibrary, editDlgLibrary.OkDialog);
 
@@ -222,13 +236,16 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(editDlgNew.UsesDecoys);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[6].IsEnabled);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[6].PercentContribution < 0);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[4].IsEnabled);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[4].PercentContribution < 0);
                     editDlgNew.UsesSecondBest = true;
                     editDlgNew.PeakCalculatorsGrid.Items[6].IsEnabled = false;
+                    editDlgNew.PeakCalculatorsGrid.Items[4].IsEnabled = false;
                     editDlgNew.TrainModel(true);
                     // Check that these cells are still active even though they've been unchecked
                     Assert.IsTrue(editDlgNew.IsActiveCell(6, 0));
                 });
-            PauseForScreenShot("p10 - peak scoring dialog with second best");
+            PauseForScreenShot("p14 - peak scoring dialog with second best");
 
             OkDialog(editDlgNew, editDlgNew.CancelDialog);
             OkDialog(editListLibrary, editListLibrary.OkDialog);
@@ -239,8 +256,9 @@ namespace pwiz.SkylineTestTutorial
                 reintegrateDlgNew.ComboPeakScoringModelSelected = "test1";
                 reintegrateDlgNew.ReintegrateAll = true;
                 reintegrateDlgNew.OverwriteManual = true;
+                reintegrateDlgNew.AddAnnotation = true;
             });
-            PauseForScreenShot("p11 -- reintegrate");
+            PauseForScreenShot("p15 -- reintegrate");
 
             OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
             RunUI(() =>
@@ -252,7 +270,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(18.0, chromGroupInfo.RetentionTime.Value, 0.1);
             });
             FindNode(peptideSeqHighlight);
-            PauseForScreenShot("p12 -- main window");
+            PauseForScreenShot("p16 -- main window");
 
             // Reintegrate slightly differently, with a q value cutoff
             var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -261,22 +279,41 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgQ.ReintegrateAll = false;
                     reintegrateDlgQ.Cutoff = 0.001;
                     reintegrateDlgQ.OverwriteManual = true;
+                    reintegrateDlgQ.AddAnnotation = true;
                 });
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
-            PauseForScreenShot("p13 -- main window with some null peaks");
+            PauseForScreenShot("p17 -- main window with some null peaks");
 
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p14.view"));
             FindNode((622.3086).ToString(CultureInfo.CurrentCulture) + "++");
-            PauseForScreenShot("p14 -- main window with interference on transition");
+            PauseForScreenShot("p18 -- main window with interference on transition");
 
             // Export the mProphet features
             var mProphetExportDlg = ShowDialog<MProphetFeaturesDlg>(SkylineWindow.ShowMProphetFeaturesDialog);
 
             RunUI(() => mProphetExportDlg.BestScoresOnly = true);
-            PauseForScreenShot("p15 -- mProphet features dialog");
+            PauseForScreenShot("p19 -- mProphet features dialog");
             
             // TODO: actually write the features here using WriteFeatures
             OkDialog(mProphetExportDlg, mProphetExportDlg.CancelDialog);
+
+            // Export a report
+            if (IsEnableLiveReports)
+            {
+                var reportExportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+                var editListReport = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(
+                    reportExportDlg.EditList);
+                RunUI(() => editListReport.SelectItem("Peptide RT Results"));
+                PauseForScreenShot("p20 -- edit report form list");
+
+                var customizeViewDlg = ShowDialog<ViewEditor>(editListReport.EditItem);
+                PauseForScreenShot("p21 -- customize view");
+
+                RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.\"annotation_annotation_QValue\"")));
+                OkDialog(customizeViewDlg, customizeViewDlg.OkDialog);
+                OkDialog(editListReport, editListReport.OkDialog);
+                OkDialog(reportExportDlg, reportExportDlg.CancelDialog);
+            }
 
             // Open OpenSWATH gold standard dataset
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("AQUA4_Human_picked_napedro2-mod2.sky"))); // Not L10N
@@ -284,10 +321,10 @@ namespace pwiz.SkylineTestTutorial
 
             // Perform re-score of DIA data
             var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-            PauseForScreenShot("p17 -- rescore peaks for DIA data");
+            PauseForScreenShot("p23 -- rescore peaks for DIA data");
 
             var rescoreResultsDlg = ShowDialog<RescoreResultsDlg>(manageResults.Rescore);
-            PauseForScreenShot("p17 -- rescore as same file");
+            PauseForScreenShot("p23 -- rescore as same file");
 
             RunUI(() => rescoreResultsDlg.Rescore(false));
             WaitForCondition(5 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 5 minutes
@@ -303,7 +340,7 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgDia.EditPeakScoringModel);
             RunUI(() => editListDia.SelectItem("test1"));
             var editDlgFromSrm = ShowDialog<EditPeakScoringModelDlg>(editListDia.EditItem);
-            PauseForScreenShot("p17 -- SRM model applied to DIA data");
+            PauseForScreenShot("p24 -- SRM model applied to DIA data");
             RunUI(() =>
                 {
                     int i = 0;
@@ -373,7 +410,7 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i++].Weight, null, 1e-3);
                     AssertEx.AreEqualNullable(editDlgDia.PeakCalculatorsGrid.Items[i].Weight, null, 1e-3);
                 });
-            PauseForScreenShot("p18 -- DIA peak scoring dialog with second best");
+            PauseForScreenShot("p25 -- DIA peak scoring dialog with second best");
             
             RunUI(() =>
                 {
@@ -388,6 +425,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 reintegrateDlgDia.ReintegrateAll = true;
                 reintegrateDlgDia.OverwriteManual = true;
+                reintegrateDlgDia.AddAnnotation = true;
             });
             OkDialog(reintegrateDlgDia, reintegrateDlgDia.OkDialog);
 

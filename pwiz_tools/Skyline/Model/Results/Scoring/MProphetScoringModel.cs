@@ -43,6 +43,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
         private const int MAX_ITERATIONS = 7;
+        public const double DEFAULT_R_LAMBDA = 0.4;    // Lambda for pi-zero from original R mProphet
+
+        /// <summary>
+        ///  Minimum possible value of PI_ZERO.  If PI_ZERO is allowed to be arbitrarily low, it
+        /// will sometimes be zero, causing all q values to be assigned to zero.  In practice, we should
+        /// always assume a baseline rate of nulls.
+        /// </summary>
+        public const double PI_ZERO_MIN = 0.05;
 
         public MProphetPeakScoringModel(
             string name, 
@@ -58,7 +66,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             UsesDecoys = usesDecoys;
             UsesSecondBest = usesSecondBest;
             ColinearWarning = colinearWarning;
-            Lambda = 0.4;   // Default from R
+            Lambda = DEFAULT_R_LAMBDA;   // Default from R
             DoValidate();
         }
 
@@ -83,7 +91,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             : base(name)
         {
             SetPeakFeatureCalculators(DEFAULT_CALCULATORS);
-            Lambda = 0.4;   // Default from R
+            Lambda = DEFAULT_R_LAMBDA;   // Default from R
             DoValidate();
         }
 
@@ -116,7 +124,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected MProphetPeakScoringModel()
         {
-            Lambda = 0.4;   // Default from R
+            Lambda = DEFAULT_R_LAMBDA;   // Default from R
         }
 
         public double? Lambda { get; private set; }

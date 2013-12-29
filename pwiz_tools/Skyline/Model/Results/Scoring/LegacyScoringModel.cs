@@ -97,8 +97,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false)
         {
             return ChangeProp(ImClone(this), im =>
-                {
-                    var parameters = new LinearModelParams(DEFAULT_WEIGHTS);
+            {
+                    int nWeights = initParameters.Weights.Count;
+                    var weights = new double [nWeights];
+                    for (int i = 0; i < initParameters.Weights.Count; ++i)
+                    {
+                        weights[i] = double.IsNaN(initParameters.Weights[i]) ? double.NaN : DEFAULT_WEIGHTS[i];
+                    }
+                    var parameters = new LinearModelParams(weights);
                     ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
                     ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets);
                     targetTransitionGroups.ScorePeaks(parameters.Weights);
