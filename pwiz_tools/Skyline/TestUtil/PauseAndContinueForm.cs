@@ -30,18 +30,24 @@ namespace pwiz.SkylineTestUtil
         public PauseAndContinueForm(string description = null)
         {
             InitializeComponent();
-            lblDescription.Text = description;
-            if (description == null)
-                Height -= btnContinue.Top - lblDescription.Top;
+            if (description != null)
+            {
+                lblDescription.Text = description;
+            }
+            else
+            {
+                int delta = btnContinue.Top - lblDescription.Top;
+                btnContinue.Top -= delta;
+                Height -= delta;
+                lblDescription.Visible = false;
+            }
 
             // Adjust dialog width to accommodate description.
             if (lblDescription.Width > btnContinue.Width)
                 Width = lblDescription.Width + lblDescription.Left*2;
 
             // Finally make sure the button is fully visible
-            btnContinue.Anchor = AnchorStyles.Left | AnchorStyles.Top;
             Height += Math.Max(0, (btnContinue.Bottom + btnContinue.Left) - ClientRectangle.Bottom);
-            btnContinue.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
         }
 
         private void btnContinue_Click(object sender, EventArgs e)
