@@ -340,9 +340,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 ZoomAll.Invoke(this, new ZoomEventArgs(newState));
         }
 
+        /// <summary>
+        /// Return the text of the annotations shown a chromatogram pane
+        /// </summary>
+        /// <param name="paneIndex">Index of the pane (default 0 or first)</param>
+        /// <returns>Enumerable of annotation label text</returns>
+        public IEnumerable<string> GetAnnotationLabelStrings(int paneIndex = 0)
+        {
+            return GraphPanes.ElementAt(paneIndex).GetAnnotationLabelStrings();
+        }
+
         public void ZoomTo(ZoomState zoomState)
         {
             zoomState.ApplyState(GraphPanes.First());
+        }
+
+        /// <summary>
+        /// Set min and max displayed time values, and optionally max intensity
+        /// Note: this is intended for use in automated functional tests only
+        /// </summary>
+        public void ZoomTo(double rtStartMeasured, double rtEndMeasured, double? maxIntensity=null)
+        {
+            if (rtEndMeasured > rtStartMeasured)
+            {                
+                var pane = GraphPanes.First();
+                pane.XAxis.Scale.Min = rtStartMeasured;
+                pane.XAxis.Scale.Max = rtEndMeasured;
+                pane.YAxis.Scale.Max = maxIntensity ?? pane.YAxis.Scale.Max;
+                var hold = graphControl.IsSynchronizeXAxes;
+                graphControl.IsSynchronizeXAxes = false; // just this one
+                ZoomState.ApplyState(pane);
+                ZoomAll.Invoke(this, new ZoomEventArgs(ZoomState));
+                graphControl.IsSynchronizeXAxes = hold;
+            }
         }
 
         public ZoomState ZoomState

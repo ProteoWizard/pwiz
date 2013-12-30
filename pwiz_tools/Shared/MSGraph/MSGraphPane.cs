@@ -107,6 +107,35 @@ namespace pwiz.MSGraph
         protected readonly GraphObjList _pointAnnotations;
         protected readonly Dictionary<TextObj, RectangleF> _manualLabels;
 
+        /// <summary>
+        /// Get all annotation label text, for testing purposes
+        /// </summary>
+        public IEnumerable<string> GetAnnotationLabelStrings()
+        {
+            foreach (var manual in _manualLabels.Where(manual => manual.Key.Text != null))
+            {
+                yield return manual.Key.Text;
+            }
+
+            foreach (CurveItem item in CurveList)
+            {
+                IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
+                if (info == null || string.IsNullOrEmpty(info.ToString()))
+                    continue;
+
+                MSPointList points = item.Points as MSPointList;
+                if (points == null)
+                    continue;
+
+                foreach (var pt in points.FullList)
+                {
+                    PointAnnotation annotation = info.AnnotatePoint(pt);
+                    if (annotation != null)
+                        yield return annotation.Label;
+                }
+            }
+        }
+
         private void drawLabels( Graphics g )
         {
             foreach( GraphObj pa in _pointAnnotations )
