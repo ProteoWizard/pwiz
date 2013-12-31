@@ -74,25 +74,25 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_ANNOTATIONS =
             {
-                "35.7;-23 ppm|36.6;0 ppm|34.1;+6.8 ppm|34.3;+2.4 ppm|35.2;+7.2 ppm|37.5;-1.7 ppm|ID;35.8|36.6;0 ppm|32.4;-6 ppm|33.2;0 ppm|34.1;+6.8 ppm|34.3;+2.4 ppm|35.2;+7.2 ppm|37.5;-1.7 ppm|38.5;-1.6 ppm|39.1;+3.4 ppm", // Not L10N
+                "35.7;-23 ppm|36.6;0 ppm|32.4;-6 ppm|33.2;0 ppm|34.1;+6.8 ppm|34.3;+2.4 ppm|35.2;+7.2 ppm|37.5;-1.7 ppm|38.5;-1.6 ppm|39.1;+3.4 ppm", // Not L10N
                 "39.0;-13.1 ppm;(idotp 0.90)|34.1;-0.5 ppm|35.7;-47.9 ppm|36.1;-36.4 ppm;(idotp 0.97)|37.8;-11.6 ppm|37.9;0 ppm|35.0;-18.5 ppm|36.5;-41.4 ppm|40.9;0 ppm", // Not L10N
-                "37.0;-6.9 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.9 ppm|35.2;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|33.1;+5.4 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.5 ppm|35.2;0 ppm|40.5;-37.8 ppm|33.1;+5.4 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.9 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|33.1;+5.4 ppm|34.6;-46.3 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm|32.2;0 ppm|34.6;-46.3 ppm|39.7;-0.3 ppm", // Not L10N
-                "37.4;-1.5 ppm|33.2;+25.8 ppm|34.9;-41 ppm|ID;37.3|40.8;-20.7 ppm|33.2;+25.8 ppm|34.9;-41 ppm", // Not L10N
-                "37.5;0 ppm|36.9;-2.6 ppm|32.8;-13.6 ppm|34.1;-8.5 ppm|35.5;0 ppm|36.0;+9.6 ppm|36.9;-2.6 ppm|38.8;0 ppm|39.6;0 ppm|42.0;-5.4 ppm", // Not L10N
-                "38.2;+19.9 ppm;(idotp 0.83)|36.1;+11.2 ppm|40.6;-7.9 ppm;(idotp 0.91)|ID;37.9|34.1;-3.9 ppm|36.1;+11.2 ppm|40.6;-7.9 ppm;(idotp 0.91)", // Not L10N
-                "37.7;-4.1 ppm|36.1;+11.2 ppm|40.8;+4.5 ppm|ID;37.9|34.1;-3.9 ppm|36.1;+11.2 ppm|40.8;+4.5 ppm", // Not L10N
-                "38.9;-28.1 ppm;(idotp 0.80)|39.4;0 ppm|34.5;+2.9 ppm|35.3;+5.6 ppm|37.5;0 ppm|36.6;0 ppm;(idotp 0.89)|37.5;0 ppm|39.4;0 ppm|40.9;-2.4 ppm", // Not L10N
-                "39.3;-14.3 ppm;(idotp 0.74)|35.7;+2.4 ppm|ID;38.9|35.7;+2.4 ppm|42.1;0 ppm;(idotp 0.84)|43.2;0 ppm;(idotp 0.79)", // Not L10N
-                "38.9;-31.2 ppm;(idotp 0.65)|39.4;0 ppm|38.0;-11.5 ppm|35.3;+5.6 ppm;(idotp 0.78)|34.5;0 ppm|36.8;0 ppm|37.3;0 ppm;(idotp 0.71)|39.4;0 ppm|41.1;-12.7 ppm|38.0;-11.5 ppm", // Not L10N
-                "38.4;+10.6 ppm;(idotp 0.54)|35.7;+2.4 ppm;(idotp 0.67)|ID;38.9|35.7;+2.4 ppm;(idotp 0.67)|42.3;-8 ppm|42.5;-6.3 ppm", // Not L10N
-                "37.3;-20.8 ppm|ID;37.0|36.1;-5.2 ppm|38.2;0 ppm|39.1;0 ppm|39.9;-0.5 ppm|32.2;-0.5 ppm|34.3;0 ppm|34.8;0 ppm", // Not L10N
-                "37.5;-11.9 ppm|ID;37.4|ID;37.5|ID;37.6|41.9;0 ppm|34.7;0 ppm|32.5;0 ppm|42.4;-16.1 ppm", // Not L10N
-                "35.9;-16.3 ppm|ID;36.1|33.0;-47.7 ppm|39.5;-53.6 ppm", // Not L10N
-                "24.6;-28.4 ppm|23.3;-35.2 ppm|ID;24.5|22.1;-18 ppm|23.3;-35.2 ppm|25.9;0 ppm|27.0;-34.9 ppm|28.6;-38.8 ppm", // Not L10N
-                "24.4;-11.6 ppm|23.3;-9.1 ppm|26.4;-13.2 ppm|26.8;-15 ppm|21.8;0 ppm|23.3;-9.1 ppm|26.1;0 ppm|26.4;-13.2 ppm|26.8;-15 ppm|27.8;-33.7 ppm|28.6;-39.3 ppm", // Not L10N 
+                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
+                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
+                "37.0;-6.5 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
+                "37.0;-6.9 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm|32.2;0 ppm|34.6;-46.3 ppm|39.7;-0.3 ppm", // Not L10N
+                "37.4;-1.5 ppm|40.8;-20.7 ppm|33.2;+25.8 ppm|34.9;-41 ppm", // Not L10N
+                "37.5;0 ppm|32.8;-13.6 ppm|34.1;-8.5 ppm|35.5;0 ppm|36.0;+9.6 ppm|36.9;-2.6 ppm|38.8;0 ppm|39.6;0 ppm|42.0;-5.4 ppm", // Not L10N
+                "34.1;-3.9 ppm|36.1;+11.2 ppm|40.6;-7.9 ppm;(idotp 0.91)|38.2;+19.9 ppm;(idotp 0.83)", // Not L10N
+                "37.7;-4.1 ppm|34.1;-3.9 ppm|36.1;+11.2 ppm|40.8;+4.5 ppm", // Not L10N
+                "34.5;+2.9 ppm|35.3;+5.6 ppm|37.5;0 ppm|38.9;-28.1 ppm;(idotp 0.80)|36.6;0 ppm;(idotp 0.89)|37.5;0 ppm|39.4;0 ppm|40.9;-2.4 ppm", // Not L10N
+                "35.7;+2.4 ppm|39.3;-14.3 ppm;(idotp 0.74)|42.1;0 ppm;(idotp 0.84)|43.2;0 ppm;(idotp 0.79)", // Not L10N
+                "35.3;+5.6 ppm;(idotp 0.78)|38.9;-31.2 ppm;(idotp 0.65)|34.5;0 ppm|36.8;0 ppm|37.3;0 ppm;(idotp 0.71)|39.4;0 ppm|41.1;-12.7 ppm|38.0;-11.5 ppm", // Not L10N
+                "35.7;+2.4 ppm;(idotp 0.67)|42.3;-8 ppm|42.5;-6.3 ppm|38.4;+10.6 ppm;(idotp 0.54)", // Not L10N
+                "36.1;-5.2 ppm|37.3;-20.8 ppm|38.2;0 ppm|39.1;0 ppm|39.9;-0.5 ppm|32.2;-0.5 ppm|34.3;0 ppm|34.8;0 ppm", // Not L10N
+                "41.9;0 ppm|37.5;-11.9 ppm|34.7;0 ppm|32.5;0 ppm|42.4;-16.1 ppm", // Not L10N
+                "35.9;-16.3 ppm|33.0;-47.7 ppm|39.5;-53.6 ppm", // Not L10N
+                "24.6;-28.4 ppm|22.1;-18 ppm|23.3;-35.2 ppm|25.9;0 ppm|27.0;-34.9 ppm|28.6;-38.8 ppm", // Not L10N
+                "24.4;-11.6 ppm|21.8;0 ppm|23.3;-9.1 ppm|26.1;0 ppm|26.4;-13.2 ppm|26.8;-15 ppm|27.8;-33.7 ppm|28.6;-39.3 ppm", // Not L10N 
                 "","","","","","","","","","","" // room to grow Not L10N
             };
 
@@ -149,8 +149,6 @@ namespace pwiz.SkylineTestTutorial
                     GetTestPath("100803_0005b_MCF7_TiTip3.group.xml")  // Not L10N
                 };
             PauseForScreenShot("page 4 - empty library page");
-
-            int atest = 0;
 
             RunUI(() =>
             {
@@ -313,6 +311,9 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowChromatogramLegends(false);
             });
             PauseForScreenShot("page 18 - main window layout"); // Not L10N
+
+            int atest = 0;
+
             CheckAnnotations(TIB_L,0,EXPECTED_ANNOTATIONS[atest++]);
             int pepIndex = 3;
             RunUI(() => SkylineWindow.CollapsePeptides());

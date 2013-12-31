@@ -112,24 +112,28 @@ namespace pwiz.MSGraph
         /// </summary>
         public IEnumerable<string> GetAnnotationLabelStrings()
         {
-            foreach (var manual in _manualLabels.Where(manual => manual.Key.Text != null))
-            {
-                yield return manual.Key.Text;
-            }
-
             foreach (CurveItem item in CurveList)
             {
-                IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
+                var info = item.Tag as IMSGraphItemExtended;
                 if (info == null || string.IsNullOrEmpty(info.ToString()))
                     continue;
 
-                MSPointList points = item.Points as MSPointList;
+                var points = item.Points as MSPointList;
                 if (points == null)
                     continue;
 
+                var listAnnotations = new GraphObjList();
+                info.AddPreCurveAnnotations(this, null, points, listAnnotations);
+                foreach (var annotation in listAnnotations)
+                {
+                    var textObj = annotation as TextObj;
+                    if (textObj != null)
+                        yield return textObj.Text;
+                }
+
                 foreach (var pt in points.FullList)
                 {
-                    PointAnnotation annotation = info.AnnotatePoint(pt);
+                    var annotation = info.AnnotatePoint(pt);
                     if (annotation != null)
                         yield return annotation.Label;
                 }
