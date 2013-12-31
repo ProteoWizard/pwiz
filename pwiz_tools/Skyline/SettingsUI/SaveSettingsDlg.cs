@@ -29,57 +29,56 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class SaveSettingsDlg : FormEx
     {
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
-
         public SaveSettingsDlg()
         {
             InitializeComponent();
-
-            _helper = new MessageBoxHelper(this);
         }
 
         public string SaveName { get; set; }
 
-        protected override void OnClosing(CancelEventArgs e)
+        #region Test helpers
+
+        public string SettingsName
         {
-            // If the user is accepting these settings, then validate
-            // and hold them in dialog member variables.
-            if (_clickedOk)
+            get { return textName.Text; }
+            set { textName.Text = value; }
+        }
+
+        #endregion Test
+
+        public void OkDialog()
+        {
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            foreach (SrmSettings settings in Settings.Default.SrmSettingsList)
             {
-                _clickedOk = false; // Reset in case of failure
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                foreach (SrmSettings settings in Settings.Default.SrmSettingsList)
+                if (name == settings.Name)
                 {
-                    if (name == settings.Name)
-                    {
-                        var message = TextUtil.LineSeparate(String.Format(Resources.SaveSettingsDlg_OnClosing_The_name__0__already_exists, name),
-                                                            Resources.SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings);
-                        var result = MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel, MessageBoxIcon.Question,
-                                                     MessageBoxDefaultButton.Button2);
-                        if (result == DialogResult.OK)
-                            break;
+                    var message = TextUtil.LineSeparate(String.Format(Resources.SaveSettingsDlg_OnClosing_The_name__0__already_exists, name),
+                                                        Resources.SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings);
+                    var result = MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel, MessageBoxIcon.Question,
+                                                    MessageBoxDefaultButton.Button2);
+                    if (result == DialogResult.OK)
+                        break;
 
-                        textName.Focus();
-                        e.Cancel = true;
-                        return;
-                    }
+                    textName.Focus();
+                    return;
                 }
-
-                SaveName = name;
             }
 
-            base.OnClosing(e);
+            SaveName = name;
+
+            DialogResult = DialogResult.OK;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
     }
 }

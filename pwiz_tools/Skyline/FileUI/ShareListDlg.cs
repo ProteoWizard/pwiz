@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -181,9 +182,13 @@ namespace pwiz.Skyline.FileUI
 
         private void cbSelectAll_CheckedChanged(object sender, EventArgs e)
         {
-            bool checkAll = cbSelectAll.Checked;
+            SelectAll(cbSelectAll.Checked);
+        }
+
+        public void SelectAll(bool selectAllChecked)
+        {
             for (int i = 0; i < listboxListItems.Items.Count; i++)
-                listboxListItems.SetItemChecked(i, checkAll);
+                listboxListItems.SetItemChecked(i, selectAllChecked);
         }
 
         //IListSerilizer<TItem> XmlMappedList<string, TItem>, IListDefaults<TItem>, IListEditor<TItem>, IListEditorSupport
@@ -217,7 +222,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format("Failure loading {0}.", fileName),
+                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format(Resources.ShareListDlg_ImportFile_Failure_loading__0__, fileName),
                                                                  fileName, x.InnerException);
                 return false;
             }
@@ -231,17 +236,18 @@ namespace pwiz.Skyline.FileUI
             string messageFormat = existing.Count == 1 ?
                Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
                multipleMessage;
-            var result = MessageBox.Show(string.Format(messageFormat, TextUtil.LineSeparate(existing)),
-                                         Program.Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.None,
-                                         MessageBoxDefaultButton.Button2);
-            switch (result)
+            using (var dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(existing)), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
             {
-                case DialogResult.Cancel:
-                    return null;
-                case DialogResult.Yes:
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.Yes)
+                {
                     // Overwrite everything
                     existing.Clear();
-                    break;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    return null;
+                }
             }
             return existing;
         }

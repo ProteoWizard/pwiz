@@ -13159,6 +13159,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure loading {0}..
+        /// </summary>
+        public static string ShareListDlg_ImportFile_Failure_loading__0__ {
+            get {
+                return ResourceManager.GetString("ShareListDlg_ImportFile_Failure_loading__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following names already exist:.
         /// </summary>
         public static string ShareListDlg_ImportFile_The_following_names_already_exist {

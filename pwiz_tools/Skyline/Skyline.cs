@@ -2146,6 +2146,11 @@ namespace pwiz.Skyline
 
         private void shareSettingsMenuItem_Click(object sender, EventArgs e)
         {
+            ShareSettings();
+        }
+
+        public void ShareSettings()
+        {
             using (var dlg = new ShareListDlg<SrmSettingsList, SrmSettings>(Settings.Default.SrmSettingsList))
             {
                 dlg.ShowDialog(this);
@@ -2154,8 +2159,13 @@ namespace pwiz.Skyline
 
         private void importSettingsMenuItem1_Click(object sender, EventArgs e)
         {
+            ImportSettings();
+        }
+
+        public void ImportSettings()
+        {
             ShareListDlg<SrmSettingsList, SrmSettings>.Import(this,
-                    Settings.Default.SrmSettingsList);
+                Settings.Default.SrmSettingsList);
         }
 
         private void peptideSettingsMenuItem_Click(object sender, EventArgs e)
@@ -2212,7 +2222,6 @@ namespace pwiz.Skyline
             string selected = DocumentUI.Settings.Name;
 
             // No point in saving the settings, if a saved instance is selected.
-            // TODO(L10N): Deal with default name localization
             saveCurrentMenuItem.Enabled = (selected == SrmSettingsList.DefaultName);
 
             // Only edit or share, if more than default settings.
@@ -2251,7 +2260,7 @@ namespace pwiz.Skyline
             toolStripSeparatorSettings.Visible = (i > 0);
         }
 
-        private bool SaveSettings()
+        public bool SaveSettings()
         {
             using (SaveSettingsDlg ss = new SaveSettingsDlg())
             {

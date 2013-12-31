@@ -6159,4 +6159,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
     <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}.  A non-degenerate overlapping window scheme is required.</value>
   </data>
+  <data name="ShareListDlg_ImportFile_Failure_loading__0__" xml:space="preserve">
+    <value>Failure loading {0}.</value>
+  </data>
 </root>

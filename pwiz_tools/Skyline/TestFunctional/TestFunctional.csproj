@@ -177,6 +177,7 @@
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
+    <Compile Include="ShareSettingsTest.cs" />
     <Compile Include="SplitGraphTest.cs" />
     <Compile Include="StandardTypeTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
