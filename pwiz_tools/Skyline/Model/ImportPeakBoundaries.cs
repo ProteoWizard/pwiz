@@ -51,8 +51,6 @@ namespace pwiz.Skyline.Model
                 (int) Field.end_time
             };
 
-        public const string DECOY = "_DECOY";
-
         public static readonly string[] FIELD_NAMES =
         {
             "PeptideModifiedSequence",
@@ -64,28 +62,35 @@ namespace pwiz.Skyline.Model
             "SampleName"
         };
 
-        private static string FormatMods(string modifiedPeptideSequence)
-        {
-            return modifiedPeptideSequence.Replace(".0]", "]");
-        }
-
         public SrmDocument Import(TextReader reader, ILongWaitBroker longWaitBroker, long lineCount)
         {
             long linesRead = 0;
             int progressPercent = 0;
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
-            var sequenceToNode = new Dictionary<string, IdentityPath>();
+            var sequenceToNode = new Dictionary<Tuple<string, bool>, IList<IdentityPath>>();
             var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
+            var modMatcher = new ModificationMatcher();
             // Make the dictionary of modified peptide strings to doc nodes and paths
             for (int i = 0; i < Document.PeptideCount; ++i)
             {
                 IdentityPath peptidePath = Document.GetPathTo((int) SrmDocument.Level.Peptides, i);
                 PeptideDocNode peptideNode = (PeptideDocNode) Document.FindNode(peptidePath);
-                string formattedModifiedSeq = FormatMods(Document.Settings.GetModifiedSequence(peptideNode));
-                if (peptideNode.IsDecoy)
-                    formattedModifiedSeq += DECOY;
-                sequenceToNode.Add(formattedModifiedSeq, peptidePath);
+                var peptidePair = new Tuple<string, bool>(peptideNode.ModifiedSequence, peptideNode.IsDecoy);
+                IList<IdentityPath> idPathList;
+                // Each (sequence, isDecoy) pair can be associated with more than one peptide, 
+                // to handle the case of duplicate peptides in the doucment.
+                if (sequenceToNode.TryGetValue(peptidePair, out idPathList))
+                {
+                    idPathList.Add(peptidePath);
+                    sequenceToNode[peptidePair] = idPathList;
+                }
+                else
+                {
+                    idPathList = new List<IdentityPath> {peptidePath};
+                    sequenceToNode.Add(peptidePair, idPathList);
+                }
+            
             }
             string line = reader.ReadLine();
             if (line == null)
@@ -173,10 +178,23 @@ namespace pwiz.Skyline.Model
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_,
                         linesRead, dataFields.Length, fieldsTotal));
                 }
-                string modifiedPeptideString = FormatMods(dataFields.GetField(Field.modified_peptide));
+                string modifiedPeptideString = dataFields.GetField(Field.modified_peptide);
+                modMatcher.CreateMatches(Document.Settings, 
+                                        new List<string> {modifiedPeptideString}, 
+                                        Settings.Default.StaticModList,
+                                        Settings.Default.HeavyModList);
+                // Convert the modified peptide string into a standardized form that 
+                // converts unimod, names, etc, into masses, eg [+57.0]
+                var nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                if (nodeForModPep == null)
+                {
+                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
+                }
+                nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
+                modifiedPeptideString = nodeForModPep.ModifiedSequence;
                 string fileName = dataFields.GetField(Field.filename);
-                if (dataFields.IsDecoy(linesRead))
-                    modifiedPeptideString += DECOY;
+                bool isDecoy = dataFields.IsDecoy(linesRead);
+                var peptideIdentifier = new Tuple<string, bool>(modifiedPeptideString, isDecoy);
                 int charge;
                 bool chargeSpecified = dataFields.TryGetCharge(linesRead, out charge);
                 string sampleName = dataFields.GetField(Field.sample_name);
@@ -220,8 +238,8 @@ namespace pwiz.Skyline.Model
                     fileIds = new[] {sampleFile.FileId};
                 }
                 // Look up the IdentityPath of peptide in first dictionary
-                IdentityPath pepPath;
-                if (!sequenceToNode.TryGetValue(modifiedPeptideString, out pepPath))
+                IList<IdentityPath> pepPaths;
+                if (!sequenceToNode.TryGetValue(peptideIdentifier, out pepPaths))
                 {
                     string sequence = FastaSequence.StripModifications(modifiedPeptideString);
                     if (Document.Peptides.Any(pep => Equals(sequence, pep.Peptide.Sequence)))
@@ -233,7 +251,7 @@ namespace pwiz.Skyline.Model
                         throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_, sequence, linesRead));
                     }
                 }
-                var nodePep = (PeptideDocNode) docNew.FindNode(pepPath);
+                
 
                 // Define the annotations to be added
                 var annotations = dataFields.GetAnnotations();
@@ -241,27 +259,32 @@ namespace pwiz.Skyline.Model
                 // Loop over all the transition groups in that peptide to find matching charge,
                 // or use all transition groups if charge not specified
                 bool foundSample = false;
-                for (int i = 0; i < nodePep.Children.Count; ++i)
+                foreach (var pepPath in pepPaths)
                 {
-                    var groupRelPath = nodePep.GetPathTo(i);
-                    var groupNode = (TransitionGroupDocNode) nodePep.FindNode(groupRelPath);
-                    if (!chargeSpecified || charge == groupNode.TransitionGroup.PrecursorCharge)
+                    var nodePep = (PeptideDocNode)docNew.FindNode(pepPath);
+                    for(int i = 0; i < nodePep.Children.Count; ++i)
                     {
-                        var groupFileIndices = new HashSet<int>(groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex));
-                        // Loop over the files in this groupNode to find the correct sample
-                        // Change peak boundaries for the transition group
-                        foreach(var fileId in fileIds)
+                        var groupRelPath = nodePep.GetPathTo(i);
+                        var groupNode = (TransitionGroupDocNode) nodePep.FindNode(groupRelPath);
+                        if (!chargeSpecified || charge == groupNode.TransitionGroup.PrecursorCharge)
                         {
-                            if (groupFileIndices.Contains(fileId.GlobalIndex))
+                            var groupFileIndices =
+                                new HashSet<int>(groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex));
+                            // Loop over the files in this groupNode to find the correct sample
+                            // Change peak boundaries for the transition group
+                            foreach (var fileId in fileIds)
                             {
-                                var groupPath = new IdentityPath(pepPath, groupNode.Id);
-                                // Attach annotations
-                                docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
-                                // Change peak
-                                string filePath = chromSet.GetFileInfo(fileId).FilePath;
-                                docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                           null, startTime, endTime, UserSet.IMPORTED, null, false);
-                                foundSample = true;
+                                if (groupFileIndices.Contains(fileId.GlobalIndex))
+                                {
+                                    var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                                    // Attach annotations
+                                    docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
+                                    // Change peak
+                                    string filePath = chromSet.GetFileInfo(fileId).FilePath;
+                                    docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
+                                        null, startTime, endTime, UserSet.IMPORTED, null, false);
+                                    foundSample = true;
+                                }
                             }
                         }
                     }

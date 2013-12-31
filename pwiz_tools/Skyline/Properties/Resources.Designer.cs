@@ -8795,6 +8795,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unrecognized Unimod id {0} in modified peptide sequence..
+        /// </summary>
+        public static string ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_ {
+            get {
+                return ResourceManager.GetString("ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified" +
+                        "_peptide_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid attempt to add data to completed MassLookup..
         /// </summary>
         public static string ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup {
@@ -10040,6 +10050,16 @@ namespace pwiz.Skyline.Properties {
         public static string PeakBoundaryImporter_Import_Missing_start_time_on_line__0_ {
             get {
                 return ResourceManager.GetString("PeakBoundaryImporter_Import_Missing_start_time_on_line__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide has unrecognized modifications {0} at line {1}.
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1" +
+                        "_", resourceCulture);
             }
         }
         

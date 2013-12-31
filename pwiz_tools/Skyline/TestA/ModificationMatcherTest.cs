@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -52,6 +53,13 @@ namespace pwiz.SkylineTestA
             UpdateMatcherFail(STR_FAIL_EMPTY_MOD2);
             // Can't match double modifications.
             UpdateMatcherFail(STR_FAIL_DOUBLE_MOD);
+            // Test exception thrown if unimod not specified correctly
+            UpdateMatcherFail(STR_FAIL_UNIMOD);
+            UpdateMatcherDataFail(STR_UNKNOWN_UNIMOD);
+            // Can't phosphorylate tryptophan
+            UpdateMatcherDataFail(STR_FAIL_WRONG_AA_UNIMOD);
+            // Can't put C-terminal modification in middle of peptide
+            UpdateMatcherDataFail(STR_FAIL_UNIMOD_TERMINUS);
 
             // Test mods in UniMod match correctly. 
             UpdateMatcher(StaticModList.GetDefaultsOn(), HeavyModList.GetDefaultsOn(), null, null);
@@ -138,6 +146,7 @@ namespace pwiz.SkylineTestA
             UpdateMatcher(new[] { carbC }, null, new[] { variableMetOx }, null);
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_CYS_AND_OXI).HasExplicitMods);
             Assert.IsFalse(MATCHER.GetModifiedNode(STR_CYS_OXI_PHOS).ExplicitMods.IsVariableStaticMods);
+            Assert.IsFalse(MATCHER.GetModifiedNode(STR_CYS_OXI_PHOS_CAP).ExplicitMods.IsVariableStaticMods);
             // Add variable mod to doc
             UpdateMatcher(new[] { carbC, variableMetOx }, null, null, null);
             // Mod can be created by the settings.
@@ -145,6 +154,7 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_CYS_AND_OXI).ExplicitMods.IsVariableStaticMods);
             // Mod cannot be created by the settings.
             Assert.IsFalse(MATCHER.GetModifiedNode(STR_CYS_OXI_PHOS).ExplicitMods.IsVariableStaticMods);
+            Assert.IsFalse(MATCHER.GetModifiedNode(STR_CYS_OXI_PHOS_CAP).ExplicitMods.IsVariableStaticMods);
 
             // Add Met Ox to global. Test: +16 finds it.
             UpdateMatcher(new[] {carbC}, null, new[] {MET_OX_ROUNDED}, null);
@@ -162,6 +172,29 @@ namespace pwiz.SkylineTestA
             // Test long masses rounded.
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_METOX_LONG_MASS).ExplicitMods.StaticModifications.Contains(mod =>
                 Equals(mod.Modification, METHIONINE_OXIDATION)));
+            // Test UniMod label types
+            var node = MATCHER.GetModifiedNode(STR_UNIMOD_LABEL);
+            Assert.IsNotNull(node);
+            Assert.IsNull(node.ExplicitMods.StaticModifications);
+            Assert.IsTrue(node.ExplicitMods.HeavyModifications.Contains(mod =>
+                Equals(mod.Modification, N_TERM_LABEL)));
+            
+            // Test case where there are lots of unimod labels
+            var nodeUniAll = MATCHER.GetModifiedNode(STR_UNIMOD_ALL);
+            Assert.AreEqual(nodeUniAll.ExplicitMods.HeavyModifications.Count, 10);
+            Assert.IsNull(nodeUniAll.ExplicitMods.StaticModifications);
+            foreach (var mod in nodeUniAll.ExplicitMods.HeavyModifications)
+            {
+                Assert.AreEqual(mod.Modification.ShortName, "+01");
+                Assert.AreEqual(mod.Modification.UnimodId, 994);
+            }
+
+            // Test unimod terminal label
+            var nodeUniTerm = MATCHER.GetModifiedNode(STR_UNIMOD_TERMINUS);
+            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications.Count, 1);
+            Assert.IsNull(nodeUniTerm.ExplicitMods.StaticModifications);
+            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.Terminus, ModTerminus.C);
+            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.UnimodId, 298);
 
             // Basic multi-label test
             var heavyLabelType2 = new IsotopeLabelType("Heavy2", 1);
@@ -244,6 +277,15 @@ namespace pwiz.SkylineTestA
             _seqs.Remove(seq);
         }
 
+        private static void UpdateMatcherDataFail(string seq)
+        {
+            if (seq != null)
+                _seqs.Add(seq);
+            AssertEx.ThrowsException<InvalidDataException>(() =>
+                UpdateMatcher(null, null, null, null));
+            _seqs.Remove(seq);
+        }
+
         private static void UpdateMatcher(
             StaticMod[] docStatMods, StaticMod[] docHeavyMods, 
             StaticMod[] globalStatMods, StaticMod[] globalHeavyMods)
@@ -286,15 +328,19 @@ namespace pwiz.SkylineTestA
         private static string STR_HEAVY_15 { get { return "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}"; } }
         private const string STR_HEAVY_15_F = "VAILIPF{+1}R";
         private static string STR_HEAVY_15_NOT_ALL { get { return "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R"; } }
-        private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT[Phospho (ST)]YLFMMQAQGILIR";
+        private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT(UniMod:21)YLFMMQAQGILIR";
         private const string STR_TERM_ONLY = "VAILIPFR{Label:13C(6) (C-term R)}";
         private const string STR_MOD_BY_NAME_TERMINUS = "SLLAALFFFSLSSSLLYFVYVAPGIVNT[Phospho (ST)]";
         private const string STR_HEAVY_ONLY = "ALSI{+1}GFETC[+57]R"; 
         private const string STR_LIGHT_ONLY = "A{+1}E{+1}I{+1}D{+1}M{+1}[+695]L{+1}D{+1}I{+1}R{+4}";
-        private const string STR_CYS_AND_OXI = "AFC[+57]AVPWQGTM[+16]TLSK";
-        private const string STR_CYS_OXI_PHOS = "AFC[+57]AVPWQGTM[+16]T[Phospho (ST)]LSK";
+        private const string STR_CYS_AND_OXI = "AFC(unimod:4)AVPWQGTM[+16]TLSK";
+        private const string STR_CYS_OXI_PHOS = "AFC[UniMod:4]AVPWQGTM[+16]T(UniMod:21)LSK";
+        private const string STR_CYS_OXI_PHOS_CAP = "AFC(uNiMoD:4)AVPWQGTM[+16]T(UNIMOD:21)LSK";
         private static string STR_METOX_LONG_MASS { get { return "AFCSFQIYAVPWQGTM[+" + 15.99 + "49151234567890]TLSK"; } }
         private const string STR_AMMONIA_LOSS = "C[-17]AVPWQGTMTLSK";
+        private const string STR_UNIMOD_LABEL = "APIPTALDTDSSK(UniMod:259)";
+        private const string STR_UNIMOD_ALL = "A(UniMod:994)C(UniMod:994)D(UniMod:994)E(UniMod:994)F(UniMod:994)A(UniMod:994)C(UniMod:994)D(UniMod:994)E(UniMod:994)F(UniMod:994)";
+        private const string STR_UNIMOD_TERMINUS = "PEMGFDLER(UniMod:298)";
 
         // Fails
         private const string STR_FAIL_MASS = "VAI{+42}LIPFR";
@@ -305,12 +351,18 @@ namespace pwiz.SkylineTestA
         private const string STR_FAIL_DOUBLE_MOD = "V{+1}{+5}A{+1}I{+1}L{+1}I{+1}P{+1}F{+1}R{+4}{+1}";
         private const string STR_FAIL_OX_ON_D = "PEMGFD[Oxidation (M)]LER";
         private const string STR_FAIL_OX_TERM = "PEM[Oxidation (M) C-term]GFDLER";
+        private const string STR_FAIL_UNIMOD = "AFC[+57]AVPWQGTM[+16]T(UnimodBad:21)LSK";
+        private const string STR_UNKNOWN_UNIMOD = "AFC[+57]AVPWQGTM[+16]T(Unimod:123456)LSK";
+        private const string STR_FAIL_WRONG_AA_UNIMOD = "AFC[+57]AVPW(Unimod:21)QGTM[+16]TLSK";
+        private const string STR_FAIL_UNIMOD_TERMINUS = "PEM(UniMod:298)GFDLER";
 
         private static readonly StaticMod METHIONINE_OXIDATION = new StaticMod("Methionine Oxidation", "M", null, "O");
         private static readonly StaticMod OXIDATION_M_GLOBAL = new StaticMod("Oxidation (M)", "M", null, "O");
         private static readonly StaticMod OXIDATION_M_C_TERM = new StaticMod("Oxidation (M) C-term", "M", ModTerminus.C, "O");
         private static readonly StaticMod LABEL15_N = new StaticMod("Label:15N", null, null, LabelAtoms.N15);
         private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);
+        private static readonly StaticMod N_TERM_LABEL = new StaticMod("Label:13C(6)15N(2) (K)", "K", null, false, null, LabelAtoms.C13|LabelAtoms.N15, 
+                                                                        RelativeRT.Matching, null,null, null, 259, "+08");
 
         private static List<string> _seqs;
         private static void InitSeqs()
@@ -320,7 +372,7 @@ namespace pwiz.SkylineTestA
                     STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL,
                     STR_CYS_OXI_PHOS,
                     STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
-                    STR_AMMONIA_LOSS
+                    STR_AMMONIA_LOSS, STR_CYS_OXI_PHOS_CAP, STR_UNIMOD_LABEL, STR_UNIMOD_ALL, STR_UNIMOD_TERMINUS
                 };
         }   
     }

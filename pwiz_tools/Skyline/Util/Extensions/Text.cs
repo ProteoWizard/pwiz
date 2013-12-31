@@ -99,6 +99,32 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Converts a list of strings to the fields in a comma-separated line that can be safely written to a comma-separated value file.
+        /// </summary>
+        /// <param name="fields">List of fields to be written in the comma-separated line</param>
+        public static string ToCsvLine(this IEnumerable<string> fields)
+        {
+            return fields.ToDsvLine(CsvSeparator);
+        }
+
+        /// <summary>
+        /// Converts a list of strings to the fields in a delimiter-separated line that can be safely writted to a delimiter-separated value file.
+        /// </summary>
+        /// <param name="fields">List of fields to be written in the delimiter-separated line</param>
+        /// <param name="separator">The separator being used</param>
+        public static string ToDsvLine(this IEnumerable<string> fields, char separator)
+        {
+            var sb = new StringBuilder();
+            foreach (string field in fields)
+            {
+                if (sb.Length > 0)
+                    sb.Append(separator);
+                sb.Append(field.ToDsvField(separator));
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Splits a line of text in comma-separated value format into an array of fields.
         /// The function correctly handles quotation marks.
         /// </summary>

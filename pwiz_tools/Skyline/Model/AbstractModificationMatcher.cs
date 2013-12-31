@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Model
 
             // Use the number of modifications as the maximum, if it is less than the current
             // settings to keep from over enumerating, which can be slow.
-            var filter = new MaxModFilter(Math.Min(seq.Count(c => c == '['),
+            var filter = new MaxModFilter(Math.Min(seq.Count(c => c == '[' || c == '('),
                                                    Settings.PeptideSettings.Modifications.MaxVariableMods));
             foreach (var nodePep in peptide.CreateDocNodes(Settings, filter))
             {

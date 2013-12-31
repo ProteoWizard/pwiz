@@ -287,6 +287,30 @@ namespace pwiz.SkylineTestA
             DoFileImportTests(docResultsId, peakBoundaryFileId, _precursorChargeId,
                 _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
 
+            // 15. Decminal import format ok
+            var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(4));
+            var valuesUnimod =  new []
+            {
+                "LGGLRPES[+80.0]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
+            };
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            
+            // 16. Integer import format ok
+            valuesUnimod[0] = "LGGLRPES[+80]PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            
+            // 17. Unimod import format ok
+            valuesUnimod[0] = "LGGLRPES(UniMod:21)PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+
+            // 18. Strange capitalizations OK
+            valuesUnimod[0] = "LGGLRPES(uniMoD:21)PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+
+            // 18. Unimod with brackets OK
+            valuesUnimod[0] = "LGGLRPES[uniMoD:21]PESLTSVSR";
+            ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
+            
             // Release open streams
             docContainerId.Release();
         }
