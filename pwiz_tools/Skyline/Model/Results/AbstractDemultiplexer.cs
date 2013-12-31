@@ -38,12 +38,11 @@ namespace pwiz.Skyline.Model.Results
         protected readonly SpectrumFilter _filter;
         protected AbstractIsoWindowMapper _isoMapper;
         protected bool _initialized;
-        protected double _isolationWindowWidth;
         protected SpectrumProcessor _spectrumProcessor;
         protected readonly List<int> _msMsSpectra;
         protected int _msMsIndex;
         protected ILsSolver _solver;
-        protected DeconvBlock _deconvBlock;
+        protected AbstractDeconvSolverHandler _deconvHandler;
 
         public int NumIsoWindows { get; private set; }
         public int NumDeconvRegions { get; private set; }
@@ -73,18 +72,10 @@ namespace pwiz.Skyline.Model.Results
             _msMsSpectra = new List<int>();
         }
 
-        // Regularization of the Matrix, how to regularize and how many rows
-        // to add depend on the type of demultiplexer. Also computational shortcuts
-        public abstract DeconvBlock PreprocessDeconvBlock(int[] deconvIndices);
-
-        // Unpack computational shortcuts and regularization rows
-        public abstract void PostprocessDeconvBlock(DeconvBlock deconvBlock, int[] deconvIndices);
-
         protected void InitializeFile()
         {
             if (!AnalyzeFile())
                 throw new IOException(Resources.OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file);
-            _isoMapper.WindowWidth = _isolationWindowWidth;
             _isoMapper.DetermineDeconvRegions();
             NumDeconvRegions = _isoMapper.NumDeconvRegions;
             NumIsoWindows = _isoMapper.NumWindows;
@@ -116,6 +107,10 @@ namespace pwiz.Skyline.Model.Results
                     if (_isoMapper.NumWindows == previousNumWindows)
                         break;
                     previousNumWindows = _isoMapper.NumWindows;
+                    if (_isoMapper.NumWindows > 1000)
+                    {
+                        throw new InvalidDataException(Resources.AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_);
+                    }
                 }
                 var scanNumber = _msMsSpectra[i];
                 MsPrecursor[] precs = _file.GetPrecursors(scanNumber);
@@ -148,7 +143,6 @@ namespace pwiz.Skyline.Model.Results
             if (!nIsoWindowsPerScan.HasValue || !nIsolationWindowWidth.HasValue)
                 return false;
             IsoWindowsPerScan = nIsoWindowsPerScan.Value;
-            _isolationWindowWidth = nIsolationWindowWidth.Value;
             NumIsoWindows = _isoMapper.NumWindows;
             return true;
         }
@@ -162,7 +156,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         protected void FindStartStop(int scanIndex, MsDataSpectrum originalSpectrum, out int startMsMsIndex,
-                                   out int endMsMsIndex)
+                                   out int endMsMsIndex, out int centerIndex)
         {
             if (_msMsSpectra[_msMsIndex] < scanIndex)
             {
@@ -177,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
                     string.Format(Resources.MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found,
                                   scanIndex));
             int countMsMs = NumScansBlock - 1;
-            int centerIndex = _msMsIndex;
+            centerIndex = _msMsIndex;
             startMsMsIndex = Math.Max(0, centerIndex - countMsMs / 2);
             endMsMsIndex = startMsMsIndex + countMsMs;
             if (endMsMsIndex >= _msMsSpectra.Count)
@@ -202,38 +196,40 @@ namespace pwiz.Skyline.Model.Results
 
         #region Test
         public void CorrectPeakIntensitiesTest(MsDataSpectrum originalSpectrum,
-            HashSet<int> binIndicesSet, IList<int> isoIndices, IList<int> deconvIndices,double[] peakSums,
-            Dictionary<int, int> binToDeconvIndex, IEnumerable<KeyValuePair<int, int>> queryBinEnumerator,
-            DeconvBlock deconvBlock, ref double[][] deconvIntensities, ref double[][] deconvMzs)
+            HashSet<int> binIndicesSet, double[] peakSums, IEnumerable<KeyValuePair<int, int>> queryBinEnumerator, 
+            AbstractDeconvSolverHandler deconvHandler, ref double[][] deconvIntensities, ref double[][] deconvMzs)
         {
-            var originalDeconvBlock = _deconvBlock;
-            _deconvBlock = deconvBlock;
+            var originalDeconvHandler = _deconvHandler;
+            _deconvHandler = deconvHandler;
             List<int> binIndicesList = binIndicesSet.ToList();
             try
             {
-                CorrectPeakIntensities(ref originalSpectrum, binIndicesList, isoIndices,deconvIndices, peakSums,
-                    binToDeconvIndex, queryBinEnumerator, ref deconvIntensities, ref deconvMzs);
+                CorrectPeakIntensities(ref originalSpectrum, binIndicesList, peakSums,
+                                       queryBinEnumerator, ref deconvIntensities, ref deconvMzs);
             }
             finally
             {
-                _deconvBlock = originalDeconvBlock;
+                _deconvHandler = originalDeconvHandler;
             }
         }
         #endregion
 
         protected void CorrectPeakIntensities(ref MsDataSpectrum originalSpectrum,
                                               List<int> binIndicesList,
-                                              IList<int> isoIndices,
-                                              IList<int> deconvIndices,
                                               IList<double> peakSums,
-                                              IDictionary<int, int> binToDeconvIndex,
                                               IEnumerable<KeyValuePair<int, int>> queryBinEnumerator,
                                               ref double[][] deconvIntensities,
                                               ref double[][] deconvMzs)
         {
             // Will do binary search on this
             binIndicesList.Sort();
-            for (int i = 0; i < deconvIntensities.Length; ++i)
+            int numDeconvolvedTrans = peakSums.Count;
+            var reverseBinIndicesList = new Dictionary<int, int>(numDeconvolvedTrans);
+            int numBinIndices = binIndicesList.Count;
+            for (int i = 0; i < numBinIndices; ++i)
+                reverseBinIndicesList[binIndicesList[i]] = i;
+            int numDeconvSpectra = deconvIntensities.Length;
+            for (int i = 0; i < numDeconvSpectra; ++i)
             {
                 originalSpectrum.Intensities.CopyTo(deconvIntensities[i], 0);
                 originalSpectrum.Mzs.CopyTo(deconvMzs[i], 0);
@@ -244,9 +240,9 @@ namespace pwiz.Skyline.Model.Results
             }
             int? prevPeakIndex = null;
 
-            double[] peakCorrections = new double[deconvIndices.Count];
-            int[] numBins = new int[deconvIndices.Count];
-            for (int i = 0; i < deconvIndices.Count; ++i)
+            double[] peakCorrections = new double[numDeconvSpectra];
+            int[] numBins = new int[numDeconvSpectra];
+            for (int i = 0; i < numDeconvSpectra; ++i)
             {
                 peakCorrections[i] = 0.0;
                 numBins[i] = 0;
@@ -268,7 +264,7 @@ namespace pwiz.Skyline.Model.Results
                         if (originalPeakIntensity > 0.0)
                         {
                             var originalPeakMz = originalSpectrum.Mzs[prevPeakIndex.Value];
-                            for (int deconvSpecIndex = 0; deconvSpecIndex < deconvIndices.Count; ++deconvSpecIndex)
+                            for (int deconvSpecIndex = 0; deconvSpecIndex < numDeconvSpectra; ++deconvSpecIndex)
                             {
                                 var nBins = numBins[deconvSpecIndex];
                                 if (nBins <= 0)
@@ -289,7 +285,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
                     binsConsidered = 0;
-                    for (int i = 0; i < deconvIndices.Count; ++i)
+                    for (int i = 0; i < numDeconvSpectra; ++i)
                     {
                         peakCorrections[i] = 0.0;
                         numBins[i] = 0;
@@ -301,18 +297,17 @@ namespace pwiz.Skyline.Model.Results
                     // This bin (transition) is in one of the deconvolved spectra
                     ++binsConsidered;
                     // For each deconvolved spectrum...
-                    for (int deconvSpecIndex = 0; deconvSpecIndex < deconvIndices.Count; ++deconvSpecIndex)
+                    for (int deconvSpecIndex = 0; deconvSpecIndex < numDeconvSpectra; ++deconvSpecIndex)
                     {
                         // TODO: Figure out why this fires during the demultiplexing test
                         // Debug.Assert(isoIndices.Count == 1);
                         //var isoIndex = isoIndices[0];
-                        var deconvIndex = deconvIndices[deconvSpecIndex];
                         // Find if this bin is in this deconvolved spectrum
                         //if (!_spectrumProcessor.TransBinner.BinInPrecursor(bin, isoIndex)) continue;
-                        int tranIndex = binToDeconvIndex[bin];
+                        int tranIndex = reverseBinIndicesList[bin];
                         if (peakSums[tranIndex] == 0.0) continue;
                         peakCorrections[deconvSpecIndex] +=
-                            _deconvBlock.Solution.Matrix[deconvIndex, tranIndex] / peakSums[tranIndex];
+                            _deconvHandler.Solution.Matrix[deconvSpecIndex, tranIndex] / peakSums[tranIndex];
                         numBins[deconvSpecIndex]++;
                     }
                 }
@@ -322,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var originalPeakIntensity = originalSpectrum.Intensities[prevPeakIndex.Value];
                 var originalPeakMz = originalSpectrum.Mzs[prevPeakIndex.Value];
-                for (int deconvSpecIndex = 0; deconvSpecIndex < deconvIndices.Count; ++deconvSpecIndex)
+                for (int deconvSpecIndex = 0; deconvSpecIndex < numDeconvSpectra; ++deconvSpecIndex)
                 {
                     var nBins = numBins[deconvSpecIndex];
                     if (nBins <= 0)
@@ -348,10 +343,7 @@ namespace pwiz.Skyline.Model.Results
             if (index < 0 || index > _file.SpectrumCount)
             {
                 throw new IndexOutOfRangeException(
-                    string.Format(
-                        Resources
-                            .OverlapDemultiplexer_GetDeconvolvedSpectra_OverlapDemultiplexer__GetDeconvolvedSpectra__Index__0__is_out_of_range,
-                        index));
+                    string.Format("OverlapDemultiplexer: GetDeconvolvedSpectra: Index {0} is out of range", index)); // Not L10N
             }
 
             // If the first time called, initialize the cache
@@ -360,22 +352,21 @@ namespace pwiz.Skyline.Model.Results
 
             // Figure out the maximum possible start/stop indices in msMsSpectra for spectra needed
             // First, find the index in msMsSpectra containing the scan queried (index)
-            int startIndex, endIndex;
+            int startIndex, endIndex, centerIndex;
             ScanCached processedSpec;
             if (!_spectrumProcessor.TryGetSpectrum(index, out processedSpec))
             {
                 processedSpec = _spectrumProcessor.AddSpectrum(index, _file.GetSpectrum(index));
             }
 
-            int[] isoIndices = processedSpec.IsoIndices;
             int[] deconvIndices = processedSpec.DeconvIndices;
             if (originalSpectrum == null)
                 originalSpectrum = _file.GetSpectrum(index);
-            FindStartStop(index, originalSpectrum, out startIndex, out endIndex);
+            FindStartStop(index, originalSpectrum, out startIndex, out endIndex, out centerIndex);
 
             MsDataSpectrum[] returnSpectra;
 
-            var binIndicesList = _spectrumProcessor.BinIndicesFromIsolationWindows(isoIndices);
+            var binIndicesList = _spectrumProcessor.BinIndicesFromDeconvWindows(deconvIndices);
             if (binIndicesList.Count == 0)
             {
                 // None of the precursors for this spectrum overlap with any of the
@@ -389,42 +380,40 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Get each spectrum, with a predicate for isolation windows
-            _deconvBlock.Clear();
+
+            _deconvHandler.Clear();
+            _deconvHandler.SetDeconvIndices(deconvIndices);
+            _deconvHandler.CurrentScan = centerIndex - startIndex;
             for (int i = startIndex; i <= endIndex; ++i)
             {
                 int scanIndex = _msMsSpectra[i];
                 IEnumerable<double> spectrumData;
                 double[] mask;
+                double? retentionTime;
                 // Add only transitions contained in the document in the precursor
                 // windows for the spectrum
                 if (!_spectrumProcessor.TryGetFilteredSpectrumData(scanIndex, binIndicesList,
-                                                                   out spectrumData, out mask))
+                                                                   out spectrumData, out mask,
+                                                                   out retentionTime))
                 {
                     _spectrumProcessor.AddSpectrum(scanIndex, _file.GetSpectrum(scanIndex));
                     _spectrumProcessor.TryGetFilteredSpectrumData(scanIndex, binIndicesList,
-                                                                  out spectrumData, out mask);
+                                                                  out spectrumData, out mask,
+                                                                  out retentionTime);
                 }
-                _deconvBlock.Add(mask, spectrumData);
+                _deconvHandler.AddScan(mask, spectrumData, scanIndex, retentionTime);
             }
-            // Add regularization rows and computationatl shortcuts if necessary
-            var deconvBlockProcessed = PreprocessDeconvBlock(deconvIndices);
-            // Pass the deconv block to the demultiplexer
-            _solver.Solve(deconvBlockProcessed);
-            // Add in missing rows/columns and unpack computational shortcuts if necessary
-            PostprocessDeconvBlock(deconvBlockProcessed,deconvIndices);
-            int numDeconvolvedTrans = _deconvBlock.NumTransitions;
+
+            _deconvHandler.Solve(_solver);
+            int numDeconvolvedTrans = _deconvHandler.NumTransitions;
             double[] peakSums = new double[numDeconvolvedTrans];
-            var binToDeconvIndex = new Dictionary<int, int>(numDeconvolvedTrans);
-            int numBinIndices = binIndicesList.Count;
-            for (int i = 0; i < numBinIndices; ++i)
-                binToDeconvIndex[binIndicesList[i]] = i;
             // For each transition, calculate its intensity summed over 
             // each deconvolved spectrum 
             for (int transIndex = 0; transIndex < numDeconvolvedTrans; ++transIndex)
             {
                 double intensitySum = 0.0;
-                foreach (var deconvIndex in deconvIndices)
-                    intensitySum += _deconvBlock.Solution.Matrix[deconvIndex, transIndex];
+                for (int j = 0; j < deconvIndices.Count(); ++j)
+                    intensitySum += _deconvHandler.Solution.Matrix[j, transIndex];
                 peakSums[transIndex] = intensitySum;
             }
 
@@ -439,8 +428,8 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 var queryBinEnumerator = _spectrumProcessor.TransBinner.BinsFromValues(originalSpectrum.Mzs, true);
-                CorrectPeakIntensities(ref originalSpectrum, binIndicesList, isoIndices, deconvIndices, 
-                    peakSums, binToDeconvIndex, queryBinEnumerator, ref deconvIntensities, ref deconvMzs);
+                CorrectPeakIntensities(ref originalSpectrum, binIndicesList, peakSums,
+                                       queryBinEnumerator, ref deconvIntensities, ref deconvMzs);
             }
             catch (InvalidOperationException)
             {
@@ -476,6 +465,94 @@ namespace pwiz.Skyline.Model.Results
             }
             return returnSpectra;
         }
+    }
+
+    public abstract class AbstractDeconvSolverHandler
+    {
+        public int MaxScans { get; private set; }
+        public int MaxTransitions { get; private set; }
+        public int NumScans { get { return Masks.NumRows; } }
+        public int NumTransitions { get { return BinnedData.NumCols; } }
+        public int NumDeconvWindows { get; private set; }
+        public MatrixWrap Masks { get; private set; }
+        public MatrixWrap BinnedData { get; private set; }
+        public MatrixWrap Solution { get; private set; }
+
+        public IList<int> DeconvIndices { get; private set; }
+        public int CurrentScan { get; set; } 
+        public IList<int> ScanNumbers { get; private set; }
+        public IList<double?> ScanTimes { get; private set; }
+        protected DeconvBlock _deconvBlock;
+
+        protected AbstractDeconvSolverHandler(int numDeconvWindows, int maxScans, int maxTransitions)
+        {
+            NumDeconvWindows = numDeconvWindows;
+            Masks = new MatrixWrap(maxScans, numDeconvWindows);
+            BinnedData = new MatrixWrap(maxScans, maxTransitions);
+            Solution = new MatrixWrap(numDeconvWindows, maxTransitions);
+            Solution.SetNumRows(0);
+            MaxScans = maxScans;
+            MaxTransitions = maxTransitions;
+            DeconvIndices = new List<int>();
+            ScanNumbers = new List<int>();
+            ScanTimes = new List<double?>();
+        }
+
+        public void Clear()
+        {
+            Masks.Reset();
+            BinnedData.Reset();
+            Solution.Reset();
+            DeconvIndices = new List<int>();
+            ScanNumbers.Clear();
+            ScanTimes.Clear();
+            Masks.SetNumCols(NumDeconvWindows);
+        }
+
+        public void SetDeconvIndices(IList<int> deconvIndices)
+        {
+            DeconvIndices = deconvIndices;
+            Solution.SetNumCols(deconvIndices.Count);
+        }
+
+        public void AddScan(double[] mask, IEnumerable<double> data, int scanNum, double? scanTime)
+        {
+            // Update Masks
+            Masks.Matrix.SetRow(Masks.NumRows, mask);
+            Masks.SetNumCols(mask.Length);
+            Masks.IncrementNumRows();
+
+            // Update BinnedData
+            int colNum = 0;
+            foreach (var dataVal in data)
+                BinnedData.Matrix[BinnedData.NumRows, colNum++] = dataVal;
+
+            BinnedData.IncrementNumRows();
+            BinnedData.SetNumCols(colNum);
+
+            // Update Solution
+            Solution.SetNumCols(colNum);
+
+            // Update scan info
+            ScanNumbers.Add(scanNum);
+            ScanTimes.Add(scanTime);
+        }
+
+        public void Solve(ILsSolver solver)
+        {
+            BuildDeconvBlock();
+            SolveDeconvBlock(solver);
+            DeconvBlockToSolution();
+        }
+
+        protected abstract void BuildDeconvBlock();
+
+        protected virtual void SolveDeconvBlock(ILsSolver solver)
+        {
+            solver.Solve(_deconvBlock);
+        }
+
+        protected abstract void DeconvBlockToSolution();
     }
 
     public class DeconvBlock
@@ -536,15 +613,9 @@ namespace pwiz.Skyline.Model.Results
         protected readonly Dictionary<long, int> _isolationWindowD;
         protected readonly List<IsoWin> _isolationWindows;
         protected readonly List<MsPrecursor> _precursors;
-        protected int _lastSort;   // Last length of the iso width for which sort happened
-        protected readonly List<KeyValuePair<double, int>> _isoWindowsSorted;
-        protected double? _windowWidth;
         protected readonly List<DeconvolutionRegion> _deconvRegions;
+        protected bool _deconvRegionsUpdated;
 
-        public double WindowWidth
-        {
-            set { _windowWidth = value; }
-        }
         public int NumWindows
         {
             get { return _isolationWindows.Count; }
@@ -564,9 +635,9 @@ namespace pwiz.Skyline.Model.Results
         {
             _isolationWindowD = new Dictionary<long, int>();
             _isolationWindows = new List<IsoWin>();
-            _isoWindowsSorted = new List<KeyValuePair<double, int>>();
             _precursors = new List<MsPrecursor>();
             _deconvRegions = new List<DeconvolutionRegion>();
+            _deconvRegionsUpdated = false;
         }
 
         public int Add(IEnumerable<MsPrecursor> precursors)
@@ -580,15 +651,15 @@ namespace pwiz.Skyline.Model.Results
 
                 if (!isolationCenter.HasValue)
                 {
-                    throw new ArgumentException(Resources.OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_center);
+                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_);
                 }
                 if (!isolationLower.HasValue)
                 {
-                    throw new ArgumentException(Resources.OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolatio_window_with_no_lower_boundary);
+                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_);
                 }
                 if (!isolationUpper.HasValue)
                 {
-                    throw new ArgumentException(Resources.OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_upper_boundary);
+                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_);
                 }
                    
                 long hash = IsoWindowHasher.Hash(isolationCenter.Value);
@@ -598,16 +669,22 @@ namespace pwiz.Skyline.Model.Results
                 var isoMzLeft = isoMz - isolationLower.Value;
                 var isoMzRight = isoMz + isolationUpper.Value;
                 _isolationWindows.Add(new IsoWin(isoMzLeft, isoMzRight, isoMz));
-                _isoWindowsSorted.Add(new KeyValuePair<double, int>(isoMz, _isolationWindows.Count - 1));
                 _isolationWindowD[hash] = _isolationWindows.Count - 1;
                 _precursors.Add(precursor);
                 countAdded++;
+                _deconvRegionsUpdated = false;
             }
             return countAdded;
         }
 
         // Derived Types must each define their own way of computing deconvolution regions
-        public abstract void DetermineDeconvRegions();
+        protected abstract void FindDeconvRegions();
+        
+        public void DetermineDeconvRegions()
+        {
+            FindDeconvRegions();
+            _deconvRegionsUpdated = true;
+        }
 
         public bool TryGetWindowIndex(double isolationWindow, out int index)
         {
@@ -618,7 +695,7 @@ namespace pwiz.Skyline.Model.Results
         public void GetWindowMask(MsDataSpectrum s, out int[] isolationIndices, out int[] deconvIndices, 
             ref double[] mask)
         {
-            if (!_deconvRegions.Any())
+            if (!_deconvRegionsUpdated)
             {
                 DetermineDeconvRegions();
             }
@@ -640,7 +717,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!TryGetWindowIndex(precursorMz, out isoIndex))
                 {
                     throw new ArgumentException(
-                        string.Format(Resources.IsolationWindowMapper_GetWindowMask_IsolationWindowMapper_Tried_to_get_a_window_mask_for__0__a_spectrum_with_previously_unobserved_isolation_windows,
+                        string.Format(Resources.AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_,
                                       precursorMz));
                 }
                 isolationIndicesList.Add(isoIndex);
@@ -660,7 +737,7 @@ namespace pwiz.Skyline.Model.Results
             if (isoIndex < 0 || isoIndex > _isolationWindows.Count)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(Resources.IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_of_range,
+                    string.Format("IsolationWindowMapper: isoIndex {0} out of range", // Not L10N
                                   isoIndex));
             }
             return _isolationWindows[isoIndex];
@@ -671,40 +748,20 @@ namespace pwiz.Skyline.Model.Results
             if (isoIndex < 0 || isoIndex > _precursors.Count)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(Resources.IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_of_range,
+                    string.Format("IsolationWindowMapper: isoIndex {0} out of range", // Not L10N
                                   isoIndex));
             }
             return _precursors[isoIndex];
         }
 
-        // DetermineDeconvRegions must be called before calling this
-        // in current code this is called when file is initialized
-        public bool TryGetAllWindowsFromMz(double mz, out int[] windowIndices)
+        public bool TryGetIsosForDeconv(int deconvIndex, out int[] windowIndices)
         {
             var windowIndicesList = new List<int>();
-            long mzHash = IsoWindowHasher.Hash(mz);
-            DeconvolutionRegion deconvRegionForMz = null;
-            foreach (var deconvRegion in _deconvRegions)
-            {
-                if (deconvRegion.Start < mzHash && mzHash < deconvRegion.Stop)
-                {
-                    // Should only ever see one of these
-                    if (deconvRegionForMz != null)
-                    {
-                        throw new Exception(Resources.Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified);
-                    }
-                    deconvRegionForMz = deconvRegion;
-                }
-            }
-            if (deconvRegionForMz == null)
-            {
-                windowIndices = windowIndicesList.ToArray();
-                return false;
-            }
-            for (int i = 0 ; i < _isolationWindows.Count ; ++i)
+            var deconvRegion = _deconvRegions[deconvIndex]; 
+            for (int i = 0; i < _isolationWindows.Count; ++i)
             {
                 IsoWin isoWin = _isolationWindows[i];
-                if (isoWin.DeconvRegions.Contains(deconvRegionForMz))
+                if (isoWin.DeconvRegions.Contains(deconvRegion))
                 {
                     windowIndicesList.Add(i);
                 }
@@ -713,58 +770,49 @@ namespace pwiz.Skyline.Model.Results
             return windowIndices.Length != 0;
         }
 
-        /// <summary>
-        /// Find the isolation window containing the query m/z
-        /// </summary>
-        /// <returns>(True/False) Was a window containing this m/z found?</returns>
+        public bool TryGetDeconvFromMz(double mz, out int deconvIndex)
+        {
+            if (!_deconvRegionsUpdated)
+            {
+                DetermineDeconvRegions();
+            }
+            long mzHash = IsoWindowHasher.Hash(mz);
+            int i = 0;
+            foreach (var deconvRegion in _deconvRegions)
+            {
+                if (deconvRegion.Start < mzHash && mzHash < deconvRegion.Stop)
+                {
+                    deconvIndex = i;
+                    return true;
+                }
+                ++i;
+            }
+            deconvIndex = -1;
+            return false;
+        }
+
+
         public bool TryGetWindowFromMz(double mz, out int windowIndex)
         {
-            var comparer = new KvpKeyComparer();
-            if (_lastSort < _isoWindowsSorted.Count)
+            long mzHash = IsoWindowHasher.Hash(mz);
+            int i = 0;
+            foreach (var isoWin in _isolationWindows)
             {
-                _isoWindowsSorted.Sort(comparer);
-                _lastSort = _isoWindowsSorted.Count;
-            }
-
-            var queryWindow = new KeyValuePair<double, int>(mz, 0);
-            int index = _isoWindowsSorted.BinarySearch(queryWindow, comparer);
-
-            if (index >= 0)
-            {
-                // m/z matches a precursor isolation center exactly
-                windowIndex = _isoWindowsSorted[index].Value;
-                return true;
-            }
-            else
-            {
-                // m/z does not match a precursor isolation center exactly
-                // ~index is the next window with isolation center greater than m/z
-                // or _isoWindowsSorted.Count if there is no window with an isolation
-                // center greater than m/z
-                var nextGreatestWindow = ~index;
-                // Query m/z is between two isolation window centers, test each one
-                var leftWindow = nextGreatestWindow == 0
-                                        ? new KeyValuePair<double, int>(double.MinValue, -1)
-                                        : _isoWindowsSorted[nextGreatestWindow - 1];
-                if (mz <= leftWindow.Key + _windowWidth / 2.0)
+                if (isoWin.Start < mzHash && mzHash < isoWin.Stop)
                 {
-                    windowIndex = leftWindow.Value;
+                    windowIndex = i;
                     return true;
                 }
-
-                var rightWindow = nextGreatestWindow == _isoWindowsSorted.Count
-                                         ? new KeyValuePair<double, int>(double.MaxValue, -1)
-                                         : _isoWindowsSorted[nextGreatestWindow];
-                if (mz >= rightWindow.Key - _windowWidth / 2.0)
-                {
-                    windowIndex = rightWindow.Value;
-                    return true;
-                }
+                ++i;
             }
-            // The m/z does not fall in any of the windows
             windowIndex = -1;
             return false;
         }
+
+       public int MaxDeconvInIsoWindow()
+       {
+          return _isolationWindows.Select(isoWin => isoWin.DeconvRegions.Count).Max();
+       }
     }
 
     public sealed class IsoWin
@@ -807,12 +855,12 @@ namespace pwiz.Skyline.Model.Results
             Id = id;
         }
 
-        internal double CenterMz
+        public double CenterMz
         {
             get { return (StartMz + StopMz)/2.0; }
         }
 
-        internal double Width
+       public double Width
         {
             get { return StopMz - StartMz; }
         }
@@ -827,18 +875,20 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ScanCached
     {
-        public ScanCached(double[] mask, double[] data, int[] isoIndices, int[] deconvIndices) : this()
+        public ScanCached(double[] mask, double[] data, int[] isoIndices, int[] deconvIndices, double? retentionTime = null) : this()
         {
             Mask = mask;
             Data = data;
             IsoIndices = isoIndices;
             DeconvIndices = deconvIndices;
+            RetentionTime = retentionTime;
         }
 
         public double[] Mask { get; set; }
         public double[] Data { get; set; }
         public int[] IsoIndices { get; set; }
         public int[] DeconvIndices { get; set; }
+        public double? RetentionTime { get; set; }
     }
 
     public sealed class SpectrumProcessor
@@ -882,11 +932,11 @@ namespace pwiz.Skyline.Model.Results
             return _transBinner.MaxTransitions(numWindows);
         }
 
-        public List<int> BinIndicesFromIsolationWindows(int[] isoIndices)
+        public List<int> BinIndicesFromDeconvWindows(int[] deconvIndices)
         {
-            var returnIndices = _transBinner.BinsForPrecursors(isoIndices).ToList();
+            var returnIndices = _transBinner.BinsForDeconvWindows(deconvIndices).ToList();
             returnIndices.Sort();
-            return returnIndices;
+            return returnIndices;           
         }
 
         public ScanCached AddSpectrum(int scanNum, MsDataSpectrum s)
@@ -903,8 +953,9 @@ namespace pwiz.Skyline.Model.Results
             // Normally this scan will be of greater scan number than any previous
             double[] binnedData = _binnedDataPool.Get();
             _transBinner.BinData(s.Mzs, s.Intensities, ref binnedData);
+            double? retentionTime = s.RetentionTime;
             // Add this data to the cache
-            var scanCache = new ScanCached(mask, binnedData, isoIndices, deconvIndices);
+            var scanCache = new ScanCached(mask, binnedData, isoIndices, deconvIndices, retentionTime);
             _cache.Add(scanNum, scanCache); 
             _scanStack.Enqueue(scanNum);
             return scanCache;
@@ -926,33 +977,36 @@ namespace pwiz.Skyline.Model.Results
 
         public bool TryGetFilteredSpectrumData(int scanIndex, IList<int> binIndices,
                                             out IEnumerable<double> spectrumData,
-                                            out double[] mask)
+                                            out double[] mask,
+                                            out double? retentionTime)
         {
             ScanCached spectrum;
             if (!TryGetSpectrum(scanIndex, out spectrum))
             {
                 spectrumData = null;
                 mask = null;
+                retentionTime = null;
                 return false;
             }
             spectrumData = binIndices.Select(i => spectrum.Data[i]);
             mask = spectrum.Mask;
+            retentionTime = spectrum.RetentionTime;
             return true;
         }
     }
 
     public sealed class TransitionInfo : IComparable<TransitionInfo>
     {
-        public TransitionInfo(double startMz, double endMz, int[] precursorIndices)
+        public TransitionInfo(double startMz, double endMz, int deconvIndex)
         {
             StartMz = startMz;
             EndMz = endMz;
-            PrecursorIndices = precursorIndices;
+            DeconvIndex = deconvIndex;
         }
 
         public double StartMz { get; private set; }
         public double EndMz { get; private set; }
-        public int[] PrecursorIndices { get; private set; }
+        public int DeconvIndex { get; private set; }
 
         public int CompareTo(TransitionInfo other)
         {
@@ -973,7 +1027,7 @@ namespace pwiz.Skyline.Model.Results
     public sealed class TransitionBinner
     {
         private List<TransitionInfo> _allTransitions;
-        private HashSet<int>[] _precursorTransitions;
+        private HashSet<int>[] _deconvTransitions; 
         private double _maxTransitionWidth;
         private IIsoWinMapper _isoMapper;
 
@@ -991,14 +1045,14 @@ namespace pwiz.Skyline.Model.Results
             foreach (var filterPair in filterPairs)
             {
                 var precursorMz = filterPair.Q1;
-                int[] precWindowIndices;
+                int deconvIndex;
                 // This precursor is outside of the range of mapped precursor
                 // isolation windows
-                if (!_isoMapper.TryGetAllWindowsFromMz(precursorMz, out precWindowIndices))
+                if (!_isoMapper.TryGetDeconvFromMz(precursorMz, out deconvIndex))
                     continue;
                 for (int i = 0; i < filterPair.ArrayQ3.Length; ++i)
                 {
-                    AddTransition(precWindowIndices, filterPair.ArrayQ3[i], filterPair.ArrayQ3Window[i]);
+                    AddTransition(deconvIndex, filterPair.ArrayQ3[i], filterPair.ArrayQ3Window[i]);
                 }
             }
             // Populate _allTransitions and precursor->transition map
@@ -1010,10 +1064,10 @@ namespace pwiz.Skyline.Model.Results
             // Initialize all variables
             _isoMapper = isoMapper;
             _allTransitions = new List<TransitionInfo>();
-            _precursorTransitions = new HashSet<int>[_isoMapper.NumWindows];
-            for (int i = 0; i < _precursorTransitions.Length; ++i)
+            _deconvTransitions = new HashSet<int>[_isoMapper.NumDeconvRegions];
+            for (int i = 0; i < _deconvTransitions.Length; ++i)
             {
-                _precursorTransitions[i] = new HashSet<int>();
+                _deconvTransitions[i] = new HashSet<int>();
             }
             _maxTransitionWidth = 0.0;
             MinValue = double.PositiveInfinity;
@@ -1029,18 +1083,15 @@ namespace pwiz.Skyline.Model.Results
             _allTransitions.Sort();
             for (int i = 0; i < _allTransitions.Count; ++i)
             {
-                var precIndices = _allTransitions[i].PrecursorIndices;
-                foreach (var precIndex in precIndices)
-                {
-                    _precursorTransitions[precIndex].Add(i);   
-                }
+                var deconvIndex = _allTransitions[i].DeconvIndex;
+                _deconvTransitions[deconvIndex].Add(i);
             }
             MinBin = 0;
             MaxBin = _allTransitions.Count - 1;
             NumBins = _allTransitions.Count;
         }
 
-        private void AddTransition(int[] precursorIndices, double windowCenter, double windowWidth)
+        private void AddTransition(int deconvIndex, double windowCenter, double windowWidth)
         {
             var windowStart = windowCenter - windowWidth / 2.0;
             var windowEnd = windowCenter + windowWidth / 2.0;
@@ -1050,13 +1101,13 @@ namespace pwiz.Skyline.Model.Results
                 MinValue = windowStart;
             if (windowEnd > MaxValue)
                 MaxValue = windowEnd;
-            _allTransitions.Add(new TransitionInfo(windowStart, windowEnd, precursorIndices));
+            _allTransitions.Add(new TransitionInfo(windowStart, windowEnd, deconvIndex));
         }
 
         public void BinData(double[] mzVals, double[] intensityVals, ref double[] binnedData)
         {
             if (mzVals.Length != intensityVals.Length)
-                throw new IndexOutOfRangeException(String.Format(Resources.TransitionBinner_BinData_mz_and_intensity_arrays_dont_match_in_length__0__1__, mzVals.Length, intensityVals.Length));
+                throw new IndexOutOfRangeException(String.Format(Resources.TransitionBinner_BinData_, mzVals.Length, intensityVals.Length));
             if (binnedData.Length != NumBins)
                 binnedData = new double[NumBins];
             else
@@ -1106,71 +1157,44 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public double LowerValueFromBin(int queryBin)
-        {
-            return TransInfoFromBin(queryBin).StartMz;
-        }
-
-        public double UpperValueFromBin(int queryBin)
-        {
-            return TransInfoFromBin(queryBin).EndMz;
-        }
-
-        public double CenterValueFromBin(int queryBin)
-        {
-            var transInf = TransInfoFromBin(queryBin);
-            return (transInf.StartMz + transInf.EndMz) / 2.0;
-        }
-
-        public TransitionInfo TransInfoFromBin(int queryBin)
-        {
-            if (MinBin > queryBin || queryBin > MaxBin)
-            {
-                throw new IndexOutOfRangeException(
-                    string.Format(Resources.TransitionBinner_TransInfoFromBin_TransitionBinner_TransInfoFromBin_Index_out_of_range__0__,
-                                  queryBin));
-            }
-            return _allTransitions[queryBin];
-        }
-
-        public ICollection<int> BinsForPrecursors(int[] precursors)
+        public ICollection<int> BinsForDeconvWindows(int[] deconvWindows)
         {
             var validBins = new HashSet<int>();
 
-            foreach (int t in precursors)
+            foreach (int t in deconvWindows)
             {
-                if (0 > t || t > _precursorTransitions.Length)
+                if (0 > t || t > _deconvTransitions.Length)
                 {
                     throw new IndexOutOfRangeException(
-                        string.Format(Resources.TransitionBinner_BinsForPrecursors_TransitionBinner_BinsForPrecursors_precursor_index_out_of_range__0__,
+                        string.Format("TransitionBinner: BinsForPrecursors: precursor index out of range: {0}", // Not L10N
                                       t));
                 }
-                validBins.UnionWith(_precursorTransitions[t]);
+                validBins.UnionWith(_deconvTransitions[t]);
             }
 
             return validBins;
         }
 
-        public bool BinInPrecursor(int bin, int precursor)
+        public bool BinInDeconvWindow(int bin, int deconvWindow)
         {
-            if (0 > precursor || precursor > _precursorTransitions.Length)
+            if (0 > deconvWindow || deconvWindow > _deconvTransitions.Length)
             {
                 throw new IndexOutOfRangeException(
-                    string.Format(Resources.TransitionBinner_BinInPrecursor_TransitionBinner_BinInPrecursor_precursor_index_out_of_range__0__,
-                                  precursor));
+                    string.Format("TransitionBinner: BinInPrecursor: precursor index out of range: {0}", // Not L10N
+                                  deconvWindow));
             }
-            return _precursorTransitions[precursor].Contains(bin);
+            return _deconvTransitions[deconvWindow].Contains(bin);
         }
 
         public int MaxTransitions(int numWindows)
         {
-            if (0 >= numWindows || numWindows > _precursorTransitions.Length)
+            if (0 >= numWindows || numWindows > _deconvTransitions.Length)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(Resources.TransitionBinner_MaxTransitions_TransitionBinner_MaxTransitionsasked_for_transitions_from_too_manyprecursors__0__,
+                    string.Format("TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}",
                                   numWindows));
             }
-            var transNumsSorted = from prec in _precursorTransitions
+            var transNumsSorted = from prec in _deconvTransitions
                                   orderby prec.Count descending
                                   select prec.Count;
             int counter = 0;
@@ -1193,14 +1217,40 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < precursors.Count; ++i)
             {
                 var precursorMz = precursors[i];
-                int[] precWindowIndices;
-                if (!_isoMapper.TryGetAllWindowsFromMz(precursorMz, out precWindowIndices))
+                int deconvIndices;
+                if (!_isoMapper.TryGetDeconvFromMz(precursorMz, out deconvIndices))
                     continue;
                 var transCenter = transitions[i].Key;
                 var transWidth = transitions[i].Value;
-                AddTransition(precWindowIndices, transCenter, transWidth);
+                AddTransition(deconvIndices, transCenter, transWidth);
             }
             PopulatePrecursorToTransition();
+        }
+
+        public TransitionInfo TransInfoFromBin(int queryBin)
+        {
+            if (MinBin > queryBin || queryBin > MaxBin)
+            {
+                throw new IndexOutOfRangeException( string.Format("TransitionBinner[TransInfoFromBin]: Index out of range: {0}", // Not L10N
+                                                    queryBin));
+            }
+            return _allTransitions[queryBin];
+        }
+
+        public double LowerValueFromBin(int queryBin)
+        {
+            return TransInfoFromBin(queryBin).StartMz;
+        }
+
+        public double UpperValueFromBin(int queryBin)
+        {
+            return TransInfoFromBin(queryBin).EndMz;
+        }
+
+        public double CenterValueFromBin(int queryBin)
+        {
+            var transInf = TransInfoFromBin(queryBin);
+            return (transInf.StartMz + transInf.EndMz) / 2.0;
         }
 
         #endregion

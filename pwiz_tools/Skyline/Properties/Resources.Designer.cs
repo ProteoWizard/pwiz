@@ -106,6 +106,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Isolation scheme is set to multiplexing but file does not appear to contain multiplexed acquisition data..
+        /// </summary>
+        public static string AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_ {
+            get {
+                return ResourceManager.GetString("AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_fil" +
+                        "e_does_not_appear_to_contain_multiplexed_acquisition_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot save to {0}..
         /// </summary>
         public static string AbstractDiaExporter_Export_Cannot_save_to__0__ {
@@ -140,6 +150,47 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_o" +
                         "ut_of__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan in imported file appears to be missing an isolation window center..
+        /// </summary>
+        public static string AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_ {
+            get {
+                return ResourceManager.GetString("AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolat" +
+                        "ion_window_center_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan in imported file appears to be missing an isolation window lower boundary..
+        /// </summary>
+        public static string AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_ {
+            get {
+                return ResourceManager.GetString("AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolat" +
+                        "ion_window_lower_boundary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan in imported file appears to be missing an isolation window upper boundary..
+        /// </summary>
+        public static string AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_ {
+            get {
+                return ResourceManager.GetString("AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolat" +
+                        "ion_window_upper_boundary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tried to get a window mask for {0}, a spectrum with previously unobserved isolation windows. Demultiplexing requires a repeating cycle of isolation windows..
+        /// </summary>
+        public static string AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_ {
+            get {
+                return ResourceManager.GetString("AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spect" +
+                        "rum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repe" +
+                        "ating_cycle_of_isolation_windows_", resourceCulture);
             }
         }
         
@@ -3241,6 +3292,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Overlap and MSX.
+        /// </summary>
+        public static string DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX {
+            get {
+                return ResourceManager.GetString("DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Random Mass Shift.
         /// </summary>
         public static string DecoyGeneration_ADD_RANDOM_Random_Mass_Shift {
@@ -3409,9 +3469,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
@@ -7608,26 +7665,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IsolationWindowMapper: isoIndex {0} out of range.
-        /// </summary>
-        public static string IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_of_range {
-            get {
-                return ResourceManager.GetString("IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_o" +
-                        "f_range", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to IsolationWindowMapper: Tried to get a window mask for {0}, a spectrum with previously unobserved isolation windows.
-        /// </summary>
-        public static string IsolationWindowMapper_GetWindowMask_IsolationWindowMapper_Tried_to_get_a_window_mask_for__0__a_spectrum_with_previously_unobserved_isolation_windows {
-            get {
-                return ResourceManager.GetString("IsolationWindowMapper_GetWindowMask_IsolationWindowMapper_Tried_to_get_a_window_m" +
-                        "ask_for__0__a_spectrum_with_previously_unobserved_isolation_windows", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to IsolationWindowMapper: TryGetWindowFromMz ({0}): _windowWidth must be set before calling this method.
         /// </summary>
         public static string IsolationWindowMapper_TryGetWindowFromMz_IsolationWindowMapper_TryGetWindowFromMz__0__windowWidth_must_be_set_before_calling_this_method {
@@ -8985,7 +9022,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MsxDemultiplexer: MS/MS index {0} not found.
+        ///   Looks up a localized string similar to MS/MS scan index {0} not found.
         /// </summary>
         public static string MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found {
             get {
@@ -9284,16 +9321,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatogram" +
                         "s_from__0__full_scan_settings_must_be_enabled_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to NonNegLsSolver DecompSolve: LQ decomposition not supported.
-        /// </summary>
-        public static string NonNegLsSolver_GetSolver_NonNegLsSolver_DecompSolve_LQ_decomposition_not_supported {
-            get {
-                return ResourceManager.GetString("NonNegLsSolver_GetSolver_NonNegLsSolver_DecompSolve_LQ_decomposition_not_supporte" +
-                        "d", resourceCulture);
             }
         }
         
@@ -9608,6 +9635,27 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing scan time value on scan {0}. Scan times are required for overlap-based demultiplexing..
+        /// </summary>
+        public static string OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_ {
+            get {
+                return ResourceManager.GetString("OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___" +
+                        "Scan_times_are_required_for_overlap_based_demultiplexing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}.  A non-degenerate overlapping window scheme is required..
+        /// </summary>
+        public static string OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_ {
+            get {
+                return ResourceManager.GetString("OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_i" +
+                        "s_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non" +
+                        "_degenerate_overlapping_window_scheme_is_required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempt to insert slice of deconvolution matrix failed due to out of range error..
         /// </summary>
         public static string OverlapDemultiplexer_attempt_to_insert_slice_of_deconvolution_matrix_failed_out_of_range {
@@ -9624,16 +9672,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("OverlapDemultiplexer_attempt_to_take_slice_of_deconvolution_matrix_failed_out_of_" +
                         "range", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OverlapDemultiplexer: GetDeconvolvedSpectra: Index {0} is out of range.
-        /// </summary>
-        public static string OverlapDemultiplexer_GetDeconvolvedSpectra_OverlapDemultiplexer__GetDeconvolvedSpectra__Index__0__is_out_of_range {
-            get {
-                return ResourceManager.GetString("OverlapDemultiplexer_GetDeconvolvedSpectra_OverlapDemultiplexer__GetDeconvolvedSp" +
-                        "ectra__Index__0__is_out_of_range", resourceCulture);
             }
         }
         
@@ -9664,36 +9702,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("OverlapDemultiplexer_the_isolation_window_overlap_scheme_does_not_cover_all_isola" +
                         "tion_windows", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OverlapIsolationWindowMapper: Tried to add an isolation window with no lower boundary.
-        /// </summary>
-        public static string OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolatio_window_with_no_lower_boundary {
-            get {
-                return ResourceManager.GetString("OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_is" +
-                        "olatio_window_with_no_lower_boundary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OverlapIsolationWindowMapper: Tried to add an isolation window with no center.
-        /// </summary>
-        public static string OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_center {
-            get {
-                return ResourceManager.GetString("OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_is" +
-                        "olation_window_with_no_center", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OverlapIsolationWindowMapper: Tried to add an isolation window with no upper boundary.
-        /// </summary>
-        public static string OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_upper_boundary {
-            get {
-                return ResourceManager.GetString("OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_is" +
-                        "olation_window_with_no_upper_boundary", resourceCulture);
             }
         }
         
@@ -16373,51 +16381,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TransitionBinner: BinData: m/z and intensity arrays don&apos;t match in length ({0} != {1}).
+        ///   Looks up a localized string similar to Imported spectrum appears to be missing m/z or intensity values ({0} != {1}).
         /// </summary>
-        public static string TransitionBinner_BinData_mz_and_intensity_arrays_dont_match_in_length__0__1__ {
+        public static string TransitionBinner_BinData_ {
             get {
-                return ResourceManager.GetString("TransitionBinner_BinData_mz_and_intensity_arrays_dont_match_in_length__0__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TransitionBinner: BinInPrecursor: precursor index out of range: {0}.
-        /// </summary>
-        public static string TransitionBinner_BinInPrecursor_TransitionBinner_BinInPrecursor_precursor_index_out_of_range__0__ {
-            get {
-                return ResourceManager.GetString("TransitionBinner_BinInPrecursor_TransitionBinner_BinInPrecursor_precursor_index_o" +
-                        "ut_of_range__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TransitionBinner: BinsForPrecursors: precursor index out of range: {0}.
-        /// </summary>
-        public static string TransitionBinner_BinsForPrecursors_TransitionBinner_BinsForPrecursors_precursor_index_out_of_range__0__ {
-            get {
-                return ResourceManager.GetString("TransitionBinner_BinsForPrecursors_TransitionBinner_BinsForPrecursors_precursor_i" +
-                        "ndex_out_of_range__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}.
-        /// </summary>
-        public static string TransitionBinner_MaxTransitions_TransitionBinner_MaxTransitionsasked_for_transitions_from_too_manyprecursors__0__ {
-            get {
-                return ResourceManager.GetString("TransitionBinner_MaxTransitions_TransitionBinner_MaxTransitionsasked_for_transiti" +
-                        "ons_from_too_manyprecursors__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TransitionBinner[TransInfoFromBin]: Index out of range: {0}.
-        /// </summary>
-        public static string TransitionBinner_TransInfoFromBin_TransitionBinner_TransInfoFromBin_Index_out_of_range__0__ {
-            get {
-                return ResourceManager.GetString("TransitionBinner_TransInfoFromBin_TransitionBinner_TransInfoFromBin_Index_out_of_" +
-                        "range__0__", resourceCulture);
+                return ResourceManager.GetString("TransitionBinner_BinData_", resourceCulture);
             }
         }
         

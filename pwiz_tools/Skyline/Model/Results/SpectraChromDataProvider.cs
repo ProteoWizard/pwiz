@@ -117,16 +117,18 @@ namespace pwiz.Skyline.Model.Results
                 var handlingType = isoScheme == null
                     ? IsolationScheme.SpecialHandlingType.NONE
                     : isoScheme.SpecialHandling;
-                bool isOverlap = Equals(handlingType, IsolationScheme.SpecialHandlingType.OVERLAP);
-                bool isMultiplexed = Equals(handlingType, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
                 IDemultiplexer demultiplexer = null;
-                if (isOverlap)
+                switch (handlingType)
                 {
-                    demultiplexer = new OverlapDemultiplexer(dataFile, filter);
-                }
-                else if (isMultiplexed)
-                {
-                    demultiplexer = new MsxDemultiplexer(dataFile, filter);
+                    case IsolationScheme.SpecialHandlingType.OVERLAP:
+                        demultiplexer = new OverlapDemultiplexer(dataFile, filter);
+                        break;
+                    case IsolationScheme.SpecialHandlingType.MULTIPLEXED:
+                        demultiplexer = new MsxDemultiplexer(dataFile, filter);
+                        break;
+                    case IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED:
+                        demultiplexer = new MsxOverlapDemultiplexer(dataFile, filter);
+                        break;
                 }
                 for (int i = 0; i < lenSpectra; i++)
                 {

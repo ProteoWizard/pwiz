@@ -38,8 +38,8 @@ namespace pwiz.Skyline.Model
         /// From mProphet paper: shift precursor m/z by 10
         /// </summary>
         public const int ALTERED_SEQUENCE_DECOY_MZ_SHIFT = 10;
-        public const int MIN_PRECURSOR_DECOY_MASS_SHIFT = -10;
-        public const int MAX_PRECURSOR_DECOY_MASS_SHIFT = -3;
+        public const int MIN_PRECURSOR_DECOY_MASS_SHIFT = -30;
+        public const int MAX_PRECURSOR_DECOY_MASS_SHIFT = 30;
 
         public static ICollection<int> MassShifts { get { return MASS_SHIFTS; } }
 

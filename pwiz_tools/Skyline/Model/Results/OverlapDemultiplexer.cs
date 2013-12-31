@@ -18,8 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using MathNet.Numerics.LinearAlgebra.Double;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 
@@ -38,149 +38,32 @@ namespace pwiz.Skyline.Model.Results
 
         public override int NumScansBlock
         {
+            get { return NumScansCycle * 3; }
+        }
+
+        public int NumScansCycle
+        {
             get { return NumDeconvRegions - 1; }
         }
 
         protected override void InitializeSolver()
         {
-            var maxTransInSpectrum = _spectrumProcessor.MaxTransitions(1);
-            _deconvBlock = new DeconvBlock(NumDeconvRegions, NumScansBlock+1, maxTransInSpectrum);
+            int maxOverlapComponents = _isoMapper.MaxDeconvInIsoWindow();
+            int maxTransInSpectrum = _spectrumProcessor.MaxTransitions(maxOverlapComponents);
+            _deconvHandler = new OverlapDeconvSolverHandler(NumDeconvRegions, 
+                                                            NumScansBlock,
+                                                            maxTransInSpectrum,
+                                                            _overlapRegionsInApprox,
+                                                            NumScansCycle);
             _solver = new OverlapLsSolver(_overlapRegionsInApprox,_overlapRegionsInApprox, maxTransInSpectrum);
-        }
-
-        public override DeconvBlock PreprocessDeconvBlock(int[] deconvIndices)
-        {
-            // Re-index the rows of the deconvBlock so that overlap and isolation windows are ordered by m/z 
-            // and the matrix always takes the same near-diagonal form
-            Reindex();
-            // Select only the most relevant rows to demultiplex
-            int rowStart = RowStart(deconvIndices[0]);
-            int rowEnd = rowStart + _overlapRegionsInApprox - 2;
-            int columnStart = rowStart;
-            int columnEnd = columnStart + _overlapRegionsInApprox - 1;
-            var newDeconvBlock = MakeDeconvSubblock(_deconvBlock, rowStart, rowEnd, columnStart, columnEnd);
-            // Add a regularizer row to make sure the solution isn't under-determined
-            double[] maskRegularizer = new double[newDeconvBlock.NumIsos];
-            double[] solutionRegularizer = new double[newDeconvBlock.NumTransitions];
-            maskRegularizer[0] = 1.0;
-            newDeconvBlock.Add(maskRegularizer, solutionRegularizer);
-            return newDeconvBlock;
-        }
-
-        public override void PostprocessDeconvBlock(DeconvBlock deconvBlock, int[] deconvIndices)
-        {
-            int isosStart = RowStart(deconvIndices[0]);
-            InsertDeconvSubblock(deconvBlock, isosStart, ref _deconvBlock);
-        }
-
-        public int RowStart(int deconvIndex)
-        {
-            int maxLeftBoundary = NumDeconvRegions - _overlapRegionsInApprox;
-            if (maxLeftBoundary < 0)
-            {
-                throw new Exception(string.Format(Resources.OverlapDemultiplexer_RowStart_Number_of_regions__0__in_overlap_demultiplexer_approximation_must_be_less_than_number_of_scans__1__,
-                    _overlapRegionsInApprox,
-                    NumDeconvRegions));
-            }
-            return Math.Min(maxLeftBoundary, Math.Max(0, deconvIndex - _overlapRegionsInApprox / 2));
-        }
-
-        public void InsertDeconvSubblock(DeconvBlock blockToInsert, int isosStart, ref DeconvBlock targetBlock)
-        {
-            int numIsos = blockToInsert.NumIsos;
-            int isosEnd = isosStart + numIsos - 1;
-            int maxTransitions = targetBlock.MaxTransitions;
-            if(0 > isosStart || isosEnd >= targetBlock.NumIsos)
-            {
-                throw new Exception(Resources.OverlapDemultiplexer_attempt_to_insert_slice_of_deconvolution_matrix_failed_out_of_range);
-            }
-            for (int i = isosStart; i <= isosEnd; ++i)
-            {
-                for (int j = 0; j < maxTransitions; ++j)
-                {
-                    targetBlock.Solution.Matrix[i,j] = blockToInsert.Solution.Matrix[i-isosStart,j];
-                }
-            }
-        }
-
-        public DeconvBlock MakeDeconvSubblock(DeconvBlock deconvBlock, int rowStart, int rowEnd, int columnStart, int columnEnd)
-        {
-            if (rowStart < 0 ||
-                columnStart < 0 ||
-                columnEnd < columnStart ||
-                rowEnd < rowStart ||
-                rowEnd >= deconvBlock.NumRows ||
-                columnEnd >= deconvBlock.NumIsos)
-            {
-                throw new Exception(Resources.OverlapDemultiplexer_attempt_to_take_slice_of_deconvolution_matrix_failed_out_of_range);
-            }
-            int numRows = rowEnd - rowStart + 1;
-            int numCols = columnEnd - columnStart + 1;
-            int maxTransitions = deconvBlock.MaxTransitions;
-            int numTransitions = deconvBlock.NumTransitions;
-            var newDeconvBlock = new DeconvBlock(numCols, numRows+1, maxTransitions);
-            for (int i = rowStart; i <= rowEnd; ++i)
-            {
-                var sliceMask = new DenseVector(numCols);
-                var sliceData = new DenseVector(numTransitions);
-                deconvBlock.Masks.Matrix.Row(i,columnStart,numCols,sliceMask);
-                deconvBlock.BinnedData.Matrix.Row(i, 0, numTransitions, sliceData);
-                newDeconvBlock.Add(sliceMask,sliceData);
-            }
-            return newDeconvBlock;
-        }
-
-        public void Reindex()
-        {
-            int numRows = _deconvBlock.NumRows;
-            int numTransitions = _deconvBlock.NumTransitions;
-            DeconvBlock deconvBlockNew = new DeconvBlock(NumDeconvRegions, NumScansBlock+1, _deconvBlock.MaxTransitions);
-            var reIndex = new int [numRows];
-            for (int i = 0; i < numRows; ++i)
-            {
-                reIndex[i] = -1;
-            }
-            for (int i = 0; i < numRows; ++i)
-            {
-                var currentRow = new DenseVector(NumDeconvRegions);
-                _deconvBlock.Masks.Matrix.Row(i, currentRow);
-                int firstNonzero = FirstNonZero(currentRow);
-                if (firstNonzero == -1)
-                {
-                    throw new Exception(Resources.OverlapDemultiplexer_the_isolation_window_overlap_scheme_does_not_cover_all_isolation_windows);
-                }
-                reIndex[firstNonzero] = i;
-            }
-            for (int i = 0; i < numRows; ++i)
-            {
-                if (reIndex[i] == -1)
-                {
-                    throw new Exception(Resources.OverlapDemultiplexer_the_isolation_window_overlap_scheme_does_not_cover_all_isolation_windows);
-                }
-                var currentMaskRow = new DenseVector(NumDeconvRegions);
-                var currentBinnedRow = new DenseVector(numTransitions);
-                _deconvBlock.Masks.Matrix.Row(reIndex[i],currentMaskRow);
-                _deconvBlock.BinnedData.Matrix.Row(reIndex[i],0,numTransitions,currentBinnedRow);
-                deconvBlockNew.Add(currentMaskRow,currentBinnedRow);
-            }
-            _deconvBlock = deconvBlockNew;
-        }
-
-        private int FirstNonZero(DenseVector currentRow)
-        {
-            for (int i = 0; i < currentRow.Count; i++)
-            {
-                if (currentRow[i] != 0)
-                    return i;
-            }
-            return -1;
         }
     }
 
     public class OverlapIsolationWindowMapper : AbstractIsoWindowMapper
     {
-        public override void DetermineDeconvRegions()
+        protected override void FindDeconvRegions()
         {
+            _deconvRegions.Clear();
             // Set the minimum size of an overlap region
             const double minDeconvWindow = 0.02;
             long minDeconvHash = IsoWindowHasher.Hash(minDeconvWindow);
@@ -225,6 +108,112 @@ namespace pwiz.Skyline.Model.Results
                     if (currentIso.Contains(currentOverlap)) currentIso.DeconvRegions.Add(currentOverlap);
                     if (currentOverlap.Start >= currentIso.Stop) break;
                 }
+            }
+        }
+    }
+
+    public class OverlapDeconvSolverHandler : AbstractDeconvSolverHandler
+    {
+        private IEnumerable<int> _scansInDeconv;
+        private int _centerIndex;
+        private int _leftBoundary;
+        private readonly int _cycleLength;
+        private IEnumerable<int> _windowsInDeconv; 
+        private readonly int _overlapRegionsInApprox;
+
+        public OverlapDeconvSolverHandler(int numDeconvWindows, int maxScans, int maxTransitions, int overlapRegions, int cycleLength):
+            base(numDeconvWindows, maxScans, maxTransitions)
+        {
+            _overlapRegionsInApprox = overlapRegions;
+            _cycleLength = cycleLength;
+            _deconvBlock = new DeconvBlock(_overlapRegionsInApprox, _overlapRegionsInApprox, maxTransitions);
+        }
+
+        protected override void BuildDeconvBlock()
+        {
+            _deconvBlock.Clear();
+            _deconvBlock.Solution.Resize(_overlapRegionsInApprox, NumTransitions);
+            _centerIndex = Convert.ToInt32(DeconvIndices.Average());
+            _leftBoundary = Math.Min(Math.Max(_centerIndex - _overlapRegionsInApprox / 2, 0), NumDeconvWindows - _overlapRegionsInApprox);
+            // Find the scans that are closest to the deconvolution windows we are interested in 
+            var maskAverages = new List<KeyValuePair<double, int>>(NumScans);
+            for (int scanIndex = 0; scanIndex < _cycleLength; ++scanIndex)
+            {
+                // Average over the indices of the nonzero elements to find the "center of mass" of the deconvolution windows of this scan
+                double currentAverage = Masks.Matrix.Row(scanIndex).Select((maskVal, index) => maskVal > 0 ? index : 0)
+                                        .Where(index => index > 0).Average();
+                double deviationFromCenter = currentAverage - _centerIndex;
+                maskAverages.Add(new KeyValuePair<double, int>(deviationFromCenter, scanIndex));
+            }
+            maskAverages.Sort(CompareKvpAbs);
+            // Pick the best few scans
+            var bestMaskAverages = maskAverages.Where((kvp, index) => index < _overlapRegionsInApprox).ToList();
+            bestMaskAverages.Sort(CompareKvp);
+            _scansInDeconv = bestMaskAverages.Select(kvp => kvp.Value);
+            foreach (var deconvScan in _scansInDeconv)
+            {
+                var scansOfWindow = new List<int>();
+                var scanTimes = new List<double>();
+                int currentScan = deconvScan;
+                while (currentScan < NumScans)
+                {
+                    scansOfWindow.Add(currentScan);
+                    if (!ScanTimes[currentScan].HasValue)
+                    {
+                        throw new InvalidDataException(string.Format(Resources.OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_, ScanNumbers[currentScan]));
+                    }
+                    scanTimes.Add(ScanTimes[currentScan].Value);
+                    currentScan = currentScan + _cycleLength;
+                }
+                var interpolatedValues = new List<double>();
+                for (int j = 0; j < NumTransitions; ++j)
+                {
+                    var scanIntensities = scansOfWindow.Select(row => BinnedData.Matrix[row, j]).ToList();
+                    var interpolator = new MathNet.Numerics.Interpolation.Algorithms.CubicSplineInterpolation(scanTimes,
+                                                                                                          scanIntensities);
+                    if (CurrentScan >= NumScans || CurrentScan < 0)
+                    {
+                        throw new InvalidDataException(string.Format("Current scan does not fall within bounds on scan {0}", ScanNumbers[currentScan]));  // Not L10N
+                    }
+                    if (!ScanTimes[CurrentScan].HasValue)
+                    {
+                        throw new InvalidDataException(string.Format(Resources.OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_, ScanNumbers[currentScan]));
+                    }
+                    // ReSharper disable PossibleInvalidOperationException
+                    double interpolatedValue = interpolator.Interpolate(ScanTimes[CurrentScan].Value);
+                    // ReSharper restore PossibleInvalidOperationException
+                    interpolatedValues.Add(interpolatedValue);
+                }
+                _deconvBlock.Add(Masks.Matrix.Row(deconvScan, _leftBoundary, _overlapRegionsInApprox).ToArray(),
+                                 interpolatedValues);
+            }
+            if (_deconvBlock.Masks.Matrix.Rank() < _overlapRegionsInApprox)
+            {
+                throw new InvalidDataException(string.Format(Resources.OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_,
+                                               _deconvBlock.Masks.Matrix.Rank(),  _overlapRegionsInApprox, ScanNumbers[NumScans/2]));
+            }
+        }
+
+        protected int CompareKvp(KeyValuePair<double, int> a, KeyValuePair<double, int> b)
+        {
+            return a.Key.CompareTo(b.Key);
+        }
+
+        protected int CompareKvpAbs(KeyValuePair<double, int> a, KeyValuePair<double, int> b)
+        {
+            return Math.Abs(a.Key).CompareTo(Math.Abs(b.Key));
+        }
+
+        protected override void DeconvBlockToSolution()
+        {
+            // Not using LINQ due to speed concerns.
+            int i = 0;
+            Solution.Resize(DeconvIndices.Count,_deconvBlock.Solution.NumCols);
+            foreach (int deconvIndex in DeconvIndices)
+            {
+                var deconvRow = _deconvBlock.Solution.Matrix.Row(deconvIndex - _leftBoundary); 
+                Solution.Matrix.SetRow(i, deconvRow);
+                ++i;
             }
         }
     }

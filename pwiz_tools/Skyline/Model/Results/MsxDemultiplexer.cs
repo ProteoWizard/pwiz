@@ -20,51 +20,58 @@ using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class MsxDemultiplexer : AbstractDemultiplexer
+    public class MsxTypeDemultiplexer : AbstractDemultiplexer
     {
         public int DutyCycleLength
         {
             get { return NumIsoWindows / IsoWindowsPerScan; }
         }
 
-        public MsxDemultiplexer(MsDataFileImpl file, SpectrumFilter filter)
+        public MsxTypeDemultiplexer(MsDataFileImpl file, SpectrumFilter filter)
             : base(file, filter)
         {
-            _isoMapper = new MsxIsolationWindowMapper();
         }
 
         public override int NumScansBlock
         {
             get
             {
-                int dutyCycleLength = NumIsoWindows / IsoWindowsPerScan;
-                return (int)(dutyCycleLength * IsoWindowsPerScan + (1.5 * dutyCycleLength));
+                return (int)(DutyCycleLength * IsoWindowsPerScan + (1.5 * DutyCycleLength));
             }
         }
 
         protected override void InitializeSolver()
         {
             var maxTransInSpectrum = _spectrumProcessor.MaxTransitions(IsoWindowsPerScan);
-            _deconvBlock = new DeconvBlock(NumDeconvRegions, NumScansBlock, maxTransInSpectrum);
+            _deconvHandler = new MsxDeconvSolverHandler(NumDeconvRegions, NumScansBlock, maxTransInSpectrum);
             _solver = new NonNegLsSolver(NumDeconvRegions, NumScansBlock, maxTransInSpectrum, true);
         }
+    }
 
-        public override DeconvBlock PreprocessDeconvBlock(int[] deconvIndices)
+    public class MsxDemultiplexer : MsxTypeDemultiplexer
+    {
+        public MsxDemultiplexer(MsDataFileImpl file, SpectrumFilter filter)
+            : base(file, filter)
         {
-            return _deconvBlock;
+            _isoMapper = new MsxIsolationWindowMapper();
         }
+    }
 
-        public override void PostprocessDeconvBlock(DeconvBlock deconvBlock, int[] deconvIndices)
+    public class MsxOverlapDemultiplexer : MsxTypeDemultiplexer
+    {
+        public MsxOverlapDemultiplexer(MsDataFileImpl file, SpectrumFilter filter)
+            : base(file, filter)
         {
-            _deconvBlock = deconvBlock;
+            _isoMapper = new OverlapIsolationWindowMapper();
         }
     }
 
     public class MsxIsolationWindowMapper : AbstractIsoWindowMapper
     {
         // For MSX, make the deconvolution regions identical to the isolation windows
-        public override void DetermineDeconvRegions()
+        protected override void FindDeconvRegions()
         {
+            _deconvRegions.Clear();
             foreach (var isolationWindow in _isolationWindows)
             {
                 var deconvRegion = new DeconvolutionRegion(isolationWindow.Start, isolationWindow.Stop,
@@ -72,6 +79,37 @@ namespace pwiz.Skyline.Model.Results
                 _deconvRegions.Add(deconvRegion);
                 // Each isolation window contains only itself as a deconv region
                 isolationWindow.DeconvRegions.Add(deconvRegion);
+            }
+        }
+    }
+
+    public class MsxDeconvSolverHandler : AbstractDeconvSolverHandler
+    {
+        public MsxDeconvSolverHandler(int numDeconvWindows, int maxScans, int maxTransitions) :
+            base(numDeconvWindows, maxScans, maxTransitions)
+        {
+            _deconvBlock = new DeconvBlock(numDeconvWindows, maxScans, maxTransitions);
+        }
+
+        protected override void BuildDeconvBlock()
+        {
+            _deconvBlock.Masks.Resize(NumScans, NumDeconvWindows);
+            _deconvBlock.Masks.Matrix.SetSubMatrix(0, NumScans, 0, NumDeconvWindows,
+                                                   Masks.Matrix.SubMatrix(0, NumScans, 0, NumDeconvWindows));
+            _deconvBlock.BinnedData.Resize(NumScans, NumTransitions);
+            _deconvBlock.BinnedData.Matrix.SetSubMatrix(0, NumScans, 0, NumTransitions,
+                                                   BinnedData.Matrix.SubMatrix(0, NumScans, 0, NumTransitions));
+            _deconvBlock.Solution.Resize(NumDeconvWindows, NumTransitions);
+        }
+
+        protected override void DeconvBlockToSolution()
+        {
+            // Not using LINQ due to speed concerns.
+            int i = 0;
+            foreach (int deconvIndex in DeconvIndices)
+            {
+                Solution.Matrix.SetRow(i, _deconvBlock.Solution.Matrix.Row(deconvIndex));
+                ++i;
             }
         }
     }

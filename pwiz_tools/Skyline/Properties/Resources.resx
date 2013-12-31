@@ -1994,40 +1994,16 @@ Are you sure you want to continue?</value>
     <value>MsxDemultiplexer: InitializeFile: Improperly formed MSX file</value>
   </data>
   <data name="MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found" xml:space="preserve">
-    <value>MsxDemultiplexer: MS/MS index {0} not found</value>
+    <value>MS/MS scan index {0} not found</value>
   </data>
   <data name="MsxDemultiplexer_GetDeconvolvedSpectra_MsxDemultiplexer_GetDeconvolvedSpectra_spectrum_index__0__out_of_range" xml:space="preserve">
     <value>MsxDemultiplexer: GetDeconvolvedSpectra: spectrum index {0} out of range.</value>
   </data>
-  <data name="IsolationWindowMapper_GetWindowMask_IsolationWindowMapper_Tried_to_get_a_window_mask_for__0__a_spectrum_with_previously_unobserved_isolation_windows" xml:space="preserve">
-    <value>IsolationWindowMapper: Tried to get a window mask for {0}, a spectrum with previously unobserved isolation windows</value>
-  </data>
-  <data name="IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_of_range" xml:space="preserve">
-    <value>IsolationWindowMapper: isoIndex {0} out of range</value>
-  </data>
   <data name="IsolationWindowMapper_TryGetWindowFromMz_IsolationWindowMapper_TryGetWindowFromMz__0__windowWidth_must_be_set_before_calling_this_method" xml:space="preserve">
     <value>IsolationWindowMapper: TryGetWindowFromMz ({0}): _windowWidth must be set before calling this method</value>
   </data>
-  <data name="TransitionBinner_BinData_mz_and_intensity_arrays_dont_match_in_length__0__1__" xml:space="preserve">
-    <value>TransitionBinner: BinData: m/z and intensity arrays don't match in length ({0} != {1})</value>
-  </data>
-  <data name="TransitionBinner_TransInfoFromBin_TransitionBinner_TransInfoFromBin_Index_out_of_range__0__" xml:space="preserve">
-    <value>TransitionBinner[TransInfoFromBin]: Index out of range: {0}</value>
-  </data>
-  <data name="TransitionBinner_BinsForPrecursors_TransitionBinner_BinsForPrecursors_precursor_index_out_of_range__0__" xml:space="preserve">
-    <value>TransitionBinner: BinsForPrecursors: precursor index out of range: {0}</value>
-  </data>
-  <data name="TransitionBinner_BinInPrecursor_TransitionBinner_BinInPrecursor_precursor_index_out_of_range__0__" xml:space="preserve">
-    <value>TransitionBinner: BinInPrecursor: precursor index out of range: {0}</value>
-  </data>
-  <data name="TransitionBinner_MaxTransitions_TransitionBinner_MaxTransitionsasked_for_transitions_from_too_manyprecursors__0__" xml:space="preserve">
-    <value>TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}</value>
-  </data>
   <data name="SizedSet_Add_SizedSet_index_value_is_out_of_range" xml:space="preserve">
     <value>SizedSet: index 'value' is out of range</value>
-  </data>
-  <data name="NonNegLsSolver_GetSolver_NonNegLsSolver_DecompSolve_LQ_decomposition_not_supported" xml:space="preserve">
-    <value>NonNegLsSolver DecompSolve: LQ decomposition not supported</value>
   </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>Unexpected null peak list</value>
@@ -5156,23 +5132,11 @@ Are you sure you want to continue?</value>
   <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
     <value>semicolon</value>
   </data>
-  <data name="OverlapDemultiplexer_GetDeconvolvedSpectra_OverlapDemultiplexer__GetDeconvolvedSpectra__Index__0__is_out_of_range" xml:space="preserve">
-    <value>OverlapDemultiplexer: GetDeconvolvedSpectra: Index {0} is out of range</value>
-  </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
   </data>
   <data name="ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area" xml:space="preserve">
     <value>Peak Area</value>
-  </data>
-  <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_center" xml:space="preserve">
-    <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no center</value>
-  </data>
-  <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolation_window_with_no_upper_boundary" xml:space="preserve">
-    <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no upper boundary</value>
-  </data>
-  <data name="OverlapIsolationWindowMapper_Add_OverlapIsolationWindowMapper__Tried_to_add_an_isolatio_window_with_no_lower_boundary" xml:space="preserve">
-    <value>OverlapIsolationWindowMapper: Tried to add an isolation window with no lower boundary</value>
   </data>
   <data name="SavitzkyGolaySmoother_WindowSize_SavitzkyGolaySmoother__Invalid_window_size___0____argument_must_be_positive_and_odd" xml:space="preserve">
     <value>SavitzkyGolaySmoother: Invalid window size ({0}): argument must be positive and odd</value>
@@ -6167,5 +6131,32 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_" xml:space="preserve">
     <value>Pi zero (expected nulls)</value>
+  </data>
+  <data name="DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX" xml:space="preserve">
+    <value>Overlap and MSX</value>
+  </data>
+  <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
+    <value>Isolation scheme is set to multiplexing but file does not appear to contain multiplexed acquisition data.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_" xml:space="preserve">
+    <value>Tried to get a window mask for {0}, a spectrum with previously unobserved isolation windows. Demultiplexing requires a repeating cycle of isolation windows.</value>
+  </data>
+  <data name="TransitionBinner_BinData_" xml:space="preserve">
+    <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
+    <value>Scan in imported file appears to be missing an isolation window center.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_" xml:space="preserve">
+    <value>Scan in imported file appears to be missing an isolation window lower boundary.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_" xml:space="preserve">
+    <value>Scan in imported file appears to be missing an isolation window upper boundary.</value>
+  </data>
+  <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
+    <value>Missing scan time value on scan {0}. Scan times are required for overlap-based demultiplexing.</value>
+  </data>
+  <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
+    <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}.  A non-degenerate overlapping window scheme is required.</value>
   </data>
 </root>

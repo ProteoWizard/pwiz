@@ -30,12 +30,13 @@ namespace pwiz.Skyline.Model.Results
     public interface IIsoWinMapper
     {
         int NumWindows { get; }
+        int NumDeconvRegions { get; }
         int Add(IEnumerable<MsPrecursor> precursors);
         bool TryGetWindowIndex(double isolationWindow, out int index);
         IsoWin GetIsolationWindow(int isoIndex);
         MsPrecursor GetPrecursor(int isoIndex);
         bool TryGetWindowFromMz(double mz, out int windowIndex);
-        bool TryGetAllWindowsFromMz(double mz, out int[] precWindowIndices);
+        bool TryGetDeconvFromMz(double mz, out int windowIndex);
     }
 
     /// <summary>

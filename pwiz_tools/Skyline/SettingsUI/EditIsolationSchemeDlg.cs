@@ -60,6 +60,8 @@ namespace pwiz.Skyline.SettingsUI
             public static string MSX { get { return Resources.DoconvolutionMethod_MSX_Msx; } }
 
             public static string OVERLAP { get { return Resources.DoconvolutionMethod_OVERLAP_Overlap; } }
+
+            public static string MSX_OVERLAP { get { return Resources.DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX;  } }
         };
 
         public EditIsolationSchemeDlg(IEnumerable<IsolationScheme> existing)
@@ -79,7 +81,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     DeconvolutionMethod.NONE,
                     DeconvolutionMethod.MSX,
-                    DeconvolutionMethod.OVERLAP
+                    DeconvolutionMethod.OVERLAP,
+                    DeconvolutionMethod.MSX_OVERLAP
                 };
             comboDeconv.Items.AddRange(deconvOptions);
             comboDeconv.SelectedItem = DeconvolutionMethod.NONE;
@@ -183,14 +186,35 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private static string IsolationSchemeToDeconvType(string specialHandling)
+        {
+            switch (specialHandling)
+            {
+                case (IsolationScheme.SpecialHandlingType.OVERLAP):
+                    return DeconvolutionMethod.OVERLAP;
+                case (IsolationScheme.SpecialHandlingType.MULTIPLEXED):
+                    return DeconvolutionMethod.MSX;
+                case (IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED):
+                    return DeconvolutionMethod.MSX_OVERLAP;
+                default:
+                    return DeconvolutionMethod.NONE;
+            }
+        }
+
+        private static string DeconvTypeToIsolationScheme(string deconvType)
+        {
+            if (deconvType == DeconvolutionMethod.OVERLAP)
+                return IsolationScheme.SpecialHandlingType.OVERLAP;
+            else if (deconvType == DeconvolutionMethod.MSX)
+                return IsolationScheme.SpecialHandlingType.MULTIPLEXED;
+            else if (deconvType == DeconvolutionMethod.MSX_OVERLAP)
+                return IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+            else return IsolationScheme.SpecialHandlingType.NONE;
+        }
+
         private void UpdateDeconvCombo(ComboBox combo)
         {
-            combo.SelectedItem =
-                Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.OVERLAP)
-                    ? DeconvolutionMethod.OVERLAP
-                    : Equals(_isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
-                          ? DeconvolutionMethod.MSX
-                          : DeconvolutionMethod.NONE;
+            combo.SelectedItem = IsolationSchemeToDeconvType(_isolationScheme.SpecialHandling);
         }
 
         private void rbFromResultsData_CheckedChanged(object sender, EventArgs e)
@@ -779,20 +803,12 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var combo = rbPrespecified.Checked ? comboDeconvPre : comboDeconv;
-                return Equals(combo.SelectedItem, DeconvolutionMethod.OVERLAP)
-                           ? IsolationScheme.SpecialHandlingType.OVERLAP
-                           : Equals(combo.SelectedItem, DeconvolutionMethod.MSX)
-                                 ? IsolationScheme.SpecialHandlingType.MULTIPLEXED
-                                 : IsolationScheme.SpecialHandlingType.NONE;
+                return DeconvTypeToIsolationScheme((string) combo.SelectedItem);
             }
             set
             {
                 var combo = rbPrespecified.Checked ? comboDeconvPre : comboDeconv;
-                combo.SelectedItem = Equals(value, IsolationScheme.SpecialHandlingType.OVERLAP)
-                                         ? DeconvolutionMethod.OVERLAP
-                                         : Equals(value, IsolationScheme.SpecialHandlingType.MULTIPLEXED)
-                                               ? DeconvolutionMethod.MSX
-                                               : DeconvolutionMethod.NONE;
+                combo.SelectedItem = IsolationSchemeToDeconvType(value);
             }
         }
 

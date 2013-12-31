@@ -38,10 +38,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public static class SpecialHandlingType
         {
             public static string NONE { get { return "None"; } }    // Not L10N : Used only in XML and in memory
-            public static string MULTIPLEXED { get { return "Multiplexed"; } }  // Not L10N : Used only in XML and in memory
+            public const string MULTIPLEXED = "Multiplexed";  // Not L10N : Used only in XML and in memory
             public const string MS_E = "MSe"; // Not L10N : This is a Waters trademark, and probably not localizable
             public const string ALL_IONS = "All Ions";    // TODO: Need to come up with a way of localizing XmlNamedElement names that appear in UI
             public const string OVERLAP = "Overlap";
+            public const string OVERLAP_MULTIPLEXED = "Overlap Multiplexed";
 
             public static void Validate(string specialHandling)
             {
@@ -49,7 +50,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     !Equals(specialHandling, MULTIPLEXED) &&
                     !Equals(specialHandling, MS_E) &&
                     !Equals(specialHandling, ALL_IONS) &&
-                    !Equals(specialHandling, OVERLAP))
+                    !Equals(specialHandling, OVERLAP) &&
+                    !Equals(specialHandling, OVERLAP_MULTIPLEXED))
                 {
                     throw new InvalidDataException(string.Format(
                         Resources.SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling, specialHandling));
