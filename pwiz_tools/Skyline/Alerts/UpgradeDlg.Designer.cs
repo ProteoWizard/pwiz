@@ -36,10 +36,10 @@
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.labelABSciex = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.pictureSkyline = new System.Windows.Forms.PictureBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureSkyline)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -58,7 +58,7 @@
             this.panel1.Controls.Add(this.linkLabel1);
             this.panel1.Controls.Add(this.labelABSciex);
             this.panel1.Controls.Add(this.label1);
-            this.panel1.Controls.Add(this.pictureBox1);
+            this.panel1.Controls.Add(this.pictureSkyline);
             this.panel1.Name = "panel1";
             // 
             // label4
@@ -88,12 +88,11 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
-            // pictureBox1
+            // pictureSkyline
             // 
-            this.pictureBox1.Image = global::pwiz.Skyline.Properties.Resources.SkylineImg;
-            resources.ApplyResources(this.pictureBox1, "pictureBox1");
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.TabStop = false;
+            resources.ApplyResources(this.pictureSkyline, "pictureSkyline");
+            this.pictureSkyline.Name = "pictureSkyline";
+            this.pictureSkyline.TabStop = false;
             // 
             // btnCancel
             // 
@@ -117,7 +116,7 @@
             this.Name = "UpgradeDlg";
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureSkyline)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -126,7 +125,7 @@
 
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.PictureBox pictureSkyline;
         private System.Windows.Forms.Label labelABSciex;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.LinkLabel linkLabel1;

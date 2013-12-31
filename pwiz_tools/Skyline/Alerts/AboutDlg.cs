@@ -18,6 +18,7 @@
  */
 
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -29,6 +30,10 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
 
             labelSoftwareVersion.Text = Install.ProgramNameAndVersion;
+
+            // Designer has problems getting images from resources
+            pictureSkylineIcon.Image = Resources.SkylineImg;
+            pictureProteoWizardIcon.Image = Resources.ProteoWizard;
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

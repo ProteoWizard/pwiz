@@ -62,7 +62,6 @@ namespace pwiz.Skyline.Alerts
             // 
             // pictureSkylineIcon
             // 
-            this.pictureSkylineIcon.Image = global::pwiz.Skyline.Properties.Resources.SkylineImg;
             resources.ApplyResources(this.pictureSkylineIcon, "pictureSkylineIcon");
             this.pictureSkylineIcon.Name = "pictureSkylineIcon";
             this.pictureSkylineIcon.TabStop = false;
@@ -85,7 +84,6 @@ namespace pwiz.Skyline.Alerts
             // 
             // pictureProteoWizardIcon
             // 
-            this.pictureProteoWizardIcon.Image = global::pwiz.Skyline.Properties.Resources.ProteoWizard;
             resources.ApplyResources(this.pictureProteoWizardIcon, "pictureProteoWizardIcon");
             this.pictureProteoWizardIcon.Name = "pictureProteoWizardIcon";
             this.pictureProteoWizardIcon.TabStop = false;
