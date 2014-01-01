@@ -1,0 +1,85 @@
+#!/bin/bash
+
+#
+# process_freqz
+#
+
+if [ $# -ne 3 ]
+then
+    echo "Usage: process_freqz freq-z data.cfd outputDirectory"
+    echo "Parameters:"
+    echo "  freq-z: text file, column 1 has freqs, column 2 has charges"
+    echo "  data.cfd: cfd file"
+    echo "  outputDirectory:  all output here"
+    exit 0
+fi
+
+
+freqzfile=$1
+cfdfile=$2
+outputDirectory=$3
+
+
+windowRadius=10
+iterationCount=10
+
+# create the output directory
+mkdir $outputDirectory 2> /dev/null
+if [ $? -ne 0 ]
+then
+    echo [process_freqz] Could not create directory $outputDirectory
+    exit 1
+else
+    echo Created directory $outputDirectory 1>&2
+fi
+
+freqz_final=$outputDirectory/freqz_final
+echo "# index freq z freq_final" >> $freqz_final 
+
+exec 3< $freqzfile
+index=0
+
+while read -u 3 freq z
+do
+    index_padded=$(printf "%03d" $index)
+    windowfile=$outputDirectory/peak.$index_padded.cfd
+    logfile=$outputDirectory/peak.$index_padded.log
+    tlpfile_init=$outputDirectory/peak.$index_padded.init.tlp
+    tlpfile_final=$outputDirectory/peak.$index_padded.final.tlp
+    plotfile=$outputDirectory/peak.$index_padded.plot
+
+    echo peak.$index_padded 1>&2
+
+    # create window file
+    cfd window $cfdfile $windowfile $freq $windowRadius
+
+    # initial estimate
+    echo "<tlpinit>" > $logfile
+    tlpinit $windowfile $tlpfile_init >> $logfile
+
+    # iteration
+    echo >> $logfile
+    echo "<tlpiter>" >> $logfile 
+    tlpiter $windowfile $tlpfile_init $tlpfile_final $iterationCount >> $logfile
+
+    # generate sample file from data
+    cfd cat $windowfile > $windowfile.sample
+
+    # generate sample file from final parameters
+    tlp sample $tlpfile_final > $tlpfile_final.sample
+
+    # generate gnuplot file
+    echo plot \'$windowfile.sample\' using 1:3, \\ > $plotfile
+    echo "'' using 1:4, '' using 1:5, \\" >> $plotfile 
+    echo \'$tlpfile_final.sample\' using 1:3 with lines, \\ >>  $plotfile
+    echo "'' using 1:4 with lines, '' using 1:5 with lines" >> $plotfile
+
+    # write info to freqz_final
+    freq_final=$(tlp cat $tlpfile_final | sed 's/.*f0=\(.*\) amplitude.*/\1/')
+    echo $index_padded $freq $z $freq_final >> $freqz_final
+
+    index=$[$index+1] 
+done 
+
+exec 3<&-
+

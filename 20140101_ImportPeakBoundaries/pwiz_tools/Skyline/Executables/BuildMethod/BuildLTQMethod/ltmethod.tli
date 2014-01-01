@@ -1,0 +1,3276 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (69a41753).
+//
+// c:\proj\util\buildltqmethod\debug\ltmethod.tli
+//
+// Wrapper implementations for Win32 type library C:\\XCalibur\\system\\LTQ\\programs\\LTMethod.dll
+// compiler-generated file created 09/07/09 at 19:43:17 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface ILCQMethod wrapper method implementations
+//
+
+inline short ILCQMethod::GetLTQModel ( ) {
+    short _result = 0;
+    HRESULT _hr = get_LTQModel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQMethod::GetLTQSubModel ( ) {
+    short _result = 0;
+    HRESULT _hr = get_LTQSubModel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQMethod::GetHybridModel ( ) {
+    short _result = 0;
+    HRESULT _hr = get_HybridModel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQMethod::GetHybridSubModel ( ) {
+    short _result = 0;
+    HRESULT _hr = get_HybridSubModel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t ILCQMethod::GetSWVersion ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_SWVersion(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline HRESULT ILCQMethod::Open ( _bstr_t szFileName ) {
+    HRESULT _hr = raw_Open(szFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::Close ( ) {
+    HRESULT _hr = raw_Close();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::Save ( ) {
+    HRESULT _hr = raw_Save();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::SaveAs ( _bstr_t szFileName ) {
+    HRESULT _hr = raw_SaveAs(szFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::IsMethodValid ( long * bIsValid ) {
+    HRESULT _hr = raw_IsMethodValid(bIsValid);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::New ( ) {
+    HRESULT _hr = raw_New();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline double ILCQMethod::GetAcquireTime ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AcquireTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutAcquireTime ( double pVal ) {
+    HRESULT _hr = put_AcquireTime(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetNumSegments ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumSegments(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumSegments ( short pVal ) {
+    HRESULT _hr = put_NumSegments(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetNumScanEvents ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumScanEvents(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumScanEvents ( short pVal ) {
+    HRESULT _hr = put_NumScanEvents(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetCurrentSegment ( ) {
+    short _result = 0;
+    HRESULT _hr = get_CurrentSegment(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCurrentSegment ( short pVal ) {
+    HRESULT _hr = put_CurrentSegment(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetCurrentScanEvent ( ) {
+    short _result = 0;
+    HRESULT _hr = get_CurrentScanEvent(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCurrentScanEvent ( short pVal ) {
+    HRESULT _hr = put_CurrentScanEvent(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetTuneMethod ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_TuneMethod(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutTuneMethod ( _bstr_t pVal ) {
+    HRESULT _hr = put_TuneMethod(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetSegmentTime ( ) {
+    double _result = 0;
+    HRESULT _hr = get_SegmentTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSegmentTime ( double pVal ) {
+    HRESULT _hr = put_SegmentTime(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetSourceFragmentation ( ) {
+    long _result = 0;
+    HRESULT _hr = get_SourceFragmentation(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSourceFragmentation ( long pVal ) {
+    HRESULT _hr = put_SourceFragmentation(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetSourceFragmentationPotential ( ) {
+    float _result = 0;
+    HRESULT _hr = get_SourceFragmentationPotential(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSourceFragmentationPotential ( float pVal ) {
+    HRESULT _hr = put_SourceFragmentationPotential(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetScanRate ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ScanRate(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutScanRate ( short pVal ) {
+    HRESULT _hr = put_ScanRate(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDependentScan ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DependentScan(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDependentScan ( long pVal ) {
+    HRESULT _hr = put_DependentScan(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetPolarity ( ) {
+    short _result = 0;
+    HRESULT _hr = get_Polarity(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutPolarity ( short pVal ) {
+    HRESULT _hr = put_Polarity(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetScanMassRange ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ScanMassRange(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutScanMassRange ( short pVal ) {
+    HRESULT _hr = put_ScanMassRange(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetInjectionRF ( ) {
+    float _result = 0;
+    HRESULT _hr = get_InjectionRF(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutInjectionRF ( float pVal ) {
+    HRESULT _hr = put_InjectionRF(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetScanMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ScanMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutScanMode ( short pVal ) {
+    HRESULT _hr = put_ScanMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetScanType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ScanType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutScanType ( short pVal ) {
+    HRESULT _hr = put_ScanType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataType ( short pVal ) {
+    HRESULT _hr = put_DataType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetWidebandActivation ( ) {
+    long _result = 0;
+    HRESULT _hr = get_WidebandActivation(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutWidebandActivation ( long pVal ) {
+    HRESULT _hr = put_WidebandActivation(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetStartDelay ( ) {
+    float _result = 0;
+    HRESULT _hr = get_StartDelay(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutStartDelay ( float pVal ) {
+    HRESULT _hr = put_StartDelay(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetAdvancedFeatures ( ) {
+    long _result = 0;
+    HRESULT _hr = get_AdvancedFeatures(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutAdvancedFeatures ( long pVal ) {
+    HRESULT _hr = put_AdvancedFeatures(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetRealTime ( ) {
+    long _result = 0;
+    HRESULT _hr = get_RealTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutRealTime ( long pVal ) {
+    HRESULT _hr = put_RealTime(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetNumReactions ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumReactions(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumReactions ( short pVal ) {
+    HRESULT _hr = put_NumReactions(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetReaction ( short nReactionIndex, double dPrecursorMass, double dIsolationWidth, double dCollisionEnergy, float fActivationQ, double dActivationTime ) {
+    HRESULT _hr = raw_SetReaction(nReactionIndex, dPrecursorMass, dIsolationWidth, dCollisionEnergy, fActivationQ, dActivationTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetReaction ( short nReactionIndex, double * pdPrecursorMass, double * pdIsolationWidth, double * pdCollisionEnergy, float * pfActivationQ, double * pdActivationTime ) {
+    HRESULT _hr = raw_GetReaction(nReactionIndex, pdPrecursorMass, pdIsolationWidth, pdCollisionEnergy, pfActivationQ, pdActivationTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetNumMassRanges ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumMassRanges(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumMassRanges ( short pVal ) {
+    HRESULT _hr = put_NumMassRanges(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetMassRange ( short nMassRangeIndex, double dFirstMass, double dLastMass ) {
+    HRESULT _hr = raw_SetMassRange(nMassRangeIndex, dFirstMass, dLastMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetMassRange ( short nMassRangeIndex, double * pdFirstMass, double * pdLastMass ) {
+    HRESULT _hr = raw_GetMassRange(nMassRangeIndex, pdFirstMass, pdLastMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::InsertScanEvent ( short nInsertIndex, short * pnInsertedIndex ) {
+    HRESULT _hr = raw_InsertScanEvent(nInsertIndex, pnInsertedIndex);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::InsertScanEventByCopy ( short nInsertSegmentIndex, short nInsertScanEventIndex, short * pnInsertedSegmentIndex, short * pnInsertedScanEventIndex ) {
+    HRESULT _hr = raw_InsertScanEventByCopy(nInsertSegmentIndex, nInsertScanEventIndex, pnInsertedSegmentIndex, pnInsertedScanEventIndex);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::RemoveScanEvent ( ) {
+    HRESULT _hr = raw_RemoveScanEvent();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::InsertSegment ( short nInsertIndex, short * pnInsertedIndex ) {
+    HRESULT _hr = raw_InsertSegment(nInsertIndex, pnInsertedIndex);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::InsertSegmentByCopy ( short nInsertIndex, short * pnInsertedIndex ) {
+    HRESULT _hr = raw_InsertSegmentByCopy(nInsertIndex, pnInsertedIndex);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::RemoveSegment ( ) {
+    HRESULT _hr = raw_RemoveSegment();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::AddScanEventsByCopy ( short nAddSegmentIndex, short nNumScanEventsToAdd ) {
+    HRESULT _hr = raw_AddScanEventsByCopy(nAddSegmentIndex, nNumScanEventsToAdd);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline double ILCQMethod::GetDataDepExclusionMassWidth ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepExclusionMassWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepExclusionMassWidth ( double pVal ) {
+    HRESULT _hr = put_DataDepExclusionMassWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepRejectMassWidth ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepRejectMassWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepRejectMassWidth ( double pVal ) {
+    HRESULT _hr = put_DataDepRejectMassWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepAddSubMass ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepAddSubMass(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepAddSubMass ( long pVal ) {
+    HRESULT _hr = put_DataDepAddSubMass(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepAddSubMassValue ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepAddSubMassValue(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepAddSubMassValue ( double pVal ) {
+    HRESULT _hr = put_DataDepAddSubMassValue(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetAnalogDataDep ( ) {
+    long _result = 0;
+    HRESULT _hr = get_AnalogDataDep(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutAnalogDataDep ( long pVal ) {
+    HRESULT _hr = put_AnalogDataDep(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetAnalogDataDepChannel ( ) {
+    short _result = 0;
+    HRESULT _hr = get_AnalogDataDepChannel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutAnalogDataDepChannel ( short pVal ) {
+    HRESULT _hr = put_AnalogDataDepChannel(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetAnalogDataDepThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AnalogDataDepThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutAnalogDataDepThreshold ( double pVal ) {
+    HRESULT _hr = put_AnalogDataDepThreshold(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDynamicExclusion ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DynamicExclusion(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusion ( long pVal ) {
+    HRESULT _hr = put_DynamicExclusion(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDynamicExclusionRepeatCount ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DynamicExclusionRepeatCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionRepeatCount ( short pVal ) {
+    HRESULT _hr = put_DynamicExclusionRepeatCount(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDynamicExclusionRepeatDuration ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DynamicExclusionRepeatDuration(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionRepeatDuration ( float pVal ) {
+    HRESULT _hr = put_DynamicExclusionRepeatDuration(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDynamicExclusionExclusionMassWidth ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DynamicExclusionExclusionMassWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExclusionMassWidth ( float pVal ) {
+    HRESULT _hr = put_DynamicExclusionExclusionMassWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDynamicExclusionExclusionDuration ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DynamicExclusionExclusionDuration(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExclusionDuration ( float pVal ) {
+    HRESULT _hr = put_DynamicExclusionExclusionDuration(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetIsotopicDataDep ( ) {
+    long _result = 0;
+    HRESULT _hr = get_IsotopicDataDep(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutIsotopicDataDep ( long pVal ) {
+    HRESULT _hr = put_IsotopicDataDep(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetIsotopicDataDepMatchTolerance ( ) {
+    double _result = 0;
+    HRESULT _hr = get_IsotopicDataDepMatchTolerance(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutIsotopicDataDepMatchTolerance ( double pVal ) {
+    HRESULT _hr = put_IsotopicDataDepMatchTolerance(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetIsotopicDataDepNumMassDifferences ( ) {
+    short _result = 0;
+    HRESULT _hr = get_IsotopicDataDepNumMassDifferences(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutIsotopicDataDepNumMassDifferences ( short pVal ) {
+    HRESULT _hr = put_IsotopicDataDepNumMassDifferences(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::GetMassDifferenceInfo ( int nIndex, double * pdMassDifference, double * pdExpectedRatio ) {
+    HRESULT _hr = raw_GetMassDifferenceInfo(nIndex, pdMassDifference, pdExpectedRatio);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::SetMassDifferenceInfo ( int nIndex, double dMassDifference, double dExpectedRatio ) {
+    HRESULT _hr = raw_SetMassDifferenceInfo(nIndex, dMassDifference, dExpectedRatio);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetDataDepNumParentMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNumParentMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNumParentMasses ( short pVal ) {
+    HRESULT _hr = put_DataDepNumParentMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNumRejectMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNumRejectMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNumRejectMasses ( short pVal ) {
+    HRESULT _hr = put_DataDepNumRejectMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepParentMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepParentMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepParentMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepParentMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepRejectMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepRejectMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepRejectMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepRejectMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepMode ( short pVal ) {
+    HRESULT _hr = put_DataDepMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNthMostIntenseIon ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNthMostIntenseIon(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNthMostIntenseIon ( short pVal ) {
+    HRESULT _hr = put_DataDepNthMostIntenseIon(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetSummary ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_Summary(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline long ILCQMethod::GetUseSyringePump ( ) {
+    long _result = 0;
+    HRESULT _hr = get_UseSyringePump(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutUseSyringePump ( long pVal ) {
+    HRESULT _hr = put_UseSyringePump(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetSyringeType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_SyringeType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeType ( short pVal ) {
+    HRESULT _hr = put_SyringeType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetSyringeVolume ( ) {
+    float _result = 0;
+    HRESULT _hr = get_SyringeVolume(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeVolume ( float pVal ) {
+    HRESULT _hr = put_SyringeVolume(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetSyringeID ( ) {
+    float _result = 0;
+    HRESULT _hr = get_SyringeID(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeID ( float pVal ) {
+    HRESULT _hr = put_SyringeID(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetSyringeFlowRate ( ) {
+    float _result = 0;
+    HRESULT _hr = get_SyringeFlowRate(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeFlowRate ( float pVal ) {
+    HRESULT _hr = put_SyringeFlowRate(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetStopSyringeAtEndOfRun ( ) {
+    long _result = 0;
+    HRESULT _hr = get_StopSyringeAtEndOfRun(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutStopSyringeAtEndOfRun ( long pVal ) {
+    HRESULT _hr = put_StopSyringeAtEndOfRun(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetExternalTrigger ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ExternalTrigger(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExternalTrigger ( long pVal ) {
+    HRESULT _hr = put_ExternalTrigger(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetSendExternalTriggerBasedOn ( ) {
+    short _result = 0;
+    HRESULT _hr = get_SendExternalTriggerBasedOn(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSendExternalTriggerBasedOn ( short pVal ) {
+    HRESULT _hr = put_SendExternalTriggerBasedOn(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetExternalTriggerSignalThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_ExternalTriggerSignalThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExternalTriggerSignalThreshold ( double pVal ) {
+    HRESULT _hr = put_ExternalTriggerSignalThreshold(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetExternalTriggerRejectMassWidth ( ) {
+    double _result = 0;
+    HRESULT _hr = get_ExternalTriggerRejectMassWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExternalTriggerRejectMassWidth ( double pVal ) {
+    HRESULT _hr = put_ExternalTriggerRejectMassWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDivertValve ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DivertValve(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDivertValve ( long pVal ) {
+    HRESULT _hr = put_DivertValve(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDivertValveNumValvePositions ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DivertValveNumValvePositions(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDivertValveNumValvePositions ( short pVal ) {
+    HRESULT _hr = put_DivertValveNumValvePositions(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDivertValvePositionAtStartOfRun ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DivertValvePositionAtStartOfRun(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDivertValvePositionAtStartOfRun ( short pVal ) {
+    HRESULT _hr = put_DivertValvePositionAtStartOfRun(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDivertValvePositionDuration ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DivertValvePositionDuration(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDivertValvePositionDuration ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DivertValvePositionDuration(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetContactClosure ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ContactClosure(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutContactClosure ( long pVal ) {
+    HRESULT _hr = put_ContactClosure(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetContactClosureNumSwitches ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ContactClosureNumSwitches(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutContactClosureNumSwitches ( short pVal ) {
+    HRESULT _hr = put_ContactClosureNumSwitches(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetContactClosurePositionAtStartOfRun ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ContactClosurePositionAtStartOfRun(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutContactClosurePositionAtStartOfRun ( short pVal ) {
+    HRESULT _hr = put_ContactClosurePositionAtStartOfRun(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetContactClosureSwitchDuration ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_ContactClosureSwitchDuration(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutContactClosureSwitchDuration ( short nIndex, double pVal ) {
+    HRESULT _hr = put_ContactClosureSwitchDuration(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDD ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDD(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDD ( long pVal ) {
+    HRESULT _hr = put_CustomDD(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDDDivertValve ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDDDivertValve(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDDivertValve ( long pVal ) {
+    HRESULT _hr = put_CustomDDDivertValve(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDDHighVoltage ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDDHighVoltage(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDHighVoltage ( long pVal ) {
+    HRESULT _hr = put_CustomDDHighVoltage(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDDSpareTrigger ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDDSpareTrigger(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDSpareTrigger ( long pVal ) {
+    HRESULT _hr = put_CustomDDSpareTrigger(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDDContactClosure ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDDContactClosure(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDContactClosure ( long pVal ) {
+    HRESULT _hr = put_CustomDDContactClosure(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetCustomDDActivationThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_CustomDDActivationThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDActivationThreshold ( double pVal ) {
+    HRESULT _hr = put_CustomDDActivationThreshold(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetCustomDDDeactivationHysteresis ( ) {
+    double _result = 0;
+    HRESULT _hr = get_CustomDDDeactivationHysteresis(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDDeactivationHysteresis ( double pVal ) {
+    HRESULT _hr = put_CustomDDDeactivationHysteresis(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDDHighVoltageDelta ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDDHighVoltageDelta(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDHighVoltageDelta ( long pVal ) {
+    HRESULT _hr = put_CustomDDHighVoltageDelta(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetCustomDDStabilizationTime ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CustomDDStabilizationTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDStabilizationTime ( long pVal ) {
+    HRESULT _hr = put_CustomDDStabilizationTime(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetCustomDDDependenceMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_CustomDDDependenceMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDDependenceMode ( short pVal ) {
+    HRESULT _hr = put_CustomDDDependenceMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetCustomDDNumMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_CustomDDNumMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDNumMasses ( short pVal ) {
+    HRESULT _hr = put_CustomDDNumMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetCustomDDMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_CustomDDMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_CustomDDMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetCustomDDNumPosAdducts ( ) {
+    short _result = 0;
+    HRESULT _hr = get_CustomDDNumPosAdducts(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDNumPosAdducts ( short pVal ) {
+    HRESULT _hr = put_CustomDDNumPosAdducts(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetCustomDDPosAdduct ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_CustomDDPosAdduct(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDPosAdduct ( short nIndex, double pVal ) {
+    HRESULT _hr = put_CustomDDPosAdduct(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetCustomDDNumNegAdducts ( ) {
+    short _result = 0;
+    HRESULT _hr = get_CustomDDNumNegAdducts(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDNumNegAdducts ( short pVal ) {
+    HRESULT _hr = put_CustomDDNumNegAdducts(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetCustomDDNegAdduct ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_CustomDDNegAdduct(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCustomDDNegAdduct ( short nIndex, double pVal ) {
+    HRESULT _hr = put_CustomDDNegAdduct(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepFallThroughToNthMostIntense ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepFallThroughToNthMostIntense(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepFallThroughToNthMostIntense ( long pVal ) {
+    HRESULT _hr = put_DataDepFallThroughToNthMostIntense(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetEnableValidation ( ) {
+    long _result = 0;
+    HRESULT _hr = get_EnableValidation(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutEnableValidation ( long pVal ) {
+    HRESULT _hr = put_EnableValidation(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepExclusionMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepExclusionMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepExclusionMassWidthType ( short pVal ) {
+    HRESULT _hr = put_DataDepExclusionMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepExclusionMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepExclusionMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepExclusionMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_DataDepExclusionMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepExclusionMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepExclusionMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepExclusionMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_DataDepExclusionMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepRejectMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepRejectMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepRejectMassWidthType ( short pVal ) {
+    HRESULT _hr = put_DataDepRejectMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepRejectMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepRejectMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepRejectMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_DataDepRejectMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepRejectMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepRejectMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepRejectMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_DataDepRejectMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDynamicExclusionExclusionMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DynamicExclusionExclusionMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExclusionMassWidthType ( short pVal ) {
+    HRESULT _hr = put_DynamicExclusionExclusionMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDynamicExclusionExclusionMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DynamicExclusionExclusionMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExclusionMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_DynamicExclusionExclusionMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDynamicExclusionExclusionMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DynamicExclusionExclusionMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExclusionMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_DynamicExclusionExclusionMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetDataDepMSSelectionRange ( double dFirstMass, double dLastMass ) {
+    HRESULT _hr = raw_SetDataDepMSSelectionRange(dFirstMass, dLastMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetDataDepMSSelectionRange ( double * pdFirstMass, double * pdLastMass ) {
+    HRESULT _hr = raw_GetDataDepMSSelectionRange(pdFirstMass, pdLastMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetDataDepMSnSelectionRangeType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepMSnSelectionRangeType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepMSnSelectionRangeType ( short pVal ) {
+    HRESULT _hr = put_DataDepMSnSelectionRangeType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetDataDepMSnSelectionRange ( double dFirstValue, double dLastValue ) {
+    HRESULT _hr = raw_SetDataDepMSnSelectionRange(dFirstValue, dLastValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetDataDepMSnSelectionRange ( double * pdFirstValue, double * pdLastValue ) {
+    HRESULT _hr = raw_GetDataDepMSnSelectionRange(pdFirstValue, pdLastValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetDataDepZoomScanRangeType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepZoomScanRangeType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepZoomScanRangeType ( short pVal ) {
+    HRESULT _hr = put_DataDepZoomScanRangeType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepZoomScanRangeLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepZoomScanRangeLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepZoomScanRangeLow ( double pVal ) {
+    HRESULT _hr = put_DataDepZoomScanRangeLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepZoomScanRangeHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepZoomScanRangeHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepZoomScanRangeHigh ( double pVal ) {
+    HRESULT _hr = put_DataDepZoomScanRangeHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetExternalTriggerRejectMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ExternalTriggerRejectMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExternalTriggerRejectMassWidthType ( short pVal ) {
+    HRESULT _hr = put_ExternalTriggerRejectMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetExternalTriggerRejectMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_ExternalTriggerRejectMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExternalTriggerRejectMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_ExternalTriggerRejectMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetExternalTriggerRejectMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_ExternalTriggerRejectMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExternalTriggerRejectMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_ExternalTriggerRejectMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDynamicExclusionExclusionListSize ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DynamicExclusionExclusionListSize(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExclusionListSize ( short pVal ) {
+    HRESULT _hr = put_DynamicExclusionExclusionListSize(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetMassTags ( ) {
+    long _result = 0;
+    HRESULT _hr = get_MassTags(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTags ( long pVal ) {
+    HRESULT _hr = put_MassTags(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetMassTagsPartnerIntensityRange ( double dMinIntensity, double dMaxIntensity ) {
+    HRESULT _hr = raw_SetMassTagsPartnerIntensityRange(dMinIntensity, dMaxIntensity);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetMassTagsPartnerIntensityRange ( double * pdMinIntensity, double * pdMaxIntensity ) {
+    HRESULT _hr = raw_GetMassTagsPartnerIntensityRange(pdMinIntensity, pdMaxIntensity);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetMassTagsPartnerScanType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_MassTagsPartnerScanType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTagsPartnerScanType ( short pVal ) {
+    HRESULT _hr = put_MassTagsPartnerScanType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetMassTagsNumMassDeltas ( ) {
+    short _result = 0;
+    HRESULT _hr = get_MassTagsNumMassDeltas(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTagsNumMassDeltas ( short pVal ) {
+    HRESULT _hr = put_MassTagsNumMassDeltas(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetMassTagsMassDelta ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_MassTagsMassDelta(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTagsMassDelta ( short nIndex, double pVal ) {
+    HRESULT _hr = put_MassTagsMassDelta(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetChargeStateScreening ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ChargeStateScreening(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutChargeStateScreening ( long pVal ) {
+    HRESULT _hr = put_ChargeStateScreening(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetChargeStateExclusion ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ChargeStateExclusion(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutChargeStateExclusion ( long pVal ) {
+    HRESULT _hr = put_ChargeStateExclusion(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetChargeStateExclusionChargeState ( short nChargeState ) {
+    long _result = 0;
+    HRESULT _hr = get_ChargeStateExclusionChargeState(nChargeState, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutChargeStateExclusionChargeState ( short nChargeState, long pVal ) {
+    HRESULT _hr = put_ChargeStateExclusionChargeState(nChargeState, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetMethodParamsInSeqRow ( ) {
+    long _result = 0;
+    HRESULT _hr = get_MethodParamsInSeqRow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMethodParamsInSeqRow ( long pVal ) {
+    HRESULT _hr = put_MethodParamsInSeqRow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetSyringeNumSwitches ( ) {
+    short _result = 0;
+    HRESULT _hr = get_SyringeNumSwitches(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeNumSwitches ( short pVal ) {
+    HRESULT _hr = put_SyringeNumSwitches(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetSyringeStateAtStartOfRun ( ) {
+    short _result = 0;
+    HRESULT _hr = get_SyringeStateAtStartOfRun(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeStateAtStartOfRun ( short pVal ) {
+    HRESULT _hr = put_SyringeStateAtStartOfRun(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetSyringeStateDuration ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_SyringeStateDuration(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSyringeStateDuration ( short nIndex, double pVal ) {
+    HRESULT _hr = put_SyringeStateDuration(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepMasterEvent ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepMasterEvent(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepMasterEvent ( short pVal ) {
+    HRESULT _hr = put_DataDepMasterEvent(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepSameMSOrder ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepSameMSOrder(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSameMSOrder ( long pVal ) {
+    HRESULT _hr = put_DataDepSameMSOrder(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetScanResolution ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ScanResolution(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutScanResolution ( long pVal ) {
+    HRESULT _hr = put_ScanResolution(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDynamicExclusionEarlyExpiration ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DynamicExclusionEarlyExpiration(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionEarlyExpiration ( long pVal ) {
+    HRESULT _hr = put_DynamicExclusionEarlyExpiration(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDynamicExclusionExpirationCount ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DynamicExclusionExpirationCount(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExpirationCount ( short pVal ) {
+    HRESULT _hr = put_DynamicExclusionExpirationCount(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDynamicExclusionExpirationThreshold ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DynamicExclusionExpirationThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDynamicExclusionExpirationThreshold ( float pVal ) {
+    HRESULT _hr = put_DynamicExclusionExpirationThreshold(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNeutralLossSortMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossSortMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossSortMode ( short pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossSortMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNeutralLossMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossMassWidthType ( short pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepNeutralLossMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepNeutralLossMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNumNeutralLossMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNumNeutralLossMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNumNeutralLossMasses ( short pVal ) {
+    HRESULT _hr = put_DataDepNumNeutralLossMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepNeutralLossMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNeutralLossMassInNthMost ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossMassInNthMost(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossMassInNthMost ( short pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossMassInNthMost(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepAnalyzeTopN ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepAnalyzeTopN(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepAnalyzeTopN ( short pVal ) {
+    HRESULT _hr = put_DataDepAnalyzeTopN(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetAnalyzer ( ) {
+    short _result = 0;
+    HRESULT _hr = get_Analyzer(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutAnalyzer ( short pVal ) {
+    HRESULT _hr = put_Analyzer(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetExperimentType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ExperimentType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutExperimentType ( short pVal ) {
+    HRESULT _hr = put_ExperimentType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetEventECDActive ( ) {
+    long _result = 0;
+    HRESULT _hr = get_EventECDActive(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutEventECDActive ( long pVal ) {
+    HRESULT _hr = put_EventECDActive(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetEventECDSettings ( float fEnergy, float fDelay, float fDuration ) {
+    HRESULT _hr = raw_SetEventECDSettings(fEnergy, fDelay, fDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetEventECDSettings ( float * pfEnergy, float * pfDelay, float * pfDuration ) {
+    HRESULT _hr = raw_GetEventECDSettings(pfEnergy, pfDelay, pfDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline long ILCQMethod::GetEventIRMPDActive ( ) {
+    long _result = 0;
+    HRESULT _hr = get_EventIRMPDActive(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutEventIRMPDActive ( long pVal ) {
+    HRESULT _hr = put_EventIRMPDActive(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetEventIRMPDSettings ( float fEnergy, float fDelay, float fDuration ) {
+    HRESULT _hr = raw_SetEventIRMPDSettings(fEnergy, fDelay, fDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetEventIRMPDSettings ( float * pfEnergy, float * pfDelay, float * pfDuration ) {
+    HRESULT _hr = raw_GetEventIRMPDSettings(pfEnergy, pfDelay, pfDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline _bstr_t ILCQMethod::GetPosLockMassListName ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_PosLockMassListName(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutPosLockMassListName ( _bstr_t pVal ) {
+    HRESULT _hr = put_PosLockMassListName(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetNumPosLockMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumPosLockMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumPosLockMasses ( short pVal ) {
+    HRESULT _hr = put_NumPosLockMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetPosLockMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_PosLockMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutPosLockMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_PosLockMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetNegLockMassListName ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_NegLockMassListName(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutNegLockMassListName ( _bstr_t pVal ) {
+    HRESULT _hr = put_NegLockMassListName(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetNumNegLockMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumNegLockMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumNegLockMasses ( short pVal ) {
+    HRESULT _hr = put_NumNegLockMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetNegLockMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_NegLockMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNegLockMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_NegLockMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepEventECDActive ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepEventECDActive(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepEventECDActive ( long pVal ) {
+    HRESULT _hr = put_DataDepEventECDActive(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepEventIRMPDActive ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepEventIRMPDActive(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepEventIRMPDActive ( long pVal ) {
+    HRESULT _hr = put_DataDepEventIRMPDActive(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetChargeStateMonoisotopicPrecursors ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ChargeStateMonoisotopicPrecursors(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutChargeStateMonoisotopicPrecursors ( long pVal ) {
+    HRESULT _hr = put_ChargeStateMonoisotopicPrecursors(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepPreviewMode ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepPreviewMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPreviewMode ( long pVal ) {
+    HRESULT _hr = put_DataDepPreviewMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepChargeDepECDTime ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepChargeDepECDTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepChargeDepECDTime ( long pVal ) {
+    HRESULT _hr = put_DataDepChargeDepECDTime(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetUseSeparateSegmentPolarityValues ( ) {
+    long _result = 0;
+    HRESULT _hr = get_UseSeparateSegmentPolarityValues(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutUseSeparateSegmentPolarityValues ( long pVal ) {
+    HRESULT _hr = put_UseSeparateSegmentPolarityValues(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetNumMassTimeWindows ( short nIndex ) {
+    long _result = 0;
+    HRESULT _hr = get_NumMassTimeWindows(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumMassTimeWindows ( short nIndex, long pVal ) {
+    HRESULT _hr = put_NumMassTimeWindows(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetMassTimeWindow ( short nIndex, long nItem, double dStartTime, double dEndTime, double dMass ) {
+    HRESULT _hr = raw_SetMassTimeWindow(nIndex, nItem, dStartTime, dEndTime, dMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetMassTimeWindow ( short nIndex, long nItem, double * pdStartTime, double * pdEndTime, double * pdMass ) {
+    HRESULT _hr = raw_GetMassTimeWindow(nIndex, nItem, pdStartTime, pdEndTime, pdMass);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetScanEventAssocMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_ScanEventAssocMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutScanEventAssocMode ( short pVal ) {
+    HRESULT _hr = put_ScanEventAssocMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepExcludeParentMass ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepExcludeParentMass(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepExcludeParentMass ( long pVal ) {
+    HRESULT _hr = put_DataDepExcludeParentMass(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepUseGlobalMassLists ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepUseGlobalMassLists(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepUseGlobalMassLists ( long pVal ) {
+    HRESULT _hr = put_DataDepUseGlobalMassLists(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetEnableSteppedCollisionEnergy ( ) {
+    long _result = 0;
+    HRESULT _hr = get_EnableSteppedCollisionEnergy(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutEnableSteppedCollisionEnergy ( long pVal ) {
+    HRESULT _hr = put_EnableSteppedCollisionEnergy(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetSteppedCollisionEnergyNumSteps ( ) {
+    short _result = 0;
+    HRESULT _hr = get_SteppedCollisionEnergyNumSteps(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSteppedCollisionEnergyNumSteps ( short pVal ) {
+    HRESULT _hr = put_SteppedCollisionEnergyNumSteps(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetSteppedCollisionEnergyWidth ( ) {
+    double _result = 0;
+    HRESULT _hr = get_SteppedCollisionEnergyWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSteppedCollisionEnergyWidth ( double pVal ) {
+    HRESULT _hr = put_SteppedCollisionEnergyWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetChargeStateUseNonPeptideMonoisotopicRecognition ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ChargeStateUseNonPeptideMonoisotopicRecognition(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutChargeStateUseNonPeptideMonoisotopicRecognition ( long pVal ) {
+    HRESULT _hr = put_ChargeStateUseNonPeptideMonoisotopicRecognition(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepPolarNumParentMasses ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepPolarNumParentMasses(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarNumParentMasses ( short nPolarity, short pVal ) {
+    HRESULT _hr = put_DataDepPolarNumParentMasses(nPolarity, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepPolarNumRejectMasses ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepPolarNumRejectMasses(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarNumRejectMasses ( short nPolarity, short pVal ) {
+    HRESULT _hr = put_DataDepPolarNumRejectMasses(nPolarity, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarParentMass ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarParentMass(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarParentMass ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarParentMass(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarRejectMass ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarRejectMass(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarRejectMass ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarRejectMass(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepPolarNumNeutralLossMasses ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepPolarNumNeutralLossMasses(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarNumNeutralLossMasses ( short nPolarity, short pVal ) {
+    HRESULT _hr = put_DataDepPolarNumNeutralLossMasses(nPolarity, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarNeutralLossMass ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarNeutralLossMass(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarNeutralLossMass ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarNeutralLossMass(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepPolarNeutralLossMassInNthMost ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepPolarNeutralLossMassInNthMost(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarNeutralLossMassInNthMost ( short nPolarity, short pVal ) {
+    HRESULT _hr = put_DataDepPolarNeutralLossMassInNthMost(nPolarity, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepInclusionMassWidth ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepInclusionMassWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepInclusionMassWidth ( double pVal ) {
+    HRESULT _hr = put_DataDepInclusionMassWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepInclusionMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepInclusionMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepInclusionMassWidthType ( short pVal ) {
+    HRESULT _hr = put_DataDepInclusionMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepInclusionMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepInclusionMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepInclusionMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_DataDepInclusionMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepInclusionMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepInclusionMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepInclusionMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_DataDepInclusionMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepAdditionalMicroscans ( short nIndex ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepAdditionalMicroscans(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepAdditionalMicroscans ( short nIndex, short pVal ) {
+    HRESULT _hr = put_DataDepAdditionalMicroscans(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepTargetIncrement ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepTargetIncrement(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepTargetIncrement ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepTargetIncrement(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepSESignalThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepSESignalThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSESignalThreshold ( double pVal ) {
+    HRESULT _hr = put_DataDepSESignalThreshold(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepSEDefaultChargeState ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepSEDefaultChargeState(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEDefaultChargeState ( short pVal ) {
+    HRESULT _hr = put_DataDepSEDefaultChargeState(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDataDepSEDefaultCollisionEnergy ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DataDepSEDefaultCollisionEnergy(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEDefaultCollisionEnergy ( float pVal ) {
+    HRESULT _hr = put_DataDepSEDefaultCollisionEnergy(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDataDepSEIsolationWidth ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DataDepSEIsolationWidth(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEIsolationWidth ( float pVal ) {
+    HRESULT _hr = put_DataDepSEIsolationWidth(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDataDepSEActivationQ ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DataDepSEActivationQ(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEActivationQ ( float pVal ) {
+    HRESULT _hr = put_DataDepSEActivationQ(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepSEActivationTime ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepSEActivationTime(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEActivationTime ( double pVal ) {
+    HRESULT _hr = put_DataDepSEActivationTime(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetReaction2 ( short nReactionIndex, double dPrecursorMass, short nActivationType, double dIsolationWidth, double dCollisionEnergy, float fActivationQ, double dActivationTime ) {
+    HRESULT _hr = raw_SetReaction2(nReactionIndex, dPrecursorMass, nActivationType, dIsolationWidth, dCollisionEnergy, fActivationQ, dActivationTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetReaction2 ( short nReactionIndex, double * pdPrecursorMass, short * pnActivationType, double * pdIsolationWidth, double * pdCollisionEnergy, float * pfActivationQ, double * pdActivationTime ) {
+    HRESULT _hr = raw_GetReaction2(nReactionIndex, pdPrecursorMass, pnActivationType, pdIsolationWidth, pdCollisionEnergy, pfActivationQ, pdActivationTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQMethod::GetDataDepSEActivationType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepSEActivationType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEActivationType ( short pVal ) {
+    HRESULT _hr = put_DataDepSEActivationType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepSEHybridFirstMassMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepSEHybridFirstMassMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEHybridFirstMassMode ( short pVal ) {
+    HRESULT _hr = put_DataDepSEHybridFirstMassMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDataDepSEHybridFirstMassAutoFactor ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DataDepSEHybridFirstMassAutoFactor(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEHybridFirstMassAutoFactor ( float pVal ) {
+    HRESULT _hr = put_DataDepSEHybridFirstMassAutoFactor(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline float ILCQMethod::GetDataDepSEHybridFirstMassFixedValue ( ) {
+    float _result = 0;
+    HRESULT _hr = get_DataDepSEHybridFirstMassFixedValue(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepSEHybridFirstMassFixedValue ( float pVal ) {
+    HRESULT _hr = put_DataDepSEHybridFirstMassFixedValue(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepNLECD ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepNLECD(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNLECD ( long pVal ) {
+    HRESULT _hr = put_DataDepNLECD(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline HRESULT ILCQMethod::SetDataDepSEECDSettings ( float fEnergy, float fDelay, float fDuration ) {
+    HRESULT _hr = raw_SetDataDepSEECDSettings(fEnergy, fDelay, fDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetDataDepSEECDSettings ( float * pfEnergy, float * pfDelay, float * pfDuration ) {
+    HRESULT _hr = raw_GetDataDepSEECDSettings(pfEnergy, pfDelay, pfDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::SetDataDepSEIRMPDSettings ( float fEnergy, float fDelay, float fDuration ) {
+    HRESULT _hr = raw_SetDataDepSEIRMPDSettings(fEnergy, fDelay, fDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQMethod::GetDataDepSEIRMPDSettings ( float * pfEnergy, float * pfDelay, float * pfDuration ) {
+    HRESULT _hr = raw_GetDataDepSEIRMPDSettings(pfEnergy, pfDelay, pfDuration);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline _bstr_t ILCQMethod::GetDataDepParentMassName ( short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepParentMassName(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepParentMassName ( short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepParentMassName(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepParentMS2Mass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepParentMS2Mass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepParentMS2Mass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepParentMS2Mass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepParentMassCollisionEnergy ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepParentMassCollisionEnergy(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepParentMassCollisionEnergy ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepParentMassCollisionEnergy(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepRejectMassName ( short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepRejectMassName(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepRejectMassName ( short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepRejectMassName(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepNeutralLossMassName ( short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepNeutralLossMassName(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepNeutralLossMassName ( short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepNeutralLossMassName(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepPolarParentMassName ( short nPolarity, short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepPolarParentMassName(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepPolarParentMassName ( short nPolarity, short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepPolarParentMassName(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarParentMS2Mass ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarParentMS2Mass(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarParentMS2Mass ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarParentMS2Mass(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarParentMassCollisionEnergy ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarParentMassCollisionEnergy(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarParentMassCollisionEnergy ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarParentMassCollisionEnergy(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepPolarRejectMassName ( short nPolarity, short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepPolarRejectMassName(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepPolarRejectMassName ( short nPolarity, short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepPolarRejectMassName(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepPolarNeutralLossMassName ( short nPolarity, short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepPolarNeutralLossMassName(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepPolarNeutralLossMassName ( short nPolarity, short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepPolarNeutralLossMassName(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetMassTimeWindowMassName ( short nIndex, long nItem ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_MassTimeWindowMassName(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutMassTimeWindowMassName ( short nIndex, long nItem, _bstr_t pVal ) {
+    HRESULT _hr = put_MassTimeWindowMassName(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetMassTimeWindowMS2Mass ( short nIndex, long nItem ) {
+    double _result = 0;
+    HRESULT _hr = get_MassTimeWindowMS2Mass(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTimeWindowMS2Mass ( short nIndex, long nItem, double pVal ) {
+    HRESULT _hr = put_MassTimeWindowMS2Mass(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetMassTimeWindowCollisionEnergy ( short nIndex, long nItem ) {
+    double _result = 0;
+    HRESULT _hr = get_MassTimeWindowCollisionEnergy(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTimeWindowCollisionEnergy ( short nIndex, long nItem, double pVal ) {
+    HRESULT _hr = put_MassTimeWindowCollisionEnergy(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetMassTimeWindowLastMass ( short nIndex, long nItem ) {
+    double _result = 0;
+    HRESULT _hr = get_MassTimeWindowLastMass(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTimeWindowLastMass ( short nIndex, long nItem, double pVal ) {
+    HRESULT _hr = put_MassTimeWindowLastMass(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepMS2ParentMassCollisionEnergy ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepMS2ParentMassCollisionEnergy(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepMS2ParentMassCollisionEnergy ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepMS2ParentMassCollisionEnergy(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarMS2ParentMassCollisionEnergy ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarMS2ParentMassCollisionEnergy(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarMS2ParentMassCollisionEnergy ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarMS2ParentMassCollisionEnergy(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepParentMassChargeState ( short nIndex ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepParentMassChargeState(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepParentMassChargeState ( short nIndex, long pVal ) {
+    HRESULT _hr = put_DataDepParentMassChargeState(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetDataDepPolarParentMassChargeState ( short nPolarity, short nIndex ) {
+    long _result = 0;
+    HRESULT _hr = get_DataDepPolarParentMassChargeState(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarParentMassChargeState ( short nPolarity, short nIndex, long pVal ) {
+    HRESULT _hr = put_DataDepPolarParentMassChargeState(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepParentMassIntensityThreshold ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepParentMassIntensityThreshold(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepParentMassIntensityThreshold ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepParentMassIntensityThreshold(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarParentMassIntensityThreshold ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarParentMassIntensityThreshold(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarParentMassIntensityThreshold ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarParentMassIntensityThreshold(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetMassTimeWindowMS2CollisionEnergy ( short nIndex, long nItem ) {
+    double _result = 0;
+    HRESULT _hr = get_MassTimeWindowMS2CollisionEnergy(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTimeWindowMS2CollisionEnergy ( short nIndex, long nItem, double pVal ) {
+    HRESULT _hr = put_MassTimeWindowMS2CollisionEnergy(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline long ILCQMethod::GetMassTimeWindowChargeState ( short nIndex, long nItem ) {
+    long _result = 0;
+    HRESULT _hr = get_MassTimeWindowChargeState(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTimeWindowChargeState ( short nIndex, long nItem, long pVal ) {
+    HRESULT _hr = put_MassTimeWindowChargeState(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetMassTimeWindowIntensityThreshold ( short nIndex, long nItem ) {
+    double _result = 0;
+    HRESULT _hr = get_MassTimeWindowIntensityThreshold(nIndex, nItem, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutMassTimeWindowIntensityThreshold ( short nIndex, long nItem, double pVal ) {
+    HRESULT _hr = put_MassTimeWindowIntensityThreshold(nIndex, nItem, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL ILCQMethod::GetCVOn ( ) {
+    VARIANT_BOOL _result = 0;
+    HRESULT _hr = get_CVOn(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCVOn ( VARIANT_BOOL pVal ) {
+    HRESULT _hr = put_CVOn(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetCV ( ) {
+    double _result = 0;
+    HRESULT _hr = get_CV(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutCV ( double pVal ) {
+    HRESULT _hr = put_CV(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepProductSortMode ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepProductSortMode(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepProductSortMode ( short pVal ) {
+    HRESULT _hr = put_DataDepProductSortMode(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepProductMassWidthType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepProductMassWidthType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepProductMassWidthType ( short pVal ) {
+    HRESULT _hr = put_DataDepProductMassWidthType(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepProductMassWidthLow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepProductMassWidthLow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepProductMassWidthLow ( double pVal ) {
+    HRESULT _hr = put_DataDepProductMassWidthLow(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepProductMassWidthHigh ( ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepProductMassWidthHigh(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepProductMassWidthHigh ( double pVal ) {
+    HRESULT _hr = put_DataDepProductMassWidthHigh(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepNumProductMasses ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepNumProductMasses(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepNumProductMasses ( short pVal ) {
+    HRESULT _hr = put_DataDepNumProductMasses(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepProductMass ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepProductMass(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepProductMass ( short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepProductMass(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepProductMassInNthMost ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepProductMassInNthMost(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepProductMassInNthMost ( short pVal ) {
+    HRESULT _hr = put_DataDepProductMassInNthMost(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepPolarNumProductMasses ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepPolarNumProductMasses(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarNumProductMasses ( short nPolarity, short pVal ) {
+    HRESULT _hr = put_DataDepPolarNumProductMasses(nPolarity, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetDataDepPolarProductMass ( short nPolarity, short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DataDepPolarProductMass(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarProductMass ( short nPolarity, short nIndex, double pVal ) {
+    HRESULT _hr = put_DataDepPolarProductMass(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline short ILCQMethod::GetDataDepPolarProductMassInNthMost ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_DataDepPolarProductMassInNthMost(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepPolarProductMassInNthMost ( short nPolarity, short pVal ) {
+    HRESULT _hr = put_DataDepPolarProductMassInNthMost(nPolarity, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepProductMassName ( short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepProductMassName(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepProductMassName ( short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepProductMassName(nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline _bstr_t ILCQMethod::GetDataDepPolarProductMassName ( short nPolarity, short nIndex ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_DataDepPolarProductMassName(nPolarity, nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline void ILCQMethod::PutDataDepPolarProductMassName ( short nPolarity, short nIndex, _bstr_t pVal ) {
+    HRESULT _hr = put_DataDepPolarProductMassName(nPolarity, nIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline unsigned short ILCQMethod::GetNumSteppedCVs ( ) {
+    unsigned short _result = 0;
+    HRESULT _hr = get_NumSteppedCVs(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutNumSteppedCVs ( unsigned short pVal ) {
+    HRESULT _hr = put_NumSteppedCVs(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline double ILCQMethod::GetSteppedCVs ( unsigned short unIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_SteppedCVs(unIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutSteppedCVs ( unsigned short unIndex, double pVal ) {
+    HRESULT _hr = put_SteppedCVs(unIndex, pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+inline VARIANT_BOOL ILCQMethod::GetDataDepUseMZAsMass ( ) {
+    VARIANT_BOOL _result = 0;
+    HRESULT _hr = get_DataDepUseMZAsMass(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline void ILCQMethod::PutDataDepUseMZAsMass ( VARIANT_BOOL pVal ) {
+    HRESULT _hr = put_DataDepUseMZAsMass(pVal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+}
+
+//
+// interface ILCQTune wrapper method implementations
+//
+
+inline HRESULT ILCQTune::Open ( _bstr_t szFileName ) {
+    HRESULT _hr = raw_Open(szFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQTune::Close ( ) {
+    HRESULT _hr = raw_Close();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline short ILCQTune::GetLCQModel ( ) {
+    short _result = 0;
+    HRESULT _hr = get_LCQModel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetInjectionWaveformType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_InjectionWaveformType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetDataType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_DataType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetSourceType ( ) {
+    short _result = 0;
+    HRESULT _hr = get_SourceType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetPolarity ( ) {
+    short _result = 0;
+    HRESULT _hr = get_Polarity(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetCapillaryTemperature ( ) {
+    double _result = 0;
+    HRESULT _hr = get_CapillaryTemperature(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetAPCIVapTemp ( ) {
+    double _result = 0;
+    HRESULT _hr = get_APCIVapTemp(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetSheathGasFlow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_SheathGasFlow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetAuxGasFlow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AuxGasFlow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetSweepGasFlow ( ) {
+    double _result = 0;
+    HRESULT _hr = get_SweepGasFlow(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetAGCFullThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AGCFullThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetAGCSIMThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AGCSIMThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetAGCMSnThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AGCMSnThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetAGCZoomThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_AGCZoomThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetNumMicroscansFull ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_NumMicroscansFull(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetNumMicroscansSIM ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_NumMicroscansSIM(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetNumMicroscansMSn ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_NumMicroscansMSn(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQTune::GetNumMicroscansZoom ( short nPolarity ) {
+    short _result = 0;
+    HRESULT _hr = get_NumMicroscansZoom(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetLens0Voltage ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_Lens0Voltage(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetLens1Voltage ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_Lens1Voltage(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetTubeLensAdjust ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_TubeLensAdjust(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMPRFAmp ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MPRFAmp(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetSourceHighVoltage ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_SourceHighVoltage(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetSourceCurrent ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_SourceCurrent(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetCapillaryVoltage ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_CapillaryVoltage(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetRFDev00Offset ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_RFDev00Offset(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMP0Offset ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MP0Offset(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMP1Offset ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MP1Offset(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMaxIonTimeFull ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MaxIonTimeFull(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMaxIonTimeSIM ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MaxIonTimeSIM(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMaxIonTimeMSn ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MaxIonTimeMSn(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetMaxIonTimeZoom ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_MaxIonTimeZoom(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetFrontLens ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_FrontLens(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetSkimmer ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_Skimmer(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetSplitLens ( short nPolarity ) {
+    double _result = 0;
+    HRESULT _hr = get_SplitLens(nPolarity, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetHybridAGCFullThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_HybridAGCFullThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetHybridAGCSIMThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_HybridAGCSIMThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetHybridAGCMSnThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_HybridAGCMSnThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQTune::GetHybridAGCZoomThreshold ( ) {
+    double _result = 0;
+    HRESULT _hr = get_HybridAGCZoomThreshold(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+//
+// interface ILCQCal wrapper method implementations
+//
+
+inline HRESULT ILCQCal::Open ( _bstr_t szFileName ) {
+    HRESULT _hr = raw_Open(szFileName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT ILCQCal::Close ( ) {
+    HRESULT _hr = raw_Close();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline double ILCQCal::GetMultiplier1 ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_Multiplier1(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetMultiplier2 ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_Multiplier2(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetMPFrequency ( ) {
+    double _result = 0;
+    HRESULT _hr = get_MPFrequency(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetRFFrequency ( ) {
+    double _result = 0;
+    HRESULT _hr = get_RFFrequency(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::Getqmslope ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_qmslope(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::Getqmintercept ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_qmintercept(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetWfIonAmpSlope ( ) {
+    double _result = 0;
+    HRESULT _hr = get_WfIonAmpSlope(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetWfIsoAmpSlope ( ) {
+    double _result = 0;
+    HRESULT _hr = get_WfIsoAmpSlope(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetWfIonAmpInt ( ) {
+    double _result = 0;
+    HRESULT _hr = get_WfIonAmpInt(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetWfIsoAmpInt ( ) {
+    double _result = 0;
+    HRESULT _hr = get_WfIsoAmpInt(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetTickAmpSlope ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_TickAmpSlope(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetTickAmpInt ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_TickAmpInt(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetDeviceMin ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DeviceMin(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetDeviceMax ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_DeviceMax(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetResEjectSlope ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_ResEjectSlope(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetResEjectInt ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_ResEjectInt(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetMassSlope ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_MassSlope(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetMassInt ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_MassInt(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQCal::GetNumqmSlopeInts ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumqmSlopeInts(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQCal::GetNumTickAmpSlopeInts ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumTickAmpSlopeInts(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQCal::GetNumDeviceMinMax ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumDeviceMinMax(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQCal::GetNumCalibrationModes ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumCalibrationModes(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline short ILCQCal::GetNumVernierDACCalibrations ( ) {
+    short _result = 0;
+    HRESULT _hr = get_NumVernierDACCalibrations(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetVernierMassSlope ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_VernierMassSlope(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ILCQCal::GetVernierMassInt ( short nIndex ) {
+    double _result = 0;
+    HRESULT _hr = get_VernierMassInt(nIndex, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}

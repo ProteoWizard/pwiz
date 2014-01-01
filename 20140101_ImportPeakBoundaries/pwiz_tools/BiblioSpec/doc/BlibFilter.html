@@ -1,0 +1,102 @@
+<html>
+<!--
+FILE: BlibFilter.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 5/9/11
+PROJECT: BiblioSpec
+-->
+<head>
+<title>BlibFilter</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibFilter</h1></center>
+
+<blockquote>
+
+<p>
+<b>Description:</b>&nbsp;&nbsp;Create a library from an existing
+one such that the new library has only one spectrum for each peptide
+ion.  The representative spectrum is chosen by taking the dot product
+of all pairs of spectra for a peptide and selecting the one with the
+highest average score.
+
+
+<p>
+<b>Usage:</b><code>  BlibFilter [options] 
+&nbsp;&lt;initial&nbsp;library&gt;
+&nbsp;&lt;output&nbsp;library&gt;</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li>
+<code>&lt;initial library&gt;</code> &ndash;
+A library file with multiple spectra for all or some peptide ions.
+
+<li>
+<code>&lt;output library&gt;</code> &ndash;
+The name to be given to the resulting library. 
+</ul>
+
+<p>
+<b>Output:</b>&nbsp;&nbsp;A library of spectra for the same
+peptides as the initial library, but with only one spectrum per peptide
+ion.  
+
+<p>
+<b>Options:</b>&nbsp;&nbsp;
+<ul>
+
+<li>
+<code>-m [ --memory-cache ] &lt;size&gt; </code>&ndash;
+SQLite memory cache size in Megs.  Default 250M.
+
+<li>
+<code>-n [ --min-peaks ] &lt;num&gt; </code>&ndash;
+Only include spectra with at least this many peaks.  Default 20.
+
+<li>
+<code>-s [ --min-score ] &lt;score&gt; </code>&ndash;
+Best spectrum must have at least this average score to be included.  Default 0.
+
+<li>
+<code>-p [ --parameter-file ] &lt;file&gt; </code>&ndash;
+File containing search parameters.  Command line values override file values.
+
+<li>
+<code>-v [ --verbosity ] &lt;level&gt; </code>&ndash;
+Control the level of output to stderr.  (silent, error, status, warn,
+debug, detail, all)  Default status. 
+
+<li>
+<code>-h [ --help ]</code>&ndash;
+Print help message.
+
+</ul>
+
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+
+-->
+</blockquote>
+
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

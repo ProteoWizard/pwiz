@@ -1,0 +1,4 @@
+Sample Type,File Name,Sample ID,Path,Instrument Method,Process Method,Position,Inj Vol,Level,Comment,Dil Factor,L1 Study,L2 Client,L3 Laboratory,L4 Company,L5 Phone,ISTD Amt,Sample Vol,Sample Wt,Sample Name,Calibration File,
+Unknown,filename1,sampleID1,path1,instmeth1,procmeth,pos1,1.000,,comment1,10.000,study1,client1,lab1,company1,phone1,20.000,30.000,40.000,sampleName1,,
+Blank,filename2,sampleID2,path2,instmeth2,procmeth,pos2,2.000,,comment2,11.000,study2,client2,lab2,company2,phone2,21.000,31.000,41.000,sampleName2,,
+QC,filename3,sampleID3,path3,instmeth3,procmeth,pos3,3.000,,comment3,12.000,study3,client3,lab3,company3,phone3,22.000,32.000,42.000,sampleName3,,

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+my_root=$(dirname $0)
+svnls_path=$my_root/svnls
+
+if [ $# -lt 1 ]
+then
+    echo Usage: create_svn_snapshot_tarball archivename.tgz [rootdir]
+    echo Create a tarball with all files in the svn snapshot, ignoring local files.
+    exit 1
+fi
+
+echo Creating archive $1
+tar czvf $1 $($svnls_path $2)
+

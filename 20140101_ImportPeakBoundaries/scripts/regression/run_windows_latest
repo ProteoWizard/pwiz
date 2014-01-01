@@ -1,0 +1,20 @@
+#!/bin/bash
+
+bindir=../autobuild/$(ls -r ../autobuild | grep winpizza | head -1)
+outdir=out/$(date +%y%m%d_%H%M)_windows
+log=$outdir/log
+
+echo "outdir: $outdir"
+mkdir $outdir
+
+date >> $log
+echo "bindir: $outdir"  >> $log
+ls -l $bindir | tee -a $log
+
+for datadir in raw_small mzxml_small pwiz_example_data raw raw_from_jim 
+do
+    run_msconvert $bindir data/$datadir $outdir
+done
+
+date >> $log
+

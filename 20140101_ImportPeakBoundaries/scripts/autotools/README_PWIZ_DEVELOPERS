@@ -1,0 +1,19 @@
+GNU Autotools and native MSVC Projects for ProteoWizard
+
+The idea here is to make it easier for projects that aren't part of ProteoWizard to use the pwiz libraries by providing familiar MSVC and GNU autotools build files for their use.
+
+The hope is to increase uptake of ProteoWizard in existing projects that don't use (and/or don't want to use) bjam, and that may use already-installed Boost versions different than that used in the bjam build.
+
+Rather than maintain three different build systems, we have Python scripts that observe the operation of the bjam based gcc and msvc builds and create native build files from that.  In this way as the bjam build evolves the other builds will too, with minimal intervention.
+
+We observe the bjam build by running bjam in "d+2" verbose mode and parsing the logs.  
+
+For gcc builds that's done as:
+	cd Proteowizard/pwiz/scripts/autotools ; ./make_nonbjam_build.sh 
+which creates the directory Proteowizard/pwiz/autotools/ containing the usual GNU autoconf stuff (this process requires autoconf and libtool).  An end-user developer then just has to
+	cd Proteowizard/pwiz ; autotools/.configure ; make ; make install
+
+For MSVC it's:
+	cd Proteowizard/pwiz/scripts/autotools; make_nonbjam_build.bat 
+which creates directories Proteowizard/pwiz/msvc8/, Proteowizard/pwiz/msvc9/, and Proteowizard/pwiz/msvc10/, each containing MSVC project files for the proteowizard lib and for test and example files.  A developer can open libpwiz.sln to build libpwiz along with the examples and tests, or just include libpwiz.vc(x)proj in another solution under development.
+

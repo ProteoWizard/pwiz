@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id: MSFileReader.XRawfile2.SxS.manifest.real_x64 3201 2012-01-09 20:00:34Z donmarsh $ -->
+<assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns="urn:schemas-microsoft-com:asm.v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <assemblyIdentity name="MSFileReader.XRawfile2.SxS" version="{VERSION}" type="win32" />
+  <file name="MSFileReader.XRawfile2.dll" asmv2:size="316928">
+    <typelib tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" version="1.0" helpdir="" resourceid="0" flags="HASDISKIMAGE" />
+    <comClass clsid="{1d23188d-53fe-4c25-b032-dc70acdbdc02}" threadingModel="Apartment" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" progid="MSFileReader.XRawfile.1" description="MSFileReader XRawfile Class" />
+    <comClass clsid="{6f2f5bd9-1c11-4cbc-af0d-6de0e3b06e3b}" threadingModel="Apartment" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" progid="MSFileReader.XVirMS.1" description="MSFileReader XVirMS Class" />
+    <comClass clsid="{b3db6431-a183-43f1-8bbd-f354064d9041}" threadingModel="Apartment" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" progid="MSFileReader.XVirUV.1" description="MSFileReader XVirUV Class" />
+  </file>
+  <file name="fileio_x64.dll" />
+  <file name="fregistry_x64.dll" />
+  <comInterfaceExternalProxyStub name="IXRawfile" iid="{11B488A0-69B1-41FC-A660-FE8DF2A31F5B}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IXRawfile2" iid="{55A25FF7-F437-471F-909A-D7F2B5930805}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IXRawfile3" iid="{19A00B1E-1559-42B1-9A46-08A5E599EDEE}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IXRawfile4" iid="{E7CF6760-11CD-4260-B5B0-FCE2AD97547B}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IXRawfile5" iid="{06F53853-E43C-4F30-9E5F-D1B3668F0C3C}" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+</assembly>

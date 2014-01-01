@@ -1,0 +1,101 @@
+#
+# $Id: Jamfile.jam 1750 2010-01-27 15:56:05Z chambm $
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+import modules ;
+import path ;
+
+
+path-constant API_PATH : . ;
+
+
+if [ modules.peek : NT ]
+{
+
+import os common ;
+
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
+        }
+        else
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
+        }
+        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
+        result += <assembly>$(API_PATH)/Interop.DataExplorer.dll ;
+        result += <define>PWIZ_READER_ABI_T2D ;
+    }
+    else
+    {
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+lib pwiz_vendor_api_abi_t2d
+    : # sources
+        T2D_Data.cpp
+    : # requirements
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
+
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <conditional>@vendor-api-requirements
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+        <link>static # <using-clr>true and <link>shared don't mix
+        <address-model>64:<build>no
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-requirements
+    ;
+
+
+# a test utility, not a unit test
+exe T2D_Data_Test
+    : T2D_Data_Test.cpp
+      pwiz_vendor_api_abi_t2d
+    ;
+
+explicit T2D_Data_Test ;
+
+
+install install_pwiz_vendor_api_abi_t2d
+    : [ path.glob $(API_PATH) : Interop.DataExplorer.dll ]
+    ;
+
+explicit install_pwiz_vendor_api_abi_t2d ;
+
+}

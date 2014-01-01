@@ -1,0 +1,56 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
+#
+# Copyright 2010 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+
+
+using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE[1]) : <zlib-src-location>$(ZLIB_SOURCE[1]) ;
+
+rule link-requirements ( properties * )
+{
+    # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+    if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+    {
+        return <library>/ext/boost//serialization/<link>shared
+               <library>/ext/boost//iostreams/<link>shared
+               <library>/ext/zlib//z/<link>shared ;
+    }
+    else
+    {
+        return <library>/ext/boost//serialization
+               <library>/ext/boost//iostreams
+               <library>/ext/zlib//z ;
+    }
+}
+
+# a library for training and running SVM models
+lib svm 
+    : # sources
+        svm.cpp
+    : # requirements
+        <link>static
+        <conditional>@link-requirements
+    : # default-build
+    : # usage-requirements
+        <conditional>@link-requirements
+        <include>.
+    ;
+
+
+# utility to serialize libsvm models as base64/zlib text to enable embedding in source code
+exe svm-model2code : svm-model2code.cpp svm /ext/boost//filesystem ;

@@ -1,0 +1,73 @@
+<html>
+<!--
+FILE: LibStats.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 7/19/05
+PROJECT: BiblioSpec
+REVISION: $Revision: 1.6 $
+-->
+<head>
+<title>BlibStats</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibStats</h1></center>
+
+<blockquote>
+
+<p><b>Description:</b> Report statistics about a library.
+
+<p><b>Usage:</b><code>  BlibStats [options] &lt;library&nbsp;filename&gt; &lt;output&nbsp;filename&gt;</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li> &lt;library filename&gt; - the library for which statistics will be reported
+
+<li> &lt;output filename&gt; - file to which results are printed
+</ul>
+
+<p><b>Output:</b>  A text file with summary statistics of
+the library: the total number of spectra, the number of unique ions,
+the number of unique sequences, and the minimum and maximum precursor
+m/z. There is an option to also print information about each spectrum:
+the unique id number, scan number, m/z, charge state, annotation,
+redundancy (from filtering), sequence, and sequence modifications..
+
+<p><b>Options:</b>
+<ul>
+
+<li><code>-l, --long</code> - in addition to summary statistics, list
+	      every spectrum in the library with its ID number,
+	      charge, sequence, curation level, and precursor m/z. 
+
+<li><code>-v, --verbose &lt;0|1|2|3&gt;</code> - Set the verbosity
+	      level of the output to stderr.  Default is 2.
+
+
+</ul>
+
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+-->
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

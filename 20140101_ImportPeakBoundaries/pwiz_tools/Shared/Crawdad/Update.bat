@@ -1,0 +1,14 @@
+copy %1\CrawPeak.cpp .
+copy %1\CrawPeak.H .
+copy %1\CrawPeakAnnotator.cpp .
+copy %1\CrawPeakAnnotator.H .
+copy %1\CrawPeakFinder.cpp .
+copy %1\CrawPeakFinder.H .
+copy %1\CrawPeakMethod.cpp .
+copy %1\CrawPeakMethod.H .
+copy %1\msmat\crawutils.cpp msmat
+copy %1\msmat\crawutils.H msmat
+copy %1\filters\ChromSmoother.cpp filters
+copy %1\filters\ChromSmoother.H filters
+copy %1\filters\GaussSmoother.cpp filters
+copy %1\filters\GaussSmoother.H filters

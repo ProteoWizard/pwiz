@@ -1,0 +1,54 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: Project Overview</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+    <h1>ProteoWizard Data Access Layer Design</h1>
+    <hr/>
+
+    <p>
+    The ProteoWizard data access layer library is <code>pwiz/msdata</code>, and the 
+    interface and data structure definitions are in <code>MSData.hpp</code>.
+    </p>
+
+    <p>
+    The data model is a one-to-one translation from mzML data elements to C++ structs.
+    The root <code>mzML</code> element correspondes to an <code>MSData</code> struct, 
+    and the sub-elements correspond to structs with similar names.  
+    <code>SpectrumList</code> has a virtual interface, which allows for lazy evaluation
+    backed by a data file.
+    </p>
+    
+    <p>
+    The <code>mzML</code> controlled vocabulary (CV) is parsed at compile time, generating
+    <code>cv.hpp</code> and <code>cv.cpp</code>.  This allows CV terms to be used in 
+    a typesafe manner, and also makes the various CV relations and synonyms available
+    to C++ client code.
+    </p>
+
+    <p>
+    Mapping from the various structs to mzML is done in the <code>IO</code> module, and
+    diff calculations in <code>Diff</code>.  <code>Serializer_mzML</code> and 
+    <code>Serializer_mzXML</code> allow serializations to/from iostreams in mzML and mzXML
+    formats, respectively.
+    </p>
+
+    <p>
+    <code>MSDataFile</code> is a subclass of <code>MSData</code> that adds file I/O handling. 
+    <code>MSDataFile::Reader</code> provides a generic interface for file readers.  By default,
+    <code>Reader</code>s for mzML, mzXML, and Thermo RAW files are provided.  On instantiation
+    with a filename, <code>MSDataFile</code> finds a <code>Reader</code> that will accept the 
+    file, and uses that <code>Reader</code> to fill in the internal data structures.
+    </p>
+
+    <hr/>
+    <a href="index.html">Technical documentation home</a>
+
+</body>
+
+</html>
+

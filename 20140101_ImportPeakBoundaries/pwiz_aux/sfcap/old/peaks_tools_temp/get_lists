@@ -1,0 +1,5 @@
+for i in $(seq 1 20)
+do
+    echo $i
+    grep peak $i/tlpmatches | sed 's/.*peak.\([0-9]*\).*/\1/g' > $i.list 
+done

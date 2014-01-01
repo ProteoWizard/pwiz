@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="ZedGraph">
+</Property><Property Name="Solution File" Value="C:\bumbershoot\src\pwiz-src\pwiz_tools\SeeMS\MSGraph\ZedGraph\ZedGraph\ZedGraph.sln">
+</Property><Property Name="Date" Value="Thursday, February 12, 2009">
+</Property><Property Name="Time" Value="13:47:38 PM">
+</Property></Properties><Event ErrorLevel="0" Project="ZedGraph" Source="ZedGraph.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="ZedGraph" Source="ZedGraph.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="ZedGraph" Source="ZedGraph.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>

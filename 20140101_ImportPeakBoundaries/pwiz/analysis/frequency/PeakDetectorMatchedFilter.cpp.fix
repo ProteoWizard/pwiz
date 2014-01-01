@@ -1,0 +1,700 @@
+// this a snapshot of an old version of the implementation,
+// with notes on problems in calculateFrequencyStep(),
+// to be fixed at some point...
+
+
+//
+// PeakDetectorMatchedFilter.cpp
+//
+//
+// Darren Kessner <Darren.Kessner@cshs.org>
+//
+// Copyright 2006 Louis Warschaw Prostate Cancer Center
+//   Cedars Sinai Medical Center, Los Angeles, California  90048
+//   Unauthorized use or reproduction prohibited
+//
+
+
+#include "PeakDetectorMatchedFilter.hpp"
+#include "TruncatedLorentzian.hpp"
+#include "TruncatedLorentzianParameters.hpp"
+#include "data/CalibrationParameters.hpp"
+#include "data/FrequencyData.hpp"
+#include "data/PeakData.hpp"
+#include "proteome/Chemistry.hpp"
+#include "proteome/Ion.hpp"
+#include "proteome/IsotopeCalculator.hpp"
+#include "extmath/MatchedFilter.hpp"
+#include "extstd/Timer.hpp"
+#include <iostream>
+#include <iomanip>
+
+
+#ifdef _MSC_VER // msvc hack
+inline double round(double d) {return floor(d + 0.5);}
+#endif // _MSC_VER
+
+
+namespace mstools {
+namespace frequency {
+
+
+using namespace std;
+using namespace extstd;
+using namespace extmath;
+using namespace proteome;
+using namespace data;
+using namespace data::peakdata;
+
+
+namespace {
+
+class TruncatedLorentzianKernel
+{
+    public:
+
+    TruncatedLorentzianKernel(double T, bool computeMagnitude = false)
+    :   tl_(T), computeMagnitude_(computeMagnitude)
+    {
+        p_.T = p_.tau = T; 
+        p_.alpha = 1;
+        p_.f0 = 0;
+    }
+
+    complex<double> operator()(double frequency) const
+    {
+        complex<double> value = tl_(frequency, p_.parameters()); 
+        return computeMagnitude_ ? abs(value) : value;
+    }
+
+    typedef MatchedFilter::DxCD space_type;
+
+    private:
+    TruncatedLorentzian tl_;
+    bool computeMagnitude_;
+    TruncatedLorentzianParameters p_;
+};
+
+typedef MatchedFilter::KernelTraits<TruncatedLorentzianKernel>::correlation_data_type 
+    CorrelationData;
+
+} // namespace
+
+
+class PeakDetectorMatchedFilterImpl : public PeakDetectorMatchedFilter
+{
+    public:
+
+    PeakDetectorMatchedFilterImpl(const Config& config);
+    virtual const Config& config() const {return config_;} 
+    virtual void findPeaks(const FrequencyData& fd, Scan& result) const;
+
+    virtual void findPeaks(const FrequencyData& fd, 
+                           Scan& result,
+                           vector<Score>& scores) const;
+
+    private:
+
+    Config config_;
+    ostream* log_;
+    vector<Chemistry::MassDistribution> isotopeEnvelopes_; // cached for quick access
+
+    void analyzePeak(double frequency, 
+                     const FrequencyData& fd,
+                     const CorrelationData& correlationData,
+                     vector<Score>& goodScores) const;
+
+    void calculateScore(Score& score,
+                        const FrequencyData& fd,
+                        const CorrelationData& correlationData) const;
+
+    void initializeIsotopeEnvelopes();
+    Chemistry::MassDistribution isotopeEnvelope(double mass) const;
+
+    void collapseScores(const vector<Score>& scores, vector<Score>& result) const;
+};
+
+
+auto_ptr<PeakDetectorMatchedFilter> 
+PeakDetectorMatchedFilter::create(const Config& config)
+{
+    return auto_ptr<PeakDetectorMatchedFilter>(new PeakDetectorMatchedFilterImpl(config));
+}
+
+
+PeakDetectorMatchedFilterImpl::PeakDetectorMatchedFilterImpl(const Config& config)
+:   config_(config),
+    log_(config.log)
+{
+    initializeIsotopeEnvelopes();
+} 
+
+
+void PeakDetectorMatchedFilterImpl::findPeaks(const FrequencyData& fd,
+                                              Scan& result) const
+{
+    vector<Score> scores;
+    findPeaks(fd, result, scores);
+}
+
+
+namespace {
+
+
+inline bool areCloseEnough(double a, double b, double epsilon)
+{
+    return (abs(a-b) < epsilon);
+}
+
+
+// RAW/mzXML scans can have holes when the signal drops below some threshold.
+// When we get FrequencyData that comes from these scans, we must fill in the 
+// holes when creating the SampledData object.  The holes seem to be marked
+// by 4 zero samples on either side.  Filling in the holes requires the following:
+// 1) calculation of the frequency step in the data
+// 2) recognizing a hole as we walk through the data by comparing the actual frequency
+//    to the calculated frequency of each sample
+// 3) accounting for the fact that real data may not be perfectly evenly spaced
+
+
+double calculateFrequencyStep(const FrequencyData& fd)
+{
+    double first = 0;
+    double sum = 0;
+    int count = 0;
+
+    for (FrequencyData::const_iterator it=fd.data().begin()+1; it!=fd.data().end(); ++it) 
+    {
+        if (it->y == 0.) continue; // don't step in the holes 
+        double step = it->x - (it-1)->x;
+        if (first == 0.) first = step;
+        sum += step; 
+        ++count;
+    } 
+    
+    if (count == 0)
+        throw runtime_error("[PeakDetectorMatchedFilter::calculateFrequencyStep()] Don't know what to do.");
+
+    double mean = sum/count;
+
+    // sanity check: first step and mean step should be very close  
+    if (!areCloseEnough(first, mean, .03))
+    {
+        cerr << "first: " << first << endl;
+        cerr << "mean: " << mean << endl;
+        throw runtime_error("[PeakDetectorMatchedFilter::calculateFrequencyStep()] I am insane!");
+    }
+
+    cout << "mean: " << mean << endl;
+
+    double width = fd.data().back().x - fd.data().front().x;
+
+    int c1 = (int)round(width/mean);
+    int c2 = c1 + 1;
+    int c3 = c1 + 2;
+
+    double s1 = width/(c1-1); 
+    double s2 = width/(c2-1); 
+    double s3 = width/(c3-1); 
+
+    cout << c1 << "\t" << s1 << "\t" << 1/s1 << endl;
+    cout << c2 << "\t" << s2 << "\t" << 1/s2 << endl;
+    cout << c3 << "\t" << s3 << "\t" << 1/s3 << endl;
+
+    return mean; 
+}
+
+
+MatchedFilter::SampledData<MatchedFilter::DxCD> createSampledData(const FrequencyData& fd)
+{
+    using namespace MatchedFilter;
+    typedef SampledData<DxCD> Result;
+
+    if (fd.data().empty())
+        throw runtime_error("[PeakDetectorMatchedFilter::createSampledData()] fd empty.");
+
+    Result result;
+    result.domain = make_pair(fd.data().front().x, fd.data().back().x);
+
+    double step = calculateFrequencyStep(fd);
+    int sampleCount = (int)round(result.domainWidth()/step);// + 2; // + 1;
+
+    // scan 19: +2
+    // scan 6: +0
+    // original calculation: +1
+
+    result.samples.resize(sampleCount);
+
+
+    double step2 = result.domainWidth() / (sampleCount-1);
+
+    cout << setprecision(12);
+    cout << "step: " << step << endl;
+    cout << "step2: " << step2 << endl;
+    cout << "sampleCount: " << sampleCount << endl;
+
+
+    // copy samples into result, filling in holes as necessary
+    FrequencyData::const_iterator from = fd.data().begin();
+    Result::samples_type::iterator to = result.samples.begin(); 
+    for (int index=0; index<sampleCount && from!=fd.data().end(); ++index, ++to)
+    {
+        double f = result.domain.first + step * index;
+        double f2 = result.domain.first + step2 * index;
+
+        // Close enough means "within slightly more than half a step"; 
+        // this allows the real frequencies and idea frequencies to get 
+        // back in sync.
+        if (areCloseEnough(f2, from->x, step*.55)) 
+        {
+            cout << setw(20) << f << setw(20) << from->x 
+                 << setw(20) << from->x - f 
+                 << setw(20) << from->x - f2 
+                 << setw(40) << from->y << endl;
+            *to = from++->y; // not a hole
+        }
+        else
+        {
+/*
+            cout << setw(20) << f << setw(20) << f 
+                 << setw(20) << 0.
+                 << setw(20) << 0.
+                 << setw(40) << complex<double>(0.) << endl;
+*/
+            *to = 0; // Fulfillment -- celebrate the unholiness!
+        }
+    }
+
+    return result;
+}
+
+
+void findPeaksAux(const CorrelationData& correlationData, 
+                  double minMagnitude, double maxAngle,
+                  vector<double>& result)
+{
+    if (correlationData.samples.empty()) 
+        throw runtime_error("[PeakDetectorMatchedFilter::findPeaksAux()] No correlations.");
+
+    double minNorm = minMagnitude*minMagnitude; 
+    double maxTan2Angle = pow(tan(maxAngle*M_PI/180), 2);
+
+    int index = 1;
+
+    for (CorrelationData::samples_type::const_iterator it=correlationData.samples.begin()+1; 
+        it+1!=correlationData.samples.end(); ++it, ++index)
+    if (norm(it->dot) >= minNorm &&             // magnitude >= minMagnitude
+        it->tan2angle <= maxTan2Angle &&        // angle <= maxAngle,
+        norm(it->dot) > norm((it-1)->dot) && 
+        norm(it->dot) > norm((it+1)->dot))      // magnitude local maximum
+    {
+        double frequency = correlationData.domain.first + correlationData.dx()*index; 
+        result.push_back(frequency);
+    }
+}
+
+
+bool hasLowerMonoisotopicFrequency(const PeakDetectorMatchedFilter::Score& a, 
+                                   const PeakDetectorMatchedFilter::Score& b)
+{
+    return a.monoisotopicFrequency < b.monoisotopicFrequency;
+}
+
+
+/*
+PeakInfo score2peakInfo(const PeakDetectorMatchedFilter::Score& score)
+{
+    PeakInfo peakInfo;
+    peakInfo.frequency = score.monoisotopicFrequency;
+    peakInfo.intensity = score.monoisotopicIntensity;
+    peakInfo.charge = score.charge;
+    return peakInfo;
+}
+*/
+
+
+peakdata::Envelope score2envelope(const PeakDetectorMatchedFilter::Score& score)
+{
+    using namespace mstools::data::peakdata;    
+    
+    Envelope envelope;
+
+    envelope.peaks.push_back(Peak());
+    Peak& peak = envelope.peaks.back();
+    
+    peak.frequency = score.monoisotopicFrequency;
+    peak.amplitude = abs(score.monoisotopicIntensity);
+    peak.phase = arg(score.monoisotopicIntensity);
+    envelope.charge = score.charge;
+    return envelope;
+}
+
+
+} // namespace
+
+
+void PeakDetectorMatchedFilterImpl::findPeaks(const FrequencyData& fd, 
+                                              Scan& result,
+                                              vector<Score>& scores) const
+{
+    using namespace MatchedFilter;
+
+    SampledData<DxCD> sampledData = createSampledData(fd);
+
+    TruncatedLorentzianKernel kernel(fd.observationDuration(), config_.useMagnitudeFilter); 
+
+    CorrelationData correlationData = computeCorrelationData(sampledData,
+                                                             kernel,
+                                                             config_.filterSampleRadius,
+                                                             config_.filterMatchRate);
+
+    // get initial list of peaks 
+
+    if (fd.noiseFloor() == 0)
+    {
+        cerr << "[PeakDetectorMatchedFilterImpl::findPeaks()] Warning: noise floor == 0.\n";
+        return;
+    }
+
+    double minMagnitude = fd.noiseFloor() * config_.peakThresholdFactor;
+    vector<double> peaks;
+
+    findPeaksAux(correlationData, minMagnitude, config_.peakMaxCorrelationAngle, peaks);
+
+    if (log_)
+    {
+        *log_ << "[PeakDetectorMatchedFilter]\n";
+
+        if (config_.logDetailLevel > 0) 
+        {
+            *log_ << setprecision(12)
+                  << "<sampledData>\n" << sampledData << "</sampledData>\n"
+                  << "<correlationData>\n" << correlationData << "</correlationData>\n"
+                  << endl;
+        }
+
+        *log_ << fixed << setprecision(4)
+              << "filterMatchRate: " << config_.filterMatchRate << endl
+              << "filterSampleRadius: " << config_.filterSampleRadius << endl
+              << "peakThresholdFactor: " << config_.peakThresholdFactor << endl
+              << "peakMaxCorrelationAngle: " << config_.peakMaxCorrelationAngle << endl
+              << "isotopeThresholdFactor: " << config_.isotopeThresholdFactor << endl
+              << "monoisotopicPeakThresholdFactor: " << config_.monoisotopicPeakThresholdFactor << endl
+              << "isotopeMaxChargeState: " << config_.isotopeMaxChargeState << endl
+              << "isotopeMaxNeutronCount: " << config_.isotopeMaxNeutronCount << endl
+              << "collapseRadius: " << config_.collapseRadius << endl
+              << "useMagnitudeFilter: " << boolalpha << config_.useMagnitudeFilter << endl
+              << "logDetailLevel: " << config_.logDetailLevel << endl
+              << endl
+              << "noiseFloor: " << fd.noiseFloor() << endl
+              << "peakThreshold: " << minMagnitude << endl
+              << "isotopeThreshold: " << fd.noiseFloor() * config_.isotopeThresholdFactor << endl
+              << "monoisotopicPeakThreshold: " << fd.noiseFloor() * config_.monoisotopicPeakThresholdFactor << endl
+              << "\n****\n"
+              << "initial peak list: " << peaks.size() << endl;
+
+        for (vector<double>::iterator it=peaks.begin(); it!=peaks.end(); ++it)
+            *log_ << "  " << *it << " " << abs(correlationData.sample(*it).dot) 
+                  << " " << correlationData.sample(*it).angle() << endl;
+    }
+
+    // analyze and create list of the good ones 
+    vector<Score> goodScores;
+    for (vector<double>::iterator it=peaks.begin(); it!=peaks.end(); ++it)
+        analyzePeak(*it, fd, correlationData, goodScores);
+
+    // sort good scores by monoisotopic frequency
+    sort(goodScores.begin(), goodScores.end(), hasLowerMonoisotopicFrequency);
+
+    if (log_)
+    {
+        *log_ << "****\nscores:\n" << fixed << setprecision(2);
+        copy(goodScores.begin(), goodScores.end(), 
+             ostream_iterator<PeakDetectorMatchedFilter::Score>(*log_, "\n"));
+    }
+
+    // remove any redundancies and fill in scores
+    scores.clear();
+    collapseScores(goodScores, scores);
+
+    if (log_)
+    {
+        *log_ << "collapsed scores:\n";
+        copy(scores.begin(), scores.end(), ostream_iterator<Score>(*log_, "\n"));
+        *log_ << endl;
+    }
+
+    // fill in PeakData structure
+
+    result.scanNumber = 0; // TODO: copy from fd 
+    result.retentionTime = 0; // TODO: copy from fd 
+    result.observationDuration = fd.observationDuration();
+    //result.calibrationParameters = fd.calibrationParameters(); // TODO: fix in FrequencyData  
+    result.calibrationParameters = CalibrationParameters(fd.calibration().A, fd.calibration().B);
+    result.envelopes.clear();
+
+    transform(scores.begin(), scores.end(), back_inserter(result.envelopes), score2envelope);
+}
+
+
+void PeakDetectorMatchedFilterImpl::analyzePeak(double frequency, 
+                                                const FrequencyData& fd,
+                                                const CorrelationData& correlationData,
+                                                vector<Score>& goodScores) const
+{
+    if (log_)
+        *log_ << "****\nAnalyzing peak: " << frequency << endl;
+
+    // find the best charge state and neutron count
+
+    Score best;
+
+    for (int charge=1; charge<=config_.isotopeMaxChargeState; charge++)
+    for (int neutronCount=0; neutronCount<=config_.isotopeMaxNeutronCount; neutronCount++)
+    {
+        Score current(frequency, charge, neutronCount);
+        calculateScore(current, fd, correlationData);
+        if (current.value > best.value) 
+            best = current;
+    }
+
+    // if our best score beats our thresholds, append to goodScores 
+
+    double scoreThreshold = fd.noiseFloor() * config_.isotopeThresholdFactor;
+    double monoisotopicThreshold = fd.noiseFloor() * config_.monoisotopicPeakThresholdFactor;
+
+    if (best.value >= scoreThreshold && 
+        abs(best.monoisotopicIntensity) >= monoisotopicThreshold)
+    {
+        if (best.peakCount == 1)
+        {
+            best.charge = 0; // we don't actually know the charge state if there's only one peak
+
+            if (best.neutronCount > 0)
+                cout << "[PeakDetectorMatchedFilterImpl::analyzePeak()] Warning: Lonely peak with neutronCount>0.\n";
+        }
+
+        goodScores.push_back(best);
+    }
+
+    if (log_)
+    {
+        *log_ << "****\n"
+              << "frequency: " << best.frequency << endl
+              << "maxScore: " << best.value << endl
+              << "bestNeutronCount: " << best.neutronCount << endl
+              << "bestCharge: " << best.charge << endl;
+    }
+}
+
+
+namespace {
+const double neutronMass_ = 1.008665;
+} // namespace
+
+
+void PeakDetectorMatchedFilterImpl::calculateScore(Score& score,
+                                                   const FrequencyData& fd,
+                                                   const CorrelationData& correlationData
+                                                   ) const 
+{
+    // assume: frequency, charge, neutronCount have been set
+    // calculate: remaining fields
+
+    data::CalibrationParameters p(fd.calibration().A, fd.calibration().B);
+    double mz = p.mz(score.frequency);
+    double neutralMass = Ion::neutralMass(mz, score.charge);
+
+    if (log_)
+    {
+        *log_ << "****\n" << score.frequency << "  charge:" << score.charge
+              << "  neutrons:" << score.neutronCount << "  m/z:" << mz << endl; 
+    }
+
+    // don't bother with really high m/z values
+    if (mz > 10000)
+        return;  
+
+    // get isotope envelope estimate based on rough estimate of monoisotopic mass
+    double monoisotopicMassEstimate = neutralMass - score.neutronCount * neutronMass_;
+    Chemistry::MassDistribution envelope = isotopeEnvelope(monoisotopicMassEstimate);
+
+    // calculate better estimate of monoisotopic mass after we have isotope envelope
+    double delta = score.neutronCount * neutronMass_;  // rough estimate
+    if (score.neutronCount < (int)envelope.size())
+    {
+        // best estimate based on isotope envelope
+        delta = envelope[score.neutronCount].mass; 
+    }
+    else if (envelope.size() >= 2)
+    {
+        // estimate based on first 2 isotopes
+        delta = (envelope[1].mass - envelope[0].mass) * score.neutronCount; 
+    }
+
+    double monoisotopicMass = neutralMass-delta;
+
+    for (int n=0; n<(int)envelope.size(); n++)
+    {
+        double filterMass = monoisotopicMass + envelope[n].mass;
+        double filterMz = Ion::mz(filterMass, score.charge);
+        double filterFrequency = p.frequency(filterMz);
+        double correlation = abs(correlationData.sample(filterFrequency).dot);
+        double contribution = correlation * envelope[n].abundance;
+
+        score.value += contribution;
+
+        const double contributionThreshold = 1.;
+        if (contribution >= contributionThreshold)
+            ++score.peakCount;
+
+        if (n==0) 
+        {
+            score.monoisotopicFrequency = filterFrequency;
+
+            // for now, report intensity of closest sample point
+            FrequencyData::const_iterator it = fd.findNearest(filterFrequency);
+            score.monoisotopicIntensity = it->y;
+        }
+
+        if (log_) 
+        {
+            *log_ << "  " 
+                << setw(7) << filterMass << "  " 
+                << setw(7) << filterMz << "  " 
+                << setw(10) << filterFrequency << "  " 
+                << setw(5) << envelope[n] << "  "  
+                << setw(12) << correlation << "  "
+                << setw(12) << contribution << endl;
+        }
+    }
+
+    if (log_)
+    {
+        *log_ << "score value: " << setw(11) << score.value << endl
+              << "peak count: " << score.peakCount << endl;
+    }
+}
+
+
+namespace {
+Chemistry::Formula estimateFormula(double mass)
+{
+    // estimate formula assuming it's a peptide, using average elemental composition
+    // of amino acid residues
+
+    using namespace Chemistry::Element;
+
+    const double averageResidueMass = 111.10524;
+    const double averageC = 4.944;
+    const double averageH = 7.763;
+    const double averageN = 1.357;
+    const double averageO = 1.476;
+    const double averageS = 0.042;
+
+    Chemistry::Formula water("H2O1");
+    double residueCount = (mass - water.monoisotopicMass())/averageResidueMass;
+    if (residueCount < 0) residueCount = 0;
+
+    Chemistry::Formula result;
+
+    result[C] = (int)round(residueCount * averageC);
+    result[H] = (int)round(residueCount * averageH);
+    result[N] = (int)round(residueCount * averageN);
+    result[O] = (int)round(residueCount * averageO);
+    result[S] = (int)round(residueCount * averageS);
+
+    result += water;
+    return result;
+}
+} // namespace
+
+
+namespace {
+
+const unsigned int cacheSize_ = 10000;
+const double cacheMaxMass_ = 100000;
+
+unsigned int massToIndex(double mass)
+{
+    unsigned int index = (unsigned int)round(mass / cacheMaxMass_ * cacheSize_);
+
+    if (index >= cacheSize_) 
+        throw runtime_error("PeakDetectorMatchedFilter::massToIndex()] Warning: Isotope envelope cache out of bounds."); 
+
+    return index;
+}
+
+double indexToMass(unsigned int index)
+{
+    double mass = (double)index / cacheSize_ * cacheMaxMass_;
+    return mass;
+}
+
+} // namespace 
+
+
+void PeakDetectorMatchedFilterImpl::initializeIsotopeEnvelopes()
+{
+    const double abundanceCutoff = .01;
+    const double massPrecision = .1; 
+    IsotopeCalculator isotopeCalculator(abundanceCutoff, massPrecision);
+
+    isotopeEnvelopes_.reserve(cacheSize_);
+
+    for (unsigned int index=0; index<cacheSize_ ; ++index)
+    {
+        // estimate the peptide formula and cache the normalized distribution 
+
+        Chemistry::Formula formula = estimateFormula(indexToMass(index));
+
+        Chemistry::MassDistribution md = 
+            isotopeCalculator.distribution(formula, 0,
+                                           IsotopeCalculator::NormalizeAbundance | 
+                                           IsotopeCalculator::NormalizeMass);
+        isotopeEnvelopes_.push_back(md);
+    }
+}
+
+
+Chemistry::MassDistribution PeakDetectorMatchedFilterImpl::isotopeEnvelope(double mass) const
+{
+    // retrieve normalized distribution from cache
+
+    return isotopeEnvelopes_[massToIndex(mass)];
+}
+
+
+void PeakDetectorMatchedFilterImpl::collapseScores(const vector<Score>& scores, vector<Score>& result) const
+{
+    // assumption: scores are sorted by monoisotopic frequency 
+
+    for (vector<Score>::const_iterator it=scores.begin(); it!=scores.end(); ++it)
+    {
+        Score* last = result.empty() ? 0 : &*(result.end()-1);
+
+        if (last && abs(it->monoisotopicFrequency - last->monoisotopicFrequency) < config_.collapseRadius)
+        {
+            // collapse scores with close frequencies 
+            if (it->value > last->value)
+                *last = *it;
+        }
+        else 
+        {
+            result.push_back(*it); 
+        }
+    }
+}
+
+
+ostream& operator<<(ostream& os, const PeakDetectorMatchedFilter::Score& a)
+{
+    os << a.frequency << " (" << a.charge << ", " << a.neutronCount << ") "
+        << a.value << " " << a.monoisotopicFrequency << " " << a.monoisotopicIntensity;
+    return os;
+}
+
+
+} // namespace frequency
+} // namespace mstools
+

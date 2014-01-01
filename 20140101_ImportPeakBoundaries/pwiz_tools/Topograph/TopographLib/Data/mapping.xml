@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Topograph.Data" assembly="TopographLib">
+  <class name="DbChromatogram">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+
+    <many-to-one name="ChromatogramSet" unique-key="ChromatogramSetMz" not-null="true"/>
+    <property name="Charge" unique-key="ChromatogramSetMz" not-null="true" />
+    <property name="MassIndex" unique-key="ChromatogramSetMz" not-null="true"/>
+    <property name="MzMin" />
+    <property name="MzMax" />
+    <property name="PointsBytes" length="1000000" type="BinaryBlob" />
+    <property name="UncompressedSize" />
+  </class>
+  <class name="DbMsDataFile">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+
+    <property name="Name" not-null="true" unique-key="WorkspaceName"/>
+    <property name="Label" />
+    <property name="Cohort" />
+    <property name="TimePoint" />
+    <property name="Sample" />
+    <property name="PrecursorPool" />
+    <property name="TimesBytes" length="1000000" type="BinaryBlob" />
+    <property name="MsLevels" length="1000000" type="BinaryBlob"/>
+    <property name="TotalIonCurrentBytes" length="1000000" type="BinaryBlob" />
+  </class>
+  <class name="DbPeptide">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="ValidationStatus" not-null="true"/>
+    <property name="Note" />
+    <property name="Sequence" not-null="true" unique-key="PeptideSequence"/>
+    <property name="FullSequence" />
+    <property name="Protein" length="10000"/>
+    <property name="ProteinDescription" length="100000" />
+  </class>
+  <class name="DbTracerDef">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <many-to-one name="Workspace" not-null="true" unique-key="TracerDef"/>
+    <property name="Name" not-null="true" unique-key="TracerDef"/>
+    <property name="TracerSymbol" />
+    <property name="DeltaMass" />
+    <property name="AtomCount" />
+    <property name="AtomPercentEnrichment" />
+    <property name="IsotopesEluteEarlier" />
+    <property name="IsotopesEluteLater" />
+    <property name="InitialEnrichment" />
+    <property name="FinalEnrichment" />
+  </class>
+  <class name="DbWorkspace">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <bag name="Modifications" inverse="true">
+      <key column="Workspace"/>
+      <one-to-many class="DbModification"/>
+    </bag>
+    <property name="ModificationCount" />
+    
+    <bag name="Settings">
+      <key column="Workspace"/>
+      <one-to-many class="DbSetting"/>
+    </bag>
+    <property name="SettingCount" />
+
+    <bag name="TracerDefs">
+      <key column="Workspace"/>
+      <one-to-many class="DbTracerDef" />
+    </bag>
+    <property name="TracerDefCount" />
+
+    <property name="SchemaVersion" />
+  </class>
+  <class name="DbModification">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <many-to-one name="Workspace" />
+    <property name="Symbol" />
+    <property name="DeltaMass" />
+  </class>
+  <class name="DbSetting">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <many-to-one name="Workspace" unique-key="WorkspaceName" not-null="true"/>
+    <property name="Name" unique-key="WorkspaceName" not-null="true"/>
+    <property name="Value" length="10000"/>
+  </class>
+  <class name="DbPeak">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+
+    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysisPeakIndex" not-null="true"/>
+    <property name="PeakIndex" unique-key="PeptideFileAnalysisPeakIndex" not-null="true"/>
+    <!--<property name="Name" unique-key="PeptideFileAnalysisName" not-null="true"/>-->
+    <property name="StartTime" />
+    <property name="EndTime" />
+    <property name="Area" />
+<!--    <property name="Background" />
+    <property name="RatioToBase" />
+    <property name="RatioToBaseError" />
+    <property name="Correlation" />
+    <property name="Intercept" />
+    <property name="TracerPercent" />
+    <property name="RelativeAmount" />-->
+  </class>
+  <class name="DbPeptideFileAnalysis" lazy="true">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="ValidationStatus" not-null="true"/>
+    <property name="Note" />
+
+    <many-to-one name="PeptideAnalysis" unique-key="PeptideAnalysis" not-null="true"/>
+    <many-to-one name="ChromatogramSet" />
+    <many-to-one name="MsDataFile" unique-key="PeptideAnalysis" not-null="true"/>
+    <bag name="Peaks" cascade="delete" inverse="true">
+      <key column="PeptideFileAnalysis" />
+      <one-to-many class="DbPeak "/>
+    </bag>
+    <property name="PeakCount"/>
+    <property name="AutoFindPeak" />
+    <property name="OverrideExcludedMasses" />
+    <property name="ChromatogramStartTime" />
+    <property name="ChromatogramEndTime" />
+    <property name="BasePeakName" />
+    <property name="TracerPercent" />
+    <property name="DeconvolutionScore" />
+    <property name="PrecursorEnrichment" />
+    <property name="PrecursorEnrichmentFormula" />
+    <property name="Turnover" />
+    <property name="ExcludedMasses" type="BinaryBlob" />
+    <property name="TurnoverScore"/>
+    <property name="PsmCount" />
+    <property name="IntegrationNote" />
+  </class>
+  <class name="DbChromatogramSet">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="TimesBytes" length="1000000" type="BinaryBlob" />
+    <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>
+    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysis" not-null="true" />
+    <bag name="Chromatograms" cascade="delete" inverse="true">
+      <key column="ChromatogramSet" />
+      <one-to-many class="DbChromatogram" />
+    </bag>
+    <property name="ChromatogramCount" />
+  </class>
+  <class name="DbPeptideAnalysis">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="ValidationStatus" not-null="true"/>
+    <property name="Note" />
+    <many-to-one name="Peptide" not-null="true" unique-key="PeptideAnalysis" />
+    <property name="MinCharge" />
+    
+    <property name="MaxCharge" />
+    <property name="ExcludedMasses" type="BinaryBlob" />
+    <property name="MassAccuracy" />
+    
+    <bag name="FileAnalyses" cascade="delete" inverse="true">
+      <key column="PeptideAnalysis" />
+      <one-to-many class="DbPeptideFileAnalysis"/>
+    </bag>
+    <property name="FileAnalysisCount"/>
+  </class>
+  <class name="DbChangeLog">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <property name="InstanceIdBytes" length="16"/>
+    <property name="PeptideAnalysisId" />
+    <property name="PeptideId" />
+    <property name="MsDataFileId" />
+    <property name="WorkspaceId" />
+  </class>
+  <class name="DbLock">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="InstanceIdBytes" length="16" />
+    <property name="LockType" />
+    <property name="WorkspaceId" unique="true"/>
+    <property name="PeptideAnalysisId" unique="true"/>
+    <property name="MsDataFileId" unique="true"/>
+  </class>
+  <class name="DbPeptideSpectrumMatch">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+
+    <many-to-one name="MsDataFile" not-null="true" index="MsDataFile"/>
+    <many-to-one name="Peptide" not-null="true" index="Peptide"/>
+    <property name="RetentionTime" />
+    <property name="PrecursorMz" />
+    <property name="PrecursorCharge" />
+    <property name="ModifiedSequence" />
+  </class>
+</hibernate-mapping>

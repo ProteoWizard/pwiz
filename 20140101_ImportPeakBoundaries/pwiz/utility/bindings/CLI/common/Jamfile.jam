@@ -1,0 +1,80 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+import modules ;
+import path ;
+
+if [ modules.peek : NT ] {
+
+project
+    : requirements
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+        <conditional>@msvc-requirement
+        <define>UNICODE
+        <define>_UNICODE
+    : usage-requirements
+        <define>UNICODE
+        <define>_UNICODE
+    : default-build
+        release
+	;
+
+
+#
+# cvgen is a program that generates cv.hpp from .obo files (passed as args)
+# usage:
+#  bjam cv.hpp (creates cv.hpp in the source directory)
+#
+
+exe cvgen_cli
+    : # sources
+        cvgen_cli.cpp
+        $(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_obo
+    : # requirements
+        <library>/ext/boost//filesystem
+        <link>static
+    ;
+explicit cvgen_cli ;
+
+
+install install_cvgen_cli
+    : cvgen_cli
+    : <location>.
+    ;
+explicit install_cvgen_cli ;
+
+actions do_cvgen_cli
+{
+   echo calling bjam install_cvgen_cli
+   $(>[1]:P:T)\\..\\..\\utility\\bindings\\CLI\\common\\cvgen_cli $(>)
+}
+
+make cv.hpp : [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/common : *.obo ] : do_cvgen_cli : <dependency>install_cvgen_cli ;
+explicit cv.hpp ;
+
+
+unit-test-if-exists SharedCLITest : SharedCLITest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists UnimodTest : UnimodTest.cpp : <conditional>@unit-test-requirements ;
+
+}

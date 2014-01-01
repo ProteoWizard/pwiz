@@ -1,0 +1,109 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+project
+    : requirements 
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+lib pwiz_analysis_spectrum_processing
+    : # sources  
+        SpectrumListFactory.cpp
+        SpectrumList_Sorter.cpp
+        SpectrumList_Filter.cpp
+        SpectrumList_PrecursorRecalculator.cpp
+        SpectrumList_Smoother.cpp
+        SpectrumList_PeakPicker.cpp
+        SpectrumList_PeakFilter.cpp
+        SpectrumList_ChargeStateCalculator.cpp
+        SpectrumList_MZWindow.cpp
+        SpectrumList_MetadataFixer.cpp
+        SpectrumList_TitleMaker.cpp
+		SpectrumList_PrecursorRefine.cpp
+        SpectrumList_ZeroSamplesFilter.cpp
+        PrecursorRecalculatorDefault.cpp
+        PrecursorMassFilter.cpp
+		MS2NoiseFilter.cpp
+		MS2Deisotoper.cpp
+        ThresholdFilter.cpp
+    : # requirements
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>../peakdetect//pwiz_analysis_peakdetect
+        <library>../passive//pwiz_analysis_passive_core
+        <library>../common//pwiz_analysis_common
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+        <library>$(PWIZ_ROOT_PATH)//svm
+    : # default-build
+    : # usage-requirements
+        <library>../../data/msdata//pwiz_data_msdata
+        <library>../peakdetect//pwiz_analysis_peakdetect
+        <library>../passive//pwiz_analysis_passive_core
+        <library>../common//pwiz_analysis_common
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+        <library>$(PWIZ_ROOT_PATH)//svm
+    ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+
+unit-test-if-exists SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing ;
+
+
+# Special run targets for tests with data files.
+# We pass in single input file, to which bjam prepends the full path from current
+# Jamfile directory.  The test program can then locate its data files.
+
+run-if-exists PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing 
+    : # args
+    : PrecursorRecalculatorDefaultTest.data/5peptide.b64 # input-files
+    : # requirements
+    : PrecursorRecalculatorDefaultTest # target name
+    : # default-build
+    ;
+
+run-if-exists SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing 
+    : # args
+    : SpectrumList_PrecursorRecalculatorTest.data/5peptideFT.mzML # input-files
+    : # requirements
+    : SpectrumList_PrecursorRecalculatorTest # target name
+    : # default-build
+    ;
+
+run-if-exists SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_processing 
+    : # args
+    : SpectrumList_PrecursorRecalculatorTest.data/PrecursorRefineOrbi.mzML # input-files
+    : # requirements
+    : SpectrumList_PrecursorRefineTest # target name
+    : # default-build
+    ;
+

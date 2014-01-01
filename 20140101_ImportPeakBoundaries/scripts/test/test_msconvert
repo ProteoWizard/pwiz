@@ -1,0 +1,113 @@
+#!/bin/bash
+
+echo "test_msconvert"
+
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
+
+source scripts/include/common
+
+toolset=$(get_toolset)
+bindir=build/$toolset-release
+
+echo "toolset: $toolset"
+echo "bindir: $bindir"
+ls -ltr $bindir
+
+datafile=example_data/small.pwiz.1.1.mzML
+if [ "$toolset" = "msvc" ] ; then datafile=example_data/small.RAW ; fi
+
+outdir=build/test
+
+msconvert_exe=$bindir/msconvert
+if [ "$toolset" = "msvc" ] ; then msconvert_exe+=.exe ; fi
+
+msdiff_exe=$bindir/msdiff
+if [ "$toolset" = "msvc" ] ; then msdiff_exe+=.exe ; fi
+
+echo "datafile: $datafile"
+echo "outdir: $outdir"
+echo "msconvert_exe: $msconvert_exe"
+echo "msdiff_exe: $msdiff_exe"
+
+#
+# test for existence of executables
+#
+
+if [ ! -f $msconvert_exe ]
+then
+    echo "Couldn't find $msconvert_exe"
+    exit 1    
+fi
+
+if [ ! -f $msdiff_exe ]
+then
+    echo "Couldn't find $msdiff_exe"
+    exit 1    
+fi
+
+#
+# msconvert tests
+#
+
+rm -rf $outdir/*
+
+datafile_basename=$(basename $datafile)
+
+
+function check_diff()
+{
+    echo "assert diff $*"
+
+    if $msdiff_exe $* > /dev/null
+    then
+        echo assertion failed! 
+        exit 1
+    fi
+}
+
+function check_not_diff()
+{
+    echo "assert not diff $*"
+
+    if ! $msdiff_exe $* > /dev/null
+    then
+        echo assertion failed! 
+        exit 1
+    fi
+}
+
+
+input_ext=.mzML
+if [ "$toolset" = "msvc" ]; then input_ext=.RAW; fi
+
+
+
+output_ext=.default.mzML
+echo; echo "TEST: $output_ext"
+$msconvert_exe $datafile -o $outdir -e $output_ext > /dev/null
+outputfile_default=$outdir/${datafile_basename/$input_ext/$output_ext}
+check_not_diff $datafile $outputfile_default -i
+
+output_ext=.64.mzML
+echo; echo "TEST: $output_ext"
+$msconvert_exe $datafile -o $outdir -e $output_ext --64 > /dev/null
+outputfile_64=$outdir/${datafile_basename/$input_ext/$output_ext}
+check_not_diff $datafile $outputfile_64 -i
+check_not_diff $datafile $outputfile_64 -i -p 1e-15
+
+output_ext=.32.mzML
+echo; echo "TEST: $output_ext"
+$msconvert_exe $datafile -o $outdir -e $output_ext --32 > /dev/null
+outputfile_32=$outdir/${datafile_basename/$input_ext/$output_ext}
+check_not_diff $datafile $outputfile_32 -i
+check_diff $datafile $outputfile_32 -i -p 1e-15
+
+output_ext=.zlib.mzML
+echo; echo "TEST: $output_ext"
+$msconvert_exe $datafile -o $outdir -e $output_ext --zlib > /dev/null
+outputfile_zlib=$outdir/${datafile_basename/$input_ext/$output_ext}
+check_not_diff $outputfile_default $outputfile_zlib -i -p 1e-15
+
+
+

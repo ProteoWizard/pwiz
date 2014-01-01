@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mzXML xmlns="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/mzXML_2.0 http://sashimi.sourceforge.net/schema_revision/mzXML_2.0/mzXML_idx_2.0.xsd">
+  <msRun scanCount="4" startTime="PT353.43S" endTime="PT42.05S">
+    <parentFile fileName="file:///F:/data/Exp01/tiny1.RAW"
+                fileType="RAWData"
+                fileSha1="71be39fb2700ab2f3c8b2234b91274968b6899b1"/>
+    <msInstrument id="LCQDeca">
+      <msManufacturer category="msManufacturer" value="Thermo Finnigan"/>
+      <msModel category="msModel" value="LCQ Deca"/>
+      <msIonisation category="msIonisation" value="nanoelectrospray"/>
+      <msMassAnalyzer category="msMassAnalyzer" value="quadrupole ion trap"/>
+      <msDetector category="msDetector" value="electron multiplier"/>
+      <software type="unknown software type" name="Xcalibur" version="2.0.5"/>
+    </msInstrument>
+    <dataProcessing>
+      <software type="unknown software type" name="Xcalibur" version="2.0.5"/>
+    </dataProcessing>
+    <scan num="19"
+          scanEvent="3"
+          scanType="FULL"
+          centroided="1"
+          msLevel="1"
+          peaksCount="15"
+          polarity="+"
+          retentionTime="PT353.43S"
+          lowMz="400.38999999999999"
+          highMz="1795.5599999999999"
+          basePeakMz="445.34699999999998"
+          basePeakIntensity="120053"
+          totIonCurrent="16675500"
+          msInstrumentID="LCQDeca">
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int">AAAAAAAAAABALgAAAAAAAD/wAAAAAAAAQCwAAAAAAABAAAAAAAAAAEAqAAAAAAAAQAgAAAAAAABAKAAAAAAAAEAQAAAAAAAAQCYAAAAAAABAFAAAAAAAAEAkAAAAAAAAQBgAAAAAAABAIgAAAAAAAEAcAAAAAAAAQCAAAAAAAABAIAAAAAAAAEAcAAAAAAAAQCIAAAAAAABAGAAAAAAAAEAkAAAAAAAAQBQAAAAAAABAJgAAAAAAAEAQAAAAAAAAQCgAAAAAAABACAAAAAAAAEAqAAAAAAAAQAAAAAAAAABALAAAAAAAAD/wAAAAAAAA</peaks>
+    </scan>
+    <scan num="20"
+          scanEvent="4"
+          scanType="FULL"
+          msLevel="2"
+          peaksCount="10"
+          polarity="+"
+          retentionTime="PT359.43S"
+          collisionEnergy="35"
+          lowMz="320.38999999999999"
+          highMz="1003.5599999999999"
+          basePeakMz="456.34699999999998"
+          basePeakIntensity="23433"
+          totIonCurrent="16675500"
+          msInstrumentID="LCQDeca">
+      <precursorMz precursorScanNum="19" precursorIntensity="120053" precursorCharge="2">445.33999999999997</precursorMz>
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int">AAAAAAAAAABANAAAAAAAAEAAAAAAAAAAQDIAAAAAAABAEAAAAAAAAEAwAAAAAAAAQBgAAAAAAABALAAAAAAAAEAgAAAAAAAAQCgAAAAAAABAJAAAAAAAAEAkAAAAAAAAQCgAAAAAAABAIAAAAAAAAEAsAAAAAAAAQBgAAAAAAABAMAAAAAAAAEAQAAAAAAAAQDIAAAAAAABAAAAAAAAAAA==</peaks>
+    </scan>
+    <scan num="21"
+          scanType="FULL"
+          centroided="1"
+          msLevel="1"
+          peaksCount="0"
+          polarity="+"
+          retentionTime="PT0S"
+          lowMz=""
+          highMz=""
+          basePeakMz=""
+          basePeakIntensity=""
+          totIonCurrent="">
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int"></peaks>
+    </scan>
+    <scan num="22"
+          scanType="FULL"
+          centroided="1"
+          msLevel="1"
+          peaksCount="15"
+          polarity="+"
+          retentionTime="PT42.05S"
+          lowMz="142.38999999999999"
+          highMz="942.55999999999995"
+          basePeakMz="422.42000000000002"
+          basePeakIntensity="42"
+          totIonCurrent="4200"
+          msInstrumentID="LCQDeca">
+      <peaks precision="64"
+             byteOrder="network"
+             pairOrder="m/z-int">AAAAAAAAAABALgAAAAAAAD/wAAAAAAAAQCwAAAAAAABAAAAAAAAAAEAqAAAAAAAAQAgAAAAAAABAKAAAAAAAAEAQAAAAAAAAQCYAAAAAAABAFAAAAAAAAEAkAAAAAAAAQBgAAAAAAABAIgAAAAAAAEAcAAAAAAAAQCAAAAAAAABAIAAAAAAAAEAcAAAAAAAAQCIAAAAAAABAGAAAAAAAAEAkAAAAAAAAQBQAAAAAAABAJgAAAAAAAEAQAAAAAAAAQCgAAAAAAABACAAAAAAAAEAqAAAAAAAAQAAAAAAAAABALAAAAAAAAD/wAAAAAAAA</peaks>
+    </scan>
+  </msRun>
+  <index name="scan">
+    <offset id="19">1170</offset>
+    <offset id="20">2031</offset>
+    <offset id="21">2915</offset>
+    <offset id="22">3323</offset>
+  </index>
+  <indexOffset>4160</indexOffset>
+  <sha1>f08c3b65a9b8b415f0e9c1b735ead7f3f8a0f0fa</sha1>
+</mzXML>

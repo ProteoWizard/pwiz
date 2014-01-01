@@ -1,0 +1,29 @@
+
+body
+{
+    margin: 20px;
+	background-color: #707475;
+}
+
+
+table
+{
+    border-collapse: collapse ;
+}
+
+
+td
+{
+    border-style: solid ;
+    border-width: thin ;
+    padding: 5px ;
+}
+
+
+tr
+{
+    border-width: 1px ;
+    border-color: black ;
+}
+
+

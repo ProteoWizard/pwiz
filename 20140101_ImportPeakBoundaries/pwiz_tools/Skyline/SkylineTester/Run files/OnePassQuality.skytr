@@ -1,0 +1,42 @@
+<SkylineTester>
+  <Tabs>tabQuality</Tabs>
+  <PauseFormDelay>true</PauseFormDelay>
+  <PauseFormSeconds>0</PauseFormSeconds>
+  <PauseFormButton>false</PauseFormButton>
+  <FormsLanguage>English</FormsLanguage>
+  <FormsTree></FormsTree>
+  <PauseTutorialsDelay>true</PauseTutorialsDelay>
+  <PauseTutorialsSeconds>0</PauseTutorialsSeconds>
+  <PauseTutorialsScreenShots>false</PauseTutorialsScreenShots>
+  <TutorialsDemoMode>false</TutorialsDemoMode>
+  <TutorialsLanguage>English</TutorialsLanguage>
+  <TutorialsTree>Tutorial tests,TestAbsoluteQuantificationTutorial,TestCEOptimizationTutorial,TestCustomReportsTutorial,TestExistingExperimentsTutorial,TestGroupedStudiesTutorial,TestIrtTutorial,TestLibraryExplorerTutorial,TestMethodEditTutorial,TestMethodRefinementTutorial,TestMs1Tutorial,TestMSstatsTutorial,TestPeakPickingTutorial,TestQuasarTutorial,TestTargetedMSMSTutorial</TutorialsTree>
+  <PauseTestsScreenShots>false</PauseTestsScreenShots>
+  <Offscreen>false</Offscreen>
+  <RunLoops>true</RunLoops>
+  <RunLoopsCount>1</RunLoopsCount>
+  <RunIndefinitely>false</RunIndefinitely>
+  <TestsEnglish>true</TestsEnglish>
+  <TestsChinese>false</TestsChinese>
+  <TestsFrench>false</TestsFrench>
+  <TestsJapanese>false</TestsJapanese>
+  <TestsTree></TestsTree>
+  <RunCheckedTests>true</RunCheckedTests>
+  <SkipCheckedTests>false</SkipCheckedTests>
+  <Build32>false</Build32>
+  <Build64>true</Build64>
+  <BuildTrunk>true</BuildTrunk>
+  <BuildBranch>false</BuildBranch>
+  <BranchUrl>https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME</BranchUrl>
+  <NukeBuild>true</NukeBuild>
+  <UpdateBuild>false</UpdateBuild>
+  <IncrementalBuild>false</IncrementalBuild>
+  <StartSln>false</StartSln>
+  <QualityRunOne>true</QualityRunOne>
+  <QualityRunAt>false</QualityRunAt>
+  <QualityStartTime>6:00 PM</QualityStartTime>
+  <QualityEndTime>8:00 AM</QualityEndTime>
+  <QualityBuildType>Test default</QualityBuildType>
+  <QualityAllTests>true</QualityAllTests>
+  <QualityChooseTests>false</QualityChooseTests>
+</SkylineTester>

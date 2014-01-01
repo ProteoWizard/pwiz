@@ -1,0 +1,54 @@
+<html>
+
+<head>
+    <title>ProteoWizard Technical Documentation: msconvert</title>
+    <link rel="stylesheet" href="../main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+    <h2>msconvert</h2>
+
+    <p>
+        <i>msconvert</i> is a command line tool for converting between various file formats.
+
+        <ul>
+            <li><b>Read:</b> open formats, vendor formats (<a href="../formats/index.html">ProteoWizard supported formats</a>)</li>
+            <li><b>Write:</b> open formats</li>
+        </ul>
+
+
+        <p>
+        Examples:
+        <ul>
+            <li><code>msconvert</code><br/>
+            (prints usage information)<p/></li>
+
+            <li><code>msconvert data.RAW</code><br/>
+            (creates data.mzML in current directory)<p/></li>
+
+            <li><code>msconvert data.RAW --mzXML</code><br/>
+            (creates data.mzXML in current directory)<p/></li>
+
+            <li><code>msconvert *.RAW -o my_output_dir</code><br/>
+            (converts all files matching *.RAW to mzML, output files created in <code>my_output_dir</code>)<p/></li>
+
+            <li><code>msconvert data.RAW --zlib --filter "peakPicking true [2,3]" </code><br/>
+            (use zlib compression for binary data arrays, and use vendor centroiding for msLevels in [2,3])<p/></li>
+
+            <li><code>msconvert data.RAW --filter "msLevel 2"</code><br/>
+            (only write ms2 scans)<p/></li>
+
+            <li><code>msconvert data.RAW --filter "msLevel 2-"</code><br/>
+            (only write ms2 and higher scans)<p/></li>
+        </ul>
+        </p>
+    </p>
+
+    <hr/>
+    <a href="index.html">Tools home</a><br/>
+    <a href="../index.html">Technical documentation home</a>
+
+
+</body>
+</html>
+

@@ -1,0 +1,160 @@
+#
+# $Id$
+#
+
+import property ;
+import project ;
+import feature ;
+import set ;
+import stage ;
+import common ;
+import path ;
+import type ;
+import targets ;
+import toolset ;
+import generators ;
+import scanner ;
+import "class" : new ;
+
+# Make this module into a project.
+project.initialize $(__name__) ;
+
+rule init ( boost-root : build-dir ? : requirements * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        .boost-root = [ path.make $(boost-root) ] ;
+        project bcp : build-dir $(build-dir:E=bin) ;
+
+        path-constant BOOST_PATH : [ boost-root ] ;
+        using ext-boost : 1.54.0 : $(BOOST_PATH) ;
+
+        exe bcp
+        : # sources
+            [ path.glob $(BOOST_PATH)/../boost_aux/tools/bcp : *.cpp ] # TODO: patch changes to official bcp
+            /ext/boost//filesystem
+            /ext/boost//regex
+            /ext/boost//prg_exec_monitor
+        : # requirements
+            <variant>release
+            <link>static
+            $(requirements)
+            $(msvc-secure-scl)
+        ;
+    }
+}
+
+rule boost-root { return $(.boost-root) ; }
+
+
+
+# The action has to invoke the tool built in other
+# parts of the project. The <bcp> feature is used
+# to specify the location of the tool, and the flags
+# statement below make the full path to the tool
+# available inside the action.
+feature.feature bcp : : dependency free ;
+toolset.flags bcp.bcp COMMAND <bcp> ;
+
+type.register BCP : bcp ;
+
+actions bcp.create bind COMMAND
+{
+    @($(STDOUT):E=$(MODULE_LIST)) > "$(MODULE_LIST_FILENAME)"
+    $(COMMAND) --scan --boost=$(BOOST_PATH) --module-list-file=$(MODULE_LIST_FILENAME) $(<:D) > $(MODULE_LIST_FILENAME:P)/bcp.log 2>&1
+}
+
+class bcp-generator : generator
+{
+    import path property-set ;
+
+    rule collect-targets ( targets * )
+    {
+        # Find subvariants
+        local s ;
+        for local t in $(targets)
+        {
+            s += [ $(t).creating-subvariant ] ;
+        }
+        s = [ sequence.unique $(s) ] ;
+        
+        local result = [ new set ] ;
+        $(result).add $(targets) ;
+        
+        for local i in $(s)
+        {
+            $(i).all-referenced-targets $(result) ;
+        }
+        local result2 ;
+        for local r in [ $(result).list ]
+        {
+            if $(r:G) != <use>
+            {
+                result2 += $(r:G=) ;
+            }
+        }
+        DELETE_MODULE $(result) ;
+        result = [ sequence.unique $(result2) ] ;
+    }
+
+    rule is-source-file ( target )
+    {
+        local filepath = [ $(target).name ] ;
+        if [ MATCH "(.*\.[ch](pp|xx)?$)" : $(filepath:L) ]
+        {
+            return true ;
+        }
+    }
+
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        #for local r in $(sources) { echo "Input source: " [ $(r).actualize [ type.get-scanner [ $(r).type ] : $(property-set) ] ] [ $(r).dependencies ] ; }
+        local real-sources = [ sequence.filter is-source-file : [ collect-targets $(sources) ] ] ;
+        #for local r in $(real-sources) { echo "Real source: " [ $(r).name ] ; }
+
+        local pwd = [ path.make [ path.pwd ] ] ;
+        local modules ;
+        for local source in $(real-sources)
+        {
+            local source-path = [ $(source).name ] ;
+            source-path = [ path.make $(source-path) ] ;
+
+            if ! [ path.is-rooted $(source-path) ]
+            {
+                source-path = [ path.make [ path.join [ $(source).path ] $(source-path) ] ] ;
+                if ! [ path.is-rooted $(source-path) ]
+                {
+                    source-path = [ path.root $(source-path) $(pwd) ] ;
+                }
+            }
+
+            source-path = [ path.native $(source-path) ] ;
+            if ! $(source-path) in $(modules) { modules += $(source-path) ; }
+        }
+        #for local m in [ SORT $(modules) ] { echo "Module: " $(m) ; }
+
+        local properties = [ $(property-set).raw ] ;
+        local location = [ feature.get-values location : $(properties) ] ;
+        local host-os = [ feature.get-values host-os : $(properties) ] ;
+        local module_list_filename = [ path.native $(location:S=)_module_list.txt ] ;
+
+        local bcp = [ property.select <bcp> : [ $(property-set).raw ] ] ;
+        local t = [ generator.generated-targets $(real-sources) $(bcp:G=)
+                            : $(property-set) : $(project) $(name) ] ;
+        local actual-result = [ $(t).actualize ] ;
+        ALWAYS $(actual-result) ;
+        MODULE_LIST_FILENAME on $(actual-result) = $(module_list_filename) ;
+        MODULE_LIST on $(actual-result) = $(modules:J=\n) ;
+        return $(t) ;
+    }
+}
+
+generators.register [ new bcp-generator bcp.bcp.create true : : BCP ] ;
+
+rule copy-boost-dependencies ( target-name : sources + : requirements * )
+{
+    targets.create-typed-target BCP : [ project.current ] :
+        $(target-name) : $(sources) : $(requirements) <bcp>bcp ;
+}

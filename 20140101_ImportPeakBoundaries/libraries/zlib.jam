@@ -1,0 +1,68 @@
+#
+# $Id$
+#
+
+#~ Copyright Redshift Software, Inc. 2006.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building Zlib library <http://www.zlib.net/>.
+### Targets:
+###     /ext/zlib//z
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import common ;
+import tar ;
+
+extension.declare zlib ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+
+        version ?= default ;
+        local requirements = [ extension.define zlib $(version) : $(location) : $(options) ] ;
+
+        local sources = 
+            adler32.c
+            compress.c
+            contrib/minizip/ioapi.c
+            contrib/minizip/unzip.c
+            crc32.c
+            deflate.c
+            gzio.c
+            inffast.c
+            inflate.c
+            inftrees.c
+            uncompr.c
+            trees.c
+            zutil.c ;
+
+        local sources = $(location)/$(sources) ;
+        if ! $(sources) { errors.error "No sources found for ZLib at \"$(location)\". Check that you're passing a valid location." ; }
+
+        lib z
+            :   $(sources)
+            :   $(requirements)
+                <zlib-version>$(version)
+                <zlib-location>$(location)
+                <include>$(location)
+                <location-prefix>zlib
+                <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+                <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+                <link>shared:<define>ZLIB_DLL
+                <warnings>off
+            :
+            :   <include>$(location)
+            ;
+    }
+}

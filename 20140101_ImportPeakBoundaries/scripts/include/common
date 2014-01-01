@@ -1,0 +1,49 @@
+
+
+function get_toolset()
+{
+    if uname | grep -i darwin > /dev/null
+    then
+        echo "darwin"
+        return
+    fi
+
+    if uname | grep -i linux > /dev/null
+    then
+        echo "gcc"
+        return
+    fi
+
+    if uname | grep -i cygwin > /dev/null
+    then
+        echo "msvc"
+        return
+    fi
+
+    echo "unknown"
+}
+
+
+function get_os()
+{
+    if uname | grep -i darwin > /dev/null
+    then
+        echo "osx"
+        return
+    fi
+
+    if uname | grep -i linux > /dev/null
+    then
+        echo "linux"
+        return
+    fi
+
+    if uname | grep -i cygwin > /dev/null
+    then
+        echo "windows"
+        return
+    fi
+
+    echo "unknown"
+}
+

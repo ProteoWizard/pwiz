@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for mass in $(cat 13masses)
+do
+    echo $mass
+    for i in $(seq 1 20)
+    do
+        grep $mass $i/tlpmatches >> dist.$mass
+    done
+done
+

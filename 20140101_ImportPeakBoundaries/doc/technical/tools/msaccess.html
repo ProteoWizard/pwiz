@@ -1,0 +1,33 @@
+<html>
+
+<head>
+    <title>ProteoWizard Technical Documentation: msaccess</title>
+    <link rel="stylesheet" href="../main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+    <h2>msaccess</h2>
+    <p>
+        <i>msaccess</i> is a command line tool for extracting data and metadata from data files. 
+
+        <p>
+        Examples:
+        <ul>
+            <li><code>msaccess data.mzML -x spectrum_table</code><br/>
+            (creates data.mzML.spectrum_table.txt with summary information for all spectra)<p/></li>
+
+            <li><code>msaccess data.mzML -x "binary 0-3"</code><br/>
+            (creates files data.mzML.binary.*.txt with binary data for spectra 0 through 3)<p/></li>
+
+            <li><code>msaccess data.mzML -x image</code><br/>
+            (creates data.mzML.image* with pseudo-2D-gel image of the data file)<p/></li>
+        </ul>
+        </p>
+
+    <hr/>
+    <a href="index.html">Tools home</a><br/>
+    <a href="../index.html">Technical documentation home</a>
+
+</body>
+</html>
+

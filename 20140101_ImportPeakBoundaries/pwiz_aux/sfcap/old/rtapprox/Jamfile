@@ -1,0 +1,11 @@
+exe rtapprox
+    : rtapprox.cpp FitFromPepXML.cpp ..//pepxml ..//math ..//xerces-c
+    ..//boost_program_options ;
+
+exe predict
+    : predict.cpp FitFromPepXML.cpp ..//pepxml ..//math ..//xerces-c
+    ..//boost_program_options ;
+
+exe tabapprox
+    : tabapprox.cpp FitFromPepXML.cpp ..//pepxml ..//xerces-c ..//math 
+    ..//boost_program_options ;

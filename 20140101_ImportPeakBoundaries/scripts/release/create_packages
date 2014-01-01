@@ -1,0 +1,60 @@
+#!/bin/bash
+
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
+
+tag=$(scripts/release/get_version)
+bindir=build
+packagedir=build/packages/$tag
+
+echo "tag: $tag"
+echo "bindir: $bindir"
+echo "packagedir: $packagedir"
+
+read -p "<enter> to continue..."
+
+rm -rf $packagedir
+mkdir -p $packagedir
+
+
+package_windows=pwiz-$tag-tools-windows-i386.zip
+package_linux=pwiz-$tag-tools-linux-i386.zip
+package_osx=pwiz-$tag-tools-osx-i386.zip
+package_src=pwiz-$tag-src.tgz
+
+
+# avoid distributing some DLLs
+rm -rf $bindir/msvc-release-stage
+mkdir -p $bindir/msvc-release-stage
+cp $bindir/msvc-release/* $bindir/msvc-release-stage
+pushd $bindir/msvc-release-stage
+rm ABSciex.DataAccess.WiffFileDataReader.dll \
+   Clearcore.dll \
+   ClearCore.Storage.dll \
+   rscoree.dll \
+   MSFileReader.XRawfile2.dll \
+   fileio.dll \
+   fregistry.dll
+popd
+
+
+echo "Creating $package_windows."
+zip -j $packagedir/$package_windows $bindir/msvc-release-stage/*
+echo "Creating $package_linux."
+zip -j $packagedir/$package_linux $bindir/gcc-release/*
+echo "Creating $package_osx."
+zip -j $packagedir/$package_osx $bindir/darwin-release/*
+
+echo "Creating $package_src."
+tempdir=pwiz_$tag
+echo "staging source..."
+svn export . $packagedir/$tempdir
+pushd $packagedir
+tar czvf $package_src $tempdir
+rm -rf $tempdir
+popd
+
+echo
+echo $packagedir
+ls -lt $packagedir
+

@@ -1,0 +1,607 @@
+User Label 0: Heading1
+User Label 1: Heading2
+User Label 2: Heading3
+User Label 3: Heading4
+User Label 4: Heading5
+Record count: 20
+
+Record #1
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name1
+Sample ID: id1
+Comment: comment1
+L1 Heading1: 1head1
+L2 Heading2: 1head2
+L3 Heading3: 1head3
+L4 Heading4: 1head4
+L5 Heading5: 1head5
+Instrument Method: instmeth1
+Process Method: procmeth2
+File Name: data01
+Path: C:\Xcalibur\Data
+Position: pos1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #2
+one: 1
+Sample Type: Blank
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 11
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name2
+Sample ID: id2
+Comment: comment2
+L1 Heading1: 2head1
+L2 Heading2: 2head2
+L3 Heading3: 2head3
+L4 Heading4: 2head4
+L5 Heading5: 2head5
+Instrument Method: instmeth2
+Process Method: procmeth2
+File Name: data02
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #3
+one: 1
+Sample Type: QC
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 12
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name3
+Sample ID: id3
+Comment: comment3
+L1 Heading1: 3head1
+L2 Heading2: 3head2
+L3 Heading3: 3head3
+L4 Heading4: 3head4
+L5 Heading5: 3head5
+Instrument Method: instmeth3
+Process Method: procmeth2
+File Name: data03
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #4
+one: 1
+Sample Type: Std Bracket
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 13
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name4
+Sample ID: id4
+Comment: comment4
+L1 Heading1: 4head1
+L2 Heading2: 4head2
+L3 Heading3: 4head3
+L4 Heading4: 4head4
+L5 Heading5: 4head5
+Instrument Method: instmeth4
+Process Method: procmeth2
+File Name: data04
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #5
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 1
+Dil Factor: 0
+unknown4: 0
+Sample Name: name1
+Sample ID: id5
+Comment: comment1
+L1 Heading1: 1head1
+L2 Heading2: 1head2
+L3 Heading3: 1head3
+L4 Heading4: 1head4
+L5 Heading5: 1head5
+Instrument Method: instmeth1
+Process Method: procmeth2
+File Name: data01
+Path: C:\Xcalibur\Data
+Position: pos1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #6
+one: 1
+Sample Type: Blank
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 11
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 2
+Dil Factor: 0
+unknown4: 0
+Sample Name: name2
+Sample ID: id6
+Comment: comment2
+L1 Heading1: 2head1
+L2 Heading2: 2head2
+L3 Heading3: 2head3
+L4 Heading4: 2head4
+L5 Heading5: 2head5
+Instrument Method: instmeth2
+Process Method: procmeth2
+File Name: data02
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #7
+one: 1
+Sample Type: QC
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 12
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 3
+Dil Factor: 0
+unknown4: 0
+Sample Name: name3
+Sample ID: id7
+Comment: comment3
+L1 Heading1: 3head1
+L2 Heading2: 3head2
+L3 Heading3: 3head3
+L4 Heading4: 3head4
+L5 Heading5: 3head5
+Instrument Method: instmeth3
+Process Method: procmeth2
+File Name: data03
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #8
+one: 1
+Sample Type: Std Bracket
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 13
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 4
+Dil Factor: 0
+unknown4: 0
+Sample Name: name4
+Sample ID: id8
+Comment: comment4
+L1 Heading1: 4head1
+L2 Heading2: 4head2
+L3 Heading3: 4head3
+L4 Heading4: 4head4
+L5 Heading5: 4head5
+Instrument Method: instmeth4
+Process Method: procmeth2
+File Name: data04
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #9
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10
+Sample Wt: 0
+Sample Vol: 5
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name1
+Sample ID: id9
+Comment: comment1
+L1 Heading1: 1head1
+L2 Heading2: 1head2
+L3 Heading3: 1head3
+L4 Heading4: 1head4
+L5 Heading5: 1head5
+Instrument Method: instmeth1
+Process Method: procmeth2
+File Name: data01
+Path: C:\Xcalibur\Data
+Position: pos1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #10
+one: 1
+Sample Type: Blank
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 11
+Sample Wt: 0
+Sample Vol: 6
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name2
+Sample ID: id10
+Comment: comment2
+L1 Heading1: 2head1
+L2 Heading2: 2head2
+L3 Heading3: 2head3
+L4 Heading4: 2head4
+L5 Heading5: 2head5
+Instrument Method: instmeth2
+Process Method: procmeth2
+File Name: data02
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #11
+one: 1
+Sample Type: QC
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 12
+Sample Wt: 0
+Sample Vol: 7
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name3
+Sample ID: id11
+Comment: comment3
+L1 Heading1: 3head1
+L2 Heading2: 3head2
+L3 Heading3: 3head3
+L4 Heading4: 3head4
+L5 Heading5: 3head5
+Instrument Method: instmeth3
+Process Method: procmeth2
+File Name: data03
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #12
+one: 1
+Sample Type: Std Bracket
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 13
+Sample Wt: 0
+Sample Vol: 8
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name4
+Sample ID: id12
+Comment: comment4
+L1 Heading1: 4head1
+L2 Heading2: 4head2
+L3 Heading3: 4head3
+L4 Heading4: 4head4
+L5 Heading5: 4head5
+Instrument Method: instmeth4
+Process Method: procmeth2
+File Name: data04
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #13
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10
+Sample Wt: 1
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name1
+Sample ID: id13
+Comment: comment1
+L1 Heading1: 1head1
+L2 Heading2: 1head2
+L3 Heading3: 1head3
+L4 Heading4: 1head4
+L5 Heading5: 1head5
+Instrument Method: instmeth1
+Process Method: procmeth2
+File Name: data01
+Path: C:\Xcalibur\Data
+Position: pos1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #14
+one: 1
+Sample Type: Blank
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 11
+Sample Wt: 2
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name2
+Sample ID: id14
+Comment: comment2
+L1 Heading1: 2head1
+L2 Heading2: 2head2
+L3 Heading3: 2head3
+L4 Heading4: 2head4
+L5 Heading5: 2head5
+Instrument Method: instmeth2
+Process Method: procmeth2
+File Name: data02
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #15
+one: 1
+Sample Type: QC
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 12
+Sample Wt: 3
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name3
+Sample ID: id15
+Comment: comment3
+L1 Heading1: 3head1
+L2 Heading2: 3head2
+L3 Heading3: 3head3
+L4 Heading4: 3head4
+L5 Heading5: 3head5
+Instrument Method: instmeth3
+Process Method: procmeth2
+File Name: data03
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #16
+one: 1
+Sample Type: Std Bracket
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 13
+Sample Wt: 4
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 0
+unknown4: 0
+Sample Name: name4
+Sample ID: id16
+Comment: comment4
+L1 Heading1: 4head1
+L2 Heading2: 4head2
+L3 Heading3: 4head3
+L4 Heading4: 4head4
+L5 Heading5: 4head5
+Instrument Method: instmeth4
+Process Method: procmeth2
+File Name: data04
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #17
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 10
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 1
+unknown4: 0
+Sample Name: name1
+Sample ID: id1
+Comment: comment1
+L1 Heading1: 1head1
+L2 Heading2: 1head2
+L3 Heading3: 1head3
+L4 Heading4: 1head4
+L5 Heading5: 1head5
+Instrument Method: instmeth1
+Process Method: procmeth2
+File Name: data01
+Path: C:\Xcalibur\Data
+Position: pos1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #18
+one: 1
+Sample Type: Blank
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 11
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 2
+unknown4: 0
+Sample Name: name2
+Sample ID: id2
+Comment: comment2
+L1 Heading1: 2head1
+L2 Heading2: 2head2
+L3 Heading3: 2head3
+L4 Heading4: 2head4
+L5 Heading5: 2head5
+Instrument Method: instmeth2
+Process Method: procmeth2
+File Name: data02
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #19
+one: 1
+Sample Type: QC
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 12
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 3
+unknown4: 0
+Sample Name: name3
+Sample ID: id3
+Comment: comment3
+L1 Heading1: 3head1
+L2 Heading2: 3head2
+L3 Heading3: 3head3
+L4 Heading4: 3head4
+L5 Heading5: 3head5
+Instrument Method: instmeth3
+Process Method: procmeth2
+File Name: data03
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #20
+one: 1
+Sample Type: Std Bracket
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 13
+Sample Wt: 0
+Sample Vol: 0
+ISTD Amt: 0
+Dil Factor: 4
+unknown4: 0
+Sample Name: name4
+Sample ID: id4
+Comment: comment4
+L1 Heading1: 4head1
+L2 Heading2: 4head2
+L3 Heading3: 4head3
+L4 Heading4: 4head4
+L5 Heading5: 4head5
+Instrument Method: instmeth4
+Process Method: procmeth2
+File Name: data04
+Path: C:\Xcalibur\Data
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+

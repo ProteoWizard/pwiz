@@ -1,0 +1,98 @@
+<html>
+<!--
+FILE: BlibToMs2.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 5/10/11
+PROJECT: BiblioSpec
+-->
+<head>
+<title>BlibToMS2</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibToMS2</h1></center>
+
+<blockquote>
+
+<p>
+<b>Description:</b>&nbsp;&nbsp;Write an MS2 file that contains all
+spectra in a library.
+
+<p>
+<b>Usage:</b><code>  BlibToMS2 [options] &nbsp;&lt;library&gt; </code>
+
+<p>
+<b>Input:</b>
+<ul>
+
+<li>
+<code>&lt;library&gt;</code> &ndash; a spectrum library file, filtered
+or redundant.
+
+</ul>
+
+<p>
+<b>Output:</b>&nbsp;&nbsp;The spectra are printed to a file named
+&lt;library&gt;.ms2 in the <a href="fileFormats.html#ms2">MS2</a>
+format.  The scan number is replaced with the library ID number.  Two
+'D' lines contain the peptide sequence with and without
+modifications. 
+
+<p><b>Options:</b>
+<ul>
+
+<li>
+<code>-f [ --file-name ] &lt;ms2 file&gt;</code>&ndash;
+Use this name for the output MS2 file rather than the default name,
+&lt;library&gt.ms2.
+
+<li>
+<code>-m [ --mz-precision ] &lt;num&gt;</code>&ndash;
+Write the peak m/z values with this many digits of precision.  Default 2.
+
+<li>
+<code>-i [ --intenisty-precision ] &lt;num&gt;</code>&ndash;
+Write the peak intensity values with this many digits of precision.
+Default 1.
+
+<li>
+<code>-p [ --parameter-file ] &lt;file&gt;</code> &ndash;
+Specify parameters in a separate file.  Command line vales override
+the file.
+
+<li>
+<code>-v [ --verbose ] &lt;silent|error|status|warn&gt;</code> &ndash;
+Set the verbosity level of the output to stderr.  The default level is
+status.
+
+<li>
+<code>-h [ --help ]</code> &ndash;
+Print the help message.
+</ul>
+
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+-->
+
+
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

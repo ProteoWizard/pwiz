@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<mzIdentML id="" creationDate="2009-06-23T11:04:10" version="1.0.0" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.0 ../schema/mzIdentML1.0.0.xsd" xmlns="http://psidev.info/psi/pi/mzIdentML/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cvList>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.26.0" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+    <cv id="UNIMOD" fullName="" version="19:11:2008" URI=""/>
+    <cv id="UO" fullName="Unit Ontology" version="14:07:2009" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
+  </cvList>
+  <AnalysisSoftwareList>
+    <AnalysisSoftware id="AS_mascot_server" name="Mascot Server" version="2.2.101" URI="http://www.matrixscience.com/search_form_select.html">
+      <ContactRole Contact_ref="ORG_MSL">
+        <role>
+          <cvParam cvRef="MS" accession="MS:1001267" name="software vendor" value=""/>
+        </role>
+      </ContactRole>
+      <SoftwareName>
+        <cvParam cvRef="MS" accession="MS:1001207" name="Mascot" value=""/>
+      </SoftwareName>
+      <Customizations>No customizations</Customizations>
+    </AnalysisSoftware>
+    <AnalysisSoftware id="AS_mascot_parser" name="Mascot Parser">
+      <SoftwareName>
+        <cvParam cvRef="MS" accession="MS:1001478" name="Mascot Parser" value=""/>
+      </SoftwareName>
+    </AnalysisSoftware>
+  </AnalysisSoftwareList>
+  <Provider id="PROVIDER">
+    <ContactRole Contact_ref="PERSON_DOC_OWNER">
+      <role>
+        <cvParam cvRef="MS" accession="MS:1001271" name="researcher" value=""/>
+      </role>
+    </ContactRole>
+  </Provider>
+  <AuditCollection>
+    <Person id="" lastName="" firstName="" midInitials="">
+      <affiliations Organization_ref="ORG_MSL"/>
+    </Person>
+    <Person id="PERSON_DOC_OWNER" email="dcreasy@matrixscience.com" lastName="David Creasy" firstName="" midInitials="">
+      <affiliations Organization_ref="ORG_DOC_OWNER"/>
+    </Person>
+    <Organization id="ORG_MSL" name="Matrix Science Limited" address="64 Baker Street, London W1U 7GB, UK" phone="+44 (0)20 7486 1050" email="support@matrixscience.com" fax="+44 (0)20 7224 1344"/>
+    <Organization id="ORG_DOC_OWNER"/>
+  </AuditCollection>
+  <SequenceCollection>
+    <DBSequence id="DBSeq_Bombessin" length="14" accession="Bombessin" SearchDatabase_ref="SDB_5peptideMix">
+      <seq>QQRLGNQWAVGHLM</seq>
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="Bombessin B-4272 pGlu-Gln-Arg-Leu-Gly-Asn-Gln-Trp-Ala-Val-Gly-His-Leu-Met-NH2 (C71 H110 N24 O18 S1) ?(C71 H111 N23 O20 S1) H+ Adducts: 1619.8223, 810.4148, 540.6123, 405.7110"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_Neurotensin" length="13" accession="Neurotensin" SearchDatabase_ref="SDB_5peptideMix">
+      <seq>QLYENKPRRPYIL</seq>
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="Neurotensin: N-6383 pGlu-Leu-Tyr-Glu-Asn-Lys-Pro-Arg-Arg-Pro-Tyr-Ile-Leu  (C78 H121 N21 O20) H+ Adducts: 1672.9170, 836.9621, 558.3105, 418.9847, 335.3892"/>
+    </DBSequence>
+    <DBSequence id="DBSeq_HSP71_RAT" length="641" accession="HSP71_RAT" SearchDatabase_ref="SDB_SwissProt">
+      <seq>MAKKTAIGIDLGTTYSCVGVFQHGKVEIIANDQGNRTTPSYVAFTDTERLIGDAAKNQVALNPQNTVFDAKRLIGRKFGDPVVQSDMKHWPFQVVNDGDKPKVQVNYKGENRSFYPEEISSMVLTKMKEIAEAYLGHPVTNAVITVPAYFNDSQRQATKDAGVIAGLNVLRIINEPTAAAIAYGLDRTGKGERNVLIFDLGGGTFDVSILTIDDGIFEVKATAGDTHLGGEDFDNRLVSHFVEEFKRKHKKDISQNKRAVRRLRTACERAKRTLSSSTQASLEIDSLFEGIDFYTSITRARFEELCSDLFRGTLEPVEKALRDAKLDKAQIHDLVLVGGSTRIPKVQKLLQDFFNGRDLNKSINPDEAVAYGAAVQAAILMGDKSENVQDLLLLDVAPLSLGLETAGGVMTALIKRNSTIPTKQTQTFTTYSDNQPGVLIQVYEGERAMTRDNNLLGRFELSGIPPAPRGVPQIEVTFDIDANGILNVTATDKSTGKANKITITNDKGRLSKEEIERMVQEAERYKAEDEVQRERVAAKNALESYAFNMKSAVEDEGLKGKISEADKKKVLDKCQEVISWLDSNTLAEKEEFVHKREELERVCNPIISGLYQGAGAPGAGGFGAQAPKGGSGSGPTIEEVD</seq>
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="Heat shock 70 kDa protein 1A/1B (Heat shock 70 kDa protein 1/2) (HSP70.1/2) - Rattus norvegicus (Rat)"/>
+      <cvParam cvRef="MS" accession="MS:1001469" name="taxonomy: scientific name" value="Rattus norvegicus"/>
+      <cvParam cvRef="MS" accession="MS:1001467" name="taxonomy: NCBI TaxID" value="10116"/>
+    </DBSequence>
+    <Peptide id="peptide_1_1">
+      <peptideSequence>QLYENKPRRPYIL</peptideSequence>
+      <Modification>
+        <cvParam cvRef="UNIMOD" accession="UNIMOD:28" name="Gln-&gt;pyro-Glu" value=""/>
+      </Modification>
+    </Peptide>
+    <Peptide id="peptide_11_1">
+      <peptideSequence>RPKPQQFFGLM</peptideSequence>
+    </Peptide>
+    <Peptide id="peptide_13_1">
+      <peptideSequence>RPKPQQFFGLM</peptideSequence>
+    </Peptide>
+  </SequenceCollection>
+  <AnalysisCollection>
+    <SpectrumIdentification id="SI" SpectrumIdentificationProtocol_ref="SIP" SpectrumIdentificationList_ref="SIL_1" activityDate="2009-05-21T17:01:53">
+      <InputSpectra SpectraData_ref="SD_1"/>
+      <SearchDatabase SearchDatabase_ref="SDB_5peptideMix"/>
+    </SpectrumIdentification>
+    <ProteinDetection id="PD_1" ProteinDetectionProtocol_ref="PDP_MascotParser_1" ProteinDetectionList_ref="PDL_1" activityDate="2009-06-30T15:36:35">
+      <InputSpectrumIdentifications SpectrumIdentificationList_ref="SIL_1"/>
+    </ProteinDetection>
+  </AnalysisCollection>
+  <AnalysisProtocolCollection>
+    <SpectrumIdentificationProtocol id="SIP" AnalysisSoftware_ref="AS_mascot_server">
+      <SearchType>
+        <cvParam cvRef="MS" accession="MS:1001083" name="ms-ms search" value=""/>
+      </SearchType>
+      <AdditionalSearchParams>
+        <cvParam cvRef="MS" accession="MS:1001211" name="parent mass type mono" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001108" name="param: a ion" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001146" name="param: a ion-NH3" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001118" name="param: b ion" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001149" name="param: b ion-NH3" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001262" name="param: y ion" value=""/>
+        <cvParam cvRef="MS" accession="MS:1001151" name="param: y ion-NH3" value=""/>
+      </AdditionalSearchParams>
+      <ModificationParams>
+        <SearchModification fixedMod="false">
+          <ModParam massDelta="-17.026548999999999" residues="Q">
+            <cvParam cvRef="UNIMOD" accession="UNIMOD:28" name="Gln-&gt;pyro-Glu" value=""/>
+          </ModParam>
+          <SpecificityRules>
+            <cvParam cvRef="MS" accession="MS:1001189" name="modification specificity N-term" value=""/>
+          </SpecificityRules>
+        </SearchModification>
+      </ModificationParams>
+      <Enzymes>
+        <Enzyme id="ENZ_0" CTermGain="OH" NTermGain="H" missedCleavages="1">
+          <SiteRegexp>(?&lt;=[KR])(?!P)</SiteRegexp>
+          <EnzymeName>
+            <cvParam cvRef="MS" accession="MS:1001251" name="Trypsin" value=""/>
+          </EnzymeName>
+        </Enzyme>
+      </Enzymes>
+      <MassTable id="MT" msLevel="1 2">
+        <Residue Code="A" Mass="71.037114000000003"/>
+        <AmbiguousResidue Code="B">
+          <cvParam cvRef="MS" accession="MS:1001360" name="alternate single letter codes" value=""/>
+        </AmbiguousResidue>
+      </MassTable>
+      <FragmentTolerance>
+        <cvParam cvRef="MS" accession="MS:1001412" name="search tolerance plus value" value="0.6" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+        <cvParam cvRef="MS" accession="MS:1001413" name="search tolerance minus value" value="0.6" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+      </FragmentTolerance>
+      <ParentTolerance>
+        <cvParam cvRef="MS" accession="MS:1001412" name="search tolerance plus value" value="3" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+        <cvParam cvRef="MS" accession="MS:1001413" name="search tolerance minus value" value="3" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+      </ParentTolerance>
+      <Threshold>
+        <cvParam cvRef="MS" accession="MS:1001316" name="mascot:SigThreshold" value="0.05"/>
+      </Threshold>
+      <DatabaseFilters>
+        <Filter>
+          <FilterType>
+            <cvParam cvRef="MS" accession="MS:1001020" name="DB filter taxonomy" value=""/>
+          </FilterType>
+        </Filter>
+      </DatabaseFilters>
+    </SpectrumIdentificationProtocol>
+    <ProteinDetectionProtocol id="PDP_MascotParser_1" AnalysisSoftware_ref="AS_mascot_parser">
+      <AnalysisParams>
+        <cvParam cvRef="MS" accession="MS:1001316" name="mascot:SigThreshold" value="0.05"/>
+        <cvParam cvRef="MS" accession="MS:1001317" name="mascot:MaxProteinHits" value="Auto"/>
+        <cvParam cvRef="MS" accession="MS:1001318" name="mascot:ProteinScoringMethod" value="MudPIT"/>
+        <cvParam cvRef="MS" accession="MS:1001319" name="mascot:MinMSMSThreshold" value="0"/>
+        <cvParam cvRef="MS" accession="MS:1001320" name="mascot:ShowHomologousProteinsWithSamePeptides" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1001321" name="mascot:ShowHomologousProteinsWithSubsetOfPeptides" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1001322" name="mascot:RequireBoldRed" value="0"/>
+        <cvParam cvRef="MS" accession="MS:1001323" name="mascot:UseUnigeneClustering" value="false"/>
+        <cvParam cvRef="MS" accession="MS:1001324" name="mascot:IncludeErrorTolerantMatches" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1001325" name="mascot:ShowDecoyMatches" value="0"/>
+      </AnalysisParams>
+      <Threshold>
+        <cvParam cvRef="MS" accession="MS:1001316" name="mascot:SigThreshold" value="0.05"/>
+      </Threshold>
+    </ProteinDetectionProtocol>
+  </AnalysisProtocolCollection>
+  <DataCollection>
+    <Inputs>
+      <SourceFile id="SF_1" location="file:///../data/Mascot_mzml_example.dat">
+        <fileFormat>
+          <cvParam cvRef="MS" accession="MS:1001199" name="Mascot DAT file" value=""/>
+        </fileFormat>
+      </SourceFile>
+      <SearchDatabase id="SDB_5peptideMix" name="5peptideMix" location="file:///c:/inetpub/mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta" version="5peptideMix_20090515.fasta" releaseDate="5peptideMix_20090515.fasta" numDatabaseSequences="5" numResidues="52">
+        <fileFormat>
+          <cvParam cvRef="MS" accession="MS:1001348" name="FASTA format" value=""/>
+        </fileFormat>
+        <DatabaseName>
+          <userParam name="5peptideMix_20090515.fasta"/>
+        </DatabaseName>
+      </SearchDatabase>
+      <SearchDatabase id="SDB_SwissProt" name="SwissProt" location="file:///C:/inetpub/mascot/sequence/SwissProt/current/SwissProt_51.6.fasta" version="SwissProt_51.6.fasta" releaseDate="SwissProt_51.6.fasta" numDatabaseSequences="5" numResidues="52">
+        <fileFormat>
+          <cvParam cvRef="MS" accession="MS:1001348" name="FASTA format" value=""/>
+        </fileFormat>
+        <DatabaseName>
+          <userParam name="SwissProt_51.6.fasta"/>
+        </DatabaseName>
+        <cvParam cvRef="MS" accession="MS:1001073" name="database type amino acid" value=""/>
+      </SearchDatabase>
+      <SpectraData id="SD_1" location="file:///small.pwiz.1.1.mzML">
+        <fileFormat>
+          <cvParam cvRef="MS" accession="MS:1000584" name="mzML file" value=""/>
+        </fileFormat>
+        <spectrumIDFormat>
+          <cvParam cvRef="MS" accession="MS:1000774" name="multiple peak list nativeID format" value=""/>
+        </spectrumIDFormat>
+      </SpectraData>
+    </Inputs>
+    <AnalysisData>
+      <SpectrumIdentificationList id="SIL_1" numSequencesSearched="5">
+        <FragmentationTable>
+          <Measure id="m_mz">
+            <cvParam cvRef="MS" accession="MS:1001225" name="product ion m/z" value=""/>
+          </Measure>
+          <Measure id="m_intensity">
+            <cvParam cvRef="MS" accession="MS:1001226" name="product ion intensity" value=""/>
+          </Measure>
+          <Measure id="m_error">
+            <cvParam cvRef="MS" accession="MS:1001227" name="product ion m/z error" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+          </Measure>
+        </FragmentationTable>
+        <SpectrumIdentificationResult id="SIR_1" spectrumID="controllerType=0 controllerNumber=1 scan=33" SpectraData_ref="SD_1">
+          <SpectrumIdentificationItem id="SII_1_1" chargeState="3" experimentalMassToCharge="558.75" calculatedMassToCharge="557.30321233333302" calculatedPI="0" Peptide_ref="peptide_1_1" rank="1" passThreshold="true">
+            <PeptideEvidence id="PE_1_1_Neurotensin" DBSequence_Ref="DBSeq_Neurotensin" start="1" end="13" pre="-" post="-" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
+            <PeptideEvidence id="PE_19_1_Bombessin_0" DBSequence_Ref="DBSeq_Bombessin" start="1" end="14" pre="-" post="-" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
+            <PeptideEvidence id="PE_20_1_Bombessin_0" DBSequence_Ref="DBSeq_Bombessin" start="1" end="14" pre="-" post="-" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
+            <PeptideEvidence id="PE_2_1_HSP71_RAT_0" DBSequence_Ref="DBSeq_HSP71_RAT" start="37" end="49" pre="R" post="L" isDecoy="false" missedCleavages="1">
+            </PeptideEvidence>
+            <cvParam cvRef="MS" accession="MS:1001171" name="mascot:score" value="15.71"/>
+            <cvParam cvRef="MS" accession="MS:1001172" name="mascot:expectation value" value="0.0268534444565851"/>
+            <Fragmentation>
+              <IonType index="2 3 4 5 6 7 " charge="1">
+                <cvParam cvRef="MS" accession="MS:1001229" name="frag: a ion" value=""/>
+                <FragmentArray values="197.056 360.125 489.168 603.244 731.076 828.637 " Measure_ref="m_mz"/>
+              </IonType>
+            </Fragmentation>
+          </SpectrumIdentificationItem>
+        </SpectrumIdentificationResult>
+      </SpectrumIdentificationList>
+      <ProteinDetectionList id="PDL_1">
+        <ProteinAmbiguityGroup id="PAG_hit_1">
+          <ProteinDetectionHypothesis id="PDH_Bombessin" DBSequence_ref="DBSeq_Bombessin" passThreshold="true">
+            <PeptideHypothesis PeptideEvidence_Ref="PE_19_1_Bombessin_0"/>
+            <PeptideHypothesis PeptideEvidence_Ref="PE_20_1_Bombessin_0"/>
+            <cvParam cvRef="MS" accession="MS:1001171" name="mascot:score" value="164.4"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="100"/>
+            <cvParam cvRef="MS" accession="MS:1001097" name="distinct peptide sequences" value="7"/>
+          </ProteinDetectionHypothesis>
+          <ProteinDetectionHypothesis id="PDH_HSP71_RAT" DBSequence_ref="DBSeq_HSP71_RAT" passThreshold="true">
+            <PeptideHypothesis PeptideEvidence_Ref="PE_2_1_HSP71_RAT_0"/>
+            <cvParam cvRef="MS" accession="MS:1001171" name="mascot:score" value="40.95"/>
+            <cvParam cvRef="MS" accession="MS:1001093" name="sequence coverage" value="2"/>
+            <cvParam cvRef="MS" accession="MS:1001097" name="distinct peptide sequences" value="1"/>
+            <cvParam cvRef="MS" accession="MS:1001125" name="manual validation" value=""/>
+          </ProteinDetectionHypothesis>
+        </ProteinAmbiguityGroup>
+      </ProteinDetectionList>
+    </AnalysisData>
+  </DataCollection>
+</mzIdentML>

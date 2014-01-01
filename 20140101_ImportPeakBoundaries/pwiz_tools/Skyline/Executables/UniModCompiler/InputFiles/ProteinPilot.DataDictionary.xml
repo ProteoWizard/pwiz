@@ -1,0 +1,7752 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<DataDictionary>
+
+
+
+
+<!-- ___________________________________ IMPORTANT MESSAGE ____________________________________________________________ -->
+
+
+<!-- IMPORTANT - THIS FILE CONTAINS FUNCTIONS THAT ARE BETA AND MAY HAVE HAD LITTLE OR NO TESTING                   	-->
+<!-- This is a non-standard document that includes additions made since the release of Version 4.0		    	-->
+<!-- These additions are being provided to you as a convenience to provide a starting point.                        	-->
+<!-- You can at least evaluate whether a new function is useful to you or not.                                      	-->
+<!-- If you have informatics expertise, you may also be able to further optimize the starting point provided here.  	-->
+<!-- Please report both successful and unsuccessful use of any of these new functions, as well as improvements.     	-->
+<!-- Successful new functions will be added to the next release of ProteinPilot Software.                        	-->
+
+
+<!-- 	    Additions to this file since version 4.0 are:                                                             	-->
+
+<!-- 		- Added Sec to Dha conversion needed for finding U residues when no cys alkyation is used 	        -->
+<!-- 		- Added Selenocys as a target of oxidation, dioxidation, and dehydro (half a disulfide analog) 	        -->
+<!-- 		- Triplex SILAC test for setting  SILAC (Lys+4, Arg+6),(Lys+8, Arg+10)	 			 	-->
+<!-- 		- Added mTRAQ permessive settings to allow other mods to be founds on mTRAQ targets 	 	        -->
+<!-- 		- Added Lys+4, Arg+10 SILAC					 	 	      			-->
+<!-- 		- Added dimethyl lys quant scheme				 	 	      			-->
+<!-- 		- Removed incorrect proline specificity on peptide termnial dimethylation - is only for protein term	-->
+<!-- 		- Added isotopic bleed mods on Pro and Glu to Lys+6, Arg+10 SILAC scheme     			 	-->
+<!-- 		- Added TMT cold, 2plex, and 6plex for ID only						     		-->
+<!-- 		- Shifted all SILAC sets over to split search scheme					     		-->
+<!-- 		- Renumbered CNBr set from 131 to 161 to make room for more SILAC			     		-->
+<!-- 		- Added thermolysin digest definition							     		-->
+<!-- 		- Added mTRAQ triplex with quantitation and permissive variant			     			-->
+<!-- 		- Added Lys+4 triplex SILAC two ways - one with 4xDeuterium, one with 2xC-13				-->
+<!-- 		- Raised the probability of phos-Y in phos-Y affinity special factor					-->
+<!-- 		- Triplex SILAC (Lys+4, Arg+4),(Lys+8, Arg+10)	- different medium label on R 				-->
+<!-- 		- additional dimethyl quant variant - Dimethyl +0,+4 (Peptide Labeled) 					-->
+<!-- 		- additional dimethyl quant variant - Dimethyl +0,+8 (Peptide Labeled) 					-->
+<!-- 		- additional dimethyl triplex variant - Dimethyl +0,+4,+8 (Peptide Labeled)				-->
+<!-- 		- hack for N-15 labeled samples										-->
+<!-- 		- RABA +0, +6 duplex											-->
+<!-- 		- Added Iodo-thyroxine mods enrichment set								-->
+<!-- 		- Split orbi-orbi to two settings, allowing sub-ppm option on survey for newer instruments		-->
+<!-- 		- Added protein-level TMT labeling support								-->
+<!-- 		- Added isotopic labels needed for AQUA with MRMPilot - Phe+10, Ala+3 					--> 
+<!-- 		- Added Leucine 3xDeuterium SILAC (not advised for AB SCIEX ESI data)		 			-->
+<!-- 		- Changed TLC for 3xC-13 to +3a since previous TLC was already assigned		 			-->
+<!-- 		- reverted name change for orginal Orbi-Orbi setting to avoid breaking existing search methods		-->
+<!-- 		- Added triplex Arg +0,+5,+10 scheme									-->
+<!-- 		- Changed previous +4a TLC to +4b and added new mod Label:13C(3)15N(1)					-->
+<!-- 		- Added Steen lab "TestCHB_1" per ASMS2011 presentations showing 5plex SILAC				-->
+<!-- 		- Changed O-16 vs. O-18 quant scheme to use new separate search mechanism				-->
+<!-- 		- Added trypsin definition to support MSIPI database's use of J as a delimiter				-->
+<!-- 		- Defined J as Leucine or Isoleucine and defined residue O as Pyrrolysine. Were previously undefined	-->
+<!-- 		- Added duplex SILAC Lys +8, Arg +10, Glu+6, Asp+5							-->
+<!-- 		- fixed mistake in Arg+5, Arg+10 triplex - medium plex was missing 					-->
+<!-- 		- Capitalized Light, Medium, Heavy consistently			 					-->
+
+
+
+<!-- __________________________________________________________________________________________________________________ -->
+
+
+
+
+
+
+
+
+
+
+<!-- ______________________________  DATA DICTIONARY TABLE OF CONTENTS ________________________________________________ -->
+
+
+<!-- 		Element definitions											-->
+
+
+<!-- 		Amino acid definitions											-->
+
+
+<!-- 		Modification definitions										-->
+
+<!-- 			Biological modifications									-->
+<!-- 			Mods that are both natural and artifact								-->
+<!-- 			Cysteine alkylation modifications 								-->
+<!-- 			Workup modifications										-->
+<!-- 			Isotopic label and differential expression modifications					-->
+<!-- 			Modifications resulting from digestion								-->
+<!-- 			Xenobiotic modifications									-->
+
+
+<!-- 		Cleavage agent definitions										-->
+
+
+<!-- 		Adduct ion definitions											-->
+
+
+
+
+<!-- 		A NOTE ON ALPHABETIZATION OF MODS:									-->
+<!-- 			Derivatives of modifications are grouped together with the base name.				-->
+<!-- 			For example, tri- and di- oxidation are listed after the base modification oxidation.	 	-->
+<!-- 			The same is true for terminal specificity variants of modifications and older names.	 	-->
+
+<!-- __________________________________________________________________________________________________________________ -->
+
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- ELEMENT DEFINITION SECTION -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<El rKey="1">
+		<Nme>Hydrogen</Nme>
+		<ANr>1</ANr>
+		<Sym>H</Sym>
+		<Iso>
+			<Mss>1.007825032</Mss>
+			<Pry>0.99985</Pry>
+		</Iso>
+		<Iso>
+			<Mss>2.014101778</Mss>
+			<Pry>0.00015</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Helium</Nme>
+		<ANr>2</ANr>
+		<Sym>He</Sym>
+		<Iso>
+			<Mss>4.00260325</Mss>
+			<Pry>0.99999863</Pry>
+		</Iso>
+		<Iso>
+			<Mss>3.01629309</Mss>
+			<Pry>1.37e-06</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Lithium</Nme>
+		<ANr>3</ANr>
+		<Sym>Li</Sym>
+		<Iso>
+			<Mss>7.0160041</Mss>
+			<Pry>0.925</Pry>
+		</Iso>
+		<Iso>
+			<Mss>6.0151223</Mss>
+			<Pry>0.075</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Berylium</Nme>
+		<ANr>4</ANr>
+		<Sym>Be</Sym>
+		<Iso>
+			<Mss>9.0121822</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Boron</Nme>
+		<ANr>5</ANr>
+		<Sym>B</Sym>
+		<Iso>
+			<Mss>11.0093055</Mss>
+			<Pry>0.801</Pry>
+		</Iso>
+		<Iso>
+			<Mss>10.0129371</Mss>
+			<Pry>0.199</Pry>
+		</Iso>
+	</El>
+	<El rKey="1">
+		<Nme>Carbon</Nme>
+		<ANr>6</ANr>
+		<Sym>C</Sym>
+		<Iso>
+			<Mss>12</Mss>
+			<Pry>0.9893</Pry>
+		</Iso>
+		<Iso>
+			<Mss>13.00335839</Mss>
+			<Pry>0.0107</Pry>
+		</Iso>
+		<Iso>
+			<Mss>14.00324199</Mss>
+			<Pry>0</Pry>
+		</Iso>
+	</El>
+	<El rKey="1">
+		<Nme>Nitrogen</Nme>
+		<ANr>7</ANr>
+		<Sym>N</Sym>
+		<Iso>
+			<Mss>14.00307401</Mss>
+			<Pry>0.99632</Pry>
+		</Iso>
+		<Iso>
+			<Mss>15.00010897</Mss>
+			<Pry>0.00368</Pry>
+		</Iso>
+	</El>
+	<El rKey="1">
+		<Nme>Oxygen</Nme>
+		<ANr>8</ANr>
+		<Sym>O</Sym>
+		<Iso>
+			<Mss>15.99491462</Mss>
+			<Pry>0.99757</Pry>
+		</Iso>
+		<Iso>
+			<Mss>17.99916</Mss>
+			<Pry>0.00205</Pry>
+		</Iso>
+		<Iso>
+			<Mss>16.9991315</Mss>
+			<Pry>0.00038</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Fluorine</Nme>
+		<ANr>9</ANr>
+		<Sym>F</Sym>
+		<Iso>
+			<Mss>18.9984032</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Neon</Nme>
+		<ANr>10</ANr>
+		<Sym>Ne</Sym>
+		<Iso>
+			<Mss>19.99244018</Mss>
+			<Pry>0.9048</Pry>
+		</Iso>
+		<Iso>
+			<Mss>21.9913855</Mss>
+			<Pry>0.0925</Pry>
+		</Iso>
+		<Iso>
+			<Mss>20.99384674</Mss>
+			<Pry>0.0027</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Sodium</Nme>
+		<ANr>11</ANr>
+		<Sym>Na</Sym>
+		<Iso>
+			<Mss>22.9897697</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Magnesium</Nme>
+		<ANr>12</ANr>
+		<Sym>Mg</Sym>
+		<Iso>
+			<Mss>23.9850419</Mss>
+			<Pry>0.7899</Pry>
+		</Iso>
+		<Iso>
+			<Mss>25.982593</Mss>
+			<Pry>0.1101</Pry>
+		</Iso>
+		<Iso>
+			<Mss>24.985837</Mss>
+			<Pry>0.1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Aluminum</Nme>
+		<ANr>13</ANr>
+		<Sym>Al</Sym>
+		<Iso>
+			<Mss>26.9815384</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Silicon</Nme>
+		<ANr>14</ANr>
+		<Sym>Si</Sym>
+		<Iso>
+			<Mss>27.97692653</Mss>
+			<Pry>0.9222</Pry>
+		</Iso>
+		<Iso>
+			<Mss>28.97649472</Mss>
+			<Pry>0.0469</Pry>
+		</Iso>
+		<Iso>
+			<Mss>29.97377022</Mss>
+			<Pry>0.0309</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Phosphorus</Nme>
+		<ANr>15</ANr>
+		<Sym>P</Sym>
+		<Iso>
+			<Mss>30.9737615</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="1">
+		<Nme>Sulfur</Nme>
+		<ANr>16</ANr>
+		<Sym>S</Sym>
+		<Iso>
+			<Mss>31.9720707</Mss>
+			<Pry>0.9493</Pry>
+		</Iso>
+		<Iso>
+			<Mss>33.9678668</Mss>
+			<Pry>0.0429</Pry>
+		</Iso>
+		<Iso>
+			<Mss>32.9714585</Mss>
+			<Pry>0.0076</Pry>
+		</Iso>
+		<Iso>
+			<Mss>35.9670809</Mss>
+			<Pry>0.0002</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Chlorine</Nme>
+		<ANr>17</ANr>
+		<Sym>Cl</Sym>
+		<Iso>
+			<Mss>34.96885271</Mss>
+			<Pry>0.7578</Pry>
+		</Iso>
+		<Iso>
+			<Mss>36.9659026</Mss>
+			<Pry>0.2422</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Argon</Nme>
+		<ANr>18</ANr>
+		<Sym>Ar</Sym>
+		<Iso>
+			<Mss>39.96238312</Mss>
+			<Pry>0.996003</Pry>
+		</Iso>
+		<Iso>
+			<Mss>35.9675463</Mss>
+			<Pry>0.003365</Pry>
+		</Iso>
+		<Iso>
+			<Mss>37.9627322</Mss>
+			<Pry>0.000632</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Potassium</Nme>
+		<ANr>19</ANr>
+		<Sym>K</Sym>
+		<Iso>
+			<Mss>38.9637069</Mss>
+			<Pry>0.932581</Pry>
+		</Iso>
+		<Iso>
+			<Mss>40.961826</Mss>
+			<Pry>0.067302</Pry>
+		</Iso>
+		<Iso>
+			<Mss>39.9639987</Mss>
+			<Pry>0.000117</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Calcium</Nme>
+		<ANr>20</ANr>
+		<Sym>Ca</Sym>
+		<Iso>
+			<Mss>39.9625912</Mss>
+			<Pry>0.96941</Pry>
+		</Iso>
+		<Iso>
+			<Mss>43.955481</Mss>
+			<Pry>0.02086</Pry>
+		</Iso>
+		<Iso>
+			<Mss>41.9586183</Mss>
+			<Pry>0.00647</Pry>
+		</Iso>
+		<Iso>
+			<Mss>47.952533</Mss>
+			<Pry>0.00187</Pry>
+		</Iso>
+		<Iso>
+			<Mss>42.9587668</Mss>
+			<Pry>0.00135</Pry>
+		</Iso>
+		<Iso>
+			<Mss>45.953693</Mss>
+			<Pry>4e-05</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Scandium</Nme>
+		<ANr>21</ANr>
+		<Sym>Sc</Sym>
+		<Iso>
+			<Mss>44.95591</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Titanium</Nme>
+		<ANr>22</ANr>
+		<Sym>Ti</Sym>
+		<Iso>
+			<Mss>47.947947</Mss>
+			<Pry>0.7372</Pry>
+		</Iso>
+		<Iso>
+			<Mss>45.95263</Mss>
+			<Pry>0.0825</Pry>
+		</Iso>
+		<Iso>
+			<Mss>46.951764</Mss>
+			<Pry>0.0744</Pry>
+		</Iso>
+		<Iso>
+			<Mss>48.947871</Mss>
+			<Pry>0.0541</Pry>
+		</Iso>
+		<Iso>
+			<Mss>49.944792</Mss>
+			<Pry>0.0518</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Vanadium</Nme>
+		<ANr>23</ANr>
+		<Sym>V</Sym>
+		<Iso>
+			<Mss>50.943964</Mss>
+			<Pry>0.9975</Pry>
+		</Iso>
+		<Iso>
+			<Mss>49.947163</Mss>
+			<Pry>0.0025</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Chromium</Nme>
+		<ANr>24</ANr>
+		<Sym>Cr</Sym>
+		<Iso>
+			<Mss>51.940512</Mss>
+			<Pry>0.83789</Pry>
+		</Iso>
+		<Iso>
+			<Mss>52.940653</Mss>
+			<Pry>0.09501</Pry>
+		</Iso>
+		<Iso>
+			<Mss>49.94605</Mss>
+			<Pry>0.04345</Pry>
+		</Iso>
+		<Iso>
+			<Mss>53.938885</Mss>
+			<Pry>0.02365</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Manganese</Nme>
+		<ANr>25</ANr>
+		<Sym>Mn</Sym>
+		<Iso>
+			<Mss>54.938049</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Iron</Nme>
+		<ANr>26</ANr>
+		<Sym>Fe</Sym>
+		<Iso>
+			<Mss>55.934942</Mss>
+			<Pry>0.91754</Pry>
+		</Iso>
+		<Iso>
+			<Mss>53.939615</Mss>
+			<Pry>0.05845</Pry>
+		</Iso>
+		<Iso>
+			<Mss>56.935398</Mss>
+			<Pry>0.02119</Pry>
+		</Iso>
+		<Iso>
+			<Mss>57.93328</Mss>
+			<Pry>0.00282</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Cobalt</Nme>
+		<ANr>27</ANr>
+		<Sym>Co</Sym>
+		<Iso>
+			<Mss>58.9332</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Nickel</Nme>
+		<ANr>28</ANr>
+		<Sym>Ni</Sym>
+		<Iso>
+			<Mss>57.935348</Mss>
+			<Pry>0.680769</Pry>
+		</Iso>
+		<Iso>
+			<Mss>59.93079</Mss>
+			<Pry>0.262231</Pry>
+		</Iso>
+		<Iso>
+			<Mss>61.928348</Mss>
+			<Pry>0.036345</Pry>
+		</Iso>
+		<Iso>
+			<Mss>60.93106</Mss>
+			<Pry>0.011399</Pry>
+		</Iso>
+		<Iso>
+			<Mss>63.927969</Mss>
+			<Pry>0.009256</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Copper</Nme>
+		<ANr>29</ANr>
+		<Sym>Cu</Sym>
+		<Iso>
+			<Mss>62.929601</Mss>
+			<Pry>0.6917</Pry>
+		</Iso>
+		<Iso>
+			<Mss>64.927794</Mss>
+			<Pry>0.3083</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Zinc</Nme>
+		<ANr>30</ANr>
+		<Sym>Zn</Sym>
+		<Iso>
+			<Mss>63.929146</Mss>
+			<Pry>0.4863</Pry>
+		</Iso>
+		<Iso>
+			<Mss>65.926036</Mss>
+			<Pry>0.279</Pry>
+		</Iso>
+		<Iso>
+			<Mss>67.924847</Mss>
+			<Pry>0.1875</Pry>
+		</Iso>
+		<Iso>
+			<Mss>66.927131</Mss>
+			<Pry>0.041</Pry>
+		</Iso>
+		<Iso>
+			<Mss>69.925325</Mss>
+			<Pry>0.0062</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Gallium</Nme>
+		<ANr>31</ANr>
+		<Sym>Ga</Sym>
+		<Iso>
+			<Mss>68.925581</Mss>
+			<Pry>0.60108</Pry>
+		</Iso>
+		<Iso>
+			<Mss>70.924707</Mss>
+			<Pry>0.39892</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Germanium</Nme>
+		<ANr>32</ANr>
+		<Sym>Ge</Sym>
+		<Iso>
+			<Mss>73.921178</Mss>
+			<Pry>0.3628</Pry>
+		</Iso>
+		<Iso>
+			<Mss>71.922076</Mss>
+			<Pry>0.2754</Pry>
+		</Iso>
+		<Iso>
+			<Mss>69.92425</Mss>
+			<Pry>0.2084</Pry>
+		</Iso>
+		<Iso>
+			<Mss>72.92346</Mss>
+			<Pry>0.0773</Pry>
+		</Iso>
+		<Iso>
+			<Mss>75.921403</Mss>
+			<Pry>0.0761</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Arsenic</Nme>
+		<ANr>33</ANr>
+		<Sym>As</Sym>
+		<Iso>
+			<Mss>74.921597</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Selenium</Nme>
+		<ANr>34</ANr>
+		<Sym>Se</Sym>
+		<Iso>
+			<Mss>79.916522</Mss>
+			<Pry>0.4961</Pry>
+		</Iso>
+		<Iso>
+			<Mss>77.91731</Mss>
+			<Pry>0.2377</Pry>
+		</Iso>
+		<Iso>
+			<Mss>75.919214</Mss>
+			<Pry>0.0937</Pry>
+		</Iso>
+		<Iso>
+			<Mss>81.9167</Mss>
+			<Pry>0.0873</Pry>
+		</Iso>
+		<Iso>
+			<Mss>76.919915</Mss>
+			<Pry>0.0763</Pry>
+		</Iso>
+		<Iso>
+			<Mss>73.922477</Mss>
+			<Pry>0.0089</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Bromine</Nme>
+		<ANr>35</ANr>
+		<Sym>Br</Sym>
+		<Iso>
+			<Mss>78.918338</Mss>
+			<Pry>0.5069</Pry>
+		</Iso>
+		<Iso>
+			<Mss>80.916291</Mss>
+			<Pry>0.4931</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Krypton</Nme>
+		<ANr>36</ANr>
+		<Sym>Kr</Sym>
+		<Iso>
+			<Mss>83.911508</Mss>
+			<Pry>0.57</Pry>
+		</Iso>
+		<Iso>
+			<Mss>85.910615</Mss>
+			<Pry>0.173</Pry>
+		</Iso>
+		<Iso>
+			<Mss>81.913485</Mss>
+			<Pry>0.1158</Pry>
+		</Iso>
+		<Iso>
+			<Mss>82.914137</Mss>
+			<Pry>0.1149</Pry>
+		</Iso>
+		<Iso>
+			<Mss>79.916379</Mss>
+			<Pry>0.0228</Pry>
+		</Iso>
+		<Iso>
+			<Mss>77.92039</Mss>
+			<Pry>0.0035</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Rubidium</Nme>
+		<ANr>37</ANr>
+		<Sym>Rb</Sym>
+		<Iso>
+			<Mss>84.911792</Mss>
+			<Pry>0.7217</Pry>
+		</Iso>
+		<Iso>
+			<Mss>86.909186</Mss>
+			<Pry>0.2783</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Strontium</Nme>
+		<ANr>38</ANr>
+		<Sym>Sr</Sym>
+		<Iso>
+			<Mss>87.905617</Mss>
+			<Pry>0.8258</Pry>
+		</Iso>
+		<Iso>
+			<Mss>85.909265</Mss>
+			<Pry>0.0986</Pry>
+		</Iso>
+		<Iso>
+			<Mss>86.908882</Mss>
+			<Pry>0.07</Pry>
+		</Iso>
+		<Iso>
+			<Mss>83.913426</Mss>
+			<Pry>0.0056</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Yttrium</Nme>
+		<ANr>39</ANr>
+		<Sym>Y</Sym>
+		<Iso>
+			<Mss>88.905849</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Zirconium</Nme>
+		<ANr>40</ANr>
+		<Sym>Zr</Sym>
+		<Iso>
+			<Mss>89.904702</Mss>
+			<Pry>0.5145</Pry>
+		</Iso>
+		<Iso>
+			<Mss>93.906314</Mss>
+			<Pry>0.1738</Pry>
+		</Iso>
+		<Iso>
+			<Mss>91.905039</Mss>
+			<Pry>0.1715</Pry>
+		</Iso>
+		<Iso>
+			<Mss>90.905643</Mss>
+			<Pry>0.1122</Pry>
+		</Iso>
+		<Iso>
+			<Mss>95.908275</Mss>
+			<Pry>0.028</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Niobium</Nme>
+		<ANr>41</ANr>
+		<Sym>Nb</Sym>
+		<Iso>
+			<Mss>92.906376</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Molybdenum</Nme>
+		<ANr>42</ANr>
+		<Sym>Mo</Sym>
+		<Iso>
+			<Mss>97.905407</Mss>
+			<Pry>0.2413</Pry>
+		</Iso>
+		<Iso>
+			<Mss>95.904678</Mss>
+			<Pry>0.1668</Pry>
+		</Iso>
+		<Iso>
+			<Mss>94.905841</Mss>
+			<Pry>0.1592</Pry>
+		</Iso>
+		<Iso>
+			<Mss>91.90681</Mss>
+			<Pry>0.1484</Pry>
+		</Iso>
+		<Iso>
+			<Mss>99.90748</Mss>
+			<Pry>0.0963</Pry>
+		</Iso>
+		<Iso>
+			<Mss>96.90602</Mss>
+			<Pry>0.0955</Pry>
+		</Iso>
+		<Iso>
+			<Mss>93.905087</Mss>
+			<Pry>0.0925</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Technetium</Nme>
+		<ANr>43</ANr>
+		<Sym>Tc</Sym>
+		<Iso>
+			<Mss>97.907215</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Ruthenium</Nme>
+		<ANr>44</ANr>
+		<Sym>Ru</Sym>
+		<Iso>
+			<Mss>101.904349</Mss>
+			<Pry>0.3157</Pry>
+		</Iso>
+		<Iso>
+			<Mss>103.90543</Mss>
+			<Pry>0.1866</Pry>
+		</Iso>
+		<Iso>
+			<Mss>100.905582</Mss>
+			<Pry>0.1705</Pry>
+		</Iso>
+		<Iso>
+			<Mss>98.905939</Mss>
+			<Pry>0.1274</Pry>
+		</Iso>
+		<Iso>
+			<Mss>99.904219</Mss>
+			<Pry>0.126</Pry>
+		</Iso>
+		<Iso>
+			<Mss>95.9076</Mss>
+			<Pry>0.055</Pry>
+		</Iso>
+		<Iso>
+			<Mss>97.90529</Mss>
+			<Pry>0.0188</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Rhodium</Nme>
+		<ANr>45</ANr>
+		<Sym>Rh</Sym>
+		<Iso>
+			<Mss>102.905504</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Palladium</Nme>
+		<ANr>46</ANr>
+		<Sym>Pd</Sym>
+		<Iso>
+			<Mss>105.903484</Mss>
+			<Pry>0.2733</Pry>
+		</Iso>
+		<Iso>
+			<Mss>107.903895</Mss>
+			<Pry>0.2646</Pry>
+		</Iso>
+		<Iso>
+			<Mss>104.905083</Mss>
+			<Pry>0.2233</Pry>
+		</Iso>
+		<Iso>
+			<Mss>109.905153</Mss>
+			<Pry>0.1172</Pry>
+		</Iso>
+		<Iso>
+			<Mss>103.904034</Mss>
+			<Pry>0.1114</Pry>
+		</Iso>
+		<Iso>
+			<Mss>101.905607</Mss>
+			<Pry>0.0102</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Silver</Nme>
+		<ANr>47</ANr>
+		<Sym>Ag</Sym>
+		<Iso>
+			<Mss>106.905093</Mss>
+			<Pry>0.51839</Pry>
+		</Iso>
+		<Iso>
+			<Mss>108.904756</Mss>
+			<Pry>0.48161</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Cadmium</Nme>
+		<ANr>48</ANr>
+		<Sym>Cd</Sym>
+		<Iso>
+			<Mss>113.903359</Mss>
+			<Pry>0.2873</Pry>
+		</Iso>
+		<Iso>
+			<Mss>111.902758</Mss>
+			<Pry>0.2413</Pry>
+		</Iso>
+		<Iso>
+			<Mss>110.904182</Mss>
+			<Pry>0.128</Pry>
+		</Iso>
+		<Iso>
+			<Mss>109.903006</Mss>
+			<Pry>0.1249</Pry>
+		</Iso>
+		<Iso>
+			<Mss>112.904401</Mss>
+			<Pry>0.1222</Pry>
+		</Iso>
+		<Iso>
+			<Mss>115.904756</Mss>
+			<Pry>0.0749</Pry>
+		</Iso>
+		<Iso>
+			<Mss>105.90646</Mss>
+			<Pry>0.0125</Pry>
+		</Iso>
+		<Iso>
+			<Mss>107.90418</Mss>
+			<Pry>0.0089</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Indium</Nme>
+		<ANr>49</ANr>
+		<Sym>In</Sym>
+		<Iso>
+			<Mss>114.903879</Mss>
+			<Pry>0.9571</Pry>
+		</Iso>
+		<Iso>
+			<Mss>112.904062</Mss>
+			<Pry>0.0429</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Tin</Nme>
+		<ANr>50</ANr>
+		<Sym>Sn</Sym>
+		<Iso>
+			<Mss>119.902199</Mss>
+			<Pry>0.3259</Pry>
+		</Iso>
+		<Iso>
+			<Mss>117.901606</Mss>
+			<Pry>0.2422</Pry>
+		</Iso>
+		<Iso>
+			<Mss>115.901745</Mss>
+			<Pry>0.1454</Pry>
+		</Iso>
+		<Iso>
+			<Mss>118.9033011</Mss>
+			<Pry>0.0859</Pry>
+		</Iso>
+		<Iso>
+			<Mss>116.902955</Mss>
+			<Pry>0.0768</Pry>
+		</Iso>
+		<Iso>
+			<Mss>123.905275</Mss>
+			<Pry>0.0579</Pry>
+		</Iso>
+		<Iso>
+			<Mss>121.903441</Mss>
+			<Pry>0.0463</Pry>
+		</Iso>
+		<Iso>
+			<Mss>111.904822</Mss>
+			<Pry>0.0097</Pry>
+		</Iso>
+		<Iso>
+			<Mss>113.902783</Mss>
+			<Pry>0.0065</Pry>
+		</Iso>
+		<Iso>
+			<Mss>114.903347</Mss>
+			<Pry>0.0034</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Antimony</Nme>
+		<ANr>51</ANr>
+		<Sym>Sb</Sym>
+		<Iso>
+			<Mss>120.903822</Mss>
+			<Pry>0.5721</Pry>
+		</Iso>
+		<Iso>
+			<Mss>122.904216</Mss>
+			<Pry>0.4279</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Tellurium</Nme>
+		<ANr>52</ANr>
+		<Sym>Te</Sym>
+		<Iso>
+			<Mss>129.906223</Mss>
+			<Pry>0.3408</Pry>
+		</Iso>
+		<Iso>
+			<Mss>127.904462</Mss>
+			<Pry>0.3174</Pry>
+		</Iso>
+		<Iso>
+			<Mss>125.903305</Mss>
+			<Pry>0.1884</Pry>
+		</Iso>
+		<Iso>
+			<Mss>124.904424</Mss>
+			<Pry>0.0707</Pry>
+		</Iso>
+		<Iso>
+			<Mss>123.902819</Mss>
+			<Pry>0.0474</Pry>
+		</Iso>
+		<Iso>
+			<Mss>121.903056</Mss>
+			<Pry>0.0255</Pry>
+		</Iso>
+		<Iso>
+			<Mss>122.904271</Mss>
+			<Pry>0.0089</Pry>
+		</Iso>
+		<Iso>
+			<Mss>119.90403</Mss>
+			<Pry>0.0009</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Iodine</Nme>
+		<ANr>53</ANr>
+		<Sym>I</Sym>
+		<Iso>
+			<Mss>126.904468</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Xenon</Nme>
+		<ANr>54</ANr>
+		<Sym>Xe</Sym>
+		<Iso>
+			<Mss>131.904155</Mss>
+			<Pry>0.2689</Pry>
+		</Iso>
+		<Iso>
+			<Mss>128.90478</Mss>
+			<Pry>0.2644</Pry>
+		</Iso>
+		<Iso>
+			<Mss>130.905083</Mss>
+			<Pry>0.2118</Pry>
+		</Iso>
+		<Iso>
+			<Mss>133.905395</Mss>
+			<Pry>0.1044</Pry>
+		</Iso>
+		<Iso>
+			<Mss>135.90722</Mss>
+			<Pry>0.0887</Pry>
+		</Iso>
+		<Iso>
+			<Mss>129.903509</Mss>
+			<Pry>0.0408</Pry>
+		</Iso>
+		<Iso>
+			<Mss>127.903531</Mss>
+			<Pry>0.0192</Pry>
+		</Iso>
+		<Iso>
+			<Mss>123.905895</Mss>
+			<Pry>0.0009</Pry>
+		</Iso>
+		<Iso>
+			<Mss>125.90427</Mss>
+			<Pry>0.0009</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Cesium</Nme>
+		<ANr>55</ANr>
+		<Sym>Cs</Sym>
+		<Iso>
+			<Mss>132.905447</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Barium</Nme>
+		<ANr>56</ANr>
+		<Sym>Ba</Sym>
+		<Iso>
+			<Mss>137.905242</Mss>
+			<Pry>0.71698</Pry>
+		</Iso>
+		<Iso>
+			<Mss>136.905822</Mss>
+			<Pry>0.11232</Pry>
+		</Iso>
+		<Iso>
+			<Mss>135.904571</Mss>
+			<Pry>0.07854</Pry>
+		</Iso>
+		<Iso>
+			<Mss>134.905684</Mss>
+			<Pry>0.06592</Pry>
+		</Iso>
+		<Iso>
+			<Mss>133.904504</Mss>
+			<Pry>0.02417</Pry>
+		</Iso>
+		<Iso>
+			<Mss>129.90631</Mss>
+			<Pry>0.00106</Pry>
+		</Iso>
+		<Iso>
+			<Mss>131.905056</Mss>
+			<Pry>0.00101</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Lanthanum</Nme>
+		<ANr>57</ANr>
+		<Sym>La</Sym>
+		<Iso>
+			<Mss>138.906349</Mss>
+			<Pry>0.9991</Pry>
+		</Iso>
+		<Iso>
+			<Mss>137.907107</Mss>
+			<Pry>0.0009</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Cerium</Nme>
+		<ANr>58</ANr>
+		<Sym>Ce</Sym>
+		<Iso>
+			<Mss>139.905435</Mss>
+			<Pry>0.8848</Pry>
+		</Iso>
+		<Iso>
+			<Mss>141.909241</Mss>
+			<Pry>0.1108</Pry>
+		</Iso>
+		<Iso>
+			<Mss>137.90599</Mss>
+			<Pry>0.0025</Pry>
+		</Iso>
+		<Iso>
+			<Mss>135.90714</Mss>
+			<Pry>0.0019</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Praseodymium</Nme>
+		<ANr>59</ANr>
+		<Sym>Pr</Sym>
+		<Iso>
+			<Mss>140.907648</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Neodymium</Nme>
+		<ANr>60</ANr>
+		<Sym>Nd</Sym>
+		<Iso>
+			<Mss>141.907719</Mss>
+			<Pry>0.2713</Pry>
+		</Iso>
+		<Iso>
+			<Mss>143.910083</Mss>
+			<Pry>0.238</Pry>
+		</Iso>
+		<Iso>
+			<Mss>145.913113</Mss>
+			<Pry>0.1719</Pry>
+		</Iso>
+		<Iso>
+			<Mss>142.90981</Mss>
+			<Pry>0.1218</Pry>
+		</Iso>
+		<Iso>
+			<Mss>144.912569</Mss>
+			<Pry>0.083</Pry>
+		</Iso>
+		<Iso>
+			<Mss>147.916889</Mss>
+			<Pry>0.0576</Pry>
+		</Iso>
+		<Iso>
+			<Mss>149.920887</Mss>
+			<Pry>0.0564</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Samarium</Nme>
+		<ANr>62</ANr>
+		<Sym>Sm</Sym>
+		<Iso>
+			<Mss>151.919729</Mss>
+			<Pry>0.267</Pry>
+		</Iso>
+		<Iso>
+			<Mss>153.922206</Mss>
+			<Pry>0.227</Pry>
+		</Iso>
+		<Iso>
+			<Mss>146.914894</Mss>
+			<Pry>0.15</Pry>
+		</Iso>
+		<Iso>
+			<Mss>148.91718</Mss>
+			<Pry>0.138</Pry>
+		</Iso>
+		<Iso>
+			<Mss>147.914818</Mss>
+			<Pry>0.113</Pry>
+		</Iso>
+		<Iso>
+			<Mss>149.917272</Mss>
+			<Pry>0.074</Pry>
+		</Iso>
+		<Iso>
+			<Mss>143.911996</Mss>
+			<Pry>0.031</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Europium</Nme>
+		<ANr>63</ANr>
+		<Sym>Eu</Sym>
+		<Iso>
+			<Mss>152.921227</Mss>
+			<Pry>0.522</Pry>
+		</Iso>
+		<Iso>
+			<Mss>150.919846</Mss>
+			<Pry>0.478</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Gadolinium</Nme>
+		<ANr>64</ANr>
+		<Sym>Gd</Sym>
+		<Iso>
+			<Mss>157.924101</Mss>
+			<Pry>0.2484</Pry>
+		</Iso>
+		<Iso>
+			<Mss>159.927051</Mss>
+			<Pry>0.2186</Pry>
+		</Iso>
+		<Iso>
+			<Mss>155.92212</Mss>
+			<Pry>0.2047</Pry>
+		</Iso>
+		<Iso>
+			<Mss>156.923957</Mss>
+			<Pry>0.1565</Pry>
+		</Iso>
+		<Iso>
+			<Mss>154.922619</Mss>
+			<Pry>0.148</Pry>
+		</Iso>
+		<Iso>
+			<Mss>153.920862</Mss>
+			<Pry>0.0218</Pry>
+		</Iso>
+		<Iso>
+			<Mss>151.919789</Mss>
+			<Pry>0.002</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Terbium</Nme>
+		<ANr>65</ANr>
+		<Sym>Tb</Sym>
+		<Iso>
+			<Mss>158.925343</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Dysprosium</Nme>
+		<ANr>66</ANr>
+		<Sym>Dy</Sym>
+		<Iso>
+			<Mss>163.929171</Mss>
+			<Pry>0.282</Pry>
+		</Iso>
+		<Iso>
+			<Mss>161.926795</Mss>
+			<Pry>0.255</Pry>
+		</Iso>
+		<Iso>
+			<Mss>162.928728</Mss>
+			<Pry>0.249</Pry>
+		</Iso>
+		<Iso>
+			<Mss>160.92693</Mss>
+			<Pry>0.189</Pry>
+		</Iso>
+		<Iso>
+			<Mss>159.925194</Mss>
+			<Pry>0.0234</Pry>
+		</Iso>
+		<Iso>
+			<Mss>157.924405</Mss>
+			<Pry>0.001</Pry>
+		</Iso>
+		<Iso>
+			<Mss>155.92428</Mss>
+			<Pry>0.0006</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Holmium</Nme>
+		<ANr>67</ANr>
+		<Sym>Ho</Sym>
+		<Iso>
+			<Mss>164.930319</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Erbium</Nme>
+		<ANr>68</ANr>
+		<Sym>Er</Sym>
+		<Iso>
+			<Mss>165.93029</Mss>
+			<Pry>0.336</Pry>
+		</Iso>
+		<Iso>
+			<Mss>167.932368</Mss>
+			<Pry>0.268</Pry>
+		</Iso>
+		<Iso>
+			<Mss>166.932046</Mss>
+			<Pry>0.2295</Pry>
+		</Iso>
+		<Iso>
+			<Mss>169.935461</Mss>
+			<Pry>0.149</Pry>
+		</Iso>
+		<Iso>
+			<Mss>163.929197</Mss>
+			<Pry>0.0161</Pry>
+		</Iso>
+		<Iso>
+			<Mss>161.928775</Mss>
+			<Pry>0.0014</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Thulium</Nme>
+		<ANr>69</ANr>
+		<Sym>Tm</Sym>
+		<Iso>
+			<Mss>168.934211</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Ytterbium</Nme>
+		<ANr>70</ANr>
+		<Sym>Yb</Sym>
+		<Iso>
+			<Mss>173.938858</Mss>
+			<Pry>0.318</Pry>
+		</Iso>
+		<Iso>
+			<Mss>171.936378</Mss>
+			<Pry>0.219</Pry>
+		</Iso>
+		<Iso>
+			<Mss>172.938207</Mss>
+			<Pry>0.1612</Pry>
+		</Iso>
+		<Iso>
+			<Mss>170.936323</Mss>
+			<Pry>0.143</Pry>
+		</Iso>
+		<Iso>
+			<Mss>175.942569</Mss>
+			<Pry>0.127</Pry>
+		</Iso>
+		<Iso>
+			<Mss>169.934759</Mss>
+			<Pry>0.0305</Pry>
+		</Iso>
+		<Iso>
+			<Mss>167.933895</Mss>
+			<Pry>0.0013</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Lutetium</Nme>
+		<ANr>71</ANr>
+		<Sym>Lu</Sym>
+		<Iso>
+			<Mss>174.940768</Mss>
+			<Pry>0.9741</Pry>
+		</Iso>
+		<Iso>
+			<Mss>175.942683</Mss>
+			<Pry>0.0259</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Hafnium</Nme>
+		<ANr>72</ANr>
+		<Sym>Hf</Sym>
+		<Iso>
+			<Mss>179.946549</Mss>
+			<Pry>0.351</Pry>
+		</Iso>
+		<Iso>
+			<Mss>177.943698</Mss>
+			<Pry>0.27297</Pry>
+		</Iso>
+		<Iso>
+			<Mss>176.94322</Mss>
+			<Pry>0.18606</Pry>
+		</Iso>
+		<Iso>
+			<Mss>178.945815</Mss>
+			<Pry>0.13629</Pry>
+		</Iso>
+		<Iso>
+			<Mss>175.941403</Mss>
+			<Pry>0.05206</Pry>
+		</Iso>
+		<Iso>
+			<Mss>173.940042</Mss>
+			<Pry>0.00162</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Tantalum</Nme>
+		<ANr>73</ANr>
+		<Sym>Ta</Sym>
+		<Iso>
+			<Mss>180.947996</Mss>
+			<Pry>0.99988</Pry>
+		</Iso>
+		<Iso>
+			<Mss>179.947466</Mss>
+			<Pry>0.00012</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Tungsten</Nme>
+		<ANr>74</ANr>
+		<Sym>W</Sym>
+		<Iso>
+			<Mss>183.950932</Mss>
+			<Pry>0.30642</Pry>
+		</Iso>
+		<Iso>
+			<Mss>185.954362</Mss>
+			<Pry>0.28426</Pry>
+		</Iso>
+		<Iso>
+			<Mss>181.948205</Mss>
+			<Pry>0.26498</Pry>
+		</Iso>
+		<Iso>
+			<Mss>182.950224</Mss>
+			<Pry>0.14314</Pry>
+		</Iso>
+		<Iso>
+			<Mss>179.946706</Mss>
+			<Pry>0.0012</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Rhenium</Nme>
+		<ANr>75</ANr>
+		<Sym>Re</Sym>
+		<Iso>
+			<Mss>186.955751</Mss>
+			<Pry>0.626</Pry>
+		</Iso>
+		<Iso>
+			<Mss>184.952955</Mss>
+			<Pry>0.374</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Osmium</Nme>
+		<ANr>76</ANr>
+		<Sym>Os</Sym>
+		<Iso>
+			<Mss>191.961479</Mss>
+			<Pry>0.41</Pry>
+		</Iso>
+		<Iso>
+			<Mss>189.958445</Mss>
+			<Pry>0.264</Pry>
+		</Iso>
+		<Iso>
+			<Mss>188.958145</Mss>
+			<Pry>0.161</Pry>
+		</Iso>
+		<Iso>
+			<Mss>187.955836</Mss>
+			<Pry>0.133</Pry>
+		</Iso>
+		<Iso>
+			<Mss>186.955748</Mss>
+			<Pry>0.016</Pry>
+		</Iso>
+		<Iso>
+			<Mss>185.953838</Mss>
+			<Pry>0.0158</Pry>
+		</Iso>
+		<Iso>
+			<Mss>183.952491</Mss>
+			<Pry>0.0002</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Iridium</Nme>
+		<ANr>77</ANr>
+		<Sym>Ir</Sym>
+		<Iso>
+			<Mss>192.962923</Mss>
+			<Pry>0.627</Pry>
+		</Iso>
+		<Iso>
+			<Mss>190.960591</Mss>
+			<Pry>0.373</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Platinum</Nme>
+		<ANr>78</ANr>
+		<Sym>Pt</Sym>
+		<Iso>
+			<Mss>194.964774</Mss>
+			<Pry>0.338</Pry>
+		</Iso>
+		<Iso>
+			<Mss>193.962663</Mss>
+			<Pry>0.329</Pry>
+		</Iso>
+		<Iso>
+			<Mss>195.964934</Mss>
+			<Pry>0.253</Pry>
+		</Iso>
+		<Iso>
+			<Mss>197.967875</Mss>
+			<Pry>0.072</Pry>
+		</Iso>
+		<Iso>
+			<Mss>191.961035</Mss>
+			<Pry>0.0079</Pry>
+		</Iso>
+		<Iso>
+			<Mss>189.95993</Mss>
+			<Pry>0.0001</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Gold</Nme>
+		<ANr>79</ANr>
+		<Sym>Au</Sym>
+		<Iso>
+			<Mss>196.966551</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Mercury</Nme>
+		<ANr>80</ANr>
+		<Sym>Hg</Sym>
+		<Iso>
+			<Mss>201.970625</Mss>
+			<Pry>0.2986</Pry>
+		</Iso>
+		<Iso>
+			<Mss>199.968309</Mss>
+			<Pry>0.231</Pry>
+		</Iso>
+		<Iso>
+			<Mss>198.968262</Mss>
+			<Pry>0.1687</Pry>
+		</Iso>
+		<Iso>
+			<Mss>200.970285</Mss>
+			<Pry>0.1318</Pry>
+		</Iso>
+		<Iso>
+			<Mss>197.966752</Mss>
+			<Pry>0.0997</Pry>
+		</Iso>
+		<Iso>
+			<Mss>203.973475</Mss>
+			<Pry>0.0687</Pry>
+		</Iso>
+		<Iso>
+			<Mss>195.965814</Mss>
+			<Pry>0.0015</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Thallium</Nme>
+		<ANr>81</ANr>
+		<Sym>Tl</Sym>
+		<Iso>
+			<Mss>204.974412</Mss>
+			<Pry>0.70476</Pry>
+		</Iso>
+		<Iso>
+			<Mss>202.972329</Mss>
+			<Pry>0.29524</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Lead</Nme>
+		<ANr>82</ANr>
+		<Sym>Pb</Sym>
+		<Iso>
+			<Mss>207.976636</Mss>
+			<Pry>0.524</Pry>
+		</Iso>
+		<Iso>
+			<Mss>205.974449</Mss>
+			<Pry>0.241</Pry>
+		</Iso>
+		<Iso>
+			<Mss>206.97588</Mss>
+			<Pry>0.221</Pry>
+		</Iso>
+		<Iso>
+			<Mss>203.973028</Mss>
+			<Pry>0.014</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Bismuth</Nme>
+		<ANr>83</ANr>
+		<Sym>Bi</Sym>
+		<Iso>
+			<Mss>208.980384</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Thorium</Nme>
+		<ANr>90</ANr>
+		<Sym>Th</Sym>
+		<Iso>
+			<Mss>232.03805</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Uranium</Nme>
+		<ANr>92</ANr>
+		<Sym>U</Sym>
+		<Iso>
+			<Mss>238.050784</Mss>
+			<Pry>0.992745</Pry>
+		</Iso>
+		<Iso>
+			<Mss>235.043922</Mss>
+			<Pry>0.0072</Pry>
+		</Iso>
+		<Iso>
+			<Mss>234.040945</Mss>
+			<Pry>5.5e-05</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Neptunium</Nme>
+		<ANr>93</ANr>
+		<Sym>Np</Sym>
+		<Iso>
+			<Mss>237.048166</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Plutonium</Nme>
+		<ANr>94</ANr>
+		<Sym>Pu</Sym>
+		<Iso>
+			<Mss>244.064197</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Americium</Nme>
+		<ANr>95</ANr>
+		<Sym>Am</Sym>
+		<Iso>
+			<Mss>243.061372</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Curium</Nme>
+		<ANr>96</ANr>
+		<Sym>Cm</Sym>
+		<Iso>
+			<Mss>247.070346</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Berkelium</Nme>
+		<ANr>97</ANr>
+		<Sym>Bk</Sym>
+		<Iso>
+			<Mss>247.0703</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Californium</Nme>
+		<ANr>98</ANr>
+		<Sym>Cf</Sym>
+		<Iso>
+			<Mss>251.079579</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Einsteinium</Nme>
+		<ANr>99</ANr>
+		<Sym>Es</Sym>
+		<Iso>
+			<Mss>252.08297</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Fermium</Nme>
+		<ANr>100</ANr>
+		<Sym>Fm</Sym>
+		<Iso>
+			<Mss>257.0951</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Mendelevium</Nme>
+		<ANr>101</ANr>
+		<Sym>Md</Sym>
+		<Iso>
+			<Mss>258.098427</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Nobelium</Nme>
+		<ANr>102</ANr>
+		<Sym>No</Sym>
+		<Iso>
+			<Mss>259.1011</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Lawrencium</Nme>
+		<ANr>103</ANr>
+		<Sym>Lr</Sym>
+		<Iso>
+			<Mss>262.11</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Actinium</Nme>
+		<ANr>89</ANr>
+		<Sym>Ac</Sym>
+		<Iso>
+			<Mss>227.027747</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Astatine</Nme>
+		<ANr>85</ANr>
+		<Sym>At</Sym>
+		<Iso>
+			<Mss>209.98713</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Francium</Nme>
+		<ANr>87</ANr>
+		<Sym>Fr</Sym>
+		<Iso>
+			<Mss>223.019731</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Polonium</Nme>
+		<ANr>84</ANr>
+		<Sym>Po</Sym>
+		<Iso>
+			<Mss>208.982415</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Promethium</Nme>
+		<ANr>61</ANr>
+		<Sym>Pm</Sym>
+		<Iso>
+			<Mss>144.912745</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Protactinium</Nme>
+		<ANr>91</ANr>
+		<Sym>Pa</Sym>
+		<Iso>
+			<Mss>231.035878</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Radium</Nme>
+		<ANr>88</ANr>
+		<Sym>Ra</Sym>
+		<Iso>
+			<Mss>226.025402</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Radon</Nme>
+		<ANr>86</ANr>
+		<Sym>Rn</Sym>
+		<Iso>
+			<Mss>222.01757</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Deuterium</Nme>
+		<ANr>1</ANr>
+		<Sym>D</Sym>
+		<Iso>
+			<Mss>2.014101778</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Tritium</Nme>
+		<ANr>1</ANr>
+		<Sym>T</Sym>
+		<Iso>
+			<Mss>3.016049268</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Carbon14</Nme>
+		<ANr>6</ANr>
+		<Sym>Cc</Sym>
+		<Iso>
+			<Mss>14.00324199</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Carbon13</Nme>
+		<ANr>6</ANr>
+		<Sym>Cb</Sym>
+		<Iso>
+			<Mss>13.00335484</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Oxygen18</Nme>
+		<ANr>8</ANr>
+		<Sym>Ob</Sym>
+		<Iso>
+			<Mss>17.99916</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Phosphorus32</Nme>
+		<ANr>15</ANr>
+		<Sym>Pc</Sym>
+		<Iso>
+			<Mss>31.9739071</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Sulfur32</Nme>
+		<ANr>16</ANr>
+		<Sym>Sa</Sym>
+		<Iso>
+			<Mss>31.9720707</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Sulfur33</Nme>
+		<ANr>16</ANr>
+		<Sym>Sd</Sym>
+		<Iso>
+			<Mss>32.9714585</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Sulfur34</Nme>
+		<ANr>16</ANr>
+		<Sym>Sf</Sym>
+		<Iso>
+			<Mss>33.9678668</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Sulfur36</Nme>
+		<ANr>16</ANr>
+		<Sym>Sg</Sym>
+		<Iso>
+			<Mss>35.9670809</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Chlorine37</Nme>
+		<ANr>17</ANr>
+		<Sym>Cg</Sym>
+		<Iso>
+			<Mss>36.9659026</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Bromine77</Nme>
+		<ANr>35</ANr>
+		<Sym>Bb</Sym>
+		<Iso>
+			<Mss>76.92138</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Bromine79</Nme>
+		<ANr>35</ANr>
+		<Sym>Bc</Sym>
+		<Iso>
+			<Mss>78.918338</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Bromine81</Nme>
+		<ANr>35</ANr>
+		<Sym>Bd</Sym>
+		<Iso>
+			<Mss>80.916291</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Bromine82</Nme>
+		<ANr>35</ANr>
+		<Sym>Bf</Sym>
+		<Iso>
+			<Mss>81.916805</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+	<El rKey="0">
+		<Nme>Nitrogen15</Nme>
+		<ANr>7</ANr>
+		<Sym>Nc</Sym>
+		<Iso>
+			<Mss>15.00010897</Mss>
+			<Pry>1</Pry>
+		</Iso>
+	</El>
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- AMINO ACID DEFINITION SECTION -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<AA rKey="1">
+		<Nme>Alanine</Nme>
+		<TLC>Ala</TLC>
+		<OLC>A</OLC>
+		<Fma>C3H5NO</Fma>
+		<pK>6</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Arginine</Nme>
+		<TLC>Arg</TLC>
+		<OLC>R</OLC>
+		<Fma>C6H12N4O</Fma>
+		<pK>10.7600002289</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Asparagine</Nme>
+		<TLC>Asn</TLC>
+		<OLC>N</OLC>
+		<Fma>C4H6N2O2</Fma>
+		<pK>5.40999984741</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>AsnOrAsp</Nme>
+		<TLC>Asx</TLC>
+		<OLC>B</OLC>
+		<Fma>C4H6N2O2</Fma>
+		<pK>5.40999984741</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Aspartic Acid</Nme>
+		<TLC>Asp</TLC>
+		<OLC>D</OLC>
+		<Fma>C4H5NO3</Fma>
+		<pK>2.76999998093</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Cysteine</Nme>
+		<TLC>Cys</TLC>
+		<OLC>C</OLC>
+		<Fma>C3H5NOS</Fma>
+		<pK>5.07000017166</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Glutamine</Nme>
+		<TLC>Gln</TLC>
+		<OLC>Q</OLC>
+		<Fma>C5H8N2O2</Fma>
+		<pK>5.65000009537</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>GlnOrGlu</Nme>
+		<TLC>Glx</TLC>
+		<OLC>Z</OLC>
+		<Fma>C5H8N2O2</Fma>
+		<pK>5.65000009537</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Glutamic Acid</Nme>
+		<TLC>Glu</TLC>
+		<OLC>E</OLC>
+		<Fma>C5H7NO3</Fma>
+		<pK>3.22000002861</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Glycine</Nme>
+		<TLC>Gly</TLC>
+		<OLC>G</OLC>
+		<Fma>C2H3NO</Fma>
+		<pK>5.96999979019</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Histidine</Nme>
+		<TLC>His</TLC>
+		<OLC>H</OLC>
+		<Fma>C6H7N3O</Fma>
+		<pK>7.59000015259</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Isoleucine</Nme>
+		<TLC>Ile</TLC>
+		<OLC>I</OLC>
+		<Fma>C6H11NO</Fma>
+		<pK>6.01999998093</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Leucine</Nme>
+		<TLC>Leu</TLC>
+		<OLC>L</OLC>
+		<Fma>C6H11NO</Fma>
+		<pK>5.98000001907</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>LeuOrIle</Nme>
+		<TLC>Xle</TLC>
+		<OLC>J</OLC>
+		<Fma>C6H11NO</Fma>
+		<pK>5.98000001907</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Lysine</Nme>
+		<TLC>Lys</TLC>
+		<OLC>K</OLC>
+		<Fma>C6H12N2O</Fma>
+		<pK>9.73999977112</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Methionine</Nme>
+		<TLC>Met</TLC>
+		<OLC>M</OLC>
+		<Fma>C5H9NOS</Fma>
+		<pK>5.73999977112</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Phenylalanine</Nme>
+		<TLC>Phe</TLC>
+		<OLC>F</OLC>
+		<Fma>C9H9NO</Fma>
+		<pK>5.48000001907</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Proline</Nme>
+		<TLC>Pro</TLC>
+		<OLC>P</OLC>
+		<Fma>C5H7NO</Fma>
+		<pK>6.30000019073</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Pyrrolysine</Nme>
+		<TLC>Pyl</TLC>
+		<OLC>O</OLC>
+		<Fma>C12H10N3O2</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Serine</Nme>
+		<TLC>Ser</TLC>
+		<OLC>S</OLC>
+		<Fma>C3H5NO2</Fma>
+		<pK>5.67999982834</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Threonine</Nme>
+		<TLC>Thr</TLC>
+		<OLC>T</OLC>
+		<Fma>C4H7NO2</Fma>
+		<pK>5.59999990463</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Tryptophan</Nme>
+		<TLC>Trp</TLC>
+		<OLC>W</OLC>
+		<Fma>C11H10N2O</Fma>
+		<pK>5.88999986649</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Tyrosine</Nme>
+		<TLC>Tyr</TLC>
+		<OLC>Y</OLC>
+		<Fma>C9H9NO2</Fma>
+		<pK>5.65999984741</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="1">
+		<Nme>Valine</Nme>
+		<TLC>Val</TLC>
+		<OLC>V</OLC>
+		<Fma>C5H9NO</Fma>
+		<pK>5.96000003815</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Selenocysteine</Nme>
+		<TLC>Sec</TLC>
+		<OLC>U</OLC>
+		<Fma>C3H5NOSe</Fma>
+		<pK>5.07000017166</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+
+
+
+
+
+	<!--Empty definitions-->
+
+
+	<AA rKey="0">
+		<Nme>UndefinedX</Nme>
+		<TLC>Xxx</TLC>
+		<OLC>X</OLC>
+		<Fma></Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+
+
+
+
+
+
+
+
+	<AA rKey="0">
+		<Nme>3-Methyl-His</Nme>
+		<TLC>MeH</TLC>
+		<OLC></OLC>
+		<RfAA>Histidine</RfAA>
+		<RfM>Methyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>3-Nitro-Tyr</Nme>
+		<TLC>NtT</TLC>
+		<OLC></OLC>
+		<RfAA>Tyrosine</RfAA>
+		<RfM>Nitro</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>4-Carboxy-Glu</Nme>
+		<TLC>Gla</TLC>
+		<OLC></OLC>
+		<RfAA>Glutamic Acid</RfAA>
+		<RfM>Carboxy</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>4-Iodo-His</Nme>
+		<TLC>IoH</TLC>
+		<OLC></OLC>
+		<RfAA>Histidine</RfAA>
+		<RfM>Iodo</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Aminoethyl-Cys</Nme>
+		<TLC>AeC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Aminoethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Benzyl-Cys</Nme>
+		<TLC>BzC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Benzyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Biotinylated-Lys</Nme>
+		<TLC>BiL</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Biotin</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Carboxy-Asp</Nme>
+		<TLC>AsD</TLC>
+		<OLC></OLC>
+		<RfAA>Aspartic Acid</RfAA>
+		<RfM>Carboxy</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Carboxymethyl-Cys</Nme>
+		<TLC>CmC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Carboxymethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dibromo-Tyr</Nme>
+		<TLC>BrT</TLC>
+		<OLC></OLC>
+		<RfAA>Tyrosine</RfAA>
+		<RfM>Dibromo</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dichloro-Tyr</Nme>
+		<TLC>ClT</TLC>
+		<OLC></OLC>
+		<RfAA>Tyrosine</RfAA>
+		<RfM>Dichloro</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dihydroxy-Pro</Nme>
+		<TLC>DiH</TLC>
+		<OLC></OLC>
+		<RfAA>Proline</RfAA>
+		<RfM>Dioxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Diiodo-Tyr</Nme>
+		<TLC>dIT</TLC>
+		<OLC></OLC>
+		<RfAA>Tyrosine</RfAA>
+		<RfM>Diiodo</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dimethyl-Arg</Nme>
+		<TLC>dMA</TLC>
+		<OLC></OLC>
+		<RfAA>Arginine</RfAA>
+		<RfM>Dimethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+			<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Hydroxy-Asp</Nme>
+		<TLC>OHD</TLC>
+		<OLC></OLC>
+		<RfAA>Aspartic Acid</RfAA>
+		<RfM>Oxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Methionine Sulfone</Nme>
+		<TLC>SuM</TLC>
+		<OLC></OLC>
+		<RfAA>Methionine</RfAA>
+		<RfM>Dioxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+<!--
+	<AA rKey="0">
+		<Nme>Methyl-Met</Nme>
+		<TLC>MeM</TLC>
+		<OLC></OLC>
+		<RfAA>Methionine</RfAA>
+		<RfM>Methyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+-->
+	<AA rKey="0">
+		<Nme>N-Acetyl-Lys</Nme>
+		<TLC>AcL</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Acetyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>N-Dimethyl-Lys</Nme>
+		<TLC>dML</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Dimethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>N-Methyl-Arg</Nme>
+		<TLC>MeA</TLC>
+		<OLC></OLC>
+		<RfAA>Arginine</RfAA>
+		<RfM>Methyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>N-Phosphoryl-His</Nme>
+		<TLC>PhH</TLC>
+		<OLC></OLC>
+		<RfAA>Histidine</RfAA>
+		<RfM>Phospho</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>N-Trimethyl-Lys</Nme>
+		<TLC>tML</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Trimethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Naphthyl-Ala</Nme>
+		<TLC>NpA</TLC>
+		<OLC></OLC>
+		<RfAA>Alanine</RfAA>
+		<RfM>Naphthyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Nicotinyl-Lys</Nme>
+		<TLC>NiL</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Nicotinyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>O-Acetyl-Ser</Nme>
+		<TLC>AcS</TLC>
+		<OLC></OLC>
+		<RfAA>Serine</RfAA>
+		<RfM>Acetyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>O-Methyl-Thr</Nme>
+		<TLC>OMT</TLC>
+		<OLC></OLC>
+		<RfAA>Threonine</RfAA>
+		<RfM>Methyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>O-Phosphoryl-Tyr</Nme>
+		<TLC>PhY</TLC>
+		<OLC></OLC>
+		<RfAA>Tyrosine</RfAA>
+		<RfM>Phospho</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>O-Sulfonyl-Tyr</Nme>
+		<TLC>SuT</TLC>
+		<OLC></OLC>
+		<RfAA>Tyrosine</RfAA>
+		<RfM>Sulfo</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Pyridylethyl-Cys</Nme>
+		<TLC>PEC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Pyridylethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>S-Carboxymethyl-Met</Nme>
+		<TLC>CmM</TLC>
+		<OLC></OLC>
+		<RfAA>Methionine</RfAA>
+		<RfM>Met-&gt;Carboxymethyl-Hcy</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dehydro-Ala</Nme>
+		<TLC>Dha</TLC>
+		<OLC></OLC>
+		<Fma>C3H3NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dehydro-Pro</Nme>
+		<TLC>Dhp</TLC>
+		<OLC></OLC>
+		<Fma>C5H5NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<!-- DIFFERENTIAL EXPRESSION - CUSTOM AA SECTION -->
+	<AA rKey="0">
+		<Nme>d0-ICAT-Cys</Nme>
+		<TLC>d0C</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>ICAT-D</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>d8-ICAT-Cys</Nme>
+		<TLC>d8C</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>ICAT-D:2H(8)</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>C13(0)-ICAT-Cys</Nme>
+		<TLC>C0C</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>ICAT-C</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>C13(9)-ICAT-Cys</Nme>
+		<TLC>C9C</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>ICAT-C:13C(9)</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>	
+	<AA rKey="0">
+		<Nme>AMP-Lys</Nme>
+		<TLC>AMP</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>AMP</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Propionamide-Cys</Nme>
+		<TLC>AcC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Propionamide</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>PMC-Arg</Nme>
+		<TLC>PMC</TLC>
+		<OLC></OLC>
+		<RfAA>Arginine</RfAA>
+		<RfM>PMC</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Pyro-Glu</Nme>
+		<TLC>Pyr</TLC>
+		<OLC></OLC>
+		<RfAA>Glutamine</RfAA>
+		<RfM>Gln-&gt;pyro-Glu</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>0</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>S-Cysteinyl-Cys</Nme>
+		<TLC>SCC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Cysteinyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>S-Farnesyl-Cys</Nme>
+		<TLC>SFC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Farnesyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>S-Palmitoyl-Cys</Nme>
+		<TLC>SPC</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Palmitoyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>2-Aminobutyric Acid</Nme>
+		<TLC>Abu</TLC>
+		<OLC></OLC>
+		<Fma>C4H7NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>2-Aminoisobutyric Acid</Nme>
+		<TLC>Aib</TLC>
+		<OLC></OLC>
+		<Fma>C4H7NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>2-Piperidinecarboxylic Acid</Nme>
+		<TLC>Pip</TLC>
+		<OLC></OLC>
+		<Fma>C6H9NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Citrulline</Nme>
+		<TLC>Cit</TLC>
+		<OLC></OLC>
+		<Fma>C6H11N3O2</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Cysteic Acid</Nme>
+		<TLC>CyA</TLC>
+		<OLC></OLC>
+		<Fma>C3H5NO4S</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Dehydroamino butyric acid</Nme>
+		<TLC>Dhb</TLC>
+		<OLC></OLC>
+		<Fma>C4H5NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Diaminopropionic acid</Nme>
+		<TLC>DiM</TLC>
+		<OLC></OLC>
+		<Fma>C3H6N2O</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Homoserine</Nme>
+		<TLC>Hse</TLC>
+		<OLC></OLC>
+		<Fma>C4H7NO2</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Homoserine Lactone</Nme>
+		<TLC>Hsl</TLC>
+		<OLC></OLC>
+		<Fma>C4H6NO2</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>0</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Isovaline</Nme>
+		<TLC>Iva</TLC>
+		<OLC></OLC>
+		<Fma>C5H9NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Norleucine</Nme>
+		<TLC>Nle</TLC>
+		<OLC></OLC>
+		<Fma>C6H11NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Ornithine</Nme>
+		<TLC>Orn</TLC>
+		<OLC></OLC>
+		<Fma>C5H10N2O</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Sarcosine</Nme>
+		<TLC>Sar</TLC>
+		<OLC></OLC>
+		<Fma>C3H5NO</Fma>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Methionine Sulfoxide</Nme>
+		<TLC>MOx</TLC>
+		<OLC></OLC>
+		<RfAA>Methionine</RfAA>
+		<RfM>Oxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Oxidized Met</Nme>
+		<TLC>Meo</TLC>
+		<OLC></OLC>
+		<RfAA>Methionine</RfAA>
+		<RfM>Oxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>O-Phosphoryl-Ser</Nme>
+		<TLC>PhS</TLC>
+		<OLC></OLC>
+		<RfAA>Serine</RfAA>
+		<RfM>Phospho(Ser,Thr)</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>O-Phosphoryl-Thr</Nme>
+		<TLC>PhT</TLC>
+		<OLC></OLC>
+		<RfAA>Threonine</RfAA>
+		<RfM>Phospho(Ser,Thr)</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>N-Phosphoryl-Lys</Nme>
+		<TLC>PhK</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Phospho</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Asn-&gt;Asp</Nme>
+		<TLC>N2D</TLC>
+		<OLC></OLC>
+		<RfAA>Asparagine</RfAA>
+		<RfM>Deamidated</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Gln-&gt;Glu</Nme>
+		<TLC>Q2E</TLC>
+		<OLC></OLC>
+		<RfAA>Glutamine</RfAA>
+		<RfM>Deamidated</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Hydroxy-Lys</Nme>
+		<TLC>Hyl</TLC>
+		<OLC></OLC>
+		<RfAA>Lysine</RfAA>
+		<RfM>Oxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Hydroxy-Pro</Nme>
+		<TLC>Hyp</TLC>
+		<OLC></OLC>
+		<RfAA>Proline</RfAA>
+		<RfM>Oxidation</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+	<AA rKey="0">
+		<Nme>Carboxamidomethyl-Cys</Nme>
+		<TLC>CAM</TLC>
+		<OLC></OLC>
+		<RfAA>Cysteine</RfAA>
+		<RfM>Carbamidomethyl</RfM>
+		<pK>0</pK>
+		<NpK>0</NpK>
+		<CpK>0</CpK>
+		<NTe>1</NTe>
+		<Cte>1</Cte>
+	</AA>
+
+
+
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- BIOLOGICAL MODIFICATIONS SECTION -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<Mod rKey="0">
+		<Nme>Acetyl</Nme>
+		<TLC>1Ac</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Acetyl</Nme>
+		<DisplayName>Acetyl</DisplayName>
+		<TLC>1Ac</TLC>
+		<TS>5</TS>
+		<Fma>C2H3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Acetyl</Nme>
+		<TLC>1Ac</TLC>
+		<TS>4</TS>
+		<Fma>C2H3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Terminal Acetyl Old3LetterCode</Nme>
+		<TLC>TAc</TLC>
+		<TS>5</TS>
+		<Fma>C2H3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal Acetyl Old3LetterCode</Nme>
+		<TLC>PAc</TLC>
+		<TS>4</TS>
+		<Fma>C2H3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Amidated</Nme>
+		<TLC>Ami</TLC>
+		<TS>8</TS>
+		<Fma>H2N</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Amidino</Nme>
+		<TLC>Amd</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>CH2N2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Archaeol</Nme>
+		<TLC>Ach</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C43H86O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Arg-&gt;Orn</Nme>
+		<TLC>Orn</TLC>
+		<Tgt>Arginine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H2CN2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Biotin</Nme>
+		<TLC>Btn</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C10H15N2O2S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Biotin</Nme>
+		<TLC>Btn</TLC>
+		<Tgt></Tgt>
+		<TS>4</TS>
+		<Fma>C10H15N2O2S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Bromo</Nme>
+		<TLC>1Br</TLC>
+		<Tgt>Tryptophan</Tgt>
+		<Tgt>Phenylalanine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>Br</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dibromo</Nme>
+		<TLC>2Br</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>Br2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Butyryl</Nme>
+		<TLC>Byr</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C4H6O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Carboxy</Nme>
+		<TLC>Cox</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Methionine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>CHO2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Carboxy-&gt;Thiocarboxy</Nme>
+		<TLC>Scx</TLC>
+		<Tgt>Glycine</Tgt>
+		<TS>8</TS>
+		<Fma>S</Fma>
+		<RpF>O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Carboxyethyl</Nme>
+		<TLC>CEt</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C3H4O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>CHDH</Nme>
+		<TLC>CHD</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>C17H26O4</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Chloro</Nme>
+		<TLC>1Cl</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>Cl</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dichloro</Nme>
+		<TLC>2Cl</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>Cl2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cholesterol</Nme>
+		<TLC>Chl</TLC>
+		<Tgt></Tgt>
+		<TS>8</TS>
+		<Fma>C27H44</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>CuSMo</Nme>
+		<TLC>CSM</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H24C19N8O15P2S3CuMo</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cyano</Nme>
+		<TLC>1CN</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>CN</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cysteinyl</Nme>
+		<TLC>SCC</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C3H6NO2S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- homocysteine formation mod --> 
+	<Mod rKey="0">	
+		<Nme>Cys-&gt;Hcy</Nme>
+		<TLC>CHC</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>CH2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Synonyms for oxoalanine are: formylglycine, or 2-amino-3-oxopropionic acid
+	     Cell, Vol. 82, 271-278, July 28, 1995 -->
+	<Mod rKey="0">
+		<Nme>Cys-&gt;Oxoalanine</Nme>
+		<TLC>COa</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF>H2S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Cys-&gt;PyruvicAcid</Nme>
+		<TLC>CPA</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>4</TS>
+		<Fma>O</Fma>
+		<RpF>H3NS</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Deamidated</Nme>
+		<TLC>Dea</TLC>
+		<TS>4</TS>
+		<Tgt>Phenylalanine</Tgt>
+		<Fma>HO</Fma>
+		<RpF>H2N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Decanoyl</Nme>
+		<TLC>Dec</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C10H18O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Delta:Se(1)</Nme>
+		<TLC>1Se</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>Se</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Delta:S(-1)Se(1)</Nme>
+		<TLC>SSe</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>Se</Fma>
+		<RpF>S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Diacylglycerol</Nme>
+		<TLC>DiG</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C37H68O4</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Deoxy</Nme>
+		<TLC>dOx</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Didehydroretinylidene</Nme>
+		<TLC>ddR</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C20H24</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Diironsubcluster</Nme>
+		<TLC>dFe</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C5N2O5S2Fe2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Diphthamide</Nme>
+		<TLC>Dip</TLC>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>C7H15N2O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Dipyrrolylmethanemethyl</Nme>
+		<TLC>dpM</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H22C20N2O8</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>FAD</Nme>
+		<TLC>FAD</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>H31C27N9O15P2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>FMN</Nme>
+		<TLC>FMN</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>H19C17N4O8P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>FMNC</Nme>
+		<TLC>FNC</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H21C17N4O9P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>FMNH</Nme>
+		<TLC>FNH</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>H19C17N4O9P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Farnesyl</Nme>
+		<TLC>Far</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C15H25</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hydroxyfarnesyl</Nme>
+		<TLC>HFr</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C15H25O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>FormylMet</Nme>
+		<TLC>FMA</TLC>
+		<TS>4</TS>
+		<Fma>H10C6NO2S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Geranylgeranyl</Nme>
+		<TLC>2Ge</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H32C20</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>GlnThrGlyGly</Nme>
+		<TLC>SU1</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C13H22N5O6</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>GlnGlnGlnThrGlyGly</Nme>
+		<TLC>SU2</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C23H37N9O10</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Glucuronyl</Nme>
+		<TLC>GCn</TLC>
+		<Tgt>Serine</Tgt>
+		<TS>255</TS>
+		<Fma>C6H10O7</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Glucuronyl</Nme>
+		<TLC>GCn</TLC>
+		<TS>4</TS>
+		<Fma>C6H10O7</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Glutathione</Nme>
+		<TLC>GSO</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H15C10N3O6S</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Glycerophospho</Nme>
+		<TLC>GPh</TLC>
+		<Tgt>Serine</Tgt>
+		<TS>255</TS>
+		<Fma>H7C3O5P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>GlycerylPE</Nme>
+		<TLC>GPE</TLC>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>H12C5NO5P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>GlyGly</Nme>
+		<TLC>UGG</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C4H7N2O2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+      <Mod rKey="0">
+            <Nme>GlyGlyGln</Nme>
+            <TLC>GGQ</TLC>
+            <Tgt>Lysine</Tgt>
+            <TS>255</TS>
+            <Fma>C9H15N4O4</Fma>
+            <RpF></RpF>
+            <NLF></NLF>
+            <IIF></IIF>
+            <Chg>0</Chg>
+  	</Mod>
+
+	<Mod rKey="0">
+		<Nme>GPIanchor</Nme>
+		<TLC>GPI</TLC>
+		<Tgt></Tgt>
+		<TS>8</TS>
+		<Fma>H6C2NO3P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Heme</Nme>
+		<TLC>HEM</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Fma>H32C34N4O4Fe</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>HNE</Nme>
+		<TLC>HNE</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Fma>H16C9O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hex</Nme>
+		<TLC>Hex</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C6H12O6</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Hex</Nme>
+		<TLC>Hex</TLC>
+		<Tgt></Tgt>
+		<TS>4</TS>
+		<Fma>C6H12O6</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>dHex</Nme>
+		<TLC>dHx</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C6H12O5</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Fucose Old3LetterCode</Nme>
+		<TLC>Fuc</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C6H12O5</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>HexNAc</Nme>
+		<TLC>HNc</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C8H14NO6</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF>C8H14NO5</IIF>
+		<Chg>1</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hex(1)HexNAc(1)</Nme>
+		<TLC>HHN</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C14H24NO11</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF>C14H24NO10</IIF>
+		<Chg>1</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hex(1)HexNAc(1)NeuAc(1)</Nme>
+		<TLC>NHH</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C25H41N2O19</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF>C25H41N2O18</IIF>
+		<Chg>1</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hex(1)HexNAc(1)NeuAc(2)</Nme>
+		<TLC>NHN</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C36H58N3O27</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF>C36H58N3O26</IIF>
+		<Chg>1</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hydroxycinnamyl</Nme>
+		<TLC>hCn</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H6C9O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hydroxyheme</Nme>
+		<TLC>hHm</TLC>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>H30C34N4O4Fe</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hydroxymethyl</Nme>
+		<TLC>h1M</TLC>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>H2CO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hydroxytrimethyl</Nme>
+		<TLC>h3M</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H7C3O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hypusine</Nme>
+		<TLC>Hps</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H9C4NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Iodo</Nme>
+		<TLC>Iod</TLC>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>I</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Diiodo</Nme>
+		<TLC>2Io</TLC>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>I2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Isopropyl Old3LetterCode</Nme>
+		<TLC>Ipr</TLC>
+		<TS>255</TS>
+		<Fma>C3H9</Fma>
+		<RpF>H3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>LeuArgGlyGly</Nme>
+		<TLC>Umc</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C16H30N7O4</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Lipoyl</Nme>
+		<TLC>Lip</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C8H12OS2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Lys-&gt;AminoadipicAcid</Nme>
+		<TLC>AAA</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF>H3N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Methyl</Nme>
+		<TLC>1Me</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Glutamine</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Isoleucine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Leucine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>CH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>N-Terminal Methyl</Nme>
+		<DisplayName>Methyl</DisplayName>
+		<TLC>1Me</TLC>
+		<TS>5</TS>
+		<Fma>CH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein N-Terminal Methyl</Nme>
+		<DisplayName>Protein Terminal Methyl</DisplayName>
+		<TLC>1Me</TLC>
+		<TS>4</TS>
+		<Fma>CH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>C-Terminal Methyl</Nme>
+		<DisplayName>Methyl</DisplayName>
+		<TLC>1Me</TLC>
+		<TS>10</TS>
+		<Fma>CH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein C-Terminal Methyl</Nme>
+		<DisplayName>Protein Terminal Methyl</DisplayName>
+		<TLC>1Me</TLC>
+		<TS>8</TS>
+		<Fma>CH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Methyl Ester Old3LetterCode</Nme>
+		<TLC>MeE</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>CH3O</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dimethyl</Nme>
+		<TLC>2Me</TLC>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Dimethyl</Nme>
+		<DisplayName>Dimethyl</DisplayName>
+		<TLC>2Me</TLC>
+		<TS>5</TS>
+		<Fma>C2H6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Dimethyl</Nme>
+		<DisplayName>Dimethyl</DisplayName>
+		<TLC>2Me</TLC>
+		<Tgt>Proline</Tgt>
+		<TS>4</TS>
+		<Fma>C2H6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dimethyl:2H(4)</Nme>
+		<TLC>DM4</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C2D4H2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Dimethyl:2H(4)</Nme>
+		<DisplayName>Dimethyl:2H(4)</DisplayName>
+		<TLC>DM4</TLC>
+		<TS>5</TS>
+		<Fma>C2D4H2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dimethyl:2H(6)</Nme>
+		<TLC>DM6</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C2D6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Dimethyl:2H(6)</Nme>
+		<DisplayName>Dimethyl:2H(6)</DisplayName>
+		<TLC>DM6</TLC>
+		<TS>5</TS>
+		<Fma>C2D6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dimethyl:2H(4)13C(2)</Nme>
+		<TLC>D6a</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb2D4</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Dimethyl:2H(4)13C(2)</Nme>
+		<DisplayName>Dimethyl:2H(4)13C(2)</DisplayName>
+		<TLC>D6a</TLC>
+		<TS>5</TS>
+		<Fma>Cb2D4</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dimethyl:2H(6)13C(2)</Nme>
+		<TLC>DM8</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb2D6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Dimethyl:2H(6)13C(2)</Nme>
+		<DisplayName>Dimethyl:2H(6)13C(2)</DisplayName>
+		<TLC>DM8</TLC>
+		<TS>5</TS>
+		<Fma>Cb2D6</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Trimethyl</Nme>
+		<TLC>3Me</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Alanine</Tgt>
+		<TS>255</TS>
+		<Fma>C3H9</Fma>
+		<RpF>H3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Methyl+Deamidated</Nme>
+		<TLC>MDe</TLC>
+		<Tgt>Glutamine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>HCO</Fma>
+		<RpF>N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Methylpyrroline</Nme>
+		<TLC>MPr</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H7C6NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Also, using MMTS as the alkylating reagent gives methylthio cysteine -->
+	<Mod rKey="0">
+		<Nme>Methylthio</Nme>
+		<TLC>MSH</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma>SCH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Methylthio</Nme>
+		<DisplayName>Methylthio</DisplayName>
+		<TLC>MSH</TLC>
+		<TS>5</TS>
+		<Fma>SCH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>MMTS Old3LetterCode</Nme>
+		<TLC>MMT</TLC>
+		<TS>255</TS>
+		<Fma>SCH3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- homocysteine formation mod -->
+	<Mod rKey="0">	
+		<Nme>Met-&gt;Hcy</Nme>
+		<TLC>MHC</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>CH2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Microcin</Nme>
+		<TLC>Mic</TLC>
+		<Tgt></Tgt>
+		<TS>8</TS>
+		<Fma>H37C36N3O20</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>MicrocinC7</Nme>
+		<TLC>Mi7</TLC>
+		<Tgt></Tgt>
+		<TS>8</TS>
+		<Fma>H19C13N6O6P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Molybdopterin</Nme>
+		<TLC>Mdt</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H11C10N5O8PS2Mo</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>MolybdopterinGD</Nme>
+		<TLC>MGD</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>H47C40N20O26P4S4Mo</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>MolybdopterinGD+Delta:S(-1)Se(1)</Nme>
+		<TLC>MtD</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H47C40N20O26P4S3SeMo</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Myristoyl</Nme>
+		<TLC>Myr</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C14H27O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Myristoyl</Nme>
+		<TLC>Myr</TLC>
+		<Tgt>Glycine</Tgt>
+		<TS>4</TS>
+		<Fma>C14H27O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>NeuAc</Nme>
+		<TLC>NAc</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C11H19NO9</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF>C11H19NO8</IIF>
+		<Chg>1</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>NeuGc</Nme>
+		<TLC>NGc</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>C11H19NO10</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Nicotinyl</Nme>
+		<TLC>Ncl</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C6H3NO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Nitro</Nme>
+		<TLC>Ntr</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>NO2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Octanoyl</Nme>
+		<TLC>Oct</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>H14C8O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Palmitoleyl</Nme>
+		<TLC>Pty</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H28C16O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Palmitoyl</Nme>
+		<TLC>Pal</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C16H31O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Tripalmitate</Nme>
+		<TLC>3Pa</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>4</TS>
+		<Fma>H96C51O5</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phosphopantetheine</Nme>
+		<TLC>PPE</TLC>
+		<Tgt>Serine</Tgt>
+		<TS>255</TS>
+		<Fma>C11H23N2O7PS</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phosphoadenosine</Nme>
+		<TLC>AMP</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>C10H14N5O7P</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phosphoguanosine</Nme>
+		<TLC>GMP</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>H12C10N5O7P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>PhosphoribosyldephosphoCoA</Nme>
+		<TLC>PRC</TLC>
+		<Tgt>Serine</Tgt>
+		<TS>255</TS>
+		<Fma>H42C26N7O19P3S</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>PhosphoUridine</Nme>
+		<TLC>UMP</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>H11C9N2O8P</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phospho(Ser,Thr)</Nme>
+		<DisplayName>Phospho</DisplayName>
+		<TLC>Pho</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>H2O3P</Fma>
+		<RpF>H</RpF>
+		<NLF>H3PO4</NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phospho</Nme>
+		<TLC>Pho</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H2O3P</Fma>
+		<RpF>H</RpF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>N-Phosphoryl Old3LetterCode</Nme>
+		<TLC>PhN</TLC>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H2O3P</Fma>
+		<RpF>H</RpF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>O-Phosphoryl Neut. Loss Old3LetterCode</Nme>
+		<TLC>PhL</TLC>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Phospho(Ser,Thr) Old3LetterCode</Nme>
+		<TLC>PhO</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>H2O3P</Fma>
+		<RpF>H</RpF>
+		<NLF>H3PO4</NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phycocyanobilin</Nme>
+		<TLC>pcb</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H38C33N4O6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phycoerythrobilin</Nme>
+		<TLC>pct</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H40C33N4O6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Phytochromobilin</Nme>
+		<TLC>pcm</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>H36C33N4O6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>PyridoxalPhosphate</Nme>
+		<TLC>PyP</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H8C8NO5P</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>PyruvicAcidIminyl</Nme>
+		<TLC>PAI</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H2C3O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal PyruvicAcidIminyl</Nme>
+		<TLC>PAI</TLC>
+		<Tgt>Valine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>4</TS>
+		<Fma>H2C3O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Quinone</Nme>
+		<TLC>Qin</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+	<Mod rKey="0">
+		<Nme>Retinylidene</Nme>
+		<TLC>Ret</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H26C20</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Ser-&gt;LacticAcid</Nme>
+		<TLC>SLA</TLC>
+		<Tgt>Serine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>HN</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Ser-&gt;Oxoalanine</Nme>
+		<TLC>SOa</TLC>
+		<Tgt>Serine</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Can also be an in vitro labeling reagent (for quant: use 0 vs. 4 deuteriums or 0 vs. 4 C13  - Fred Regnier) -->
+	<Mod rKey="0">
+		<Nme>Succinyl</Nme>
+		<TLC>Suc</TLC>
+		<TS>4</TS>
+		<Fma>C4H5O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Sulfide</Nme>
+		<TLC>Sud</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>S</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Sulfo</Nme>
+		<TLC>SuO</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>HO3S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Thyroxine</Nme>
+		<TLC>Trx</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>C6OI4</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Triiodo</Nme>
+		<TLC>3Io</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>I3</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Triiodothyronine</Nme>
+		<TLC>3IT</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>HC6OI3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Tyr-&gt;Dha</Nme>
+		<TLC>YDA</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H6C6O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- MODS THAT CAN BE BOTH NATURAL AND ARTIFACT - MODIFICATION SECTION -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<!-- Asparagine: N-Succinimide artifact -->
+	<Mod rKey="0">
+		<Nme>Ammonia-loss</Nme>
+		<DisplayName>Ammonia-loss</DisplayName>
+		<TLC>dAm</TLC>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>NH3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Cysteine: CAM to pyro-CAM cyclization artifact -->
+	<Mod rKey="0">
+		<Nme>Terminal Ammonia-loss</Nme>
+		<DisplayName>Ammonia-loss</DisplayName>
+		<TLC>dAm</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>5</TS>
+		<Fma></Fma>
+		<RpF>NH3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Serine: Ser to pyruvic acid cyclization PTM -->
+	<!-- Threonine: Thr to 2-oxobutanoic acid cyclization PTM -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal Ammonia-loss</Nme>
+		<DisplayName>Protein Terminal Ammonia-loss</DisplayName>
+		<TLC>dAm</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>4</TS>
+		<Fma></Fma>
+		<RpF>NH3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cation:Na</Nme>
+		<TLC>NaX</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>Na</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Cation:Na</Nme>
+		<DisplayName>Cation:Na</DisplayName>
+		<TLC>NaX</TLC>
+		<TS>10</TS>
+		<Fma>Na</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cation:K</Nme>
+		<TLC>KXX</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>K</Fma>
+		<RpF>H</RpF>
+`		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Cation:K</Nme>
+		<DisplayName>Cation:K</DisplayName>
+		<TLC>KXX</TLC>
+		<TS>10</TS>
+		<Fma>K</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cation:Cu[I]</Nme>
+		<TLC>CuX</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>Cu</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Cation:Cu[I]</Nme>
+		<DisplayName>Cation:Cu[I]</DisplayName>
+		<TLC>CuX</TLC>
+		<TS>10</TS>
+		<Fma>Cu</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Biomods - Y and S, workup K and T -->
+	<!-- On Ser is oxoalanine formylglycine -->
+	<!-- Journal of Biological Chemistry, Vol. 278, 2212-2218 (2003) --> 
+	<Mod rKey="0">	
+		<Nme>Didehydro</Nme>
+		<TLC>-2H</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Lactone formation from C-terminal hydroxylysine --> 
+	<Mod rKey="0">	
+		<Nme>Terminal Didehydro</Nme>
+		<DisplayName>Didehydro</DisplayName>
+		<TLC>-2H</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>10</TS>
+		<Fma></Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Formyl</Nme>
+		<TLC>Frm</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>CHO</Fma>
+		<RpF>H</RpF>
+		<NLF>CO</NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Formyl</Nme>
+		<DisplayName>Formyl</DisplayName>
+		<TLC>Frm</TLC>
+		<TS>5</TS>
+		<Fma>CHO</Fma>
+		<RpF>H</RpF>
+		<NLF>CO</NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Formyl</Nme>
+		<TLC>Frm</TLC>
+		<TS>4</TS>
+		<Fma>CHO</Fma>
+		<RpF>H</RpF>
+		<NLF>CO</NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>FormaldehydeAdduct</Nme>
+		<TLC>FRT</TLC>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>CH2O</Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Propionyl can be chemical ex. from propionic anhydride treatment or biological - ex putatively a histone mod -->
+	<Mod rKey="0">
+		<Nme>Propionyl</Nme>
+		<TLC>Poy</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>C3H4O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Propionyl</Nme>
+		<DisplayName>Propionyl</DisplayName>
+		<TLC>Poy</TLC>
+		<TS>5</TS>
+		<Fma>C3H4O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Propionyl</Nme>
+		<DisplayName>Propionyl</DisplayName>
+		<TLC>Poy</TLC>
+		<TS>4</TS>
+		<Fma>C3H4O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- CYSTEINE ALKYLATION MODIFICATIONS -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<Mod rKey="0">
+		<Nme>Acetyl-PEO-Biotin</Nme>
+		<TLC>PEO</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C18H30N4O5S</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>	
+
+	<Mod rKey="0">
+		<Nme>Terminal Acetyl-PEO-Biotin</Nme>
+		<DisplayName>Acetyl-PEO-Biotin</DisplayName>
+		<TLC>PEO</TLC>
+		<TS>5</TS>
+		<Fma>C18H30N4O5S</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>	
+
+	<Mod rKey="0">
+		<Nme>Carboxymethyl</Nme>
+		<TLC>Cmc</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H3O2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Carboxymethyl</Nme>
+		<DisplayName>Carboxymethyl</DisplayName>
+		<TLC>Cmc</TLC>
+		<TS>5</TS>
+		<Fma>C2H3O2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Carbamidomethyl</Nme>
+		<TLC>CAM</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H4NO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Carbamidomethyl</Nme>
+		<DisplayName>Carbamidomethyl</DisplayName>
+		<TLC>CAM</TLC>
+		<TS>5</TS>
+		<Fma>C2H4NO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dicarbamidomethyl</Nme>
+		<TLC>2CM</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>C4H8N2O2</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cys-&gt;pyro-CAM</Nme>
+		<TLC>PCa</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>5</TS>
+		<Fma>C2O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cys-&gt;pyro-CmC</Nme>
+		<TLC>PCm</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>5</TS>
+		<Fma>C2O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- CmC to pyro-CmC cyclization -->
+	<Mod rKey="0">
+		<Nme>Terminal Dehydrated</Nme>
+		<DisplayName>Dehydrated</DisplayName>
+		<TLC>Dhy</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>5</TS>
+		<Fma></Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dethiomethyl</Nme>
+		<TLC>DTM</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>CH4S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!--  Anal Biochem. 2004 Oct 1;333(1):174-81 -->
+	<Mod rKey="0">
+		<Nme>Ethanolyl</Nme>
+		<TLC>EtO</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H5O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>	
+
+	<Mod rKey="0">
+		<Nme>Terminal Ethanolyl</Nme>
+		<DisplayName>Ethanolyl</DisplayName>
+		<TLC>EtO</TLC>
+		<TS>5</TS>
+		<Fma>C2H5O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>N-Ethylmaleimide</Nme>
+		<TLC>NEM</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H7C6NO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal N-Ethylmaleimide</Nme>
+		<DisplayName>N-Ethylmaleimide</DisplayName>
+		<TLC>NEM</TLC>
+		<TS>5</TS>
+		<Fma>H7C6NO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>N-Ethylmaleimide+water</Nme>
+		<TLC>NMH</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H9C6NO3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal N-Ethylmaleimide+water</Nme>
+		<DisplayName>N-Ethylmaleimide+water</DisplayName>
+		<TLC>NMH</TLC>
+		<TS>5</TS>
+		<Fma>H9C6NO3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Met-&gt;Carbamidomethyl-Hcy</Nme>
+		<TLC>CaS</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H4NO</Fma>
+		<RpF>CH3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Met-&gt;Carboxymethyl-Hcy</Nme>
+		<TLC>CoS</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H3O2</Fma>
+		<RpF>CH3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>N-Methylmaleimide</Nme>
+		<TLC>NMM</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H5C5NO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal N-Methylmaleimide</Nme>
+		<DisplayName>N-Methylmaleimide</DisplayName>
+		<TLC>NMM</TLC>
+		<TS>5</TS>
+		<Fma>H5C5NO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>N-Methylmaleimide+water</Nme>
+		<TLC>MMH</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H7C5NO3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal N-Methylmaleimide+water</Nme>
+		<DisplayName>N-Methylmaleimide+water</DisplayName>
+		<TLC>MMH</TLC>
+		<TS>5</TS>
+		<Fma>H7C5NO3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Pyridylethyl</Nme>
+		<TLC>Pye</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C7H8N</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Pyridylethyl</Nme>
+		<DisplayName>Pyridylethyl</DisplayName>
+		<TLC>Pye</TLC>
+		<TS>5</TS>
+		<Fma>C7H8N</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- WORKUP MODIFICATIONS GENERAL -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<!-- Was called Aminoethyl and incorrectly define wrt cysteine prior to Pilot 4.0 but was never translated -->
+	<Mod rKey="0">
+		<Nme>AEC-MAEC</Nme>
+		<TLC>Aec</TLC>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H5NS</Fma>
+		<RpF>O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Amidated</Nme>
+		<DisplayName>Amidated</DisplayName>
+		<TLC>Ami</TLC>
+		<TS>10</TS>
+		<Fma>H2N</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Amino</Nme>
+		<TLC>Amn</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>NH2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- This is half of transpeptidation - the addition of Arg to any peptide N-term -->
+	<Mod rKey="0">	
+		<Nme>Arg-add</Nme>
+		<TLC>+1R</TLC>
+		<Tgt></Tgt>
+		<TS>5</TS>
+		<Fma>H12C6N4O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- This is half of transpeptidation - the removal of Arg from a peptide C-term having Arginine -->
+	<Mod rKey="0">	
+		<Nme>Arg-loss</Nme>
+		<TLC>-1R</TLC>
+		<Tgt>Arginine</Tgt>
+		<TS>10</TS>
+		<Fma></Fma>
+		<RpF>H12C6N4O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Oxidation followed by loss of H5CN3. Amino Acids (2003) 25: 221-226. -->
+	<Mod rKey="0">
+		<Nme>Arg-&gt;GluSA</Nme>
+		<TLC>AGA</TLC>
+		<Tgt>Arginine</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF>H5CN3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Side reaction in urea denaturation -->
+	<Mod rKey="0">
+		<Nme>Carbamyl</Nme>
+		<TLC>CRM</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>CH2NO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Side reaction in urea denaturation -->
+	<Mod rKey="0">
+		<Nme>Terminal Carbamyl</Nme>
+		<DisplayName>Carbamyl</DisplayName>
+		<TLC>CRM</TLC>
+		<TS>5</TS>
+		<Fma>CH2NO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Side reaction in urea denaturation -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal Carbamyl</Nme>
+		<TLC>CRM</TLC>
+		<TS>4</TS>
+		<Fma>CH2NO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Cys-&gt;Dha</Nme>
+		<TLC>DHA</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H2S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Arginine to citrulline conversion is also being dubbed deamidated, as proposed in the standards spreadsheet. Thus, Arg to Cit has been removed here in version 3 onward -->
+	<Mod rKey="0">
+		<Nme>Deamidated</Nme>
+		<TLC>Dea</TLC>
+		<TS>255</TS>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Glutamine</Tgt>
+		<Tgt>AsnOrAsp</Tgt>
+		<Tgt>GlnOrGlu</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Fma>HO</Fma>
+		<RpF>H2N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dehydrated</Nme>
+		<TLC>Dhy</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Serine</Tgt>
+ 		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+ 		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Dehydrated</Nme>
+		<TLC>Dhy</TLC>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Glutamine</Tgt>
+ 		<TS>8</TS>
+		<Fma></Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Half of a disulfide bridge -->
+	<Mod rKey="0">	
+		<Nme>Dehydro</Nme>
+		<TLC>-1H</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Delta:H(2)C(2)</Nme>
+		<TLC>AAS</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Delta:H(2)C(2)</Nme>
+		<DisplayName>Delta:H(2)C(2)</DisplayName>
+		<TLC>AAS</TLC>
+		<TS>5</TS>
+		<Fma>C2H2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Delta:H(4)C(2)</Nme>
+		<TLC>AAR</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>C2H4</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Delta:H(4)C(2)</Nme>
+		<DisplayName>Delta:H(4)C(2)</DisplayName>
+		<TLC>AAR</TLC>
+		<TS>5</TS>
+		<Fma>C2H4</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Ethylamide</Nme>
+		<TLC>EAm</TLC>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>C2H5</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Gln-&gt;pyro-Glu</Nme>
+		<TLC>PGQ</TLC>
+		<Tgt>Glutamine</Tgt>
+		<TS>5</TS>
+		<Fma></Fma>
+		<RpF>H3N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Glu-&gt;pyro-Glu</Nme>
+		<TLC>PGE</TLC>
+		<Tgt>Glutamic Acid</Tgt>
+		<TS>5</TS>
+		<Fma></Fma>
+		<RpF>H2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Conversion of lysine to homoarginine improves ionization. -->
+	<!-- Analytical Biochem 287, 110-117 (2000) -->
+	<!-- Official PSI name of the modification where lysine is converted to homoarginine is Guanidinyl -->
+	<Mod rKey="0">
+		<Nme>Guanidinyl</Nme>
+		<TLC>1Gu</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>H2CN2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+	<Mod rKey="0">
+		<Nme>Terminal Guanidinyl</Nme>
+		<DisplayName>Guanidinyl</DisplayName>
+		<TLC>1Gu</TLC>
+		<TS>5</TS>
+		<Fma>H2CN2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<!-- Oxidation followed by loss of NH3. Amino Acids (2003) 25: 221-226. Can be biological mod too. -->
+	<Mod rKey="0">
+		<Nme>Lys-&gt;Allysine</Nme>
+		<TLC>LAA</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF>H3N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Really a biological mod? -->
+	<Mod rKey="0">
+		<Nme>Lys-&gt;Hydroxyallysine</Nme>
+		<TLC>HAA</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF>H3N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- This is half of transpeptidation - the addition of Lys to any peptide N-term -->
+	<Mod rKey="0">	
+		<Nme>Lys-add</Nme>
+		<TLC>+1K</TLC>
+		<Tgt></Tgt>
+		<TS>5</TS>
+		<Fma>H12C6N2O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- This is half of transpeptidation - the removal of Lys from a peptide C-term having Lysine -->
+	<Mod rKey="0">	
+		<Nme>Lys-loss</Nme>
+		<TLC>-1K</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>10</TS>
+		<Fma></Fma>
+		<RpF>H12C6N2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Protein Terminal Lys-loss</Nme>
+		<TLC>-1K</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>8</TS>
+		<Fma></Fma>
+		<RpF>H12C6N2O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- BONCAT mod -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;Aha</Nme>
+		<TLC>MAH</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>N3</Fma>
+		<RpF>CH3S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- BONCAT mod -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;Aha+tag</Nme>
+		<TLC>MAT</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>C4H5N5O</Fma>
+		<RpF>S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- BONCAT mod -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;Aha+tagMCL</Nme>
+		<TLC>MAC</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>C26H37N11O14</Fma>
+		<RpF>S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Note that oxidation (including hydroxylation) can arise during workup or biologically -->
+	<Mod rKey="0">	
+		<Nme>Oxidation</Nme>
+		<TLC>Oxi</TLC>
+		<Tgt>Methionine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Phenylalanine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Proline</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">	
+		<Nme>Terminal Oxidation</Nme>
+		<TLC>Oxi</TLC>
+		<Tgt>Glycine</Tgt>
+		<TS>10</TS>
+		<Fma>O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Hydroxy Old3LetterCode</Nme>
+		<TLC>1OH</TLC>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Cysteine sulfenic acid Old3LetterCode</Nme>
+		<TLC>CSA</TLC>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Proglutamicsealde Old3LetterCode</Nme>
+		<TLC>PGa</TLC>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dioxidation</Nme>
+		<TLC>2Ox</TLC>
+		<Tgt>Methionine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Phenylalanine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Proline</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Dihydroxy Old3LetterCode</Nme>
+		<TLC>2OH</TLC>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Dihydroxy-Phe Old3LetterCode</Nme>
+		<TLC>DHF</TLC>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Formylkynurenin Old3LetterCode</Nme>
+		<TLC>Fky</TLC>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Trioxidation</Nme>
+		<TLC>3Ox</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>O3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Trioxidation Old3LetterCode</Nme>
+		<TLC>CAa</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>O3</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Berlett, Barbara S.; Stadtman, Earl R. Journal of Biological Chemistry (1997), 272(33), 20313-20316. Reaction 4 -->
+	<Mod rKey="0">
+		<Nme>Pro-&gt;Pyrrolidinone</Nme>
+		<TLC>PYD</TLC>
+		<Tgt>Proline</Tgt>
+		<TS>10</TS>
+		<Fma></Fma>
+		<RpF>H2CO</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Side reaction in 2D electrophoresis gels -->
+	<Mod rKey="0">
+		<Nme>Propionamide</Nme>
+		<TLC>PPa</TLC>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C3H5NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Side reaction in 2D electrophoresis gels -->
+	<Mod rKey="0">
+		<Nme>Terminal Propionamide</Nme>
+		<DisplayName>Propionamide</DisplayName>
+		<TLC>PPa</TLC>
+		<TS>5</TS>
+		<Fma>C3H5NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- NOT a cyclization reaction. (Proline is already cyclized!). Biological mod? -->
+	<Mod rKey="0">
+		<Nme>Pro-&gt;pyro-Glu</Nme>
+		<TLC>PGP</TLC>
+		<Tgt>Proline</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF>H2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Sec-&gt;Dha</Nme>
+		<TLC>UHA</TLC>
+		<Tgt>Selenocysteine</Tgt>
+		<TS>255</TS>
+		<Fma></Fma>
+		<RpF>H2Se</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Trp-&gt;Kynurenin</Nme>
+		<TLC>Kyn</TLC>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>O</Fma>
+		<RpF>C</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Trp-&gt;Hydroxykynurenin</Nme>
+		<TLC>HKy</TLC>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>O2</Fma>
+		<RpF>C</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- ISOTOPIC LABELS AND DIFFERENTIAL EXPRESSION MODIFICATIONS SECTION -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<Mod rKey="0">
+		<Nme>Acetyl:2H(3)</Nme>
+		<TLC>DAc</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>C2D3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Acetyl:2H(3)</Nme>
+		<DisplayName>Acetyl:2H(3)</DisplayName>
+		<TLC>DAc</TLC>
+		<TS>5</TS>
+		<Fma>C2D3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal Acetyl:2H(3)</Nme>
+		<DisplayName>Acetyl:2H(3)</DisplayName>
+		<TLC>DAc</TLC>
+		<TS>4</TS>
+		<Fma>C2D3O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+	<Mod rKey="0">
+		<Nme>Deamidated:18O(1)</Nme>
+		<TLC>DeO</TLC>
+		<TS>255</TS>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Glutamine</Tgt>
+		<Tgt>AsnOrAsp</Tgt>
+		<Fma>HOb</Fma>
+		<RpF>H2N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For PNGase F in O-18 water special factor  -->
+	<Mod rKey="0">
+		<Nme>Delta:H(1)O(-1)18O(1)</Nme>
+		<TLC>DeW</TLC>
+		<Tgt>Asparagine</Tgt>
+		<TS>255</TS>
+		<Fma>HOb</Fma>
+		<RpF>O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>ICAT-C</Nme>
+		<TLC>C0I</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C10H18N3O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>ICAT-C:13C(9)</Nme>
+		<TLC>C9I</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>CCb9H18N3O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>ICAT-D</Nme>
+		<TLC>d0I</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C20H35N4O5S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>ICAT-D:2H(8)</Nme>
+		<TLC>d8I</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C20D8H27N4O5S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>ICPL</Nme>
+		<TLC>IP0</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C6H3NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal ICPL</Nme>
+		<DisplayName>ICPL</DisplayName>
+		<TLC>IP0</TLC>
+		<TS>5</TS>
+		<Fma>C6H3NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+ 	 <Mod rKey="0">
+    		<Nme>ICPL:2H(4)</Nme>
+    		<TLC>IP4</TLC>
+    		<Tgt>Lysine</Tgt>
+    		<TS>255</TS>
+    		<Fma>D4C6NO</Fma>
+    		<RpF>H</RpF>
+    		<NLF></NLF>
+    		<IIF></IIF>
+    		<Chg>0</Chg>
+  	</Mod>
+
+	<Mod rKey="0">
+    		<Nme>Terminal ICPL:2H(4)</Nme>
+    		<DisplayName>ICPL:2H(4)</DisplayName>
+    		<TLC>IP4</TLC>
+    		<TS>5</TS>
+    		<Fma>D4C6NO</Fma>
+   		<RpF>H</RpF>
+    		<NLF></NLF>
+    		<IIF></IIF>
+    		<Chg>0</Chg>
+  	</Mod>
+
+	<Mod rKey="0">
+		<Nme>ICPL:13C(6)</Nme>
+		<TLC>IP6</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6H3NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal ICPL:13C(6)</Nme>
+		<DisplayName>ICPL:13C(6)</DisplayName>
+		<TLC>IP6</TLC>
+		<TS>5</TS>
+		<Fma>Cb6H3NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal ICPL</Nme>
+		<DisplayName>ICPL</DisplayName>
+		<TLC>ICL</TLC>
+		<TS>4</TS>
+		<Fma>C6H3NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal ICPL:13C(6)</Nme>
+		<DisplayName>ICPL:13C(6)</DisplayName>
+		<TLC>ICH</TLC>
+		<TS>4</TS>
+		<Fma>Cb6H3NO</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>iTRAQ4plex</Nme>
+		<TLC>IT4</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ4plex</Nme>
+		<DisplayName>iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<TS>5</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ4plex</Nme>
+		<TLC>IT4</TLC>
+		<TS>4</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>iTRAQ8plex</Nme>
+		<TLC>IT8</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>  
+
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ8plex</Nme>
+		<DisplayName>iTRAQ8plex</DisplayName>
+		<TLC>IT8</TLC>
+		<TS>5</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ8plex</Nme>
+		<TLC>IT8</TLC>
+		<TS>4</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>iTRAQ8plexCold</Nme>
+		<TLC>T8C</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C14H25N4O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ8plexCold</Nme>
+		<DisplayName>iTRAQ8plexCold</DisplayName>
+		<TLC>T8C</TLC>
+		<TS>5</TS>
+		<Fma>C14H25N4O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ8plexCold</Nme>
+		<TLC>T8C</TLC>
+		<TS>4</TS>
+		<Fma>C14H25N4O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+  
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>iTRAQ4plex Old3LetterCode</Nme>
+		<TLC>ITR</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ4plex Old3LetterCode</Nme>
+		<TLC>PTR</TLC>
+		<TS>4</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>iTRAQ8plex Old3LetterCode</Nme>
+		<TLC>TR8</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<TS>255</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>iTRAQ</Nme>
+		<DisplayName>iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ</Nme>
+		<DisplayName>iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<TS>5</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ</Nme>
+		<DisplayName>Protein Terminal iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<TS>4</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>iTRAQ4Plex</Nme>
+		<DisplayName>iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ4Plex</Nme>
+		<DisplayName>iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<TS>5</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ4Plex</Nme>
+		<DisplayName>Protein Terminal iTRAQ4plex</DisplayName>
+		<TLC>IT4</TLC>
+		<TS>4</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>iTRAQ8Plex</Nme>
+		<DisplayName>iTRAQ8plex</DisplayName>
+		<TLC>IT8</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>  
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ8Plex</Nme>
+		<DisplayName>iTRAQ8plex</DisplayName>
+		<TLC>IT8</TLC>
+		<TS>5</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ8Plex</Nme>
+		<DisplayName>Protein Terminal iTRAQ8plex</DisplayName>
+		<TLC>IT8</TLC>
+		<TS>4</TS>
+		<Fma>C7Cb7H25N3NcO3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>iTRAQ8PlexCold</Nme>
+		<DisplayName>iTRAQ8plexCold</DisplayName>
+		<TLC>T8C</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C14H25N4O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Terminal iTRAQ8PlexCold</Nme>
+		<DisplayName>iTRAQ8plexCold</DisplayName>
+		<TLC>T8C</TLC>
+		<TS>5</TS>
+		<Fma>C14H25N4O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For display purposes in ProteinPilot UI only (supply DisplayName) -->
+	<Mod rKey="0">
+		<Nme>Protein Terminal iTRAQ8PlexCold</Nme>
+		<DisplayName>Protein Terminal iTRAQ8plexCold</DisplayName>
+		<TLC>T8C</TLC>
+		<TS>4</TS>
+		<Fma>C14H25N4O3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+	<Mod rKey="0">
+		<Nme>TMT6plex</Nme>
+		<TLC>TM6</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C8Cb4H20NNcO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal TMT6plex</Nme>
+		<DisplayName>TMT6plex</DisplayName>
+		<TLC>TM6</TLC>
+		<TS>5</TS>
+		<Fma>C8Cb4H20NNcO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal TMT6plex</Nme>
+		<TLC>TM6</TLC>
+		<TS>4</TS>
+		<Fma>C8Cb4H20NNcO2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+	<Mod rKey="0">
+		<Nme>TMT2plex</Nme>
+		<TLC>TM2</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C11CbH20N2O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal TMT2plex</Nme>
+		<DisplayName>TMT2plex</DisplayName>
+		<TLC>TM2</TLC>
+		<TS>5</TS>
+		<Fma>C11CbH20N2O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal TMT2plex</Nme>
+		<TLC>TM2</TLC>
+		<TS>4</TS>
+		<Fma>C11CbH20N2O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+	<Mod rKey="0">
+		<Nme>TMT</Nme>
+		<TLC>TM0</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C12H20N2O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal TMT</Nme>
+		<DisplayName>TMT</DisplayName>
+		<TLC>TM0</TLC>
+		<TS>5</TS>
+		<Fma>C12H20N2O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Protein Terminal TMT</Nme>
+		<TLC>TM0</TLC>
+		<TS>4</TS>
+		<Fma>C12H20N2O2</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Label:15N(1)</Nme>
+		<TLC>+01</TLC>
+		<Tgt>Alanine</Tgt>
+		<Tgt>Aspartic Acid</Tgt>
+		<Tgt>Cysteine</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Glycine</Tgt>
+		<Tgt>Isoleucine</Tgt>
+		<Tgt>Leucine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Methionine</Tgt>
+		<Tgt>Phenylalanine</Tgt>
+		<Tgt>Proline</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Valine</Tgt>
+		<TS>255</TS>
+		<Fma>Nc1</Fma>
+		<RpF>N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:15N(2)</Nme>
+		<TLC>+02</TLC>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Asparagine</Tgt>
+		<Tgt>Glutamine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tryptophan</Tgt>
+		<TS>255</TS>
+		<Fma>Nc2</Fma>
+		<RpF>N2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Label:2H(3)</Nme>
+		<TLC>D03</TLC>
+		<Tgt>Leucine</Tgt>
+		<TS>255</TS>
+		<Fma>D3</Fma>
+		<RpF>H3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+        <Mod rKey="0">
+                <Nme>Label:13C(3)</Nme>
+                <TLC>+3a</TLC>
+                <Tgt>Alanine</Tgt>
+                <TS>255</TS>
+                <Fma>Cb3</Fma>
+                <RpF>C3</RpF>
+                <NLF></NLF>
+                <IIF></IIF>
+                <Chg>0</Chg>
+        </Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:15N(3)</Nme>
+		<TLC>+03</TLC>
+		<Tgt>Histidine</Tgt>
+		<TS>255</TS>
+		<Fma>Nc3</Fma>
+		<RpF>N3</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+	<Mod rKey="0">
+		<Nme>Label:2H(4)</Nme>
+		<TLC>D04</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>D4</Fma>
+		<RpF>H4</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:13C(4)</Nme>
+		<TLC>+4b</TLC>
+		<Tgt>Lysine</Tgt>
+
+		<TS>255</TS>
+		<Fma>Cb4</Fma>
+		<RpF>C4</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:13C(3)15N(1)</Nme>
+		<TLC>+4a</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb3Nc</Fma>
+		<RpF>C3N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:15N(4)</Nme>
+		<TLC>+04</TLC>
+		<Tgt>Arginine</Tgt>
+		<TS>255</TS>
+		<Fma>Nc4</Fma>
+		<RpF>N4</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+  
+	<Mod rKey="0">
+		<Nme>Label:13C(4)15N(1)</Nme>
+		<TLC>+05</TLC>
+		<Tgt>Aspartic Acid</Tgt>
+		<TS>255</TS>
+		<Fma>Cb4Nc</Fma>
+		<RpF>C4N</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:2H(4)13C(1)</Nme>
+		<TLC>+5a</TLC>
+		<Tgt>Arginine</Tgt>
+		<TS>255</TS>
+		<Fma>CbD4</Fma>
+		<RpF>CH4</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<Mod rKey="0">
+		<Nme>Label:13C(6)</Nme>
+		<TLC>+06</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Isoleucine</Tgt>
+		<Tgt>Leucine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6</Fma>
+		<RpF>C6</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:13C(5)15N(1)</Nme>
+		<TLC>+6a</TLC>
+		<Tgt>Valine</Tgt>
+		<Tgt>Proline</Tgt>
+		<Tgt>Glutamic Acid</Tgt>
+		<Tgt>Methionine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb5Nc1</Fma>
+		<RpF>C5N1</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+	<Mod rKey="0">
+		<Nme>Label:13C(6)15N(1)</Nme>
+		<TLC>+07</TLC>
+		<Tgt>Leucine</Tgt>
+		<Tgt>Isoleucine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6Nc1</Fma>
+		<RpF>C6N1</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+	<Mod rKey="0">
+		<Nme>Label:13C(6)15N(2)</Nme>
+		<TLC>+08</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Leucine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6Nc2</Fma>
+		<RpF>C6N2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+	<Mod rKey="0">
+		<Nme>Label:2H(10)</Nme>
+		<TLC>D10</TLC>
+		<Tgt>Leucine</Tgt>
+		<TS>255</TS>
+		<Fma>D10</Fma>
+		<RpF>H10</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Label:13C(6)15N(4)</Nme>
+		<TLC>+10</TLC>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6Nc4</Fma>
+		<RpF>C6N4</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>	
+
+	<Mod rKey="0">
+		<Nme>Label:13C(9)15N(1)</Nme>
+		<TLC>10a</TLC>
+		<Tgt>Phenylalanine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb9Nc1</Fma>
+		<RpF>C9N1</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>	
+	
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Label:13C(6)15N(2) Old3LetterCode</Nme>
+		<TLC>K+8</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6Nc2</Fma>
+		<RpF>C6N2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+	
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Label:13C(6) Old3LetterCode</Nme>
+		<TLC>SK6</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Isoleucine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6</Fma>
+		<RpF>C6</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Label:13C(6)15N(4) Old3LetterCode</Nme>
+		<TLC>SRT</TLC>
+		<Tgt>Arginine</Tgt>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>Cb6Nc4</Fma>
+		<RpF>C6N4</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>	
+
+	<Mod rKey="0">
+		<Nme>Label:18O(1)</Nme>
+		<TLC>Ob1</TLC>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>Ob</Fma>
+		<RpF>O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Label:18O(1)</Nme>
+		<DisplayName>Label:18O(1)</DisplayName>
+		<TLC>Ob1</TLC>
+		<TS>10</TS>
+		<Fma>Ob</Fma>
+		<RpF>O</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Label:18O(2)</Nme>
+		<DisplayName>Label:18O(2)</DisplayName>
+		<TLC>Ob2</TLC>
+		<TS>10</TS>
+		<Fma>Ob2</Fma>
+		<RpF>O2</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>mTRAQ</Nme>
+		<TLC>M00</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C7H13N2O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal mTRAQ</Nme>
+		<DisplayName>mTRAQ</DisplayName>
+		<TLC>M00</TLC>
+		<TS>5</TS>
+		<Fma>C7H13N2O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>mTRAQ:13C(3)15N(1)</Nme>
+		<TLC>M04</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal mTRAQ:13C(3)15N(1)</Nme>
+		<DisplayName>mTRAQ:13C(3)15N(1)</DisplayName>
+		<TLC>M04</TLC>
+		<TS>5</TS>
+		<Fma>C4Cb3H13NNcO</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>mTRAQ:13C(6)15N(2)</Nme>
+		<TLC>M08</TLC>
+		<Tgt>Lysine</Tgt>
+		<Tgt>Tyrosine</Tgt>
+		<Tgt>Histidine</Tgt>
+		<Tgt>Serine</Tgt>
+		<Tgt>Threonine</Tgt>
+		<TS>255</TS>
+		<Fma>C1Cb6H13Nc2O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal mTRAQ:13C(6)15N(2)</Nme>
+		<DisplayName>mTRAQ:13C(6)15N(2)</DisplayName>
+		<TLC>M08</TLC>
+		<TS>5</TS>
+		<Fma>C1Cb6H13Nc2O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+	<!-- RABA - Reductive Alklyation By Acetone  J Am Soc Mass Spectrom  Jianjun et al (2009) 20, 1366-1377 -->
+
+	<Mod rKey="0">
+		<Nme>Propyl</Nme>
+		<TLC>Prp</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C3H6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Propyl</Nme>
+		<DisplayName>Propyl</DisplayName>
+		<TLC>Prp</TLC>
+		<TS>5</TS>
+		<Fma>C3H6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Propyl:2H(6)</Nme>
+		<TLC>Pr6</TLC>
+		<Tgt>Lysine</Tgt>
+		<TS>255</TS>
+		<Fma>C3D6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Propyl:2H(6)</Nme>
+		<DisplayName>Propyl:2H(6)</DisplayName>
+		<TLC>Pr6</TLC>
+		<TS>5</TS>
+		<Fma>C3D6</Fma>
+		<RpF></RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- MODIFICATIONS RESULTING FROM DIGESTION -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<!-- CNBr cleavage also causes methionine cyclization at C-terminal, resulting in the formation of homoserine lactone. -->
+	<!-- Analytical Biochemistry 266, 1-8 (1999) -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;Hsl</Nme>
+		<TLC>Hsl</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>2</TS>
+		<Fma></Fma>
+		<RpF>CH4S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- Addition of water to homoserine lactone results in the formation of homoserine -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;Hse</Nme>
+		<TLC>Hse</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>2</TS>
+		<Fma>H2O</Fma>
+		<RpF>CH4S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;HseLactone Old3LetterCode</Nme>
+		<TLC>HSL</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>2</TS>
+		<Fma></Fma>
+		<RpF>CH4S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<!-- For backwards compatibility of 3 letter codes -->
+	<Mod rKey="0">
+		<Nme>Met-&gt;Hse Old3LetterCode</Nme>
+		<TLC>HSr</TLC>
+		<Tgt>Methionine</Tgt>
+		<TS>2</TS>
+		<Fma>H2O</Fma>
+		<RpF>CH4S</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- XENOBIOTIC MODIFICATIONS    -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<Mod rKey="0">
+		<Nme>Benzyl</Nme>
+		<TLC>Bnz</TLC>
+		<Tgt>Cysteine</Tgt>
+		<TS>255</TS>
+		<Fma>C7H7</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Boc</Nme>
+		<TLC>Boc</TLC>
+		<TS>4</TS>
+		<Fma>C5H9O2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>CBZ(Benzyloxycarbonyl)</Nme>
+		<TLC>CBZ</TLC>
+		<TS>4</TS>
+		<Fma>C8H7O2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Dinitrophenyl</Nme>
+		<TLC>2Np</TLC>
+		<TS>255</TS>
+		<Fma>C6H3N2O4</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Fmoc</Nme>
+		<TLC>Fmc</TLC>
+		<TS>4</TS>
+		<Fma>C15H11O2</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Hydrazide</Nme>
+		<TLC>Hyz</TLC>
+		<TS>255</TS>
+		<Fma>H3N2</Fma>
+		<RpF>HO</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Naphthyl</Nme>
+		<TLC>Npl</TLC>
+		<Tgt>Alanine</Tgt>
+		<TS>255</TS>
+		<Fma>C10H7</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Napthylacetyl</Nme>
+		<TLC>NpA</TLC>
+		<TS>255</TS>
+		<Fma>C12H9O</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Trifluoroacetyl</Nme>
+		<TLC>TFA</TLC>
+		<TS>255</TS>
+		<Fma>C2OF3</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Trinitrophenyl</Nme>
+		<TLC>3Np</TLC>
+		<TS>255</TS>
+		<Fma>C6H2N3O6</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>Terminal Trinitrophenyl</Nme>
+		<DisplayName>Trinitrophenyl</DisplayName>
+		<TLC>3Np</TLC>
+		<TS>5</TS>
+		<Fma>C6H2N3O6</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+	<Mod rKey="0">
+		<Nme>PMC</Nme>
+		<TLC>PMC</TLC>
+		<Tgt>Arginine</Tgt>
+		<TS>255</TS>
+		<Fma>C14H18O3S</Fma>
+		<RpF>H</RpF>
+		<NLF></NLF>
+		<IIF></IIF>
+		<Chg>0</Chg>
+	</Mod>
+
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- USER-DEFINED MODIFICATIONS - removed in Pilot 3.0 and thereafter -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- DIGESTION AGENTS -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+
+	<CAgt rKey="0">
+		<Nme>Acid Cleavage</Nme>
+		<TLC>A</TLC>
+		<CA>Aspartic Acid</CA>
+		<CA>Proline</CA>
+	</CAgt>
+	
+	<CAgt rKey="0">
+		<Nme>Arg C</Nme>
+		<TLC>AC</TLC>
+		<CA>Arginine</CA>
+	</CAgt>
+	
+	<CAgt rKey="0">
+		<Nme>Asp N</Nme>
+		<TLC>AN</TLC>
+		<CB>Aspartic Acid</CB>
+	</CAgt>
+
+	<CAgt rKey="0">
+		<Nme>CNBr</Nme>
+		<TLC>Cb</TLC>
+		<CA>Methionine</CA>
+		<CMd>Met-&gt;Hsl</CMd>
+		<CMd>Met-&gt;Hse</CMd>
+	</CAgt>
+
+	<CAgt rKey="0">
+		<Nme>Chymotrypsin</Nme>
+		<TLC>C</TLC>
+		<CA>Isoleucine</CA>
+		<CA>Leucine</CA>
+		<CA>Phenylalanine</CA>
+		<CA>Tryptophan</CA>
+		<CA>Tyrosine</CA>
+		<CNB>Proline</CNB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Glu C(V8 Protease)</Nme>
+		<TLC>G</TLC>
+		<CA>Aspartic Acid</CA>
+		<CA>Glutamic Acid</CA>
+		<CNB>Proline</CNB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Lys C</Nme>
+		<TLC>L</TLC>
+		<CA>Lysine</CA>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Thermolysin</Nme>
+		<TLC>TLN</TLC>
+		<CB>Isoleucine</CB>
+		<CB>Leucine</CB>
+		<CB>Phenylalanine</CB>
+		<CB>Valine</CB>
+		<CB>Methionine</CB>
+		<CB>Alanine</CB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Trypsin</Nme>
+		<TLC>T</TLC>
+		<CA>Arginine</CA>
+		<CA>Lysine</CA>
+		<CNB>Proline</CNB>
+		<HB>Aspartic Acid</HB>
+		<HB>Glutamic Acid</HB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Trypsin for MSIPI</Nme>
+		<TLC>TIP</TLC>
+		<CA>Arginine</CA>
+		<CA>Lysine</CA>
+		<CA>LeuOrIle</CA>
+		<CB>LeuOrIle</CB>
+		<CNB>Proline</CNB>
+		<HB>Aspartic Acid</HB>
+		<HB>Glutamic Acid</HB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Trypsin + Chymotrypsin</Nme>
+		<TLC>T+C</TLC>
+		<CA>Arginine</CA>
+		<CA>Lysine</CA>
+		<CNB>Proline</CNB>
+		<HB>Aspartic Acid</HB>
+		<HB>Glutamic Acid</HB>
+		<CA>Isoleucine</CA>
+		<CA>Leucine</CA>
+		<CA>Phenylalanine</CA>
+		<CA>Tryptophan</CA>
+		<CA>Tyrosine</CA>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Trypsin + Glu C</Nme>
+		<TLC>T+G</TLC>
+		<CA>Arginine</CA>
+		<CA>Lysine</CA>
+		<CNB>Proline</CNB>
+		<CA>Aspartic Acid</CA>
+		<CA>Glutamic Acid</CA>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Trypsin + Asp N</Nme>
+		<TLC>T+A</TLC>
+		<CA>Arginine</CA>
+		<CA>Lysine</CA>
+		<CNB>Proline</CNB>
+		<CB>Aspartic Acid</CB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Lys C + Chymotrypsin</Nme>
+		<TLC>L+C</TLC>
+		<CA>Lysine</CA>
+		<CA>Isoleucine</CA>
+		<CA>Leucine</CA>
+		<CA>Phenylalanine</CA>
+		<CA>Tryptophan</CA>
+		<CA>Tyrosine</CA>
+		<CNB>Proline</CNB>
+	</CAgt>
+	<CAgt rKey="0">
+		<Nme>Lys C + Glu C</Nme>
+		<TLC>L+G</TLC>
+		<CA>Aspartic Acid</CA>
+		<CA>Glutamic Acid</CA>
+		<CA>Lysine</CA>
+		<CNB>Proline</CNB>
+	</CAgt>
+
+	<CAgt rKey="0">
+		<Nme>Glu C + Asp N</Nme>
+		<TLC>G+A</TLC>
+		<CA>Aspartic Acid</CA>
+		<CA>Glutamic Acid</CA>
+		<CB>Aspartic Acid</CB>
+		<CNB>Proline</CNB>
+	</CAgt>
+
+	<!-- Lys N digestion ref - J Proteome Res. 2009 Mar 8(3):1415-22. -->
+	<CAgt rKey="0">
+		<Nme>Lys N</Nme>
+		<TLC>LN</TLC>
+		<CB>Lysine</CB>
+	</CAgt>
+
+
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<!-- ADDUCT IONS -->
+
+<!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -->
+
+	<AIn rKey="0">
+		<Nme>Acetate</Nme>
+		<Fma>C5H9O</Fma>
+		<Chg>-1</Chg>
+	</AIn>
+	<AIn rKey="0">
+		<Nme>Ammonium</Nme>
+		<Fma>H4N</Fma>
+		<Chg>1</Chg>
+	</AIn>
+	<AIn rKey="0">
+		<Nme>Hydrogen</Nme>
+		<Fma>H</Fma>
+		<Chg>1</Chg>
+	</AIn>
+	<AIn rKey="0">
+		<Nme>Iron</Nme>
+		<Fma>Fe</Fma>
+		<Chg>3</Chg>
+	</AIn>
+	<AIn rKey="0">
+		<Nme>Potassium</Nme>
+		<Fma>K</Fma>
+		<Chg>1</Chg>
+	</AIn>
+	<AIn rKey="0">
+		<Nme>Sodium</Nme>
+		<Fma>Na</Fma>
+		<Chg>1</Chg>
+	</AIn>
+
+
+
+</DataDictionary>
