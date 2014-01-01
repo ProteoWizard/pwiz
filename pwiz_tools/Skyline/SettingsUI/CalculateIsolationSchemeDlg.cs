@@ -65,6 +65,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
+            Icon = Resources.Skyline;
+
             // Initialize margins combo box.
             comboMargins.Items.AddRange(
                 new object[]

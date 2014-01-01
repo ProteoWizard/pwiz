@@ -69,6 +69,9 @@ namespace pwiz.Skyline.SettingsUI
             _existing = existing;
 
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             gridIsolationWindows.AutoGenerateColumns = false;
             _gridViewDriver = new GridViewDriver(this, editIsolationWindowBindingSource,
                                                  new SortableBindingList<EditIsolationWindow>());
