@@ -90,11 +90,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (SrmDocument.GetRetentionTimeStandards().Contains(ModifiedSequence))
-                {
-                    return "iRT";
-                }
-                return null;
+                return DocNode.GlobalStandardType;
             }
         }
 

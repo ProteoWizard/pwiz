@@ -20,7 +20,6 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.DataBinding;
 
 namespace pwiz.Skyline.Model.Databinding
 {

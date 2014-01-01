@@ -18,13 +18,12 @@
  */
 
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Controls.DataBinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class DocumentGridForm : DataboundGridForm
     {

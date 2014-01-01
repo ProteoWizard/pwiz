@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.DataBinding
+﻿namespace pwiz.Skyline.Controls.Databinding
 {
     partial class DocumentGridForm
     {
