@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private IDictionary<ResultKey, PrecursorResult> _results;
+        [DisplayName("PrecursorResults")]
         [OneToMany(ForeignKey = "Precursor", ItemDisplayName = "PrecursorResult")]
         public IDictionary<ResultKey, PrecursorResult> Results
         {
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), null);
         }
 
+        [DisplayName("PrecursorResultsSummary")]
         public PrecursorResultSummary ResultSummary
         {
             get

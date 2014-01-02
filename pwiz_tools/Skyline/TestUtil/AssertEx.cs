@@ -28,12 +28,11 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public class AssertEx
+    public static class AssertEx
     {
         public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2)
         {
@@ -372,11 +371,6 @@ namespace pwiz.SkylineTestUtil
 
         public static void Cloned(object expected, object actual)
         {
-            Cloned(expected, actual, null);
-        }
-
-        public static void Cloned(object expected, object actual, object defaultObj)
-        {
             if (!Equals(expected, actual))
             {
                 Assert.AreEqual(expected, actual);
@@ -472,7 +466,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.Libraries, copy.TransitionSettings.Libraries);
             Cloned(target.TransitionSettings.Integration, copy.TransitionSettings.Integration);
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument);
-            Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, SrmSettingsList.GetDefault().TransitionSettings.FullScan);
+            Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
             Cloned(target, copy);
         }

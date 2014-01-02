@@ -32,9 +32,12 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -193,6 +196,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     findResultsForm.ActivateItem(i);
                     Assert.AreEqual(SkylineWindow.SelectedPeptideSequence, missingPeptides[i]);
+                    if (0 < i && i < 5)
+                        SkylineWindow.SetStandardType(PeptideDocNode.STANDARD_TYPE_QC);
                 }
             });
 
@@ -200,7 +205,8 @@ namespace pwiz.SkylineTestTutorial
 
             for (int i = 0; i < 6; ++i)
             {
-                RemovePeptide(missingPeptides[i], isDecoys[i]);
+                if (!(0 < i && i < 5))
+                    RemovePeptide(missingPeptides[i], isDecoys[i]);
             }
 
             var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -263,7 +269,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
             RunUI(() =>
             {
-                var nodeGroup = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[65];
+                var nodeGroup = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[70];
                 Assert.AreEqual(nodeGroup.TransitionGroup.Peptide.Sequence, peptideSeqHighlight);
                 var chromGroupInfo = nodeGroup.ChromInfos.ToList()[0];
                 Assert.IsNotNull(chromGroupInfo.RetentionTime);
@@ -298,21 +304,69 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(mProphetExportDlg, mProphetExportDlg.CancelDialog);
 
             // Export a report
+            string pathReport = GetTestPath("PeptideRTWithQValues.csv");
+            const string qvalueHeader = "annotation_QValue";
+            const string reportName = "Peptide RT Results";
             if (IsEnableLiveReports)
             {
                 var reportExportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
                 var editListReport = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(
                     reportExportDlg.EditList);
-                RunUI(() => editListReport.SelectItem("Peptide RT Results"));
+                RunUI(() => editListReport.SelectItem(reportName));
                 PauseForScreenShot("p20 -- edit report form list");
 
                 var customizeViewDlg = ShowDialog<ViewEditor>(editListReport.EditItem);
                 PauseForScreenShot("p21 -- customize view");
 
-                RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.\"annotation_annotation_QValue\"")));
+                RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.\"annotation_" + qvalueHeader + "\"")));
+                PauseForScreenShot("p21 -- Selected columns");
+
                 OkDialog(customizeViewDlg, customizeViewDlg.OkDialog);
                 OkDialog(editListReport, editListReport.OkDialog);
-                OkDialog(reportExportDlg, reportExportDlg.CancelDialog);
+                RunUI(() => reportExportDlg.ReportName = reportName);
+                OkDialog(reportExportDlg, () => reportExportDlg.OkDialog(pathReport, TextUtil.CsvSeparator));
+            }
+            else
+            {
+                var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
+                var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
+                RunUI(() => editReportListDlg.SelectItem(reportName));
+                PauseForScreenShot("p20 -- edit report form list");
+
+                var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.EditItem);
+                PauseForScreenShot("p21 -- customize view");
+
+                RunUI(() =>
+                {
+                    pivotReportDlg.Select(new Identifier("Peptides", "Precursors", "PrecursorResults", qvalueHeader));
+                    pivotReportDlg.AddSelectedColumn();
+                });
+                PauseForScreenShot("p21 -- Selected columns");
+
+                OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
+                OkDialog(editReportListDlg, editReportListDlg.OkDialog);
+                RunUI(() => exportReportDlg.ReportName = reportName);
+                OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(pathReport, TextUtil.CsvSeparator));
+            }
+
+            Assert.IsTrue(File.Exists(pathReport));
+            using (var reader = new StreamReader(pathReport))
+            {
+                string line = reader.ReadLine();
+                Assert.IsNotNull(line);
+                var fieldHeaders = line.Split(TextUtil.CsvSeparator);
+                const int qvalueColumnIndex = 6;
+                Assert.AreEqual(qvalueColumnIndex + 1, fieldHeaders.Length);
+                Assert.AreEqual(qvalueHeader, fieldHeaders[qvalueColumnIndex]);
+                int qvalueCount = 0;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var fields = line.Split(TextUtil.CsvSeparator);
+                    double qvalue;
+                    if (double.TryParse(fields[qvalueColumnIndex], out qvalue))
+                        qvalueCount++;
+                }
+                Assert.AreEqual(290, qvalueCount); // PrecursorResults field means 29 peptides * 5 replicates * 2 label types
             }
 
             // Open OpenSWATH gold standard dataset

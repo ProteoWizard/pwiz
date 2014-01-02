@@ -111,6 +111,18 @@ namespace pwiz.Skyline.Model
             {
                 var annotationTargets = AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.precursor_result);
                 var newAnnotationDef = new AnnotationDef(AnnotationName, annotationTargets, AnnotationDef.AnnotationType.number, new string[0]);
+                AnnotationDef existingAnnotationDef;
+                // CONSIDER: Throw error instead of overwriting?
+                if (!Settings.Default.AnnotationDefList.TryGetValue(AnnotationName, out existingAnnotationDef) && !Equals(existingAnnotationDef, newAnnotationDef))
+                {
+                    Settings.Default.AnnotationDefList.SetValue(newAnnotationDef);
+                }
+                else
+                {
+                    // Use the existing annotation
+                    newAnnotationDef = existingAnnotationDef;
+                }
+
                 Document = Document.ChangeSettings(Document.Settings.ChangeAnnotationDefs(defs =>
                 {
                     var defsNew = defs.ToList();

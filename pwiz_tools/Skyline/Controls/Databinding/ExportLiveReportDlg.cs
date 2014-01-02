@@ -36,8 +36,8 @@ namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class ExportLiveReportDlg : FormEx
     {
-        private SkylineViewContext _viewContext;
-        private IDocumentUIContainer _documentUiContainer;
+        private readonly SkylineViewContext _viewContext;
+        private readonly IDocumentUIContainer _documentUiContainer;
 
         public ExportLiveReportDlg(IDocumentUIContainer documentUIContainer)
         {
@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Controls.Databinding
             DialogResult = DialogResult.OK;
             Close();
         }
+
         public void OkDialog(string fileName, char separator)
         {
             Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
@@ -145,6 +146,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             OkDialog();
         }
+
         private void btnShare_Click(object sender, EventArgs e)
         {
             ShowShare();

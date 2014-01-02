@@ -6168,4 +6168,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_" xml:space="preserve">
     <value>Unrecognized Unimod id {0} in modified peptide sequence.</value>
   </data>
+  <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
+    <value>Reintegrate peaks</value>
+  </data>
 </root>

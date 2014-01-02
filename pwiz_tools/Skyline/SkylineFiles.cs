@@ -995,7 +995,7 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
-                ModifyDocument(null, doc =>
+                ModifyDocument(Resources.SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks, doc =>
                     {
                         if (!ReferenceEquals(documentOrig, doc))
                             throw new InvalidDataException(

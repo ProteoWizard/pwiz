@@ -14661,6 +14661,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reintegrate peaks.
+        /// </summary>
+        public static string SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reintegration of results requires a trained peak scoring model..
         /// </summary>
         public static string SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_ {

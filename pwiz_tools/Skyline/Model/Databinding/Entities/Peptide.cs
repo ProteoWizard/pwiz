@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private IDictionary<ResultKey, PeptideResult> _results;
+        [DisplayName("PeptideResults")]
         [OneToMany(ForeignKey = "Peptide", ItemDisplayName = "PeptideResult")]
         public IDictionary<ResultKey, PeptideResult> Results
         {
