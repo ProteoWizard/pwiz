@@ -6171,4 +6171,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
     <value>Reintegrate peaks</value>
   </data>
+  <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
+    <value>Edit Report</value>
+  </data>
 </root>

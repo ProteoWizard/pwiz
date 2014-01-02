@@ -20,6 +20,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -45,6 +46,7 @@ namespace pwiz.Skyline.Model.Databinding
             if (EnablePreview)
             {
                 viewEditor.PreviewButtonVisible = true;
+                viewEditor.Text = Resources.DocumentGridViewContext_CreateViewEditor_Edit_Report;
             }
             return viewEditor;
         }

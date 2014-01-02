@@ -3446,6 +3446,18 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Report.
+        /// </summary>
+        public static string DocumentGridViewContext_CreateViewEditor_Edit_Report {
+            get {
+                return ResourceManager.GetString("DocumentGridViewContext_CreateViewEditor_Edit_Report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
             get {
                 object obj = ResourceManager.GetObject("down_pro32", resourceCulture);
