@@ -83,6 +83,16 @@ namespace pwiz.Skyline.SettingsUI
             comboModel.Items.Add(LegacyScoringModel.DEFAULT_NAME);
             gridPeakCalculators.DataBindingComplete += OnDataBindingComplete;
             comboModel.SelectedIndexChanged += comboModel_SelectedIndexChanged;
+
+            // Hide borders for better copy-paste images
+            zedGraphMProphet.MasterPane.Border.IsVisible = false;
+            zedGraphMProphet.GraphPane.Border.IsVisible = false;
+            zedGraphSelectedCalculator.MasterPane.Border.IsVisible = false;
+            zedGraphSelectedCalculator.GraphPane.Border.IsVisible = false;
+            zedGraphPValues.MasterPane.Border.IsVisible = false;
+            zedGraphPValues.GraphPane.Border.IsVisible = false;
+            zedGraphQValues.MasterPane.Border.IsVisible = false;
+            zedGraphQValues.GraphPane.Border.IsVisible = false;
         }
 
         /// <summary>

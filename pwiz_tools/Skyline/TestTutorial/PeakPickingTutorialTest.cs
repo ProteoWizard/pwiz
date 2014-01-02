@@ -304,7 +304,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(mProphetExportDlg, mProphetExportDlg.CancelDialog);
 
             // Export a report
-            string pathReport = GetTestPath("PeptideRTWithQValues.csv");
+            string pathReport = GetTestPath("qValues_Exported_report.csv");
             const string qvalueHeader = "annotation_QValue";
             const string reportName = "Peptide RT Results";
             if (IsEnableLiveReports)

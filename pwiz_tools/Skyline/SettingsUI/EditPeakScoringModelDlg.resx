@@ -329,7 +329,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphMProphet</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.26689, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -425,7 +425,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphSelectedCalculator</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.26689, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -476,7 +476,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphPValues</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.26689, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
     <value>tabPage4</value>
@@ -527,7 +527,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphQValues</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.26689, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.21921, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
     <value>tabPage3</value>

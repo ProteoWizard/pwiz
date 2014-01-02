@@ -302,6 +302,7 @@
             this.zedGraphPValues.ScrollMinX = 0D;
             this.zedGraphPValues.ScrollMinY = 0D;
             this.zedGraphPValues.ScrollMinY2 = 0D;
+            this.zedGraphPValues.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
             // 
             // tabPage3
             // 
@@ -327,6 +328,7 @@
             this.zedGraphQValues.ScrollMinX = 0D;
             this.zedGraphQValues.ScrollMinY = 0D;
             this.zedGraphQValues.ScrollMinY2 = 0D;
+            this.zedGraphQValues.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
             // 
             // label3
             // 
