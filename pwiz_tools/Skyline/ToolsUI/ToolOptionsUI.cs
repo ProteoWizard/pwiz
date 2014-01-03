@@ -38,6 +38,9 @@ namespace pwiz.Skyline.ToolsUI
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
             checkBoxLiveReports.Checked = Settings.Default.EnableLiveReports;
+
+            // Hide ability to turn off live reports
+            //tabControl.TabPages.Remove(tabMisc);
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)

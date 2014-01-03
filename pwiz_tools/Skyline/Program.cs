@@ -163,6 +163,9 @@ namespace pwiz.Skyline
                     }
                 }
 
+                // Force live reports (though tests may reset this)
+                //Settings.Default.EnableLiveReports = true;
+
                 using (MainWindow = new SkylineWindow())
                 {
                     // Position window offscreen for stress testing.

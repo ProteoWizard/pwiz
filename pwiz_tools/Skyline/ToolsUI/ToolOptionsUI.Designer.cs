@@ -29,27 +29,27 @@ namespace pwiz.Skyline.ToolsUI
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolOptionsUI));
-            this.PanaramaTabControl = new System.Windows.Forms.TabControl();
+            this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPanorama = new System.Windows.Forms.TabPage();
             this.listboxServers = new System.Windows.Forms.ListBox();
             this.lblServers = new System.Windows.Forms.Label();
             this.btnEditServers = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.btnOK = new System.Windows.Forms.Button();
             this.tabMisc = new System.Windows.Forms.TabPage();
             this.checkBoxLiveReports = new System.Windows.Forms.CheckBox();
-            this.PanaramaTabControl.SuspendLayout();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabMisc.SuspendLayout();
             this.SuspendLayout();
             // 
-            // PanaramaTabControl
+            // tabControl
             // 
-            resources.ApplyResources(this.PanaramaTabControl, "PanaramaTabControl");
-            this.PanaramaTabControl.Controls.Add(this.tabPanorama);
-            this.PanaramaTabControl.Controls.Add(this.tabMisc);
-            this.PanaramaTabControl.Name = "PanaramaTabControl";
-            this.PanaramaTabControl.SelectedIndex = 0;
+            resources.ApplyResources(this.tabControl, "tabControl");
+            this.tabControl.Controls.Add(this.tabPanorama);
+            this.tabControl.Controls.Add(this.tabMisc);
+            this.tabControl.Name = "tabControl";
+            this.tabControl.SelectedIndex = 0;
             // 
             // tabPanorama
             // 
@@ -79,6 +79,19 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditServers.UseVisualStyleBackColor = true;
             this.btnEditServers.Click += new System.EventHandler(this.btnEditServers_Click);
             // 
+            // tabMisc
+            // 
+            this.tabMisc.Controls.Add(this.checkBoxLiveReports);
+            resources.ApplyResources(this.tabMisc, "tabMisc");
+            this.tabMisc.Name = "tabMisc";
+            this.tabMisc.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxLiveReports
+            // 
+            resources.ApplyResources(this.checkBoxLiveReports, "checkBoxLiveReports");
+            this.checkBoxLiveReports.Name = "checkBoxLiveReports";
+            this.checkBoxLiveReports.UseVisualStyleBackColor = true;
+            // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
@@ -93,19 +106,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
-            // tabMisc
-            // 
-            this.tabMisc.Controls.Add(this.checkBoxLiveReports);
-            resources.ApplyResources(this.tabMisc, "tabMisc");
-            this.tabMisc.Name = "tabMisc";
-            this.tabMisc.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxLiveReports
-            // 
-            resources.ApplyResources(this.checkBoxLiveReports, "checkBoxLiveReports");
-            this.checkBoxLiveReports.Name = "checkBoxLiveReports";
-            this.checkBoxLiveReports.UseVisualStyleBackColor = true;
-            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -114,12 +114,12 @@ namespace pwiz.Skyline.ToolsUI
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.PanaramaTabControl);
+            this.Controls.Add(this.tabControl);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ToolOptionsUI";
             this.ShowInTaskbar = false;
-            this.PanaramaTabControl.ResumeLayout(false);
+            this.tabControl.ResumeLayout(false);
             this.tabPanorama.ResumeLayout(false);
             this.tabPanorama.PerformLayout();
             this.tabMisc.ResumeLayout(false);
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.ToolsUI
 
         #endregion
 
-        private System.Windows.Forms.TabControl PanaramaTabControl;
+        private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPanorama;
         private System.Windows.Forms.Button btnEditServers;
         private System.Windows.Forms.Label lblServers;
