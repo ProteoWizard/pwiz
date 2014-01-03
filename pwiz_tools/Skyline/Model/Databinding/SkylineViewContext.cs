@@ -262,6 +262,13 @@ namespace pwiz.Skyline.Model.Databinding
                     new ColumnSpec().SetName("PeptideRetentionTime"), 
                     new ColumnSpec().SetName("RatioToStandard"), 
                 });
+                
+                var skylineDataSchema = (SkylineDataSchema)columnDescriptor.DataSchema;
+                PropertyPath propertyPathReplicate = PropertyPath.Parse("ResultFile.Replicate");
+                viewSpec = viewSpec.SetColumns(viewSpec.Columns.Concat(
+                    skylineDataSchema.GetAnnotations(typeof (Replicate))
+                        .Select(pd => new ColumnSpec(propertyPathReplicate.Property(pd.Name))))
+                    );
             }
             else
             {

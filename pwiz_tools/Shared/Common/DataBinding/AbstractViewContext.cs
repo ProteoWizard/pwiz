@@ -469,7 +469,7 @@ namespace pwiz.Common.DataBinding
                 {
                     column.DefaultCellStyle.Format = formatAttribute.Format;
                 }
-                if (null != formatAttribute.NullValue)
+                if (null != formatAttribute.NullValue && propertyDescriptor.IsReadOnly)
                 {
                     column.DefaultCellStyle.NullValue = formatAttribute.NullValue;
                 }
