@@ -390,6 +390,7 @@ namespace pwiz.Skyline
             this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparatorTools = new System.Windows.Forms.ToolStripSeparator();
             this.updatesToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStoreMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2943,6 +2944,7 @@ namespace pwiz.Skyline
             // 
             this.toolsMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.placeholderToolsMenuItem,
+            this.toolStripSeparatorTools,
             this.updatesToolsMenuItem,
             this.toolStoreMenuItem,
             this.configureToolsMenuItem,
@@ -2958,6 +2960,11 @@ namespace pwiz.Skyline
             // 
             this.placeholderToolsMenuItem.Name = "placeholderToolsMenuItem";
             resources.ApplyResources(this.placeholderToolsMenuItem, "placeholderToolsMenuItem");
+            // 
+            // toolStripSeparatorTools
+            // 
+            this.toolStripSeparatorTools.Name = "toolStripSeparatorTools";
+            resources.ApplyResources(this.toolStripSeparatorTools, "toolStripSeparatorTools");
             // 
             // updatesToolsMenuItem
             // 
@@ -3457,6 +3464,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem qcStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem irtStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStoreMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorTools;
     }
 }
 

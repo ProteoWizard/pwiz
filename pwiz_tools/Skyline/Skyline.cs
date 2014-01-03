@@ -2449,7 +2449,7 @@ namespace pwiz.Skyline
         public void PopulateToolsMenu()
         {
             // Remove all tools from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], updatesToolsMenuItem))
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolStripSeparatorTools))
             {
                 toolsMenu.DropDownItems.RemoveAt(0);
                 //Consider: (danny) When we remove menu items do we have to dispose of them?
@@ -2467,7 +2467,7 @@ namespace pwiz.Skyline
                     {
                         ToolStripMenuItem item;
                         int index = toolExists(current, spliced[i]);
-                        if ( index >= 0)
+                        if (index >= 0)
                         {
                             item = (ToolStripMenuItem) current.DropDownItems[index];
                         }
@@ -2475,7 +2475,8 @@ namespace pwiz.Skyline
                         {
                             item = new ToolStripMenuItem(spliced[i])
                                 {
-                                    Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null
+                                    Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null,
+                                    ImageTransparentColor = Color.Fuchsia
                                 };
                             if (current == toolsMenu)
                             {
@@ -2497,11 +2498,13 @@ namespace pwiz.Skyline
                     ToolMenuItem menuItem = new ToolMenuItem(tool, this)
                         {
                             Text = tool.Title, 
-                            Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null
+                            Image = tool.UpdateAvailable ? Resources.ToolUpdateAvailable : null,
+                            ImageTransparentColor = Color.Fuchsia
                         };
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++ , menuItem);
                 }
             }
+            toolStripSeparatorTools.Visible = (lastInsertIndex != 0);
             updatesToolsMenuItem.Enabled = updatesToolsMenuItem.Visible = toolList.Contains(tool => tool.UpdateAvailable);
         }
         /// <summary>
