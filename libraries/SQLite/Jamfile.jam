@@ -22,10 +22,31 @@
 
 #lib sqlite3 : : <toolset>msvc <link>shared <name>System.Data.SQLite <search>. : : <include>. ;
 
-lib sqlite3 : sqlite3.c : <toolset>msvc <link>static <define>SQLITE_MAX_MMAP_SIZE=70368744177664 : : <include>. ;
-lib sqlite3pp : sqlite3pp.cpp sqlite3 : <toolset>msvc <link>static <include>. : : <include>. ;
+path-constant THIS_PATH : . ;
 
-lib sqlite3 : sqlite3.c : : : <include>. <linkflags>-ldl <define>SQLITE_MAX_MMAP_SIZE=70368744177664 ;
-lib sqlite3pp : sqlite3pp.cpp sqlite3 : <include>. : : <include>. <linkflags>-ldl ;
+rule sqlite3-requirements ( properties * )
+{
+    local result = <include>$(THIS_PATH) ;
+    if <toolset>msvc in $(properties)
+    {
+        if <address-model>64 in $(properties) { result += <define>SQLITE_MAX_MMAP_SIZE=70368744177664 ; }
+    }
+    else
+    {
+        result += <define>SQLITE_MAX_MMAP_SIZE=70368744177664 ;
+    }
+    return $(result) ;
+}
+
+rule sqlite3-usage-requirements ( properties * )
+{
+    if ! <toolset>msvc in $(properties)
+    {
+        return <linkflags>-ldl ;
+    }
+}
+
+lib sqlite3 : sqlite3.c : <conditional>@sqlite3-requirements <link>static : : <conditional>@sqlite3-usage-requirements <include>$(THIS_PATH) ;
+lib sqlite3pp : sqlite3pp.cpp sqlite3 : <include>$(THIS_PATH) <link>static : : <conditional>@sqlite3-usage-requirements <include>$(THIS_PATH) ;
 
 #exe sqlite : shell.c : <library>sqlite3 <link>static ;
