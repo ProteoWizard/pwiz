@@ -344,8 +344,15 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("page 23 - showing all peaks for 1_MCF_TiB_L");
             CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]); 
 
+            // current TIB_L peak should have idotp .87 and ppm -6.9
+            Assert.AreEqual(0.87, GetTransitionGroupChromInfo(TIB_L, pepIndex).IsotopeDotProduct ?? -1, .005);
+            Assert.AreEqual(-6.9, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
+
             ChangePeakBounds(TIB_L,pepIndex,36.5,38.0);
-            //PauseForScreenShot("page 23 - adjust integration 36.5-38: no graphic, but verify claimed dotp values in text");  // TODO programattically verify values once Brendan has fixes in 
+
+            // now current TIB_L peak should have idotp .9 and ppm -6.5
+            Assert.AreEqual(0.9, GetTransitionGroupChromInfo(TIB_L, pepIndex).IsotopeDotProduct ?? -1, .005);
+            Assert.AreEqual(-6.5, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
             CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
 
             var undoIndex = SkylineWindow.Document.RevisionIndex; // preserve for simulating ctrl-z
@@ -409,13 +416,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
             PauseForScreenShot("page 32 - effects of zoom settings");
 
-            // TODO: Load layout
-            
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p33.view")); // float the  Library Match window TODO this causes a crash at next call to ChangePeakBounds, in pwiz.Skyline.Controls.Graphs.GraphChromatogram.ChromGroupInfos.get() Line 492 , why?
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(Tip3Filename, 37.6076f))); // set the Library Match view
             PauseForScreenShot("page 33 - 5b_MCF7_TiTip3 (37.61 Min)");
 
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(Tib_LFilename, 37.0335f))); // set the Library Match view
             PauseForScreenShot("page 33 - 1_MCF_TiB_L (37.03 min)");
+
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p34.view")); // back to normal view
 
             pepIndex = JumpToPeptide("GVVDSEDLPLNISR"); // Not L10N
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
@@ -583,6 +591,32 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
         }
 
+        private TransitionGroupChromInfo GetTransitionGroupChromInfo(int chromIndex, int pepIndex)
+        {
+            TransitionGroupChromInfo result = null;
+            RunUI(() => 
+            {
+                var nodePep = SkylineWindow.DocumentUI.Peptides.ElementAt(pepIndex);
+                var nodeGroup = nodePep.TransitionGroups.First();
+                result = nodeGroup.ChromInfos.ToArray()[chromIndex];
+            });
+            return result;
+        }
+
+        private TransitionChromInfo GetTransitionChromInfo(int chromIndex, int pepIndex, int transIndex)
+        {
+            TransitionChromInfo result = null;
+            RunUI(() => 
+            {
+                var nodePep = SkylineWindow.DocumentUI.Peptides.ElementAt(pepIndex);
+                var nodeGroup = nodePep.TransitionGroups.First();
+                var transition = nodeGroup.Transitions.ElementAt(transIndex);
+                result = transition.ChromInfos.ToArray()[chromIndex];
+            });
+            return result;
+        }
+
+
         private void ChangePeakBounds(int chromIndex,
                                        int pepIndex,
                                        double startDisplayTime,
@@ -646,9 +680,11 @@ namespace pwiz.SkylineTestTutorial
 
         private void PickTransitions(int pepIndex, int[] transIndexes, string screenshotPromptA = null, string screenshotPromptB = null)
         {
-            var pepPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Peptides, pepIndex);
-            RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pepPath);
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.Nodes[0]);
+            var doc = SkylineWindow.Document;
+            var pepPath = doc.GetPathTo((int)SrmDocument.Level.Peptides, pepIndex);
+            var nodeGroup = doc.Peptides.ElementAt(pepIndex).TransitionGroups.First();
+            var groupPath = new IdentityPath(pepPath, nodeGroup.TransitionGroup);
+            RunUI(() => SkylineWindow.SequenceTree.SelectedPath = groupPath);
             var popupPickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             if (screenshotPromptA != null)
                 PauseForScreenShot(screenshotPromptA);
@@ -662,7 +698,6 @@ namespace pwiz.SkylineTestTutorial
                     popupPickList.SetItemChecked(i, transIndexes.Contains(i));
                 }
             });
-            var doc = SkylineWindow.Document;
             OkDialog(popupPickList, popupPickList.OnOk);
             WaitForDocumentChange(doc);
             WaitForGraphs();
