@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using pwiz.Skyline.Util;
@@ -66,6 +67,40 @@ namespace pwiz.SkylineTest
             }
             var fieldsOut = sb.ToString().ParseDsvFields(separator);
             Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut));
+        }
+
+        [TestMethod]
+        public void DsvHeadersTest()
+        {
+            // test reading DSV files with and without headers
+            string[] lines = {"dog,1.1,cat,2.2", "pony,3.3,fish,4.4"}; // Not L10N
+            const char csvSeperator = ',';
+            var withheaders = new DsvFileReader(new StringReader("0,1,2,3\n" + String.Join("\n", lines)), csvSeperator);  // Not L10N
+            var withoutheaders = new DsvFileReader(new StringReader(String.Join("\n", lines)), csvSeperator, hasHeaders: false);   // Not L10N
+
+            Assert.AreEqual(withheaders.NumberOfFields, withoutheaders.NumberOfFields);
+            for (int h = 0; h < withoutheaders.NumberOfFields; h++)
+            {
+                var f = String.Format("{0}", h); // verify that a headerless CSV file will pretend to have a header of form "0,1,2,..."  // Not L10N
+                Assert.AreEqual(withheaders.GetFieldIndex(f), withoutheaders.GetFieldIndex(f));
+            }
+            int linenumber = 0;
+            while (true)
+            {
+                var fields = withoutheaders.ReadLine();
+                var fieldsTest = withheaders.ReadLine();
+                Assert.IsTrue((fields == null) == (fieldsTest == null));
+
+                if (fields == null)
+                    break;
+                for (int f = 0; f < withoutheaders.NumberOfFields; f++)
+                {
+                    Assert.AreEqual(fields[f], fieldsTest[f]); // quick string compare
+                    Assert.AreEqual(lines[linenumber].Split(csvSeperator)[f],fields[f]);
+                }
+                linenumber++;
+            }
+            Assert.AreEqual(2,linenumber);
         }
 
         [TestMethod]

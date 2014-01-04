@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -285,53 +287,67 @@ namespace pwiz.Skyline.Util.Extensions
     }
 
     /// <summary>
-    /// Reads a comma-separated variable file, assuming the first line contains
+    /// Reads a comma-separated variable file, normally assuming the first line contains
     /// the names of the columns, and all following lines contain data for each column
+    /// When ctor's optional hasHeaders arg == false, then columns are named "0", "1","2","3" etc.
     /// </summary>
     public class CsvFileReader : DsvFileReader
     {
-        public CsvFileReader(string fileName) :
-            base(fileName, TextUtil.CsvSeparator)
+        public CsvFileReader(string fileName, bool hasHeaders = true) :
+            base(fileName, TextUtil.CsvSeparator, hasHeaders)
         {
         }
 
-        public CsvFileReader(TextReader reader) :
-            base(reader, TextUtil.CsvSeparator)
+        public CsvFileReader(TextReader reader, bool hasHeaders = true) :
+            base(reader, TextUtil.CsvSeparator, hasHeaders)
         {
         }
     }
 
     /// <summary>
-    /// Reads a delimiter-separated variable file, assuming the first line contains
-    /// the names of the columns, and all following lines contain data for each column
+    /// Reads a delimiter-separated variable file, normally assuming the first line contains
+    /// the names of the columns, and all following lines contain data for each column.
+    /// When ctor's optional hasHeaders arg == false, then columns are named "0", "1","2","3" etc.
     /// </summary>
     public class DsvFileReader
     {
         private char _separator;
         private string[] _currentFields;
+        private string _titleLine;
+        private bool _rereadTitleLine; // set true for first readline if the file didn't actually have a header line
         private TextReader _reader;
         
         public int NumberOfFields { get; private set; }
         public Dictionary<string, int> FieldDict { get; private set; }
 
-        public DsvFileReader(string fileName, char separator) : 
-            this(new StreamReader(fileName), separator)
+        public DsvFileReader(string fileName, char separator, bool hasHeaders=true) : 
+            this(new StreamReader(fileName), separator, hasHeaders)
         {
         }
 
-        public DsvFileReader(TextReader reader, char separator)
+        public DsvFileReader(TextReader reader, char separator, bool hasHeaders = true)
         {
-            Initialize(reader, separator);
+            Initialize(reader, separator, hasHeaders);
         }
 
-        public void Initialize(TextReader reader, char separator)
+        public void Initialize(TextReader reader, char separator, bool hasHeaders = true)
         {
             _separator = separator;
             _reader = reader;
             FieldDict = new Dictionary<string, int>();
-            string titleLine = _reader.ReadLine();
-            var fields = titleLine.ParseDsvFields(separator);
+            _titleLine = _reader.ReadLine(); // we will re-use this if it's not actually a header line
+            _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
+            var fields = _titleLine.ParseDsvFields(separator);
             NumberOfFields = fields.Length;
+            if (!hasHeaders)
+            {
+                // that wasn't really the header line, we just used it to get column count
+                // replace with made up column names
+                for (int i = 0; i < fields.Length; ++i)
+                {
+                    fields[i] = String.Format("{0}", i );
+                }
+            }
             for (int i = 0; i < fields.Length; ++i)
             {
                 FieldDict[fields[i]] = i;
@@ -345,7 +361,8 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns></returns>
         public string[] ReadLine()
         {
-            var line = _reader.ReadLine();
+            var line = _rereadTitleLine?_titleLine:_reader.ReadLine(); // re-use title line on first read if it wasn't actually header info
+            _rereadTitleLine = false; // we no longer need to re-use that first line
             if (line == null)
                 return null;
             _currentFields = line.ParseDsvFields(_separator);
