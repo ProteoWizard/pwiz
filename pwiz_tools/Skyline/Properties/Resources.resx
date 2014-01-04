@@ -6174,4 +6174,16 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
     <value>Edit Report</value>
   </data>
+    <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+    <value>U&amp;RL:</value>
+  </data>
+    <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+    <value>&amp;Query params:</value>
+  </data>
+    <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+    <value>&amp;Command:</value>
+  </data>
+    <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+    <value>A&amp;rguments:</value>
+  </data>
 </root>

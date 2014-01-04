@@ -151,6 +151,24 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
+        public string GetUrl(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
+        {
+            if (!IsWebPage)
+                return null;
+            string url = Command;
+            const string querySep = "?"; // Not L10N
+            const string paramSep = "&"; // Not L10N
+            if (!string.IsNullOrEmpty(Arguments))
+            {
+                string query = GetArguments(doc, toolMacroProvider, exceptionHandler);
+                if (query == null)
+                    return null;
+
+                url += (!url.Contains(querySep) ? querySep : paramSep) + query;
+            }
+            return url;
+        }
+
         /// <summary>
         ///  Return a string that is the Arguments string with the macros replaced.
         /// </summary>
@@ -208,13 +226,17 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 var webHelpers = WebHelpers ?? new WebHelpers();
 
-                if (String.IsNullOrEmpty(ReportTitle))
+                string url = GetUrl(document, toolMacroProvider, exceptionHandler);
+                if (string.IsNullOrEmpty(url))
+                    return;
+
+                if (string.IsNullOrEmpty(ReportTitle))
                 {
-                    webHelpers.OpenLink(Command);
+                    webHelpers.OpenLink(url);
                 }
                 else // It has a selected report that must be posted. 
                 {
-                    PostToLink(document, exceptionHandler, webHelpers);
+                    PostToLink(url, document, exceptionHandler, webHelpers);
                 }
             }
             else // Not a website. Needs its own thread.
@@ -281,18 +303,18 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        private Thread PostToLink(SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
+        private Thread PostToLink(string url, SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
         {
-            var thread = new Thread(() => PostToLinkBackground(doc, exceptionHandler, webHelpers));
+            var thread = new Thread(() => PostToLinkBackground(url, doc, exceptionHandler, webHelpers));
             thread.Start();
             return thread;
         }
 
-        private void PostToLinkBackground(SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
+        private void PostToLinkBackground(string url, SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
         {
             string report = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, exceptionHandler);
             if (report != null)
-                webHelpers.PostToLink(Command, report);
+                webHelpers.PostToLink(url, report);
         }
 
         private Thread RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent)

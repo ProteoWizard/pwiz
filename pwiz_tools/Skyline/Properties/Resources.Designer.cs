@@ -2955,6 +2955,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Command:.
+        /// </summary>
+        public static string ConfigureToolsDlg_textCommand_TextChanged__Command_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_textCommand_TextChanged__Command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Query params:.
+        /// </summary>
+        public static string ConfigureToolsDlg_textCommand_TextChanged__Query_params_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_textCommand_TextChanged__Query_params_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A&amp;rguments:.
+        /// </summary>
+        public static string ConfigureToolsDlg_textCommand_TextChanged_A_rguments_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_textCommand_TextChanged_A_rguments_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to U&amp;RL:.
+        /// </summary>
+        public static string ConfigureToolsDlg_textCommand_TextChanged_U_RL_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_textCommand_TextChanged_U_RL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to continue?.
         /// </summary>
         public static string ConfigureToolsDlg_UnpackZipTool_Do_you_want_to_continue_ {
@@ -3455,9 +3491,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
             get {
                 object obj = ResourceManager.GetObject("down_pro32", resourceCulture);

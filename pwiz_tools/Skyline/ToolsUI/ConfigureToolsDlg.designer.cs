@@ -48,8 +48,8 @@ namespace pwiz.Skyline.ToolsUI
             this.cbOutputImmediateWindow = new System.Windows.Forms.CheckBox();
             this.listTools = new System.Windows.Forms.ListBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
+            this.labelArguments = new System.Windows.Forms.Label();
+            this.labelCommand = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.btnMoveDown = new System.Windows.Forms.Button();
@@ -184,15 +184,15 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
-            // label4
+            // labelArguments
             // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
+            resources.ApplyResources(this.labelArguments, "labelArguments");
+            this.labelArguments.Name = "labelArguments";
             // 
-            // label3
+            // labelCommand
             // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
+            resources.ApplyResources(this.labelCommand, "labelCommand");
+            this.labelCommand.Name = "labelCommand";
             // 
             // label2
             // 
@@ -312,8 +312,8 @@ namespace pwiz.Skyline.ToolsUI
             this.Controls.Add(this.btnFindCommand);
             this.Controls.Add(this.listTools);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.labelArguments);
+            this.Controls.Add(this.labelCommand);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textInitialDirectory);
             this.Controls.Add(this.textArguments);
@@ -357,8 +357,8 @@ namespace pwiz.Skyline.ToolsUI
         public System.Windows.Forms.TextBox textArguments;
         public System.Windows.Forms.TextBox textInitialDirectory;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label labelCommand;
+        private System.Windows.Forms.Label labelArguments;
         private System.Windows.Forms.Label label5;
         public System.Windows.Forms.ListBox listTools;
         public System.Windows.Forms.Button btnFindCommand;

@@ -187,7 +187,7 @@ namespace pwiz.Skyline.ToolsUI
             ToolDescription newTool;
             if (ToolDescription.IsWebPageCommand(command))
             {
-                newTool = new ToolDescription(GetTitle(title), command, string.Empty, string.Empty, false,
+                newTool = new ToolDescription(GetTitle(title), command, arguments, string.Empty, false,
                     selectedReport, argsCollectorDllPath, argsCollectorType, toolDirPath, null, packageVersion, packageIdentifier, packageName);
             }
             else
@@ -396,30 +396,34 @@ namespace pwiz.Skyline.ToolsUI
                     Unsaved = true;
                     ToolList[spot].Command = textCommand.Text;
                 }
-                
-                if (ToolDescription.IsWebPageCommand(textCommand.Text) && textArguments.Enabled)
-                {                    
-                    textArguments.Enabled = false;
-                    textArguments.Text = string.Empty;
-                    textInitialDirectory.Enabled = false;
-                    textInitialDirectory.Text = string.Empty;
-                    cbOutputImmediateWindow.Enabled = false;
-                    btnArguments.Enabled = false;
-                    btnFindCommand.Enabled = false;
-                    btnInitialDirectory.Enabled = false;
-                    btnInitialDirectoryMacros.Enabled = false;                    
-                }
-                else if (!ToolDescription.IsWebPageCommand(textCommand.Text) && !textArguments.Enabled)
+
+                if (ToolDescription.IsWebPageCommand(textCommand.Text))
                 {
-                    textArguments.Enabled = true;
-                    textArguments.Text = ToolList[spot].Arguments;
-                    textInitialDirectory.Enabled = true;
-                    textInitialDirectory.Text = ToolList[spot].InitialDirectory;
-                    cbOutputImmediateWindow.Enabled = true;
-                    btnArguments.Enabled = true;
-                    btnFindCommand.Enabled = true;
-                    btnInitialDirectory.Enabled = true;
-                    btnInitialDirectoryMacros.Enabled = true;                    
+                    labelCommand.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged_U_RL_;
+                    labelArguments.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged__Query_params_;
+                    if (textInitialDirectory.Enabled)
+                    {
+                        textInitialDirectory.Enabled = false;
+                        textInitialDirectory.Text = string.Empty;
+                        cbOutputImmediateWindow.Enabled = false;
+                        btnFindCommand.Enabled = false;
+                        btnInitialDirectory.Enabled = false;
+                        btnInitialDirectoryMacros.Enabled = false;
+                    }
+                }
+                else
+                {
+                    labelCommand.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged__Command_;
+                    labelArguments.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged_A_rguments_;
+                    if (!textInitialDirectory.Enabled)
+                    {
+                        textInitialDirectory.Enabled = true;
+                        textInitialDirectory.Text = ToolList[spot].InitialDirectory;
+                        cbOutputImmediateWindow.Enabled = true;
+                        btnFindCommand.Enabled = true;
+                        btnInitialDirectory.Enabled = true;
+                        btnInitialDirectoryMacros.Enabled = true;                    
+                    }
                 }
             }
         }
@@ -762,12 +766,12 @@ namespace pwiz.Skyline.ToolsUI
         private void PopulateMacroList()
         {
             // Populate _macroListArguments.
-            foreach (Macro macro in ToolMacros._listArguments)
+            foreach (Macro macro in ToolMacros.LIST_ARGUMENTS)
             {
                 MacroListArguments.Add(new MacroMenuItem(macro, textArguments, true));
             }
             // Populate _macroListInitialDirectory.
-            foreach (Macro macro in ToolMacros._listInitialDirectory)
+            foreach (Macro macro in ToolMacros.LIST_INITIAL_DIRECTORY)
             {
                 MacroListInitialDirectory.Add(new MacroMenuItem(macro, textInitialDirectory, false));
             }            
@@ -775,7 +779,9 @@ namespace pwiz.Skyline.ToolsUI
         
         public class MacroMenuItem : ToolStripMenuItem  
         { 
-            private readonly Macro _macro; 
+            private readonly Macro _macro;
+            private readonly TextBox _targetTextBox;
+            private readonly bool _multiMacro;
 
             /// <summary>
             /// Initiates a new MacroMenuItem
@@ -796,8 +802,7 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             public string ShortText { get { return _macro.ShortText; } }
-            private readonly TextBox _targetTextBox;
-            private readonly bool _multiMacro;
+            public bool IsWebApplicable { get { return _macro.IsWebApplicable; }}
 
             private void HandleClick(object sender, EventArgs e)
             {
@@ -822,31 +827,36 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Used in automated testing.
-        public void ClickMacro (List<MacroMenuItem> list, int index)
+        public void ClickMacro(List<MacroMenuItem> list, int index)
         {
             list[index].DoClick();
         }
 
         private void btnArguments_Click(object sender, EventArgs e)
         {
-            btnArgumentsOpen();
+            ShowArgumentsOpen();
         }
 
         /// <summary>
         /// Show the ContextMenu full of macros next to btnArguments.
         /// </summary>
-        public void btnArgumentsOpen()
+        public void ShowArgumentsOpen()
         {
-            PopulateMacroDropdown(MacroListArguments, contextMenuMacroArguments);
-            contextMenuMacroArguments.Items.Insert(4, new ToolStripSeparator());
-            contextMenuMacroArguments.Items.Insert(9, new ToolStripSeparator());
+            bool isWebPage = ToolDescription.IsWebPageCommand(textCommand.Text);
+            PopulateMacroDropdown(MacroListArguments, contextMenuMacroArguments, isWebPage);
+            if (!isWebPage)
+            {
+                contextMenuMacroArguments.Items.Insert(4, new ToolStripSeparator());
+                contextMenuMacroArguments.Items.Insert(9, new ToolStripSeparator());
+            }
             contextMenuMacroArguments.Show(btnArguments, new Point(btnArguments.Width, 0));
         }
 
         //For Functional Testing.
         public void PopulateListMacroArguments()
         {
-            PopulateMacroDropdown(MacroListArguments, contextMenuMacroArguments);
+            bool isWebPage = ToolDescription.IsWebPageCommand(textCommand.Text);
+            PopulateMacroDropdown(MacroListArguments, contextMenuMacroArguments, isWebPage);
         }
 
         public string GetMacroArgumentToolTip(string s)
@@ -869,7 +879,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public void btnInitialDirectoryOpen()
         {            
-            PopulateMacroDropdown(MacroListInitialDirectory, contextMenuMacroInitialDirectory);
+            PopulateMacroDropdown(MacroListInitialDirectory, contextMenuMacroInitialDirectory, false);
             contextMenuMacroInitialDirectory.Show(btnInitialDirectoryMacros, new Point(btnInitialDirectoryMacros.Width, 0));
         }
 
@@ -878,7 +888,8 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         /// <param name="macroList">List of macros to add from (eg. _macroListInitialDirectory)</param>
         /// <param name="menu">Menu to add the macros to.</param>
-        private void PopulateMacroDropdown(IEnumerable<MacroMenuItem> macroList, ToolStrip menu)
+        /// <param name="isWebPage"></param>
+        private void PopulateMacroDropdown(IEnumerable<MacroMenuItem> macroList, ToolStrip menu, bool isWebPage)
         {
             while (menu.Items.Count > 0)
                 menu.Items.RemoveAt(0);
@@ -886,13 +897,11 @@ namespace pwiz.Skyline.ToolsUI
             foreach (MacroMenuItem menuItem in macroList)
             {
                 if (string.IsNullOrEmpty(ToolDir) && menuItem.ShortText == ToolMacros.TOOL_DIR)
-                {
                     continue;
-                }
                 if (string.IsNullOrEmpty(ArgsCollectorPath) && menuItem.ShortText == ToolMacros.COLLECTED_ARGS)
-                {
                     continue;
-                }
+                if (isWebPage && !menuItem.IsWebApplicable)
+                    continue;
 
                 menu.Items.Add(menuItem);
 

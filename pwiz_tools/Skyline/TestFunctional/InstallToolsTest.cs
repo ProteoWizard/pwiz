@@ -411,7 +411,7 @@ namespace pwiz.SkylineTestFunctional
                     configureToolsDlg.listTools.SelectedIndex = 2;
                     Assert.AreEqual("WebPageType", configureToolsDlg.textTitle.Text);
                     Assert.AreEqual("http://www.google.com", configureToolsDlg.textCommand.Text);
-                    Assert.IsFalse(configureToolsDlg.textArguments.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textArguments.Enabled);
                     Assert.IsFalse(configureToolsDlg.textInitialDirectory.Enabled);
                     Assert.IsFalse(configureToolsDlg.cbOutputImmediateWindow.Enabled);
                     Assert.AreEqual(string.Empty, configureToolsDlg.comboReport.SelectedItem);

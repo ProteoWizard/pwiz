@@ -91,6 +91,7 @@ namespace pwiz.SkylineTestFunctional
                 HttpPostCalled = false;
             }
 
+            public string LastLinkUsed { get; private set; }
             public bool OpenLinkCalled { get; private set; }
             public bool HttpPostCalled { get; private set; }
             
@@ -98,11 +99,13 @@ namespace pwiz.SkylineTestFunctional
 
             public void OpenLink(string link)
             {
+                LastLinkUsed = link;
                 OpenLinkCalled = true;
             }
 
             public void PostToLink(string link, string postData)
             {
+                LastLinkUsed = link;
                 HttpPostCalled = true;
             }
 
@@ -145,16 +148,23 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestHttpPost()
         {            
-            FakeWebHelper fakeWebHelper = new FakeWebHelper();
+            var fakeWebHelper = new FakeWebHelper();
+            const string googleUrl = "http://www.google.com"; // Not L10N
+            const string param1 = "param1=test";    // Not L10N
+            const string param2 = "param2=test";    // Not L10N
+            const string querySep = "?";    // Not L10N
+            const string paramSep = "&";    // Not L10N
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     //Remove all tools.
                     configureToolsDlg.RemoveAllTools();
-                    configureToolsDlg.AddDialog("OpenLinkTest", "http://www.google.com", _empty, _empty, false, _empty);
-                    // Not L10N
-                    configureToolsDlg.AddDialog("HttpPostTest", "http://www.google.com", _empty, _empty, false,
+                    configureToolsDlg.AddDialog("OpenLinkTest", googleUrl, _empty, _empty, false, _empty); // Not L10N
+                    configureToolsDlg.AddDialog("OpenLinkParamsTest", googleUrl, param1, _empty, false, _empty); // Not L10N);
+                    configureToolsDlg.AddDialog("HttpPostTest", googleUrl, _empty, _empty, false, // Not L10N
                                                 Resources.ReportSpecList_GetDefaults_Transition_Results);
-                    Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
+                    configureToolsDlg.AddDialog("HttpPostParamsTest", googleUrl + "?" + param1, param2, _empty, false, // Not L10N
+                                                Resources.ReportSpecList_GetDefaults_Transition_Results);
+                    Assert.AreEqual(4, configureToolsDlg.ToolList.Count);
                     configureToolsDlg.OkDialog();
                 });
 
@@ -162,16 +172,33 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Settings.Default.ToolList[0].WebHelpers = fakeWebHelper;
                     Settings.Default.ToolList[1].WebHelpers = fakeWebHelper;
+                    Settings.Default.ToolList[2].WebHelpers = fakeWebHelper;
 
                     SkylineWindow.PopulateToolsMenu();
                     Assert.IsFalse(fakeWebHelper.OpenLinkCalled);
                     SkylineWindow.RunTool(0);
+                    Assert.IsFalse(fakeWebHelper.LastLinkUsed.Contains(querySep));
                     Assert.IsTrue(fakeWebHelper.OpenLinkCalled);
-                    Assert.IsFalse((fakeWebHelper.HttpPostCalled));
+                    Assert.IsFalse(fakeWebHelper.HttpPostCalled);
                     SkylineWindow.RunTool(1);
+                    Assert.AreEqual(googleUrl + querySep + param1, fakeWebHelper.LastLinkUsed);
+                    Assert.IsTrue(fakeWebHelper.OpenLinkCalled);
+                    Assert.IsFalse(fakeWebHelper.HttpPostCalled);
+                    SkylineWindow.RunTool(2);
                 });
             // The post now happens on a background thread, since report export can take a long time
             WaitForCondition(() => fakeWebHelper.HttpPostCalled);
+            Assert.IsFalse(fakeWebHelper.LastLinkUsed.Contains(querySep));
+            var fakeWebHelper3 = new FakeWebHelper();
+            RunUI(() =>
+            {
+                Settings.Default.ToolList[3].WebHelpers = fakeWebHelper3;
+
+                SkylineWindow.PopulateToolsMenu();
+                SkylineWindow.RunTool(3);
+            });
+            WaitForCondition(() => fakeWebHelper3.HttpPostCalled);
+            Assert.AreEqual(googleUrl + querySep + param1 + paramSep + param2, fakeWebHelper3.LastLinkUsed);
             RunUI(() =>
                 {
                     // Remove all tools
@@ -276,13 +303,13 @@ namespace pwiz.SkylineTestFunctional
                           Assert.AreEqual("ExampleWebsiteTool", configureToolsDlg.textTitle.Text); // Not L10N
                           Assert.IsTrue(configureToolsDlg.textCommand.Enabled);
                           Assert.AreEqual("https://skyline.gs.washington.edu/labkey/project/home/begin.view?", configureToolsDlg.textCommand.Text); // Not L10N
-                          Assert.IsFalse(configureToolsDlg.textArguments.Enabled);
+                          Assert.IsTrue(configureToolsDlg.textArguments.Enabled);
                           Assert.IsFalse(configureToolsDlg.textInitialDirectory.Enabled);
                           Assert.IsFalse(configureToolsDlg.cbOutputImmediateWindow.Enabled);
                           Assert.IsTrue(configureToolsDlg.comboReport.Enabled);
                           Assert.AreEqual(_empty,configureToolsDlg.comboReport.SelectedItem);
                           Assert.IsFalse(configureToolsDlg.btnFindCommand.Enabled);
-                          Assert.IsFalse(configureToolsDlg.btnArguments.Enabled);
+                          Assert.IsTrue(configureToolsDlg.btnArguments.Enabled);
                           Assert.IsFalse(configureToolsDlg.btnInitialDirectoryMacros.Enabled);
                           Assert.IsFalse(configureToolsDlg.btnInitialDirectory.Enabled);                        
                           Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);

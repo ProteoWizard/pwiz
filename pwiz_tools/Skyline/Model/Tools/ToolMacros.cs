@@ -39,18 +39,21 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="shortText"> The text that shows up in the text box (eg. "$(DocumentPath)")</param>
         /// <param name="getContents"> A function that when passed an ToolMacroInfo returns the actual string value the macro represents. </param>
         /// <param name="errorMessage">The message that will be displayed if GetContents returns null in the replace macro methods. (eg. When there is no document to get the path of) </param>
-        public Macro(string plainText, string shortText, Func<ToolMacroInfo, string> getContents, string errorMessage)
+        /// <param name="isWebApplicable">True if the macro might be applicable to a web site</param>
+        public Macro(string plainText, string shortText, Func<ToolMacroInfo, string> getContents, string errorMessage, bool isWebApplicable = false)
         {
             PlainText = plainText;
             ShortText = shortText;
             GetContents = getContents;
             ErrorMessage = errorMessage;
+            IsWebApplicable = isWebApplicable;
         }        
 
-        public string PlainText { get; set; }
-        public string ShortText { get; set; }
-        public string ErrorMessage { get; set; }       
-        public Func<ToolMacroInfo, string> GetContents { get; set; }
+        public string PlainText { get; private set; }
+        public string ShortText { get; private set; }
+        public string ErrorMessage { get; private set; }
+        public bool IsWebApplicable { get; private set; }
+        public Func<ToolMacroInfo, string> GetContents { get; private set; }
     }
 
     public static class ToolMacros
@@ -61,29 +64,29 @@ namespace pwiz.Skyline.Model.Tools
         public const string COLLECTED_ARGS = "$(CollectedArgs)";                //Not L10N
 
         // Macros for Arguments.
-        public static readonly Macro[] _listArguments =
+        public static readonly Macro[] LIST_ARGUMENTS =
         {
             new Macro(Resources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
             new Macro(Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run),
             new Macro(Resources.ToolMacros__listArguments_Document_File_Name, "$(DocumentFileName)", GetDocumentFileName, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run),
             new Macro(Resources.ToolMacros__listArguments_Document_File_Name_Without_Extension, "$(DocumentBaseName)", GetDocumentFileNameWithoutExtension, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_),
-            new Macro(Resources.ToolMacros__listArguments_Selected_Protein_Name, "$(SelProtein)", GetSelectedProteinName, TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_,Resources.ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_)),
-            new Macro(Resources.ToolMacros__listArguments_Selected_Peptide_Sequence, "$(SelPeptide)", GetSelectedPeptideSequence, TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run, Resources.ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_ )),
-            new Macro(Resources.ToolMacros__listArguments_Selected_Precursor, "$(SelPrecursor)", GetSelectedPrecursor, TextUtil.LineSeparate(Resources.ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run,Resources.ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_)),
-            new Macro(Resources.ToolMacros__listArguments_Active_Replicate_Name, "$(ReplicateName)", GetActiveReplicateName, Resources.ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run),                
+            new Macro(Resources.ToolMacros__listArguments_Selected_Protein_Name, "$(SelProtein)", GetSelectedProteinName, TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_,Resources.ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_), true),
+            new Macro(Resources.ToolMacros__listArguments_Selected_Peptide_Sequence, "$(SelPeptide)", GetSelectedPeptideSequence, TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run, Resources.ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_ ), true),
+            new Macro(Resources.ToolMacros__listArguments_Selected_Precursor, "$(SelPrecursor)", GetSelectedPrecursor, TextUtil.LineSeparate(Resources.ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run,Resources.ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_), true),
+            new Macro(Resources.ToolMacros__listArguments_Active_Replicate_Name, "$(ReplicateName)", GetActiveReplicateName, Resources.ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run, true),                
             new Macro(Resources.ToolMacros__listArguments_Input_Report_Temp_Path, INPUT_REPORT_TEMP_PATH, GetReportTempPath , Resources.ToolMacros_listArguments_This_tool_requires_a_selected_report),
             new Macro(Resources.ToolMacros__listArguments_Collected_Arguments, COLLECTED_ARGS, null , Resources.ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_),
             new Macro(Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_)
         };
 
         // Macros for InitialDirectory.
-        public static readonly Macro[] _listInitialDirectory =
+        public static readonly Macro[] LIST_INITIAL_DIRECTORY =
         {
             new Macro(Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run) 
         };
 
         // Macros for Command.
-        public static readonly Macro[] _listCommand =
+        public static readonly Macro[] LIST_COMMAND =
         {
             new Macro(Resources.ToolMacros__listCommand_Program_Path, PROGRAM_PATH, GetProgramPath, TextUtil.LineSeparate(Resources.ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_,Resources.ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_)), 
             new Macro(Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_)
@@ -115,7 +118,7 @@ namespace pwiz.Skyline.Model.Tools
         public static string ReplaceMacrosCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription toolDescription, IExceptionHandler exceptionHandler)
         {            
             string workingString = toolDescription.Command;
-            foreach (Macro macro in _listCommand)
+            foreach (Macro macro in LIST_COMMAND)
             {
                 if (macro.ShortText == PROGRAM_PATH)
                 {
@@ -164,7 +167,7 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns> Arguments string with macros replaced or a thrown exception with error message. </returns>
         public static string ReplaceMacrosArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IExceptionHandler exceptionHandler)
         {
-            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, exceptionHandler, tool.Arguments, _listArguments);
+            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, exceptionHandler, tool.Arguments, LIST_ARGUMENTS);
         }
 
         /// <summary>
@@ -179,7 +182,7 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns> InitialDirectory string with macros replaced or a thrown exception with error message. </returns>
         public static string ReplaceMacrosInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IExceptionHandler exceptionHandler)
         {
-            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, exceptionHandler, tool.InitialDirectory, _listInitialDirectory);
+            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, exceptionHandler, tool.InitialDirectory, LIST_INITIAL_DIRECTORY);
         }
 
         public static string ReplaceMacrosHelper(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IExceptionHandler exceptionHandler, string replacein, Macro[] macros)
