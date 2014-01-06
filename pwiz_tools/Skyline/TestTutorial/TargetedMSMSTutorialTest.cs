@@ -224,14 +224,14 @@ namespace pwiz.SkylineTestTutorial
                 var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
                 RunUI(() =>
                 {
-                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Name")));
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Name")));
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                     Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
                     var columnsToAdd = new[]
                                 {
-                                    PropertyPath.Parse("Peptides!*.Precursors!*.ModifiedSequence"),
-                                    PropertyPath.Parse("Peptides!*.Precursors!*.Charge"),
-                                    PropertyPath.Parse("Peptides!*.Precursors!*.Mz"),
+                                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ModifiedSequence"),
+                                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"),
+                                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Mz"),
                                 };
                     foreach (var id in columnsToAdd)
                     {

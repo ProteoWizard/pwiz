@@ -422,17 +422,17 @@ namespace pwiz.SkylineTestTutorial
             // p. 5
             RunUI(() =>
             {
-                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Root.Property("Peptides").LookupAllItems().Property("Sequence"))); // Not L10N
+                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
                 var expectedFields = new[]
                 {
                     // Not L10N
-                    PropertyPath.Root.Property("Name"),
-                    PropertyPath.Root.Property("Description"),
-                    PropertyPath.Root.Property("Sequence"),
-                    PropertyPath.Root.Property("Note"),
-                    PropertyPath.Root.Property("Results").LookupAllItems(),
+                    PropertyPath.Parse("Proteins!*.Name"),
+                    PropertyPath.Parse("Proteins!*.Description"),
+                    PropertyPath.Parse("Proteins!*.Sequence"),
+                    PropertyPath.Parse("Proteins!*.Note"),
+                    PropertyPath.Parse("Replicates").LookupAllItems(),
                 };
                 foreach (var id in expectedFields)
                 {
@@ -447,9 +447,9 @@ namespace pwiz.SkylineTestTutorial
                 var columnsToAdd = new[]
                 { 
                     // Not L10N
-                    PropertyPath.Parse("Peptides!*.Precursors!*.IsotopeLabelType"),
-                    PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"),
-                    PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.TotalArea"),
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.IsotopeLabelType"),
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"),
+                    PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.TotalArea"),
                 };
                 foreach (var id in columnsToAdd)
                 {
@@ -547,28 +547,28 @@ namespace pwiz.SkylineTestTutorial
                 var columnsToAdd = new[]
                                        {
                                            // Not L10N
-                                           PropertyPath.Parse("Results!*.Value.FileName"),
-                                           PropertyPath.Parse("Results!*.Value.SampleName"),
-                                           PropertyPath.Parse("Results!*.Value.Replicate.Name"),
-                                           PropertyPath.Parse("Name"),
-                                           PropertyPath.Parse("Peptides!*.AverageMeasuredRetentionTime"),
-                                           PropertyPath.Parse("Peptides!*.Results!*.Value.PeptideRetentionTime"),
-                                           PropertyPath.Parse("Peptides!*.Results!*.Value.RatioToStandard"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Charge"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Mz"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.ProductCharge"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.ProductMz"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.FragmentIon"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.MaxFwhm"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.MinStartTime"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.MaxEndTime"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.RetentionTime"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Fwhm"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.StartTime"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.EndTime"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Height"),
-                                           PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.UserSetPeak"),
+                                           PropertyPath.Parse("Replicates!*.Files!*.FileName"),
+                                           PropertyPath.Parse("Replicates!*.Files!*.SampleName"),
+                                           PropertyPath.Parse("Replicates!*.Name"),
+                                           PropertyPath.Parse("Proteins!*.Name"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.AverageMeasuredRetentionTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.PeptideRetentionTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.RatioToStandard"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Mz"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.ProductCharge"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.ProductMz"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.FragmentIon"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.MaxFwhm"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.MinStartTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.MaxEndTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.RetentionTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Fwhm"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.StartTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.EndTime"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Height"),
+                                           PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.UserSetPeak"),
                                        };
                 foreach (var id in columnsToAdd)
                 {

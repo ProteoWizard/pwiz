@@ -91,9 +91,20 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 else
                 {
                     Nodes.AddRange(MakeChildNodes(_rootColumn).ToArray());
+                    bool allChildrenAreCollections = true;
                     foreach (TreeNode node in Nodes)
                     {
+                        allChildrenAreCollections = allChildrenAreCollections &&
+                                                    null != GetTreeColumn(node).CollectionInfo;
                         EnsureChildren(node);
+                    }
+                    // If all of the nodes at the root are collections, then expand the first node
+                    // so that the user has an easier time finding "Normal" columns (this makes it
+                    // less confusing in Skyline when the user is presented only with "Proteins" and "Replicate")
+                    if (Nodes.Count > 0 && allChildrenAreCollections)
+                    {
+                        EnsureChildren(Nodes[0]);
+                        Nodes[0].Expand();
                     }
                 }
             }
@@ -187,7 +198,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             var result = new List<TreeNode>();
             foreach (var columnDescriptor in ListChildren(parentColumnDescriptor))
             {
-                var isAdvanced = columnDescriptor.IsAdvanced;
+                var isAdvanced = IsAdvanced(columnDescriptor, parentColumnDescriptor);
                 if (!ShowAdvancedFields && isAdvanced)
                 {
                     continue;
@@ -199,14 +210,22 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 }
                 child.SelectedImageIndex = child.ImageIndex = (int) GetImageIndex(columnDescriptor);
                 SetColumnDescriptor(child, columnDescriptor);
-//                if (CheckedColumns.Any(columnId => columnId.StartsWith(columnDescriptor.IdPath)))
-//                {
-//                    EnsureChildren(child);
-//                    child.Expand();
-//                }
                 result.Add(child);
             }
             return result;
+        }
+
+        private bool IsAdvanced(ColumnDescriptor columnDescriptor, ColumnDescriptor parent)
+        {
+            while (null != columnDescriptor && columnDescriptor.PropertyPath.StartsWith(parent.PropertyPath))
+            {
+                if (columnDescriptor.IsAdvanced)
+                {
+                    return true;
+                }
+                columnDescriptor = columnDescriptor.Parent;
+            }
+            return false;
         }
 
         private ImageIndexes GetImageIndex(ColumnDescriptor columnDescriptor)

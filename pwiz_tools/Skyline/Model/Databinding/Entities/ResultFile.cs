@@ -20,6 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Results;
 
@@ -41,6 +42,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public ChromFileInfo ChromFileInfo { get; private set; }
         [Browsable(false)]
         public int OptimizationStep { get; private set; }
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Replicate Replicate { get; private set; }
         public string FileName {
             get { return SampleHelp.GetFileName(ChromFileInfo.FilePath); }

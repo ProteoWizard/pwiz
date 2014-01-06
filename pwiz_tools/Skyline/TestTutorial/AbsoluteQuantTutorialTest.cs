@@ -245,10 +245,10 @@ namespace pwiz.SkylineTestTutorial
                 const string reportName = "Peptide Ratio Results Test";
                 var columnsToAdd = new[]
                                    {
-                                       PropertyPath.Parse("Peptides!*.Sequence"),
-                                       PropertyPath.Parse("Name"),
-                                       PropertyPath.Parse("Results!*.Value.Replicate.Name"),
-                                       PropertyPath.Parse("Peptides!*.Results!*.Value.RatioToStandard"),
+                                       PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
+                                       PropertyPath.Parse("Proteins!*.Name"),
+                                       PropertyPath.Parse("Replicates!*.Name"),
+                                       PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.RatioToStandard"),
                                    };
                 Assert.AreEqual(columnsToAddCount, columnsToAdd.Length);
                 {

@@ -226,15 +226,15 @@ namespace pwiz.SkylineTestFunctional
             var columnsToAdd = new[]
                     {
                         // Not L10N
-                        PropertyPath.Parse("Peptides!*.Sequence"),
-                        PropertyPath.Parse("Peptides!*.StandardType"),
-                        PropertyPath.Parse("Peptides!*.Precursors!*.Charge"),
-                        PropertyPath.Parse("Peptides!*.Precursors!*.IsotopeLabelType"),
-                        PropertyPath.Parse("Peptides!*.Results!*.Value").Concat(ratioColumnLight),
-                        PropertyPath.Parse("Peptides!*.Results!*.Value").Concat(ratioColumnHeavy),
-                        PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value").Concat(ratioColumnPrec),
-                        PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.FragmentIon"),
-                        PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value").Concat(ratioColumnTran),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.StandardType"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.IsotopeLabelType"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value").Concat(ratioColumnLight),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value").Concat(ratioColumnHeavy),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value").Concat(ratioColumnPrec),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.FragmentIon"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value").Concat(ratioColumnTran),
                     };
             RunUI(() =>
             {

@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private Precursor _precursor;
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Precursor Precursor
         {
             get

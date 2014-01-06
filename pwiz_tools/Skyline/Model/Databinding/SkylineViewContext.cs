@@ -272,24 +272,20 @@ namespace pwiz.Skyline.Model.Databinding
             }
             else
             {
-                PropertyPath sublistId = PropertyPath.Root;
                 var columnsToRemove = new HashSet<PropertyPath>();
                 bool addRoot = false;
                 if (columnDescriptor.PropertyType == typeof(Protein))
                 {
-                    sublistId = PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*");
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Peptide))
                 {
-                    sublistId = PropertyPath.Parse("Precursors!*.Transitions!*");
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Precursor))
                 {
-                    sublistId = PropertyPath.Parse("Transitions!*");
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
@@ -301,7 +297,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
                     addRoot = true;
                 }
-                viewSpec = viewSpec.SetSublistId(sublistId);
+                viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
                 if (addRoot)
                 {
                     viewSpec = viewSpec.SetColumns(new[] { new ColumnSpec(PropertyPath.Root) }.Concat(viewSpec.Columns));
@@ -318,6 +314,20 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return new ViewInfo(columnDescriptor, viewSpec);
         }
+
+        public static PropertyPath GetReplicateSublist(Type rowType)
+        {
+            if (rowType == typeof(SkylineDocument))
+            {
+                return PropertyPath.Root.Property("Replicates").LookupAllItems();
+            }
+            if (rowType == typeof(Replicate))
+            {
+                return PropertyPath.Root.Property("Files").LookupAllItems();
+            }
+            return PropertyPath.Root.Property("Results").LookupAllItems();
+        }
+
 
         public static bool IsNumeric(Type type)
         {
@@ -469,6 +479,8 @@ namespace pwiz.Skyline.Model.Databinding
             yield return MakeRowSource(dataSchema, "Peptides", new Peptides(dataSchema, new[] { IdentityPath.ROOT }));
             yield return MakeRowSource(dataSchema, "Precursors", new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
             yield return MakeRowSource(dataSchema, "Transitions", new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
+            yield return MakeRowSource(dataSchema, "Replicates", new ReplicateList(dataSchema));
+            yield return new RowSourceInfo(typeof(SkylineDocument), new SkylineDocument[0], new ViewInfo[0]);
         }
 
         public static IEnumerable<RowSourceInfo> GetAllRowSources(SkylineDataSchema dataSchema)
@@ -478,7 +490,8 @@ namespace pwiz.Skyline.Model.Databinding
         private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, IList<T> rows)
         {
             var parentColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(T));
-            return new RowSourceInfo(rows, new ViewInfo(parentColumn, GetDefaultViewSpec(parentColumn).SetName(name)));
+            var viewInfo = new ViewInfo(parentColumn, GetDefaultViewInfo(parentColumn).GetViewSpec().SetName(name));
+            return new RowSourceInfo(rows, viewInfo);
         }
 
     }

@@ -318,7 +318,8 @@ namespace pwiz.SkylineTestTutorial
                 var customizeViewDlg = ShowDialog<ViewEditor>(editListReport.EditItem);
                 PauseForScreenShot("p22 - customize view");
 
-                RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.\"annotation_" + qvalueHeader + "\"")));
+                RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value")
+                    .Property(AnnotationDef.ANNOTATION_PREFIX + qvalueHeader)));
                 PauseForScreenShot("p23 - Selected columns");
 
                 OkDialog(customizeViewDlg, customizeViewDlg.OkDialog);

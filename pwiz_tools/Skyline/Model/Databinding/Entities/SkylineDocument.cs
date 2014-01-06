@@ -18,6 +18,7 @@
  */
 
 using System;
+using pwiz.Skyline.Model.Databinding.Collections;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -32,5 +33,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             throw new InvalidOperationException();
         }
+
+        private Proteins _proteins;
+        public Proteins Proteins { get { return _proteins = _proteins ?? new Proteins(DataSchema); } }
+        private ReplicateList _replicates;
+        public ReplicateList Replicates { get { return _replicates = _replicates ?? new ReplicateList(DataSchema); } }
     }
 }

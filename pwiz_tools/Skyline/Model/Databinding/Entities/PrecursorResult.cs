@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
 
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
         public TransitionGroupChromInfo ChromInfo { get; private set; }
@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private PeptideResult _peptideResult;
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public PeptideResult PeptideResult 
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }

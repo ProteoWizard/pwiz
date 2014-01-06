@@ -94,7 +94,7 @@
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\AdvancedWhenAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />

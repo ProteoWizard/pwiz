@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 FirePropertyChanged(null);
             }
         }
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Peptide Peptide { get { return SkylineDocNode as Peptide; } }
 
         [Browsable(false)]

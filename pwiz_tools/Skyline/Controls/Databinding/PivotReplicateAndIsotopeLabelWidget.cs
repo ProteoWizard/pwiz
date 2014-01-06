@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
 
-            cbxPivotReplicate.Checked = !ViewSpec.SublistId.StartsWith(PropertyPath.Root.Property("Results").LookupAllItems());
+            cbxPivotReplicate.Checked = !ViewSpec.SublistId.StartsWith(SkylineViewContext.GetReplicateSublist(ViewInfo.ParentColumn.PropertyType));
         }
 
         private void cbxPivotReplicate_CheckedChanged(object sender, EventArgs e)
@@ -82,7 +83,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             else
             {
-                ViewSpec = ViewSpec.SetSublistId(PropertyPath.Root.Property("Results").LookupAllItems());
+                ViewSpec = ViewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(ViewInfo.ParentColumn.PropertyType));
             }
         }
 

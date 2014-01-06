@@ -48,19 +48,36 @@ namespace pwiz.SkylineTest.Reporting
             ValidateReport(GetDefaultReport(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results), typeof(Peptide));
         }
 
+        [TestMethod]
+        public void TestDefaultViews()
+        {
+            SkylineDataSchema dataSchema = GetDataSchema();
+            foreach (var type in new[]
+                {typeof (Protein), typeof (Peptide), typeof (Precursor), typeof (Transition), typeof (Replicate)})
+            {
+                var viewInfo = SkylineViewContext.GetDefaultViewInfo(ColumnDescriptor.RootColumn(dataSchema, type));
+                EnsureViewRoundTrips(viewInfo);
+            }
+        }
+
         private void ValidateReport(ReportSpec reportSpec, Type rowType)
         {
             var dataSchema = GetDataSchema();
             var converter = new ReportSpecConverter(dataSchema);
             var viewInfo = converter.Convert(reportSpec);
-            IEnumerable<PropertyPath> emptyPropertyPaths = new PropertyPath[0];
             Assert.AreEqual(rowType, viewInfo.ParentColumn.PropertyType);
+            EnsureViewRoundTrips(viewInfo);
+        }
+
+        private void EnsureViewRoundTrips(ViewInfo viewInfo)
+        {
+            IEnumerable<PropertyPath> emptyPropertyPaths = new PropertyPath[0];
             ValidateViewInfo(viewInfo);
             var transformer = new DocumentViewTransformer();
-            var viewInfoProteins = transformer.MakeIntoProteinsView(viewInfo, ref emptyPropertyPaths);
-            Assert.AreEqual(typeof(Protein), viewInfoProteins.ParentColumn.PropertyType);
-            ValidateViewInfo(viewInfoProteins);
-            var viewInfoRoundTrip = transformer.ConvertFromProteinsView(viewInfoProteins, ref emptyPropertyPaths);
+            var viewInfoDocument = transformer.MakeIntoDocumentView(viewInfo, ref emptyPropertyPaths);
+            Assert.AreEqual(typeof(SkylineDocument), viewInfoDocument.ParentColumn.PropertyType);
+            ValidateViewInfo(viewInfoDocument);
+            var viewInfoRoundTrip = transformer.ConvertFromDocumentView(viewInfoDocument, ref emptyPropertyPaths);
             Assert.AreEqual(viewInfo.ParentColumn.PropertyType, viewInfoRoundTrip.ParentColumn.PropertyType);
             Assert.AreEqual(viewInfo.GetViewSpec(), viewInfoRoundTrip.GetViewSpec());
         }

@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private Peptide _peptide;
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Peptide Peptide
         {
             get { return _peptide = _peptide ?? new Peptide(DataSchema, IdentityPath.Parent); }

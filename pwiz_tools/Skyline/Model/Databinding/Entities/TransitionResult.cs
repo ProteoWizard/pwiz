@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var newDocNode = Transition.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Transition.DocNode.Results, newChromInfo));
             Transition.ChangeDocNode(newDocNode);
         }
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Transition Transition { get { return (Transition)SkylineDocNode; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? RetentionTime { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.RetentionTime; } }
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return ChromInfo.Annotations.GetAnnotation(annotationDef);
         }
 
-        [AdvancedWhen(AncestorOfType = typeof(Protein))]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public PrecursorResult PrecursorResult 
         {
             get

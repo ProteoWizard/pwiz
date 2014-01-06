@@ -10,13 +10,15 @@ namespace pwiz.Skyline.Model.Databinding
 {
     /// <summary>
     /// Takes views which select from <see cref="Peptides"/>, <see cref="Precursors"/>, or <see cref="Transitions"/>, 
-    /// and (if possible) transforms them so that they are selecting from <see cref="Proteins"/>.
+    /// <see cref="ReplicateList"/>  and (if possible) transforms them so that they are selecting from
+    /// <see cref="SkylineDocument"/>.
     /// This is so that the DocumentGrid customize view form can be simplified.
     /// </summary>
     public class DocumentViewTransformer : IViewTransformer
     {
+        private static readonly PropertyPath Proteins = PropertyPath.Root.Property("Proteins").LookupAllItems();
         private static readonly PropertyPath Peptides 
-            = PropertyPath.Root.Property("Peptides").LookupAllItems();
+            = Proteins.Property("Peptides").LookupAllItems();
 
         private static readonly PropertyPath PeptidesPrecursors
             = Peptides.Property("Precursors").LookupAllItems();
@@ -24,8 +26,11 @@ namespace pwiz.Skyline.Model.Databinding
         private static readonly PropertyPath PeptidesPrecursorsTransitions
             = PeptidesPrecursors.Property("Transitions").LookupAllItems();
 
-        private static readonly PropertyPath ProteinResults
-            = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
+        private static readonly PropertyPath Replicates
+            = PropertyPath.Root.Property("Replicates").LookupAllItems();
+
+        private static readonly PropertyPath ResultFiles
+            = Replicates.Property("Files").LookupAllItems();
 
         private static readonly PropertyPath PeptideResults
             = Peptides.Property("Results").LookupAllItems().Property("Value");
@@ -38,17 +43,17 @@ namespace pwiz.Skyline.Model.Databinding
 
         public KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> TransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths)
         {
-            var newView = MakeIntoProteinsView(view, ref propertyPaths);
+            var newView = MakeIntoDocumentView(view, ref propertyPaths);
             return new KeyValuePair<ViewInfo, IEnumerable<PropertyPath>>(newView, propertyPaths);
         }
 
         public KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> UntransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths)
         {
-            var newView = ConvertFromProteinsView(view, ref propertyPaths);
+            var newView = ConvertFromDocumentView(view, ref propertyPaths);
             return new KeyValuePair<ViewInfo, IEnumerable<PropertyPath>>(newView, propertyPaths);
         }
 
-        public ViewInfo MakeIntoProteinsView(ViewInfo viewInfo, ref IEnumerable<PropertyPath> propertyPaths)
+        public ViewInfo MakeIntoDocumentView(ViewInfo viewInfo, ref IEnumerable<PropertyPath> propertyPaths)
         {
             IList<KeyValuePair<PropertyPath, PropertyPath>> mapping;
             if (viewInfo.ParentColumn.PropertyType == typeof(Entities.Peptide))
@@ -63,22 +68,34 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 mapping = MappingFromTransitions();
             }
+            else if (viewInfo.ParentColumn.PropertyType == typeof (Protein))
+            {
+                mapping = MappingFromProteins();
+            }
+            else if (viewInfo.ParentColumn.PropertyType == typeof (Replicate))
+            {
+                mapping = MappingFromReplicates();
+            }
             else
             {
                 return viewInfo;
             }
             var viewSpec = viewInfo.GetViewSpec();
-            viewSpec = MapViewSpec(mapping, viewSpec, typeof(Protein));
+            viewSpec = MapViewSpec(mapping, viewSpec, typeof(SkylineDocument));
             if (null != propertyPaths)
             {
                 propertyPaths = ImmutableList.ValueOf(propertyPaths.Select(path => MapPropertyPath(mapping, path)));
             }
-            return new ViewInfo(viewInfo.DataSchema, typeof(Protein), viewSpec);
+            if (Equals(viewSpec.SublistId, SkylineViewContext.GetReplicateSublist(viewInfo.ParentColumn.PropertyType)))
+            {
+                viewSpec = viewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(typeof(SkylineDocument)));
+            }
+            return new ViewInfo(viewInfo.DataSchema, typeof(SkylineDocument), viewSpec);
         }
 
-        public ViewInfo ConvertFromProteinsView(ViewInfo viewInfo, ref IEnumerable<PropertyPath> propertyPaths)
+        public ViewInfo ConvertFromDocumentView(ViewInfo viewInfo, ref IEnumerable<PropertyPath> propertyPaths)
         {
-            if (viewInfo.ParentColumn.PropertyType != typeof (Protein))
+            if (viewInfo.ParentColumn.PropertyType != typeof (SkylineDocument))
             {
                 return viewInfo;
             }
@@ -100,6 +117,16 @@ namespace pwiz.Skyline.Model.Databinding
                 mapping = ReverseMapping(MappingFromPeptides());
                 newType = typeof (Entities.Peptide);
             }
+            else if (AnyColumnsWithPrefix(viewSpec, Proteins))
+            {
+                mapping = ReverseMapping(MappingFromProteins());
+                newType = typeof (Protein);
+            }
+            else if (AnyColumnsWithPrefix(viewSpec, Replicates))
+            {
+                mapping = ReverseMapping(MappingFromReplicates());
+                newType = typeof (Replicate);
+            }
             else
             {
                 return viewInfo;
@@ -108,6 +135,10 @@ namespace pwiz.Skyline.Model.Databinding
             if (null != propertyPaths)
             {
                 propertyPaths = propertyPaths.Select(path => MapPropertyPath(mapping, path));
+            }
+            if (Equals(viewSpec.SublistId, SkylineViewContext.GetReplicateSublist(typeof(SkylineDocument))))
+            {
+                viewSpec = viewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(newType));
             }
             return new ViewInfo(viewInfo.DataSchema, newType, viewSpec);
         }
@@ -153,16 +184,28 @@ namespace pwiz.Skyline.Model.Databinding
             return propertyPath;
         }
 
+        private static IList<KeyValuePair<PropertyPath, PropertyPath>> MappingFromProteins()
+        {
+            PropertyPath resultFiles = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
+            PropertyPath replicates = resultFiles.Property("Replicate");
+            return new List<KeyValuePair<PropertyPath, PropertyPath>>
+            {
+                Kvp(replicates, Replicates),
+                Kvp(resultFiles, ResultFiles),
+                Kvp(PropertyPath.Root, Proteins),
+            };
+        }
+
         private static IList<KeyValuePair<PropertyPath, PropertyPath>> MappingFromPeptides()
         {
-            PropertyPath results = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
-            PropertyPath resultFile = results.Property("ResultFile");
+            PropertyPath resultFiles = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value").Property("ResultFile");
+            PropertyPath replicates = resultFiles.Property("Replicate");
 
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {
-                Kvp(PropertyPath.Root.Property("Protein"), PropertyPath.Root),
-                Kvp(resultFile, ProteinResults),
-                Kvp(results, PeptideResults),
+                Kvp(PropertyPath.Root.Property("Protein"), Proteins),
+                Kvp(replicates, Replicates),
+                Kvp(resultFiles, ResultFiles),
                 Kvp(PropertyPath.Root, Peptides),
             };
         }
@@ -173,11 +216,13 @@ namespace pwiz.Skyline.Model.Databinding
             PropertyPath results = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
             PropertyPath peptideResult = results.Property("PeptideResult");
             PropertyPath resultFile = peptideResult.Property("ResultFile");
+            PropertyPath replicate = resultFile.Property("Replicate");
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {
-                Kvp(peptide.Property("Protein"), PropertyPath.Root),
+                Kvp(peptide.Property("Protein"), Proteins),
                 Kvp(peptide, Peptides),
-                Kvp(resultFile, ProteinResults),
+                Kvp(replicate, Replicates),
+                Kvp(resultFile, ResultFiles),
                 Kvp(peptideResult, PeptideResults),
                 Kvp(results, PrecursorResults),
                 Kvp(PropertyPath.Root, PeptidesPrecursors),
@@ -189,23 +234,35 @@ namespace pwiz.Skyline.Model.Databinding
             PropertyPath precursor = PropertyPath.Root.Property("Precursor");
             PropertyPath peptide = precursor.Property("Peptide");
             PropertyPath protein = peptide.Property("Protein");
-            PropertyPath results = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
-            PropertyPath precursorResult = results.Property("PrecursorResult");
+            PropertyPath transitionResult = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
+            PropertyPath precursorResult = transitionResult.Property("PrecursorResult");
             PropertyPath peptideResult = precursorResult.Property("PeptideResult");
-            PropertyPath proteinResult = peptideResult.Property("ResultFile");
+            PropertyPath resultFile = peptideResult.Property("ResultFile");
+            PropertyPath replicate = peptideResult.Property("Replicate");
 
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {
-                Kvp(protein, PropertyPath.Root),
+                Kvp(protein, Proteins),
                 Kvp(peptide, Peptides),
                 Kvp(precursor, PeptidesPrecursors),
-                Kvp(proteinResult, ProteinResults),
+                Kvp(replicate, Replicates),
+                Kvp(resultFile, ResultFiles),
                 Kvp(peptideResult, PeptideResults),
                 Kvp(precursorResult, PrecursorResults),
-                Kvp(results, TransitionResults),
+                Kvp(transitionResult, TransitionResults),
                 Kvp(PropertyPath.Root, PeptidesPrecursorsTransitions),
             };
-        } 
+        }
+
+        private static IList<KeyValuePair<PropertyPath, PropertyPath>> MappingFromReplicates()
+        {
+            return new List<KeyValuePair<PropertyPath, PropertyPath>>
+            {
+                Kvp(PropertyPath.Root.Property("Files").LookupAllItems(), ResultFiles),
+                Kvp(PropertyPath.Root, Replicates),
+            };
+        }
+
 
         private static PropertyPath ReplacePrefix(PropertyPath oldPrefix, PropertyPath newPrefix, PropertyPath tail)
         {

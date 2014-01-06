@@ -285,6 +285,10 @@ namespace pwiz.Skyline.Model.Databinding
                         propertyPath = PropertyPath.Root.Property(part);
                     }
                 }
+//                else if (component == typeof (DbProteinResult) && part == "ResultFile")
+//                {
+//                    propertyPath = PropertyPath.Parse("Results!*.Value");
+//                }
                 else
                 {
                     PropertyInfo property = component.GetProperty(part);
@@ -311,7 +315,6 @@ namespace pwiz.Skyline.Model.Databinding
                     component = property.PropertyType;
                 }
                 identifierPath = identifierPath.Concat(propertyPath);
-                
             }
             var columnDescriptor = GetColumnDescriptor(databindingTableAttribute, identifierPath);
             if (null == columnDescriptor)

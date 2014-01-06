@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
             var viewEditor = ShowDialog<ViewEditor>(editReportList.AddItem);
 
             // Simple protein name report
-            AddColumns(viewEditor, PropertyPath.Parse("Name"));
+            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Name"));
             CheckPreview(viewEditor, (preview, document) =>
             {
                 Assert.AreEqual(document.PeptideGroupCount, preview.RowCount);
@@ -89,8 +89,8 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add precursor information
-            AddColumns(viewEditor, PropertyPath.Parse("Peptides!*.Sequence"),
-                PropertyPath.Parse("Peptides!*.Precursors!*.Charge"));
+            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"),
+                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Charge"));
             CheckPreview(viewEditor, (preview, document) =>
             {
                 Assert.AreEqual(document.TransitionGroupCount, preview.RowCount);
@@ -98,9 +98,9 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add precursor results and results summary information
-            AddColumns(viewEditor, PropertyPath.Parse("Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Mean"),
-                PropertyPath.Parse("Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Cv"),
-                PropertyPath.Parse("Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"));
+            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Mean"),
+                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.BestRetentionTime.Cv"),
+                PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.BestRetentionTime"));
             CheckPreview(viewEditor, (preview, document) =>
             {
                 int expectedRows = document.TransitionGroupCount *
@@ -125,7 +125,7 @@ namespace pwiz.SkylineTestFunctional
             viewEditor = ShowDialog<ViewEditor>(editReportList.CopyItem);
 
             // Add transition results summary column
-            AddColumns(viewEditor, PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.ResultSummary.Area.Cv"));
+            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.ResultSummary.Area.Cv"));
             // Not L10N
             CheckPreview(viewEditor, (preview, document) =>
             {
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add transition results column
-            AddColumns(viewEditor, PropertyPath.Parse("Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"));
+            AddColumns(viewEditor, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Area"));
             // Not L10N
             CheckPreview(viewEditor, (preview, document) =>
             {

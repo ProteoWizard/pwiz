@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ItemDisplayName = "ResultFile")]
-        [Obsolete]
+        [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public IDictionary<ResultKey, ResultFile> Results
         {
             get

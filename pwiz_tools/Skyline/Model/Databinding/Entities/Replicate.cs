@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -114,5 +115,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [Obsolete]
         public string ReplicatePath { get { return "/"; } }
+
+        public IList<ResultFile> Files
+        {
+            get
+            {
+                return ChromatogramSet.MSDataFileInfos.Select(
+                    chromFileInfo => new ResultFile(this, chromFileInfo.FileId, 0)).ToArray();
+            }
+        }
     }
 }
