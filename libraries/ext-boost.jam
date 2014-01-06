@@ -188,9 +188,7 @@ rule init ( version : location : options * )
             <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
-            <define>BOOST_ALL_NO_LIB=1
             <warnings>off
-
             <conditional>@secure-scl-throws
             ;
 
@@ -208,6 +206,7 @@ rule init ( version : location : options * )
         #requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
         local common-requirements =
             <include>$(location)
+            <define>BOOST_ALL_NO_LIB=1
             ;
         alias boost
             :
