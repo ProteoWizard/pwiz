@@ -328,40 +328,63 @@ namespace pwiz.SkylineTestUtil
             NoDiff(file1, file2);
         }
 
-        public static void FieldsEqual(string target, string actual, int countFields)
+        public static void FieldsEqual(string target, string actual, int countFields, bool allowForNumericPrecisionDifferences = false)
         {
-            FieldsEqual(target, actual, countFields, null);
+            FieldsEqual(target, actual, countFields, null, allowForNumericPrecisionDifferences);
         }
 
-        public static void FieldsEqual(string target, string actual, int countFields, int? exceptIndex)
+        public static void FieldsEqual(string target, string actual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false)
         {
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
-                int count = 1;
-                while (true)
-                {
-                    string lineTarget = readerTarget.ReadLine();
-                    string lineActual = readerActual.ReadLine();
-                    if (lineTarget == null && lineActual == null)
-                        return;
-                    if (lineTarget == null)
-                        Assert.Fail("Target stops at line {0}.", count);
-                    else if (lineActual == null)
-                        Assert.Fail("Actual stops at line {0}.", count);
-                    else if (lineTarget != lineActual)
-                    {
-                        string[] fieldsTarget = lineTarget.Split(new[] { ',' });
-                        string[] fieldsActual = lineActual.Split(new[] { ',' });
-                        if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
-                            Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);                        
-                        for (int i = 0; i < countFields; i++)
-                        {
-                            if (exceptIndex.HasValue && exceptIndex.Value == i)
-                                continue;
+                FieldsEqual(readerTarget, readerActual, countFields, exceptIndex, allowForTinyNumericDifferences);
+            }
+        }
 
-                            if (!Equals(fieldsTarget[i], fieldsActual[i]))
-                                Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false)
+        {
+
+            int count = 1;
+            while (true)
+            {
+                string lineTarget = readerTarget.ReadLine();
+                string lineActual = readerActual.ReadLine();
+                if (lineTarget == null && lineActual == null)
+                    return;
+                if (lineTarget == null)
+                    Assert.Fail("Target stops at line {0}.", count);
+                else if (lineActual == null)
+                    Assert.Fail("Actual stops at line {0}.", count);
+                else if (lineTarget != lineActual)
+                {
+                    var culture = CultureInfo.InvariantCulture; // for the moment at least, we are hardcoded for commas in CSV
+                    string[] fieldsTarget = lineTarget.Split(new[] { ',' });
+                    string[] fieldsActual = lineActual.Split(new[] { ',' });
+                    if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
+                        Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);                        
+                    for (int i = 0; i < countFields; i++)
+                    {
+                        if (exceptIndex.HasValue && exceptIndex.Value == i)
+                            continue;
+
+                        if (!Equals(fieldsTarget[i], fieldsActual[i]))
+                        {
+                            // test numerics with the precision presented in the output text
+                            double dTarget, dActual;
+                            if (allowForTinyNumericDifferences && 
+                                Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
+                                Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
+                            {
+                                // how much of that was decimal places?
+                                var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int)dTarget).Length;
+                                var precActual = fieldsActual[i].Length - String.Format("{0}.", (int)dActual).Length;
+                                var prec = Math.Max(Math.Min(precTarget, precActual), 0);
+                                double toler = .5 * ((prec == 0) ? 0 : Math.Pow(10, -prec)); // so .001 is seen as close enough to .0009
+                                if (Math.Abs(dTarget - dActual) <= toler)
+                                    continue;
+                            }
+                            Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                         }
                     }
                     count++;
