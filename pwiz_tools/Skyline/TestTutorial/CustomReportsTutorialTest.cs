@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -48,11 +49,12 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class CustomReportsTutorialTest : AbstractFunctionalTest
     {
+        const string customReportName = "Overview";
         [TestMethod]
         public void TestCustomReportsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
 
             TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/CustomReports.zip";
             RunFunctionalTest();
@@ -96,7 +98,6 @@ namespace pwiz.SkylineTestTutorial
             // p. 4
             var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
             var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
-            const string customReportName = "Overview";
             RunUI(() => pivotReportDlg.ReportName = customReportName);
             PauseForScreenShot();
 
@@ -406,7 +407,18 @@ namespace pwiz.SkylineTestTutorial
                       });
             PauseForScreenShot();   // p. 27
         }
+
         protected void DoLiveReportsTest()
+        {
+            DoCreatingASimpleReport();
+            DoExportingReportDataToAFile();
+            DoSharingManagingModifyingReportTemplates();
+            DoQualityControlSummaryReports();
+            DoResultsGridView();
+        }
+
+
+        protected void DoCreatingASimpleReport()
         {
             // Creating a Simple Custom Report, p. 3
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
@@ -415,13 +427,16 @@ namespace pwiz.SkylineTestTutorial
             // p. 4
             var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
-            const string customReportName = "Overview";
             RunUI(() => viewEditor.ViewName = customReportName);
             PauseForScreenShot();
 
             // p. 5
             RunUI(() =>
             {
+                viewEditor.ChooseColumnsTab.ExpandPropertyPath(PropertyPath.Parse("Proteins!*.Peptides!*"), true);
+                viewEditor.ChooseColumnsTab.ExpandPropertyPath(PropertyPath.Parse("Replicates!*"), true);
+                // Make the view editor bigger so that these expanded nodes can be seen in the next screenshot
+                viewEditor.Height = Math.Max(viewEditor.Height, 600);
                 Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
@@ -482,6 +497,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();
 
             OkDialog(exportReportDlg, exportReportDlg.CancelClick);
+        }
+
+        protected void DoExportingReportDataToAFile()
+        {
 
             // Exporting Report Data to a File, p. 9
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg0 =>
@@ -489,7 +508,10 @@ namespace pwiz.SkylineTestTutorial
                 exportReportDlg0.ReportName = customReportName; // Not L10N
                 exportReportDlg0.OkDialog(TestFilesDir.GetTestPath("Overview_Study7_example.csv"), TextUtil.SEPARATOR_CSV); // Not L10N
             });
+        }
 
+        protected void DoSharingManagingModifyingReportTemplates()
+        {
             // Sharing Report Templates, p. 9
             var exportReportDlg1 = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
 
@@ -529,7 +551,7 @@ namespace pwiz.SkylineTestTutorial
                 exportReportDlg1.ReportName = customReportName; // Not L10N
             });
             var previewDlg = ShowDialog<DocumentGridForm>(exportReportDlg1.ShowPreview);
-            WaitForCondition(()=>previewDlg.RowCount == 20);
+            WaitForCondition(() => previewDlg.RowCount == 20);
             Assert.AreEqual(20, previewDlg.RowCount);
             Assert.AreEqual(58, previewDlg.ColumnCount);
             RunUI(previewDlg.Close);
@@ -614,35 +636,56 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();   // p. 17
 
             OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);
-
+        }
+        protected void DoQualityControlSummaryReports()
+        {
             // Quality Control Summary Reports, p. 18
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\study9pilot.sky")); // Not L10N
                 SkylineWindow.ExpandPeptides();
             });
-            var exportReportDlg2 = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-            RunUI(() => exportReportDlg2.Import(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))); // Not L10N
-            PauseForScreenShot();
-
-            var editReportListDlg2 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg2.EditList);
-            RunUI(() => editReportListDlg2.SelectItem("Summary Statistics")); // Not L10N
-            var pivotReportDlg1 = ShowDialog<ViewEditor>(editReportListDlg2.EditItem);
-            RunUI(() => Assert.AreEqual(11, pivotReportDlg1.ChooseColumnsTab.ColumnCount));
-            PauseForScreenShot();   // p. 19
-
-            {
-                var previewReportDlg = ShowDialog<DocumentGridForm>(pivotReportDlg1.ShowPreview);
-                PauseForScreenShot();   // p. 20
-
-                OkDialog(previewReportDlg, previewReportDlg.Close);
-            }
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            var manageViewsForm = ShowDialog<ManageViewsForm>(documentGridForm.ManageViews);
             RunUI(() =>
             {
-                pivotReportDlg1.OkDialog();
-                editReportListDlg2.OkDialog();
+                Assert.AreEqual(1, ((SkylineViewContext)documentGridForm.BindingListSource.ViewContext)
+                    .ImportViewsFromFile(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr")));
+                manageViewsForm.RefreshUi(true);
             });
-            OkDialog(exportReportDlg2, exportReportDlg2.CancelClick);
+            PauseForScreenShot();
+            OkDialog(manageViewsForm, manageViewsForm.Close);
+            PauseForScreenShot("Click the views dropdown and highlight 'Summary_stats'");
+            RunUI(() =>
+            {
+                documentGridForm.ChooseView("Summary Statistics");
+                // Resize the documentGridForm so that all the columns we want are visible for the screenshot.
+                documentGridForm.FloatingPane.Width = Math.Max(documentGridForm.FloatingPane.Width, 800);
+            });
+            WaitForConditionUI(() => documentGridForm.IsComplete);
+            PauseForScreenShot();
+
+            var viewEditor = ShowDialog<ViewEditor>(documentGridForm.NavBar.CustomizeView);
+            RunUI(() => Assert.AreEqual(11, viewEditor.ChooseColumnsTab.ColumnCount));
+            RunUI(() =>
+            {
+                int indexCvTotalArea =
+                    viewEditor.ChooseColumnsTab.ColumnNames.ToList().IndexOf("CvTotalArea");
+                Assert.IsFalse(indexCvTotalArea < 0, "{0} < 0", indexCvTotalArea);
+                viewEditor.ChooseColumnsTab.ActivateColumn(indexCvTotalArea);
+            });
+            PauseForScreenShot(); // p. 19
+            RunUI(()=>viewEditor.TabControl.SelectTab(1));
+            RunUI(() =>
+            {
+                viewEditor.FilterTab.AddSelectedColumn();
+                Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN));
+                viewEditor.FilterTab.SetFilterOperand(0, ".2");
+            });
+            PauseForScreenShot();
+            RunUI(viewEditor.OkDialog);
+            PauseForScreenShot();
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
                 findPeptideDlg.SearchString = "INDISHTQSVSAK"; // Not L10N
@@ -651,8 +694,10 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
-            PauseForScreenShot();   // p. 21
-
+            PauseForScreenShot(); // p. 21
+        }
+        protected void DoResultsGridView()
+        {
             // Results Grid View, p. 22
             var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             PauseForScreenShot();
@@ -729,19 +774,17 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++");
-            // TODO(nicksh)
             var liveResultsGrid = FindOpenForm<LiveResultsGrid>();
-            RunUI(() => liveResultsGrid.ChooseView("Precursor Results"));
-            WaitForGraphs();
+            ViewEditor viewEditor = ShowDialog<ViewEditor>(liveResultsGrid.NavBar.CustomizeView);
             RunUI(() =>
             {
-                var colTailing = resultsGrid.Columns.Cast<DataGridViewColumn>().First(col=>col.HeaderText == "Tailing");
-                Assert.IsNotNull(colTailing);
-                Assert.AreEqual(typeof(bool), colTailing.ValueType);
-                var colNote = resultsGrid.Columns.Cast<DataGridViewColumn>().First(col=>col.HeaderText == "PrecursorReplicateNote");
-                Assert.IsNotNull(colNote);
-                colTailing.DisplayIndex = colNote.DisplayIndex + 1;
+                viewEditor.ChooseColumnsTab.ActivateColumn(2);
+                Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(
+                    PropertyPath.Root.Property(AnnotationDef.ANNOTATION_PREFIX + "Tailing")));
+                viewEditor.ChooseColumnsTab.AddSelectedColumn();
             });
+            PauseForScreenShot();
+            OkDialog(viewEditor, viewEditor.OkDialog);
             PauseForScreenShot();   // p. 27
         }
     }

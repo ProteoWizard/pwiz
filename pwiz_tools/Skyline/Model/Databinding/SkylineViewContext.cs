@@ -432,6 +432,32 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
+        /// <summary>
+        /// For testing
+        /// </summary>
+        /// <param name="filename"></param>
+        public int ImportViewsFromFile(string fileName)
+        {
+            ViewSpec[] views = LoadViews(fileName).ToArray();
+            if (views.Length == 0)
+            {
+                return 0;
+            }
+            int count = 0;
+            var currentViews = CustomViews.ToList();
+            foreach (var view in views)
+            {
+                // ReSharper disable once SimplifyLinqExpression
+                if (!currentViews.Any(currentView => currentView.Name == view.Name))
+                {
+                    currentViews.Add(view);
+                    count++;
+                }
+            }
+            SetCustomViews(currentViews);
+            return count;
+        }
+
         public void SaveSettingsList(IEnumerable<ReportOrViewSpec> reportOrViewSpecList)
         {
             if (null == reportOrViewSpecList)

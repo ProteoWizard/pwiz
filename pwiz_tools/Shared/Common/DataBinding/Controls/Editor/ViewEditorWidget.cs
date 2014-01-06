@@ -35,11 +35,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             if (null != ViewEditor)
             {
                 ViewEditor.ViewChange -= ViewEditorOnViewChange;
+                ViewEditor.PropertyPathActivated -= ViewEditorOnPropertyPathActivate;
             }
             ViewEditor = viewEditor;
             if (null != ViewEditor)
             {
                 ViewEditor.ViewChange += ViewEditorOnViewChange;
+                ViewEditor.PropertyPathActivated += ViewEditorOnPropertyPathActivate;
                 ViewEditorOnViewChange(this, new EventArgs());
             }
             foreach (var subEditor in _subEditors)
@@ -66,6 +68,20 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 InChangeView = false;
             }
+        }
+
+        private void ViewEditorOnPropertyPathActivate(object sender, PropertyPathEventArgs eventArgs)
+        {
+            IEnumerable<PropertyPath> propertyPaths = new []{eventArgs.PropertyPath};
+            if (UseTransformedView && ViewEditor.ViewTransformer != null)
+            {
+                propertyPaths = ViewEditor.ViewTransformer.TransformView(ViewInfo, propertyPaths).Value;
+            }
+            OnActivatePropertyPath(propertyPaths.First());
+        }
+
+        protected virtual void OnActivatePropertyPath(PropertyPath propertyPath)
+        {
         }
 
         protected virtual void OnViewChange()
@@ -174,6 +190,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 subEditor.SetViewEditor(null);
             }
+        }
+
+        protected void ActivatePropertyPath(PropertyPath propertyPath)
+        {
+            IEnumerable<PropertyPath> activatedPaths = new[] {propertyPath};
+            if (UseTransformedView && ViewEditor.ViewTransformer != null)
+            {
+                activatedPaths = ViewEditor.ViewTransformer.TransformView(ViewInfo, activatedPaths).Value;
+            }
+            ViewEditor.ActivatePropertyPath(activatedPaths.First());
         }
     }
 }

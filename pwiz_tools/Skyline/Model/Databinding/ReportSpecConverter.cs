@@ -73,6 +73,12 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return null;
         }
+        /// <summary>
+        /// In old custom reports, if the report was showing rows from a Results table,
+        /// the report would not include any DocNode's which did not have any results.
+        /// To preserve this behavior we add a filter that only DocNode's which have at
+        /// least one Result get included.
+        /// </summary>
         public static ViewSpec AddFilter(ViewSpec viewSpec, ReportSpec reportSpec)
         {
             var propertyPaths = new HashSet<PropertyPath>();
@@ -84,31 +90,16 @@ namespace pwiz.Skyline.Model.Databinding
             foreach (var reportColumn in columns)
             {
                 var databindingTableAttribute = GetDatabindingTableAttribute(reportColumn);
-                if (null != databindingTableAttribute.Property)
+                if (null != databindingTableAttribute.Property && !databindingTableAttribute.Property.EndsWith("Summary"))
                 {
                     propertyPaths.Add(PropertyPath.Parse(databindingTableAttribute.Property));
                 }
             }
-            var newFilters = new List<FilterSpec>();
-            foreach (var propertyPath in propertyPaths)
-            {
-                var collection = FindCollection(propertyPath);
-                if (!collection.IsRoot)
-                {
-                    newFilters.Add(new FilterSpec(collection.Parent.Property("Count"), FilterOperations.OP_IS_GREATER_THAN, "0"));
-                }
-            }
+            var newFilters =
+                propertyPaths.Select(
+                    propertyPath => new FilterSpec(propertyPath, FilterOperations.OP_IS_NOT_BLANK, null));
             viewSpec = viewSpec.SetFilters(viewSpec.Filters.Concat(newFilters));
             return viewSpec;
-        }
-
-        private static PropertyPath FindCollection(PropertyPath propertyPath)
-        {
-            while (null != propertyPath && !propertyPath.IsUnboundLookup)
-            {
-                propertyPath = propertyPath.Parent;
-            }
-            return propertyPath;
         }
 
         public static DatabindingTableAttribute GetDatabindingTableAttribute(ReportColumn reportColumn)

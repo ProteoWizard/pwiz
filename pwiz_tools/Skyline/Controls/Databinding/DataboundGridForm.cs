@@ -83,6 +83,12 @@ namespace pwiz.Skyline.Controls.Databinding
                 return DataGridView.Columns.Cast<DataGridViewColumn>().Select(col => col.HeaderText).ToArray();
             }
         }
+
+        public void ManageViews()
+        {
+            BindingListSource.ViewContext.ManageViews(NavBar);
+        }
+
         #endregion
 
         private void InitializeComponent()

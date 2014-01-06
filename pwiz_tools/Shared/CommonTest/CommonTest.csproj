@@ -77,6 +77,7 @@
     <Compile Include="DataBinding\CollectionInfoTest.cs" />
     <Compile Include="DataBinding\Controls\AvailableFieldsTreeTest.cs" />
     <Compile Include="DataBinding\Controls\BoundDataGridViewTest.cs" />
+    <Compile Include="DataBinding\FilterOperationTest.cs" />
     <Compile Include="DataBinding\FilterTest.cs" />
     <Compile Include="DataBinding\PropertyPathTest.cs" />
     <Compile Include="DataBinding\SampleData\AminoAcid.cs" />

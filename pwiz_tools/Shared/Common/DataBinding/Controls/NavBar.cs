@@ -106,7 +106,8 @@ namespace pwiz.Common.DataBinding.Controls
 
         void BindingSourceOnCurrentChanged(object sender, EventArgs e)
         {
-            navBarDeleteItem.Enabled = ViewContext.DeleteEnabled;
+            navBarDeleteItem.Visible = navBarDeleteItem.Enabled = ViewContext.DeleteEnabled;
+            bindingNavigatorAddNewItem.Visible = BindingListSource.AllowNew;
         }
 
         void RefreshUi()

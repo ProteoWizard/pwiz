@@ -124,7 +124,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         
         private void ListViewColumnsOnItemActivate(object sender, EventArgs e)
         {
-            availableFieldsTreeColumns.SelectColumn(VisibleColumns[listViewColumns.FocusedItem.Index].PropertyPath);
+            ActivatePropertyPath(VisibleColumns[listViewColumns.FocusedItem.Index].PropertyPath);
         }
 
         private void ListViewColumnsOnSelectedIndexChanged(object sender, EventArgs e)
@@ -274,6 +274,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ColumnSpecs = columns;
         }
 
+        protected override void OnActivatePropertyPath(PropertyPath propertyPath)
+        {
+            availableFieldsTreeColumns.SelectColumn(propertyPath);
+        }
+
         #region For Testing
         public bool TrySelect(PropertyPath propertyPath)
         {
@@ -284,6 +289,19 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             var columnDescriptor = availableFieldsTreeColumns.GetTreeColumn(availableFieldsTreeColumns.SelectedNode);
             return null != columnDescriptor && Equals(propertyPath, columnDescriptor.PropertyPath);
+        }
+
+        public void ExpandPropertyPath(PropertyPath propertyPath, bool expand)
+        {
+            TreeNode treeNode = availableFieldsTreeColumns.FindTreeNode(propertyPath, true);
+            if (expand)
+            {
+                treeNode.Expand();
+            }
+            else
+            {
+                treeNode.Collapse();
+            }
         }
 
         public void AddSelectedColumn()
@@ -302,6 +320,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return listViewColumns.Items.Cast<ListViewItem>().Select(item => item.Text).ToArray();
             }
+        }
+
+        public void ActivateColumn(int index)
+        {
+            ListViewHelper.SelectIndex(listViewColumns, index);
+            ActivatePropertyPath(VisibleColumns[index].PropertyPath);
         }
         #endregion
     }

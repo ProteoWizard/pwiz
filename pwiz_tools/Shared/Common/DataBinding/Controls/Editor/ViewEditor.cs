@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -335,7 +336,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return _editorWidgets.AsEnumerable();
             }
-        } 
+        }
 
         public ChooseColumnsTab ChooseColumnsTab
         {
@@ -343,6 +344,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return _chooseColumnsTab;
             }
+        }
+
+        public FilterTab FilterTab
+        {
+            get { return _filterTab; }
         }
 
         public bool PreviewButtonVisible
@@ -364,12 +370,26 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void ShowPreview()
         {
-            ViewContext.Preview(this, ViewInfo);
+            Debug.Assert(PreviewButtonVisible);
+            var viewInfo = new ViewInfo(ViewInfo.ParentColumn, ViewSpec.SetName(ViewName));
+            ViewContext.Preview(this, viewInfo);
         }
+
+        public TabControl TabControl { get { return tabControl1; }}
 
         public void OkDialog()
         {
             DialogResult = btnOK.DialogResult;
         }
+
+        public void ActivatePropertyPath(PropertyPath propertyPath)
+        {
+            if (null != PropertyPathActivated)
+            {
+                PropertyPathActivated(this, new PropertyPathEventArgs(propertyPath));
+            }
+        }
+
+        public event EventHandler<PropertyPathEventArgs> PropertyPathActivated;
     }
 }

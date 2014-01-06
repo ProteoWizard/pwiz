@@ -46,7 +46,7 @@ namespace pwiz.Common.DataBinding
             var displayColumns = new List<DisplayColumn>();
             foreach (var column in viewSpec.Columns)
             {
-                var columnDescriptor = GetColumnDescriptor(column.PropertyPath, true);
+                var columnDescriptor = GetColumnDescriptor(column.PropertyPath);
                 displayColumns.Add(new DisplayColumn(this, column, columnDescriptor));
             }
             DisplayColumns = Array.AsReadOnly(displayColumns.ToArray());
@@ -54,7 +54,7 @@ namespace pwiz.Common.DataBinding
             var filters = new List<FilterInfo>();
             foreach (var filterSpec in viewSpec.Filters)
             {
-                var columnDescriptor = GetColumnDescriptor(filterSpec.ColumnId, false);
+                var columnDescriptor = GetColumnDescriptor(filterSpec.ColumnId);
                 ColumnDescriptor collectionColumn = null;
                 if (columnDescriptor != null)
                 {
@@ -121,27 +121,26 @@ namespace pwiz.Common.DataBinding
         public ICollection<ColumnDescriptor> GetCollectionColumns()
         {
             var unboundColumnSet = new HashSet<ColumnDescriptor> {ParentColumn};
-            foreach (var displayColumn in DisplayColumns)
+            var allColumnDescriptors = DisplayColumns.Select(displayColumn => displayColumn.ColumnDescriptor)
+                .Concat(Filters.Select(filter => filter.ColumnDescriptor))
+                .Where(columnDescriptor=>null != columnDescriptor);
+            foreach (var columnDescriptor in allColumnDescriptors)
             {
-                if (displayColumn.ColumnDescriptor == null)
-                {
-                    continue;
-                }
-                for (var unboundParent = displayColumn.ColumnDescriptor.CollectionAncestor(); unboundParent != null; unboundParent = unboundParent.Parent.CollectionAncestor())
+                for (var unboundParent = columnDescriptor.CollectionAncestor(); unboundParent != null; unboundParent = unboundParent.Parent.CollectionAncestor())
                 {
                     unboundColumnSet.Add(unboundParent);
                 }
             }
             return unboundColumnSet;
         }
-        private ColumnDescriptor GetColumnDescriptor(PropertyPath idPath, bool followCollections)
+        private ColumnDescriptor GetColumnDescriptor(PropertyPath idPath)
         {
             ColumnDescriptor columnDescriptor;
             if (_columnDescriptors.TryGetValue(idPath, out columnDescriptor))
             {
                 return columnDescriptor;
             }
-            var parent = GetColumnDescriptor(idPath.Parent, followCollections);
+            var parent = GetColumnDescriptor(idPath.Parent);
             if (parent == null)
             {
                 return null;
@@ -152,10 +151,6 @@ namespace pwiz.Common.DataBinding
             }
             else
             {
-                if (!followCollections)
-                {
-                    return null;
-                }
                 columnDescriptor = parent.GetCollectionColumn();
                 if (columnDescriptor == null)
                 {

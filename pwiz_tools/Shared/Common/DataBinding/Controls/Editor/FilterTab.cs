@@ -39,7 +39,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             base.OnViewChange();
             availableFieldsTreeFilter.ShowAdvancedFields = ViewEditor.ShowHiddenFields;
-            availableFieldsTreeFilter.RootColumn = ViewEditor.ViewInfo.ParentColumn;
+            availableFieldsTreeFilter.RootColumn = ViewInfo.ParentColumn;
             if (dataGridViewFilter.Rows.Count != ViewInfo.Filters.Count)
             {
                 dataGridViewFilter.Rows.Clear();
@@ -52,6 +52,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 SetFilterInfo(dataGridViewFilter.Rows[iFilter], ViewInfo.Filters[iFilter]);
             }
+        }
+
+        protected override bool UseTransformedView
+        {
+            get { return true; }
         }
 
         private void SetFilterInfo(DataGridViewRow row, FilterInfo filterInfo)
@@ -70,21 +75,14 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             var filterOpCell = (DataGridViewComboBoxCell)row.Cells[colFilterOperation.Index];
             row.Cells[colFilterOperand.Index].Value = filterInfo.FilterSpec.Operand;
-            filterOpCell.Value = null;
-            filterOpCell.Items.Clear();
-            foreach (var filterOperation in FilterOperations.ListOperations())
-            {
-                bool selected = filterInfo.FilterSpec.Operation == filterOperation;
-                if (selected || filterInfo.ColumnDescriptor == null || filterOperation.IsValidFor(filterInfo.ColumnDescriptor))
-                {
-                    var item = new FilterOperationItem(filterOperation);
-                    filterOpCell.Items.Add(item);
-                    if (selected)
-                    {
-                        filterOpCell.Value = item;
-                    }
-                }
-            }
+            filterOpCell.Value = filterInfo.FilterSpec.Operation.DisplayName;
+            var filterOpItems = FilterOperations.ListOperations()
+                .Where(filterOp => filterOp == filterInfo.FilterSpec.Operation
+                                   || filterInfo.ColumnDescriptor == null
+                                   || filterOp.IsValidFor(filterInfo.ColumnDescriptor))
+                .Select(filterOp => filterOp.DisplayName)
+                .ToArray();
+            filterOpCell.DataSource = filterOpItems;
             if (filterInfo.FilterSpec.Operation.GetOperandType(filterInfo.ColumnDescriptor) == null)
             {
                 row.Cells[colFilterOperand.Index].ReadOnly = true;
@@ -95,16 +93,51 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 row.Cells[colFilterOperand.Index].ReadOnly = false;
                 row.Cells[colFilterOperand.Index].Style.BackColor = colFilterOperand.DefaultCellStyle.BackColor;
             }
-        }
-        class FilterOperationItem
-        {
-            public FilterOperationItem(IFilterOperation filterOperation)
+            foreach (DataGridViewCell cell in row.Cells)
             {
-                Operation = filterOperation;
+                if (filterInfo.Error != null)
+                {
+                    cell.Style.BackColor = Color.Red;
+                    cell.ToolTipText = filterInfo.Error;
+                }
+                else
+                {
+                    cell.Style.BackColor = dataGridViewFilter.DefaultCellStyle.BackColor;
+                    cell.ToolTipText = null;
+                }
             }
+        }
 
-            public IFilterOperation Operation { get; private set; }
-            public override string ToString() { return Operation.DisplayName; }
+        private IFilterOperation FilterOperationFromDisplayName(string displayName)
+        {
+            return FilterOperations.ListOperations().FirstOrDefault(filterOp => filterOp.DisplayName == displayName);
+        }
+
+        protected override IEnumerable<PropertyPath> GetSelectedPaths()
+        {
+            IEnumerable<int> selectedRows;
+            if (dataGridViewFilter.SelectedRows.Count > 0)
+            {
+                selectedRows = dataGridViewFilter.SelectedRows.Cast<DataGridViewRow>().Select(row => row.Index);
+            }
+            else if (dataGridViewFilter.CurrentRow != null)
+            {
+                selectedRows = new[] {dataGridViewFilter.CurrentRow.Index};
+            }
+            else
+            {
+                return new PropertyPath[0];
+            }
+            var propertyPaths = new List<PropertyPath>();
+            var filters = ViewInfo.Filters;
+            foreach (var rowIndex in selectedRows)
+            {
+                if (rowIndex < filters.Count)
+                {
+                    propertyPaths.Add(filters[rowIndex].FilterSpec.ColumnId);
+                }
+            }
+            return propertyPaths;
         }
 
         private void AvailableFieldsTreeFilterOnAfterSelect(object sender, TreeViewEventArgs e)
@@ -148,7 +181,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 var newFilters = ViewSpec.Filters.ToArray();
                 var cell = dataGridViewFilter.Rows[e.RowIndex].Cells[e.ColumnIndex];
-                newFilters[e.RowIndex] = newFilters[e.RowIndex].SetOperation(((FilterOperationItem)cell.Value).Operation);
+                newFilters[e.RowIndex] = newFilters[e.RowIndex].SetOperation(FilterOperationFromDisplayName(cell.Value as string));
                 ViewSpec = ViewSpec.SetFilters(newFilters);
             }
             else if (e.ColumnIndex == colFilterOperand.Index)
@@ -164,7 +197,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (e.RowIndex >= 0)
             {
-                availableFieldsTreeFilter.SelectColumn(ViewInfo.Filters[e.RowIndex].FilterSpec.ColumnId);
+                ActivatePropertyPath(ViewInfo.Filters[e.RowIndex].FilterSpec.ColumnId);
             }
         }
 
@@ -218,17 +251,17 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 return;
             }
             var rowIndex = dataGridViewFilter.CurrentRow.Index;
-            var selectedItem = dataGridViewComboBoxEditingControl.SelectedItem as FilterOperationItem;
-            if (selectedItem == null)
+            var filterOperation = FilterOperationFromDisplayName(dataGridViewComboBoxEditingControl.Text);
+            if (filterOperation == null)
             {
                 return;
             }
-            if (selectedItem.Operation == ViewInfo.Filters[rowIndex].FilterSpec.Operation)
+            if (filterOperation == ViewInfo.Filters[rowIndex].FilterSpec.Operation)
             {
                 return;
             }
             var newFilters = ViewSpec.Filters.ToArray();
-            newFilters[rowIndex] = newFilters[rowIndex].SetOperation(selectedItem.Operation);
+            newFilters[rowIndex] = newFilters[rowIndex].SetOperation(filterOperation);
             ViewSpec = ViewSpec.SetFilters(newFilters);
         }
 
@@ -253,7 +286,57 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             base.OnLoad(e);
             dataGridViewFilter.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-
         }
+
+        protected override void OnActivatePropertyPath(PropertyPath propertyPath)
+        {
+            availableFieldsTreeFilter.SelectColumn(propertyPath);
+        }
+
+        #region Methods exposed for testing
+
+        public bool TrySelectColumn(PropertyPath propertyPath)
+        {
+            availableFieldsTreeFilter.SelectColumn(propertyPath);
+            if (null == availableFieldsTreeFilter.SelectedNode)
+            {
+                return false;
+            }
+            var columnDescriptor = availableFieldsTreeFilter.GetTreeColumn(availableFieldsTreeFilter.SelectedNode);
+            return null != columnDescriptor && Equals(propertyPath, columnDescriptor.PropertyPath);
+        }
+        public void AddSelectedColumn()
+        {
+            AddFilter(availableFieldsTreeFilter.GetValueColumn(availableFieldsTreeFilter.SelectedNode));
+        }
+
+        public bool SetFilterOperation(int iRow, IFilterOperation filterOperation)
+        {
+            dataGridViewFilter.CurrentCell = dataGridViewFilter.Rows[iRow].Cells[colFilterOperation.Index];
+            var dataGridViewComboBoxEditingControl = (DataGridViewComboBoxEditingControl) dataGridViewFilter.EditingControl;
+            bool found = false;
+            for (int i = 0; i < dataGridViewComboBoxEditingControl.Items.Count; i++)
+            {
+                if (Equals(dataGridViewComboBoxEditingControl.Items[i], filterOperation.DisplayName))
+                {
+                    dataGridViewComboBoxEditingControl.SelectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            dataGridViewFilter.EndEdit();
+            return found;
+        }
+
+        public void SetFilterOperand(int iRow, string operand)
+        {
+            dataGridViewFilter.CurrentCell = dataGridViewFilter.Rows[iRow].Cells[colFilterOperand.Index];
+            dataGridViewFilter.BeginEdit(true);
+            var dataGridViewTextBoxEditingControl =
+                (DataGridViewTextBoxEditingControl) dataGridViewFilter.EditingControl;
+            dataGridViewTextBoxEditingControl.Text = operand;
+            dataGridViewFilter.EndEdit();
+        }
+        #endregion
     }
 }

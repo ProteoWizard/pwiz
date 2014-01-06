@@ -33,30 +33,50 @@ namespace pwiz.Common.DataBinding
 
     public static class FilterOperations
     {
-
-        public static readonly IFilterOperation OP_HAS_ANY_VALUE = new FilterOperation("", "Has Any Value", null,
+        /// <summary>
+        /// Given a column type, this Dictionary gives what type the operands of a filter operation should
+        /// be converted to.  Number columns get converted to "double" so that "less than 3.5" gives the user
+        /// the expected result, even if the column type is integer.
+        /// </summary>
+        private static readonly IDictionary<Type, Type> convertibleTypes = new Dictionary<Type, Type>
+            {
+                {typeof (char),typeof(char)},
+                {typeof (sbyte),typeof(double)},
+                {typeof (byte),typeof(double)},
+                {typeof (short),typeof(double)},
+                {typeof (ushort),typeof(double)},
+                {typeof (int),typeof(double)},
+                {typeof (uint),typeof(double)},
+                {typeof (long),typeof(double)},
+                {typeof (ulong),typeof(double)},
+                {typeof (float),typeof(double)},
+                {typeof (double),typeof(double)},
+                {typeof (Decimal),typeof(double)},
+                {typeof (DateTime),typeof(DateTime)}
+            };
+        public static readonly IFilterOperation OP_HAS_ANY_VALUE = new UnaryFilterOperation("", "Has Any Value",
                                                                          (cd, operand) => rowNode => true);
 
         public static readonly IFilterOperation OP_EQUALS 
-            = new FilterOperation("equals", "Equals", typeof (object), FnEquals);
+            = new FilterOperation("equals", "Equals", FnEquals);
 
         public static readonly IFilterOperation OP_NOT_EQUALS 
-            = new FilterOperation("<>", "Does Not Equal", typeof (object), FnNotEquals);
+            = new FilterOperation("<>", "Does Not Equal", FnNotEquals);
 
         public static readonly IFilterOperation OP_IS_BLANK
-            = new FilterOperation("isnullorblank", "Is Blank", null, FnIsBlank);
+            = new UnaryFilterOperation("isnullorblank", "Is Blank", FnIsBlank);
 
         public static readonly IFilterOperation OP_IS_NOT_BLANK
-            = new FilterOperation("isnotnullorblank", "Is Not Blank", null, FnIsNotBlank);
+            = new UnaryFilterOperation("isnotnullorblank", "Is Not Blank", FnIsNotBlank);
 
         public static readonly IFilterOperation OP_IS_GREATER_THAN
-            = new FilterOperation(">", "Is Greater Than", typeof (object), MakeFnCompare(i => i > 0));
+            = new ComparisonFilterOperation(">", "Is Greater Than", i => i > 0);
         public static readonly IFilterOperation OP_IS_LESS_THAN
-            = new FilterOperation("<", "Is Less Than", typeof(object), MakeFnCompare(i => i < 0));
+            = new ComparisonFilterOperation("<", "Is Less Than", i => i < 0);
         public static readonly IFilterOperation OP_IS_GREATER_THAN_OR_EQUAL
-            = new FilterOperation(">=", "Is Greater Than Or Equal To", typeof(object), MakeFnCompare(i => i >= 0));
+            = new ComparisonFilterOperation(">=", "Is Greater Than Or Equal To", i => i >= 0);
         public static readonly IFilterOperation OP_IS_LESS_THAN_OR_EQUAL
-            = new FilterOperation("<=", "Is Less Than Or Equal To", typeof(object), MakeFnCompare(i => i <= 0));
+            = new ComparisonFilterOperation("<=", "Is Less Than Or Equal To", i => i <= 0);
 
         public static readonly IFilterOperation OP_CONTAINS = new StringFilterOperation("contains", "Contains", FnContains);
         public static readonly IFilterOperation OP_NOT_CONTAINS = new StringFilterOperation("notcontains", "Does Not Contain", FnNotContains);
@@ -116,7 +136,7 @@ namespace pwiz.Common.DataBinding
                    =>
                        {
                            object operand = ConvertOperand(columnDescriptor, strOperand);
-                           return value => null != value && comparisonPredicate(columnDescriptor.DataSchema.Compare(value, operand));
+                           return value => null != value && comparisonPredicate(columnDescriptor.DataSchema.Compare(ConvertValue(columnDescriptor, value), operand));
                        };
             
         }
@@ -137,10 +157,25 @@ namespace pwiz.Common.DataBinding
             return value => null != value && !value.ToString().StartsWith(strOperand);
         }
 
+        public static Type GetTypeToConvertOperandTo(ColumnDescriptor columnDescriptor)
+        {
+            if (null == columnDescriptor)
+            {
+                return typeof (string);
+            }
+            var columnType = columnDescriptor.WrappedPropertyType;
+            columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
+            Type typeToConvertTo;
+            if (convertibleTypes.TryGetValue(columnType, out typeToConvertTo))
+            {
+                return typeToConvertTo;
+            }
+            return typeof (string);
+        }
 
         public static object ConvertOperand(ColumnDescriptor columnDescriptor, string operand)
         {
-            var type = columnDescriptor.WrappedPropertyType;
+            var type = GetTypeToConvertOperandTo(columnDescriptor);
             if (null == type)
             {
                 return operand;
@@ -152,10 +187,6 @@ namespace pwiz.Common.DataBinding
                     return null;
                 }
                 return operand[0];
-            }
-            if (typeof(bool) == type)
-            {
-                return Convert.ToBoolean(operand);
             }
             if (type.IsEnum)
             {
@@ -172,39 +203,33 @@ namespace pwiz.Common.DataBinding
                     return Enum.Parse(type, operand, true);
                 }
             }
+            if (string.IsNullOrEmpty(operand))
+            {
+                return null;
+            }
             return Convert.ChangeType(operand, type);
         }
         public static object ConvertValue(ColumnDescriptor columnDescriptor, object value)
         {
-            var type = columnDescriptor.WrappedPropertyType;
-            if (typeof(char) == type)
+            if (value == null)
             {
-                return value as char?;
+                return null;
             }
-            if (typeof(bool) == type)
+            var type = GetTypeToConvertOperandTo(columnDescriptor);
+            if (type == typeof (string))
             {
-                return value as bool?;
+                return value.ToString();
             }
-            if (type.IsEnum)
-            {
-                return value;
-            }
-            if (type.IsPrimitive)
-            {
-                return Convert.ChangeType(value, type);
-            }
-            return Convert.ToString(value);
+            return Convert.ChangeType(value, type);
         }
 
         class FilterOperation : IFilterOperation
         {
             private readonly Func<ColumnDescriptor, string, Predicate<object>> _fnMakePredicate;
-            private readonly Type _operandType;
-            public FilterOperation(string opName, string displayName, Type operandType, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
+            public FilterOperation(string opName, string displayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
             {
                 OpName = opName;
                 DisplayName = displayName;
-                _operandType = operandType;
                 _fnMakePredicate = fnMakePredicate;
             }
             public string OpName { get; private set; }
@@ -215,7 +240,7 @@ namespace pwiz.Common.DataBinding
             }
             public virtual Type GetOperandType(ColumnDescriptor columnDescriptor)
             {
-                return _operandType;
+                return GetTypeToConvertOperandTo(columnDescriptor);
             }
             public Predicate<object> MakePredicate(ColumnDescriptor columnDescriptor, string operand)
             {
@@ -224,12 +249,47 @@ namespace pwiz.Common.DataBinding
         }
         class StringFilterOperation : FilterOperation
         {
-            public StringFilterOperation(string opName, string displayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate) : base(opName, displayName, typeof(string), fnMakePredicate)
+            public StringFilterOperation(string opName, string displayName, Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate) : base(opName, displayName, fnMakePredicate)
             {
             }
             public override bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
                 return typeof (string) == columnDescriptor.WrappedPropertyType;
+            }
+        }
+
+        class ComparisonFilterOperation : FilterOperation
+        {
+            public ComparisonFilterOperation(string opName, string displayName,
+                Predicate<int> filterFunc)
+                : base(opName, displayName, MakeFnCompare(filterFunc))
+            {
+            }
+
+            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            {
+                if (null == columnDescriptor)
+                {
+                    return false;
+                }
+                var columnType = columnDescriptor.WrappedPropertyType;
+                columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
+                return convertibleTypes.ContainsKey(columnType) && columnType != typeof (string);
+            }
+        }
+
+        class UnaryFilterOperation : FilterOperation
+        {
+            public UnaryFilterOperation(string opName, string displayName,
+                Func<ColumnDescriptor, string, Predicate<object>> fnMakePredicate)
+                : base(opName, displayName, fnMakePredicate)
+            {
+                
+            }
+
+            public override Type GetOperandType(ColumnDescriptor columnDescriptor)
+            {
+                return null;
             }
         }
     }
