@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
@@ -34,23 +33,16 @@ namespace SkylineTester
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
         public Func<string, bool> FilterFunc { get; set; } 
+        public bool DoLiveUpdate { get; set; }
+        public int NextCommand { get; set; }
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
-        private int _commandIndex;
         private Action<bool> _doneAction;
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
-        private bool _logWasScrolled;
         private Process _process;
-        private BackgroundWorker _deleteTask;
         private Timer _outputTimer;
-
-        public CommandShell()
-        {
-            HScroll += OnScroll;
-            VScroll += OnScroll;
-        }
 
         #region Add/run commands
 
@@ -59,21 +51,27 @@ namespace SkylineTester
         /// command.  You can also add a comment line starting with '#'.  Multiple Add
         /// calls can be made to create a script of commands to be executed by Run.
         /// </summary>
-        public void Add(string command, params object[] args)
+        public int Add(string command, params object[] args)
         {
-            _commands.Add(string.Format(command, args));
+            _commands.Add(command.With(args));
+            return _commands.Count - 1;
         }
 
         public void AddImmediate(string command, params object[] args)
         {
-            Log(string.Format(command, args) + Environment.NewLine);
+            Log(command.With(args) + Environment.NewLine);
             UpdateLog();
         }
 
         public void ClearLog()
         {
+            lock (_logBuffer)
+            {
+                _logBuffer.Clear();
+                _logEmpty = true;
+            }
+
             Clear();
-            _logEmpty = true;
         }
 
         /// <summary>
@@ -82,19 +80,21 @@ namespace SkylineTester
         /// (through successful completion, abort due to error, or abort due to
         /// user interrupt request).
         /// </summary>
-        public void Run(Action<bool> doneAction = null, bool clearLog = true)
+        public void Run(Action<bool> doneAction)
         {
-            _doneAction = doneAction ?? Done;
-            _commandIndex = 0;
+            _doneAction = doneAction;
+            NextCommand = 0;
 
-            if (clearLog)
-                ClearLog();
-
-            _outputTimer = new Timer { Interval = 500 };
+            _outputTimer = new Timer { Interval = 1000 };
             _outputTimer.Tick += UpdateLog;
             _outputTimer.Start();
 
             RunNext();
+        }
+
+        private void RunUI(Action action)
+        {
+            Invoke(action);
         }
 
         /// <summary>
@@ -102,14 +102,14 @@ namespace SkylineTester
         /// </summary>
         private void RunNext(object sender, EventArgs e)
         {
-            Invoke(new Action(RunNext));
+            RunUI(RunNext);
         }
 
         private void RunNext()
         {
-            while (_commandIndex < _commands.Count)
+            while (NextCommand < _commands.Count)
             {
-                var line = _commands[_commandIndex++];
+                var line = _commands[NextCommand++];
 
                 // Handle comment line.
                 if (line.StartsWith("#"))
@@ -149,52 +149,26 @@ namespace SkylineTester
                 if (command == "cd")
                 {
                     _workingDirectory = words[0].Trim('"');
-                    continue;
                 }
 
                 // Remove a directory.
-                if (command == "rmdir")
+                else if (command == "rmdir")
                 {
-                    _deleteTask = new BackgroundWorker();
-                    bool recursiveDelete = false;
                     if (words[0] == "/s")
-                    {
-                        recursiveDelete = true;
                         words.RemoveAt(0);
-                    }
                     var deleteDir = words[0].Trim('"');
-                    _deleteTask.DoWork += (o, a) =>
+                    if (Directory.Exists(deleteDir))
                     {
-                        try
+                        using (var deleteWindow = new DeleteWindow(deleteDir))
                         {
-                            Try<Exception>(() => Directory.Delete(deleteDir, recursiveDelete), 4);
-                            if (_deleteTask != null)
-                            {
-                                _deleteTask = null;
-                                RunNext(null, null);
-                                return;
-                            }
+                            deleteWindow.ShowDialog();
                         }
-// ReSharper disable once EmptyGeneralCatchClause
-                        catch (Exception)
+                        if (Directory.Exists(deleteDir))
                         {
+                            RunUI(() => CommandsDone(false));
+                            return;
                         }
-
-                        try
-                        {
-                            Invoke(new Action(() =>
-                            {
-                                _deleteTask = null;
-                                MessageBox.Show("Can't delete " + deleteDir);
-                                FinishLog();
-                            }));
-                        }
-// ReSharper disable once EmptyGeneralCatchClause
-                        catch (Exception)
-                        {
-                        }
-                    };
-                    _deleteTask.RunWorkerAsync();
+                    }
                 }
 
                 // Run a command in a separate process.
@@ -205,8 +179,8 @@ namespace SkylineTester
                         args,
                         _workingDirectory);
                     _workingDirectory = DefaultDirectory;
+                    return;
                 }
-                return;
             }
 
             CommandsDone(true);
@@ -220,14 +194,14 @@ namespace SkylineTester
         {
             if (!success)
                 Log("# Stopped." + Environment.NewLine + Environment.NewLine);
-            Invoke(new Action(UpdateLog));
+            RunUI(UpdateLog);
             _commands.Clear();
             _doneAction(success);
         }
 
         public void Done(bool success)
         {
-            Invoke(new Action(FinishLog));
+            RunUI(FinishLog);
             _process = null;
         }
         #endregion
@@ -285,8 +259,8 @@ namespace SkylineTester
         /// </summary>
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
-            var line = e.Data;
-            Log(line);
+            if (_process != null)
+                Log(e.Data);
         }
 
         /// <summary>
@@ -296,7 +270,6 @@ namespace SkylineTester
         {
             try
             {
-                _deleteTask = null;
                 if (_process != null && !_process.HasExited)
                     ProcessUtilities.KillProcessTree(_process);
             }
@@ -311,13 +284,19 @@ namespace SkylineTester
         /// </summary>
         void ProcessExit(object sender, EventArgs e)
         {
-            if (_process.ExitCode == 0)
+            if (_process == null)
+                return;
+
+            var exitCode = _process.ExitCode;
+            _process = null;
+
+            if (exitCode == 0)
                 RunNext(null, null);
             else
             {
                 try
                 {
-                    Invoke(new Action(() => CommandsDone(false)));
+                    RunUI(() => CommandsDone(false));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)
@@ -355,7 +334,7 @@ namespace SkylineTester
         /// <summary>
         /// Add a line to the log buffer.
         /// </summary>
-        private void Log(string line)
+        public void Log(string line)
         {
             if (line == null)
                 return;
@@ -381,12 +360,8 @@ namespace SkylineTester
         /// </summary>
         private void UpdateLog(object sender, EventArgs eventArgs)
         {
-            // Delay update a little while if user was scrolling recently.
-            if (_logWasScrolled)
-            {
-                _logWasScrolled = false;
+            if (_scrolling)
                 return;
-            }
 
             // Get buffered log output.
             string logLines;
@@ -403,27 +378,26 @@ namespace SkylineTester
             if (!string.IsNullOrEmpty(LogFile))
                 File.AppendAllText(LogFile, logLines);
 
+            if (!DoLiveUpdate)
+                return;
+
             // Scroll if text box is already scrolled to bottom.
             int previousLength = Math.Max(0, TextLength - 1);
             var point = GetPositionFromCharIndex(previousLength);
             bool autoScroll = (ClientRectangle.Bottom >= point.Y);
 
-            StopButton.Focus(); // text box scrolls if it has focus!
-            AppendText(logLines);
+            if (Focused)
+                StopButton.Focus(); // text box scrolls if it has focus!
+            var addLines = logLines.Replace("\r", "");
+            if (addLines.EndsWith("\n"))
+                addLines = addLines.Substring(0, addLines.Length - 1);
+            AddLines(addLines.Split('\n'));
 
             if (autoScroll)
             {
                 Select(Text.Length - 1, 0);
                 ScrollToCaret();
             }
-
-            DoPaint = false;
-            ColorText(previousLength, "\n# ", Color.DarkGreen);
-            ColorText(previousLength, "\n> ", Color.FromArgb(120, 120, 120));
-            ColorText(previousLength, "\n...skipped ", Color.Orange);
-            ColorText(previousLength, "\n...failed ", Color.Red);
-            ColorText(previousLength, "\n!!!", Color.Red);
-            DoPaint = true;
         }
 
         /// <summary>
@@ -438,39 +412,125 @@ namespace SkylineTester
             }
 
             // Show final log output.
-            _logWasScrolled = false;
             UpdateLog();
         }
 
-        /// <summary>
-        /// Add color to log output.
-        /// </summary>
-        private void ColorText(int previousLength, string text, Color color)
+        private class ColorMatch
         {
-            while (true)
+            public string LineStart;
+            public Color LineColor;
+        }
+
+        private readonly List<ColorMatch> _colorMatchList = new List<ColorMatch>();
+
+        public void AddColorPattern(string lineStart, Color lineColor)
+        {
+            _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineColor = lineColor});
+        }
+ 
+        public void Load(string file)
+        {
+            if (_logFile == file)
+                return;
+            _logFile = file;
+
+            if (!File.Exists(file))
             {
-                int startIndex = Text.IndexOf(text, previousLength, StringComparison.InvariantCulture);
-                if (startIndex < 0)
-                    return;
-                int endIndex = Text.IndexOf('\n', startIndex + 1);
-                if (endIndex < 0)
-                    return;
-                Select(startIndex, endIndex - startIndex);
-                SelectionColor = color;
-                previousLength = endIndex;
+                ClearLog();
+                return;
             }
+
+            // Load non-colored text quickly (we are on the UI thread here).
+            LoadFile(file, RichTextBoxStreamType.PlainText);
+            var text = Text;
+
+            // Apply colors using a background thread.
+            var colorWorker = new BackgroundWorker();
+            colorWorker.DoWork += (sender, args) =>
+            {
+                int startIndex = 0;
+                while (true)
+                {
+                    // Scan for start of line.
+                    while (startIndex < text.Length && text[startIndex] == '\n')
+                        startIndex++;
+                    if (startIndex == text.Length)
+                        break;
+
+                    // Find end of line.
+                    int endIndex = text.IndexOf('\n', startIndex) + 1;
+                    if (endIndex == 0)
+                        break;
+
+                    // Match line against various start patterns.
+                    ColorMatch match = null;
+                    foreach (var colorMatch in _colorMatchList)
+                    {
+                        var lineStart = text.Substring(startIndex, colorMatch.LineStart.Length);
+                        if (lineStart == colorMatch.LineStart)
+                        {
+                            match = colorMatch;
+                            break;
+                        }
+                    }
+
+                    // Color text if a match was found.
+                    if (match != null)
+                    {
+                        int start = startIndex;
+                        RunUI(() =>
+                        {
+                            Select(start, endIndex - start);
+                            SelectionColor = match.LineColor;
+                        });
+                    }
+
+                    // Move to next line.
+                    startIndex = endIndex;
+                }
+            };
+            colorWorker.RunWorkerAsync();
         }
 
-        private void OnScroll(object sender, EventArgs eventArgs)
+        public void AddLines(string[] lines)
         {
-            _logWasScrolled = true;
+            DoPaint = false;
+            foreach (var line in lines)
+            {
+                ColorMatch match = null;
+                foreach (var colorMatch in _colorMatchList)
+                {
+                    if (line.StartsWith(colorMatch.LineStart))
+                    {
+                        match = colorMatch;
+                        break;
+                    }
+                }
+
+                var addLine = line + Environment.NewLine;
+                RunUI(() =>
+                {
+                    AppendText(addLine);
+                    if (match != null)
+                    {
+                        Select(Text.Length - addLine.Length, addLine.Length);
+                        SelectionColor = match.LineColor;
+                        Select(Text.Length - 1, 0);
+                    }
+                });
+            }
+            DoPaint = true;
         }
 
-
-        const short WM_PAINT = 0x00f;
+        private const short WM_PAINT = 0x00f;
+        private const short WM_HSCROLL = 0x114;
+        private const short WM_VSCROLL = 0x115;
+        private const int SB_ENDSCROLL = 8;
 
         // ReSharper disable once ConvertToConstant.Global
         public bool DoPaint = true;
+
+        private bool _scrolling;
 
         protected override void WndProc(ref Message m)
         {
@@ -478,32 +538,18 @@ namespace SkylineTester
             // sometimes we want to eat the paint message so we don't have to see all the
             // flicker from when we select the text to change the color.
             if (m.Msg == WM_PAINT && !DoPaint)
+            {
                 m.Result = IntPtr.Zero; // not painting, must set this to IntPtr.Zero, otherwise serious problems.
-            else
-                base.WndProc(ref m); // message other than WM_PAINT, jsut do what you normally do.
+                return;
+            }
+
+            if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL)
+                _scrolling = ((short)m.WParam != SB_ENDSCROLL);
+
+            base.WndProc(ref m); // message other than WM_PAINT, jsut do what you normally do.
         }
 
         #endregion
 
-        private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500)
-            where TEx : Exception
-        {
-            for (int i = 1; i < loopCount; i++)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (TEx)
-                {
-                    Thread.Sleep(milliseconds);
-                }
-            }
-
-            // Try the last time, and let the exception go.
-            if (throwOnFailure)
-                action();
-        }
     }
 }

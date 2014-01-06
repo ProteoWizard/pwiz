@@ -25,7 +25,7 @@ using Microsoft.Win32.SafeHandles;
 namespace SkylineTester
 {
     /// <summary>
-    /// Wakeup timer will possibly wake the computer from sleep.
+    /// Wakeup timer can wake the computer from sleep.
     /// Based on http://www.codeproject.com/Articles/49798/Wake-the-PC-from-standby-or-hibernation.
     /// </summary>
     class WakeupTimer

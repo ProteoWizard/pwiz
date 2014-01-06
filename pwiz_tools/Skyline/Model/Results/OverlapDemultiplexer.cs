@@ -118,7 +118,6 @@ namespace pwiz.Skyline.Model.Results
         private int _centerIndex;
         private int _leftBoundary;
         private readonly int _cycleLength;
-        private IEnumerable<int> _windowsInDeconv; 
         private readonly int _overlapRegionsInApprox;
 
         public OverlapDeconvSolverHandler(int numDeconvWindows, int maxScans, int maxTransitions, int overlapRegions, int cycleLength):

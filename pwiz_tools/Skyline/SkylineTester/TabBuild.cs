@@ -16,79 +16,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
 namespace SkylineTester
 {
-    public partial class SkylineTesterWindow
+    public class TabBuild : TabBase
     {
-        private void OpenBuild()
+        public TabBuild()
         {
-            buttonDeleteBuild.Enabled = Directory.Exists(_buildDir);
+            MainWindow.LabelSpecifyPath.Text =
+                "(Specify absolute path or relative path from {0} folder)".With(Path.GetFileName(MainWindow.RootDir));
         }
 
-        private bool HasBuildPrerequisites
+        public override void Open()
         {
-            get
-            {
-                if (_subversion == null)
-                {
-                    MessageBox.Show(
-                        "Subversion is required to build Skyline.  You can install it from http://sourceforge.net/projects/win32svn/");
-                    return false;
-                }
-
-                if (_devenv == null)
-                {
-                    MessageBox.Show("Visual Studio 10.0 is required to build Skyline.");
-                    return false;
-                }
-
-                return true;
-            }
+            var buildRoot = MainWindow.GetBuildRoot();
+            MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(buildRoot);
         }
 
-        private void RunBuild(object sender, EventArgs e)
+        public override bool Run()
         {
-            if (!HasBuildPrerequisites)
-                return;
-            var architectures = new List<int>();
-            if (Build32.Checked)
-                architectures.Add(32);
-            if (Build64.Checked)
-                architectures.Add(64);
+            if (!MainWindow.HasBuildPrerequisites)
+                return false;
+            var architectures = GetArchitectures();
             if (architectures.Count == 0)
             {
                 MessageBox.Show("Select 32 or 64 bit architecture (or both).");
-                return;
+                return false;
             }
 
-            if (!ToggleRunButtons(tabBuild))
-            {
-                commandShell.Stop();
-                return;
-            }
-
-            _runningTab = tabBuild;
-            commandShell.LogFile = _defaultLogFile;
-            Tabs.SelectTab(tabOutput);
-
-            GenerateBuildCommands(architectures);
-            commandShell.Run(BuildDone);
+            StartLog("Build", MainWindow.DefaultLogFile, true);
+            CreateBuildCommands(architectures, MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked);
+            MainWindow.RunCommands();
+            return true;
         }
 
-        private void BuildDone(bool success)
+        public override bool Stop(bool success)
         {
-            ToggleRunButtons(null);
-
-            if (success && StartSln.Checked && _devenv != null)
+            if (success && MainWindow.StartSln.Checked && MainWindow.Devenv != null)
             {
-                var slnDirectory = Path.Combine(_buildDir, @"pwiz_tools\Skyline");
+                var buildRoot = MainWindow.GetBuildRoot();
+                var slnDirectory = Path.Combine(buildRoot, @"pwiz_tools\Skyline");
                 var process = new Process
                 {
                     StartInfo =
@@ -100,75 +72,105 @@ namespace SkylineTester
                 };
                 process.Start();
             }
+
+            return true;
         }
 
-        private void GenerateBuildCommands(IList<int> architectures)
+        public static List<int> GetArchitectures()
         {
-            var architectureList = string.Join("- and ", architectures);
-            commandShell.Add("# Build Skyline {0}-bit...", architectureList);
+            var architectures = new List<int>();
+            if (MainWindow.Build32.Checked)
+                architectures.Add(32);
+            if (MainWindow.Build64.Checked)
+                architectures.Add(64);
+            return architectures;
+        }
 
-            if (Directory.Exists(_buildDir))
+        public static string GetBranchUrl()
+        {
+            return MainWindow.BuildTrunk.Checked
+                ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
+                : MainWindow.BranchUrl.Text;
+        }
+
+        public static void CreateBuildCommands(IList<int> architectures, bool nukeBuild, bool updateBuild)
+        {
+            var commandShell = MainWindow.CommandShell;
+            var buildRoot = MainWindow.GetBuildRoot();
+            var branchUrl = GetBranchUrl();
+            var branchParts = branchUrl.Split('/');
+            var branchName = "Skyline ({0})".With(branchParts[branchParts.Length - 1]);
+            var subversion = MainWindow.Subversion;
+
+            var architectureList = string.Join("- and ", architectures);
+            commandShell.Add("# Build {0} {1}-bit...", branchName, architectureList);
+
+            if (Directory.Exists(buildRoot))
             {
-                if (NukeBuild.Checked)
+                if (nukeBuild)
                 {
                     commandShell.Add("#@ Deleting Build directory...\n");
-                    commandShell.Add("# Deleting old Skyline build directory...");
-                    commandShell.Add("rmdir /s {0}", Quote(_buildDir));
+                    commandShell.Add("# Deleting Build directory...");
+                    commandShell.Add("rmdir /s {0}", buildRoot.Quote());
                 }
-                else if (UpdateBuild.Checked)
+                else if (updateBuild)
                 {
                     commandShell.Add("#@ Cleaning Build directory...\n");
-                    commandShell.Add("# Cleaning Skyline build directory...");
-                    commandShell.Add("{0} cleanup {1}", Quote(_subversion), Quote(_buildDir));
+                    commandShell.Add("# Cleaning Build directory...");
+                    commandShell.Add("{0} cleanup {1}", subversion.Quote(), buildRoot.Quote());
+                    commandShell.Add("{0} update {1}", subversion.Quote(), buildRoot.Quote());
                 }
             }
 
-            if (NukeBuild.Checked)
+            if (nukeBuild)
             {
-                commandShell.Add("#@ Checking out Skyline source files...\n");
-                commandShell.Add("# Checking out Skyline source files...");
-                commandShell.Add("{0} checkout {1} {2}",
-                    Quote(_subversion),
-                    Quote(BuildTrunk.Checked
-                        ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
-                        : BranchUrl.Text),
-                    Quote(_buildDir));
+                commandShell.Add("#@ Checking out {0} source files...\n", branchName);
+                commandShell.Add("# Checking out {0} source files...", branchName);
+                commandShell.Add("{0} checkout {1} {2}", subversion.Quote(), branchUrl.Quote(), buildRoot.Quote());
             }
 
             commandShell.Add("# Building Skyline...");
-            commandShell.Add("cd {0}", Quote(_buildDir));
+            commandShell.Add("cd {0}", buildRoot.Quote());
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
                 commandShell.Add("{0} {1} --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
-                    Quote(Path.Combine(_buildDir, @"pwiz_tools\build-apps.bat")),
+                    Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
                     architecture);
             }
 
-            commandShell.Add("#@ Build done.\n");
             commandShell.Add("# Build done.");
         }
 
-        private string Quote(string s)
+        public void DeleteBuild()
         {
-            return "\"" + s + "\"";
+            var buildRoot = MainWindow.GetBuildRoot();
+            if (!Directory.Exists(buildRoot) ||
+                MessageBox.Show(MainWindow, "Delete \"" + buildRoot + "\" folder?", "Confirm delete",
+                    MessageBoxButtons.OKCancel) != DialogResult.OK)
+            {
+                return;
+            }
+
+            using (var deleteWindow = new DeleteWindow(buildRoot))
+            {
+                deleteWindow.ShowDialog();
+            }
+
+            MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(buildRoot);
         }
 
-
-        private void buttonDeleteBuild_Click(object sender, EventArgs e)
+        public void BrowseBuild()
         {
-            if (Directory.Exists(_buildDir))
+            using (var dlg = new FolderBrowserDialog
             {
-                statusLabel.Text = "Deleting Build folder...";
-                var task = new BackgroundWorker();
-                task.DoWork += (o, args) =>
-                {
-                    Directory.Delete(_buildDir, true);
-                    Invoke(new Action(() => statusLabel.Text = ""));
-                };
-                task.RunWorkerAsync();
+                Description = "Select or create a root folder for build source files.",
+                ShowNewFolderButton = true
+            })
+            {
+                if (dlg.ShowDialog(MainWindow) == DialogResult.OK)
+                    MainWindow.BuildRoot.Text = dlg.SelectedPath;
             }
-            buttonDeleteBuild.Enabled = false;
         }
     }
 }

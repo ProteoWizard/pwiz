@@ -49,7 +49,7 @@ namespace TestRunner
         private const int LeakCheckIterations = 4;
 
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
@@ -58,8 +58,9 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;quality=off;" +
-                "clipboardcheck=off;profile=off;vendors=on;culture=fr-FR,en-US;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;buildcheck=0;" +
+                "quality=off;pass0=on;pass1=on;" +
+                "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
@@ -70,15 +71,19 @@ namespace TestRunner
                 case "-?":
                 case "help":
                     Help();
-                    return;
+                    return 0;
 
                 case "report":
                     Report(commandLineArgs.ArgAsString("report"));
-                    return;
+                    return 0;
             }
 
-            Console.WriteLine("\nTestRunner " + string.Join(" ", args) + "\n");
-            //Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
+            Console.WriteLine();
+            if (!commandLineArgs.ArgAsBool("status") && !commandLineArgs.ArgAsBool("buildcheck"))
+            {
+                Console.WriteLine("TestRunner " + string.Join(" ", args) + "\n");
+                Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
+            }
 
             if (commandLineArgs.HasArg("debug"))
             {
@@ -99,6 +104,8 @@ namespace TestRunner
                 FileAccess.Write,
                 FileShare.ReadWrite);
             var log = new StreamWriter(logStream);
+
+            bool allTestsPassed = true;
 
             try
             {
@@ -138,11 +145,16 @@ namespace TestRunner
                 if (testList.Count == 0)
                 {
                     Console.WriteLine("No tests found");
-                    return;
+                    return 1;
                 }
 
                 var passes = commandLineArgs.ArgAsLong("loop");
                 var repeat = commandLineArgs.ArgAsLong("repeat");
+                if (commandLineArgs.ArgAsBool("buildcheck"))
+                {
+                    passes = 1;
+                    repeat = 1;
+                }
 
                 // Prevent system sleep.
                 using (new SystemSleep())
@@ -152,14 +164,14 @@ namespace TestRunner
                     if (profiling)
                     {
                         Console.WriteLine("\nRunning each test once to warm up memory...\n");
-                        RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
+                        allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
                         Console.WriteLine("\nTaking memory snapshot...\n");
 //                        MemoryProfiler.Snapshot();
                         if (passes == 0)
                             passes = 1;
                     }
 
-                    RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat);
+                    allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat) && allTestsPassed;
 
                     // Pause for profiling
                     if (profiling)
@@ -179,12 +191,13 @@ namespace TestRunner
                     Console.WriteLine(e.InnerException.Message);
                     Console.WriteLine(e.InnerException.StackTrace);
                 }
+                allTestsPassed = false;
             }
 
             // Display report.
             log.Close();
             Console.WriteLine("\n");
-            if (!commandLineArgs.ArgAsBool("quality"))
+            if (!commandLineArgs.ArgAsBool("status"))
                 Report(commandLineArgs.ArgAsString("log"));
 
             // If the forms/tests cache was regenerated, copy it to Skyline directory.
@@ -197,6 +210,8 @@ namespace TestRunner
 
             // Ungraceful exit to avoid unwinding errors
             //Process.GetCurrentProcess().Kill();
+
+            return allTestsPassed ? 0 : 1;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -209,21 +224,34 @@ namespace TestRunner
         }
 
         // Run all test passes.
-        private static void RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
+        private static bool RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
         {
+            bool buildMode = commandLineArgs.ArgAsBool("buildcheck");
             bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
+            bool pass0 = commandLineArgs.ArgAsBool("pass0");
+            bool pass1 = commandLineArgs.ArgAsBool("pass1");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
 
-            var runTests = new RunTests(demoMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
+            if (buildMode)
+            {
+                randomOrder = false;
+                demoMode = false;
+                offscreen = true;
+                useVendorReaders = true;
+                showStatus = false;
+                qualityMode = false;
+            }
+
+            var runTests = new RunTests(demoMode, buildMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
             var random = new Random(397);   // fixed order random numbers for repeatability
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
@@ -238,12 +266,14 @@ namespace TestRunner
                 Console.WriteLine("Running {0}{1} tests{2}{3}...\n",
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
-                    (loopCount == 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
+                    (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
                     (repeat <= 1) ? "" : ", repeated " + repeat + " times each");
             }
 
-            // Get list of cultures
-            var cultures = commandLineArgs.ArgAsString("culture").Split(',');
+            // Get list of languages
+            var languages = buildMode 
+                ? new[] {"en"} 
+                : commandLineArgs.ArgAsString("language").Split(',');
 
             List<string> shownForms = (formList == "__REGEN__") ? new List<string>() : null;
             runTests.Skyline.Set("ShownForms", shownForms);
@@ -252,104 +282,122 @@ namespace TestRunner
             var formLookup = new FormLookup();
 
             var executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var qualityCultures = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();
+            var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();
             var removeList = new List<TestInfo>();
-
-            int pass = 1;
 
             if (qualityMode)
             {
                 int testNumber = 0;
 
-                // Pass zero tests French number format with no vendor readers.
-                runTests.Log("# Test pass 0 runs French number format with vendor readers disabled.\r\n");
-
-                runTests.Culture = new CultureInfo("fr");
-                runTests.CheckCrtLeaks = CrtLeakThreshold;
-                runTests.Skyline.Set("NoVendorReaders", true);
-                foreach (var test in testList)
+                if (pass0)
                 {
-                    testNumber++;
+                    // Pass zero tests French number format with no vendor readers.
+                    runTests.Log("# Test pass 0 runs French number format with vendor readers disabled.\r\n");
 
-                    if (!runTests.Run(test, 0, testNumber))
-                        removeList.Add(test);
-                }
-                runTests.CheckCrtLeaks = 0;
-                runTests.Skyline.Set("NoVendorReaders", false);
-
-                foreach (var removeTest in removeList)
-                    testList.Remove(removeTest);
-                removeList.Clear();
-
-                // Pass 1 looks for cumulative leaks when test is run multiple times.
-                int qualityPasses = Math.Max(LeakCheckIterations, qualityCultures.Length);
-                testNumber = 0;
-                foreach (var test in testList)
-                {
-                    testNumber++;
-
-                    runTests.Culture = new CultureInfo("en");
+                    runTests.Language = new CultureInfo("fr");
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
-                    if (!runTests.Run(test, 1, testNumber))
+                    runTests.Skyline.Set("NoVendorReaders", true);
+                    foreach (var test in testList)
                     {
-                        removeList.Add(test);
-                        continue;
+                        testNumber++;
+
+                        if (!runTests.Run(test, 0, testNumber))
+                            removeList.Add(test);
                     }
                     runTests.CheckCrtLeaks = 0;
+                    runTests.Skyline.Set("NoVendorReaders", false);
 
-                    // Check for memory leak by noting memory size increase over multiple runs.
-                    // Check leaks up to 3 times to make sure the test is actually leaking, because
-                    // memory reporting is pretty squishy.
-                    long leakSize = 0;
-                    for (int leakCheck = 0; leakCheck < 3; leakCheck++)
-                    {
-                        long memorySize = runTests.TotalMemoryBytes;
-                        bool failed = false;
-                        for (int i = 1; i <= qualityPasses; i++)
-                        {
-                            runTests.Culture = new CultureInfo(qualityCultures[i%qualityCultures.Length]);
-                            if (!runTests.Run(test, 1, testNumber))
-                            {
-                                failed = true;
-                                break;
-                            }
-                        }
-                        if (failed)
-                        {
-                            removeList.Add(test);
-                            break;
-                        }
-
-                        long leakedPerPass = (runTests.TotalMemoryBytes - memorySize)/qualityPasses;
-                        if (leakedPerPass < LeakThreshold)
-                        {
-                            leakSize = 0;
-                            break;
-                        }
-                        if (leakSize == 0)
-                            leakSize = leakedPerPass;
-                        if (leakSize > leakedPerPass)
-                            leakSize = leakedPerPass;
-                    }
-
-                    if (leakSize > LeakThreshold)
-                    {
-                        runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, leakSize);
-                        removeList.Add(test);
-                    }
+                    foreach (var removeTest in removeList)
+                        testList.Remove(removeTest);
+                    removeList.Clear();
                 }
 
-                foreach (var removeTest in removeList)
-                    testList.Remove(removeTest);
-                removeList.Clear();
+                if (pass1)
+                {
+                    // Pass 1 looks for cumulative leaks when test is run multiple times.
+                    runTests.Log("# Test pass 1 runs tests multiple times to detect memory leaks.\r\n");
 
-                pass++;
+                    int qualityPasses = Math.Max(LeakCheckIterations, qualityLanguages.Length);
+                    testNumber = 0;
+                    foreach (var test in testList)
+                    {
+                        testNumber++;
+
+                        runTests.Language = new CultureInfo("en");
+                        runTests.CheckCrtLeaks = CrtLeakThreshold;
+                        if (!runTests.Run(test, 1, testNumber))
+                        {
+                            removeList.Add(test);
+                            continue;
+                        }
+                        runTests.CheckCrtLeaks = 0;
+
+                        // Check for memory leak by noting memory size increase over multiple runs.
+                        // Check leaks up to 3 times to make sure the test is actually leaking, because
+                        // memory reporting is pretty squishy.
+                        long leakSize = 0;
+                        for (int leakCheck = 0; leakCheck < 3; leakCheck++)
+                        {
+                            long memorySize = runTests.TotalMemoryBytes;
+                            bool failed = false;
+                            for (int i = 1; i <= qualityPasses; i++)
+                            {
+                                runTests.Language = new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
+                                if (!runTests.Run(test, 1, testNumber))
+                                {
+                                    failed = true;
+                                    break;
+                                }
+                            }
+                            if (failed)
+                            {
+                                removeList.Add(test);
+                                break;
+                            }
+
+                            long leakedPerPass = (runTests.TotalMemoryBytes - memorySize)/qualityPasses;
+                            if (leakedPerPass < LeakThreshold)
+                            {
+                                leakSize = 0;
+                                break;
+                            }
+                            if (leakSize == 0)
+                                leakSize = leakedPerPass;
+                            if (leakSize > leakedPerPass)
+                                leakSize = leakedPerPass;
+                        }
+
+                        if (leakSize > LeakThreshold)
+                        {
+                            runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, leakSize);
+                            removeList.Add(test);
+                        }
+                    }
+
+                    foreach (var removeTest in removeList)
+                        testList.Remove(removeTest);
+                    removeList.Clear();
+                }
             }
 
             runTests.CheckCrtLeaks = 0;
 
             // Run all test passes.
-            for (; pass <= loopCount || loopCount == 0; pass++)
+            int pass = 1;
+            int passEnd = pass + (int) loopCount;
+            if (qualityMode)
+            {
+                pass++;
+                passEnd++;
+                if (loopCount < 0)
+                    passEnd = int.MaxValue;
+            }
+            else if (loopCount == 0)
+            {
+                passEnd = int.MaxValue;
+            }
+
+            for (; pass < passEnd; pass++)
             {
                 if (testList.Count == 0)
                     break;
@@ -363,8 +411,8 @@ namespace TestRunner
 
                     for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                     {
-                        var randomIndex = random.Next(cultures.Length);
-                        runTests.Culture = new CultureInfo(cultures[randomIndex]);
+                        var randomIndex = random.Next(languages.Length);
+                        runTests.Language = new CultureInfo(languages[randomIndex]);
                         if (!runTests.Run(test, pass, testNumber))
                             removeList.Add(test);
                     }
@@ -381,6 +429,8 @@ namespace TestRunner
                     testList.Remove(removeTest);
                 removeList.Clear();
             }
+
+            return runTests.FailureCount == 0;
         }
 
         // Load list of tests to be run into TestList.
@@ -648,10 +698,10 @@ Here is a list of recognized arguments:
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
 
-    culture=[culture1,culture2,...] Choose a random culture from this list before executing
+    language=[language1,language2,...]  Choose a random language from this list before executing
                                     each test.  Default value is ""en-US,fr-FR"".  You can
-                                    specify just one culture if you want all tests to run
-                                    in that culture.
+                                    specify just one language if you want all tests to run
+                                    in that language.
 
     demo=[on|off]                   Set demo=on to pause slightly at PauseForScreenshot() calls
                                     maximize the main window and show all-chromatograms graph

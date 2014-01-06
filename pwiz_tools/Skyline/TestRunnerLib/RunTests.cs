@@ -36,9 +36,10 @@ namespace TestRunnerLib
         private readonly Process _process;
         private readonly StreamWriter _log;
         private readonly bool _showStatus;
+        private readonly bool _buildMode;
 
         public readonly TestContext TestContext;
-        public CultureInfo Culture = new CultureInfo("en-US");
+        public CultureInfo Language = new CultureInfo("en-US");
         public long CheckCrtLeaks;
         public int FailureCount { get; private set; }
         public readonly Dictionary<string, int> ErrorCounts = new Dictionary<string, int>();
@@ -48,6 +49,7 @@ namespace TestRunnerLib
 
         public RunTests(
             bool demoMode,
+            bool buildMode,
             bool offscreen,
             bool showStatus,
             IEnumerable<string> pauseForms,
@@ -57,6 +59,7 @@ namespace TestRunnerLib
             string results = null,
             StreamWriter log = null)
         {
+            _buildMode = buildMode;
             _log = log;
             _process = Process.GetCurrentProcess();
             _showStatus = showStatus;
@@ -87,6 +90,8 @@ namespace TestRunnerLib
             testContext.Properties["TestDir"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
+            if (Directory.Exists(resultsDir))
+                Log("!!! Couldn't delete results directory: {0}\n", resultsDir);
         }
 
         private static string GetProjectPath(string relativePath)
@@ -111,17 +116,25 @@ namespace TestRunnerLib
         public bool Run(TestInfo test, int pass, int testNumber)
         {
             if (_showStatus)
-                Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Culture.TwoLetterISOLanguageName);
+                Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
 
-            var time = DateTime.Now;
-            Log(
-                "[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
-                time.Hour.ToString("D2"),
-                time.Minute.ToString("D2"),
-                pass,
-                testNumber,
-                test.TestMethod.Name,
-                Culture.TwoLetterISOLanguageName);
+            if (_buildMode)
+            {
+                Log("{0,3}. {1,-46} ",
+                    testNumber,
+                    test.TestMethod.Name);
+            }
+            else
+            {
+                var time = DateTime.Now;
+                Log("[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
+                    time.Hour.ToString("D2"),
+                    time.Minute.ToString("D2"),
+                    pass,
+                    testNumber,
+                    test.TestMethod.Name,
+                    Language.TwoLetterISOLanguageName);
+            }
 
             // Create test class.
             var testObject = Activator.CreateInstance(test.TestClassType);
@@ -136,7 +149,7 @@ namespace TestRunnerLib
             // Switch to selected culture.
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
-            LocalizationHelper.CurrentCulture = Culture;
+            LocalizationHelper.CurrentCulture = Language;
             LocalizationHelper.InitThread();
 
             long crtLeakedBytes = 0;

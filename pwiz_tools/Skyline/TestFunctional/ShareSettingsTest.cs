@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(settingsOld, settingsNew);
 
             // Change settings, save, share again, and import
-            IonType[] ionList = new[]
+            IonType[] ionList =
                 {
                     IonType.b, IonType.y, IonType.precursor
                 };

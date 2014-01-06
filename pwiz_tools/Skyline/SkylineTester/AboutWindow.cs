@@ -17,13 +17,21 @@
  * limitations under the License.
  */
 
+using System.Diagnostics;
+using System.Windows.Forms;
+
 namespace SkylineTester
 {
-    public class TabOutput : TabBase
+    public partial class AboutWindow : Form
     {
-        public override void Open()
+        public AboutWindow()
         {
-            MainWindow.InitLogSelector(MainWindow.ComboOutput, MainWindow.ButtonOpenOutput);
+            InitializeComponent();
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("http://proteome.gs.washington.edu/software/Skyline/funding.html"); // Not L10N
         }
     }
 }

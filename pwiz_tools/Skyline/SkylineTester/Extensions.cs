@@ -19,11 +19,16 @@
 
 namespace SkylineTester
 {
-    public class TabOutput : TabBase
+    public static class Extensions
     {
-        public override void Open()
+        public static string Quote(this string s)
         {
-            MainWindow.InitLogSelector(MainWindow.ComboOutput, MainWindow.ButtonOpenOutput);
+            return '"' + s + '"';
+        }
+
+        public static string With(this string format, params object[] args)
+        {
+            return string.Format(format, args);
         }
     }
 }

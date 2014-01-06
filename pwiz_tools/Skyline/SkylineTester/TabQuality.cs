@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -29,145 +30,94 @@ using ZedGraph;
 
 namespace SkylineTester
 {
-    public partial class SkylineTesterWindow
+    public class TabQuality : TabBase
     {
-        private const string QualityLogsDirectory = "Quality logs";
-        private const string SummaryLog = "Summary.log";
-
         private WakeupTimer _endTimer;
         private WakeupTimer _startTimer;
+        private Timer _qualityTimer;
+        private bool _timerStop;
+        private int _revision;
+        private readonly List<string> _labels = new List<string>();
 
-        private void InitQuality()
+        public override void Open()
         {
-            QualityBuildType.SelectedIndex = 0;
-
-            InitGraph(graphMemory, "Memory used");
-            var pane = graphMemory.GraphPane;
-            pane.XAxis.MajorTic.IsAllTics = false;
-            pane.XAxis.MinorTic.IsAllTics = false;
-            pane.XAxis.Scale.IsVisible = false;
-            pane.XAxis.Scale.Format = "#";
-            pane.XAxis.Scale.Mag = 0;
-            pane.YAxis.IsVisible = true;
-            pane.YAxis.MinorTic.IsAllTics = false;
-            pane.YAxis.Title.Text = "MB";
-            pane.YAxis.Scale.Format = "#";
-            pane.YAxis.Scale.Mag = 0;
-            pane.Legend.IsVisible = true;
-            pane.YAxis.Scale.FontSpec.Angle = 90;
-
-            InitGraph(graphTestsRun, "Tests run");
-            InitGraph(graphDuration, "Duration");
-            InitGraph(graphFailures, "Failures");
-            InitGraph(graphMemoryHistory, "Memory used");
-        }
-
-        private void InitGraph(ZedGraphControl graph, string title = null)
-        {
-            var pane = graph.GraphPane;
-            if (title != null)
-                pane.Title.Text = title;
-            pane.Chart.Border.IsVisible = false;
-            pane.YAxis.IsVisible = false;
-            pane.X2Axis.IsVisible = false;
-            pane.Y2Axis.IsVisible = false;
-            pane.XAxis.MajorTic.IsOpposite = false;
-            pane.YAxis.MajorTic.IsOpposite = false;
-            pane.XAxis.MinorTic.IsOpposite = false;
-            pane.YAxis.MinorTic.IsOpposite = false;
-            pane.XAxis.MinorTic.IsAllTics = false;
-            pane.XAxis.Title.IsVisible = false;
-            pane.IsFontsScaled = false;
-            pane.XAxis.Scale.MaxGrace = 0.0;
-            pane.YAxis.Scale.MaxGrace = 0.05;
-            pane.XAxis.Scale.FontSpec.Angle = 90;
-            pane.Legend.IsVisible = false;
-        }
-
-        private Summary _summary;
-
-        private void OpenQuality()
-        {
-            comboRunDate.Items.Clear();
-
-            var summaryLog = Path.Combine(_rootDir, QualityLogsDirectory, SummaryLog);
-            if (_summary == null)
-                _summary = new Summary(summaryLog);
-
-            foreach (var run in _summary.Runs)
-                AddRun(run);
-
+            MainWindow.InitLogSelector(MainWindow.ComboRunDate, MainWindow.ButtonOpenLog, false);
             UpdateSelectedRun();
             UpdateHistory();
         }
 
-        private void AddRun(Summary.Run run)
+        public override bool Run()
         {
-            var text = run.Date.ToString("M/d  h:mm tt");
-            if (run.Revision > 0)
-                text += "    (rev. " + run.Revision + ")";
-            comboRunDate.Items.Insert(0, text);
-            comboRunDate.SelectedIndex = 0;
+            if (MainWindow.QualityBuildType.SelectedIndex >= 3 && !MainWindow.HasBuildPrerequisites)
+                return false;
+
+            MainWindow.LastRunName = "Quality";
+            MainWindow.CommandShell.LogFile = MainWindow.DefaultLogFile;
+            _labels.Clear();
+
+            if (MainWindow.QualityRunSchedule.Checked)
+                RunSchedule();
+            else
+                StartQuality();
+
+            return true;
         }
 
-        private void CreateGraph(string name, ZedGraphControl graph, Color color, string[] labels, double[] data)
+        public override void Cancel()
         {
-            var pane = graph.GraphPane;
-            pane.CurveList.Clear();
-            var bars = pane.AddBar(name, null, data, color);
-            bars.Bar.Fill = new Fill(color);
-            pane.XAxis.Scale.TextLabels = labels;
-            pane.XAxis.Type = AxisType.Text;
-            pane.AxisChange();
-            graph.Refresh();
-        }
-
-        private void RunQuality(object sender, EventArgs e)
-        {
-            if (QualityBuildType.SelectedIndex >= 3 && !HasBuildPrerequisites)
-                return;
-
-            if (!ToggleRunButtons(tabQuality))
+            base.Cancel();
+            if (_startTimer != null)
             {
-                statusLabel.Text = null;
+                StopTimers();
+                MainWindow.CommandShell.AddImmediate("# Stopped.");
+                MainWindow.Done();
+            }
+        }
 
-                if (_endTimer != null)
-                {
-                    _endTimer.Stop();
-                    _endTimer = null;
-                }
-
-                // Schedule stopped before it started.
-                if (_startTimer != null)
-                {
-                    _startTimer.Stop();
-                    _startTimer = null;
-                    commandShell.AddImmediate("# Stopped.");
-                }
-                else
-                {
-                    commandShell.Stop();
-                }
-                return;
+        private void StopTimers()
+        {
+            if (_endTimer != null)
+            {
+                _endTimer.Stop();
+                _endTimer = null;
             }
 
-            commandShell.LogFile = null;
-            commandShell.ClearLog();
-
-            if (QualityRunOne.Checked || QualityRunContinuously.Checked)
-                StartQuality();
-            else
-                RunSchedule();
+            if (_startTimer != null)
+            {
+                _startTimer.Stop();
+                _startTimer = null;
+            }
         }
 
-        private bool _scheduleEnd;
+        public override bool Stop(bool success)
+        {
+            StopTimers();
+
+            _qualityTimer.Stop();
+            _qualityTimer = null;
+
+            UpdateRun();
+            MainWindow.Summary.Save();
+            MainWindow.NewQualityRun = null;
+
+            if (_timerStop && MainWindow.QualityRunSchedule.Checked)
+            {
+                Run();
+                return false;
+            }
+
+            return true;
+        }
 
         private void RunSchedule()
         {
-            commandShell.ClearLog();
+            var startTime = DateTime.Parse(MainWindow.QualityStartTime.Text);
+            var endTime = DateTime.Parse(MainWindow.QualityEndTime.Text);
 
-            var startTime = DateTime.Parse(QualityStartTime.Text);
-            var endTime = DateTime.Parse(QualityEndTime.Text);
+            // for run schedule testing...
+            //startTime = DateTime.Now + new TimeSpan(0, 0, 10);
+            //endTime = startTime + new TimeSpan(0, 0, 10);
+
             if (endTime < startTime)
                 endTime = endTime.AddDays(1);
             if (endTime <= DateTime.Now)
@@ -175,10 +125,11 @@ namespace SkylineTester
                 startTime = startTime.AddDays(1);
                 endTime = endTime.AddDays(1);
             }
+            _timerStop = false;
             _endTimer = new WakeupTimer(endTime, () =>
             {
-                _scheduleEnd = true;
-                Stop(null, null);
+                _timerStop = true;
+                MainWindow.CommandShell.Stop();
             });
 
             var now = DateTime.Now;
@@ -188,60 +139,77 @@ namespace SkylineTester
                 return;
             }
 
-            commandShell.AddImmediate(Environment.NewLine + "# Waiting until {0} to start quality pass...", QualityStartTime.Text);
-            statusLabel.Text = "Waiting to run quality pass at " + QualityStartTime.Text;
+            MainWindow.CommandShell.LogFile = MainWindow.DefaultLogFile;
+
+            MainWindow.CommandShell.AddImmediate(
+                Environment.NewLine + "# Waiting until {0} to start quality pass...", 
+                MainWindow.QualityStartTime.Text);
+            MainWindow.SetStatus("Waiting to run quality pass at " + MainWindow.QualityStartTime.Text);
+            MainWindow.ResetElapsedTime();
+            MainWindow.RefreshLogs();
 
             _startTimer = new WakeupTimer(startTime, StartQuality);
         }
 
-        private Summary.Run _newQualityRun;
 
         private void StartQuality()
         {
+            MainWindow.SetStatus("Running quality pass...");
+            MainWindow.ResetElapsedTime();
+
             _startTimer = null;
-            statusLabel.Text = "Running quality pass...";
-            _testsRun = 0;
-            _lastTestResult = null;
-            _newQualityRun = new Summary.Run
+            MainWindow.TestsRun = 0;
+
+            if (File.Exists(MainWindow.DefaultLogFile))
+                Try.Multi<Exception>(() => File.Delete(MainWindow.DefaultLogFile), 4, false);
+            var qualityDirectory = Path.Combine(MainWindow.RootDir, SkylineTesterWindow.QualityLogsDirectory);
+            if (!Directory.Exists(qualityDirectory))
+                Directory.CreateDirectory(qualityDirectory);
+            MainWindow.LastTestResult = null;
+            MainWindow.NewQualityRun = new Summary.Run
             {
                 Date = DateTime.Now
             };
-            _summary.Runs.Add(_newQualityRun);
-            AddRun(_newQualityRun);
+            MainWindow.Summary.Runs.Add(MainWindow.NewQualityRun);
+            MainWindow.AddRun(MainWindow.NewQualityRun, MainWindow.ComboRunDate);
+            MainWindow.ComboRunDate.SelectedIndex = 0;
 
+            StartLog("Quality", MainWindow.Summary.GetLogFile(MainWindow.NewQualityRun));
+
+            var nukeBuild = MainWindow.QualityBuildType.SelectedIndex >= 3;
             var revisionWorker = new BackgroundWorker();
-            revisionWorker.DoWork += (s, a) => _revision = GetRevision();
+            revisionWorker.DoWork += (s, a) => _revision = GetRevision(nukeBuild);
             revisionWorker.RunWorkerAsync();
 
-            var qualityDirectory = Path.Combine(_rootDir, QualityLogsDirectory);
-            if (!Directory.Exists(qualityDirectory))
-                Directory.CreateDirectory(qualityDirectory);
-            commandShell.LogFile = _summary.GetLogFile(_newQualityRun);
-            linkLogFile.Text = commandShell.LogFile;
-
-            commandShell.Add("# Quality run started {0}" + Environment.NewLine, _newQualityRun.Date.ToString("f"));
-
-            if (QualityBuildType.SelectedIndex == 3)
-                GenerateBuildCommands(new[] {32});
-            if (QualityBuildType.SelectedIndex == 4)
-                GenerateBuildCommands(new[] {64});
-
-            var args = "offscreen=on quality=on loop=" + (QualityRunOne.Checked ? 1 : 0);
-            StartTestRunner(
-                args + (QualityChooseTests.Checked ? GetTestList() : ""),
-                DoneQuality);
-
             _qualityTimer = new Timer {Interval = 1000};
-            _qualityTimer.Tick += (s, a) => Invoke(new Action(UpdateQuality));
+            _qualityTimer.Tick += (s, a) => RunUI(UpdateQuality);
             _qualityTimer.Start();
+
+            var architectures = new List<int>();
+            var buildType = MainWindow.QualityBuildType.SelectedIndex;
+            if (buildType == 3)
+                architectures.Add(32);
+            if (buildType == 4)
+                architectures.Add(64);
+            if (architectures.Count > 0)
+                TabBuild.CreateBuildCommands(architectures, true, false);
+
+            var args = "offscreen=on quality=on loop={0} pass0={1} pass1={2} {3}".With(
+                MainWindow.QualityRunSchedule.Checked ? -1 : int.Parse(MainWindow.PassCount.Text),
+                MainWindow.Pass0.Checked.ToString(),
+                MainWindow.Pass1.Checked.ToString(),
+                MainWindow.QualityChooseTests.Checked ? TabTests.GetTestList() : "");
+            MainWindow.AddTestRunner(args);
+
+            MainWindow.RunCommands();
         }
 
         private void UpdateQuality()
         {
-            if (Tabs.SelectedTab == tabQuality)
+            if (MainWindow.Tabs.SelectedTab == MainWindow.QualityPage)
             {
                 UpdateRun();
-                if (comboRunDate.SelectedIndex == 0)
+                if (MainWindow.ComboRunDate.SelectedIndex == 0)
                     UpdateSelectedRun();
                 UpdateHistory();
             }
@@ -249,126 +217,121 @@ namespace SkylineTester
 
         private Summary.Run GetSelectedRun()
         {
-            return comboRunDate.SelectedIndex >= 0
-                ? _summary.Runs[_summary.Runs.Count - 1 - comboRunDate.SelectedIndex]
+            return MainWindow.ComboRunDate.SelectedIndex >= 0
+                ? MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1 - MainWindow.ComboRunDate.SelectedIndex]
                 : null;
         }
 
         private void UpdateSelectedRun()
         {
-            var pane = graphMemory.GraphPane;
+            var pane = MainWindow.GraphMemory.GraphPane;
             pane.CurveList.Clear();
 
             var run = GetSelectedRun();
             if (run == null)
             {
-                labelDuration.Text = "";
-                labelTestsRun.Text = "";
-                labelFailures.Text = "";
-                labelLeaks.Text = "";
-                graphMemory.Refresh();
+                MainWindow.LabelDuration.Text = "";
+                MainWindow.LabelTestsRun.Text = "";
+                MainWindow.LabelFailures.Text = "";
+                MainWindow.LabelLeaks.Text = "";
+                MainWindow.GraphMemory.Refresh();
                 return;
             }
 
-            labelDuration.Text = (run.RunMinutes / 60) + ":" + (run.RunMinutes % 60).ToString("D2");
-            labelTestsRun.Text = run.TestsRun.ToString(CultureInfo.InvariantCulture);
-            labelFailures.Text = run.Failures.ToString(CultureInfo.InvariantCulture);
-            labelLeaks.Text = run.Leaks.ToString(CultureInfo.InvariantCulture);
+            MainWindow.LabelDuration.Text = (run.RunMinutes / 60) + ":" + (run.RunMinutes % 60).ToString("D2");
+            MainWindow.LabelTestsRun.Text = run.TestsRun.ToString(CultureInfo.InvariantCulture);
+            MainWindow.LabelFailures.Text = run.Failures.ToString(CultureInfo.InvariantCulture);
+            MainWindow.LabelLeaks.Text = run.Leaks.ToString(CultureInfo.InvariantCulture);
 
-            var managedPointList = new PointPairList();
-            var totalPointList = new PointPairList();
-
-            var logFile = _summary.GetLogFile(run);
-            if (File.Exists(logFile))
+            var updateWorker = new BackgroundWorker();
+            updateWorker.DoWork += (sender, args) =>
             {
-                var logLines = File.ReadAllLines(logFile);
-                foreach (var line in logLines)
+                var managedPointList = new PointPairList();
+                var totalPointList = new PointPairList();
+
+                var logFile = MainWindow.Summary.GetLogFile(run);
+                _labels.Clear();
+                if (File.Exists(logFile))
                 {
-                    if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')
+                    var logLines = File.ReadAllLines(logFile);
+                    foreach (var line in logLines)
                     {
-                        var i = line.IndexOf("failures, ", StringComparison.OrdinalIgnoreCase);
-                        if (i < 0)
-                            continue;
-                        var memory = line.Substring(i + 10).Split('/');
-                        var managedMemory = double.Parse(memory[0]);
-                        var totalMemory = double.Parse(memory[1].Split(' ')[0]);
-                        managedPointList.Add(managedPointList.Count, managedMemory);
-                        totalPointList.Add(totalPointList.Count, totalMemory);
+                        if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')
+                        {
+                            var i = line.IndexOf("failures, ", StringComparison.OrdinalIgnoreCase);
+                            if (i < 0)
+                                continue;
+
+                            var memory = line.Substring(i + 10).Split('/');
+                            var managedMemory = double.Parse(memory[0]);
+                            var totalMemory = double.Parse(memory[1].Split(' ')[0]);
+
+                            var testNumber = line.Substring(8, 7).Trim();
+                            if (_labels.Count > 0 && _labels[_labels.Count - 1] == testNumber)
+                            {
+                                managedPointList[managedPointList.Count - 1].Y = managedMemory;
+                                totalPointList[totalPointList.Count - 1].Y = totalMemory;
+                            }
+                            else
+                            {
+                                _labels.Add(testNumber);
+                                managedPointList.Add(managedPointList.Count, managedMemory);
+                                totalPointList.Add(totalPointList.Count, totalMemory);
+                            }
+                        }
                     }
+
                 }
 
-                var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
-                var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
-                managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
-                totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
-                pane.XAxis.Scale.Max = managedPointList.Count - 1;
-                pane.XAxis.Scale.MinGrace = 0;
-                pane.XAxis.Scale.MaxGrace = 0;
-                pane.YAxis.Scale.MinGrace = 0.05;
-                pane.YAxis.Scale.MaxGrace = 0.05;
-            }
+                RunUI(() =>
+                {
+                    var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
+                    var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
+                    managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150),
+                        -90);
+                    totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220),
+                        -90);
+                    pane.XAxis.Scale.TextLabels = _labels.ToArray();
+                    pane.XAxis.Scale.Max = managedPointList.Count - 1;
+                    pane.XAxis.Scale.MinGrace = 0;
+                    pane.XAxis.Scale.MaxGrace = 0;
+                    pane.YAxis.Scale.MinGrace = 0.05;
+                    pane.YAxis.Scale.MaxGrace = 0.05;
+                    pane.AxisChange();
+                    MainWindow.GraphMemory.Refresh();
+                });
+            };
 
-            pane.AxisChange();
-            graphMemory.Refresh();
+            updateWorker.RunWorkerAsync();
         }
 
         private void UpdateHistory()
         {
-            var labels = _summary.Runs.Select(run => run.Date.Month + "/" + run.Date.Day).ToArray();
+            var labels = MainWindow.Summary.Runs.Select(run => run.Date.Month + "/" + run.Date.Day).ToArray();
 
-            CreateGraph("Tests run", graphTestsRun, Color.LightSeaGreen,
+            CreateGraph("Tests run", MainWindow.GraphTestsRun, Color.LightSeaGreen,
                 labels,
-                _summary.Runs.Select(run => (double)run.TestsRun).ToArray());
+                MainWindow.Summary.Runs.Select(run => (double)run.TestsRun).ToArray());
 
-            CreateGraph("Duration", graphDuration, Color.LightSteelBlue,
+            CreateGraph("Duration", MainWindow.GraphDuration, Color.LightSteelBlue,
                 labels,
-                _summary.Runs.Select(run => (double)run.RunMinutes).ToArray());
+                MainWindow.Summary.Runs.Select(run => (double)run.RunMinutes).ToArray());
 
-            CreateGraph("Failures", graphFailures, Color.LightCoral,
+            CreateGraph("Failures", MainWindow.GraphFailures, Color.LightCoral,
                 labels,
-                _summary.Runs.Select(run => (double)run.Failures).ToArray());
+                MainWindow.Summary.Runs.Select(run => (double)run.Failures).ToArray());
 
-            CreateGraph("Duration", graphMemoryHistory, Color.FromArgb(160, 120, 160),
+            CreateGraph("Duration", MainWindow.GraphMemoryHistory, Color.FromArgb(160, 120, 160),
                 labels,
-                _summary.Runs.Select(run => (double)run.TotalMemory).ToArray());
-        }
-
-        private int _testsRun;
-        private int _revision;
-        private Timer _qualityTimer;
-
-        private void DoneQuality(bool success)
-        {
-            _qualityTimer.Stop();
-            _qualityTimer = null;
-
-            UpdateRun();
-            _summary.Save();
-            _newQualityRun = null;
-
-            _reportDone = null;
-            if (_scheduleEnd)
-            {
-                _scheduleEnd = false;
-                success = true;
-                _reportDone = QualityRestart;
-            }
-            TestRunnerDone(success);
-        }
-
-        private void QualityRestart(bool success)
-        {
-            commandShell.UpdateLog();
-            ReportDone(success);
-            RunQuality(null, null);
+                MainWindow.Summary.Runs.Select(run => (double)run.TotalMemory).ToArray());
         }
 
         private void UpdateRun()
         {
             string lastTestResult;
-            lock (_newQualityRun)
+            lock (MainWindow.NewQualityRun)
             {
-                lastTestResult = _lastTestResult;
+                lastTestResult = MainWindow.LastTestResult;
             }
 
             if (lastTestResult != null)
@@ -379,79 +342,63 @@ namespace SkylineTester
                 var managedMemory = Double.Parse(parts[6].Split('/')[0]);
                 var totalMemory = Double.Parse(parts[6].Split('/')[1]);
 
-                _newQualityRun.Revision = _revision;
-                _newQualityRun.RunMinutes = (int) (DateTime.Now - _newQualityRun.Date).TotalMinutes;
-                _newQualityRun.TestsRun = _testsRun;
-                _newQualityRun.Failures = failures;
-                _newQualityRun.ManagedMemory = (int) managedMemory;
-                _newQualityRun.TotalMemory = (int) totalMemory;
+                MainWindow.NewQualityRun.Revision = _revision;
+                MainWindow.NewQualityRun.RunMinutes = (int)(DateTime.Now - MainWindow.NewQualityRun.Date).TotalMinutes;
+                MainWindow.NewQualityRun.TestsRun = MainWindow.TestsRun;
+                MainWindow.NewQualityRun.Failures = failures;
+                MainWindow.NewQualityRun.ManagedMemory = (int)managedMemory;
+                MainWindow.NewQualityRun.TotalMemory = (int)totalMemory;
             }
         }
 
-        private int GetRevision()
+        private int GetRevision(bool nuke)
         {
             // Get current SVN revision info.
             int revision = 0;
             try
             {
-                var skylineDirectory = GetSkylineDirectory();
-
-                if (skylineDirectory != null)
+                var buildRoot = MainWindow.GetBuildRoot();
+                var target = (Directory.Exists(buildRoot) && !nuke)
+                    ? buildRoot
+                    : TabBuild.GetBranchUrl();
+                Process svn = new Process
                 {
-                    Process svn = new Process
+                    StartInfo =
                     {
-                        StartInfo =
-                        {
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            FileName = _subversion,
-                            Arguments = @"info -r BASE " + skylineDirectory.FullName,
-                            CreateNoWindow = true
-                        }
-                    };
-                    svn.Start();
-                    string svnOutput = svn.StandardOutput.ReadToEnd();
-                    svn.WaitForExit();
-                    var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
-                    revision = int.Parse(revisionString);
-                }
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        FileName = MainWindow.Subversion,
+                        Arguments = @"info " + target,
+                        CreateNoWindow = true
+                    }
+                };
+                svn.Start();
+                string svnOutput = svn.StandardOutput.ReadToEnd();
+                svn.WaitForExit();
+                var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
+                revision = int.Parse(revisionString);
             }
-            // ReSharper disable EmptyGeneralCatchClause
+// ReSharper disable once EmptyGeneralCatchClause
             catch
-            // ReSharper restore EmptyGeneralCatchClause
             {
             }
 
             return revision;
         }
 
-        private DirectoryInfo GetSkylineDirectory()
-        {
-            return GetSkylineDirectory(GetCurrentBuildDirectory());
-        }
-
-        private DirectoryInfo GetSkylineDirectory(string startDirectory)
-        {
-            string skylinePath = startDirectory;
-            var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
-            while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
-                skylineDirectory = skylineDirectory.Parent;
-            return skylineDirectory;
-        }
-
-        private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
+        public void RunDateChanged()
         {
             UpdateSelectedRun();
         }
 
-        private void buttonOpenLog_Click(object sender, EventArgs e)
+        public void OpenLog()
         {
             var run = GetSelectedRun();
             if (run == null)
                 return;
 
-            var logFile = _summary.GetLogFile(run);
+            var logFile = MainWindow.Summary.GetLogFile(run);
             if (File.Exists(logFile))
             {
                 var editLogFile = new Process { StartInfo = { FileName = logFile } };
@@ -459,18 +406,18 @@ namespace SkylineTester
             }
         }
 
-        private void buttonDeleteRun_Click(object sender, EventArgs e)
+        public void DeleteRun()
         {
             if (_qualityTimer != null)
             {
-                MessageBox.Show(this, "Can't delete a run while quality pass is running.");
+                MessageBox.Show(MainWindow, "Can't delete a run while quality pass is running.");
                 return;
             }
 
             var run = GetSelectedRun();
             if (run != null)
             {
-                var logFile = _summary.GetLogFile(run);
+                var logFile = MainWindow.Summary.GetLogFile(run);
                 if (File.Exists(logFile))
                 {
                     try
@@ -483,9 +430,21 @@ namespace SkylineTester
                     }
                 }
 
-                _summary.Runs.Remove(run);
+                MainWindow.Summary.Runs.Remove(run);
             }
-            OpenQuality();
+            Open();
+        }
+
+        private void CreateGraph(string name, ZedGraphControl graph, Color color, string[] labels, double[] data)
+        {
+            var pane = graph.GraphPane;
+            pane.CurveList.Clear();
+            var bars = pane.AddBar(name, null, data, color);
+            bars.Bar.Fill = new Fill(color);
+            pane.XAxis.Scale.TextLabels = labels;
+            pane.XAxis.Type = AxisType.Text;
+            pane.AxisChange();
+            graph.Refresh();
         }
     }
 }

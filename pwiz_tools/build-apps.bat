@@ -86,6 +86,7 @@ REM # look for problems
 findstr /c:"...updated" %QUICKBUILDLOG%
 findstr /c:"...skipped" %QUICKBUILDLOG%
 findstr /c:"...failed" %QUICKBUILDLOG%
+findstr /e "FAILED:" %QUICKBUILDLOG%
 echo.
 findstr /c:"Could not resolve reference" %QUICKBUILDLOG%
 findstr /b /c:"Unable to load" %QUICKBUILDLOG%

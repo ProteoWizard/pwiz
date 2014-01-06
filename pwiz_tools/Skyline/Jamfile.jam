@@ -82,6 +82,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestTutorial /nologo /verbosity:minimal        
         echo Building Skyline Test Runner in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestRunner /nologo /verbosity:minimal        
+        echo Building SkylineTester in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineTester /nologo /verbosity:minimal        
     }
 
     rule do_skyline_test ( targets + : sources * : properties * )
@@ -91,11 +93,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test
     {
-        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test"
         $(TEST_PRECOMMAND)
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -107,11 +108,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test_a
     {
-        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test A"
         $(TEST_PRECOMMAND)
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TestA /nologo /verbosity:minimal
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestA.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -123,11 +123,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test_functional
     {
-        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline functional test"
         $(TEST_PRECOMMAND)
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -139,9 +138,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     actions do_skyline_test_passed
     {
-        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-        echo Copying Skyline test output in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
+        $(OUTPUT_PATH)/SkylineTester.exe $(OUTPUT_PATH)/SkylineTester.zip
     }
     
     rule build-location ( properties * )

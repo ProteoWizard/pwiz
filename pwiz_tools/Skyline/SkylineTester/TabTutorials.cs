@@ -22,41 +22,39 @@ using System.Text;
 
 namespace SkylineTester
 {
-    public partial class SkylineTesterWindow
+    public class TabTutorials : TabBase
     {
-        private void OpenTutorials()
+        public TabTutorials()
         {
-            InitLanguages(TutorialsLanguage);
+            MainWindow.InitLanguages(MainWindow.TutorialsLanguage);
         }
 
-        private void RunTutorials(object sender, EventArgs e)
+        public override bool Run()
         {
-            if (!ToggleRunButtons(tabTutorials))
-            {
-                commandShell.Stop();
-                return;
-            }
+            StartLog("Tutorials");
 
             var testList = new List<string>();
-            GetCheckedTests(TutorialsTree.TopNode, testList);
+            TabTests.GetCheckedTests(MainWindow.TutorialsTree.TopNode, testList);
 
-            var args = new StringBuilder("offscreen=off loop=1 culture=");
-            args.Append(GetCulture(TutorialsLanguage));
-            if (TutorialsDemoMode.Checked)
+            var args = new StringBuilder("offscreen=off loop=1 language=");
+            args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
+            if (MainWindow.TutorialsDemoMode.Checked)
                 args.Append(" demo=on");
             else
             {
                 int pauseSeconds = -1;
-                if (!PauseTutorialsScreenShots.Checked && !int.TryParse(PauseTutorialsSeconds.Text, out pauseSeconds))
+                if (!MainWindow.PauseTutorialsScreenShots.Checked && 
+                    !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;
                 args.Append(" pause=");
                 args.Append(pauseSeconds);
             }
             args.Append(" test=");
-            args.Append(string.Join(",", testList));
+            args.Append(String.Join(",", testList));
 
-            commandShell.LogFile = _defaultLogFile;
-            StartTestRunner(args.ToString());
+            MainWindow.AddTestRunner(args.ToString());
+            MainWindow.RunCommands();
+            return true;
         }
     }
 }

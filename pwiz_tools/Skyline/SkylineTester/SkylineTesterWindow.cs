@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -27,29 +28,66 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using Microsoft.Win32;
-using TestRunnerLib;
+using ZedGraph;
+using Label = System.Windows.Forms.Label;
 
 namespace SkylineTester
 {
     public partial class SkylineTesterWindow : Form
     {
+        #region Fields
+
+        public const string QualityLogsDirectory = "Quality logs";
+        public const string SummaryLog = "Summary.log";
+
+        public string Subversion { get; private set; }
+        public string Devenv { get; private set; }
+        public string RootDir { get; private set; }
+        public string ExeDir { get; private set; }
+        public string DefaultLogFile { get; private set; }
+        public Summary Summary { get; private set; }
+        public Summary.Run NewQualityRun { get; set; }
+        public int TestsRun { get; set; }
+        public string LastTestResult { get; set; }
+        public string LastRunName { get; set; }
+
+        private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
+        {
+            {"en", "English"},
+            {"fr", "French"},
+            {"ja", "Japanese"},
+            {"zh", "Chinese"}
+        };
+
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll" };
         private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
         private static readonly string[] TUTORIAL_DLLS = { "TestTutorial.dll" };
-        private Button[] _runButtons;
 
         private List<string> _formsTestList;
-        private readonly string _rootDir;
         private readonly string _resultsDir;
-        private readonly string _buildDir;
-        private readonly string _defaultLogFile;
-        private TabPage _runningTab;
-        private string _subversion;
-        private string _devenv;
-        private readonly string _exeDir;
         private readonly string _openFile;
-        private bool _runningTestRunner;
-        private string _lastTestResult;
+
+        private Button[] _runButtons;
+        private TabBase _runningTab;
+        private DateTime _runStartTime;
+        private Timer _runTimer;
+
+        private TabForms _tabForms;
+        private TabTutorials _tabTutorials;
+        private TabTests _tabTests;
+        private TabBuild _tabBuild;
+        private TabQuality _tabQuality;
+        private TabOutput _tabOutput;
+        private TabErrors _tabErrors;
+        private TabBase[] _tabs;
+
+        private ZedGraphControl graphMemory;
+        private ZedGraphControl graphMemoryHistory;
+        private ZedGraphControl graphFailures;
+        private ZedGraphControl graphDuration;
+        private ZedGraphControl graphTestsRun;
+
+        #endregion Fields
 
         #region Create and load window
 
@@ -63,11 +101,21 @@ namespace SkylineTester
             InitializeComponent();
 
             string exeFile = Assembly.GetExecutingAssembly().Location;
-            _exeDir = Path.GetDirectoryName(exeFile);
-            _rootDir = Path.GetDirectoryName(_exeDir) ?? "";
-            _buildDir = Path.Combine(_rootDir, "Build");
-            _resultsDir = Path.Combine(_rootDir, "SkylineTester Results");
-            _defaultLogFile = Path.Combine(_rootDir, "SkylineTester.log");
+            ExeDir = Path.GetDirectoryName(exeFile);
+            RootDir = ExeDir;
+            while (RootDir != null)
+            {
+                if (Path.GetFileName(RootDir).StartsWith("Skyline"))
+                    break;
+                RootDir = Path.GetDirectoryName(RootDir);
+            }
+            if (RootDir == null)
+                throw new ApplicationException("Can't find Skyline or SkylineTester directory");
+
+            _resultsDir = Path.Combine(RootDir, "SkylineTester Results");
+            DefaultLogFile = Path.Combine(RootDir, "SkylineTester.log");
+            if (File.Exists(DefaultLogFile))
+                Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
 
             if (args.Length > 0)
                 _openFile = args[0];
@@ -96,41 +144,58 @@ namespace SkylineTester
 
             // Try to find where subversion is available.
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            _subversion = ChooseMostRecentFile(
+            Subversion = ChooseMostRecentFile(
                 Path.Combine(programFiles, @"Subversion\bin\svn.exe"),
                 Path.Combine(programFiles, @"VisualSVN\bin\svn.exe"));
 
             // Find Visual Studio, if available.
-            _devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
-            if (!File.Exists(_devenv))
-                _devenv = null;
+            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
+            if (!File.Exists(Devenv))
+                Devenv = null;
 
             commandShell.StopButton = buttonStop;
+            errorsShell.StopButton = buttonErrorsStop;
+            commandShell.DoLiveUpdate = true;
+            commandShell.AddColorPattern("# ", Color.DarkGreen);
+            commandShell.AddColorPattern("> ", Color.FromArgb(120, 120, 120));
+            commandShell.AddColorPattern("...skipped ", Color.Orange);
+            commandShell.AddColorPattern("...failed ", Color.Red);
+            commandShell.AddColorPattern("!!!", Color.Red);
+            errorsShell.AddColorPattern("!!!", Color.FromArgb(150, 0, 0));
+
             commandShell.FilterFunc = line =>
             {
-                if (_runningTestRunner && line != null)
+                if (line != null)
                 {
                     if (line.StartsWith("#@ "))
                     {
                         // Update status.
-                        Invoke(new Action(() => statusLabel.Text = line.Substring(3)));
+                        RunUI(() => statusLabel.Text = line.Substring(3));
                         return false;
                     }
 
-                    if (_newQualityRun != null)
+                    if (line.StartsWith("...skipped ") ||
+                        line.StartsWith("...failed ") ||
+                        line.StartsWith("!!! "))
+                    {
+                        errorsShell.Log(line);
+                        RunUI(() => errorsShell.UpdateLog());
+                    }
+
+                    if (NewQualityRun != null)
                     {
                         if (line.StartsWith("!!! "))
                         {
                             var parts = line.Split(' ');
                             if (parts[2] == "LEAKED" || parts[2] == "CRT-LEAKED")
-                                _newQualityRun.Leaks++;
+                                NewQualityRun.Leaks++;
                         }
                         else if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
                         {
-                            lock (_newQualityRun)
+                            lock (NewQualityRun)
                             {
-                                _lastTestResult = line;
-                                _testsRun++;
+                                LastTestResult = line;
+                                TestsRun++;
                             }
                         }
                     }
@@ -142,8 +207,28 @@ namespace SkylineTester
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync();
 
+            TabBase.MainWindow = this;
+            _tabForms = new TabForms();
+            _tabTutorials = new TabTutorials();
+            _tabTests = new TabTests();
+            _tabBuild = new TabBuild();
+            _tabQuality = new TabQuality();
+            _tabOutput = new TabOutput();
+            _tabErrors = new TabErrors();
+
+            _tabs = new TabBase[]
+            {
+                _tabForms,
+                _tabTutorials,
+                _tabTests,
+                _tabBuild,
+                _tabQuality,
+                _tabOutput,
+                _tabErrors
+            };
+
             InitQuality();
-            OpenForms();
+            _tabForms.Open();
             statusLabel.Text = "";
         }
 
@@ -165,13 +250,13 @@ namespace SkylineTester
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
-                    Invoke(new Action(() =>
+                    RunUI(() =>
                     {
                         var childNodes = new TreeNode[tests.Length];
                         for (int i = 0; i < childNodes.Length; i++)
                             childNodes[i] = new TreeNode(tests[i]);
-                        TestsTree.Nodes.Add(new TreeNode(dllName, childNodes));
-                    }));
+                        testsTree.Nodes.Add(new TreeNode(dllName, childNodes));
+                    });
                 }
 
                 var tutorialTests = new List<string>();
@@ -179,20 +264,20 @@ namespace SkylineTester
                     tutorialTests.AddRange(GetTestInfos(tutorialDll));
                 var tutorialNodes = new TreeNode[tutorialTests.Count];
                 tutorialTests = tutorialTests.OrderBy(test => test).ToList();
-                Invoke(new Action(() =>
+                RunUI(() =>
                 {
                     for (int i = 0; i < tutorialNodes.Length; i++)
                     {
                         tutorialNodes[i] = new TreeNode(tutorialTests[i]);
                     }
-                    TutorialsTree.Nodes.Add(new TreeNode("Tutorial tests", tutorialNodes));
-                    TutorialsTree.ExpandAll();
-                    TutorialsTree.Nodes[0].Checked = true;
-                    CheckAllChildNodes(TutorialsTree.Nodes[0], true);
+                    tutorialsTree.Nodes.Add(new TreeNode("Tutorial tests", tutorialNodes));
+                    tutorialsTree.ExpandAll();
+                    tutorialsTree.Nodes[0].Checked = true;
+                    TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
 
                     // Add forms to forms tree view.
-                    CreateFormsTree();
-                }));
+                    TabForms.CreateFormsTree();
+                });
             }
             catch (Exception ex)
             {
@@ -201,34 +286,20 @@ namespace SkylineTester
 
             if (_openFile != null)
             {
-                Invoke(new Action(() =>
+                RunUI(() =>
                 {
                     OpenFile(_openFile);
                     if (Path.GetExtension(_openFile) == ".skytr")
                     {
-                        Run(Tabs.SelectedTab);
+                        Run(null, null);
                     }
-                }));
+                });
             }
-        }
-
-        private void Run(TabPage tab)
-        {
-            if (tab == tabForms)
-                RunForms(null, null);
-            else if (tab == tabTutorials)
-                RunTutorials(null, null);
-            else if (tab == tabTests)
-                RunTests(null, null);
-            else if (tab == tabBuild)
-                RunBuild(null, null);
-            else if (tab == tabQuality)
-                RunQuality(null, null);
         }
 
         public IEnumerable<string> GetTestInfos(string testDll)
         {
-            var dllPath = Path.Combine(_exeDir, testDll);
+            var dllPath = Path.Combine(ExeDir, testDll);
             var assembly = Assembly.LoadFrom(dllPath);
             var types = assembly.GetTypes();
 
@@ -262,138 +333,131 @@ namespace SkylineTester
             base.OnClosed(e);
         }
 
-        private bool ToggleRunButtons(TabPage tab)
+        private void TabChanged(object sender, EventArgs e)
         {
-            // Stop running task.
-            if (_runningTab != null || tab == null)
-            {
-                _runningTab = null;
-
-                foreach (var runButton in _runButtons)
-                    runButton.Text = "Run";
-                buttonStop.Enabled = false;
-
-                return false;
-            }
-
-            // Prepare to start task.
-            _runningTab = tab;
-            foreach (var runButton in _runButtons)
-                runButton.Text = "Stop";
-            buttonStop.Enabled = true;
-
-            return true;
+            _tabs[tabs.SelectedIndex].Open();
         }
 
-        private string GetCurrentBuildDirectory()
+        public void ShowOutput()
         {
-            var testRunner = ChooseMostRecentFile(
-                Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe"),
-                Path.Combine(_buildDir, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe"),
-                Path.Combine(_exeDir, "TestRunner.exe"));
-            return Path.GetDirectoryName(testRunner);
+            tabs.SelectTab(tabOutput);
         }
 
-        private string ChooseMostRecentFile(params string[] files)
+        public void SetStatus(string status = null)
         {
-            string mostRecent = null;
-            foreach (var file in files)
-            {
-                if (!File.Exists(file))
-                    continue;
-                if (mostRecent != null)
-                {
-                    var fileDate = File.GetLastWriteTime(file);
-                    var otherDate = File.GetLastWriteTime(mostRecent);
-                    if (fileDate < otherDate)
-                        continue;
-                }
-                mostRecent = file;
-            }
-            return mostRecent;
+            statusLabel.Text = status;
         }
 
-        private void StartTestRunner(string args, Action<bool> doneAction = null)
-        {
-            MemoryChartWindow.Start("TestRunnerMemory.log");
-
-            var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");
-            commandShell.Add("{0} random=off status=on results={1} {2} {3}",
-                Quote(testRunner),
-                Quote(_resultsDir),
-                RunWithDebugger.Checked ? "Debug" : "",
-                args);
-            _runningTestRunner = true;
-            commandShell.Run(doneAction ?? TestRunnerDone);
-        }
-
-        private Action<bool> _reportDone;
-
-        private void TestRunnerDone(bool success)
-        {
-            _runningTestRunner = false;
-            statusLabel.Text = "";
-            var testRunner = Path.Combine(GetCurrentBuildDirectory(), "TestRunner.exe");
-            commandShell.Add("{0} report={1}", Quote(testRunner), Quote(commandShell.LogFile));
-            commandShell.Run(_reportDone ?? ReportDone, false);
-        }
-
-        private void ReportDone(bool success)
-        {
-            commandShell.Done(success);
-            ToggleRunButtons(null);
-        }
-
-
-        private void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)
-        {
-            foreach (TreeNode childNode in node.Nodes)
-            {
-                if (childNode.Checked == !skipTests)
-                    testList.Add(childNode.Text);
-            }
-        }
-
-        // Updates all child tree nodes recursively.
-        private void CheckAllChildNodes(TreeNode treeNode, bool nodeChecked)
-        {
-            foreach (TreeNode node in treeNode.Nodes)
-            {
-                node.Checked = nodeChecked;
-                if (node.Nodes.Count > 0)
-                {
-                    // If the current node has child nodes, call the CheckAllChildsNodes method recursively.
-                    CheckAllChildNodes(node, nodeChecked);
-                }
-            }
-        }
-
-        // NOTE   This code can be added to the BeforeCheck event handler instead of the AfterCheck event.
-        // After a tree node's Checked property is changed, all its child nodes are updated to the same value.
-        private void node_AfterCheck(object sender, TreeViewEventArgs e)
-        {
-            // The code only executes if the user caused the checked state to change.
-            if (e.Action != TreeViewAction.Unknown)
-            {
-                if (e.Node.Nodes.Count > 0)
-                {
-                    /* Calls the CheckAllChildNodes method, passing in the current 
-                    Checked value of the TreeNode whose checked state changed. */
-                    CheckAllChildNodes(e.Node, e.Node.Checked);
-                }
-            }
-        }
-
-        private void ViewMemoryUse(object sender, EventArgs e)
-        {
-            MemoryChartWindow.ShowMemoryChart();
-        }
+        #region Menu
 
         private void open_Click(object sender, EventArgs e)
         {
             var openFileDialog = new OpenFileDialog {Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr"};
             if (openFileDialog.ShowDialog() != DialogResult.Cancel)
                 OpenFile(openFileDialog.FileName);
+        }
+
+        private void save_Click(object sender, EventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog { Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr" };
+            if (saveFileDialog.ShowDialog() == DialogResult.Cancel)
+                return;
+
+            var root = CreateElement(
+                "SkylineTester",
+                tabs,
+
+                // Forms
+                pauseFormDelay,
+                pauseFormSeconds,
+                pauseFormButton,
+                formsLanguage,
+                formsTree,
+
+                // Tutorials
+                pauseTutorialsDelay,
+                pauseTutorialsSeconds,
+                pauseTutorialsScreenShots,
+                tutorialsDemoMode,
+                tutorialsLanguage,
+                tutorialsTree,
+
+                // Tests
+                pauseTestsScreenShots,
+                offscreen,
+                runLoops,
+                runLoopsCount,
+                runIndefinitely,
+                testsEnglish,
+                testsChinese,
+                testsFrench,
+                testsJapanese,
+                testsTree,
+                runCheckedTests,
+                skipCheckedTests,
+                
+                // Build
+                build32,
+                build64,
+                buildTrunk,
+                buildBranch,
+                branchUrl,
+                nukeBuild,
+                updateBuild,
+                incrementalBuild,
+                startSln,
+
+                // Quality
+                qualityRunNow,
+                passCount,
+                qualityRunSchedule,
+                qualityStartTime,
+                qualityEndTime,
+                pass0,
+                pass1,
+                qualityBuildType,
+                qualityAllTests,
+                qualityChooseTests);
+
+            XDocument doc = new XDocument(root);
+            File.WriteAllText(saveFileDialog.FileName, doc.ToString());
+        }
+
+        private void exit_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void about_Click(object sender, EventArgs e)
+        {
+            using (var aboutWindow = new AboutWindow())
+            {
+                aboutWindow.ShowDialog();
+            }
+        }
+
+        private void CreateInstallerZipFile(object sender, EventArgs e)
+        {
+            var skylineDirectory = GetSkylineDirectory(ExeDir);
+            if (skylineDirectory == null)
+            {
+                MessageBox.Show(this,
+                    "The zip file can only be created if you're running SkylineTester from the bin directory of the Skyline project directory.");
+                return;
+            }
+
+            string zipDirectory;
+            using (var dlg = new CreateZipInstallerWindow())
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                zipDirectory = dlg.ZipDirectory;
+            }
+            var zipFile = Path.Combine(zipDirectory, "SkylineTester.zip");
+
+            TabBase.StartLog("Zip", null, true);
+            commandShell.Add("{0} {1}", Assembly.GetExecutingAssembly().Location.Quote(), zipFile.Quote());
+            RunCommands();
         }
 
         private void OpenFile(string file)
@@ -405,9 +469,9 @@ namespace SkylineTester
                 if (control == null)
                     continue;
 
-                var tabs = control as TabControl;
-                if (tabs != null)
-                    tabs.SelectTab(element.Value);
+                var tab = control as TabControl;
+                if (tab != null)
+                    tab.SelectTab(element.Value);
 
                 var button = control as RadioButton;
                 if (button != null && element.Value == "true")
@@ -431,102 +495,14 @@ namespace SkylineTester
             }
         }
 
-        private static void CheckNodes(TreeView treeView, ICollection<string> checkedNames)
-        {
-            foreach (TreeNode childNode in treeView.Nodes)
-            {
-                UncheckNodes(childNode);
-                CheckNodes(childNode, checkedNames);
-            }
-        }
-
-        private static void UncheckNodes(TreeNode node)
-        {
-            node.Checked = false;
-            foreach (TreeNode childNode in node.Nodes)
-                UncheckNodes(childNode);
-        }
-
-        private static void CheckNodes(TreeNode node, ICollection<string> checkedNames)
-        {
-            if (checkedNames.Contains(node.Text))
-                node.Checked = true;
-
-            foreach (TreeNode childNode in node.Nodes)
-                CheckNodes(childNode, checkedNames);
-        }
-
-        private void save_Click(object sender, EventArgs e)
-        {
-            var saveFileDialog = new SaveFileDialog { Filter = "Skyline Tester (*.skyt;*.skytr)|*.skyt;*.skytr" };
-            if (saveFileDialog.ShowDialog() == DialogResult.Cancel)
-                return;
-
-            var root = CreateElement(
-                "SkylineTester",
-                Tabs,
-
-                // Forms
-                PauseFormDelay,
-                PauseFormSeconds,
-                PauseFormButton,
-                FormsLanguage,
-                FormsTree,
-
-                // Tutorials
-                PauseTutorialsDelay,
-                PauseTutorialsSeconds,
-                PauseTutorialsScreenShots,
-                TutorialsDemoMode,
-                TutorialsLanguage,
-                TutorialsTree,
-
-                // Tests
-                PauseTestsScreenShots,
-                Offscreen,
-                RunLoops,
-                RunLoopsCount,
-                RunIndefinitely,
-                TestsEnglish,
-                TestsChinese,
-                TestsFrench,
-                TestsJapanese,
-                TestsTree,
-                RunCheckedTests,
-                SkipCheckedTests,
-                
-                // Build
-                Build32,
-                Build64,
-                BuildTrunk,
-                BuildBranch,
-                BranchUrl,
-                NukeBuild,
-                UpdateBuild,
-                IncrementalBuild,
-                StartSln,
-
-                // Quality
-                QualityRunOne,
-                QualityRunAt,
-                QualityStartTime,
-                QualityEndTime,
-                QualityBuildType,
-                QualityAllTests,
-                QualityChooseTests);
-
-            XDocument doc = new XDocument(root);
-            File.WriteAllText(saveFileDialog.FileName, doc.ToString());
-        }
-
         private XElement CreateElement(string name, params object[] childElements)
         {
             var element = new XElement(name);
             foreach (var child in childElements)
             {
-                var tabs = child as TabControl;
-                if (tabs != null)
-                    element.Add(new XElement(tabs.Name, tabs.SelectedTab.Name));
+                var tab = child as TabControl;
+                if (tab != null)
+                    element.Add(new XElement(tab.Name, tab.SelectedTab.Name));
 
                 var button = child as RadioButton;
                 if (button != null)
@@ -552,12 +528,57 @@ namespace SkylineTester
             return element;
         }
 
+        private void ViewMemoryUse(object sender, EventArgs e)
+        {
+            MemoryChartWindow.ShowMemoryChart();
+        }
+
+        #endregion Menu
+
+        #region Tree support
+
+        // After a tree node's Checked property is changed, all its child nodes are updated to the same value.
+        private void node_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            // The code only executes if the user caused the checked state to change.
+            if (e.Action != TreeViewAction.Unknown)
+            {
+                if (e.Node.Nodes.Count > 0)
+                    TabTests.CheckAllChildNodes(e.Node, e.Node.Checked);
+            }
+        }
+
+        private static void CheckNodes(TreeView treeView, ICollection<string> checkedNames)
+        {
+            foreach (TreeNode childNode in treeView.Nodes)
+            {
+                UncheckNodes(childNode);
+                CheckNodes(childNode, checkedNames);
+            }
+        }
+
+        private static void CheckNodes(TreeNode node, ICollection<string> checkedNames)
+        {
+            if (checkedNames.Contains(node.Text))
+                node.Checked = true;
+
+            foreach (TreeNode childNode in node.Nodes)
+                CheckNodes(childNode, checkedNames);
+        }
+
+        private static void UncheckNodes(TreeNode node)
+        {
+            node.Checked = false;
+            foreach (TreeNode childNode in node.Nodes)
+                UncheckNodes(childNode);
+        }
+
         private string GetCheckedNodes(TreeView treeView)
         {
             var names = new StringBuilder();
             foreach (TreeNode childNode in treeView.Nodes)
                 GetCheckedNodes(childNode, names);
-            return names.Length > 0 ? names.ToString(1, names.Length - 1) : string.Empty;
+            return names.Length > 0 ? names.ToString(1, names.Length - 1) : String.Empty;
         }
 
         private void GetCheckedNodes(TreeNode node, StringBuilder names)
@@ -572,93 +593,146 @@ namespace SkylineTester
                 GetCheckedNodes(childNode, names);
         }
 
-        private void exit_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void TabChanged(object sender, EventArgs e)
-        {
-            if (Tabs.SelectedTab == tabForms)
-                OpenForms();
-            else if (Tabs.SelectedTab == tabTutorials)
-                OpenTutorials();
-            else if (Tabs.SelectedTab == tabTests)
-                OpenTests();
-            else if (Tabs.SelectedTab == tabBuild)
-                OpenBuild();
-            else if (Tabs.SelectedTab == tabQuality)
-                OpenQuality();
-            else if (Tabs.SelectedTab == tabOutput)
-                OpenOutput();
-        }
-
         private void FormsTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             e.Node.Checked = !e.Node.Checked;
-            FormsTree.SelectedNode = null;
+            formsTree.SelectedNode = null;
         }
 
-        private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
-        {
-            {"en", "English"},
-            {"fr", "French"},
-            {"ja", "Japanese"},
-            {"zh", "Chinese"}
-        };
+        #endregion Tree support
 
-        private IEnumerable<string> GetLanguageNames()
+        #region Accessors
+
+        public TextBox          BranchUrl                   { get { return branchUrl; } }
+        public CheckBox         Build32                     { get { return build32; } }
+        public CheckBox         Build64                     { get { return build64; } }
+        public TextBox          BuildRoot                   { get { return buildRoot; } }
+        public RadioButton      BuildTrunk                  { get { return buildTrunk; } }
+        public Button           ButtonDeleteBuild           { get { return buttonDeleteBuild; } }
+        public Button           ButtonOpenErrors            { get { return buttonOpenErrors; } }
+        public Button           ButtonOpenLog               { get { return buttonOpenLog; } }
+        public Button           ButtonOpenOutput            { get { return buttonOpenOutput; } }
+        public ComboBox         ComboErrors                 { get { return comboBoxErrors; } }
+        public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
+        public ComboBox         ComboRunDate                { get { return comboRunDate; } }
+        public CommandShell     CommandShell                { get { return commandShell; } }
+        public CommandShell     ErrorsShell                 { get { return errorsShell; } }
+        public ComboBox         FormsLanguage               { get { return formsLanguage; } }
+        public MyTreeView       FormsTree                   { get { return formsTree; } }
+        public ZedGraphControl  GraphDuration               { get { return graphDuration; } }
+        public ZedGraphControl  GraphFailures               { get { return graphFailures; } }
+        public ZedGraphControl  GraphMemory                 { get { return graphMemory; } }
+        public ZedGraphControl  GraphMemoryHistory          { get { return graphMemoryHistory; } }
+        public ZedGraphControl  GraphTestsRun               { get { return graphTestsRun; } }
+        public RadioButton      IncrementalBuild            { get { return incrementalBuild; } }
+        public Label            LabelDuration               { get { return labelDuration; } }
+        public Label            LabelFailures               { get { return labelFailures; } }
+        public Label            LabelLeaks                  { get { return labelLeaks; } }
+        public Label            LabelSpecifyPath            { get { return labelSpecifyPath; } }
+        public Label            LabelTestsRun               { get { return labelTestsRun; } }
+        public RadioButton      NukeBuild                   { get { return nukeBuild; } }
+        public CheckBox         Offscreen                   { get { return offscreen; } }
+        public CheckBox         Pass0                       { get { return pass0; } }
+        public CheckBox         Pass1                       { get { return pass1; } }
+        public TextBox          PassCount                   { get { return passCount; } }
+        public RadioButton      PauseFormDelay              { get { return pauseFormDelay; } }
+        public TextBox          PauseFormSeconds            { get { return pauseFormSeconds; } }
+        public CheckBox         PauseTestsScreenShots       { get { return pauseTestsScreenShots; } }
+        public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
+        public TextBox          PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
+        public ComboBox         QualityBuildType            { get { return qualityBuildType; } }
+        public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
+        public TextBox          QualityEndTime              { get { return qualityEndTime; } }
+        public RadioButton      QualityRunOne               { get { return qualityRunNow; } }
+        public RadioButton      QualityRunSchedule          { get { return qualityRunSchedule; } }
+        public TextBox          QualityStartTime            { get { return qualityStartTime; } }
+        public CheckBox         RegenerateCache             { get { return regenerateCache; } }
+        public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
+        public TextBox          RunLoopsCount               { get { return runLoopsCount; } }
+        public CheckBox         StartSln                    { get { return startSln; } }
+        public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
+        public TabPage          QualityPage                 { get { return tabQuality; } }
+        public TabControl       Tabs                        { get { return tabs; } }
+        public MyTreeView       TestsTree                   { get { return testsTree; } }
+        public CheckBox         TestsChinese                { get { return testsChinese; } }
+        public CheckBox         TestsEnglish                { get { return testsEnglish; } }
+        public CheckBox         TestsFrench                 { get { return testsFrench; } }
+        public CheckBox         TestsJapanese               { get { return testsJapanese; } }
+        public RadioButton      TutorialsDemoMode           { get { return tutorialsDemoMode; } }
+        public ComboBox         TutorialsLanguage           { get { return tutorialsLanguage; } }
+        public MyTreeView       TutorialsTree               { get { return tutorialsTree; } }
+        public RadioButton      UpdateBuild                 { get { return updateBuild; } }
+
+        #endregion Accessors
+
+        #region Control events
+
+        private void comboBoxOutput_SelectedIndexChanged(object sender, EventArgs e)
         {
-            foreach (var language in GetLanguages())
-            {
-                string name;
-                if (_languageNames.TryGetValue(language, out name))
-                    yield return name;
-            }
+            commandShell.Load(GetSelectedLog(comboBoxOutput));
+            commandShell.DoLiveUpdate = comboBoxOutput.SelectedIndex == 0;
         }
 
-        private IEnumerable<string> GetLanguages()
+        private void buttonOpenOutput_Click(object sender, EventArgs e)
         {
-            return (new FindLanguages(GetCurrentBuildDirectory(), "en", "fr").Enumerate());
+            OpenSelectedLog(comboBoxOutput);
         }
 
-        private void InitLanguages(ComboBox comboBox)
+        private void buttonDeleteBuild_Click(object sender, EventArgs e)
         {
-            comboBox.Items.Clear();
-            var languages = GetLanguageNames().ToList();
-            foreach (var language in languages)
-                comboBox.Items.Add(language);
-            comboBox.SelectedIndex = 0;
+            _tabBuild.DeleteBuild();
         }
 
-        private string GetCulture(ComboBox comboBox)
+        private void buttonBrowseBuild_Click(object sender, EventArgs e)
         {
-            return _languageNames.First(x => x.Value == (string) comboBox.SelectedItem).Key;
+            _tabBuild.BrowseBuild();
         }
 
-        private void CreateInstallerZipFile(object sender, EventArgs e)
+        private void buttonOpenErrors_Click(object sender, EventArgs e)
         {
-            var skylineDirectory = GetSkylineDirectory(_exeDir);
-            if (skylineDirectory == null)
-            {
-                MessageBox.Show(this,
-                    "The zip file can only be created if you're running SkylineTester from the bin directory of the Skyline project directory.");
-                return;
-            }
-
-            string zipDirectory;
-            using (var dlg = new CreateZipInstallerWindow())
-            {
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                    return;
-                zipDirectory = dlg.ZipDirectory;
-            }
-
-            var zipFile = Path.Combine(zipDirectory, "SkylineTester.zip");
-            commandShell.LogFile = _defaultLogFile;
-            Tabs.SelectTab(tabOutput);
-            commandShell.Add("{0} {1}", Quote(Assembly.GetExecutingAssembly().Location), Quote(zipFile));
-            commandShell.Run();
+            _tabErrors.OpenLog();
         }
+
+        private void comboBoxErrors_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _tabErrors.SelectLog();
+        }
+
+        private void checkAll_Click(object sender, EventArgs e)
+        {
+            _tabTests.CheckAll();
+        }
+
+        private void uncheckAll_Click(object sender, EventArgs e)
+        {
+            _tabTests.UncheckAll();
+        }
+
+        private void pauseTestsForScreenShots_CheckedChanged(object sender, EventArgs e)
+        {
+            _tabTests.PauseTestsForScreenShotsChanged();
+        }
+
+        private void offscreen_CheckedChanged(object sender, EventArgs e)
+        {
+            _tabTests.OffscreenChanged();
+        }
+
+        private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _tabQuality.RunDateChanged();
+        }
+
+        private void buttonOpenLog_Click(object sender, EventArgs e)
+        {
+            _tabQuality.OpenLog();
+        }
+
+        private void buttonDeleteRun_Click(object sender, EventArgs e)
+        {
+            _tabQuality.DeleteRun();
+        }
+
+        #endregion Control events
     }
 }

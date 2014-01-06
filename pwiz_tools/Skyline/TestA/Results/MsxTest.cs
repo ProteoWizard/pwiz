@@ -146,8 +146,8 @@ namespace pwiz.SkylineTestA.Results
 
                 TestPeakIntensityCorrection(testSpectrum, isoMapper,
                                             demultiplexer);
-                int[] intensityIndices = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296 };
-                double[] intensityValues = new[]
+                int[] intensityIndices = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 290, 291, 292, 293, 294, 295, 296 };
+                double[] intensityValues =
                 {
                     0.0, 0.0, 0.0, 0.0, 142.95, 349.75, 
                     542.87, 511.77, 248.4, 0.0, 49.28,

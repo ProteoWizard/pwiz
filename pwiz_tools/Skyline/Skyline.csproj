@@ -1199,6 +1199,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RenameProteinsDlg.resx">
       <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChromatogramDlg.resx">
       <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
@@ -1347,6 +1348,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Jamfile.jam" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

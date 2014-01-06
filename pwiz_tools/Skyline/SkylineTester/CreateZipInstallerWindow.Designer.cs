@@ -98,6 +98,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "CreateZipInstallerWindow";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Create installer";
             this.ResumeLayout(false);
             this.PerformLayout();

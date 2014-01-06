@@ -20,6 +20,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace SkylineTester
@@ -51,7 +53,9 @@ namespace SkylineTester
 
             if (args.Length == 1 && args[0].EndsWith(".zip"))
             {
+                AllocConsole();
                 CreateZipInstallerWindow.CreateZipFile(args[0]);
+                Thread.Sleep(2000);
                 return;
             }
 
@@ -60,5 +64,9 @@ namespace SkylineTester
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new SkylineTesterWindow(args));
         }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool AllocConsole();
+
     }
 }

@@ -19,103 +19,114 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
 namespace SkylineTester
 {
-    public partial class SkylineTesterWindow
+    public class TabTests : TabBase
     {
-        private void OpenTests()
+        public override bool Run()
         {
-        }
-
-        private void RunTests(object sender, EventArgs e)
-        {
-            if (!ToggleRunButtons(tabTests))
-            {
-                commandShell.Stop();
-                return;
-            }
-
-            commandShell.LogFile = _defaultLogFile;
-            Tabs.SelectTab(tabOutput);
+            StartLog("Tests", null, true);
 
             var args = new StringBuilder();
 
             args.Append("offscreen=");
-            args.Append(Offscreen.Checked);
+            args.Append(MainWindow.Offscreen.Checked);
 
-            if (!RunIndefinitely.Checked)
+            if (!MainWindow.RunIndefinitely.Checked)
             {
                 int loop;
-                if (!int.TryParse(RunLoopsCount.Text, out loop))
+                if (!Int32.TryParse(MainWindow.RunLoopsCount.Text, out loop))
                     loop = 1;
                 args.Append(" loop=");
                 args.Append(loop);
             }
 
             var cultures = new List<CultureInfo>();
-            if (TestsEnglish.Checked)
+            if (MainWindow.TestsEnglish.Checked)
                 cultures.Add(new CultureInfo("en-US"));
-            if (TestsChinese.Checked)
+            if (MainWindow.TestsChinese.Checked)
                 cultures.Add(new CultureInfo("zh"));
-            if (TestsFrench.Checked)
+            if (MainWindow.TestsFrench.Checked)
                 cultures.Add(new CultureInfo("fr-FR"));
-            if (TestsJapanese.Checked)
+            if (MainWindow.TestsJapanese.Checked)
                 cultures.Add(new CultureInfo("ja"));
 
-            args.Append(" culture=");
-            args.Append(string.Join(",", cultures));
-            if (PauseTestsScreenShots.Checked)
+            args.Append(" language=");
+            args.Append(String.Join(",", cultures));
+            if (MainWindow.PauseTestsScreenShots.Checked)
                 args.Append(" pause=-1");
 
             args.Append(GetTestList());
 
-            commandShell.LogFile = _defaultLogFile;
-            Tabs.SelectTab(tabOutput);
-            StartTestRunner(args.ToString());
+            MainWindow.AddTestRunner(args.ToString());
+            MainWindow.RunCommands();
+            return true;
         }
 
-        private string GetTestList()
+        public static string GetTestList()
         {
             var testList = new List<string>();
-            foreach (TreeNode node in TestsTree.Nodes)
-                GetCheckedTests(node, testList, SkipCheckedTests.Checked);
+            foreach (TreeNode node in MainWindow.TestsTree.Nodes)
+                GetCheckedTests(node, testList, MainWindow.SkipCheckedTests.Checked);
             if (testList.Count == 0)
                 return "";
-            return " test=" + string.Join(",", testList);
+            return " test=" + String.Join(",", testList);
         }
 
-        private void checkAll_Click(object sender, EventArgs e)
+        public static void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)
         {
-            foreach (var node in TestsTree.Nodes)
+            foreach (TreeNode childNode in node.Nodes)
+            {
+                if (childNode.Checked == !skipTests)
+                    testList.Add(childNode.Text);
+            }
+        }
+
+        public void CheckAll()
+        {
+            foreach (var node in MainWindow.TestsTree.Nodes)
             {
                 ((TreeNode)node).Checked = true;
                 CheckAllChildNodes((TreeNode)node, true);
             }
         }
 
-        private void uncheckAll_Click(object sender, EventArgs e)
+        public void UncheckAll()
         {
-            foreach (var node in TestsTree.Nodes)
+            foreach (var node in MainWindow.TestsTree.Nodes)
             {
                 ((TreeNode)node).Checked = false;
                 CheckAllChildNodes((TreeNode)node, false);
             }
         }
 
-        private void pauseTestsForScreenShots_CheckedChanged(object sender, EventArgs e)
+        // Updates all child tree nodes recursively.
+        public static void CheckAllChildNodes(TreeNode treeNode, bool nodeChecked)
         {
-            if (PauseTestsScreenShots.Checked)
-                Offscreen.Checked = false;
+            foreach (TreeNode node in treeNode.Nodes)
+            {
+                node.Checked = nodeChecked;
+                if (node.Nodes.Count > 0)
+                {
+                    // If the current node has child nodes, call the CheckAllChildsNodes method recursively.
+                    CheckAllChildNodes(node, nodeChecked);
+                }
+            }
         }
 
-        private void offscreen_CheckedChanged(object sender, EventArgs e)
+        public void PauseTestsForScreenShotsChanged()
         {
-            if (Offscreen.Checked)
-                PauseTestsScreenShots.Checked = false;
+            if (MainWindow.PauseTestsScreenShots.Checked)
+                MainWindow.Offscreen.Checked = false;
+        }
+
+        public void OffscreenChanged()
+        {
+            if (MainWindow.Offscreen.Checked)
+                MainWindow.PauseTestsScreenShots.Checked = false;
         }
     }
 }

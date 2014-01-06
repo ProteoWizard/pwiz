@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -28,65 +28,72 @@ using TestRunnerLib;
 
 namespace SkylineTester
 {
-    public partial class SkylineTesterWindow
+    public class TabForms : TabBase
     {
-        private void OpenForms()
+        public TabForms()
         {
-            InitLanguages(FormsLanguage);
+            CreateFormsTree();
         }
 
-        private void RunForms(object sender, EventArgs e)
+        public override void Open()
         {
-            if (!ToggleRunButtons(tabForms))
-            {
-                commandShell.Stop();
-                return;
-            }
+            MainWindow.InitLanguages(MainWindow.FormsLanguage);
+        }
 
-            var args = new StringBuilder("loop=1 offscreen=off culture=");
-            args.Append(GetCulture(FormsLanguage));
-            if (RegenerateCache.Checked)
+        public override bool Run()
+        {
+            StartLog("Forms");
+
+            var args = new StringBuilder("loop=1 offscreen=off language=");
+            args.Append(MainWindow.GetCulture(MainWindow.FormsLanguage));
+            if (MainWindow.RegenerateCache.Checked)
             {
                 args.Append(" form=__REGEN__");
             }
             else
             {
                 // Create list of forms the user wants to see.
-                var formList = new List<string>();
-                var skylineNode = FormsTree.Nodes[0];
-                foreach (TreeNode node in skylineNode.Nodes)
-                {
-                    if (node.Checked)
-                        formList.Add(node.Text);
-                }
+                var formList = GetFormList();
                 args.Append(" form=");
                 args.Append(string.Join(",", formList));
-                int pauseSeconds = -1;
-                if (PauseFormDelay.Checked && !int.TryParse(PauseFormSeconds.Text, out pauseSeconds))
-                    pauseSeconds = 0;
                 args.Append(" pause=");
+                int pauseSeconds = -1;
+                if (MainWindow.PauseFormDelay.Checked && !int.TryParse(MainWindow.PauseFormSeconds.Text, out pauseSeconds))
+                    pauseSeconds = 0;
                 args.Append(pauseSeconds);
             }
 
-            commandShell.LogFile = _defaultLogFile;
-            StartTestRunner(args.ToString(), DoneForms);
+            MainWindow.AddTestRunner(args.ToString());
+            MainWindow.RunCommands();
+            return true;
         }
 
-        private void DoneForms(bool success)
+        public override bool Stop(bool success)
         {
-            if (success && RegenerateCache.Checked)
+            if (success && MainWindow.RegenerateCache.Checked)
                 CreateFormsTree();
-            RegenerateCache.Checked = false;
-            TestRunnerDone(success);
+            return true;
         }
 
-        private void CreateFormsTree()
+        public static IEnumerable<string> GetFormList()
         {
-            FormsTree.Nodes.Clear();
+            var formList = new List<string>();
+            var skylineNode = MainWindow.FormsTree.Nodes[0];
+            foreach (TreeNode node in skylineNode.Nodes)
+            {
+                if (node.Checked)
+                    formList.Add(node.Text);
+            }
+            return formList;
+        }
+
+        public static void CreateFormsTree()
+        {
+            MainWindow.FormsTree.Nodes.Clear();
 
             var forms = new List<TreeNode>();
-            var skylinePath = Path.Combine(_exeDir, "Skyline.exe");
-            var skylineDailyPath = Path.Combine(_exeDir, "Skyline-daily.exe");
+            var skylinePath = Path.Combine(MainWindow.ExeDir, "Skyline.exe");
+            var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe");
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = Assembly.LoadFrom(skylinePath);
             var types = assembly.GetTypes();
@@ -104,8 +111,10 @@ namespace SkylineTester
             }
 
             forms = forms.OrderBy(node => node.Text).ToList();
-            FormsTree.Nodes.Add(new TreeNode("Skyline", forms.ToArray()));
-            FormsTree.ExpandAll();
+            MainWindow.FormsTree.Nodes.Add(new TreeNode("Skyline", forms.ToArray()));
+            MainWindow.FormsTree.ExpandAll();
+
+            MainWindow.RegenerateCache.Checked = false;
         }
     }
 }

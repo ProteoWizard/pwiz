@@ -25,7 +25,6 @@ using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 

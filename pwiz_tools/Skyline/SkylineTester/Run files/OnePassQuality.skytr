@@ -1,42 +1,45 @@
 <SkylineTester>
-  <Tabs>tabQuality</Tabs>
-  <PauseFormDelay>true</PauseFormDelay>
-  <PauseFormSeconds>0</PauseFormSeconds>
-  <PauseFormButton>false</PauseFormButton>
-  <FormsLanguage>English</FormsLanguage>
-  <FormsTree></FormsTree>
-  <PauseTutorialsDelay>true</PauseTutorialsDelay>
-  <PauseTutorialsSeconds>0</PauseTutorialsSeconds>
-  <PauseTutorialsScreenShots>false</PauseTutorialsScreenShots>
-  <TutorialsDemoMode>false</TutorialsDemoMode>
-  <TutorialsLanguage>English</TutorialsLanguage>
-  <TutorialsTree>Tutorial tests,TestAbsoluteQuantificationTutorial,TestCEOptimizationTutorial,TestCustomReportsTutorial,TestExistingExperimentsTutorial,TestGroupedStudiesTutorial,TestIrtTutorial,TestLibraryExplorerTutorial,TestMethodEditTutorial,TestMethodRefinementTutorial,TestMs1Tutorial,TestMSstatsTutorial,TestPeakPickingTutorial,TestQuasarTutorial,TestTargetedMSMSTutorial</TutorialsTree>
-  <PauseTestsScreenShots>false</PauseTestsScreenShots>
-  <Offscreen>false</Offscreen>
-  <RunLoops>true</RunLoops>
-  <RunLoopsCount>1</RunLoopsCount>
-  <RunIndefinitely>false</RunIndefinitely>
-  <TestsEnglish>true</TestsEnglish>
-  <TestsChinese>false</TestsChinese>
-  <TestsFrench>false</TestsFrench>
-  <TestsJapanese>false</TestsJapanese>
-  <TestsTree></TestsTree>
-  <RunCheckedTests>true</RunCheckedTests>
-  <SkipCheckedTests>false</SkipCheckedTests>
-  <Build32>false</Build32>
-  <Build64>true</Build64>
-  <BuildTrunk>true</BuildTrunk>
-  <BuildBranch>false</BuildBranch>
-  <BranchUrl>https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME</BranchUrl>
-  <NukeBuild>true</NukeBuild>
-  <UpdateBuild>false</UpdateBuild>
-  <IncrementalBuild>false</IncrementalBuild>
-  <StartSln>false</StartSln>
-  <QualityRunOne>true</QualityRunOne>
-  <QualityRunAt>false</QualityRunAt>
-  <QualityStartTime>6:00 PM</QualityStartTime>
-  <QualityEndTime>8:00 AM</QualityEndTime>
-  <QualityBuildType>Test default</QualityBuildType>
-  <QualityAllTests>true</QualityAllTests>
-  <QualityChooseTests>false</QualityChooseTests>
+  <tabs>tabQuality</tabs>
+  <pauseFormDelay>true</pauseFormDelay>
+  <pauseFormSeconds>0</pauseFormSeconds>
+  <pauseFormButton>false</pauseFormButton>
+  <formsLanguage>English</formsLanguage>
+  <formsTree></formsTree>
+  <pauseTutorialsDelay>true</pauseTutorialsDelay>
+  <pauseTutorialsSeconds>0</pauseTutorialsSeconds>
+  <pauseTutorialsScreenShots>false</pauseTutorialsScreenShots>
+  <tutorialsDemoMode>false</tutorialsDemoMode>
+  <tutorialsLanguage>English</tutorialsLanguage>
+  <tutorialsTree>Tutorial tests,TestAbsoluteQuantificationTutorial,TestCEOptimizationTutorial,TestCustomReportsTutorial,TestExistingExperimentsTutorial,TestGroupedStudiesTutorial,TestIrtTutorial,TestLibraryExplorerTutorial,TestMethodEditTutorial,TestMethodRefinementTutorial,TestMs1Tutorial,TestMSstatsTutorial,TestPeakPickingTutorial,TestQuasarTutorial,TestTargetedMSMSTutorial</tutorialsTree>
+  <pauseTestsScreenShots>false</pauseTestsScreenShots>
+  <offscreen>false</offscreen>
+  <runLoops>true</runLoops>
+  <runLoopsCount>1</runLoopsCount>
+  <runIndefinitely>false</runIndefinitely>
+  <testsEnglish>true</testsEnglish>
+  <testsChinese>false</testsChinese>
+  <testsFrench>false</testsFrench>
+  <testsJapanese>false</testsJapanese>
+  <testsTree></testsTree>
+  <runCheckedTests>true</runCheckedTests>
+  <skipCheckedTests>false</skipCheckedTests>
+  <build32>false</build32>
+  <build64>true</build64>
+  <buildTrunk>true</buildTrunk>
+  <buildBranch>false</buildBranch>
+  <branchUrl>https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME</branchUrl>
+  <nukeBuild>true</nukeBuild>
+  <updateBuild>false</updateBuild>
+  <incrementalBuild>false</incrementalBuild>
+  <startSln>false</startSln>
+  <qualityRunOne>true</qualityRunOne>
+  <passCount>1</passCount>
+  <qualityRunSchedule>false</qualityRunSchedule>
+  <qualityStartTime>6:00 PM</qualityStartTime>
+  <qualityEndTime>8:00 AM</qualityEndTime>
+  <pass0>true</pass0>
+  <pass1>true</pass1>
+  <qualityBuildType>Test default</qualityBuildType>
+  <qualityAllTests>true</qualityAllTests>
+  <qualityChooseTests>false</qualityChooseTests>
 </SkylineTester>

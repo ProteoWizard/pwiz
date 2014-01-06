@@ -81,7 +81,10 @@ namespace SkylineTester
             if (File.Exists(zipPath))
                 File.Delete(zipPath);
 
-            var solutionDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+            var exeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+            Directory.SetCurrentDirectory(exeDirectory);
+            
+            var solutionDirectory = exeDirectory;
             while (!File.Exists(Path.Combine(solutionDirectory, "Skyline.sln")))
             {
                 solutionDirectory = Path.GetDirectoryName(solutionDirectory);
