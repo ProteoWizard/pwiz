@@ -41,11 +41,13 @@ namespace pwiz.SkylineTestA.Results
             var customReports = (ReportSpecList)new XmlSerializer(typeof(ReportSpecList)).Deserialize(
                 myType.Assembly.GetManifestResourceStream(myType, "MultiLabelCustomReports.skyr"));
             Assert.AreNotEqual(0, customReports.Count);
-            var checkReportCompatibility = new CheckReportCompatibility(document);
-            checkReportCompatibility.CheckAll();
-            foreach (var customReport in customReports)
+            using (var checkReportCompatibility = new CheckReportCompatibility(document))
             {
-                checkReportCompatibility.CheckReport(customReport);
+                checkReportCompatibility.CheckAll();
+                foreach (var customReport in customReports)
+                {
+                    checkReportCompatibility.CheckReport(customReport);
+                }
             }
         }
 
