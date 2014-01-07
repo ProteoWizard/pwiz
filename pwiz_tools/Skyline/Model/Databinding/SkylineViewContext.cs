@@ -435,7 +435,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// <summary>
         /// For testing
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="fileName"></param>
         public int ImportViewsFromFile(string fileName)
         {
             ViewSpec[] views = LoadViews(fileName).ToArray();

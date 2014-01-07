@@ -664,6 +664,7 @@ namespace pwiz.SkylineTestTutorial
             annotations = annotations.Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, 
                                               CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
             if (IsRecordMode)
+// ReSharper disable once LocalizableElement
                 Console.WriteLine(@"""{0}"", // Not L10N", annotations);  // Not L10N
             else
                 Assert.AreEqual(LineBracket(expected), LineBracket(annotations));
