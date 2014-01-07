@@ -285,6 +285,7 @@ namespace SkylineTester
 
                 RunUI(() =>
                 {
+                    pane.CurveList.Clear();
                     var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
                     var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
                     managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150),

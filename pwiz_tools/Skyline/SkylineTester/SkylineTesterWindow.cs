@@ -616,6 +616,7 @@ namespace SkylineTester
         public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
         public ComboBox         ComboRunDate                { get { return comboRunDate; } }
         public CommandShell     CommandShell                { get { return commandShell; } }
+        public Button           ErrorsOpenLog               { get { return buttonOpenErrors; } }
         public CommandShell     ErrorsShell                 { get { return errorsShell; } }
         public ComboBox         FormsLanguage               { get { return formsLanguage; } }
         public MyTreeView       FormsTree                   { get { return formsTree; } }
@@ -624,7 +625,6 @@ namespace SkylineTester
         public ZedGraphControl  GraphMemory                 { get { return graphMemory; } }
         public ZedGraphControl  GraphMemoryHistory          { get { return graphMemoryHistory; } }
         public ZedGraphControl  GraphTestsRun               { get { return graphTestsRun; } }
-        public RadioButton      IncrementalBuild            { get { return incrementalBuild; } }
         public Label            LabelDuration               { get { return labelDuration; } }
         public Label            LabelFailures               { get { return labelFailures; } }
         public Label            LabelLeaks                  { get { return labelLeaks; } }
@@ -632,6 +632,7 @@ namespace SkylineTester
         public Label            LabelTestsRun               { get { return labelTestsRun; } }
         public RadioButton      NukeBuild                   { get { return nukeBuild; } }
         public CheckBox         Offscreen                   { get { return offscreen; } }
+        public Button           OutputOpenLog               { get { return buttonOpenOutput; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
         public TextBox          PassCount                   { get { return passCount; } }

@@ -24,6 +24,7 @@ namespace SkylineTester
         public override void Open()
         {
             MainWindow.InitLogSelector(MainWindow.ComboOutput, MainWindow.ButtonOpenOutput);
+            MainWindow.OutputOpenLog.Height = MainWindow.ComboOutput.Height + 2;
         }
     }
 }
