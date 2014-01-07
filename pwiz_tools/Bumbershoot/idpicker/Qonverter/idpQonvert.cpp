@@ -256,8 +256,8 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             bfs::path proteinDatabaseFilepath = analysis.importSettings.proteinDatabaseFilepath;
             if (!g_rtConfig->ProteinDatabase.empty())
             {
-                if (!bal::iequals(proteinDatabaseFilepath.replace_extension("").filename(),
-                                  bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
+                if (!bal::iequals(proteinDatabaseFilepath.replace_extension("").filename().string(),
+                                  bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename().string()))
                    cerr << "\nWarning: ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
                         << " does not match " << proteinDatabaseFilepath.filename();
                 analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
@@ -353,7 +353,7 @@ struct UserFeedbackIterationListener : public IterationListener
         BOOST_FOREACH_FIELD((const string& filepath)(PersistentUpdateMessage& updateMessage), lastUpdateByFilepath)
         {
             // create a message for each file like "source (message: index/count)"
-            string source = Parser::sourceNameFromFilename(bfs::path(filepath).filename());
+            string source = Parser::sourceNameFromFilename(bfs::path(filepath).filename().string());
             int index = updateMessage.iterationIndex;
             int count = updateMessage.iterationCount;
             const string& message = originalMessage;
@@ -381,7 +381,7 @@ struct UserFeedbackIterationListener : public IterationListener
 
 struct UserFeedbackProgressMonitor : public Qonverter::ProgressMonitor
 {
-    UserFeedbackProgressMonitor(const string& idpDbFilepath) : source(Parser::sourceNameFromFilename(bfs::path(idpDbFilepath).filename()))
+    UserFeedbackProgressMonitor(const string& idpDbFilepath) : source(Parser::sourceNameFromFilename(bfs::path(idpDbFilepath).filename().string()))
     {
     }
 

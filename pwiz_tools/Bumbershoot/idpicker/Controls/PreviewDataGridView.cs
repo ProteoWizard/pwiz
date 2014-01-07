@@ -30,23 +30,9 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using IDPicker.DataModel;
 
 namespace IDPicker.Controls
 {
-    public class DataGridViewPreviewCellClickEventArgs : System.Windows.Forms.DataGridViewCellMouseEventArgs
-    {
-        public DataGridViewPreviewCellClickEventArgs (int columnIndex, int rowIndex, int localX, int localY, MouseEventArgs mouseEventArgs)
-            : base(columnIndex, rowIndex, localX, localY, mouseEventArgs)
-        {
-            Handled = false;
-        }
-
-        public bool Handled { get; set; }
-    }
-
-    public delegate void DataGridViewPreviewCellClickEventHandler (object sender, DataGridViewPreviewCellClickEventArgs e);
-
     public class PreviewDataGridView : System.Windows.Forms.DataGridView
     {
         /// <summary>
@@ -71,4 +57,17 @@ namespace IDPicker.Controls
             base.OnMouseDown(e);
         }
     }
+
+    public class DataGridViewPreviewCellClickEventArgs : System.Windows.Forms.DataGridViewCellMouseEventArgs
+    {
+        public DataGridViewPreviewCellClickEventArgs(int columnIndex, int rowIndex, int localX, int localY, MouseEventArgs mouseEventArgs)
+            : base(columnIndex, rowIndex, localX, localY, mouseEventArgs)
+        {
+            Handled = false;
+        }
+
+        public bool Handled { get; set; }
+    }
+
+    public delegate void DataGridViewPreviewCellClickEventHandler(object sender, DataGridViewPreviewCellClickEventArgs e);
 }

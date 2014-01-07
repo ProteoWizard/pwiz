@@ -235,7 +235,7 @@ void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& prog
     db.execute("PRAGMA journal_mode=OFF;"
                "PRAGMA synchronous=OFF;"
                "PRAGMA cache_size=50000;"
-               "PRAGMA mmap_size=70368744177664; -- 2^46");
+               IDPICKER_SQLITE_PRAGMA_MMAP);
 
     qonvert(db.connected(), progressMonitor);
 }
@@ -558,7 +558,7 @@ void Qonverter::reset(const string& idpDbFilepath)
     db.execute("PRAGMA journal_mode=OFF;"
                "PRAGMA synchronous=OFF;"
                "PRAGMA cache_size=50000;"
-               "PRAGMA mmap_size=70368744177664; -- 2^46");
+               IDPICKER_SQLITE_PRAGMA_MMAP);
 
     reset(db.connected());
 }
@@ -590,7 +590,7 @@ void Qonverter::dropFilters(const string& idpDbFilepath)
     db.execute("PRAGMA journal_mode=OFF;"
                "PRAGMA synchronous=OFF;"
                "PRAGMA cache_size=50000;"
-               "PRAGMA mmap_size=70368744177664; -- 2^46");
+               IDPICKER_SQLITE_PRAGMA_MMAP);
 
     dropFilters(db.connected());
 }

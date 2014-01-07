@@ -116,10 +116,10 @@
             <key column="Protein"/>
             <one-to-many class="PeptideInstance"/>
         </bag>
-        <property name="IsDecoy" access="nosetter.camelcase"/>
-        <property name="Cluster" access="nosetter.camelcase"/>
-        <property name="ProteinGroup" access="nosetter.camelcase"/>
-        <property name="Length" access="nosetter.camelcase"/>
+        <property name="IsDecoy"/>
+        <property name="Cluster"/>
+        <property name="ProteinGroup"/>
+        <property name="Length"/>
         <property name="GeneId"/>
         <property name="GeneGroup"/>
 
@@ -152,14 +152,14 @@
 
     <class name="Peptide">
         <id name="Id"><generator class="native"/></id>
-        <property name="Sequence" access="nosetter.camelcase" 
+        <property name="Sequence"
                   formula="(SELECT IFNULL(SUBSTR(pro.Sequence, pi.Offset+1, pi.Length), DecoySequence)
                             FROM PeptideInstance pi
                             LEFT JOIN ProteinData pro ON pi.Protein=pro.Id
                             WHERE Id=pi.Peptide)"/>
         <property name="MonoisotopicMass"/>
         <property name="MolecularWeight"/>
-        <property name="PeptideGroup" access="nosetter.camelcase"/>
+        <property name="PeptideGroup"/>
         <property name="DecoySequence"/>
         <bag name="Instances" inverse="true" batch-size="500" lazy="true">
             <key column="Peptide"/>
@@ -187,7 +187,7 @@
         <property name="NTerminusIsSpecific"/>
         <property name="CTerminusIsSpecific"/>
         <property name="MissedCleavages"/>
-        <property name="SpecificTermini" access="nosetter.camelcase" formula="(SELECT NTerminusIsSpecific + CTerminusIsSpecific)"/>
+        <property name="SpecificTermini" formula="(SELECT NTerminusIsSpecific + CTerminusIsSpecific)"/>
     </class>
 
     <class name="Modification">
@@ -241,8 +241,8 @@
 
         <join optional="true" table="DistinctMatch">
             <key column="PsmId"/>
-            <property name="DistinctMatchKey" access="nosetter.camelcase"/>
-            <property name="DistinctMatchId" access="nosetter.camelcase"/>
+            <property name="DistinctMatchKey"/>
+            <property name="DistinctMatchId"/>
         </join>
     </class>
 
@@ -251,7 +251,7 @@
         <many-to-one name="PeptideSpectrumMatch" fetch="join"/>
         <many-to-one name="Modification" fetch="join"/>
         <property name="Offset" access="nosetter.camelcase"/>
-        <property name="Site" access="nosetter.camelcase"/>
+        <property name="Site"/>
         <!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
     </class>
 

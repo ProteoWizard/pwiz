@@ -38,6 +38,7 @@ obj SchemaUpdater : SchemaUpdater.cpp
                   : # usage-requirements
                       <library>../freicore/libraries/SQLite//sqlite3pp
                       <library>$(PWIZ_SOURCE)/pwiz/utility/misc//pwiz_utility_misc
+                      <address-model>64:<define>IDPICKER_SQLITE_64
                   ;
 
 lib Qonverter

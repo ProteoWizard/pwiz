@@ -57,13 +57,13 @@ namespace IDPicker.DataModel
         public virtual string Name { get; set; }
         public virtual string URL { get; set; }
 
-        public virtual int TotalSpectraMS1 { get; private set; }
-        public virtual int TotalSpectraMS2 { get; private set; }
+        public virtual int TotalSpectraMS1 { get; protected set; }
+        public virtual int TotalSpectraMS2 { get; protected set; }
 
-        public virtual double TotalIonCurrentMS1 { get; private set; }
-        public virtual double TotalIonCurrentMS2 { get; private set; }
+        public virtual double TotalIonCurrentMS1 { get; protected set; }
+        public virtual double TotalIonCurrentMS2 { get; protected set; }
 
-        public virtual QuantitationMethod QuantitationMethod { get; private set; }
+        public virtual QuantitationMethod QuantitationMethod { get; protected set; }
 
         public virtual IList<Spectrum> Spectra { get; set; }
 
@@ -161,10 +161,10 @@ namespace IDPicker.DataModel
         public virtual string Sequence { get; set; }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
-        public virtual bool IsDecoy { get { return isDecoy; } }
-        public virtual int Cluster { get { return cluster; } }
-        public virtual int ProteinGroup { get { return proteinGroup; } }
-        public virtual int Length { get { return length; } }
+        public virtual bool IsDecoy { get; protected set; }
+        public virtual int Cluster { get; protected set; }
+        public virtual int ProteinGroup { get; protected set; }
+        public virtual int Length { get; protected set; }
 
         public virtual double Coverage { get; set; }
         public virtual IList<ushort> CoverageMask { get; set; }
@@ -178,42 +178,40 @@ namespace IDPicker.DataModel
         public virtual string GeneDescription { get; set; }
 
         #region Transient instance members
-        public Protein () { }
-        public Protein (string description, string sequence)
+        public Protein()
+        {
+            ProteinGroup = 0;
+            Cluster = 0;
+        }
+
+        public Protein (string description, string sequence) : this()
         {
             Description = description;
             Sequence = sequence;
-            this.length = sequence.Length;
+            Length = sequence.Length;
         }
-
-        bool isDecoy = false;
-        int cluster = 0;
-        int proteinGroup = 0;
-        int length = 0;
 
         #endregion
     }
 
     public class Peptide : QuantitativeEntity<Peptide>
     {
-        public virtual string Sequence { get { return sequence; } }
+        public virtual string Sequence { get; protected set; }
 
         public virtual IList<PeptideInstance> Instances { get; set; }
         public virtual IList<PeptideSpectrumMatch> Matches { get; set; }
 
         public virtual double MonoisotopicMass { get; set; }
         public virtual double MolecularWeight { get; set; }
-        public virtual int PeptideGroup { get { return peptideGroup; } }
+        public virtual int PeptideGroup { get; protected set; }
 
         #region Transient instance members
-        public Peptide () { }
-        internal protected Peptide (string sequence)
+        public Peptide() { PeptideGroup = 0; }
+        internal protected Peptide (string sequence) : this()
         {
-            this.sequence = sequence;
+            Sequence = sequence;
         }
 
-        string sequence = null;
-        int peptideGroup = 0;
         string DecoySequence { get; set; }
         #endregion
     }
@@ -233,8 +231,8 @@ namespace IDPicker.DataModel
         public virtual bool CTerminusIsSpecific { get; set; }
         public virtual int MissedCleavages { get; set; }
 
-        private int specificTermini = -1;
-        public virtual int SpecificTermini { get { return specificTermini; } }
+        public PeptideInstance() { SpecificTermini = -1; }
+        public virtual int SpecificTermini { get; protected set; }
     }
 
     public class Modification : Entity<Modification>
@@ -259,8 +257,8 @@ namespace IDPicker.DataModel
         public virtual int Charge { get; set; }
         public virtual IDictionary<string, double> Scores { get; set; }
 
-        public virtual string DistinctMatchKey { get { return distinctMatchKey; } }
-        public virtual long DistinctMatchId { get { return distinctMatchId; } }
+        public virtual string DistinctMatchKey { get; protected set; }
+        public virtual long DistinctMatchId { get; protected set; }
 
         /// <summary>
         /// Automatically choose monoisotopic or average mass error based on the following logic:
@@ -282,8 +280,14 @@ namespace IDPicker.DataModel
         public readonly static double DefaultQValue = 2;
 
         #region Transient instance members
-        public PeptideSpectrumMatch () { QValue = DefaultQValue; }
-        public PeptideSpectrumMatch (PeptideSpectrumMatch other)
+        public PeptideSpectrumMatch()
+        {
+            QValue = DefaultQValue;
+            DistinctMatchKey = "";
+            DistinctMatchId = 0;
+        }
+
+        public PeptideSpectrumMatch (PeptideSpectrumMatch other) : this()
         {
             Id = other.Id;
             Spectrum = other.Spectrum;
@@ -299,8 +303,6 @@ namespace IDPicker.DataModel
             Scores = other.Scores;
         }
 
-        private string distinctMatchKey = "";
-        private long distinctMatchId = 0;
         #endregion
     }
 
@@ -320,13 +322,13 @@ namespace IDPicker.DataModel
                 offset = value;
 
                 if (offset == int.MinValue)
-                    site = '(';
+                    Site = '(';
                 else if (offset == int.MaxValue)
-                    site = ')';
+                    Site = ')';
                 else
                 {
                     var firstInstance = PeptideSpectrumMatch.Peptide.Instances.First();
-                    site = firstInstance.Protein.Sequence[firstInstance.Offset + offset];
+                    Site = firstInstance.Protein.Sequence[firstInstance.Offset + offset];
                 }
             }
         }
@@ -337,7 +339,7 @@ namespace IDPicker.DataModel
         /// <para>- '(' for an N-terminal modification</para>
         /// <para>- ')' for a C-terminal modification</para>
         /// </summary>
-        public virtual char Site { get { return site; } }
+        public virtual char Site { get; protected set; }
 
         #region Transient instance members
         public PeptideModification () { }
@@ -346,15 +348,14 @@ namespace IDPicker.DataModel
             this.offset = offset;
 
             if (offset == int.MinValue)
-                site = '(';
+                Site = '(';
             else if (offset == int.MaxValue)
-                site = ')';
+                Site = ')';
             else
-                site = sequence[offset];
+                Site = sequence[offset];
         }
 
         private int offset;
-        private char site;
         #endregion
     }
 

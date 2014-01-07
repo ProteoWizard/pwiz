@@ -4,8 +4,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{30DD84D7-0E18-45C8-8594-2656F94C468E}"
 	ProjectSection(SolutionItems) = preProject
 		IDPicker.vsmdi = IDPicker.vsmdi
-		Local-x86.testrunconfig = Local-x86.testrunconfig
 		Local-x64.testrunconfig = Local-x64.testrunconfig
+		Local-x86.testrunconfig = Local-x86.testrunconfig
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STL_Containers", "Util\STL_Containers\STL_Containers.csproj", "{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}"
@@ -32,6 +32,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomDataSourceDialog", "CustomDataSourceDialog\CustomDataSourceDialog.csproj", "{6B7B0771-4D09-469F-AEFA-00E4FA06D017}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "freicore\pwiz_src\pwiz_tools\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "freicore\pwiz_src\pwiz_tools\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -131,6 +133,14 @@ Global
 		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x64.Build.0 = Release|x64
 		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x86.ActiveCfg = Release|x86
 		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x86.Build.0 = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.ActiveCfg = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x64.Build.0 = Debug|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.ActiveCfg = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Debug|x86.Build.0 = Debug|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.ActiveCfg = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x64.Build.0 = Release|x64
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.ActiveCfg = Release|x86
+		{B99650EE-AF46-47B4-A4A9-212ADE7809B7}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

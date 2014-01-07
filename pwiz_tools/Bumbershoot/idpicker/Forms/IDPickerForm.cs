@@ -2015,6 +2015,11 @@ namespace IDPicker
                 MessageBox.Show("Error in DragDrop function: " + ex.Message);
             }
         }
+
+        private void newSessionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start(Application.ExecutablePath);
+        }
     }
 
     internal class ClusterInfo

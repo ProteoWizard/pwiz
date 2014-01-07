@@ -189,7 +189,7 @@ namespace IDPicker.Forms
                 quantitationMethodBySource[id] = new Embedder.QuantitationConfiguration
                 {
                     QuantitationMethod = (QuantitationMethod)methodIndex,
-                    ReporterIonMzTolerance = new MZTolerance(10, MZTolerance.Units.PPM)
+                    ReporterIonMzTolerance = new MZTolerance(0.015, MZTolerance.Units.MZ)
                 };
             }
 

@@ -30,6 +30,11 @@
 #include <string>
 #include "pwiz/utility/misc/IterationListener.hpp"
 
+#ifdef IDPICKER_SQLITE_64
+#define IDPICKER_SQLITE_PRAGMA_MMAP "PRAGMA mmap_size=70368744177664; -- 2^46"
+#else
+#define IDPICKER_SQLITE_PRAGMA_MMAP "PRAGMA mmap_size=2147483648; -- 2^31"
+#endif
 
 #ifndef IDPICKER_NAMESPACE
 #define IDPICKER_NAMESPACE IDPicker

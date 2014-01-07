@@ -80,7 +80,7 @@ namespace Test
                     Sequence = testProteinSequences[i]
                 };
                 var proteinAccessor = new PrivateObject(protein);
-                proteinAccessor.SetFieldOrProperty("length", testProteinSequences[i].Length);
+                proteinAccessor.SetProperty("Length", testProteinSequences[i].Length);
                 bulkInserter.Add(protein);
             }
 
@@ -398,7 +398,7 @@ namespace Test
                     };
 
                     var instanceAccessor = new PrivateObject(instance);
-                    instanceAccessor.SetField("specificTermini", (nTerminusIsSpecific ? 1 : 0) + (cTerminusIsSpecific ? 1 : 0));
+                    instanceAccessor.SetProperty("SpecificTermini", (nTerminusIsSpecific ? 1 : 0) + (cTerminusIsSpecific ? 1 : 0));
 
                     bulkInserter.Add(instance);
                     pep.Instances.Add(instance);

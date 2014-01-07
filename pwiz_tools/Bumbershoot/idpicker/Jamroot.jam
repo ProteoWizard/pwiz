@@ -54,7 +54,7 @@ else
     exit ;
 }
 
-constant BOOST_VERSION : 1 43 0 ;
+constant BOOST_VERSION : 1 54 0 ;
 
 local default_libraries_path = "./freicore/libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
@@ -93,7 +93,7 @@ import feature ;
 import path ;
 
 
-project bumbershoot
+project idpicker
 	: requirements
 	  <include>$(PWIZ_SOURCE)
 	  <include>$(LIBRARIES_PATH)/boost_aux
@@ -416,7 +416,6 @@ actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 path-constant PNG_SOURCE : $(png_src) ;
-
 local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
 if ! $(.has-boost)
 {
@@ -424,13 +423,11 @@ if ! $(.has-boost)
     using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 }
 
-using png : 1.5.6 : $(PNG_SOURCE) : $(options) ;
-
 rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ path.make $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ] ;
     if <link>shared in $(properties) { location = $(location)-shared ; }
     if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
 
@@ -550,6 +547,7 @@ tar.extract
         pwiz_tools/common
         pwiz_tools/SeeMS
         pwiz_tools/Shared/MSGraph
+        pwiz_tools/Shared/zedgraph
         pwiz_tools/Shared/Lib
         pwiz_tools/Shared/Common
 

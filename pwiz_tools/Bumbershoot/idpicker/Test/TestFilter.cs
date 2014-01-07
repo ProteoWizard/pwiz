@@ -521,31 +521,31 @@ namespace Test
 
             // get all peptides at the protein N-terminus
             dataFilter.AminoAcidOffset = new List<int> { 0 };
-            Assert.AreEqual(8, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(8, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             // get all peptides of PEPTIDERPEPTIDEKPEPTIDE at the N-terminus
             dataFilter.Protein = new List<Protein> { session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE") };
-            Assert.AreEqual(2, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(2, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             // get all peptides of PEPTIDERPEPTIDEKPEPTIDE that cover offset 8 (PEPTIDERPEPTIDEK, DERPEPTIDEK, PEPTIDEK)
             dataFilter.AminoAcidOffset = new List<int> { 8 };
-            Assert.AreEqual(3, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(3, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             // get all peptides of PEPTIDERPEPTIDEKPEPTIDE that cover offset 3 or 8 (PEPTIDER, PEPTIDERPEPTIDEK, DERPEPTIDEK, TIDER, PEPTIDEK)
             dataFilter.AminoAcidOffset = new List<int> { 3, 8 };
-            Assert.AreEqual(5, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(5, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             // get all peptides of PEPTIDERPEPTIDEKPEPTIDE at the C-terminus
             dataFilter.AminoAcidOffset = new List<int> { Int32.MaxValue };
-            Assert.AreEqual(0, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(0, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             // get all peptides at the protein C-terminus
             dataFilter.Protein = null;
-            Assert.AreEqual(1, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(1, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             // get all peptides at either protein terminus
             dataFilter.AminoAcidOffset = new List<int> { 0, Int32.MaxValue };
-            Assert.AreEqual(9, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
+            Assert.AreEqual(9, Convert.ToInt32(session.CreateQuery("SELECT COUNT(DISTINCT pi.Peptide) " + dataFilter.GetFilteredQueryString(DataFilter.FromProtein)).UniqueResult()));
 
             session.Close();
         }
@@ -1655,7 +1655,9 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
+            var log = new StringWriter();
+            Console.SetOut(log);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true, WriteSqlToConsoleOut = true});
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -1717,9 +1719,9 @@ namespace Test
             var dataFilter = new DataFilter()
                                  {
                                      MaximumQValue = 1,
-                                     MinimumDistinctPeptidesPerProtein = 0,
-                                     MinimumSpectraPerProtein = 0,
-                                     MinimumAdditionalPeptidesPerProtein = 0
+                                     MinimumDistinctPeptidesPerProtein = 1,
+                                     MinimumSpectraPerProtein = 1,
+                                     MinimumAdditionalPeptidesPerProtein = 1
                                  };
             dataFilter.ApplyBasicFilters(session);
 
@@ -1730,6 +1732,7 @@ namespace Test
             {
                 var peptideRows = IDPicker.Forms.PeptideTableForm.DistinctPeptideRow.GetRows(session, dataFilter);
                 int row = 0;
+                Assert.AreEqual(12, peptideRows.Count);
 
                 Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
                 Assert.AreEqual(2, peptideRows[row].DistinctMatches);

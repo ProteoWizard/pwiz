@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace IDPicker
@@ -58,9 +59,12 @@ namespace IDPicker
                 }
 
                 int compare = str.Length.CompareTo(otherString.Length);
-                if (compare == 0 && str == otherString || 
-                    compare < 0 && otherString.Contains(str) ||
-                    str.Contains(otherString))
+                if (compare == 0 && str == otherString ||
+                    compare < 0 && otherString.Contains(str) /*||
+                    str.Contains(otherString)*/)
+                    return true;
+
+                if (Regex.IsMatch(str, otherString, RegexOptions.ExplicitCapture))
                     return true;
             }
             return false;

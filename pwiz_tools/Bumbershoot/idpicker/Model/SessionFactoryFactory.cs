@@ -284,7 +284,6 @@ namespace IDPicker.DataModel
                 .SetProperty("show_sql", config.WriteSqlToConsoleOut ? "true" : "false")
                 .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
                 .SetProperty("hibernate.cache.use_query_cache", "true")
-                .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 //.SetProperty("adonet.batch_size", batchSize.ToString())
                 .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;{1}", uncCompatiblePath, (pooling ? "Pooling=True;Max Pool Size=1;" : "")))
                 .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
@@ -332,7 +331,6 @@ namespace IDPicker.DataModel
                 {
                     Configuration configuration = new Configuration()
                         .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
-                        .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                         .SetProperty("connection.connection_string", "Data Source=:memory:;Version=3;")
                         .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
                         .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)

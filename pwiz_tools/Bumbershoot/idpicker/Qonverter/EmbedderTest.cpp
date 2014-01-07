@@ -139,7 +139,7 @@ void test()
             sl->spectra.back()->set((i%10 == 0) ? MS_MS1_spectrum : MS_MSn_spectrum);
             sl->spectra.back()->set(MS_ms_level, (i%10 == 0) ? 1 : 2);
             sl->spectra.back()->set(MS_centroid_spectrum);
-            sl->spectra.back()->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_counts);
+            sl->spectra.back()->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts);
             sl->spectra.back()->scanList.scans.push_back(Scan());
             sl->spectra.back()->scanList.scans[0].set(MS_scan_start_time, i / 100.0, UO_second);
         }

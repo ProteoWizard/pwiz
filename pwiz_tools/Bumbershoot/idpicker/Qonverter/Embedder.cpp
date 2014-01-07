@@ -25,6 +25,7 @@
 
 #include "Embedder.hpp"
 #include "Qonverter.hpp"
+#include "SchemaUpdater.hpp"
 #include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -39,127 +40,6 @@
 #include "boost/foreach_field.hpp"
 #include "boost/throw_exception.hpp"
 #include "boost/xpressive/xpressive.hpp"
-
-# ifdef BOOST_POSIX_API
-#   include <fcntl.h>
-# else // BOOST_WINDOWS_API
-#   include <windows.h>
-#   include <wincrypt.h>
-#   pragma comment(lib, "Advapi32.lib")
-# endif
-
-namespace {
-    
-// boost::filesystem::unique_path() adapted from boost 1.46 until pwiz updates to filesystem v3
-void fail(int err, boost::system::error_code* ec)
-{
-  if (ec == 0)
-    BOOST_THROW_EXCEPTION(boost::system::system_error(err, boost::system::system_category,
-                          "boost::filesystem::unique_path"));
-  ec->assign(err, boost::system::system_category);
-  return;
-}
-
-void system_crypt_random(void* buf, std::size_t len, boost::system::error_code* ec)
-{
-# ifdef BOOST_POSIX_API
-
-  int file = open("/dev/urandom", O_RDONLY);
-  if (file == -1)
-  {
-    file = open("/dev/random", O_RDONLY);
-    if (file == -1)
-    {
-      fail(errno, ec);
-      return;
-    }
-  }
-
-  size_t bytes_read = 0;
-  while (bytes_read < len)
-  {
-    ssize_t n = read(file, buf, len - bytes_read);
-    if (n == -1)
-    {
-      close(file);
-      fail(errno, ec);
-      return;
-    }
-    bytes_read += n;
-    buf = static_cast<char*>(buf) + n;
-  }
-
-  close(file);
-
-# else // BOOST_WINDOWS_API
-
-  HCRYPTPROV handle;
-  int errval = 0;
-
-  if (!::CryptAcquireContextA(&handle, 0, 0, PROV_RSA_FULL, 0))
-  {
-    errval = ::GetLastError();
-    if (errval == NTE_BAD_KEYSET)
-    {
-      if (!::CryptAcquireContextA(&handle, 0, 0, PROV_RSA_FULL, CRYPT_NEWKEYSET))
-      {
-        errval = ::GetLastError();
-      }
-      else errval = 0;
-    }
-  }
-
-  if (!errval)
-  {
-    BOOL gen_ok = ::CryptGenRandom(handle, len, static_cast<unsigned char*>(buf));
-    if (!gen_ok)
-      errval = ::GetLastError();
-    ::CryptReleaseContext(handle, 0);
-  }
-
-  if (!errval) return;
-
-  fail(errval, ec);
-# endif
-}
-
-} // namespace
-
-// boost::filesystem::unique_path() adapted from boost 1.46 until pwiz updates to filesystem v3
-namespace boost { namespace filesystem {
-
-path unique_path(const path& model = "%%%%-%%%%-%%%%-%%%%", system::error_code* ec = 0)
-{
-  std::string s (model.string());  // std::string ng for MBCS encoded POSIX
-  const char hex[] = "0123456789abcdef";
-  const int n_ran = 16;
-  const int max_nibbles = 2 * n_ran;   // 4-bits per nibble
-  char ran[n_ran];
-
-  int nibbles_used = max_nibbles;
-  for(std::string::size_type i=0; i < s.size(); ++i)
-  {
-    if (s[i] == '%')                        // digit request
-    {
-      if (nibbles_used == max_nibbles)
-      {
-        system_crypt_random(ran, sizeof(ran), ec);
-        if (ec != 0 && *ec)
-          return "";
-        nibbles_used = 0;
-      }
-      int c = ran[nibbles_used/2];
-      c >>= 4 * (nibbles_used++ & 1);  // if odd, shift right 1 nibble
-      s[i] = hex[c & 0xf];             // convert to hex digit and replace
-    }
-  }
-
-  if (ec != 0) ec->clear();
-
-  return s;
-}
-
-}} // namespace boost::filesystem
 
 
 using namespace pwiz::msdata;
@@ -234,7 +114,7 @@ void getSources(sqlite::database& idpDb,
                 const map<int, QuantitationConfiguration>& quantitationMethodBySource,
                 pwiz::util::IterationListenerRegistry* ilr)
 {
-    string databaseName = bfs::path(idpDbFilepath).replace_extension("").filename();
+    string databaseName = bfs::path(idpDbFilepath).replace_extension("").filename().string();
 
     // parse the search path
     vector<string> paths;
@@ -637,7 +517,7 @@ void embed(const string& idpDbFilepath,
     {
         SpectrumSource& source = sources[i];
 
-        string sourceFilename = bfs::path(source.filepath).filename();
+        string sourceFilename = bfs::path(source.filepath).filename().string();
 
         ITERATION_UPDATE(ilr, i, sources.size(), "opening source \"" + sourceFilename + "\"");
 
@@ -800,7 +680,7 @@ void embedScanTime(const string& idpDbFilepath,
     {
         SpectrumSource& source = sources[i];
 
-        string sourceFilename = bfs::path(source.filepath).filename();
+        string sourceFilename = bfs::path(source.filepath).filename().string();
 
         ITERATION_UPDATE(ilr, i, sources.size(), "opening source \"" + sourceFilename + "\"");
 
@@ -920,7 +800,7 @@ bool hasGeneMetadata(const string& idpDbFilepath)
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
     
-    idpDb.execute("PRAGMA mmap_size=70368744177664; -- 2^46");
+    idpDb.execute(IDPICKER_SQLITE_PRAGMA_MMAP);
 
     // if there is at least 1 non-null GeneId, there is embedded gene metadata
     return sqlite::query(idpDb, "SELECT COUNT(*) FROM Protein WHERE GeneId IS NOT NULL").begin()->get<int>(0) > 0;
@@ -958,7 +838,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     idpDb.execute("PRAGMA journal_mode=OFF;"
                   "PRAGMA synchronous=OFF;"
                   "PRAGMA cache_size=50000;"
-                  "PRAGMA mmap_size=70368744177664; -- 2^46");
+                  IDPICKER_SQLITE_PRAGMA_MMAP);
 
     // reset GeneId column
     idpDb.execute("UPDATE Protein SET GeneId=NULL");

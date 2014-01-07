@@ -389,7 +389,7 @@ struct ParserImpl
                       "PRAGMA cache_size=30000;"
                       "PRAGMA temp_store=MEMORY;"
                       "PRAGMA page_size=32768;"
-                      "PRAGMA mmap_size=70368744177664; -- 2^46");
+                      IDPICKER_SQLITE_PRAGMA_MMAP);
 
         sqlite::transaction transaction(idpDb);
 
@@ -475,13 +475,13 @@ struct ParserImpl
         if (spectraDataName.empty())
         {
             const string& location = mzid.dataCollection.inputs.spectraData[0]->location;
-            spectraDataName = Parser::sourceNameFromFilename(bfs::path(location).filename());
+            spectraDataName = Parser::sourceNameFromFilename(bfs::path(location).filename().string());
 
             if (spectraDataName.empty())
                 throw runtime_error("no spectrum source name or location");
         }
         else
-            spectraDataName = Parser::sourceNameFromFilename(bfs::path(spectraDataName).filename());
+            spectraDataName = Parser::sourceNameFromFilename(bfs::path(spectraDataName).filename().string());
 
         // insert file-level metadata into the database
         insertSpectrumSource.binder() << 1
@@ -596,6 +596,11 @@ struct ParserImpl
 
                 // insert distinct peptide
                 const string& sequence = sii->peptidePtr->peptideSequence;
+
+                // skip short peptides
+                if (analysis.importSettings.minPeptideLength > sequence.length())
+                    continue;
+
                 proteome::Peptide pwizPeptide(sequence);
                 shared_string sharedSequence(new string(sequence));
 
@@ -1468,7 +1473,7 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                 if (t->timed_join(bpt::seconds(1)))
                     finishedThreads.insert(t);
 
-                if (status.exception.get())
+                if (status.exception)
                     boost::rethrow_exception(status.exception);
                 else if (status.userCanceled)
                     return;
@@ -1514,7 +1519,7 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                 if (t->timed_join(bpt::seconds(1)))
                     finishedThreads.insert(t);
 
-                if (status.exception.get())
+                if (status.exception)
                     boost::rethrow_exception(status.exception);
                 else if (status.userCanceled)
                     return;
@@ -1534,6 +1539,7 @@ Parser::Analysis::Analysis() : startTime(bdt::not_a_date_time)
 {
     importSettings.maxQValue = 0.25;
     importSettings.maxResultRank = 0;
+    importSettings.minPeptideLength = 5;
 }
 
 
@@ -1635,13 +1641,13 @@ string Parser::parseSource(const string& inputFilepath)
     if (spectraDataName.empty())
     {
         const string& location = mzid.dataCollection.inputs.spectraData[0]->location;
-        spectraDataName = sourceNameFromFilename(bfs::path(location).filename());
+        spectraDataName = sourceNameFromFilename(bfs::path(location).filename().string());
 
         if (spectraDataName.empty())
             throw runtime_error("no spectrum source name or location");
     }
     else
-        spectraDataName = Parser::sourceNameFromFilename(bfs::path(spectraDataName).filename());
+        spectraDataName = Parser::sourceNameFromFilename(bfs::path(spectraDataName).filename().string());
 
     return spectraDataName;
 }

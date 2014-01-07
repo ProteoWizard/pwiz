@@ -79,6 +79,7 @@ struct Parser
             Qonverter::Settings qonverterSettings;
             double maxQValue; /// filter the database on Q-value before writing to disk
             int maxResultRank; /// filter the database on PSM rank before writing to disk
+            int minPeptideLength; /// ignore peptides shorter than this
             bool ignoreUnmappedPeptides;
         };
 
