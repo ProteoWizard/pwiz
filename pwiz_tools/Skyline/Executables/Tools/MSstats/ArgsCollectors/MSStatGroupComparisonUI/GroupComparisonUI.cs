@@ -40,6 +40,8 @@ namespace MSStatArgsCollector
         {
             InitializeComponent();
 
+            comboBoxNoramilzeTo.SelectedIndex = 1;
+
             Array.Sort(groups);
             ControlGroup.DataSource = ControlGroupList = groups;
             Arguments = oldArgs;
@@ -228,13 +230,18 @@ namespace MSStatArgsCollector
             commandLineArguments.Add(textBoxName.Text);
 
             // Add settings
+            commandLineArguments.Add(comboBoxNoramilzeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));            
             commandLineArguments.Add(cboxLabelData.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(bioRepExp.Checked ? EXPANDED : RESTRICTED);
             commandLineArguments.Add(techRepExp.Checked ? EXPANDED : RESTRICTED);
             commandLineArguments.Add(cboxInterferenceTransitions.Checked ? TRUESTRING : FALSESTRING);
+          
 
             Arguments = commandLineArguments.ToArray();
         }
+
+      
     }
 
     public class MSstatsGroupComparisonCollector

@@ -47,6 +47,8 @@
             this.rBtnTransitions = new System.Windows.Forms.RadioButton();
             this.rBtnPower = new System.Windows.Forms.RadioButton();
             this.groupBoxAuto = new System.Windows.Forms.GroupBox();
+            this.comboBoxNoramilzeTo = new System.Windows.Forms.ComboBox();
+            this.labelNormalizeTo = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numberSamples)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numberPeptides)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numberTransitions)).BeginInit();
@@ -112,11 +114,11 @@
             // 
             this.labelFDR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelFDR.AutoSize = true;
-            this.labelFDR.Location = new System.Drawing.Point(21, 279);
+            this.labelFDR.Location = new System.Drawing.Point(21, 331);
             this.labelFDR.Margin = new System.Windows.Forms.Padding(3, 0, 3, 8);
             this.labelFDR.Name = "labelFDR";
             this.labelFDR.Size = new System.Drawing.Size(32, 13);
-            this.labelFDR.TabIndex = 1;
+            this.labelFDR.TabIndex = 3;
             this.labelFDR.Text = "FDR:";
             // 
             // labelLowerDesiredFC
@@ -145,7 +147,7 @@
             this.btnOK.Location = new System.Drawing.Point(176, 12);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 5;
+            this.btnOK.TabIndex = 7;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -157,7 +159,7 @@
             this.btnCancel.Location = new System.Drawing.Point(176, 41);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
+            this.btnCancel.TabIndex = 8;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -169,10 +171,10 @@
             this.gBoxFoldChange.Controls.Add(this.numberLDFC);
             this.gBoxFoldChange.Controls.Add(this.labelLowerDesiredFC);
             this.gBoxFoldChange.Controls.Add(this.labelUpperDesiredFC);
-            this.gBoxFoldChange.Location = new System.Drawing.Point(12, 329);
+            this.gBoxFoldChange.Location = new System.Drawing.Point(12, 381);
             this.gBoxFoldChange.Name = "gBoxFoldChange";
             this.gBoxFoldChange.Size = new System.Drawing.Size(154, 74);
-            this.gBoxFoldChange.TabIndex = 3;
+            this.gBoxFoldChange.TabIndex = 5;
             this.gBoxFoldChange.TabStop = false;
             this.gBoxFoldChange.Text = "Desired fold change";
             // 
@@ -199,10 +201,10 @@
             // btnDefault
             // 
             this.btnDefault.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnDefault.Location = new System.Drawing.Point(43, 409);
+            this.btnDefault.Location = new System.Drawing.Point(43, 461);
             this.btnDefault.Name = "btnDefault";
             this.btnDefault.Size = new System.Drawing.Size(93, 23);
-            this.btnDefault.TabIndex = 4;
+            this.btnDefault.TabIndex = 6;
             this.btnDefault.Text = "Use Defaults";
             this.btnDefault.UseVisualStyleBackColor = true;
             this.btnDefault.Click += new System.EventHandler(this.btnDefault_Click);
@@ -219,11 +221,11 @@
             // numberFDR
             // 
             this.numberFDR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.numberFDR.Location = new System.Drawing.Point(24, 294);
+            this.numberFDR.Location = new System.Drawing.Point(24, 346);
             this.numberFDR.Margin = new System.Windows.Forms.Padding(3, 3, 3, 12);
             this.numberFDR.Name = "numberFDR";
             this.numberFDR.Size = new System.Drawing.Size(60, 20);
-            this.numberFDR.TabIndex = 2;
+            this.numberFDR.TabIndex = 4;
             this.numberFDR.Text = "0.05";
             this.numberFDR.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.numericTextBox_KeyPress);
             // 
@@ -284,12 +286,36 @@
             this.groupBoxAuto.Controls.Add(this.rBtnTransitions);
             this.groupBoxAuto.Controls.Add(this.rBtnPeptides);
             this.groupBoxAuto.Controls.Add(this.numberTransitions);
-            this.groupBoxAuto.Location = new System.Drawing.Point(12, 12);
+            this.groupBoxAuto.Location = new System.Drawing.Point(12, 68);
             this.groupBoxAuto.Name = "groupBoxAuto";
-            this.groupBoxAuto.Size = new System.Drawing.Size(154, 247);
-            this.groupBoxAuto.TabIndex = 0;
+            this.groupBoxAuto.Size = new System.Drawing.Size(154, 243);
+            this.groupBoxAuto.TabIndex = 2;
             this.groupBoxAuto.TabStop = false;
             this.groupBoxAuto.Text = "Automatically calculate";
+            // 
+            // comboBoxNoramilzeTo
+            // 
+            this.comboBoxNoramilzeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxNoramilzeTo.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.comboBoxNoramilzeTo.FormattingEnabled = true;
+            this.comboBoxNoramilzeTo.Items.AddRange(new object[] {
+            "None",
+            "Constant",
+            "Quantile",
+            "Global Standards"});
+            this.comboBoxNoramilzeTo.Location = new System.Drawing.Point(12, 30);
+            this.comboBoxNoramilzeTo.Name = "comboBoxNoramilzeTo";
+            this.comboBoxNoramilzeTo.Size = new System.Drawing.Size(144, 21);
+            this.comboBoxNoramilzeTo.TabIndex = 1;
+            // 
+            // labelNormalizeTo
+            // 
+            this.labelNormalizeTo.AutoSize = true;
+            this.labelNormalizeTo.Location = new System.Drawing.Point(12, 12);
+            this.labelNormalizeTo.Name = "labelNormalizeTo";
+            this.labelNormalizeTo.Size = new System.Drawing.Size(68, 13);
+            this.labelNormalizeTo.TabIndex = 0;
+            this.labelNormalizeTo.Text = "Normalize to:";
             // 
             // SampleSizeUi
             // 
@@ -297,7 +323,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(258, 448);
+            this.ClientSize = new System.Drawing.Size(258, 500);
+            this.Controls.Add(this.comboBoxNoramilzeTo);
+            this.Controls.Add(this.labelNormalizeTo);
             this.Controls.Add(this.groupBoxAuto);
             this.Controls.Add(this.numberFDR);
             this.Controls.Add(this.btnDefault);
@@ -310,7 +338,7 @@
             this.MinimizeBox = false;
             this.Name = "SampleSizeUi";
             this.ShowIcon = false;
-            this.Text = "Design Sample Size";
+            this.Text = "MSstats Design Sample Size";
             ((System.ComponentModel.ISupportInitialize)(this.numberSamples)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numberPeptides)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numberTransitions)).EndInit();
@@ -344,5 +372,7 @@
         private System.Windows.Forms.RadioButton rBtnTransitions;
         private System.Windows.Forms.RadioButton rBtnPower;
         private System.Windows.Forms.GroupBox groupBoxAuto;
+        private System.Windows.Forms.ComboBox comboBoxNoramilzeTo;
+        private System.Windows.Forms.Label labelNormalizeTo;
     }
 }

@@ -43,8 +43,11 @@
             this.labelName = new System.Windows.Forms.Label();
             this.textBoxName = new System.Windows.Forms.TextBox();
             this.ComparisonGroups = new System.Windows.Forms.ListBox();
+            this.cboxEqualVariance = new System.Windows.Forms.CheckBox();
             this.groupBoxBioRep = new System.Windows.Forms.GroupBox();
             this.groupBoxTechRep = new System.Windows.Forms.GroupBox();
+            this.comboBoxNoramilzeTo = new System.Windows.Forms.ComboBox();
+            this.labelNormalizeTo = new System.Windows.Forms.Label();
             this.argsLayoutPanel.SuspendLayout();
             this.groupBoxBioRep.SuspendLayout();
             this.groupBoxTechRep.SuspendLayout();
@@ -57,7 +60,7 @@
             this.btnOK.Margin = new System.Windows.Forms.Padding(3, 3, 15, 3);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 1;
+            this.btnOK.TabIndex = 3;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -70,7 +73,7 @@
             this.btnCancel.Margin = new System.Windows.Forms.Padding(3, 3, 15, 3);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 2;
+            this.btnCancel.TabIndex = 4;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -135,7 +138,7 @@
             this.cboxInterferenceTransitions.AutoSize = true;
             this.cboxInterferenceTransitions.Checked = true;
             this.cboxInterferenceTransitions.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cboxInterferenceTransitions.Location = new System.Drawing.Point(3, 194);
+            this.cboxInterferenceTransitions.Location = new System.Drawing.Point(3, 217);
             this.cboxInterferenceTransitions.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
             this.cboxInterferenceTransitions.Name = "cboxInterferenceTransitions";
             this.cboxInterferenceTransitions.Size = new System.Drawing.Size(170, 17);
@@ -185,15 +188,16 @@
             this.argsLayoutPanel.Controls.Add(this.labelComparisonGroups);
             this.argsLayoutPanel.Controls.Add(this.ComparisonGroups);
             this.argsLayoutPanel.Controls.Add(this.cboxLabelData);
+            this.argsLayoutPanel.Controls.Add(this.cboxEqualVariance);
             this.argsLayoutPanel.Controls.Add(this.cboxInterferenceTransitions);
             this.argsLayoutPanel.Controls.Add(this.groupBoxBioRep);
             this.argsLayoutPanel.Controls.Add(this.groupBoxTechRep);
             this.argsLayoutPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.argsLayoutPanel.Location = new System.Drawing.Point(12, 9);
+            this.argsLayoutPanel.Location = new System.Drawing.Point(12, 64);
             this.argsLayoutPanel.Name = "argsLayoutPanel";
             this.argsLayoutPanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
-            this.argsLayoutPanel.Size = new System.Drawing.Size(180, 336);
-            this.argsLayoutPanel.TabIndex = 0;
+            this.argsLayoutPanel.Size = new System.Drawing.Size(180, 359);
+            this.argsLayoutPanel.TabIndex = 2;
             // 
             // labelName
             // 
@@ -223,11 +227,23 @@
             this.ComparisonGroups.TabIndex = 5;
             this.ComparisonGroups.Visible = false;
             // 
+            // cboxEqualVariance
+            // 
+            this.cboxEqualVariance.AutoSize = true;
+            this.cboxEqualVariance.Checked = true;
+            this.cboxEqualVariance.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cboxEqualVariance.Location = new System.Drawing.Point(3, 194);
+            this.cboxEqualVariance.Name = "cboxEqualVariance";
+            this.cboxEqualVariance.Size = new System.Drawing.Size(136, 17);
+            this.cboxEqualVariance.TabIndex = 10;
+            this.cboxEqualVariance.Text = "&Assume equal variance";
+            this.cboxEqualVariance.UseVisualStyleBackColor = true;
+            // 
             // groupBoxBioRep
             // 
             this.groupBoxBioRep.Controls.Add(this.bioRepRes);
             this.groupBoxBioRep.Controls.Add(this.bioRepExp);
-            this.groupBoxBioRep.Location = new System.Drawing.Point(3, 222);
+            this.groupBoxBioRep.Location = new System.Drawing.Point(3, 245);
             this.groupBoxBioRep.Margin = new System.Windows.Forms.Padding(3, 3, 3, 8);
             this.groupBoxBioRep.Name = "groupBoxBioRep";
             this.groupBoxBioRep.Size = new System.Drawing.Size(169, 45);
@@ -239,12 +255,36 @@
             // 
             this.groupBoxTechRep.Controls.Add(this.techRepRes);
             this.groupBoxTechRep.Controls.Add(this.techRepExp);
-            this.groupBoxTechRep.Location = new System.Drawing.Point(3, 278);
+            this.groupBoxTechRep.Location = new System.Drawing.Point(3, 301);
             this.groupBoxTechRep.Name = "groupBoxTechRep";
             this.groupBoxTechRep.Size = new System.Drawing.Size(169, 45);
             this.groupBoxTechRep.TabIndex = 9;
             this.groupBoxTechRep.TabStop = false;
             this.groupBoxTechRep.Text = "Scope of &technical replicate";
+            // 
+            // comboBoxNoramilzeTo
+            // 
+            this.comboBoxNoramilzeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxNoramilzeTo.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.comboBoxNoramilzeTo.FormattingEnabled = true;
+            this.comboBoxNoramilzeTo.Items.AddRange(new object[] {
+            "None",
+            "Constant",
+            "Quantile",
+            "Global Standards"});
+            this.comboBoxNoramilzeTo.Location = new System.Drawing.Point(12, 32);
+            this.comboBoxNoramilzeTo.Name = "comboBoxNoramilzeTo";
+            this.comboBoxNoramilzeTo.Size = new System.Drawing.Size(172, 21);
+            this.comboBoxNoramilzeTo.TabIndex = 1;
+            // 
+            // labelNormalizeTo
+            // 
+            this.labelNormalizeTo.AutoSize = true;
+            this.labelNormalizeTo.Location = new System.Drawing.Point(12, 14);
+            this.labelNormalizeTo.Name = "labelNormalizeTo";
+            this.labelNormalizeTo.Size = new System.Drawing.Size(68, 13);
+            this.labelNormalizeTo.TabIndex = 0;
+            this.labelNormalizeTo.Text = "Normalize to:";
             // 
             // GroupComparisonUi
             // 
@@ -254,7 +294,9 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(292, 351);
+            this.ClientSize = new System.Drawing.Size(292, 459);
+            this.Controls.Add(this.comboBoxNoramilzeTo);
+            this.Controls.Add(this.labelNormalizeTo);
             this.Controls.Add(this.argsLayoutPanel);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
@@ -298,5 +340,8 @@
         private System.Windows.Forms.TextBox textBoxName;
         private System.Windows.Forms.GroupBox groupBoxBioRep;
         private System.Windows.Forms.GroupBox groupBoxTechRep;
+        private System.Windows.Forms.CheckBox cboxEqualVariance;
+        private System.Windows.Forms.ComboBox comboBoxNoramilzeTo;
+        private System.Windows.Forms.Label labelNormalizeTo;
     }
 }

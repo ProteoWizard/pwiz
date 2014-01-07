@@ -25,7 +25,7 @@ namespace MSStatArgsCollector
 {
     public partial class SampleSizeUi : Form
     {
-        private enum Args { samples, peptides, transitions, power, fdr, lower_fold, upper_fold }
+        private enum Args { normalize_to, samples, peptides, transitions, power, fdr, lower_fold, upper_fold }
 
         public string[] Arguments { get; private set; }
 
@@ -33,7 +33,9 @@ namespace MSStatArgsCollector
         {
             InitializeComponent();
 
-            if (oldArgs != null && oldArgs.Length == 7)
+            comboBoxNoramilzeTo.SelectedIndex = 1;
+
+            if (oldArgs != null && oldArgs.Length == 8)
                 Arguments = oldArgs;
 
             // set shift distance based on ititial form layout
@@ -152,8 +154,9 @@ namespace MSStatArgsCollector
         //
         private void GenerateArguments()
         {
-            Arguments = Arguments ?? new string[7];
-            
+            Arguments = Arguments ?? new string[8];
+
+            Arguments[(int)Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? TRUESTRING : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.peptides] = (rBtnPeptides.Checked) ? TRUESTRING : numberPeptides.Value.ToString(CultureInfo.InvariantCulture);
             Arguments[(int) Args.transitions] = (rBtnTransitions.Checked) ? TRUESTRING : numberTransitions.Value.ToString(CultureInfo.InvariantCulture); 
@@ -184,6 +187,7 @@ namespace MSStatArgsCollector
         }
 
         // defaults
+        private const int NORMALIZE = 1;
         private const decimal SAMPLES = 2m;
         private const decimal PEPTIDES = 1m;
         private const decimal TRANSITIONS = 1m;
@@ -199,6 +203,7 @@ namespace MSStatArgsCollector
 
         private void RestoreDefaults()
         {
+            comboBoxNoramilzeTo.SelectedIndex = NORMALIZE;
             rBtnSamples.Checked = true;
             numberSamples.Value = SAMPLES;
             numberPeptides.Value = PEPTIDES;
