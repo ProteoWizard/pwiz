@@ -25,7 +25,10 @@ namespace pwiz.SkylineTestUtil
 {
 
     /// <summary>
-    /// Class used for moving toolDir out of the way in testing tool installation. 
+    /// Class used for moving toolDir out of the way in testing tool installation.
+    /// This is done for testing scenarios that do not copy Skyline.exe to a different
+    /// directory, to avoid destroying the Tools directory for the current build,
+    /// which may have been created during manual testing.
     /// </summary>
     public class MovedDirectory : IDisposable
     {
@@ -36,14 +39,19 @@ namespace pwiz.SkylineTestUtil
             if (isLoopingTest)
             {
                 SrcDirPath = dirPath;
-                DestDirPath = Path.Combine(Directory.GetParent(dirPath).FullName,
-                                           MOVED_PREFIX + Path.GetFileName(dirPath));
-                if (Directory.Exists(DestDirPath))
-                {
-                    DestDirPath = DirectoryEx.GetUniqueName(DestDirPath);
-                }
 
-                Helpers.TryTwice(() => Directory.Move(SrcDirPath, DestDirPath));
+                // Only move, if there is an existing Tools directory
+                if (Directory.Exists(SrcDirPath))
+                {
+                    DestDirPath = Path.Combine(Directory.GetParent(dirPath).FullName,
+                                               MOVED_PREFIX + Path.GetFileName(dirPath));
+                    if (Directory.Exists(DestDirPath))
+                    {
+                        DestDirPath = DirectoryEx.GetUniqueName(DestDirPath);
+                    }
+
+                    Helpers.TryTwice(() => Directory.Move(SrcDirPath, DestDirPath));
+                }
             }
         }
 
@@ -52,11 +60,14 @@ namespace pwiz.SkylineTestUtil
 
         public void Dispose()
         {
-            if (DestDirPath != null)
+            if (SrcDirPath != null)
             {
+                // Get rid of the tools directory created for this test
                 if (Directory.Exists(SrcDirPath))
                     Helpers.TryTwice(() => Directory.Delete(SrcDirPath));
-                Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath));
+                // If there was an existing tools directory move it back
+                if (DestDirPath != null)
+                    Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath));
             }
         }
     }
