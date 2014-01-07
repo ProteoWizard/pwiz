@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestTutorial
             var generateDecoysDlg = ShowDialog<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg());
             RunUI(() =>
             {
-                generateDecoysDlg.DecoysMethod = DecoyGeneration.ADD_RANDOM;
+                generateDecoysDlg.DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 generateDecoysDlg.NumDecoys = 29;
             });
             PauseForScreenShot("p2 - decoy dialog");
