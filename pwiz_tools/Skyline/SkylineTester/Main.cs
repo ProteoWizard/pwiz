@@ -164,6 +164,16 @@ namespace SkylineTester
             commandShell.Run(CommandsDone);
         }
 
+        public int TestRunnerProcessId
+        {
+            get
+            {
+                return (commandShell.NextCommand == _testRunnerIndex + 1)
+                    ? commandShell.ProcessId
+                    : 0;
+            }
+        }
+
         private int _testRunnerIndex;
 
         public void CommandsDone(bool success)

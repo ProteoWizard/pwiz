@@ -254,6 +254,11 @@ namespace SkylineTester
             _process.BeginErrorReadLine();
         }
 
+        public int ProcessId
+        {
+            get { return _process != null ? _process.Id : 0; }
+        }
+
         /// <summary>
         /// Handle a line of output/error data from the process.
         /// </summary>

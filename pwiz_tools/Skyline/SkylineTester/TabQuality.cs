@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using ZedGraph;
@@ -206,13 +207,166 @@ namespace SkylineTester
 
         private void UpdateQuality()
         {
-            if (MainWindow.Tabs.SelectedTab == MainWindow.QualityPage)
+            if (MainWindow.Tabs.SelectedTab == MainWindow.QualityPage &&
+                MainWindow.TestRunnerProcessId != 0)
             {
                 UpdateRun();
                 if (MainWindow.ComboRunDate.SelectedIndex == 0)
                     UpdateSelectedRun();
                 UpdateHistory();
+                UpdateThumbnail();
             }
+        }
+
+        // TODO: Create separate class or control to encapsulate thumbnail functionality.
+        // From http://bartdesmet.net/blogs/bart/archive/2006/10/05/4495.aspx
+
+        private const int GWL_STYLE = -16;
+
+        private const ulong WS_VISIBLE = 0x10000000L;
+        private const ulong WS_BORDER = 0x00800000L;
+        private const ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
+
+        private IntPtr thumb;
+        private IntPtr _lastSkylineWindow;
+
+        private const int DWM_TNP_VISIBLE = 0x8;
+        private const int DWM_TNP_OPACITY = 0x4;
+        private const int DWM_TNP_RECTDESTINATION = 0x1;
+
+        private void UnregisterThumb()
+        {
+            if (thumb != IntPtr.Zero)
+            {
+                DwmUnregisterThumbnail(thumb);
+                thumb = IntPtr.Zero;
+            }
+        }
+        private void UpdateThumbnail()
+        {
+            var skylineWindow = FindSkylineWindow(MainWindow.TestRunnerProcessId);
+            if (skylineWindow == IntPtr.Zero || _lastSkylineWindow != skylineWindow)
+            {
+                _lastSkylineWindow = skylineWindow;
+                UnregisterThumb();
+                if (skylineWindow == IntPtr.Zero)
+                    return;
+            }
+
+            if (thumb == IntPtr.Zero)
+            {
+                DwmRegisterThumbnail(MainWindow.Handle, skylineWindow, out thumb);
+            }
+
+            if (thumb != IntPtr.Zero)
+            {
+                Point locationOnForm = MainWindow.PointToClient(
+                    MainWindow.SkylineThumbnail.Parent.PointToScreen(MainWindow.SkylineThumbnail.Location));
+
+                PSIZE size;
+                DwmQueryThumbnailSourceSize(thumb, out size);
+
+                DWM_THUMBNAIL_PROPERTIES props = new DWM_THUMBNAIL_PROPERTIES
+                {
+                    dwFlags = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION | DWM_TNP_OPACITY,
+                    fVisible = true,
+                    opacity = 255,
+                    rcDestination = new Rect(
+                        locationOnForm.X,
+                        locationOnForm.Y,
+                        locationOnForm.X + MainWindow.SkylineThumbnail.Width,
+                        locationOnForm.Y + MainWindow.SkylineThumbnail.Height)
+                };
+
+                if (size.x < MainWindow.SkylineThumbnail.Width)
+                    props.rcDestination.Right = props.rcDestination.Left + size.x;
+                if (size.y < MainWindow.SkylineThumbnail.Height)
+                    props.rcDestination.Bottom = props.rcDestination.Top + size.y;
+
+                DwmUpdateThumbnailProperties(thumb, ref props);
+            }
+        }
+
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern ulong GetWindowLongA(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmRegisterThumbnail(IntPtr dest, IntPtr src, out IntPtr thumb);
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmUnregisterThumbnail(IntPtr thumb);
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmQueryThumbnailSourceSize(IntPtr thumb, out PSIZE size);
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmUpdateThumbnailProperties(IntPtr hThumb, ref DWM_THUMBNAIL_PROPERTIES props);
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct DWM_THUMBNAIL_PROPERTIES
+        {
+            public int dwFlags;
+            public Rect rcDestination;
+            public Rect rcSource;
+            public byte opacity;
+            public bool fVisible;
+            public readonly bool fSourceClientAreaOnly;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct Rect
+        {
+            internal Rect(int left, int top, int right, int bottom)
+            {
+                Left = left;
+                Top = top;
+                Right = right;
+                Bottom = bottom;
+            }
+
+            public readonly int Left;
+            public readonly int Top;
+            public int Right;
+            public int Bottom;
+        }
+        
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct PSIZE
+        {
+            public readonly int x;
+            public readonly int y;
+        }
+
+        public static IntPtr FindSkylineWindow(int processId)
+        {
+            IntPtr skylineWindow = IntPtr.Zero;
+
+            EnumWindows(
+                delegate(IntPtr wnd, IntPtr param)
+                {
+                    uint id;
+                    GetWindowThreadProcessId(wnd, out id);
+
+                    if ((int) id == processId &&
+                        (GetWindowLongA(wnd, GWL_STYLE) & TARGETWINDOW) == TARGETWINDOW)
+                    {
+                        skylineWindow = wnd;
+                        return false;
+                    }
+                    return true;
+                },
+                (IntPtr)processId);
+
+            return skylineWindow;
         }
 
         private Summary.Run GetSelectedRun()
@@ -267,7 +421,7 @@ namespace SkylineTester
                             var totalMemory = double.Parse(memory[1].Split(' ')[0]);
 
                             var testNumber = line.Substring(8, 7).Trim();
-                            if (_labels.Count > 0 && _labels[_labels.Count - 1] == testNumber)
+                            if (managedPointList.Count > 0 && _labels[_labels.Count - 1] == testNumber)
                             {
                                 managedPointList[managedPointList.Count - 1].Y = managedMemory;
                                 totalPointList[totalPointList.Count - 1].Y = totalMemory;

@@ -644,7 +644,6 @@ namespace SkylineTester
         public ComboBox         QualityBuildType            { get { return qualityBuildType; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
         public TextBox          QualityEndTime              { get { return qualityEndTime; } }
-        public RadioButton      QualityRunOne               { get { return qualityRunNow; } }
         public RadioButton      QualityRunSchedule          { get { return qualityRunSchedule; } }
         public TextBox          QualityStartTime            { get { return qualityStartTime; } }
         public CheckBox         RegenerateCache             { get { return regenerateCache; } }
@@ -652,6 +651,7 @@ namespace SkylineTester
         public TextBox          RunLoopsCount               { get { return runLoopsCount; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
+        public PictureBox       SkylineThumbnail            { get { return skylineThumbnail; } }
         public TabPage          QualityPage                 { get { return tabQuality; } }
         public TabControl       Tabs                        { get { return tabs; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
