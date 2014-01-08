@@ -42,7 +42,7 @@ namespace TestRunner
 {
     internal static class Program
     {
-        private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll" /*, "CommonTest.dll"*/};
+        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll" };
         private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
         private const int LeakThreshold = 2000;
         private const int CrtLeakThreshold = 1000;
@@ -252,7 +252,6 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(demoMode, buildMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
-            var random = new Random(397);   // fixed order random numbers for repeatability
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
@@ -397,10 +396,14 @@ namespace TestRunner
                 passEnd = int.MaxValue;
             }
 
+            int languageIndex = -1;
             for (; pass < passEnd; pass++)
             {
                 if (testList.Count == 0)
                     break;
+
+                languageIndex = (languageIndex + 1)%languages.Length;
+                runTests.Language = new CultureInfo(languages[languageIndex]);
 
                 // Run each test in this test pass.
                 int testNumber = 0;
@@ -411,8 +414,6 @@ namespace TestRunner
 
                     for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                     {
-                        var randomIndex = random.Next(languages.Length);
-                        runTests.Language = new CultureInfo(languages[randomIndex]);
                         if (!runTests.Run(test, pass, testNumber))
                             removeList.Add(test);
                     }

@@ -153,7 +153,10 @@ namespace CommonTest.DataBinding
                                 }
                                 index++;
                             }
-                            CollectionAssert.AreEqual(targetList, boundList.ToArray());
+                            if (!targetList.SequenceEqual(boundList.ToArray()))
+                            {
+                                CollectionAssert.AreEqual(targetList, boundList.ToArray());
+                            }
 
                             foreach (var deletion in boundList.ItemDeletions)
                             {
