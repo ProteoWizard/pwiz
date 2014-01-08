@@ -118,29 +118,6 @@
     <Component Feature="MainFeature"><File Id="_SharpSvn_SASL21_23_x64.dll" Name="SharpSvn-SASL21-23-x64.dll" Source="msvc-release\SharpSvn-SASL21-23-x64.dll" KeyPath="yes"/></Component>
 <?endif?>
 
-<!-- Bruker and T2D support not available in 64-bit -->
-<?if $(var.AddressModel)=32 ?>
-    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.dll" Name="BDal.CXt.Lc.dll" Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Factory.dll" Name="BDal.CXt.Lc.Factory.dll" Source="msvc-release\BDal.CXt.Lc.Factory.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Interfaces.dll" Name="BDal.CXt.Lc.Interfaces.dll" Source="msvc-release\BDal.CXt.Lc.Interfaces.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.UntU2.dll" Name="BDal.CXt.Lc.UntU2.dll" Source="msvc-release\BDal.CXt.Lc.UntU2.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_NTB_vc80_mt_1_5_97.dll" Name="NTB-vc80-mt-1_5_97.dll" Source="msvc-release\NTB-vc80-mt-1_5_97.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_Interop.EDAL.dll" Name="Interop.EDAL.dll" Source="msvc-release\Interop.EDAL.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_Interop.EDAL.SxS.manifest" Name="Interop.EDAL.SxS.manifest" Source="msvc-release\Interop.EDAL.SxS.manifest" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.dll" Name="Interop.HSREADWRITELib.dll" Source="msvc-release\Interop.HSREADWRITELib.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.SxS.manifest" Name="Interop.HSREADWRITELib.SxS.manifest" Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_libfftw3_3.dll" Name="libfftw3-3.dll" Source="msvc-release\libfftw3-3.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_libfftw3f_3.dll" Name="libfftw3f-3.dll" Source="msvc-release\libfftw3f-3.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_FlexVariableTable.xml" Name="FlexVariableTable.xml" Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_HSReadWrite.dll" Name="HSReadWrite.dll" Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_ICRVariableTable.xml" Name="ICRVariableTable.xml" Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_CompassXtractMS.dll" Name="CompassXtractMS.dll" Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_boost_date_time_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_boost_regex_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_boost_thread_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_Interop.DataExplorer.dll" Name="Interop.DataExplorer.dll" Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
-<?endif?>
-
 <!-- Components shared by IDPicker and ProteoWizard -->
 <Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll" Name="CustomDataSourceDialog.dll" Source="msvc-release\CustomDataSourceDialog.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll.config" Name="CustomDataSourceDialog.dll.config" Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
