@@ -104,7 +104,7 @@ namespace pwiz.SkylineTest
             // let's also check the precision handling and field exception in AssertEx.FieldsEqual
             var A = String.Join("\n", lines).Replace("cat","hamster");  // change col 2, then ignore it // Not L10N
             var B = String.Join("\n", lines).Replace("1.1","1.09");  // add error at limits of precision, then allow for it // Not L10N
-            AssertEx.FieldsEqual(A,B, countFields: 4, exceptIndex: 2, allowForTinyNumericDifferences: true);  
+            AssertEx.FieldsEqual(A, B, 4, 2, true);  
 
         }
 

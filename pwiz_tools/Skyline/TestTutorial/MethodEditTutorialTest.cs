@@ -422,7 +422,7 @@ namespace pwiz.SkylineTestTutorial
                 using (TextReader target = new StreamReader(TestFilesDirs[0].GetTestPath(csvname)))
                 using (TextReader actual = new StreamReader(TestFilesDirs[1].GetTestPath(csvname)))
                 {
-                    AssertEx.FieldsEqual(target, actual, exceptIndex: null, countFields: 6, allowForTinyNumericDifferences: true);
+                    AssertEx.FieldsEqual(target, actual, 6, null, true);
                 }
             }
         }
