@@ -448,20 +448,6 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.Height = Math.Max(viewEditor.Height, 600);
                 Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
-                Assert.AreEqual(1, viewEditor.ChooseColumnsTab.ColumnCount);
-                var expectedFields = new[]
-                {
-                    // Not L10N
-                    PropertyPath.Parse("Proteins!*.Name"),
-                    PropertyPath.Parse("Proteins!*.Description"),
-                    PropertyPath.Parse("Proteins!*.Sequence"),
-                    PropertyPath.Parse("Proteins!*.Note"),
-                    PropertyPath.Parse("Replicates").LookupAllItems(),
-                };
-                foreach (var id in expectedFields)
-                {
-                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
-                }
             });
             PauseForScreenShot();
 
@@ -692,12 +678,14 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();
             RunUI(viewEditor.OkDialog);
             PauseForScreenShot();
+            RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
                 findPeptideDlg.SearchString = "INDISHTQSVSAK"; // Not L10N
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
+            PauseForScreenShot("Highlight the menu item 'View>Peak Areas>Replicate Comparison'");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
             PauseForScreenShot(); // p. 21
@@ -706,7 +694,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Results Grid View, p. 22
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("ResultsGridInFrontOfPeakAreas.view"));
-            PauseForScreenShot();
+            PauseForScreenShot("Take full screen capture of floating windows");
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("DockedResultsGridAndPeakAreas.view"));
             PauseForScreenShot();
 
