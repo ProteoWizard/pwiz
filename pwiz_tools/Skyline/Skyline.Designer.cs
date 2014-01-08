@@ -514,10 +514,9 @@ namespace pwiz.Skyline
             // 
             // irtStandardContextMenuItem
             // 
-            this.irtStandardContextMenuItem.Checked = true;
-            this.irtStandardContextMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            resources.ApplyResources(this.irtStandardContextMenuItem, "irtStandardContextMenuItem");
             this.irtStandardContextMenuItem.Name = "irtStandardContextMenuItem";
+            resources.ApplyResources(this.irtStandardContextMenuItem, "irtStandardContextMenuItem");
+            this.irtStandardContextMenuItem.Click += new System.EventHandler(this.irtStandardContextMenuItem_Click);
             // 
             // modifyPeptideContextMenuItem
             // 

@@ -173,29 +173,25 @@
     <value>Remove Peak</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="noStandardContextMenuItem.Text" xml:space="preserve">
     <value>None</value>
   </data>
   <data name="normStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="normStandardContextMenuItem.Text" xml:space="preserve">
     <value>Normalization</value>
   </data>
   <data name="qcStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
     <value>QC</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="irtStandardContextMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 22</value>
+    <value>152, 22</value>
   </data>
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
@@ -212,6 +208,7 @@
   <data name="modifyPeptideContextMenuItem.Text" xml:space="preserve">
     <value>Modify...</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -261,7 +258,7 @@
     <value>Replicates</value>
   </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>170, 264</value>
+    <value>170, 286</value>
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>

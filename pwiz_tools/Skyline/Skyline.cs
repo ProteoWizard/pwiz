@@ -1651,11 +1651,9 @@ namespace pwiz.Skyline
 
         private void setStandardTypeContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            bool isIrtPeptideSelected = IsIrtPeptideSelected();
-            noStandardContextMenuItem.Enabled =
-                qcStandardContextMenuItem.Enabled =
-                normStandardContextMenuItem.Enabled = !isIrtPeptideSelected;
-            irtStandardContextMenuItem.Visible = isIrtPeptideSelected;
+            // Only show iRT menu item when there is an iRT calculator
+            var rtRegression = Document.Settings.PeptideSettings.Prediction.RetentionTime;
+            irtStandardContextMenuItem.Visible = (rtRegression != null && rtRegression.Calculator is RCalcIrt);
         }
 
         private void setStandardTypeMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -1690,6 +1688,12 @@ namespace pwiz.Skyline
         private void normStandardMenuItem_Click(object sender, EventArgs e)
         {
             SetStandardType(PeptideDocNode.STANDARD_TYPE_NORMALIZAITON);
+        }
+
+        private void irtStandardContextMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_,
+                Resources.SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_));
         }
 
         public void SetStandardType(string standardType)

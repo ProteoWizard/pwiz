@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -426,7 +425,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p34.view")); // back to normal view
 
             pepIndex = JumpToPeptide("GVVDSEDLPLNISR"); // Not L10N
-            RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
+            RunUI(() => SkylineWindow.ShowChromatogramLegends(true));
             PauseForScreenShot("page 34 upper - chromatograms for peptide GVVDSEDLPLNISR");
 
             ZoomBoth(35.05,36.9,480);
@@ -434,27 +433,27 @@ namespace pwiz.SkylineTestTutorial
             ChangePeakBounds(TIP3, pepIndex, 35.7, 36.5); // adjust integration per tutorial 
             CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]); // check the new idotp values
 
-            pepIndex = JumpToPeptide("DQVANSAFVER"); // Not L10N
+            /* pepIndex = */ JumpToPeptide("DQVANSAFVER"); // Not L10N
             PauseForScreenShot("page 35 upper - chromatograms for peptide DQVANSAFVER");
 
-            int[] m1 = {2};
-            PickTransitions(pepIndex, m1); // enable [M+1] only
-            // Measured times in TIB_L are different from displayed times, because of alignment
-            ChangePeakBounds(TIB_L, pepIndex, 23.99, 25.29); 
-            ChangePeakBounds(TIP3, pepIndex, 23.81, 25.21);
-            // First transition selected for screenshot
-            RunUI(() =>
-            {
-                var pathPep = SkylineWindow.SelectedPath;
-                var nodePep = ((PeptideTreeNode)SkylineWindow.SelectedNode).DocNode;
-                var nodeGroup = nodePep.TransitionGroups.First();
-                var nodeTran = nodeGroup.Transitions.First();
-                SkylineWindow.SelectedPath = new IdentityPath(
-                    new IdentityPath(pathPep, nodeGroup.TransitionGroup), nodeTran.Transition);
-            });
-            PauseForScreenShot("page 36 - M+1 only, with adjusted integration");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest]);
+//            int[] m1 = {2};
+//            PickTransitions(pepIndex, m1); // enable [M+1] only
+//            // Measured times in TIB_L are different from displayed times, because of alignment
+//            ChangePeakBounds(TIB_L, pepIndex, 23.99, 25.29); 
+//            ChangePeakBounds(TIP3, pepIndex, 23.81, 25.21);
+//            // First transition selected for screenshot
+//            RunUI(() =>
+//            {
+//                var pathPep = SkylineWindow.SelectedPath;
+//                var nodePep = ((PeptideTreeNode)SkylineWindow.SelectedNode).DocNode;
+//                var nodeGroup = nodePep.TransitionGroups.First();
+//                var nodeTran = nodeGroup.Transitions.First();
+//                SkylineWindow.SelectedPath = new IdentityPath(
+//                    new IdentityPath(pathPep, nodeGroup.TransitionGroup), nodeTran.Transition);
+//            });
+//            PauseForScreenShot("page 36 - M+1 only, with adjusted integration");
+//            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+//            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest]);
 
             var docAfter = SkylineWindow.Document;
 

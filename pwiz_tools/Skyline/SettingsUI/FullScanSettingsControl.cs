@@ -729,14 +729,15 @@ namespace pwiz.Skyline.SettingsUI
                     break;
                 case RetentionTimeFilterType.scheduling_windows:
                     radioUseSchedulingWindow.Checked = true;
+                    tbxTimeAroundPrediction.Text = length.ToString(CultureInfo.CurrentUICulture);
                     break;
                 case RetentionTimeFilterType.ms2_ids:
                     radioTimeAroundMs2Ids.Checked = true;
+                    tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
                     break;
                 default:
                     throw new ArgumentException(Resources.FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType, "retentionTimeFilterType"); // Not L10N
             }
-            tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
         }
 
         public double TimeAroundMs2Ids

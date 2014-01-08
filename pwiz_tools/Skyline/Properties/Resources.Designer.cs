@@ -13994,6 +13994,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator..
+        /// </summary>
+        public static string SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Predicti" +
+                        "on_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The standard peptides for an iRT calculator can only be set in the iRT calculator editor..
+        /// </summary>
+        public static string SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_c" +
+                        "alculator_can_only_be_set_in_the_iRT_calculator_editor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Must be called from event thread.
         /// </summary>
         public static string SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread {

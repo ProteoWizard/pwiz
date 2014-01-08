@@ -123,12 +123,13 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.qit;
                     transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
-                    transitionSettingsUI.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 2);
                 });
                 PauseForScreenShot("p. 6 - Low res full-scan settings");
 
                 RunUI(() =>
                 {
+                    transitionSettingsUI.SetRetentionTimeFilter(RetentionTimeFilterType.ms2_ids, 2);
+
                     // p.6 - library ion match tolerance same as extraction window
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library;
                     transitionSettingsUI.IonMatchTolerance = 0.7;
@@ -553,6 +554,8 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
+                    transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
+
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
                     transitionSettingsUI.FragmentTypes += ", p";
                 });
@@ -625,7 +628,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
-                    transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.scheduling_windows;
+                    transitionSettingsUI.SetRetentionTimeFilter(RetentionTimeFilterType.scheduling_windows, 1);
                 });
 
                 PauseForScreenShot("p 33 - scheduled extraction");
