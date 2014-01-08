@@ -20,8 +20,8 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 using Timer = System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline.Controls.Graphs

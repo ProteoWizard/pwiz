@@ -19,8 +19,8 @@
 
 using System;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {

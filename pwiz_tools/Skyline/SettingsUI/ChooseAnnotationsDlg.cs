@@ -19,11 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {

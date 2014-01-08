@@ -80,7 +80,7 @@ namespace TestRunner
 
         public string ArgAsString(string argName)
         {
-            return _args[argName].Replace("\r", "").Replace("\n", "");
+            return _args[argName];
         }
 
         public long ArgAsLong(string argName)

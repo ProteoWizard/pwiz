@@ -27,7 +27,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
 using Newtonsoft.Json;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;

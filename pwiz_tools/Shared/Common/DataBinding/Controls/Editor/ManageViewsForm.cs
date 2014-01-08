@@ -20,14 +20,13 @@
 using System;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
     /// <summary>
     /// UI for adding, and removing custom views.
     /// </summary>
-    public partial class ManageViewsForm : FormEx
+    public partial class ManageViewsForm : Form
     {
         private ViewSpec[] _views = new ViewSpec[0];
         public ManageViewsForm(IViewContext viewContext)

@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+﻿using ZedGraph;
+
+namespace pwiz.Skyline.Controls.Graphs
 {
     partial class AlignmentForm
     {

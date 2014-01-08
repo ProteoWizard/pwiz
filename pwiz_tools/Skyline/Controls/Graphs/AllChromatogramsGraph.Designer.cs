@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+﻿using System;
+
+namespace pwiz.Skyline.Controls.Graphs
 {
     partial class AllChromatogramsGraph
     {

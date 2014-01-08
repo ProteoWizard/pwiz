@@ -2275,20 +2275,11 @@ namespace pwiz.Skyline
             rectFloat.Y += rectFloat.Height / 3;
             rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
             rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-            if (Offscreen)
-            {
-                var offscreenPoint = GetOffscreenPoint();
-                rectFloat.X = offscreenPoint.X;
-                rectFloat.Y = offscreenPoint.Y;
-            }
-            else
-            {
-                // Make sure it is on the screen.
-                var screen = Screen.FromControl(dockPanel);
-                var rectScreen = screen.WorkingArea;
-                rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-                rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
-            }
+            // Make sure it is on the screen.
+            var screen = Screen.FromControl(dockPanel);
+            var rectScreen = screen.WorkingArea;
+            rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
+            rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
             return rectFloat;
         }
 
@@ -2300,13 +2291,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_graphRetentionTime != null && !Offscreen)
+                if (_graphRetentionTime != null)
                 {
                     _graphRetentionTime.Activate();
                 }
                 else
                 {
-                    _graphRetentionTime = _graphRetentionTime ?? CreateGraphRetentionTime();
+                    _graphRetentionTime = CreateGraphRetentionTime();
 
                     // Choose a position to float the window
                     var rectFloat = GetFloatingRectangleForNewWindow();
@@ -3065,13 +3056,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_graphPeakArea != null && !Offscreen)
+                if (_graphPeakArea != null)
                 {
                     _graphPeakArea.Activate();
                 }
                 else
                 {
-                    _graphPeakArea = _graphPeakArea ?? CreateGraphPeakArea();
+                    _graphPeakArea = CreateGraphPeakArea();
 
                     // Choose a position to float the window
                     var rectFloat = GetFloatingRectangleForNewWindow();
@@ -3638,13 +3629,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_resultsGridForm != null && !Offscreen)
+                if (_resultsGridForm != null)
                 {
                     _resultsGridForm.Activate();
                 }
                 else
                 {
-                    _resultsGridForm = _resultsGridForm ?? CreateResultsGrid();
+                    _resultsGridForm = CreateResultsGrid();
 
                     var rectFloat = GetFloatingRectangleForNewWindow();
                     _resultsGridForm.Show(dockPanel, rectFloat);
@@ -3710,13 +3701,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_documentGridForm != null && !Offscreen)
+                if (_documentGridForm != null)
                 {
                     _documentGridForm.Activate();
                 }
                 else
                 {
-                    _documentGridForm = _documentGridForm ?? CreateDocumentGrid();
+                    _documentGridForm = CreateDocumentGrid();
                     var rectFloat = GetFloatingRectangleForNewWindow();
                     _documentGridForm.Show(dockPanel, rectFloat);
                 }

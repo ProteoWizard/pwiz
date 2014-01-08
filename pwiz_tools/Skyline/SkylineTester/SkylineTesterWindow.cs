@@ -39,8 +39,6 @@ namespace SkylineTester
 
         public const string QualityLogsDirectory = "Quality logs";
         public const string SummaryLog = "Summary.log";
-        public const string SkylineTesterZip = "SkylineTester.zip";
-        public const string SkylineTesterFiles = "SkylineTester Files";
 
         public string Subversion { get; private set; }
         public string Devenv { get; private set; }
@@ -129,9 +127,9 @@ namespace SkylineTester
                 return; // design mode
 
             // Register file/exe/icon associations.
-            var checkRegistry = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null, null);
+            var checkRegistry = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTesterx\shell\open\command", null, null);
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null,
-                Assembly.GetExecutingAssembly().Location.Quote() + @" ""%1""");
+                Assembly.GetExecutingAssembly().Location + @" ""%1""");
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skyt", null, "SkylineTester");
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skytr", null, "SkylineTester");
             

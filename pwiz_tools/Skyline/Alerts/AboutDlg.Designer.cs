@@ -1,4 +1,7 @@
-﻿namespace pwiz.Skyline.Alerts
+﻿using System;
+using System.Drawing;
+
+namespace pwiz.Skyline.Alerts
 {
     partial class AboutDlg
     {

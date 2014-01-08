@@ -69,7 +69,6 @@ namespace TestRunnerLib
             // Set Skyline state for unit testing.
             Skyline = new InvokeSkyline();
             Skyline.Set("StressTest", true);
-            Skyline.Set("FunctionalTest", true);
             Skyline.Set("SkylineOffscreen", !demoMode && offscreen);
             Skyline.Set("DemoMode", demoMode);
             Skyline.Set("NoVendorReaders", !useVendorReaders);

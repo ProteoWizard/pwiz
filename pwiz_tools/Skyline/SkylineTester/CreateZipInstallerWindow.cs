@@ -27,6 +27,9 @@ namespace SkylineTester
 {
     public partial class CreateZipInstallerWindow : Form
     {
+        private const string SKYLINE_TESTER_ZIP = "SkylineTester.zip";
+        private const string FILES_DIR = "SkylineTester Files";
+
         // Excluded files must be lower-case!
         private static readonly List<string> EXCLUDED_FILES = new List<string>
         {
@@ -72,7 +75,7 @@ namespace SkylineTester
         public static void CreateZipFile(string zipPath)
         {
             Console.WriteLine();
-            Console.WriteLine("# Creating " + SkylineTesterWindow.SkylineTesterZip + "...");
+            Console.WriteLine("# Creating " + SKYLINE_TESTER_ZIP + "...");
             Console.WriteLine();
 
             if (File.Exists(zipPath))
@@ -110,8 +113,8 @@ namespace SkylineTester
                     if (Include(directory))
                     {
                         var name = Path.GetFileName(directory) ?? "";
-                        Console.WriteLine(Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
-                        zipFile.AddDirectory(directory, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
+                        Console.WriteLine(Path.Combine(FILES_DIR, name));
+                        zipFile.AddDirectory(directory, Path.Combine(FILES_DIR, name));
                     }
                 }
 
@@ -125,7 +128,7 @@ namespace SkylineTester
                 // Add test zip files.
                 var zipFilesList = new List<string>();
                 FindZipFiles(solutionDirectory, zipFilesList);
-                var zipFilesDirectory = Path.Combine(SkylineTesterWindow.SkylineTesterFiles, "TestZipFiles");
+                var zipFilesDirectory = Path.Combine(FILES_DIR, "TestZipFiles");
                 foreach (var testZipFile in zipFilesList)
                 {
                     var testZipDirectory = Path.GetDirectoryName(testZipFile);
@@ -157,7 +160,7 @@ namespace SkylineTester
             return (name != null && !EXCLUDED_FILES.Contains(name.ToLower()));
         }
 
-        static void AddFile(string filePath, ZipFile zipFile, string zipDirectory = SkylineTesterWindow.SkylineTesterFiles)
+        static void AddFile(string filePath, ZipFile zipFile, string zipDirectory = FILES_DIR)
         {
             var name = Path.GetFileName(filePath);
             if (name == null)

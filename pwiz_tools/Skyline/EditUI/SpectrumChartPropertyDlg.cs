@@ -19,11 +19,11 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {

@@ -25,7 +25,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 

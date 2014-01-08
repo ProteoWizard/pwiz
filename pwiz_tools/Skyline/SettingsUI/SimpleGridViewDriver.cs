@@ -20,9 +20,9 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {

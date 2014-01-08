@@ -29,7 +29,6 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -478,7 +477,7 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-                FormEx.TestMode = true;
+                Program.FunctionalTest = true;
                 LocalizationHelper.InitThread();
 
                 // Unzip test files.
@@ -665,7 +664,7 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(string viewFilePath)
         {
-            if (!FormEx.Offscreen)
+            if (!Program.SkylineOffscreen)
                 RunUI(() => SkylineWindow.LoadLayout(new FileStream(viewFilePath, FileMode.Open)));            
         }
 

@@ -19,10 +19,10 @@
 using System;
 using System.ComponentModel;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI

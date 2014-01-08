@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿using pwiz.Skyline.Properties;
+
+namespace pwiz.Skyline.SettingsUI
 {
     partial class PeptideSettingsUI
     {
