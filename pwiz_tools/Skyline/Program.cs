@@ -24,6 +24,7 @@ using System.IO.Pipes;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -112,6 +113,9 @@ namespace pwiz.Skyline
                 Process.GetCurrentProcess().Kill();
                 return;
             }
+
+            CommonFormEx.TestMode = FunctionalTest;
+            CommonFormEx.Offscreen = SkylineOffscreen;
 
             try
             {

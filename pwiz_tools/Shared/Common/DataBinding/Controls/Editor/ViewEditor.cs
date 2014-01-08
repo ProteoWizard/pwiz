@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -30,7 +31,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     /// <summary>
     /// User interface for choosing which columns should go in a view, and setting the filter and sort.
     /// </summary>
-    public partial class ViewEditor : Form, IViewEditor
+    public partial class ViewEditor : CommonFormEx, IViewEditor
     {
         private bool _inChangeView;
         private bool _showHiddenFields;

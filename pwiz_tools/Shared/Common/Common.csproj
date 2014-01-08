@@ -75,6 +75,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\CommonFormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Controls\DoubleBufferedListView.cs">
       <SubType>Component</SubType>
     </Compile>

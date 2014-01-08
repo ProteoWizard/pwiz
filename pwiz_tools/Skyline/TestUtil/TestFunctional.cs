@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -505,6 +506,7 @@ namespace pwiz.SkylineTestUtil
 
                 // Were all windows disposed?
                 FormEx.CheckAllFormsDisposed();
+                CommonFormEx.CheckAllFormsDisposed();
 
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
             }

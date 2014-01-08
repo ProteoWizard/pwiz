@@ -397,9 +397,10 @@ namespace pwiz.Skyline
                 if (_graphRetentionTime != null)
                     listUpdateGraphs.Add(_graphRetentionTime);
                 if (_graphPeakArea != null)
-                    listUpdateGraphs.Add(_graphPeakArea);                
-                if (_resultsGridForm is ResultsGridForm)
-                    listUpdateGraphs.Add((ResultsGridForm) _resultsGridForm);
+                    listUpdateGraphs.Add(_graphPeakArea);
+                var form = _resultsGridForm as ResultsGridForm;
+                if (form != null)
+                    listUpdateGraphs.Add(form);
             }
 
             UpdateGraphPanes(listUpdateGraphs);
@@ -2275,11 +2276,20 @@ namespace pwiz.Skyline
             rectFloat.Y += rectFloat.Height / 3;
             rectFloat.Width = Math.Max(600, rectFloat.Width / 2);
             rectFloat.Height = Math.Max(440, rectFloat.Height / 2);
-            // Make sure it is on the screen.
-            var screen = Screen.FromControl(dockPanel);
-            var rectScreen = screen.WorkingArea;
-            rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
-            rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
+            if (Program.SkylineOffscreen)
+            {
+                var offscreenPoint = GetOffscreenPoint();
+                rectFloat.X = offscreenPoint.X;
+                rectFloat.Y = offscreenPoint.Y;
+            }
+            else
+            {
+                // Make sure it is on the screen.
+                var screen = Screen.FromControl(dockPanel);
+                var rectScreen = screen.WorkingArea;
+                rectFloat.X = Math.Max(rectScreen.X, Math.Min(rectScreen.Width - rectFloat.Width, rectFloat.X));
+                rectFloat.Y = Math.Max(rectScreen.Y, Math.Min(rectScreen.Height - rectFloat.Height, rectFloat.Y));
+            }
             return rectFloat;
         }
 
@@ -2291,13 +2301,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_graphRetentionTime != null)
+                if (_graphRetentionTime != null && !Program.SkylineOffscreen)
                 {
                     _graphRetentionTime.Activate();
                 }
                 else
                 {
-                    _graphRetentionTime = CreateGraphRetentionTime();
+                    _graphRetentionTime = _graphRetentionTime ?? CreateGraphRetentionTime();
 
                     // Choose a position to float the window
                     var rectFloat = GetFloatingRectangleForNewWindow();
@@ -3056,13 +3066,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_graphPeakArea != null)
+                if (_graphPeakArea != null && !Program.SkylineOffscreen)
                 {
                     _graphPeakArea.Activate();
                 }
                 else
                 {
-                    _graphPeakArea = CreateGraphPeakArea();
+                    _graphPeakArea = _graphPeakArea ?? CreateGraphPeakArea();
 
                     // Choose a position to float the window
                     var rectFloat = GetFloatingRectangleForNewWindow();
@@ -3629,13 +3639,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_resultsGridForm != null)
+                if (_resultsGridForm != null && !Program.SkylineOffscreen)
                 {
                     _resultsGridForm.Activate();
                 }
                 else
                 {
-                    _resultsGridForm = CreateResultsGrid();
+                    _resultsGridForm = _resultsGridForm ?? CreateResultsGrid();
 
                     var rectFloat = GetFloatingRectangleForNewWindow();
                     _resultsGridForm.Show(dockPanel, rectFloat);
@@ -3701,13 +3711,13 @@ namespace pwiz.Skyline
         {
             if (show)
             {
-                if (_documentGridForm != null)
+                if (_documentGridForm != null && !Program.SkylineOffscreen)
                 {
                     _documentGridForm.Activate();
                 }
                 else
                 {
-                    _documentGridForm = CreateDocumentGrid();
+                    _documentGridForm = _documentGridForm ?? CreateDocumentGrid();
                     var rectFloat = GetFloatingRectangleForNewWindow();
                     _documentGridForm.Show(dockPanel, rectFloat);
                 }
