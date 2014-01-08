@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Model.Databinding
             PropertyPath precursorResult = transitionResult.Property("PrecursorResult");
             PropertyPath peptideResult = precursorResult.Property("PeptideResult");
             PropertyPath resultFile = peptideResult.Property("ResultFile");
-            PropertyPath replicate = peptideResult.Property("Replicate");
+            PropertyPath replicate = resultFile.Property("Replicate");
 
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {

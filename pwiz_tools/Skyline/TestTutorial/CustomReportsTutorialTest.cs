@@ -56,8 +56,17 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
 
-            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/CustomReports.zip";
+            TestFilesZipPaths = new[]
+            {
+                @"https://skyline.gs.washington.edu/tutorials/CustomReports.zip",
+                @"TestTutorial\CustomReportsViews.zip"
+            };
             RunFunctionalTest();
+        }
+
+        private new TestFilesDir TestFilesDir
+        {
+            get { return TestFilesDirs[0]; }
         }
 
         protected override void DoTest()
@@ -559,12 +568,12 @@ namespace pwiz.SkylineTestTutorial
             // Modifying Existing Report Templates, p. 13
             var editReportListDlg1 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg1.SelectItem(customReportName)); // Not L10N
-            var pivotReportDlg0 = ShowDialog<ViewEditor>(editReportListDlg1.CopyItem);
+            var viewEditor = ShowDialog<ViewEditor>(editReportListDlg1.CopyItem);
             PauseForScreenShot();
 
             RunUI(() =>
             {
-                pivotReportDlg0.ViewName = "Study 7"; // Not L10N
+                viewEditor.ViewName = "Study 7"; // Not L10N
                 // Not L10N
                 var columnsToAdd = new[]
                                        {
@@ -594,20 +603,20 @@ namespace pwiz.SkylineTestTutorial
                                        };
                 foreach (var id in columnsToAdd)
                 {
-                    Assert.IsTrue(pivotReportDlg0.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
-                    pivotReportDlg0.ChooseColumnsTab.AddSelectedColumn();
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 }
-                var pivotWidget = pivotReportDlg0.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First();
+                var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First();
                 pivotWidget.SetPivotReplicate(false);
+                viewEditor.Height = Math.Max(viewEditor.Height, 610);
             });
             PauseForScreenShot();   // p. 15
 
             int columnCount = 0;
             int rowCount = 0;
             {
-                var previewReportDlg = ShowDialog<DocumentGridForm>(pivotReportDlg0.ShowPreview);
+                var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
                 WaitForCondition(() => previewReportDlg.ColumnCount > 0);
-                PauseForScreenShot();
                 RunUI(() =>
                 {
                     columnCount = previewReportDlg.ColumnCount;
@@ -615,22 +624,22 @@ namespace pwiz.SkylineTestTutorial
                 });
                 OkDialog(previewReportDlg, previewReportDlg.Close);
             }
-            RunUI(() => pivotReportDlg0.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotIsotopeLabel(true));
+            RunUI(() => viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotIsotopeLabel(true));
             {
-                var previewReportDlg = ShowDialog<DocumentGridForm>(pivotReportDlg0.ShowPreview);
+                var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
                 WaitForCondition(() => previewReportDlg.ColumnCount > 0);
                 RunUI(() =>
                 {
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
                     Assert.AreEqual(rowCount / 2, previewReportDlg.RowCount);
                 });
-                PauseForScreenShot();
+                PauseForScreenShot("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"");
                 OkDialog(previewReportDlg, previewReportDlg.Close);
             }
             RunUI(() =>
             {
-                pivotReportDlg0.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse("IsotopeLabelType")); // Not L10N
-                pivotReportDlg0.OkDialog();
+                viewEditor.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse("IsotopeLabelType")); // Not L10N
+                viewEditor.OkDialog();
                 editReportListDlg1.OkDialog();
             });
             PauseForScreenShot();   // p. 17
@@ -646,6 +655,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPeptides();
             });
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"WideSummaryStatistics.view"));
             var documentGridForm = FindOpenForm<DocumentGridForm>();
             var manageViewsForm = ShowDialog<ManageViewsForm>(documentGridForm.ManageViews);
             RunUI(() =>
@@ -657,12 +667,8 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot();
             OkDialog(manageViewsForm, manageViewsForm.Close);
             PauseForScreenShot("Click the views dropdown and highlight 'Summary_stats'");
-            RunUI(() =>
-            {
-                documentGridForm.ChooseView("Summary Statistics");
-                // Resize the documentGridForm so that all the columns we want are visible for the screenshot.
-                documentGridForm.FloatingPane.Width = Math.Max(documentGridForm.FloatingPane.Width, 800);
-            });
+
+            RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
             PauseForScreenShot();
 
@@ -699,9 +705,12 @@ namespace pwiz.SkylineTestTutorial
         protected void DoResultsGridView()
         {
             // Results Grid View, p. 22
-            var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("ResultsGridInFrontOfPeakAreas.view"));
+            PauseForScreenShot();
+            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("DockedResultsGridAndPeakAreas.view"));
             PauseForScreenShot();
 
+            var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
             RunUI(() =>
             {

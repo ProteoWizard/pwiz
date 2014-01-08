@@ -244,6 +244,7 @@
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
+    <None Include="LiveReportsFilterTest.zip" />
     <None Include="ManageLibraryRunsTest.zip" />
     <None Include="ManageResultsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />

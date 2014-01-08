@@ -118,6 +118,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             PropertyPath pivotKey;
             IList<PropertyPath> groupBy;
+            IList<PropertyPath> crossTabExclude;
             IList<PropertyPath> crosstabValues;
             if (viewSpec.RowSource == typeof (Precursor).FullName)
             {
@@ -128,6 +129,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     PropertyPath.Root.Property("Charge"),
                 };
                 crosstabValues = PrecursorCrosstabValues;
+                crossTabExclude = new []{PropertyPath.Parse("Results!*.Value.PeptideResult")};
             }
             else if (viewSpec.RowSource == typeof (Transition).FullName)
             {
@@ -150,6 +152,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }.Concat(PrecursorCrosstabValues.Select(
                     propertyPath => PropertyPath.Root.Property("Precursor").Concat(propertyPath)))
                     .ToArray();
+                crossTabExclude = new[] {PropertyPath.Parse("Results!*.Value.PrecursorResult.PeptideResult")};
             }
             else
             {
@@ -176,6 +179,10 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         pivotKeyHandled = true;
                         newColumns.Add(column.SetTotal(TotalOperation.PivotKey));
+                    }
+                    else if (crossTabExclude.Any(propertyPath => column.PropertyPath.StartsWith(propertyPath)))
+                    {
+                        newColumns.Add(column.SetTotal(TotalOperation.GroupBy));
                     }
                     else if (crosstabValues.Any(propertyPath => column.PropertyPath.StartsWith(propertyPath)))
                     {
