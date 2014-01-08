@@ -52,6 +52,7 @@ namespace SkylineTester
         public int TestsRun { get; set; }
         public string LastTestResult { get; set; }
         public string LastRunName { get; set; }
+        public string RunningTestName { get; private set; }
 
         private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
         {
@@ -172,7 +173,12 @@ namespace SkylineTester
                     if (line.StartsWith("#@ "))
                     {
                         // Update status.
-                        RunUI(() => statusLabel.Text = line.Substring(3));
+                        var parts = line.Split(' ');
+                        RunUI(() =>
+                        {
+                            RunningTestName = parts[2];
+                            statusLabel.Text = line.Substring(3);
+                        });
                         return false;
                     }
 
@@ -230,7 +236,7 @@ namespace SkylineTester
             };
 
             InitQuality();
-            _tabForms.Open();
+            _tabForms.Enter();
             statusLabel.Text = "";
         }
 
@@ -335,9 +341,13 @@ namespace SkylineTester
             base.OnClosed(e);
         }
 
+        private int _previousTab;
+
         private void TabChanged(object sender, EventArgs e)
         {
-            _tabs[tabs.SelectedIndex].Open();
+            _tabs[_previousTab].Leave();
+            _previousTab = tabs.SelectedIndex;
+            _tabs[_previousTab].Enter();
         }
 
         public void ShowOutput()
@@ -649,6 +659,7 @@ namespace SkylineTester
         public TabPage          QualityPage                 { get { return tabQuality; } }
         public RadioButton      QualityRunSchedule          { get { return qualityRunSchedule; } }
         public TextBox          QualityStartTime            { get { return qualityStartTime; } }
+        public Label            QualityTestName             { get { return qualityTestName; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public CheckBox         RegenerateCache             { get { return regenerateCache; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }

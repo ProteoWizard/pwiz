@@ -23,7 +23,7 @@ namespace SkylineTester
 {
     public class TabErrors : TabBase
     {
-        public override void Open()
+        public override void Enter()
         {
             MainWindow.InitLogSelector(MainWindow.ComboErrors, MainWindow.ButtonOpenErrors);
             MainWindow.ErrorsOpenLog.Height = MainWindow.ComboErrors.Height + 2;

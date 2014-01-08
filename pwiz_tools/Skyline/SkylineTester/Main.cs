@@ -161,6 +161,8 @@ namespace SkylineTester
 
         public void RunCommands()
         {
+            RunningTestName = null;
+            commandShell.FinishedOneCommand = () => { RunningTestName = null; };
             commandShell.Run(CommandsDone);
         }
 
@@ -231,9 +233,9 @@ namespace SkylineTester
         public void RefreshLogs()
         {
             if (Tabs.SelectedTab == tabOutput)
-                _tabOutput.Open();
+                _tabOutput.Enter();
             if (Tabs.SelectedTab == tabErrors)
-                _tabErrors.Open();
+                _tabErrors.Enter();
         }
 
         public void InitLogSelector(ComboBox combo, Button openButton, bool showDefaultLog = true)

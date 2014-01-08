@@ -115,6 +115,7 @@ namespace SkylineTester
             this.historyTable = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox11 = new System.Windows.Forms.GroupBox();
+            this.qualityThumbnail = new SkylineTester.WindowThumbnail();
             this.panelMemoryGraph = new System.Windows.Forms.Panel();
             this.buttonDeleteRun = new System.Windows.Forms.Button();
             this.buttonOpenLog = new System.Windows.Forms.Button();
@@ -177,7 +178,7 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.qualityThumbnail = new SkylineTester.WindowThumbnail();
+            this.qualityTestName = new System.Windows.Forms.Label();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -1242,6 +1243,7 @@ namespace SkylineTester
             this.groupBox11.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox11.Controls.Add(this.qualityTestName);
             this.groupBox11.Controls.Add(this.qualityThumbnail);
             this.groupBox11.Controls.Add(this.panelMemoryGraph);
             this.groupBox11.Controls.Add(this.buttonDeleteRun);
@@ -1265,19 +1267,29 @@ namespace SkylineTester
             this.groupBox11.TabStop = false;
             this.groupBox11.Text = "Run results";
             // 
+            // qualityThumbnail
+            // 
+            this.qualityThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.qualityThumbnail.Location = new System.Drawing.Point(317, 21);
+            this.qualityThumbnail.Name = "qualityThumbnail";
+            this.qualityThumbnail.ProcessId = 0;
+            this.qualityThumbnail.Size = new System.Drawing.Size(206, 79);
+            this.qualityThumbnail.TabIndex = 34;
+            // 
             // panelMemoryGraph
             // 
             this.panelMemoryGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelMemoryGraph.Location = new System.Drawing.Point(11, 108);
+            this.panelMemoryGraph.Location = new System.Drawing.Point(11, 126);
             this.panelMemoryGraph.Name = "panelMemoryGraph";
-            this.panelMemoryGraph.Size = new System.Drawing.Size(512, 249);
+            this.panelMemoryGraph.Size = new System.Drawing.Size(512, 231);
             this.panelMemoryGraph.TabIndex = 32;
             // 
             // buttonDeleteRun
             // 
-            this.buttonDeleteRun.Location = new System.Drawing.Point(260, 76);
+            this.buttonDeleteRun.Location = new System.Drawing.Point(205, 92);
             this.buttonDeleteRun.Margin = new System.Windows.Forms.Padding(4);
             this.buttonDeleteRun.Name = "buttonDeleteRun";
             this.buttonDeleteRun.Size = new System.Drawing.Size(96, 24);
@@ -1288,7 +1300,7 @@ namespace SkylineTester
             // 
             // buttonOpenLog
             // 
-            this.buttonOpenLog.Location = new System.Drawing.Point(260, 48);
+            this.buttonOpenLog.Location = new System.Drawing.Point(205, 60);
             this.buttonOpenLog.Margin = new System.Windows.Forms.Padding(4);
             this.buttonOpenLog.Name = "buttonOpenLog";
             this.buttonOpenLog.Size = new System.Drawing.Size(96, 24);
@@ -1300,7 +1312,7 @@ namespace SkylineTester
             // labelLeaks
             // 
             this.labelLeaks.AutoSize = true;
-            this.labelLeaks.Location = new System.Drawing.Point(213, 82);
+            this.labelLeaks.Location = new System.Drawing.Point(87, 103);
             this.labelLeaks.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelLeaks.Name = "labelLeaks";
             this.labelLeaks.Size = new System.Drawing.Size(13, 13);
@@ -1310,7 +1322,7 @@ namespace SkylineTester
             // labelFailures
             // 
             this.labelFailures.AutoSize = true;
-            this.labelFailures.Location = new System.Drawing.Point(213, 54);
+            this.labelFailures.Location = new System.Drawing.Point(87, 87);
             this.labelFailures.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelFailures.Name = "labelFailures";
             this.labelFailures.Size = new System.Drawing.Size(13, 13);
@@ -1320,7 +1332,7 @@ namespace SkylineTester
             // labelTestsRun
             // 
             this.labelTestsRun.AutoSize = true;
-            this.labelTestsRun.Location = new System.Drawing.Point(87, 82);
+            this.labelTestsRun.Location = new System.Drawing.Point(87, 71);
             this.labelTestsRun.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelTestsRun.Name = "labelTestsRun";
             this.labelTestsRun.Size = new System.Drawing.Size(13, 13);
@@ -1340,7 +1352,7 @@ namespace SkylineTester
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(155, 82);
+            this.label12.Location = new System.Drawing.Point(19, 103);
             this.label12.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(39, 13);
@@ -1350,7 +1362,7 @@ namespace SkylineTester
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(155, 54);
+            this.label13.Location = new System.Drawing.Point(19, 87);
             this.label13.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(46, 13);
@@ -1360,7 +1372,7 @@ namespace SkylineTester
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(19, 82);
+            this.label10.Location = new System.Drawing.Point(19, 71);
             this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(54, 13);
@@ -1384,7 +1396,7 @@ namespace SkylineTester
             this.comboRunDate.Location = new System.Drawing.Point(85, 21);
             this.comboRunDate.Margin = new System.Windows.Forms.Padding(4);
             this.comboRunDate.Name = "comboRunDate";
-            this.comboRunDate.Size = new System.Drawing.Size(271, 21);
+            this.comboRunDate.Size = new System.Drawing.Size(216, 21);
             this.comboRunDate.TabIndex = 1;
             this.comboRunDate.SelectedIndexChanged += new System.EventHandler(this.comboRunDate_SelectedIndexChanged);
             // 
@@ -1942,15 +1954,17 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // qualityThumbnail
+            // qualityTestName
             // 
-            this.qualityThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.qualityTestName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.qualityThumbnail.Location = new System.Drawing.Point(363, 21);
-            this.qualityThumbnail.Name = "qualityThumbnail";
-            this.qualityThumbnail.ProcessId = 0;
-            this.qualityThumbnail.Size = new System.Drawing.Size(160, 79);
-            this.qualityThumbnail.TabIndex = 34;
+            this.qualityTestName.AutoEllipsis = true;
+            this.qualityTestName.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.qualityTestName.Location = new System.Drawing.Point(317, 103);
+            this.qualityTestName.Name = "qualityTestName";
+            this.qualityTestName.Size = new System.Drawing.Size(206, 20);
+            this.qualityTestName.TabIndex = 35;
+            this.qualityTestName.Text = "test name";
             // 
             // SkylineTesterWindow
             // 
@@ -2165,6 +2179,7 @@ namespace SkylineTester
         private ComboBox qualityBuildType;
         private Label label18;
         private WindowThumbnail qualityThumbnail;
+        private Label qualityTestName;
     }
 }
 

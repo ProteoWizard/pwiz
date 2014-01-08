@@ -60,15 +60,25 @@ namespace SkylineTester
         
         private void RegisterThumb()
         {
-            UnregisterThumb();
-
             var window = FindWindow(_processId);
             if (window == IntPtr.Zero)
+            {
+                UnregisterThumb();
                 return;
+            }
 
-            DwmRegisterThumbnail(MainWindow.Handle, window, out _thumb);
-            if (_thumb == IntPtr.Zero)
+            IntPtr newThumb;
+            DwmRegisterThumbnail(MainWindow.Handle, window, out newThumb);
+            if (newThumb == IntPtr.Zero)
+            {
+                UnregisterThumb();
                 return;
+            }
+            if (_thumb != newThumb)
+            {
+                UnregisterThumb();
+                _thumb = newThumb;
+            }
 
             Point locationOnForm = MainWindow.PointToClient(Parent.PointToScreen(Location));
 

@@ -25,7 +25,11 @@ namespace SkylineTester
     {
         public static SkylineTesterWindow MainWindow;
 
-        public virtual void Open()
+        public virtual void Enter()
+        {
+        }
+
+        public virtual void Leave()
         {
         }
 

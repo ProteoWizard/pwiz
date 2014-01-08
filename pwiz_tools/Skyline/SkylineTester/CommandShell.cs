@@ -32,7 +32,8 @@ namespace SkylineTester
     {
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
-        public Func<string, bool> FilterFunc { get; set; } 
+        public Func<string, bool> FilterFunc { get; set; }
+        public Action FinishedOneCommand { get; set; }
         public bool DoLiveUpdate { get; set; }
         public int NextCommand { get; set; }
 
@@ -105,8 +106,12 @@ namespace SkylineTester
             RunUI(RunNext);
         }
 
+        // Called on UI thread.
         private void RunNext()
         {
+            if (NextCommand > 0 && FinishedOneCommand != null)
+                FinishedOneCommand();
+
             while (NextCommand < _commands.Count)
             {
                 var line = _commands[NextCommand++];
@@ -165,7 +170,7 @@ namespace SkylineTester
                         }
                         if (Directory.Exists(deleteDir))
                         {
-                            RunUI(() => CommandsDone(false));
+                            CommandsDone(false);
                             return;
                         }
                     }
@@ -188,20 +193,21 @@ namespace SkylineTester
 
         /// <summary>
         /// Handle completion of commands, either by successfully finishing,
-        /// or due to error or user interrupt.
+        /// or due to error or user interrupt.  Run on UI thread.
         /// </summary>
         private void CommandsDone(bool success)
         {
             if (!success)
                 Log("# Stopped." + Environment.NewLine + Environment.NewLine);
-            RunUI(UpdateLog);
+            UpdateLog();
             _commands.Clear();
             _doneAction(success);
         }
 
+        // Run on UI thread.
         public void Done(bool success)
         {
-            RunUI(FinishLog);
+            FinishLog();
             _process = null;
         }
         #endregion
@@ -406,7 +412,7 @@ namespace SkylineTester
         }
 
         /// <summary>
-        /// Close the log after command execution is finished.
+        /// Close the log after command execution is finished.  Run on UI thread.
         /// </summary>
         private void FinishLog()
         {

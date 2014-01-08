@@ -222,7 +222,7 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo] = 1;
 
             Log(
-                "{0,3} failures, {1:0.0}/{2:0.0} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
+                "{0,3} failures, {1}/{2} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
                 FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
                 exception.InnerException.Message,
                 exception.InnerException.StackTrace);

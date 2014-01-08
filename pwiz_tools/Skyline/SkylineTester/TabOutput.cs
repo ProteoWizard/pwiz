@@ -21,7 +21,7 @@ namespace SkylineTester
 {
     public class TabOutput : TabBase
     {
-        public override void Open()
+        public override void Enter()
         {
             MainWindow.InitLogSelector(MainWindow.ComboOutput, MainWindow.ButtonOpenOutput);
             MainWindow.OutputOpenLog.Height = MainWindow.ComboOutput.Height + 2;

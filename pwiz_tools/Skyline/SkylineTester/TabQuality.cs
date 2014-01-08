@@ -39,12 +39,18 @@ namespace SkylineTester
         private int _revision;
         private readonly List<string> _labels = new List<string>();
 
-        public override void Open()
+        public override void Enter()
         {
             MainWindow.InitLogSelector(MainWindow.ComboRunDate, MainWindow.ButtonOpenLog, false);
             WindowThumbnail.MainWindow = MainWindow;
-            UpdateSelectedRun();
+            UpdateThumbnail();
             UpdateHistory();
+            UpdateSelectedRun();
+        }
+
+        public override void Leave()
+        {
+            MainWindow.QualityThumbnail.ProcessId = 0;
         }
 
         public override bool Run()
@@ -97,6 +103,7 @@ namespace SkylineTester
             _qualityTimer.Stop();
             _qualityTimer = null;
 
+            UpdateThumbnail();
             UpdateRun();
             MainWindow.Summary.Save();
             MainWindow.NewQualityRun = null;
@@ -182,7 +189,7 @@ namespace SkylineTester
             revisionWorker.DoWork += (s, a) => _revision = GetRevision(nukeBuild);
             revisionWorker.RunWorkerAsync();
 
-            _qualityTimer = new Timer {Interval = 1000};
+            _qualityTimer = new Timer {Interval = 300};
             _qualityTimer.Tick += (s, a) => RunUI(UpdateQuality);
             _qualityTimer.Start();
 
@@ -207,20 +214,24 @@ namespace SkylineTester
 
         private void UpdateQuality()
         {
-            if (MainWindow.Tabs.SelectedTab == MainWindow.QualityPage &&
-                MainWindow.TestRunnerProcessId != 0)
-            {
-                UpdateRun();
-                if (MainWindow.ComboRunDate.SelectedIndex == 0)
-                    UpdateSelectedRun();
-                UpdateHistory();
-                UpdateThumbnail();
-            }
+            if (MainWindow.Tabs.SelectedTab != MainWindow.QualityPage)
+                return;
+
+            UpdateThumbnail();
+
+            if (MainWindow.TestRunnerProcessId == 0)
+                return;
+
+            UpdateRun();
+            if (MainWindow.ComboRunDate.SelectedIndex == 0)
+                UpdateSelectedRun();
+            UpdateHistory();
         }
 
         private void UpdateThumbnail()
         {
             MainWindow.QualityThumbnail.ProcessId = MainWindow.TestRunnerProcessId;
+            MainWindow.QualityTestName.Text = MainWindow.RunningTestName;
         }
 
         private Summary.Run GetSelectedRun()
@@ -288,24 +299,27 @@ namespace SkylineTester
                             }
                         }
                     }
-
                 }
 
                 RunUI(() =>
                 {
                     pane.CurveList.Clear();
-                    var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
-                    var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
-                    managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150),
-                        -90);
-                    totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220),
-                        -90);
-                    pane.XAxis.Scale.TextLabels = _labels.ToArray();
                     pane.XAxis.Scale.Max = managedPointList.Count - 1;
                     pane.XAxis.Scale.MinGrace = 0;
                     pane.XAxis.Scale.MaxGrace = 0;
                     pane.YAxis.Scale.MinGrace = 0.05;
                     pane.YAxis.Scale.MaxGrace = 0.05;
+                    pane.XAxis.Scale.TextLabels = _labels.ToArray();
+                    pane.Legend.FontSpec.Size = 11;
+                    pane.Title.FontSpec.Size = 13;
+                    pane.XAxis.Title.FontSpec.Size = 11;
+                    pane.XAxis.Scale.FontSpec.Size = 11;
+
+                    var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
+                    var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
+                    managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
+                    totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+
                     pane.AxisChange();
                     MainWindow.GraphMemory.Refresh();
                 });
@@ -441,7 +455,7 @@ namespace SkylineTester
 
                 MainWindow.Summary.Runs.Remove(run);
             }
-            Open();
+            Enter();
         }
 
         private void CreateGraph(string name, ZedGraphControl graph, Color color, string[] labels, double[] data)

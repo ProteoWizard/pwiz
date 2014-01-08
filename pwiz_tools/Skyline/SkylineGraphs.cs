@@ -460,6 +460,9 @@ namespace pwiz.Skyline
 
         private void EnsureFloatingWindowsVisible()
         {
+            if (Program.SkylineOffscreen)
+                return;
+
             foreach (var floatingWindow in dockPanel.FloatingWindows)
             {
                 var screen = Screen.FromControl(floatingWindow);
@@ -2332,7 +2335,7 @@ namespace pwiz.Skyline
                                           TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times,
                                           ResultsIndex = SelectedResultsIndex
                                       };
-            _graphRetentionTime.FormClosed += graphRetentinTime_FormClosed;
+            _graphRetentionTime.FormClosed += graphRetentionTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
             return _graphRetentionTime;
         }
@@ -2341,7 +2344,7 @@ namespace pwiz.Skyline
         {
             if (_graphRetentionTime != null)
             {
-                _graphRetentionTime.FormClosed -= graphRetentinTime_FormClosed;
+                _graphRetentionTime.FormClosed -= graphRetentionTime_FormClosed;
                 _graphRetentionTime.VisibleChanged -= graphRetentionTime_VisibleChanged;
                 _graphRetentionTime.HideOnClose = false;
                 _graphRetentionTime.Close();
@@ -2355,7 +2358,7 @@ namespace pwiz.Skyline
                 (_graphRetentionTime != null && _graphRetentionTime.Visible);
         }
 
-        private void graphRetentinTime_FormClosed(object sender, FormClosedEventArgs e)
+        private void graphRetentionTime_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Update settings and menu check
             Settings.Default.ShowRetentionTimeGraph = false;

@@ -35,7 +35,7 @@ namespace SkylineTester
             CreateFormsTree();
         }
 
-        public override void Open()
+        public override void Enter()
         {
             MainWindow.InitLanguages(MainWindow.FormsLanguage);
         }

@@ -32,7 +32,7 @@ namespace SkylineTester
                 "(Specify absolute path or relative path from {0} folder)".With(Path.GetFileName(MainWindow.RootDir));
         }
 
-        public override void Open()
+        public override void Enter()
         {
             var buildRoot = MainWindow.GetBuildRoot();
             MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(buildRoot);
