@@ -513,7 +513,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return GetDocumentGridRowSources(dataSchema);
         }
-        private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, IList<T> rows)
+        private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, IEnumerable<T> rows)
         {
             var parentColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(T));
             var viewInfo = new ViewInfo(parentColumn, GetDefaultViewInfo(parentColumn).GetViewSpec().SetName(name));

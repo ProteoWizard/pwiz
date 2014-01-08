@@ -211,6 +211,7 @@ namespace pwiz.Common.DataBinding
                 return rowItem.Value;
             }
 
+// ReSharper disable once MemberCanBePrivate.Local
             protected bool Equals(Root other)
             {
                 return base.Equals(other) && _propertyType == other._propertyType;
@@ -287,6 +288,7 @@ namespace pwiz.Common.DataBinding
                 return _propertyDescriptor.Attributes.Cast<Attribute>().Concat(base.GetAttributes());
             }
 
+// ReSharper disable once MemberCanBePrivate.Local
             protected bool Equals(Reflected other)
             {
                 return base.Equals(other) && _propertyDescriptor.Equals(other._propertyDescriptor);
@@ -351,6 +353,7 @@ namespace pwiz.Common.DataBinding
                 get { return _collectionInfo; }
             }
 
+// ReSharper disable once MemberCanBePrivate.Local
             protected bool Equals(Collection other)
             {
                 return base.Equals(other) && _collectionInfo.Equals(other._collectionInfo);

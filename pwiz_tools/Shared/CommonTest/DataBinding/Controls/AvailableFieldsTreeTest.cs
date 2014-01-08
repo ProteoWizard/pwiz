@@ -34,10 +34,10 @@ namespace CommonTest.DataBinding.Controls
         public void TestMapAttribute()
         {
             var tree = new AvailableFieldsTree
-                           {
-                               RootColumn = ColumnDescriptor.RootColumn(new DataSchema(), typeof (Peptide))
-                           };
-            tree.ShowAdvancedFields = true;
+            {
+                RootColumn = ColumnDescriptor.RootColumn(new DataSchema(), typeof (Peptide)),
+                ShowAdvancedFields = true
+            };
             var idAminoAcidMoleculeElement = PropertyPath.Parse("AminoAcidsList!*.Molecule!*.Key");
             Assert.IsNull(tree.FindTreeNode(idAminoAcidMoleculeElement, false));
             var aminoAcidMoleculeElementNode = tree.FindTreeNode(idAminoAcidMoleculeElement, true);

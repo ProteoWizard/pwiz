@@ -47,13 +47,13 @@ namespace pwiz.Skyline.Model.Databinding
             return new SkylineRowSource<T>(caption, makeNodeList);
         }
 
-        public static SkylineRowSource<Protein> Proteins
+        public static readonly SkylineRowSource<Protein> Proteins
             = MakeRowSource("Proteins", schema=>new Proteins(schema));
-        public static SkylineRowSource<Entities.Peptide> Peptides 
+        public static readonly SkylineRowSource<Entities.Peptide> Peptides 
             = MakeRowSource("Peptides", schema => new Peptides(schema, new[]{IdentityPath.ROOT}));
-        public static SkylineRowSource<Precursor> Precursors
+        public static readonly SkylineRowSource<Precursor> Precursors
             = MakeRowSource("Precursors", schema => new Precursors(schema, new[] { IdentityPath.ROOT }));
-        public static SkylineRowSource<Entities.Transition> Transitions 
+        public static readonly SkylineRowSource<Entities.Transition> Transitions 
             = MakeRowSource("Transitions", schema => new Transitions(schema, new[] {IdentityPath.ROOT}));
 
         public static readonly IList<SkylineRowSource> RowSources =

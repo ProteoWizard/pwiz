@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestA
             var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(4));
             var valuesUnimod =  new []
             {
-                "LGGLRPES[+80.0]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
+                "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
             };
             ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
             

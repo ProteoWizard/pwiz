@@ -379,6 +379,7 @@ namespace pwiz.Common.DataBinding
         public virtual DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor)
         {
             DataGridViewColumn column = CreateCustomColumn(propertyDescriptor);
+            // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
             if (null == column)
             {
                 column = CreateLinkColumn(propertyDescriptor);
@@ -566,7 +567,7 @@ namespace pwiz.Common.DataBinding
             var type = propertyDescriptor.PropertyType;
             if (type == typeof(bool) || type == typeof(CheckState))
             {
-                dataGridViewColumn = new DataGridViewCheckBoxColumn(type.Equals(typeof(CheckState)));
+                dataGridViewColumn = new DataGridViewCheckBoxColumn(type == typeof(CheckState));
             }
             else 
             {

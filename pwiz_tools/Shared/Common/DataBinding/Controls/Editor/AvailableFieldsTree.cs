@@ -324,6 +324,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             foreach (var child in parent.GetChildColumns())
             {
                 var collectionColumn = child.GetCollectionColumn();
+                // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
                 if (null != collectionColumn)
                 {
                     result.Add(collectionColumn);

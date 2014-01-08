@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Controls.Databinding
             return currentList;
         }
 
-        private void SetViewSpecList(ReportOrViewSpecList reportOrViewSpecList)
+        private void SetViewSpecList(IEnumerable<ReportOrViewSpec> reportOrViewSpecList)
         {
             var newViews = new List<ViewSpec>();
             var converter = new ReportSpecConverter(new SkylineDataSchema(_documentUiContainer));

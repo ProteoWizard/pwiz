@@ -99,8 +99,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         }
         private ListViewItem MakeListViewColumnItem(DisplayColumn displayColumn)
         {
-            var listViewItem = new ListViewItem();
-            listViewItem.Text = displayColumn.ColumnCaption;
+            var listViewItem = new ListViewItem {Text = displayColumn.ColumnCaption};
             Debug.Assert(!displayColumn.ColumnSpec.Hidden);
             if (!string.IsNullOrEmpty(displayColumn.ColumnSpec.Caption))
             {

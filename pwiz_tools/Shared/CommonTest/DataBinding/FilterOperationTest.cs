@@ -39,9 +39,9 @@ namespace CommonTest.DataBinding
             VerifyFilterCountStructs(ints, FilterOperations.OP_EQUALS, "3", 1);
             VerifyFilterCountStructs(ints, FilterOperations.OP_NOT_EQUALS, "3", 20);
             VerifyFilterCountStructs(ints, FilterOperations.OP_IS_LESS_THAN, "3", 13);
-            VerifyFilterCountStructs(ints, FilterOperations.OP_IS_LESS_THAN, "3.5", 14);
+            VerifyFilterCountStructs(ints, FilterOperations.OP_IS_LESS_THAN, (3.5).ToString(CultureInfo.CurrentCulture), 14);
             VerifyFilterCountStructs(ints, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, "3", 14);
-            VerifyFilterCountStructs(ints, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, "3.5", 14);
+            VerifyFilterCountStructs(ints, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, (3.5).ToString(CultureInfo.CurrentCulture), 14);
             VerifyFilterCountStructs(ints, FilterOperations.OP_IS_GREATER_THAN, "3", 7);
             VerifyFilterCountStructs(ints, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, "3", 8);
             Assert.IsFalse(IsValidForType<int>(FilterOperations.OP_STARTS_WITH));

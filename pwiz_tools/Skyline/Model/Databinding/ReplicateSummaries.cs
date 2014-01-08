@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Model.Databinding
             lock (_allTotalAreas)
             {
                 areasByLabelType = _allTotalAreas[replicateIndex];
+                // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
                 if (null == areasByLabelType)
                 {
                     areasByLabelType = _allTotalAreas[replicateIndex] =

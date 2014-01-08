@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class AnnotationPropertyDescriptor : PropertyDescriptor
     {
-        private bool _isValid;
+        private readonly bool _isValid;
         public AnnotationPropertyDescriptor(AnnotationDef annotationDef, bool isValid) 
             : base(AnnotationDef.ANNOTATION_PREFIX + annotationDef.Name, GetAttributes(annotationDef))
         {
@@ -93,8 +93,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static Attribute[] GetAttributes(AnnotationDef annotationDef)
         {
-            var attributes = new List<Attribute>();
-            attributes.Add(new DisplayNameAttribute(annotationDef.Name));
+            var attributes = new List<Attribute> {new DisplayNameAttribute(annotationDef.Name)};
             if (annotationDef.Type == AnnotationDef.AnnotationType.number)
             {
                 attributes.Add(new FormatAttribute {NullValue = TextUtil.EXCEL_NA});

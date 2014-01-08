@@ -54,6 +54,7 @@ namespace CommonTest.DataBinding.Controls
                     .SetColumns(columnIds.Select(id => new ColumnSpec().SetPropertyPath(id)))
                     .SetSublistId(PropertyPath.Parse("AminoAcidsList!*"));
                 var viewInfo = new ViewInfo(new DataSchema(), typeof (LinkValue<Peptide>), viewSpec);
+                // ReSharper disable once UseObjectOrCollectionInitializer
                 var innerList = new BindingList<LinkValue<Peptide>>();
                 innerList.Add(new LinkValue<Peptide>(new Peptide("AD"), null));
                 ((BindingListSource)boundDataGridView.DataSource).SetViewContext(new TestViewContext(viewInfo.DataSchema, new[]{new RowSourceInfo(innerList, viewInfo)}));
