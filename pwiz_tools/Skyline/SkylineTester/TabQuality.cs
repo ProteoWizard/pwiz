@@ -579,7 +579,7 @@ namespace SkylineTester
                     {
                         File.Delete(logFile);
                     }
-                        // ReSharper disable once EmptyGeneralCatchClause
+// ReSharper disable once EmptyGeneralCatchClause
                     catch (Exception)
                     {
                     }
@@ -596,8 +596,11 @@ namespace SkylineTester
             pane.CurveList.Clear();
             var bars = pane.AddBar(name, null, data, color);
             bars.Bar.Fill = new Fill(color);
+            pane.Title.FontSpec.Size = 11;
             pane.XAxis.Scale.TextLabels = labels;
             pane.XAxis.Type = AxisType.Text;
+            pane.XAxis.Scale.FontSpec.Size = 10;
+            pane.XAxis.Scale.Align = AlignP.Inside;
             pane.AxisChange();
             graph.Refresh();
         }

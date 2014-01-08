@@ -203,6 +203,7 @@
     <None Include="Run files\BuildSkyline64.skytr" />
     <None Include="Run files\OnePassQuality.skytr" />
     <None Include="Run files\RegenerateFormsList.skytr" />
+    <None Include="Run files\SubmitCheck.skytr" />
     <None Include="Run files\TutorialsDemo.skytr" />
   </ItemGroup>
   <ItemGroup>

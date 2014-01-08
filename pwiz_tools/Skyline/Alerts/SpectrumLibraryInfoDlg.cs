@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Model.Lib;
 using System.Linq;
 using pwiz.Skyline.Properties;

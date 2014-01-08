@@ -34,6 +34,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using log4net;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -745,7 +746,7 @@ namespace pwiz.Skyline
 
             ToolReportCache.Instance.Register(null);
 
-            if (!Program.FunctionalTest)
+            if (!TestMode)
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             
             base.OnClosed(e);
@@ -755,7 +756,7 @@ namespace pwiz.Skyline
         {
             base.OnHandleDestroyed(e);
             
-            if (!Program.FunctionalTest)
+            if (!TestMode)
             {
                 // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
                 Process.GetCurrentProcess().Kill();

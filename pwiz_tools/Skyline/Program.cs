@@ -24,6 +24,7 @@ using System.IO.Pipes;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -113,6 +114,9 @@ namespace pwiz.Skyline
                 return;
             }
 
+            FormEx.TestMode = FunctionalTest;
+            FormEx.Offscreen = SkylineOffscreen;
+
             try
             {
                 Init();
@@ -169,7 +173,7 @@ namespace pwiz.Skyline
                 using (MainWindow = new SkylineWindow())
                 {
                     // Position window offscreen for stress testing.
-                    if (SkylineOffscreen)
+                    if (FormEx.Offscreen)
                         FormEx.SetOffscreen(MainWindow);
 
                     Application.Run(MainWindow);

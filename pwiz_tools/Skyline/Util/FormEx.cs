@@ -18,112 +18,36 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Util
 {
-    public class FormEx : Form
-    {
-        private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
-
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            if (Program.FunctionalTest)
-            {
-                // For unit testing, move window offscreen.
-                if (Program.SkylineOffscreen)
-                    SetOffscreen(this);
-
-                // Track undisposed forms.
-                _undisposedForms.Add(this);
-            }
-        }
-
-        protected override bool ShowWithoutActivation
-        {
-            get { return Program.FunctionalTest; }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (Program.FunctionalTest && disposing)
-                _undisposedForms.Remove(this);
-        }
-
-        public void CheckDisposed()
-        {
-            if (IsDisposed)
-            {
-                throw new ObjectDisposedException("Form disposed"); // Not L10N
-            }
-        }
-
-        public static void CheckAllFormsDisposed()
-        {
-            if (_undisposedForms.Count != 0)
-            {
-                var formType = _undisposedForms[0].GetType().Name;
-                _undisposedForms.Clear();
-                throw new ApplicationException(formType + " was not disposed"); // Not L10N
-            }
-        }
-
-        public static void SetOffscreen(Form form)
-        {
-            var offscreenPoint = new Point(0, 0);
-            foreach (var screen in Screen.AllScreens)
-            {
-                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
-                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
-            }
-            form.StartPosition = FormStartPosition.Manual;
-            form.Location = offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
-        }
-
-        public static Form GetParentForm(Control control)
-        {
-            for (; ; )
-            {
-                var parent = control.Parent;
-                if (parent == null)
-                    return null;
-                var parentForm = parent as Form;
-                if (parentForm != null)
-                    return parentForm;
-                control = parent;
-            }
-        }
-
-        public virtual void CancelDialog()
-        {
-            CancelButton.PerformClick();
-        }
-    }
-
     public class DockableFormEx : DockableForm
     {
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);
-            if (Program.SkylineOffscreen && ParentForm != null)
-            {
+            if (FormEx.Offscreen && ParentForm != null)
                 FormEx.SetOffscreen(ParentForm);
-            }
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (Parent == null)
+                FormEx.SetOffscreen(this);
+        }
+
+        protected override bool ShowWithoutActivation
+        {
+            get { return FormEx.TestMode || FormEx.Offscreen; }
         }
 
         public void CheckDisposed()
         {
             if (IsDisposed)
-            {
                 throw new ObjectDisposedException("Form disposed"); // Not L10N
-            }
         }
     }
 }

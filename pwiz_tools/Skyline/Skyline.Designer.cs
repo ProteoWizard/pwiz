@@ -1,7 +1,3 @@
-
-using System;
-using pwiz.Skyline.Properties;
-
 namespace pwiz.Skyline
 {
     partial class SkylineWindow

@@ -19,6 +19,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Util;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Alerts
 {

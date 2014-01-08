@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;

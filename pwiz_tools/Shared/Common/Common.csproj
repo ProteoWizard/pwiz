@@ -84,6 +84,9 @@
     <Compile Include="Controls\FindBox.Designer.cs">
       <DependentUpon>FindBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\FormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Controls\RecordNavBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
