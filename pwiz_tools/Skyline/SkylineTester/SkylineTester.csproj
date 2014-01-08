@@ -163,6 +163,12 @@
     <Compile Include="TabTutorials.cs" />
     <Compile Include="Try.cs" />
     <Compile Include="WakeupTimer.cs" />
+    <Compile Include="WindowThumbnail.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="WindowThumbnail.Designer.cs">
+      <DependentUpon>WindowThumbnail.cs</DependentUpon>
+    </Compile>
     <Content Include="SkylineTester.ico" />
     <EmbeddedResource Include="AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
@@ -203,6 +209,7 @@
     <None Include="Run files\BuildSkyline64.skytr" />
     <None Include="Run files\OnePassQuality.skytr" />
     <None Include="Run files\RegenerateFormsList.skytr" />
+    <None Include="Run files\SubmitCheck.skytr" />
     <None Include="Run files\TutorialsDemo.skytr" />
   </ItemGroup>
   <ItemGroup>

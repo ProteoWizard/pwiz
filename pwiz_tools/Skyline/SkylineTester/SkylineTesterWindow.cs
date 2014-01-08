@@ -39,6 +39,8 @@ namespace SkylineTester
 
         public const string QualityLogsDirectory = "Quality logs";
         public const string SummaryLog = "Summary.log";
+        public const string SkylineTesterZip = "SkylineTester.zip";
+        public const string SkylineTesterFiles = "SkylineTester Files";
 
         public string Subversion { get; private set; }
         public string Devenv { get; private set; }
@@ -59,7 +61,7 @@ namespace SkylineTester
             {"zh", "Chinese"}
         };
 
-        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll" };
+        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll" /*, "CommonTest.dll"*/ };
         private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
         private static readonly string[] TUTORIAL_DLLS = { "TestTutorial.dll" };
 
@@ -127,9 +129,9 @@ namespace SkylineTester
                 return; // design mode
 
             // Register file/exe/icon associations.
-            var checkRegistry = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTesterx\shell\open\command", null, null);
+            var checkRegistry = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null, null);
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\SkylineTester\shell\open\command", null,
-                Assembly.GetExecutingAssembly().Location + @" ""%1""");
+                Assembly.GetExecutingAssembly().Location.Quote() + @" ""%1""");
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skyt", null, "SkylineTester");
             Registry.SetValue(@"HKEY_CURRENT_USER\Software\Classes\.skytr", null, "SkylineTester");
             
@@ -644,15 +646,15 @@ namespace SkylineTester
         public ComboBox         QualityBuildType            { get { return qualityBuildType; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
         public TextBox          QualityEndTime              { get { return qualityEndTime; } }
+        public TabPage          QualityPage                 { get { return tabQuality; } }
         public RadioButton      QualityRunSchedule          { get { return qualityRunSchedule; } }
         public TextBox          QualityStartTime            { get { return qualityStartTime; } }
+        public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public CheckBox         RegenerateCache             { get { return regenerateCache; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public TextBox          RunLoopsCount               { get { return runLoopsCount; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
-        public PictureBox       SkylineThumbnail            { get { return skylineThumbnail; } }
-        public TabPage          QualityPage                 { get { return tabQuality; } }
         public TabControl       Tabs                        { get { return tabs; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
         public CheckBox         TestsChinese                { get { return testsChinese; } }

@@ -37,15 +37,20 @@ namespace SkylineTester
         static void Main(string[] args)
         {
             // The SkylineTester installation puts SkylineTester one directory too high.
-            var nestedSkylineTester = Path.Combine(
+            var nestedDirectory = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                "SkylineTester Files",
-                "SkylineTester.exe");
+                SkylineTesterWindow.SkylineTesterFiles);
+            var nestedSkylineTester = Path.Combine(nestedDirectory, "SkylineTester.exe");
             if (File.Exists(nestedSkylineTester))
             {
                 var restartSkylineTester = new Process
                 {
-                    StartInfo = { FileName = nestedSkylineTester }
+                    StartInfo =
+                    {
+                        FileName = nestedSkylineTester, 
+                        Arguments = string.Join(" ", args), 
+                        WorkingDirectory = nestedDirectory
+                    }
                 };
                 restartSkylineTester.Start();
                 return;
