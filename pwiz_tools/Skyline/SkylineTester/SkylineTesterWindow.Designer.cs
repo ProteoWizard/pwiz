@@ -316,7 +316,7 @@ namespace SkylineTester
             this.groupBox13.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox13.Name = "groupBox13";
             this.groupBox13.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox13.Size = new System.Drawing.Size(220, 69);
+            this.groupBox13.Size = new System.Drawing.Size(280, 69);
             this.groupBox13.TabIndex = 21;
             this.groupBox13.TabStop = false;
             this.groupBox13.Text = "Language";
@@ -330,7 +330,7 @@ namespace SkylineTester
             this.formsLanguage.Location = new System.Drawing.Point(9, 25);
             this.formsLanguage.Margin = new System.Windows.Forms.Padding(4);
             this.formsLanguage.Name = "formsLanguage";
-            this.formsLanguage.Size = new System.Drawing.Size(203, 21);
+            this.formsLanguage.Size = new System.Drawing.Size(185, 21);
             this.formsLanguage.TabIndex = 0;
             // 
             // regenerateCache
@@ -363,11 +363,11 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.formsTree);
-            this.groupBox1.Location = new System.Drawing.Point(239, 50);
+            this.groupBox1.Location = new System.Drawing.Point(299, 50);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(492, 524);
+            this.groupBox1.Size = new System.Drawing.Size(432, 524);
             this.groupBox1.TabIndex = 18;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Forms";
@@ -383,7 +383,7 @@ namespace SkylineTester
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(220, 90);
+            this.groupBox2.Size = new System.Drawing.Size(280, 90);
             this.groupBox2.TabIndex = 17;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Pause";
@@ -468,7 +468,7 @@ namespace SkylineTester
             this.groupBox14.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox14.Name = "groupBox14";
             this.groupBox14.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox14.Size = new System.Drawing.Size(220, 69);
+            this.groupBox14.Size = new System.Drawing.Size(280, 69);
             this.groupBox14.TabIndex = 25;
             this.groupBox14.TabStop = false;
             this.groupBox14.Text = "Language";
@@ -482,7 +482,7 @@ namespace SkylineTester
             this.tutorialsLanguage.Location = new System.Drawing.Point(9, 25);
             this.tutorialsLanguage.Margin = new System.Windows.Forms.Padding(4);
             this.tutorialsLanguage.Name = "tutorialsLanguage";
-            this.tutorialsLanguage.Size = new System.Drawing.Size(203, 21);
+            this.tutorialsLanguage.Size = new System.Drawing.Size(185, 21);
             this.tutorialsLanguage.TabIndex = 0;
             // 
             // groupBox3
@@ -491,11 +491,11 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox3.Controls.Add(this.tutorialsTree);
-            this.groupBox3.Location = new System.Drawing.Point(239, 50);
+            this.groupBox3.Location = new System.Drawing.Point(299, 50);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Size = new System.Drawing.Size(492, 524);
+            this.groupBox3.Size = new System.Drawing.Size(432, 524);
             this.groupBox3.TabIndex = 24;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Tutorials";
@@ -511,7 +511,7 @@ namespace SkylineTester
             this.groupBox4.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox4.Size = new System.Drawing.Size(220, 116);
+            this.groupBox4.Size = new System.Drawing.Size(280, 116);
             this.groupBox4.TabIndex = 23;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pause";
@@ -623,7 +623,7 @@ namespace SkylineTester
             this.groupBox15.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox15.Size = new System.Drawing.Size(220, 146);
+            this.groupBox15.Size = new System.Drawing.Size(280, 146);
             this.groupBox15.TabIndex = 26;
             this.groupBox15.TabStop = false;
             this.groupBox15.Text = "Language";
@@ -693,7 +693,7 @@ namespace SkylineTester
             this.pauseGroup.Margin = new System.Windows.Forms.Padding(4);
             this.pauseGroup.Name = "pauseGroup";
             this.pauseGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.pauseGroup.Size = new System.Drawing.Size(220, 55);
+            this.pauseGroup.Size = new System.Drawing.Size(280, 55);
             this.pauseGroup.TabIndex = 20;
             this.pauseGroup.TabStop = false;
             this.pauseGroup.Text = "Pause";
@@ -717,7 +717,7 @@ namespace SkylineTester
             this.windowsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.windowsGroup.Name = "windowsGroup";
             this.windowsGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.windowsGroup.Size = new System.Drawing.Size(220, 58);
+            this.windowsGroup.Size = new System.Drawing.Size(280, 58);
             this.windowsGroup.TabIndex = 18;
             this.windowsGroup.TabStop = false;
             this.windowsGroup.Text = "Windows";
@@ -744,7 +744,7 @@ namespace SkylineTester
             this.iterationsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.iterationsGroup.Name = "iterationsGroup";
             this.iterationsGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.iterationsGroup.Size = new System.Drawing.Size(220, 90);
+            this.iterationsGroup.Size = new System.Drawing.Size(280, 90);
             this.iterationsGroup.TabIndex = 17;
             this.iterationsGroup.TabStop = false;
             this.iterationsGroup.Text = "Run options";
@@ -802,11 +802,11 @@ namespace SkylineTester
             this.testsGroup.Controls.Add(this.runCheckedTests);
             this.testsGroup.Controls.Add(this.button3);
             this.testsGroup.Controls.Add(this.button2);
-            this.testsGroup.Location = new System.Drawing.Point(239, 50);
+            this.testsGroup.Location = new System.Drawing.Point(299, 50);
             this.testsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.testsGroup.Name = "testsGroup";
             this.testsGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.testsGroup.Size = new System.Drawing.Size(492, 524);
+            this.testsGroup.Size = new System.Drawing.Size(432, 524);
             this.testsGroup.TabIndex = 16;
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
@@ -1873,7 +1873,7 @@ namespace SkylineTester
             this.formsTree.Location = new System.Drawing.Point(8, 23);
             this.formsTree.Margin = new System.Windows.Forms.Padding(4);
             this.formsTree.Name = "formsTree";
-            this.formsTree.Size = new System.Drawing.Size(476, 493);
+            this.formsTree.Size = new System.Drawing.Size(416, 493);
             this.formsTree.TabIndex = 15;
             this.formsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             this.formsTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FormsTree_AfterSelect);
@@ -1887,7 +1887,7 @@ namespace SkylineTester
             this.tutorialsTree.Location = new System.Drawing.Point(8, 23);
             this.tutorialsTree.Margin = new System.Windows.Forms.Padding(4);
             this.tutorialsTree.Name = "tutorialsTree";
-            this.tutorialsTree.Size = new System.Drawing.Size(474, 492);
+            this.tutorialsTree.Size = new System.Drawing.Size(414, 492);
             this.tutorialsTree.TabIndex = 15;
             this.tutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
@@ -1900,7 +1900,7 @@ namespace SkylineTester
             this.testsTree.Location = new System.Drawing.Point(8, 23);
             this.testsTree.Margin = new System.Windows.Forms.Padding(4);
             this.testsTree.Name = "testsTree";
-            this.testsTree.Size = new System.Drawing.Size(474, 394);
+            this.testsTree.Size = new System.Drawing.Size(414, 394);
             this.testsTree.TabIndex = 15;
             this.testsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
