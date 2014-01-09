@@ -3357,10 +3357,10 @@ Are you sure you want to continue?</value>
     <value>Incorrect number of columns ({0}) found on line {1}.</value>
   </data>
   <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th" xml:space="preserve">
-    <value>Results {0:0.##},{1:0.##} Th</value>
+    <value>Results {0:0.##},{1:0.##} m/z</value>
   </data>
   <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th" xml:space="preserve">
-    <value>Results {0:0.##} Th</value>
+    <value>Results {0:0.##} m/z</value>
   </data>
   <data name="BiblioSpecLiteLibraryLoadLoading__0__library" xml:space="preserve">
     <value>Loading {0} library,</value>

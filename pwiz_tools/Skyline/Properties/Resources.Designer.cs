@@ -16906,7 +16906,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Results {0:0.##},{1:0.##} Th.
+        ///   Looks up a localized string similar to Results {0:0.##},{1:0.##} m/z.
         /// </summary>
         public static string TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th {
             get {
@@ -16915,7 +16915,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Results {0:0.##} Th.
+        ///   Looks up a localized string similar to Results {0:0.##} m/z.
         /// </summary>
         public static string TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th {
             get {
