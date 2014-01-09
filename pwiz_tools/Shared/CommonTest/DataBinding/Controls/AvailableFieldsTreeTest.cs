@@ -31,7 +31,7 @@ namespace CommonTest.DataBinding.Controls
     public class AvailableFieldsTreeTest
     {
         [TestMethod]
-        public void TestMapAttribute()
+        public void TestDataBindingMapAttribute()
         {
             var tree = new AvailableFieldsTree
             {

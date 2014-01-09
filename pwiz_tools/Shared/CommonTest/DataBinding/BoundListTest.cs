@@ -33,7 +33,7 @@ namespace CommonTest.DataBinding
     public class BoundListTest
     {
         [TestMethod]
-        public void TestInsertOnly()
+        public void TestDataBindingInsertOnly()
         {
             var random = new Random(0);
             var target = new List<int>();
@@ -48,7 +48,7 @@ namespace CommonTest.DataBinding
             }
         }
         [TestMethod]
-        public void TestRemoveOnly()
+        public void TestDataBindingRemoveOnly()
         {
             var random = new Random(0);
             var target = Enumerable.Range(0, 10).ToList();
@@ -87,7 +87,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestBoundList()
+        public void TestDataBindingBoundList()
         {
             foreach (int seed in new[] { 0, Environment.TickCount })
             {

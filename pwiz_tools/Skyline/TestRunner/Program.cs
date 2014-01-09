@@ -465,7 +465,15 @@ namespace TestRunner
             // Maintain order in list of explicitly specified tests
             var testDict = new Dictionary<string, int>();
             for (int i = 0; i < testNames.Count; i++)
+            {
+                if (testDict.ContainsKey(testNames[i]))
+                {
+                    MessageBox.Show("Duplicate test name: " + testNames[i]);
+                    throw new ArgumentException("Duplicate test name: " + testNames[i]);
+                }
                 testDict.Add(testNames[i], i);
+            }
+
             var testArray = new TestInfo[testNames.Count];
 
             var skipList = LoadList(commandLineArgs.ArgAsString("skip"));

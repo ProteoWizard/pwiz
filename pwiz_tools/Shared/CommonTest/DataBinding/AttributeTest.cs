@@ -13,7 +13,7 @@ namespace CommonTest.DataBinding
     public class AttributeTest
     {
         [TestMethod]
-        public void TestChildDisplayName()
+        public void TestDataBindingChildDisplayName()
         {
             var dataSchema = new DataSchema();
             var coldescRoot = ColumnDescriptor.RootColumn(dataSchema, typeof (RowValue));

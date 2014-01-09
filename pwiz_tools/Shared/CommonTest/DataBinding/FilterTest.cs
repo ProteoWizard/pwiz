@@ -28,7 +28,7 @@ namespace CommonTest.DataBinding
     public class FilterTest
     {
         [TestMethod]
-        public void TestIsNotNullFilter()
+        public void TestDataBindingIsNotNullFilter()
         {
             var dataSchema = new DataSchema();
             var viewSpec = new ViewSpec().SetColumns(new[] {new ColumnSpec(PropertyPath.Parse("AminoAcidsDict!*.Value")),})
@@ -48,7 +48,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestIsSulfur()
+        public void TestDataBindingIsSulfur()
         {
             var dataSchema = new DataSchema();
             var viewSpec =

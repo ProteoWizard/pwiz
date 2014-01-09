@@ -31,7 +31,7 @@ namespace CommonTest.DataBinding
     public class CollectionInfoTest
     {
         [TestMethod]
-        public void TestArray()
+        public void TestDataBindingArray()
         {
             var collectionInfo = CollectionInfo.ForType(typeof (string[]));
             var strings = new[] {"One", "Two", "Three"};
@@ -47,7 +47,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestDictionary()
+        public void TestDataBindingDictionary()
         {
             var dict = new Dictionary<string, double>
                            {

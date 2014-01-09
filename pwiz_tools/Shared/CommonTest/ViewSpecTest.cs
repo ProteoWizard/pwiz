@@ -12,7 +12,7 @@ namespace CommonTest
     public class ViewSpecTest
     {
         [TestMethod]
-        public void TestXml()
+        public void TestViewSpecXml()
         {
             var viewSpecList =
                 new ViewSpecList(new[]

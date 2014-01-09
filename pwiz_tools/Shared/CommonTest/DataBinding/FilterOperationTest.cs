@@ -14,7 +14,7 @@ namespace CommonTest.DataBinding
     public class FilterOperationTest
     {
         [TestMethod]
-        public void TestChar()
+        public void TestDataBindingChar()
         {
             var alphabet = Enumerable.Range(0, 26).Select(i => (char) ('a' + i)).ToArray();
             VerifyFilterCountStructs(alphabet, FilterOperations.OP_IS_BLANK, null, 0);
@@ -31,7 +31,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestInt()
+        public void TestDataBindingInt()
         {
             var ints = Enumerable.Range(-10, 21).ToArray();
             VerifyFilterCountStructs(ints, FilterOperations.OP_IS_BLANK, null, 0);
@@ -50,7 +50,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestObject()
+        public void TestDataBindingObject()
         {
             var strings = new[] {"urn:one", "urn:two", "urn:three"};
             var uris = strings.Select(s => new Uri(s)).ToArray();
@@ -70,7 +70,7 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
-        public void TestDate()
+        public void TestDataBindingDate()
         {
             var dates = new[]
             {

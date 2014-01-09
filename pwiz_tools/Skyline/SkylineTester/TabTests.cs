@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
@@ -73,7 +74,9 @@ namespace SkylineTester
                 GetCheckedTests(node, testList, MainWindow.SkipCheckedTests.Checked);
             if (testList.Count == 0)
                 return "";
-            return " test=" + String.Join(",", testList);
+            var testListFile = Path.Combine(MainWindow.RootDir, "SkylineTester test list.txt");
+            File.WriteAllLines(testListFile, testList);
+            return " test=\"@{0}\"".With(testListFile);
         }
 
         public static void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)

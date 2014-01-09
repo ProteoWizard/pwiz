@@ -34,7 +34,7 @@ namespace CommonTest.DataBinding.Controls
     public class BoundDataGridViewTest
     {
         [TestMethod]
-        public void TestSubList()
+        public void TestDataBindingSubList()
         {
             var boundDataGridView = new BoundDataGridView
                                         {

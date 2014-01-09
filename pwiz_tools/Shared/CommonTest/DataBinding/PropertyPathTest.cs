@@ -26,7 +26,7 @@ namespace CommonTest.DataBinding
     public class PropertyPathTest
     {
         [TestMethod]
-        public void TestCompareTo()
+        public void TestDataBindingCompareTo()
         {
             var idPath = PropertyPath.Parse("HalfLives!*");
             Assert.AreEqual(-1, PropertyPath.Root.CompareTo(idPath));
@@ -35,7 +35,7 @@ namespace CommonTest.DataBinding
             Assert.AreEqual(1, idPath.CompareTo(idPath.Parent));
         }
         [TestMethod]
-        public void TestParse()
+        public void TestDataBindingParse()
         {
             Assert.IsTrue(ParseVariants("", (string) null).IsRoot);
             var property = ParseVariants("property", "\"property\"");
@@ -56,7 +56,7 @@ namespace CommonTest.DataBinding
             Assert.IsFalse(lookupStar.IsUnboundLookup);
         }
         [TestMethod]
-        public void TestParseErrors()
+        public void TestDataBindingParseErrors()
         {
             ParseWithErrorAt("\"property", 0);
             ParseWithErrorAt("\"propert\"y", 9);
