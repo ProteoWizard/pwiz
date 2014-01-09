@@ -834,6 +834,7 @@ namespace IDPicker.Forms
                         newColumn.Tag = new Pair<bool, Map<long, PivotData>>(false, statsBySpectrumSource[sourceId]);
                         newColumn.DataPropertyName = i.ToString();
                         newColumn.Name = "pivotQuantColumn" + i.ToString();
+                        newColumn.FillWeight = 1;
                         // preserve the visibility of the cloned column
                         pivotColumns.Add(newColumn);
                     }
@@ -893,6 +894,7 @@ namespace IDPicker.Forms
                         newColumn.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
                         newColumn.DataPropertyName = i.ToString();
                         newColumn.Name = "pivotQuantColumn" + i.ToString();
+                        newColumn.FillWeight = 1;
                         // preserve the visibility of the cloned column
                         pivotColumns.Add(newColumn);
                     }
