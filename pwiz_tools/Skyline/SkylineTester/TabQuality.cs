@@ -231,7 +231,9 @@ namespace SkylineTester
         private void UpdateThumbnail()
         {
             MainWindow.QualityThumbnail.ProcessId = MainWindow.TestRunnerProcessId;
-            MainWindow.QualityTestName.Text = MainWindow.RunningTestName;
+            MainWindow.QualityTestName.Text = MainWindow.TestRunnerProcessId != 0
+                ? MainWindow.RunningTestName
+                : null;
         }
 
         private Summary.Run GetSelectedRun()
