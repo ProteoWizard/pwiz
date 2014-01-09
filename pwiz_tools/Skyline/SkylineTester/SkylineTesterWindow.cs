@@ -407,7 +407,8 @@ namespace SkylineTester
                 testsTree,
                 runCheckedTests,
                 skipCheckedTests,
-                
+                runFullQualityPass,
+
                 // Build
                 build32,
                 build64,
@@ -657,16 +658,19 @@ namespace SkylineTester
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
         public TextBox          QualityEndTime              { get { return qualityEndTime; } }
         public TabPage          QualityPage                 { get { return tabQuality; } }
+        public RadioButton      QualityRunNow               { get { return qualityRunNow; } }
         public RadioButton      QualityRunSchedule          { get { return qualityRunSchedule; } }
         public TextBox          QualityStartTime            { get { return qualityStartTime; } }
         public Label            QualityTestName             { get { return qualityTestName; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public CheckBox         RegenerateCache             { get { return regenerateCache; } }
+        public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public TextBox          RunLoopsCount               { get { return runLoopsCount; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public TabControl       Tabs                        { get { return tabs; } }
+        public TabQuality       TabQuality                  { get { return _tabQuality; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
         public CheckBox         TestsChinese                { get { return testsChinese; } }
         public CheckBox         TestsEnglish                { get { return testsEnglish; } }

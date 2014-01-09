@@ -29,6 +29,18 @@ namespace SkylineTester
     {
         public override bool Run()
         {
+            if (MainWindow.RunFullQualityPass.Checked)
+            {
+                MainWindow.QualityRunNow.Checked = true;
+                MainWindow.PassCount.Text = "1";
+                MainWindow.Pass0.Checked = true;
+                MainWindow.Pass1.Checked = true;
+                MainWindow.QualityBuildType.SelectedIndex = 0;
+                MainWindow.QualityChooseTests.Checked = true;
+                MainWindow.Tabs.SelectTab(MainWindow.QualityPage);
+                return MainWindow.TabQuality.Run();
+            }
+
             StartLog("Tests", null, true);
 
             var args = new StringBuilder();
