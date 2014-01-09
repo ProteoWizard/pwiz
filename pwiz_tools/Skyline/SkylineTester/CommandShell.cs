@@ -387,7 +387,7 @@ namespace SkylineTester
 
             // Add to log file.
             if (!string.IsNullOrEmpty(LogFile))
-                File.AppendAllText(LogFile, logLines);
+                Try.Multi<Exception>(() => File.AppendAllText(LogFile, logLines));
 
             if (!DoLiveUpdate)
                 return;

@@ -46,12 +46,27 @@ namespace SkylineTester
             _deleteWorker = new BackgroundWorker {WorkerSupportsCancellation = true};
             _deleteWorker.DoWork += DeleteTask;
             _deleteWorker.RunWorkerAsync();
+
+            _updateTimer = new Timer {Interval = 500};
+            _updateTimer.Tick += (o, args) =>
+            {
+                lock (progressBarDelete)
+                {
+                    progressBarDelete.Value = _progressValue;
+                    labelDeletingFile.Text = "Deleting " + _fileName;
+                }
+            };
+            _updateTimer.Start();
         }
 
         private void RunUI(Action action)
         {
             Invoke(action);
         }
+
+        private int _progressValue;
+        private string _fileName;
+        private Timer _updateTimer;
 
         private void DeleteTask(object sender, EventArgs eventArgs)
         {
@@ -64,11 +79,11 @@ namespace SkylineTester
                 var fileDisplay = fileParts.Length > 3
                     ? "...\\" + fileParts[fileParts.Length - 3] + "\\" + fileParts[fileParts.Length - 2] + "\\" + fileParts[fileParts.Length - 1]
                     : file;
-                RunUI(() =>
+                lock (progressBarDelete)
                 {
-                    progressBarDelete.Value = index;
-                    labelDeletingFile.Text = "Deleting " + fileDisplay + "...";
-                });
+                    _progressValue = index;
+                    _fileName = fileDisplay;
+                }
 
                 try
                 {
@@ -82,7 +97,10 @@ namespace SkylineTester
                         retry = MessageBox.Show(this, "Can't delete " + file, "File busy",
                             MessageBoxButtons.RetryCancel) == DialogResult.Retry;
                         if (!retry)
+                        {
+                            _updateTimer.Stop();
                             Close();
+                        }
                     });
                     if (!retry)
                         return;
@@ -110,6 +128,7 @@ namespace SkylineTester
                 }
             }
 
+            _updateTimer.Stop();
             RunUI(Close);
         }
 

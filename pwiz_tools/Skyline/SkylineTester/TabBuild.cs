@@ -99,7 +99,7 @@ namespace SkylineTester
             var buildRoot = MainWindow.GetBuildRoot();
             var branchUrl = GetBranchUrl();
             var branchParts = branchUrl.Split('/');
-            var branchName = "Skyline ({0})".With(branchParts[branchParts.Length - 1]);
+            var branchName = "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var subversion = MainWindow.Subversion;
 
             var architectureList = string.Join("- and ", architectures);
