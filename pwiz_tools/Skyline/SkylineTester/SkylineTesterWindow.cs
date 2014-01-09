@@ -59,7 +59,7 @@ namespace SkylineTester
             {"en", "English"},
             {"fr", "French"},
             {"ja", "Japanese"},
-            {"zh", "Chinese"}
+            {"zh-CHS", "Chinese"}
         };
 
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll" };

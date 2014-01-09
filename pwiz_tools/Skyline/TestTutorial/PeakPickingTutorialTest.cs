@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestTutorial
             // Export a report
             string pathReport = GetTestPath("qValues_Exported_report.csv");
             const string qvalueHeader = "annotation_QValue";
-            const string reportName = "Peptide RT Results";
+            string reportName = Resources.ReportSpecList_GetDefaults_Peptide_RT_Results;
             if (IsEnableLiveReports)
             {
                 var reportExportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);

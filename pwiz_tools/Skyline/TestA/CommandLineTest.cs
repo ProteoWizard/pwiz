@@ -277,7 +277,7 @@ namespace pwiz.SkylineTestA
             const string replicate = "Single";
 
             //Before generating this report, check that it exists
-            const string reportName = "Peptide Ratio Results";
+            string reportName = Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results;
             var defaultReportSpecs = Settings.Default.ReportSpecList.GetDefaults().ToArray();
             Assert.IsNotNull(defaultReportSpecs.FirstOrDefault(r => r.Name.Equals(reportName)));
             Settings.Default.ReportSpecList = new ReportSpecList();
@@ -315,7 +315,7 @@ namespace pwiz.SkylineTestA
             RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,
                        "--import-replicate-name=" + replicate,
-                       "--report-name=Peptide Ratio Results",
+                       "--report-name=" + reportName,
                        "--report-format=CSV",
                        "--report-file=" + outPath);
 
@@ -703,14 +703,15 @@ namespace pwiz.SkylineTestA
 
             output = RunCommand("--in=" + brokenFile);
             Assert.AreEqual(1, CountInstances("Error", output));
-            AssertEx.Contains(output, new[] { "line", "column" });
+            AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 2, 7));
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var invalidFile = commandFilesDir.GetTestPath("InvalidFile.sky");
             output = RunCommand("--in=" + invalidFile);
             Assert.AreEqual(1, CountInstances("Error", output));
-            AssertEx.Contains(output, new[] {"line", "column"});
+            AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 7, 8));
+            AssertEx.Contains(output, string.Format(Resources.DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__, Resources.DigestSettings_Validate_maximum_missed_cleavages, 10, 0, 9));
 
             //Test unexpected parameter formats
             //CONSIDER: Maybe some more automatic way to keep these lists up to date.

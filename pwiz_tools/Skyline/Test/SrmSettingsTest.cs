@@ -264,7 +264,7 @@ namespace pwiz.SkylineTest
         public void SettingsSerializeStubTest()
         {
             XmlSerializer ser = new XmlSerializer(typeof(SrmSettings));
-            using (TextReader reader = new StringReader(XML_DIRECTIVE + SETTINGS_STUBS))
+            using (TextReader reader = new StringReader(XML_DIRECTIVE + string.Format(SETTINGS_STUBS, SrmSettingsList.DefaultName)))
             {
                 var target = SrmSettingsList.GetDefault();
                 var copy = (SrmSettings) ser.Deserialize(reader);
@@ -286,7 +286,7 @@ namespace pwiz.SkylineTest
 
         // This string should deserialize successfully to the default SRM settings.
         private const string SETTINGS_STUBS =
-            "<settings_summary name=\"Default\">\n" +
+            "<settings_summary name=\"{0}\">\n" +
             "    <peptide_settings>\n" +
             "        <peptide_prediction/>\n" +
             "    </peptide_settings>\n" +

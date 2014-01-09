@@ -61,7 +61,7 @@ namespace SkylineTester
             if (MainWindow.TestsEnglish.Checked)
                 cultures.Add(new CultureInfo("en-US"));
             if (MainWindow.TestsChinese.Checked)
-                cultures.Add(new CultureInfo("zh"));
+                cultures.Add(new CultureInfo("zh-CHS"));
             if (MainWindow.TestsFrench.Checked)
                 cultures.Add(new CultureInfo("fr-FR"));
             if (MainWindow.TestsJapanese.Checked)

@@ -1706,7 +1706,7 @@ namespace pwiz.Skyline.Properties
         public const string EXT_SETTINGS = ".skys"; // Not L10N
         private static readonly SrmSettings DEFAULT = new SrmSettings
             (
-                DefaultName,
+                "<placeholder>",    // Not L10N
                 new PeptideSettings
                 (
                     EnzymeList.GetDefault(),
@@ -1801,7 +1801,7 @@ namespace pwiz.Skyline.Properties
 
         public static SrmSettings GetDefault()
         {
-            return DEFAULT;
+            return (SrmSettings)DEFAULT.ChangeName(DefaultName);
         }
 
         public override IEnumerable<SrmSettings> GetDefaults(int revisionIndex)
