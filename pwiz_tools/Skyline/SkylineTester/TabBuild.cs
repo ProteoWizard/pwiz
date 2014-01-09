@@ -115,8 +115,8 @@ namespace SkylineTester
                 }
                 else if (updateBuild)
                 {
-                    commandShell.Add("#@ Cleaning Build directory...\n");
-                    commandShell.Add("# Cleaning Build directory...");
+                    commandShell.Add("#@ Updating Build directory...\n");
+                    commandShell.Add("# Updating Build directory...");
                     commandShell.Add("{0} cleanup {1}", subversion.Quote(), buildRoot.Quote());
                     commandShell.Add("{0} update {1}", subversion.Quote(), buildRoot.Quote());
                 }
