@@ -306,24 +306,34 @@ namespace SkylineTester
                 RunUI(() =>
                 {
                     pane.CurveList.Clear();
-                    pane.XAxis.Scale.Max = managedPointList.Count - 1;
-                    pane.XAxis.Scale.MinGrace = 0;
-                    pane.XAxis.Scale.MaxGrace = 0;
-                    pane.YAxis.Scale.MinGrace = 0.05;
-                    pane.YAxis.Scale.MaxGrace = 0.05;
-                    pane.XAxis.Scale.TextLabels = _labels.ToArray();
-                    pane.Legend.FontSpec.Size = 11;
-                    pane.Title.FontSpec.Size = 13;
-                    pane.XAxis.Title.FontSpec.Size = 11;
-                    pane.XAxis.Scale.FontSpec.Size = 11;
 
-                    var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
-                    var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
-                    managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
-                    totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+                    try
+                    {
+                        pane.XAxis.Scale.Max = managedPointList.Count - 1;
+                        pane.XAxis.Scale.MinGrace = 0;
+                        pane.XAxis.Scale.MaxGrace = 0;
+                        pane.YAxis.Scale.MinGrace = 0.05;
+                        pane.YAxis.Scale.MaxGrace = 0.05;
+                        pane.XAxis.Scale.TextLabels = _labels.ToArray();
+                        pane.Legend.FontSpec.Size = 11;
+                        pane.Title.FontSpec.Size = 13;
+                        pane.XAxis.Title.FontSpec.Size = 11;
+                        pane.XAxis.Scale.FontSpec.Size = 11;
 
-                    pane.AxisChange();
-                    MainWindow.GraphMemory.Refresh();
+                        var managedMemoryCurve = pane.AddCurve("Managed", managedPointList, Color.Black, SymbolType.None);
+                        var totalMemoryCurve = pane.AddCurve("Total", totalPointList, Color.Black, SymbolType.None);
+                        managedMemoryCurve.Line.Fill = new Fill(Color.FromArgb(70, 150, 70), Color.FromArgb(150, 230, 150), -90);
+                        totalMemoryCurve.Line.Fill = new Fill(Color.FromArgb(160, 120, 160), Color.FromArgb(220, 180, 220), -90);
+
+                        pane.AxisChange();
+                        MainWindow.GraphMemory.Refresh();
+                    }
+// ReSharper disable once EmptyGeneralCatchClause
+                    catch (Exception)
+                    {
+                        // Weird: I got an exception assigning to TextLabels once.  No need
+                        // to kill a whole quality run for that.
+                    }
                 });
             };
 
