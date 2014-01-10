@@ -48,7 +48,8 @@ const char* scoreTypeNames[NUM_PSM_SCORE_TYPES] = {
     "MAXQUANT SCORE",
     "MORPHEUS SCORE",
     "MSGF+ SCORE",
-    "PEAKS CONFIDENCE SCORE"
+    "PEAKS CONFIDENCE SCORE",
+    "BYONIC SCORE"
 };
 
 /**

@@ -40,12 +40,13 @@ MzIdentMLReader::MzIdentMLReader
      const ProgressIndicator* const parent_progress)
     : BuildParser(maker, mzidFileName, parent_progress)
 {
+    analysisType_ = UNKNOWN_ANALYSIS;
     pwizReader_ = new IdentDataFile(mzidFileName);
     list_iter_ = pwizReader_->dataCollection.analysisData.spectrumIdentificationList.begin();
     list_end_ = pwizReader_->dataCollection.analysisData.spectrumIdentificationList.end();
 
     lookUpBy_ = NAME_ID;
-    scoreThreshold_ = getScoreThreshold(SCAFFOLD);
+    scoreThreshold_ = 0;
 }
 
 MzIdentMLReader::~MzIdentMLReader()
@@ -81,12 +82,29 @@ bool MzIdentMLReader::parseFile(){
         }
     }
 
+    PSM_SCORE_TYPE scoreType = UNKNOWN_SCORE_TYPE;
+    switch (analysisType_) {
+        case SCAFFOLD_ANALYSIS:
+            scoreType = SCAFFOLD_SOMETHING;
+            break;
+        case BYONIC_ANALYSIS:
+            scoreType = BYONIC_PEP;
+            break;
+        case MSGF_ANALYSIS:
+            scoreType = MSGF_SCORE;
+            lookUpBy_ = INDEX_ID;
+            break;
+    }
+
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
+    vector<const char*> specExtensions;
+    specExtensions.push_back(".MGF");
+    specExtensions.push_back(".mzXML");
     for(; fileIterator != fileMap_.end(); ++fileIterator) {
         vector<string> pathParts;
         boost::split(pathParts, fileIterator->first, boost::is_any_of(";"));
-        string mgfFileroot = getFileRoot(pathParts[0]);
-        setSpecFileName(mgfFileroot.c_str(), vector<const char*>(1, ".MGF"));
+        string specFileroot = getFileRoot(pathParts[0]);
+        setSpecFileName(specFileroot.c_str(), specExtensions);
 
         string sourceFile = pathParts[1];
         if (!mapSourceFiles[sourceFile].empty())
@@ -95,9 +113,9 @@ bool MzIdentMLReader::parseFile(){
         // move from map to psms_
         psms_ = fileIterator->second;
         if (sourceFile.empty())
-            buildTables(SCAFFOLD_SOMETHING);
+            buildTables(scoreType);
         else
-            buildTables(SCAFFOLD_SOMETHING, sourceFile);
+            buildTables(scoreType, sourceFile);
     }
 
     return true;
@@ -136,18 +154,21 @@ void MzIdentMLReader::collectPsms(){
 
                 // only include top-ranked PSMs, skip decoys
                 if( item.rank != 1 || item.peptideEvidencePtr.front()->isDecoy ){ 
-                    continue; 
+                    continue;
                 }
 
                 // skip if it doesn't pass score threshold
                 double score = getScore(item);
-                if( score < scoreThreshold_ ){
+                if (!passThreshold(score)) {
                     continue;
                 }
 
                 // now get the psm info
                 curPSM_ = new PSM();
-                curPSM_->specName = idStr;
+                curPSM_->specName = (analysisType_ != BYONIC_ANALYSIS) ?
+                    idStr : result.cvParam(MS_spectrum_title).valueAs<string>();
+                if (idStr.compare(0, 6, "index=") == 0)
+                    curPSM_->specIndex = boost::lexical_cast<int>(idStr.substr(6));
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
                 extractModifications(item.peptidePtr, curPSM_);
@@ -214,13 +235,46 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
     vector<CVParam>::const_iterator it=item.cvParams.begin(); 
     for(; it!=item.cvParams.end(); ++it){
         string name = cvTermInfo((*it).cvid).name;
-        if( name == "Scaffold: Peptide Probability" // ": " in file but being
-            || name == "Scaffold:Peptide Probability" ){// returned as ":P"
+        if (name == "Scaffold: Peptide Probability" // ": " in file but being
+            || name == "Scaffold:Peptide Probability") { // returned as ":P"
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = SCAFFOLD_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(SCAFFOLD);
+            } else if (analysisType_ != SCAFFOLD_ANALYSIS)
+                Verbosity::error("Scaffold score(s) found in non-Scaffold analysis");
+            return boost::lexical_cast<double>(it->value);
+        } else if (name == "Byonic: Peptide AbsLogProb") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = BYONIC_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(BYONIC);
+            } else if (analysisType_ != BYONIC_ANALYSIS)
+                Verbosity::error("ByOnic score(s) found in non-ByOnic analysis");
+            return pow(10, -1 * boost::lexical_cast<double>(it->value));
+        } else if (name == "MS-GF:QValue") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = MSGF_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(MSGF);
+            } else if (analysisType_ != MSGF_ANALYSIS)
+                Verbosity::error("MSGF+ score(s) found in non-MSGF+ analysis");
             return boost::lexical_cast<double>(it->value);
         }
     }
 
     return 0; // shouldn't get to here, warning?
+}
+
+bool MzIdentMLReader::passThreshold(double score)
+{
+    switch (analysisType_) {
+        // Scores where lower is better
+        case BYONIC_ANALYSIS:
+        case MSGF_ANALYSIS:
+            return score <= scoreThreshold_;
+        // Scores where higher is better
+        case SCAFFOLD_ANALYSIS:
+            return score >= scoreThreshold_;
+    }
+    Verbosity::error("Can't determine cutoff score, unknown analysis type");
 }
 
 } // namespace

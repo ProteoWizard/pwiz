@@ -73,6 +73,7 @@ enum BUILD_INPUT
     MORPHEUS,
     MSGF,
     PEAKS,
+    BYONIC,
 
     // Keep this last
     NUM_BUILD_INPUTS

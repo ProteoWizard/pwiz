@@ -41,6 +41,12 @@ namespace BiblioSpec{
         bool parseFile();
         
     private:
+        enum ANALYSIS { UNKNOWN_ANALYSIS,
+                        SCAFFOLD_ANALYSIS,
+                        BYONIC_ANALYSIS,
+                        MSGF_ANALYSIS };
+
+        ANALYSIS analysisType_;
         pwiz::identdata::IdentDataFile* pwizReader_;
         map< string, vector<PSM*> > fileMap_; // vector of PSMs for each file
         double scoreThreshold_;
@@ -55,6 +61,7 @@ namespace BiblioSpec{
         void collectPsms();
         void extractModifications(pwiz::identdata::PeptidePtr peptide, PSM* psm);
         double getScore(const pwiz::identdata::SpectrumIdentificationItem& item);
+        bool passThreshold(double score);
     };
 } // namespace
 

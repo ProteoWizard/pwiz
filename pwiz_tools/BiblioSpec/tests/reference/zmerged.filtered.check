@@ -93,6 +93,7 @@ id	scoreType
 14	MORPHEUS SCORE
 15	MSGF+ SCORE
 16	PEAKS CONFIDENCE SCORE
+17	BYONIC SCORE
 RefSpectraID	RedundantRefSpectraID	SpectrumSourceID	retentionTime	bestSpectrum
 1	170	3	18.081833	1
 2	169	3	18.036833	1

@@ -51,6 +51,7 @@ targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin)
     scoreThresholds[MORPHEUS] = 0.01; // Morpheus PSM q-value
     scoreThresholds[MSGF] = 0.01; // MSGF+ PSM q-value
     scoreThresholds[PEAKS] = 0.95;  // PEAKS confidence
+    scoreThresholds[BYONIC] = 0.05;  // ByOnic PEP
 }
 
 BlibBuilder::~BlibBuilder()
@@ -82,19 +83,6 @@ void BlibBuilder::usage()
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
         "   -u                Ignore peptides except those with the unmodified sequences from stdin.\n"
         "   -U                Ignore peptides except those with the modified sequences from stdin.\n"
-        "   -q  <max score>   Maximum FDR for accepting results from Percolator (.sqt or .perc.xml) files. Default 0.01.\n"
-        "   -Q  <max score>   Maximum q-value for accepting results from Morpheus .pep.xml files. Default 0.01.\n"
-        "   -d  <max score>   Maximum q-value for accepting results from MSGF+ .pep.xml files. Default 0.01.\n"
-        "   -k  <min score>   Minimum PEAKS confidence level. Default 0.95 (or 95%)\n"
-        "   -p  <min score>   Minimum probability for accepting results from PeptideProphet (.pep.xml) files. Default 0.95.\n"
-        "   -e  <max score>   Maximum expectation value for accepting results from Mascot (.dat) files. Default 0.05\n"
-        "   -t  <max score>   Maximum expectation value for accepting results from X! Tandem (.xtan.xml) files. Default 0.1\n"
-        "   -f  <min score>   Minimum Scaffold Peptide Probability for accepting results from .mzid files. Default 0.95\n"
-        "   -w  <min score>   Minimum Waters MSe peptide score for accepting results from final_fragment.csv files. Default 6\n"
-        "   -P  <min score>   Minimum ProteinPilot confidence level. Default 0.95 (or 95%)\n"
-        "   -E  <max score>   Maximum expectation value for accepting results from OMSAA .pep.xml files. Default 0.00001\n"
-        "   -R  <max score>   Maximum expectation value for accepting results from Protein Prospector .pep.xml files. Default 0.00001\n"
-        "   -M  <max score>   Maximum PEP for accepting results from MaxQuant (.msms.txt) files. Default 0.05.\n"
         "   -C  <file size>   Minimum file size required to use caching for .dat files.  Specifiy units as B,K,G or M.  Default 800M.\n"
         "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default status.\n"
         "   -L                Write status and warning messages to log file.\n"
@@ -352,32 +340,7 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         scoreThresholds[MORPHEUS] = 1 - probability_cutoff;
         scoreThresholds[MSGF] = 1 - probability_cutoff;
         scoreThresholds[PEAKS] = probability_cutoff;
-    } else if (switchName == 'q' && ++i < argc) {
-        scoreThresholds[SQT] = atof(argv[i]);
-    } else if (switchName == 'Q' && ++i < argc) {
-        scoreThresholds[MORPHEUS] = atof(argv[i]);
-    } else if (switchName == 'd' && ++i < argc) {
-        scoreThresholds[MSGF] = atof(argv[i]);
-    } else if (switchName == 'k' && ++i < argc) {
-        scoreThresholds[PEAKS] = atof(argv[i]);
-    } else if (switchName == 'p' && ++i < argc) {
-        scoreThresholds[PEPXML] = atof(argv[i]);
-    } else if (switchName == 'P' && ++i < argc) {
-        scoreThresholds[PROT_PILOT] = atof(argv[i]);
-    } else if (switchName == 'E' && ++i < argc) {
-        scoreThresholds[OMSSA] = atof(argv[i]);
-    } else if (switchName == 'R' && ++i < argc) {
-        scoreThresholds[PROT_PROSPECT] = atof(argv[i]);
-    } else if (switchName == 'M' && ++i < argc) {
-        scoreThresholds[MAXQUANT] = atof(argv[i]);
-    } else if (switchName == 'e' && ++i < argc) {
-        scoreThresholds[MASCOT] = atof(argv[i]);
-    } else if (switchName == 't' && ++i < argc) {
-        scoreThresholds[TANDEM] = atof(argv[i]);
-    } else if (switchName == 'f' && ++i < argc) {
-        scoreThresholds[SCAFFOLD] = atof(argv[i]);
-    } else if (switchName == 'w' && ++i < argc) {
-        scoreThresholds[MSE] = atof(argv[i]);
+        scoreThresholds[BYONIC] = 1 - probability_cutoff;
     } else if (switchName == 'l' && ++i < argc) {
         level_compress = atoi(argv[i]);
     } else if (switchName == 'C' && ++i < argc) {
