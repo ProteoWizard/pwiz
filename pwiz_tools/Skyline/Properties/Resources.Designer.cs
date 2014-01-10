@@ -7683,16 +7683,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IsolationWindowMapper: TryGetWindowFromMz ({0}): _windowWidth must be set before calling this method.
-        /// </summary>
-        public static string IsolationWindowMapper_TryGetWindowFromMz_IsolationWindowMapper_TryGetWindowFromMz__0__windowWidth_must_be_set_before_calling_this_method {
-            get {
-                return ResourceManager.GetString("IsolationWindowMapper_TryGetWindowFromMz_IsolationWindowMapper_TryGetWindowFromMz" +
-                        "__0__windowWidth_must_be_set_before_calling_this_method", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Minimum abundance {0} too high.
         /// </summary>
         public static string IsotopeDistInfo_IsotopeDistInfo_Minimum_abundance__0__too_high {
@@ -9055,26 +9045,6 @@ namespace pwiz.Skyline.Properties {
         public static string MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found {
             get {
                 return ResourceManager.GetString("MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to MsxDemultiplexer: GetDeconvolvedSpectra: spectrum index {0} out of range..
-        /// </summary>
-        public static string MsxDemultiplexer_GetDeconvolvedSpectra_MsxDemultiplexer_GetDeconvolvedSpectra_spectrum_index__0__out_of_range {
-            get {
-                return ResourceManager.GetString("MsxDemultiplexer_GetDeconvolvedSpectra_MsxDemultiplexer_GetDeconvolvedSpectra_spe" +
-                        "ctrum_index__0__out_of_range", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to MsxDemultiplexer: InitializeFile: Improperly formed MSX file.
-        /// </summary>
-        public static string MsxDemultiplexer_InitializeFile_MsxDemultiplexer_InitializeFile_Improperly_formed_MSX_file {
-            get {
-                return ResourceManager.GetString("MsxDemultiplexer_InitializeFile_MsxDemultiplexer_InitializeFile_Improperly_formed" +
-                        "_MSX_file", resourceCulture);
             }
         }
         
@@ -13318,7 +13288,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to SizedSet: index &apos;value&apos; is out of range.
+        ///   Looks up a localized string similar to Index is out of range.
         /// </summary>
         public static string SizedSet_Add_SizedSet_index_value_is_out_of_range {
             get {

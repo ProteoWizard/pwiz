@@ -1990,20 +1990,11 @@ Are you sure you want to continue?</value>
   <data name="Loader_Fail_Failed_to_build_a_cache_for__0__" xml:space="preserve">
     <value>Failed to build a cache for '{0}'.</value>
   </data>
-  <data name="MsxDemultiplexer_InitializeFile_MsxDemultiplexer_InitializeFile_Improperly_formed_MSX_file" xml:space="preserve">
-    <value>MsxDemultiplexer: InitializeFile: Improperly formed MSX file</value>
-  </data>
   <data name="MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found" xml:space="preserve">
     <value>MS/MS scan index {0} not found</value>
   </data>
-  <data name="MsxDemultiplexer_GetDeconvolvedSpectra_MsxDemultiplexer_GetDeconvolvedSpectra_spectrum_index__0__out_of_range" xml:space="preserve">
-    <value>MsxDemultiplexer: GetDeconvolvedSpectra: spectrum index {0} out of range.</value>
-  </data>
-  <data name="IsolationWindowMapper_TryGetWindowFromMz_IsolationWindowMapper_TryGetWindowFromMz__0__windowWidth_must_be_set_before_calling_this_method" xml:space="preserve">
-    <value>IsolationWindowMapper: TryGetWindowFromMz ({0}): _windowWidth must be set before calling this method</value>
-  </data>
   <data name="SizedSet_Add_SizedSet_index_value_is_out_of_range" xml:space="preserve">
-    <value>SizedSet: index 'value' is out of range</value>
+    <value>Index is out of range</value>
   </data>
   <data name="PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list" xml:space="preserve">
     <value>Unexpected null peak list</value>

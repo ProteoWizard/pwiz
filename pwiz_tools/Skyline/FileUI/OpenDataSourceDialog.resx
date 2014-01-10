@@ -129,7 +129,7 @@
     <value>-1</value>
   </data>
   <data name="FileType.Text" xml:space="preserve">
-    <value>FileType</value>
+    <value>Type</value>
   </data>
   <data name="FileType.Width" type="System.Int32, mscorlib">
     <value>120</value>
@@ -138,7 +138,7 @@
     <value>Size</value>
   </data>
   <data name="DateModified.Text" xml:space="preserve">
-    <value>Date Modified</value>
+    <value>Date modified</value>
   </data>
   <data name="DateModified.Width" type="System.Int32, mscorlib">
     <value>120</value>
