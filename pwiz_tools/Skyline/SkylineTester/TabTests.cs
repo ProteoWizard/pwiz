@@ -37,8 +37,9 @@ namespace SkylineTester
                 MainWindow.Pass1.Checked = true;
                 MainWindow.QualityBuildType.SelectedIndex = 0;
                 MainWindow.QualityChooseTests.Checked = true;
+                MainWindow.RunQualityFromTestsTab();
                 MainWindow.Tabs.SelectTab(MainWindow.QualityPage);
-                return MainWindow.TabQuality.Run();
+                return true;
             }
 
             StartLog("Tests", null, true);

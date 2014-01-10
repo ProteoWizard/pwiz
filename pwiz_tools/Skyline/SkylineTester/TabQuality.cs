@@ -39,13 +39,23 @@ namespace SkylineTester
         private int _revision;
         private readonly List<string> _labels = new List<string>();
 
+        public TabQuality()
+        {
+            WindowThumbnail.MainWindow = MainWindow;
+        }
+
         public override void Enter()
         {
             MainWindow.InitLogSelector(MainWindow.ComboRunDate, MainWindow.ButtonOpenLog, false);
-            WindowThumbnail.MainWindow = MainWindow;
             UpdateThumbnail();
             UpdateHistory();
             UpdateSelectedRun();
+        }
+
+        public void RunFromTestsTab()
+        {
+            _labels.Clear();
+            StartQuality();
         }
 
         public override void Leave()
@@ -103,8 +113,7 @@ namespace SkylineTester
             _qualityTimer.Stop();
             _qualityTimer = null;
 
-            UpdateThumbnail();
-            UpdateRun();
+            UpdateQuality();
             MainWindow.Summary.Save();
             MainWindow.NewQualityRun = null;
 
@@ -218,10 +227,6 @@ namespace SkylineTester
                 return;
 
             UpdateThumbnail();
-
-            if (MainWindow.TestRunnerProcessId == 0)
-                return;
-
             UpdateRun();
             if (MainWindow.ComboRunDate.SelectedIndex == 0)
                 UpdateSelectedRun();
@@ -242,6 +247,8 @@ namespace SkylineTester
                 ? MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1 - MainWindow.ComboRunDate.SelectedIndex]
                 : null;
         }
+
+        private BackgroundWorker _updateWorker;
 
         private void UpdateSelectedRun()
         {
@@ -264,8 +271,11 @@ namespace SkylineTester
             MainWindow.LabelFailures.Text = run.Failures.ToString(CultureInfo.InvariantCulture);
             MainWindow.LabelLeaks.Text = run.Leaks.ToString(CultureInfo.InvariantCulture);
 
-            var updateWorker = new BackgroundWorker();
-            updateWorker.DoWork += (sender, args) =>
+            if (_updateWorker != null)
+                return;
+
+            _updateWorker = new BackgroundWorker();
+            _updateWorker.DoWork += (sender, args) =>
             {
                 var managedPointList = new PointPairList();
                 var totalPointList = new PointPairList();
@@ -309,7 +319,8 @@ namespace SkylineTester
 
                     try
                     {
-                        pane.XAxis.Scale.Max = managedPointList.Count - 1;
+                        pane.XAxis.Scale.Min = 1;
+                        pane.XAxis.Scale.Max = managedPointList.Count;
                         pane.XAxis.Scale.MinGrace = 0;
                         pane.XAxis.Scale.MaxGrace = 0;
                         pane.YAxis.Scale.MinGrace = 0.05;
@@ -335,9 +346,11 @@ namespace SkylineTester
                         // to kill a whole quality run for that.
                     }
                 });
+
+                _updateWorker = null;
             };
 
-            updateWorker.RunWorkerAsync();
+            _updateWorker.RunWorkerAsync();
         }
 
         private void UpdateHistory()

@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
@@ -109,6 +110,8 @@ namespace SkylineTester
         // Called on UI thread.
         private void RunNext()
         {
+            UpdateLog();
+
             if (NextCommand > 0 && FinishedOneCommand != null)
                 FinishedOneCommand();
 
@@ -270,8 +273,7 @@ namespace SkylineTester
         /// </summary>
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
-            if (_process != null)
-                Log(e.Data);
+            Log(e.Data);
         }
 
         /// <summary>
@@ -290,6 +292,8 @@ namespace SkylineTester
             }
         }
 
+        private Timer _exitTimer;
+
         /// <summary>
         /// Handle process exit (success, error, or interrupt).
         /// </summary>
@@ -302,7 +306,20 @@ namespace SkylineTester
             _process = null;
 
             if (exitCode == 0)
-                RunNext(null, null);
+            {
+                // Tricky: we have to wait for the final output of the last process to
+                // be logged, otherwise the output from the next process may be interleaved.
+                RunUI(() =>
+                {
+                    _exitTimer = new Timer {Interval = 500};
+                    _exitTimer.Tick += (o, args) =>
+                    {
+                        _exitTimer.Stop();
+                        RunNext(null, null);
+                    };
+                    _exitTimer.Start();
+                });
+            }
             else
             {
                 try

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using TestRunnerLib;
 using ZedGraph;
+using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineTester
 {
@@ -61,6 +62,18 @@ namespace SkylineTester
                 statusRunTime.Text = "{0}:{1:D2}:{2:D2}".With(elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds);
             };
             _runTimer.Start();
+        }
+
+        /// <summary>
+        /// Allow the Tests tab to run the Quality tab without the overhead of loading the last log.
+        /// </summary>
+        public void RunQualityFromTestsTab()
+        {
+            LoadSummary();
+
+            _runningTab = _tabQuality;
+            _tabQuality.RunFromTestsTab();
+            tabs.SelectTab(tabQuality);
         }
 
         public void ResetElapsedTime()
@@ -238,16 +251,20 @@ namespace SkylineTester
                 _tabErrors.Enter();
         }
 
-        public void InitLogSelector(ComboBox combo, Button openButton, bool showDefaultLog = true)
+        public void LoadSummary()
         {
-            combo.Items.Clear();
             var summaryLog = Path.Combine(RootDir, QualityLogsDirectory, SummaryLog);
             if (Summary == null)
                 Summary = new Summary(summaryLog);
+        }
 
+        public void InitLogSelector(ComboBox combo, Button openButton, bool showDefaultLog = true)
+        {
+            combo.Items.Clear();
+            
+            LoadSummary();
             foreach (var run in Summary.Runs)
                 AddRun(run, combo);
-
 
             if (showDefaultLog && File.Exists(DefaultLogFile))
                 combo.Items.Insert(0, LastRunName + " output");

@@ -262,7 +262,7 @@ namespace TestRunner
             }
             else
             {
-                Console.WriteLine("Running {0}{1} tests{2}{3}...\n",
+                runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                     (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
@@ -291,6 +291,7 @@ namespace TestRunner
                 if (pass0)
                 {
                     // Pass zero tests French number format with no vendor readers.
+                    runTests.Log("\r\n");
                     runTests.Log("# Test pass 0 runs French number format with vendor readers disabled.\r\n");
 
                     runTests.Language = new CultureInfo("fr");
@@ -314,6 +315,7 @@ namespace TestRunner
                 if (pass1)
                 {
                     // Pass 1 looks for cumulative leaks when test is run multiple times.
+                    runTests.Log("\r\n");
                     runTests.Log("# Test pass 1 runs tests multiple times to detect memory leaks.\r\n");
 
                     int qualityPasses = Math.Max(LeakCheckIterations, qualityLanguages.Length);
@@ -396,14 +398,16 @@ namespace TestRunner
                 passEnd = int.MaxValue;
             }
 
-            int languageIndex = -1;
+            if (pass < passEnd)
+            {
+                runTests.Log("\r\n");
+                runTests.Log("# Test passes >= 2 run tests in each selected language.\r\n");
+            }
+
             for (; pass < passEnd; pass++)
             {
                 if (testList.Count == 0)
                     break;
-
-                languageIndex = (languageIndex + 1)%languages.Length;
-                runTests.Language = new CultureInfo(languages[languageIndex]);
 
                 // Run each test in this test pass.
                 int testNumber = 0;
@@ -412,10 +416,15 @@ namespace TestRunner
                 {
                     testNumber++;
 
-                    for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
+                    // Run once (or repeat times) for each language.
+                    foreach (var language in languages)
                     {
-                        if (!runTests.Run(test, pass, testNumber))
-                            removeList.Add(test);
+                        runTests.Language = new CultureInfo(language);
+                        for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
+                        {
+                            if (!runTests.Run(test, pass, testNumber))
+                                removeList.Add(test);
+                        }
                     }
 
                     // Record which forms the test showed.
