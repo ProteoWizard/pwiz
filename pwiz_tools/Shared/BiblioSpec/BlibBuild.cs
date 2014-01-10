@@ -34,11 +34,17 @@ namespace pwiz.BiblioSpec
 // ReSharper restore InconsistentNaming
     public static class LibraryBuildActionExtension
     {
-        private static readonly string[] LOCALIZED_VALUES =
+        private static string[] LOCALIZED_VALUES
         {
-            Resources.LibraryBuildActionExtension_LOCALIZED_VALUES_Create,
-            Resources.LibraryBuildActionExtension_LOCALIZED_VALUES_Append
-        };
+            get
+            {
+                return new[]
+                {
+                    Resources.LibraryBuildActionExtension_LOCALIZED_VALUES_Create,
+                    Resources.LibraryBuildActionExtension_LOCALIZED_VALUES_Append
+                };
+            }
+        }
         public static string GetLocalizedString(this LibraryBuildAction val)
         {
             return LOCALIZED_VALUES[(int)val];

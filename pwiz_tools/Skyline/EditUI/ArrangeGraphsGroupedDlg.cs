@@ -114,38 +114,23 @@ namespace pwiz.Skyline.EditUI
     }
 
     public enum GroupGraphsType { separated, distributed }
-    public static class GroupGraphsTypeExtension
-    {
-        private static readonly string[] LOCALIZED_VALUES =
-        {
-            Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_separated,
-            Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed
-        };
-        public static string GetLocalizedString(this GroupGraphsType val)
-        {
-            return LOCALIZED_VALUES[(int)val];
-        }
-        public static GroupGraphsType GetEnum(string enumValue)
-        {
-            return Helpers.EnumFromLocalizedString<GroupGraphsType>(enumValue, LOCALIZED_VALUES);
-        }
-
-        public static GroupGraphsType GetEnum(string enumValue, GroupGraphsType defaultValue)
-        {
-            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
-        }
-    }
 
     // ReSharper disable InconsistentNaming
     public enum GroupGraphsOrder { Position, Document }
 
     public static class GroupGraphsOrderExtension
     {
-        private static readonly string[] LOCALIZED_VALUES =
+        private static string[] LOCALIZED_VALUES
         {
-            Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
-            Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document
-        };
+            get
+            {
+                return new[]
+                {
+                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
+                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document
+                };
+            }
+        }
         public static string GetLocalizedString(this GroupGraphsOrder val)
         {
             return LOCALIZED_VALUES[(int) val];

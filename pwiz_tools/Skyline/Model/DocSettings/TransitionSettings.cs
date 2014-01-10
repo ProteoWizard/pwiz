@@ -251,12 +251,18 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper restore InconsistentNaming
     public static class OptimizedMethodTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES =
+        private static string[] LOCALIZED_VALUES
         {
-            Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_None,
-            Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor,
-            Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition
-        };
+            get
+            {
+                return new[]
+                {
+                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_None,
+                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor,
+                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition
+                };
+            }
+        }
         public static string GetLocalizedString(this OptimizedMethodType val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -1351,12 +1357,18 @@ namespace pwiz.Skyline.Model.DocSettings
     public enum FullScanAcquisitionMethod { None, Targeted, DIA } // Not L10N: Not used for combo boxes.
     public static class FullScanAcquisitionExtension
     {
-        private static readonly string[] LOCALIZED_VALUES =
+        private static string[] LOCALIZED_VALUES
         {
-            Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None,
-            Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted,
-            Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA
-        };
+            get
+            {
+                return new[]
+                {
+                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None,
+                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted,
+                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA
+                };
+            }
+        }
         public static string GetLocalizedString(this FullScanAcquisitionMethod val)
         {
             return LOCALIZED_VALUES[(int)val];
@@ -1375,12 +1387,18 @@ namespace pwiz.Skyline.Model.DocSettings
     public enum FullScanPrecursorIsotopes { None, Count, Percent }
     public static class FullScanPrecursorIsotopesExtension
     {
-        private static readonly string[] LOCALIZED_VALUES =
+        private static string[] LOCALIZED_VALUES
         {
-            Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None,
-            Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count,
-            Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent
-        };
+            get
+            {
+                return new[]
+                {
+                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None,
+                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count,
+                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent
+                };
+            }
+        }
         public static string GetLocalizedString(this FullScanPrecursorIsotopes val)
         {
             return LOCALIZED_VALUES[(int)val];

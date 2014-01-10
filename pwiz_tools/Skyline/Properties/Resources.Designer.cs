@@ -6779,24 +6779,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to distributed.
-        /// </summary>
-        public static string GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed {
-            get {
-                return ResourceManager.GetString("GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to separated.
-        /// </summary>
-        public static string GroupGraphsTypeExtension_LOCALIZED_VALUES_separated {
-            get {
-                return ResourceManager.GetString("GroupGraphsTypeExtension_LOCALIZED_VALUES_separated", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Edit Isotope Modification.
         /// </summary>
         public static string HeavyModList_EditItem_Edit_Isotope_Modification {

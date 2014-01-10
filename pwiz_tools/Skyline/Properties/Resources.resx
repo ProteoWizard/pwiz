@@ -4040,12 +4040,6 @@ Are you sure you want to continue?</value>
   <data name="FileStreamManager_GetTempFileName_Win32_Error__0__" xml:space="preserve">
     <value>Win32 Error: {0}</value>
   </data>
-  <data name="GroupGraphsTypeExtension_LOCALIZED_VALUES_separated" xml:space="preserve">
-    <value>separated</value>
-  </data>
-  <data name="GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed" xml:space="preserve">
-    <value>distributed</value>
-  </data>
   <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Position" xml:space="preserve">
     <value>Position</value>
   </data>

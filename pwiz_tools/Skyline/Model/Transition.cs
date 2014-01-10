@@ -34,7 +34,16 @@ namespace pwiz.Skyline.Model
 
     public static class IonTypeExtension
     {
-        private static readonly string[] LOCALIZED_VALUES = { Resources.IonTypeExtension_LOCALIZED_VALUES_precursor, "a", "b", "c", "x", "y", "z"}; // Not L10N
+        private static readonly string[] VALUES = { string.Empty, "a", "b", "c", "x", "y", "z"}; // Not L10N
+
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                VALUES[0] = Resources.IonTypeExtension_LOCALIZED_VALUES_precursor;
+                return VALUES;
+            }
+        }
         public static string GetLocalizedString(this IonType val)
         {
             return LOCALIZED_VALUES[(int) val + 1]; // To include precursor
