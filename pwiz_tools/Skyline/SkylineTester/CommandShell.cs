@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
@@ -311,7 +310,7 @@ namespace SkylineTester
                 // be logged, otherwise the output from the next process may be interleaved.
                 RunUI(() =>
                 {
-                    _exitTimer = new Timer {Interval = 500};
+                    _exitTimer = new Timer {Interval = 700};
                     _exitTimer.Tick += (o, args) =>
                     {
                         _exitTimer.Stop();

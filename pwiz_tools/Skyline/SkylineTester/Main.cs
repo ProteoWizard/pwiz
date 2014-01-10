@@ -108,7 +108,7 @@ namespace SkylineTester
         {
             var root = buildRoot.Text;
             if (!Path.IsPathRooted(root))
-                root = Path.Combine(RootDir, root);
+                root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), root);
             return root;
         }
 

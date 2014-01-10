@@ -168,46 +168,50 @@ namespace SkylineTester
 
             commandShell.FilterFunc = line =>
             {
-                if (line != null)
+                if (line == null)
+                    return false;
+
+                if (line.StartsWith("[MLRAW:"))
+                    return false;
+
+                if (line.StartsWith("#@ "))
                 {
-                    if (line.StartsWith("#@ "))
+                    // Update status.
+                    var parts = line.Split(' ');
+                    RunUI(() =>
                     {
-                        // Update status.
+                        RunningTestName = parts[2];
+                        statusLabel.Text = line.Substring(3);
+                    });
+                    return false;
+                }
+
+                if (line.StartsWith("...skipped ") ||
+                    line.StartsWith("...failed ") ||
+                    line.StartsWith("!!! "))
+                {
+                    errorsShell.Log(line);
+                    RunUI(() => errorsShell.UpdateLog());
+                }
+
+                if (NewQualityRun != null)
+                {
+                    if (line.StartsWith("!!! "))
+                    {
                         var parts = line.Split(' ');
-                        RunUI(() =>
-                        {
-                            RunningTestName = parts[2];
-                            statusLabel.Text = line.Substring(3);
-                        });
-                        return false;
+                        if (parts[2] == "LEAKED" || parts[2] == "CRT-LEAKED")
+                            NewQualityRun.Leaks++;
                     }
-
-                    if (line.StartsWith("...skipped ") ||
-                        line.StartsWith("...failed ") ||
-                        line.StartsWith("!!! "))
+                    else if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
                     {
-                        errorsShell.Log(line);
-                        RunUI(() => errorsShell.UpdateLog());
-                    }
-
-                    if (NewQualityRun != null)
-                    {
-                        if (line.StartsWith("!!! "))
+                        lock (NewQualityRun)
                         {
-                            var parts = line.Split(' ');
-                            if (parts[2] == "LEAKED" || parts[2] == "CRT-LEAKED")
-                                NewQualityRun.Leaks++;
-                        }
-                        else if (line.Length > 6 && line[0] == '[' && line[6] == ']' && line.Contains(" failures, "))
-                        {
-                            lock (NewQualityRun)
-                            {
-                                LastTestResult = line;
-                                TestsRun++;
-                            }
+                            LastTestResult = line;
+                            TestsRun++;
                         }
                     }
                 }
+
                 return true;
             };
 
@@ -249,6 +253,9 @@ namespace SkylineTester
 
             try
             {
+                var skylineNode = new TreeNode[1];
+                skylineNode[0] = new TreeNode("Skyline tests");
+
                 // Load all tests from each dll.
                 foreach (var testDll in TEST_DLLS)
                 {
@@ -258,14 +265,17 @@ namespace SkylineTester
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
-                    RunUI(() =>
-                    {
                         var childNodes = new TreeNode[tests.Length];
                         for (int i = 0; i < childNodes.Length; i++)
                             childNodes[i] = new TreeNode(tests[i]);
-                        testsTree.Nodes.Add(new TreeNode(dllName, childNodes));
-                    });
+                    skylineNode[0].Nodes.Add(new TreeNode(dllName, childNodes));
                 }
+                
+                RunUI(() =>
+                {
+                    testsTree.Nodes.Add(skylineNode[0]);
+                    skylineNode[0].Expand();
+                });
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)

@@ -111,7 +111,7 @@ namespace SkylineTester
             }
 
             forms = forms.OrderBy(node => node.Text).ToList();
-            MainWindow.FormsTree.Nodes.Add(new TreeNode("Skyline", forms.ToArray()));
+            MainWindow.FormsTree.Nodes.Add(new TreeNode("Skyline forms", forms.ToArray()));
             MainWindow.FormsTree.ExpandAll();
 
             MainWindow.RegenerateCache.Checked = false;

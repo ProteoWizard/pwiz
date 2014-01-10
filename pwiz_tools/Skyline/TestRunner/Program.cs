@@ -292,7 +292,7 @@ namespace TestRunner
                 {
                     // Pass zero tests French number format with no vendor readers.
                     runTests.Log("\r\n");
-                    runTests.Log("# Test pass 0 runs French number format with vendor readers disabled.\r\n");
+                    runTests.Log("# Pass 0: Run with French number format, vendor readers disabled.\r\n");
 
                     runTests.Language = new CultureInfo("fr");
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
@@ -316,7 +316,7 @@ namespace TestRunner
                 {
                     // Pass 1 looks for cumulative leaks when test is run multiple times.
                     runTests.Log("\r\n");
-                    runTests.Log("# Test pass 1 runs tests multiple times to detect memory leaks.\r\n");
+                    runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
 
                     int qualityPasses = Math.Max(LeakCheckIterations, qualityLanguages.Length);
                     testNumber = 0;
@@ -398,10 +398,10 @@ namespace TestRunner
                 passEnd = int.MaxValue;
             }
 
-            if (pass < passEnd)
+            if (pass == 2 && pass < passEnd && testList.Count > 0)
             {
                 runTests.Log("\r\n");
-                runTests.Log("# Test passes >= 2 run tests in each selected language.\r\n");
+                runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
             }
 
             for (; pass < passEnd; pass++)

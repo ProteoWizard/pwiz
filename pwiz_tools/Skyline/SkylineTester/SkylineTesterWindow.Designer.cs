@@ -65,14 +65,15 @@ namespace SkylineTester
             this.pauseTutorialsScreenShots = new System.Windows.Forms.RadioButton();
             this.runTutorials = new System.Windows.Forms.Button();
             this.tabTests = new System.Windows.Forms.TabPage();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.runFullQualityPass = new System.Windows.Forms.CheckBox();
+            this.runTests = new System.Windows.Forms.Button();
             this.label17 = new System.Windows.Forms.Label();
             this.groupBox15 = new System.Windows.Forms.GroupBox();
             this.testsFrench = new System.Windows.Forms.CheckBox();
             this.testsJapanese = new System.Windows.Forms.CheckBox();
             this.testsChinese = new System.Windows.Forms.CheckBox();
             this.testsEnglish = new System.Windows.Forms.CheckBox();
-            this.runTests = new System.Windows.Forms.Button();
             this.pauseGroup = new System.Windows.Forms.GroupBox();
             this.pauseTestsScreenShots = new System.Windows.Forms.CheckBox();
             this.windowsGroup = new System.Windows.Forms.GroupBox();
@@ -85,8 +86,6 @@ namespace SkylineTester
             this.testsGroup = new System.Windows.Forms.GroupBox();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.tabBuild = new System.Windows.Forms.TabPage();
             this.label14 = new System.Windows.Forms.Label();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
@@ -173,7 +172,6 @@ namespace SkylineTester
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
-            this.panel2 = new System.Windows.Forms.Panel();
             this.formsTree = new SkylineTester.MyTreeView();
             this.tutorialsTree = new SkylineTester.MyTreeView();
             this.testsTree = new SkylineTester.MyTreeView();
@@ -193,6 +191,7 @@ namespace SkylineTester
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.tabTests.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.groupBox15.SuspendLayout();
             this.pauseGroup.SuspendLayout();
             this.windowsGroup.SuspendLayout();
@@ -214,7 +213,6 @@ namespace SkylineTester
             this.tabOutput.SuspendLayout();
             this.tabErrors.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -603,16 +601,39 @@ namespace SkylineTester
             this.tabTests.TabIndex = 0;
             this.tabTests.Text = "Tests";
             // 
+            // panel2
+            // 
+            this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel2.Controls.Add(this.runTests);
+            this.panel2.Location = new System.Drawing.Point(299, 554);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(410, 29);
+            this.panel2.TabIndex = 33;
+            // 
             // runFullQualityPass
             // 
+            this.runFullQualityPass.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.runFullQualityPass.AutoSize = true;
-            this.runFullQualityPass.Location = new System.Drawing.Point(8, 6);
+            this.runFullQualityPass.Location = new System.Drawing.Point(280, 439);
             this.runFullQualityPass.Margin = new System.Windows.Forms.Padding(4);
             this.runFullQualityPass.Name = "runFullQualityPass";
             this.runFullQualityPass.Size = new System.Drawing.Size(120, 17);
             this.runFullQualityPass.TabIndex = 32;
             this.runFullQualityPass.Text = "Run full quality pass";
             this.runFullQualityPass.UseVisualStyleBackColor = true;
+            // 
+            // runTests
+            // 
+            this.runTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.runTests.Location = new System.Drawing.Point(310, -1);
+            this.runTests.Margin = new System.Windows.Forms.Padding(4);
+            this.runTests.Name = "runTests";
+            this.runTests.Size = new System.Drawing.Size(100, 28);
+            this.runTests.TabIndex = 14;
+            this.runTests.Text = "Run";
+            this.runTests.UseVisualStyleBackColor = true;
+            this.runTests.Click += new System.EventHandler(this.Run);
             // 
             // label17
             // 
@@ -687,18 +708,6 @@ namespace SkylineTester
             this.testsEnglish.TabIndex = 1;
             this.testsEnglish.Text = "English";
             this.testsEnglish.UseVisualStyleBackColor = true;
-            // 
-            // runTests
-            // 
-            this.runTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.runTests.Location = new System.Drawing.Point(310, -1);
-            this.runTests.Margin = new System.Windows.Forms.Padding(4);
-            this.runTests.Name = "runTests";
-            this.runTests.Size = new System.Drawing.Size(100, 28);
-            this.runTests.TabIndex = 14;
-            this.runTests.Text = "Run";
-            this.runTests.UseVisualStyleBackColor = true;
-            this.runTests.Click += new System.EventHandler(this.Run);
             // 
             // pauseGroup
             // 
@@ -811,11 +820,10 @@ namespace SkylineTester
             this.testsGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.testsGroup.Controls.Add(this.runFullQualityPass);
             this.testsGroup.Controls.Add(this.testsTree);
             this.testsGroup.Controls.Add(this.skipCheckedTests);
             this.testsGroup.Controls.Add(this.runCheckedTests);
-            this.testsGroup.Controls.Add(this.button3);
-            this.testsGroup.Controls.Add(this.button2);
             this.testsGroup.Location = new System.Drawing.Point(299, 50);
             this.testsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.testsGroup.Name = "testsGroup";
@@ -850,30 +858,6 @@ namespace SkylineTester
             this.runCheckedTests.TabStop = true;
             this.runCheckedTests.Text = "Run checked tests";
             this.runCheckedTests.UseVisualStyleBackColor = true;
-            // 
-            // button3
-            // 
-            this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button3.Location = new System.Drawing.Point(116, 396);
-            this.button3.Margin = new System.Windows.Forms.Padding(4);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(100, 28);
-            this.button3.TabIndex = 12;
-            this.button3.Text = "Uncheck all";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.uncheckAll_Click);
-            // 
-            // button2
-            // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.button2.Location = new System.Drawing.Point(8, 396);
-            this.button2.Margin = new System.Windows.Forms.Padding(4);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(100, 28);
-            this.button2.TabIndex = 11;
-            this.button2.Text = "Check all";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.checkAll_Click);
             // 
             // tabBuild
             // 
@@ -929,7 +913,7 @@ namespace SkylineTester
             this.labelSpecifyPath.Name = "labelSpecifyPath";
             this.labelSpecifyPath.Size = new System.Drawing.Size(572, 28);
             this.labelSpecifyPath.TabIndex = 28;
-            this.labelSpecifyPath.Text = "(Specify absolute path or path relative to Skyline folder)";
+            this.labelSpecifyPath.Text = "(Specify absolute path or path relative to User folder)";
             this.labelSpecifyPath.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // buttonDeleteBuild
@@ -954,7 +938,7 @@ namespace SkylineTester
             this.buildRoot.Name = "buildRoot";
             this.buildRoot.Size = new System.Drawing.Size(572, 20);
             this.buildRoot.TabIndex = 3;
-            this.buildRoot.Text = "Build";
+            this.buildRoot.Text = "Documents\\SkylineBuild";
             // 
             // buttonBrowseBuild
             // 
@@ -1878,17 +1862,6 @@ namespace SkylineTester
             this.radioButton5.Text = "Pause for screenshot";
             this.radioButton5.UseVisualStyleBackColor = true;
             // 
-            // panel2
-            // 
-            this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel2.Controls.Add(this.runFullQualityPass);
-            this.panel2.Controls.Add(this.runTests);
-            this.panel2.Location = new System.Drawing.Point(299, 554);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(410, 29);
-            this.panel2.TabIndex = 33;
-            // 
             // formsTree
             // 
             this.formsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -1925,7 +1898,7 @@ namespace SkylineTester
             this.testsTree.Location = new System.Drawing.Point(8, 23);
             this.testsTree.Margin = new System.Windows.Forms.Padding(4);
             this.testsTree.Name = "testsTree";
-            this.testsTree.Size = new System.Drawing.Size(392, 365);
+            this.testsTree.Size = new System.Drawing.Size(392, 407);
             this.testsTree.TabIndex = 15;
             this.testsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
@@ -2023,6 +1996,7 @@ namespace SkylineTester
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.tabTests.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             this.groupBox15.ResumeLayout(false);
             this.groupBox15.PerformLayout();
             this.pauseGroup.ResumeLayout(false);
@@ -2057,8 +2031,6 @@ namespace SkylineTester
             this.tabErrors.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.panel2.ResumeLayout(false);
-            this.panel2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -2081,8 +2053,6 @@ namespace SkylineTester
         private MyTreeView testsTree;
         private RadioButton skipCheckedTests;
         private RadioButton runCheckedTests;
-        private Button button3;
-        private Button button2;
         private TabPage tabForms;
         private GroupBox groupBox1;
         private MyTreeView formsTree;

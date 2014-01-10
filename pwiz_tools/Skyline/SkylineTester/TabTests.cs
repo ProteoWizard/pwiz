@@ -83,7 +83,7 @@ namespace SkylineTester
         public static string GetTestList()
         {
             var testList = new List<string>();
-            foreach (TreeNode node in MainWindow.TestsTree.Nodes)
+            foreach (TreeNode node in MainWindow.TestsTree.Nodes[0].Nodes)
                 GetCheckedTests(node, testList, MainWindow.SkipCheckedTests.Checked);
             if (testList.Count == 0)
                 return "";
