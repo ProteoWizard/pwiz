@@ -315,9 +315,9 @@ namespace pwiz.Skyline.Model
                     features.Id.NodePep.ModifiedSequence,
                     features.Id.NodePepGroup.Name,
                     Convert.ToString(features.Id.NodePep.IsDecoy ? 1 : 0, cultureInfo),
-                    Convert.ToString((float) mProphetScore, cultureInfo),
-                    Convert.ToString((float) pValue, cultureInfo),
-                    Convert.ToString((float) qValue, cultureInfo),
+                    ToFieldString((float) mProphetScore, cultureInfo),
+                    ToFieldString((float) pValue, cultureInfo),
+                    ToFieldString((float) qValue, cultureInfo),
                 };
             foreach (var name in fieldsArray)
             {
@@ -329,12 +329,15 @@ namespace pwiz.Skyline.Model
             {
                 if (!first)
                     writer.Write(separator);
-                writer.WriteDsvField(
-                    float.IsNaN(featureColumn) ? TextUtil.EXCEL_NA : Convert.ToString(featureColumn, cultureInfo),
-                    separator);
+                writer.WriteDsvField(ToFieldString(featureColumn, cultureInfo), separator);
                 first = false;
             }
             writer.WriteLine();
+        }
+
+        private static string ToFieldString(float f, IFormatProvider cultureInfo)
+        {
+            return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
         }
 
         private struct FeatureStatistics
