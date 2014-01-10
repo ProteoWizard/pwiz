@@ -150,7 +150,7 @@ namespace pwiz.Skyline
             // Get placement values before changing anything.
             Point location = Settings.Default.MainWindowLocation;
             Size size = Settings.Default.MainWindowSize;
-            bool maximize = Settings.Default.MainWindowMaximized;
+            bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
 
             // Restore window placement.
             if (!location.IsEmpty)
