@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 
@@ -116,6 +117,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Obsolete]
         public string ReplicatePath { get { return "/"; } }
 
+        [HideWhen(AncestorOfType = typeof(ResultFile))]
         public IList<ResultFile> Files
         {
             get

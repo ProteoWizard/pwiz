@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
 
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
+        [Advanced]
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
         public TransitionGroupChromInfo ChromInfo { get; private set; }
