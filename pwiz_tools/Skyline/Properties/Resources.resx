@@ -5189,9 +5189,6 @@ Are you sure you want to continue?</value>
   <data name="EditPeakScoringModelDlg_UpdateModelGraph_Targets" xml:space="preserve">
     <value>Targets</value>
   </data>
-  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm" xml:space="preserve">
-    <value>Decoy norm</value>
-  </data>
   <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown" xml:space="preserve">
     <value>unknown</value>
   </data>
@@ -5876,19 +5873,7 @@ Are you sure you want to continue?</value>
   <data name="RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_" xml:space="preserve">
     <value>Dot Product To {0}</value>
   </data>
-  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks" xml:space="preserve">
-    <value>Second Best Peaks</value>
-  </data>
-  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm" xml:space="preserve">
-    <value>Combined Norm</value>
-  </data>
-  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm" xml:space="preserve">
-    <value>Second Best Peaks Norm</value>
-  </data>
-  <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks" xml:space="preserve">
-    <value>Second Best Peaks</value>
-  </data>
-  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
+    <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
     <value>Cannot train model without either decoys or second best peaks included.</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_" xml:space="preserve">
@@ -6191,5 +6176,17 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
     <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
     <value>In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator.</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
+    <value>Decoy normal distribution</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
+    <value>Second best peaks</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
+    <value>Combined normal distribution</value>
+  </data>
+    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
+    <value>Second best peaks normal distribution</value>
   </data>
 </root>

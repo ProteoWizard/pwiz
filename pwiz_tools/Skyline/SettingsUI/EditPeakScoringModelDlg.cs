@@ -450,14 +450,14 @@ namespace pwiz.Skyline.SettingsUI
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
-                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, secondBestPoints, _secondBestColor);
+                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, secondBestPoints, _secondBestColor);
             graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
             // Add bar graphs for p values.
             if (decoyCheckBox.Checked)
                 graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, pHistograms.BinGroups[1], _decoyColor);
             if (secondBestCheckBox.Checked)
-                graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, pHistograms.BinGroups[2], _secondBestColor);
+                graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, pHistograms.BinGroups[2], _secondBestColor);
             graphPaneP.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, pHistograms.BinGroups[0], _targetColor);
 
             // Add bar graph for q values.
@@ -521,13 +521,13 @@ namespace pwiz.Skyline.SettingsUI
                         (_decoyColor.B + _secondBestColor.B)/2);
                     color = Color.FromArgb(alpha, _peakScoringModel.UsesDecoys ? mixColor : _secondBestColor);
                     normLabel = _peakScoringModel.UsesDecoys
-                                    ? Resources.EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm
-                                    : Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm;
+                                    ? Resources.EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution
+                                    : Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution;
                 }
                 else
                 {
                     color = Color.FromArgb(alpha, _decoyColor);
-                    normLabel = Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm;
+                    normLabel = Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution;
                 }
                 var curve = new LineItem(normLabel, normalCurve, Color.DarkGray, SymbolType.None)
                     {
@@ -596,7 +596,7 @@ namespace pwiz.Skyline.SettingsUI
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
-                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks, secondBestPoints, _secondBestColor);
+                graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks, secondBestPoints, _secondBestColor);
             graphPane.AddBar(Resources.EditPeakScoringModelDlg_UpdateModelGraph_Targets, targetPoints, _targetColor);
 
             ScaleGraph(graphPane, modelHistograms.Min, modelHistograms.Max, _hasUnknownScores);

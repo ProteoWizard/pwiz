@@ -4435,15 +4435,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second Best Peaks.
-        /// </summary>
-        public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks {
-            get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateCalculatorGraph_Second_Best_Peaks", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to unknown.
         /// </summary>
         public static string EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown {
@@ -4453,20 +4444,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Combined Norm.
+        ///   Looks up a localized string similar to Combined normal distribution.
         /// </summary>
-        public static string EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm {
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution {
             get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Combined_Norm", resourceCulture);
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Decoy norm.
+        ///   Looks up a localized string similar to Decoy normal distribution.
         /// </summary>
-        public static string EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm {
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution {
             get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Decoy_norm", resourceCulture);
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution", resourceCulture);
             }
         }
         
@@ -4498,20 +4489,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second Best Peaks.
+        ///   Looks up a localized string similar to Second best peaks.
         /// </summary>
-        public static string EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks {
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks {
             get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks", resourceCulture);
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second Best Peaks Norm.
+        ///   Looks up a localized string similar to Second best peaks normal distribution.
         /// </summary>
-        public static string EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm {
+        public static string EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution {
             get {
-                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Second_Best_Peaks_Norm", resourceCulture);
+                return ResourceManager.GetString("EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution", resourceCulture);
             }
         }
         
