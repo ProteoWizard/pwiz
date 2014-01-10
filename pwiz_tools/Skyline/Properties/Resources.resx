@@ -5909,8 +5909,8 @@ Are you sure you want to continue?</value>
   <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
     <value>Attempted to score a peak with {0} features using a model with {1} trained scores.</value>
   </data>
-  <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score_" xml:space="preserve">
-    <value>Precursor-product shape score.</value>
+  <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score" xml:space="preserve">
+    <value>Precursor-product shape score</value>
   </data>
   <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product" xml:space="preserve">
     <value>Precursor isotope dot product</value>

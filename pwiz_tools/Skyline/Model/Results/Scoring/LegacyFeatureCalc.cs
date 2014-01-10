@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class LegacyLogUnforcedAreaCalc : SummaryPeakFeatureCalculator
     {
-        public LegacyLogUnforcedAreaCalc() : base(Resources.LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area) { }
+        public LegacyLogUnforcedAreaCalc() : base(Resources.LegacyLogUnforcedAreaCalc_LegacyLogUnforcedAreaCalc_Legacy_log_unforced_area, "Log co-eluting area") { }  // Not L10N
 
         /// <summary>
         /// Standard peaks are assigned ^1.2 the value of analyte peaks, since standards
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public abstract class LegacyCountScoreCalc : SummaryPeakFeatureCalculator
     {
-        protected LegacyCountScoreCalc(string name) : base(name) {}
+        protected LegacyCountScoreCalc(string name, string headerName) : base(name, headerName) {}
 
         protected abstract bool IsIncludedGroup(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData);
 
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     class LegacyUnforcedCountScoreCalc : LegacyCountScoreCalc
     {
-        public LegacyUnforcedCountScoreCalc() : base(Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count) { }
+        public LegacyUnforcedCountScoreCalc() : base(Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count, "Co-elution count") { }  // Not L10N
 
         protected override bool IsIncludedGroup(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData)
         {
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     class LegacyUnforcedCountScoreStandardCalc : LegacyCountScoreCalc
     {
-        public LegacyUnforcedCountScoreStandardCalc() : base(Resources.LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard) { }
+        public LegacyUnforcedCountScoreStandardCalc() : base(Resources.LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard, "Reference co-elution count") { }  // Not L10N
 
         protected override bool IsIncludedGroup(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData)
         {
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class LegacyIdentifiedCountCalc : SummaryPeakFeatureCalculator
     {
-        public LegacyIdentifiedCountCalc() : base(Resources.LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count) { }
+        public LegacyIdentifiedCountCalc() : base(Resources.LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count, "Identified count") { }  // Not L10N
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {

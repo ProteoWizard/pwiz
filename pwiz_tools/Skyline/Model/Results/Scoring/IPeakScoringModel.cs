@@ -266,6 +266,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         float Calculate(PeakScoringContext context, IPeptidePeakData peakGroupData);
         string Name { get; }
+
+        /// <summary>
+        /// A calculator name that does not get localized
+        /// </summary>
+        string HeaderName { get; }
         
         /// <summary>
         /// True if low scores are better for this calculator, false if high scores are better
@@ -278,12 +283,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class SummaryPeakFeatureCalculator : IPeakFeatureCalculator
     {
-        protected SummaryPeakFeatureCalculator(string name)
+        protected SummaryPeakFeatureCalculator(string name, string headerName)
         {
             Name = name;
+            HeaderName = headerName;
         }
 
         public string Name { get; private set; }
+
+        public string HeaderName { get; private set; }
 
         public abstract bool IsReversedScore { get; }
 
@@ -300,12 +308,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class DetailedPeakFeatureCalculator : IPeakFeatureCalculator
     {
-        protected DetailedPeakFeatureCalculator(string name)
+        protected DetailedPeakFeatureCalculator(string name, string headerName)
         {
             Name = name;
+            HeaderName = headerName;
         }
 
         public string Name { get; private set; }
+
+        public string HeaderName { get; private set; }
 
         public abstract bool IsReversedScore { get; }
 

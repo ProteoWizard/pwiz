@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestRetentionTimePredictionCalc(string name) : base(name) {}
+        protected AbstractMQuestRetentionTimePredictionCalc(string name, string headerName) : base(name, headerName) {}
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
-        public MQuestRetentionTimePredictionCalc() : base(Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference) { }
+        public MQuestRetentionTimePredictionCalc() : base(Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference, "Retention time difference") { }  // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestIntensityCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestIntensityCalc(string name) : base(name) { }
+        protected AbstractMQuestIntensityCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestIntensityCalc : AbstractMQuestIntensityCalc
     {
-        public MQuestIntensityCalc() : base(Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity) {}
+        public MQuestIntensityCalc() : base(Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity, "Intensity") { }  // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestIntensityCorrelationCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestIntensityCorrelationCalc(string name) : base(name) { }
+        protected AbstractMQuestIntensityCorrelationCalc(string name, string headerName) : base(name, headerName) { }
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             var tranGroupPeakDatas = MQuestHelpers.GetAnalyteGroups(summaryPeakData).ToArray();
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
     {
-        public MQuestIntensityCorrelationCalc() : base(Resources.MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation) { }
+        public MQuestIntensityCorrelationCalc() : base(Resources.MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation, "Library intensity dot-product") { }  // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestReferenceCorrelationCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestReferenceCorrelationCalc(string name) : base(name) { }
+        protected AbstractMQuestReferenceCorrelationCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestReferenceCorrelationCalc : AbstractMQuestReferenceCorrelationCalc
     {
-        public MQuestReferenceCorrelationCalc()  : base(Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation) {}
+        public MQuestReferenceCorrelationCalc() : base(Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation, "Reference intensity dot-product") { }  // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class MQuestWeightedLightCalc : DetailedPeakFeatureCalculator
     {
-        protected MQuestWeightedLightCalc(string name) : base(name) { }
+        protected MQuestWeightedLightCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(PeakScoringContext context,
                                             IPeptidePeakData<IDetailedPeakData> summaryPeakData)
@@ -329,8 +329,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedShapeCalc : MQuestWeightedLightCalc
     {
-        public MQuestWeightedShapeCalc() : base(Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape) { }
-        public MQuestWeightedShapeCalc(string name) : base(name) { }
+        public MQuestWeightedShapeCalc() : base(Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape, "Shape (weighted)") { }  // Not L10N
+        public MQuestWeightedShapeCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestShapeCalc : MQuestWeightedShapeCalc
     {
-        public MQuestShapeCalc() : base(Resources.MQuestShapeCalc_MQuestShapeCalc_Shape)
+        public MQuestShapeCalc() : base(Resources.MQuestShapeCalc_MQuestShapeCalc_Shape, "Shape")  // Not L10N
         {
         }
 
@@ -369,8 +369,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedCoElutionCalc : MQuestWeightedLightCalc
     {
-        public MQuestWeightedCoElutionCalc() : base(Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution) { }
-        public MQuestWeightedCoElutionCalc(string name) : base(name) { }
+        public MQuestWeightedCoElutionCalc() : base(Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution, "Co-elution (weighted)") { }  // Not L10N
+        public MQuestWeightedCoElutionCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -393,7 +393,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestCoElutionCalc : MQuestWeightedCoElutionCalc
     {
-        public MQuestCoElutionCalc() : base(Resources.MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution)
+        public MQuestCoElutionCalc() : base(Resources.MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution, "Co-elution")  // Not L10N
         {
         }
 
@@ -484,7 +484,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class MQuestWeightedReferenceCalc : DetailedPeakFeatureCalculator
     {
-        protected MQuestWeightedReferenceCalc(string name) : base(name) { }
+        protected MQuestWeightedReferenceCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(PeakScoringContext context,
                                             IPeptidePeakData<IDetailedPeakData> summaryPeakData)
@@ -532,8 +532,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape) {}
-        public MQuestWeightedReferenceShapeCalc(string name) : base(name) {}
+        public MQuestWeightedReferenceShapeCalc() : base(Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape, "Reference shape (weighted)") { }  // Not L10N
+        public MQuestWeightedReferenceShapeCalc(string name, string headerName) : base(name, headerName) {}
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -556,7 +556,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
     {
-        public MQuestReferenceShapeCalc() : base(Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape) {}
+        public MQuestReferenceShapeCalc() : base(Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape, "Reference shape") { }  // Not L10N
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
         {
@@ -570,8 +570,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
     {
-        public MQuestWeightedReferenceCoElutionCalc() : base(Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution) { }
-        public MQuestWeightedReferenceCoElutionCalc(string name) : base(name) { }
+        public MQuestWeightedReferenceCoElutionCalc() : base(Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution, "Reference co-elution (weighted)") { }  // Not L10N
+        public MQuestWeightedReferenceCoElutionCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(Statistics statValues, Statistics statWeigths)
         {
@@ -594,7 +594,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class MQuestReferenceCoElutionCalc : MQuestWeightedReferenceCoElutionCalc
     {
-        public MQuestReferenceCoElutionCalc() : base(Resources.MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution)
+        public MQuestReferenceCoElutionCalc()
+            : base(Resources.MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution, "Reference co-elution")  // Not L10N
         {
         }
 

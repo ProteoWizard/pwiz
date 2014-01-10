@@ -9187,12 +9187,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor-product shape score..
+        ///   Looks up a localized string similar to Precursor-product shape score.
         /// </summary>
-        public static string NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score_ {
+        public static string NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score {
             get {
                 return ResourceManager.GetString("NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_sha" +
-                        "pe_score_", resourceCulture);
+                        "pe_score", resourceCulture);
             }
         }
         

@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!first)
                     writer.Write(separator);
-                writer.Write(first ? "main_var_{0}" : "var_{0}", peakFeatureCalculator.Name.Replace(" ", "_"));
+                writer.Write(first ? "main_var_{0}" : "var_{0}", peakFeatureCalculator.HeaderName.Replace(" ", "_"));
                 first = false;
             }
             writer.WriteLine();

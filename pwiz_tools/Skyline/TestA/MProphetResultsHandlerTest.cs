@@ -89,14 +89,14 @@ namespace pwiz.SkylineTestA
             string docNewActual = testFilesDir.GetTestPath(REPORT_ACTUAL);                                        
             string docNewExpected = testFilesDir.GetTestPathLocale(REPORT_EXPECTED);
             ReportToCsv(reportSpec, docNew, docNewActual, CultureInfo.CurrentCulture);
-            AssertEx.FileEquals(docNewActual, docNewExpected);
+            AssertEx.FileEquals(docNewExpected, docNewActual);
 
             // 2. Reintegrating again gives no change in document
             var resultsHandlerRepeat = new MProphetResultsHandler(docNew, peakScoringModel);
             resultsHandlerRepeat.ScoreFeatures();
             var docRepeat = resultsHandlerRepeat.ChangePeaks(Q_CUTOFF);
             Assert.AreSame(docRepeat, docNew);
-            Assert.AreNotSame(docNew, docOriginal);
+            Assert.AreNotSame(docOriginal, docNew);
 
             // 3. Export mProphet results gives expected file
             var calcs = peakScoringModel.PeakFeatureCalculators;
@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestA
                 SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPathIntl(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"), calcs);
             }
             SaveMProphetFeatures(resultsHandler, mProphetActual, CultureInfo.CurrentCulture, calcs);
-            AssertEx.FileEquals(mProphetActual, mProphetExpected);
+            AssertEx.FileEquals(mProphetExpected, mProphetActual);
 
             // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
             var resultsHandlerQAll = new MProphetResultsHandler(docOriginal, peakScoringModel);
@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestA
             // 7. Labeled peptide pairs still have matching peaks
             foreach (var peptideNode in resultsHandler.Document.Peptides)
             {
-                Assert.AreEqual(peptideNode.TransitionGroupCount, 2);
+                Assert.AreEqual(2, peptideNode.TransitionGroupCount);
                 var groupList = peptideNode.TransitionGroups.ToList();
                 var lightGroup = groupList[0];
                 var heavyGroup = groupList[0];

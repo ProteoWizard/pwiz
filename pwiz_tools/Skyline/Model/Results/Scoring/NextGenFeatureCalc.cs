@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class MassErrorCalc : SummaryPeakFeatureCalculator
     {
-        protected MassErrorCalc(string name) : base(name) { }
+        protected MassErrorCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<ISummaryPeakData> summaryPeakData)
@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenProductMassErrorCalc : MassErrorCalc
     {
-        public NextGenProductMassErrorCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error) {}
+        public NextGenProductMassErrorCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error, "Product mass error") {}  // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenPrecursorMassErrorCalc : MassErrorCalc
     {
-        public NextGenPrecursorMassErrorCalc() : base(Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error) { }
+        public NextGenPrecursorMassErrorCalc() : base(Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error, "Precursor mass error") {} // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenIsotopeDotProductCalc : SummaryPeakFeatureCalculator
     {
-        public NextGenIsotopeDotProductCalc() : base(Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product) { }
+        public NextGenIsotopeDotProductCalc() : base(Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product, "Precursor isotope dot product") { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -150,8 +150,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenCrossWeightedShapeCalc : MQuestWeightedShapeCalc
     {
-        public NextGenCrossWeightedShapeCalc() : base(Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score_) { }
-        public NextGenCrossWeightedShapeCalc(string name) : base(name) { }
+        public NextGenCrossWeightedShapeCalc() : base(Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score, "Precursor-product shape score") { }
 
         protected override IEnumerable<MQuestCrossCorrelation> FilterIons(IEnumerable<MQuestCrossCorrelation> crossCorrMatrix)
         {
@@ -170,7 +169,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractNextGenSignalNoiseCalc : DetailedPeakFeatureCalculator
     {
-        protected AbstractNextGenSignalNoiseCalc(string name) : base(name) { }
+        protected AbstractNextGenSignalNoiseCalc(string name, string headerName) : base(name, headerName) { }
 
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<IDetailedPeakData> summaryPeakData)
@@ -246,8 +245,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class NextGenSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
     {
-        public NextGenSignalNoiseCalc(string name) : base(name) { }
-        public NextGenSignalNoiseCalc() : base(Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise) { }
+        public NextGenSignalNoiseCalc() : base(Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise, "Signal to noise") { }  // Not L10N
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
