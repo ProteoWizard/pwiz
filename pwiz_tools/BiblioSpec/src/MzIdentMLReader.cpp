@@ -100,6 +100,7 @@ bool MzIdentMLReader::parseFile(){
     vector<const char*> specExtensions;
     specExtensions.push_back(".MGF");
     specExtensions.push_back(".mzXML");
+    specExtensions.push_back(".mzML");
     for(; fileIterator != fileMap_.end(); ++fileIterator) {
         vector<string> pathParts;
         boost::split(pathParts, fileIterator->first, boost::is_any_of(";"));
