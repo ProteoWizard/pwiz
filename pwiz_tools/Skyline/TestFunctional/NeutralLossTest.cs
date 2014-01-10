@@ -330,18 +330,18 @@ namespace pwiz.SkylineTestFunctional
 
         private static IEnumerable<IGrouping<double, string>> GetLossGroups(IEnumerable<string> itemNames)
         {
+            Regex regexLoss = new Regex(@"-(\d+)\]");
+            Regex regexPrecursorLoss = new Regex(string.Format("{0} -(\\d+)", IonType.precursor.GetLocalizedString()));
+
             return from name in itemNames
-                   where GetLossMass(name) > 0
-                   group name by GetLossMass(name) into g
+                   where GetLossMass(name, regexPrecursorLoss, regexLoss) > 0
+                   group name by GetLossMass(name, regexPrecursorLoss, regexLoss) into g
                    select g;
         }
 
-        private static readonly Regex REGEX_LOSS = new Regex(@"-(\d+)\]");
-        private static readonly Regex REGEX_PRECURSOR_LOSS = new Regex(string.Format("{0} -(\\d+)", IonType.precursor.GetLocalizedString()));
-
-        private static double GetLossMass(string name)
+        private static double GetLossMass(string name, Regex regexPrecursorLoss, Regex regexProductLoss)
         {
-            var regexLoss = (name.StartsWith(IonType.precursor.GetLocalizedString()) ? REGEX_PRECURSOR_LOSS : REGEX_LOSS);
+            var regexLoss = (name.StartsWith(IonType.precursor.GetLocalizedString()) ? regexPrecursorLoss : regexProductLoss);
             var match = regexLoss.Match(name);
             if (!match.Success)
                 return 0;
