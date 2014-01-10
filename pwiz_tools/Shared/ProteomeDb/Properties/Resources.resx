@@ -100,10 +100,7 @@
   <data name="ProteomeDb_AddFastaFile_Added__0__proteins" xml:space="preserve">
     <value xml:space="preserve">Added {0} proteins</value>
   </data>
-  <data name="ProteomeDb_AddFastaFile_Committing_transaction" xml:space="preserve">
-    <value xml:space="preserve">Committing transaction</value>
-  </data>
-  <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
+    <data name="ProteomeDb_AddFastaFile_Finished_importing__0__proteins" xml:space="preserve">
     <value xml:space="preserve">Finished importing {0} proteins</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
@@ -123,5 +120,8 @@
   </data>
   <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
     <value xml:space="preserve">Must have write lock</value>
+  </data>
+    <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
+    <value>Saving changes</value>
   </data>
 </root>

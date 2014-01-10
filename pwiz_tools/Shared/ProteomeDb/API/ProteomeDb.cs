@@ -148,7 +148,7 @@ namespace pwiz.ProteomeDatabase.API
                             }
                         }
                     }
-                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Committing_transaction, 99))
+                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Saving_changes, 99))
                     {
                         return;
                     }
@@ -379,7 +379,7 @@ namespace pwiz.ProteomeDatabase.API
                             }
                         }
                     }
-                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Committing_transaction, 99))
+                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Saving_changes, 99))
                     {
                         return null;
                     }
