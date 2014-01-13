@@ -4422,7 +4422,7 @@ void write(minimxml::XMLWriter& writer, const IdentData& mzid,
 
     attributes.add("creationDate", mzid.creationDate);
     attributes.add("version", mzid.version());
-    attributes.add("xsi:schemaLocation", "http://psidev.info/psi/pi/mzIdentML/1.1 ../schema/mzIdentML" + mzid.version() + ".xsd");
+    attributes.add("xsi:schemaLocation", "http://psidev.info/psi/pi/mzIdentML/1.1 http://psidev.info/files/mzIdentML" + mzid.version() + ".xsd");
     attributes.add("xmlns", "http://psidev.info/psi/pi/mzIdentML/1.1");
     attributes.add("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
 
