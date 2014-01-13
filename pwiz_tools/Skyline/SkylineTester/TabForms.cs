@@ -38,6 +38,7 @@ namespace SkylineTester
         public override void Enter()
         {
             MainWindow.InitLanguages(MainWindow.FormsLanguage);
+            MainWindow.DefaultButton = MainWindow.RunForms;
         }
 
         public override bool Run()
@@ -73,6 +74,11 @@ namespace SkylineTester
             if (success && MainWindow.RegenerateCache.Checked)
                 CreateFormsTree();
             return true;
+        }
+
+        public override int Find(string text, int position)
+        {
+            return MainWindow.FormsTree.Find(text, position);
         }
 
         public static IEnumerable<string> GetFormList()

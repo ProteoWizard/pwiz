@@ -18,6 +18,8 @@
  */
 
 using System;
+using System.IO;
+using System.Windows.Forms;
 
 namespace SkylineTester
 {
@@ -46,6 +48,25 @@ namespace SkylineTester
         public virtual bool Stop(bool success)
         {
             return true;
+        }
+
+        public virtual int Find(string text, int position)
+        {
+            return MainWindow.FindOutput(text, position);
+        }
+
+        public virtual void MemoryGraphClick(int index)
+        {
+        }
+
+        protected int VerifyFind(string text, int position, string lastRun)
+        {
+            if (MainWindow.LastRunName != lastRun || !File.Exists(MainWindow.DefaultLogFile))
+            {
+                MessageBox.Show(MainWindow, "Must run {0} first.".With(lastRun));
+                return 0;
+            }
+            return MainWindow.FindOutput(text, position);
         }
 
         public static void StartLog(string runName, string logFile = null, bool switchToOutputTab = false)

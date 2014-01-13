@@ -27,6 +27,11 @@ namespace SkylineTester
 {
     public class TabTests : TabBase
     {
+        public override void Enter()
+        {
+            MainWindow.DefaultButton = MainWindow.RunTests;
+        }
+
         public override bool Run()
         {
             if (MainWindow.RunFullQualityPass.Checked)
@@ -35,7 +40,6 @@ namespace SkylineTester
                 MainWindow.PassCount.Text = "1";
                 MainWindow.Pass0.Checked = true;
                 MainWindow.Pass1.Checked = true;
-                MainWindow.QualityBuildType.SelectedIndex = 0;
                 MainWindow.QualityChooseTests.Checked = true;
                 MainWindow.RunQualityFromTestsTab();
                 MainWindow.Tabs.SelectTab(MainWindow.QualityPage);
@@ -78,6 +82,11 @@ namespace SkylineTester
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
             return true;
+        }
+
+        public override int Find(string text, int position)
+        {
+            return MainWindow.TestsTree.Find(text, position);
         }
 
         public static string GetTestList()

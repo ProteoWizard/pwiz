@@ -36,6 +36,7 @@ namespace SkylineTester
         {
             var buildRoot = MainWindow.GetBuildRoot();
             MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(buildRoot);
+            MainWindow.DefaultButton = MainWindow.RunBuild;
         }
 
         public override bool Run()
@@ -50,7 +51,7 @@ namespace SkylineTester
             }
 
             StartLog("Build", MainWindow.DefaultLogFile, true);
-            CreateBuildCommands(architectures, MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked);
+            CreateBuildCommands(MainWindow.GetBuildRoot(), architectures, MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked);
             MainWindow.RunCommands();
             return true;
         }
@@ -76,6 +77,11 @@ namespace SkylineTester
             return true;
         }
 
+        public override int Find(string text, int position)
+        {
+            return VerifyFind(text, position, "Build");
+        }
+
         public static List<int> GetArchitectures()
         {
             var architectures = new List<int>();
@@ -93,10 +99,9 @@ namespace SkylineTester
                 : MainWindow.BranchUrl.Text;
         }
 
-        public static void CreateBuildCommands(IList<int> architectures, bool nukeBuild, bool updateBuild)
+        public static void CreateBuildCommands(string buildRoot, IList<int> architectures, bool nukeBuild, bool updateBuild)
         {
             var commandShell = MainWindow.CommandShell;
-            var buildRoot = MainWindow.GetBuildRoot();
             var branchUrl = GetBranchUrl();
             var branchParts = branchUrl.Split('/');
             var branchName = "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
@@ -171,6 +176,8 @@ namespace SkylineTester
                 if (dlg.ShowDialog(MainWindow) == DialogResult.OK)
                     MainWindow.BuildRoot.Text = dlg.SelectedPath;
             }
+
+            MainWindow.ButtonDeleteBuild.Enabled = Directory.Exists(MainWindow.GetNightlyRoot());
         }
     }
 }

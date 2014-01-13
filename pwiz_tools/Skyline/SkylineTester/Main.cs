@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -36,11 +37,11 @@ namespace SkylineTester
             if (_runningTab != null)
             {
                 Stop(null, null);
+                AcceptButton = DefaultButton;
                 return;
             }
 
             commandShell.ClearLog();
-            errorsShell.ClearLog();
 
             // Prepare to start task.
             _runningTab = _tabs[tabs.SelectedIndex];
@@ -51,7 +52,8 @@ namespace SkylineTester
 
             foreach (var runButton in _runButtons)
                 runButton.Text = "Stop";
-            buttonStop.Enabled = buttonErrorsStop.Enabled = true;
+            buttonStop.Enabled = true;
+            AcceptButton = null;
 
             // Update elapsed time display.
             _runStartTime = DateTime.Now;
@@ -81,6 +83,11 @@ namespace SkylineTester
             _runStartTime = DateTime.Now;
         }
 
+        public void Stop()
+        {
+            RunUI(() => Stop(null, null));
+        }
+
         private void Stop(object sender, EventArgs e)
         {
             _runningTab.Cancel();
@@ -92,7 +99,8 @@ namespace SkylineTester
 
             foreach (var runButton in _runButtons)
                 runButton.Text = "Run";
-            buttonStop.Enabled = buttonErrorsStop.Enabled = false;
+            buttonStop.Enabled = false;
+            AcceptButton = DefaultButton;
 
             if (_runTimer != null)
             {
@@ -112,6 +120,14 @@ namespace SkylineTester
             return root;
         }
 
+        public string GetNightlyRoot()
+        {
+            var root = nightlyRoot.Text;
+            if (!Path.IsPathRooted(root))
+                root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), root);
+            return root;
+        }
+
         public DirectoryInfo GetSkylineDirectory(string startDirectory)
         {
             string skylinePath = startDirectory;
@@ -119,16 +135,6 @@ namespace SkylineTester
             while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
                 skylineDirectory = skylineDirectory.Parent;
             return skylineDirectory;
-        }
-
-        private string GetTestRunnerDirectory()
-        {
-            var root = GetBuildRoot();
-            var testRunner = ChooseMostRecentFile(
-                Path.Combine(root, @"pwiz_tools\Skyline\bin\x86\Release\TestRunner.exe"),
-                Path.Combine(root, @"pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe"),
-                Path.Combine(ExeDir, "TestRunner.exe"));
-            return Path.GetDirectoryName(testRunner);
         }
 
         private string ChooseMostRecentFile(params string[] files)
@@ -152,23 +158,22 @@ namespace SkylineTester
 
         public void AddTestRunner(string args)
         {
-            MemoryChartWindow.Start("TestRunnerMemory.log");
+            //MemoryChartWindow.Start("TestRunnerMemory.log");
             TestsRun = 0;
             Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
 
-            var testRunner = Path.Combine(GetTestRunnerDirectory(), "TestRunner.exe");
+            var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
             _testRunnerIndex = commandShell.Add(
-                "{0} random=off status=on results={1} {2} {3}",
+                "{0} random=off status=on results={1} {2}",
                 testRunner.Quote(),
                 _resultsDir.Quote(),
-                runWithDebugger.Checked ? "Debug" : "",
                 args);
         }
 
         public void ClearLog()
         {
             commandShell.ClearLog();
-            errorsShell.ClearLog();
+            _tabOutput.ClearErrors();
             _testRunnerIndex = int.MaxValue;
         }
 
@@ -200,7 +205,7 @@ namespace SkylineTester
                 _testRunnerIndex = int.MaxValue;
 
                 // Report test results.
-                var testRunner = Path.Combine(GetTestRunnerDirectory(), "TestRunner.exe");
+                var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
                 commandShell.NextCommand = commandShell.Add("{0} report={1}", testRunner.Quote(), commandShell.LogFile.Quote());
                 RunCommands();
                 return;
@@ -226,7 +231,7 @@ namespace SkylineTester
 
         private IEnumerable<string> GetLanguages()
         {
-            return (new FindLanguages(GetTestRunnerDirectory(), "en", "fr").Enumerate());
+            return (new FindLanguages(GetSelectedBuildDir(), "en", "fr").Enumerate());
         }
 
         public void InitLanguages(ComboBox comboBox)
@@ -247,18 +252,18 @@ namespace SkylineTester
         {
             if (Tabs.SelectedTab == tabOutput)
                 _tabOutput.Enter();
-            if (Tabs.SelectedTab == tabErrors)
-                _tabErrors.Enter();
         }
 
         public void LoadSummary()
         {
-            var summaryLog = Path.Combine(RootDir, QualityLogsDirectory, SummaryLog);
             if (Summary == null)
+            {
+                var summaryLog = Path.Combine(RootDir, NightlyLogsDirectory, SummaryLog);
                 Summary = new Summary(summaryLog);
+            }
         }
 
-        public void InitLogSelector(ComboBox combo, Button openButton, bool showDefaultLog = true)
+        public void InitLogSelector(ComboBox combo, Button openButton)
         {
             combo.Items.Clear();
             
@@ -266,18 +271,7 @@ namespace SkylineTester
             foreach (var run in Summary.Runs)
                 AddRun(run, combo);
 
-            if (showDefaultLog && File.Exists(DefaultLogFile))
-                combo.Items.Insert(0, LastRunName + " output");
-
-            if (combo.Items.Count > 0)
-            {
-                combo.SelectedIndex = 0;
-                openButton.Enabled = true;
-            }
-            else
-            {
-                openButton.Enabled = false;
-            }
+            openButton.Enabled = (combo.Items.Count > 0);
         }
 
         public void AddRun(Summary.Run run, ComboBox combo)
@@ -293,9 +287,9 @@ namespace SkylineTester
             if (combo.SelectedIndex == -1)
                 return null;
 
-            // Combo box items are reversed.
             int index = combo.SelectedIndex;
-            return Char.IsDigit(combo.Items[index].ToString()[0])
+            var text = combo.Items[index].ToString();
+            return (Char.IsDigit(text[0]))
                 ? Summary.GetLogFile(Summary.Runs[combo.Items.Count - 1 - index])
                 : DefaultLogFile;
         }
@@ -310,12 +304,14 @@ namespace SkylineTester
             }
         }
 
-        private void InitQuality()
+        private ZedGraphControl CreateMemoryGraph()
         {
-            qualityBuildType.SelectedIndex = 0;
-
-            InitGraph(ref graphMemory, "Memory used");
-            var pane = graphMemory.GraphPane;
+            var graph = InitGraph("Memory used");
+            graph.IsShowPointValues = true;
+            graph.PointValueEvent += GraphOnPointValueEvent;
+            graph.MouseDownEvent += GraphOnMouseDownEvent;
+            graph.MouseUpEvent += GraphOnMouseUpEvent;
+            var pane = graph.GraphPane;
             pane.XAxis.Type = AxisType.Text;
             pane.XAxis.Scale.FontSpec.Family = "Courier New";
             pane.XAxis.Scale.FontSpec.Size = 12;
@@ -335,22 +331,58 @@ namespace SkylineTester
             pane.YAxis.Scale.Mag = 0;
             pane.Legend.IsVisible = true;
             pane.YAxis.Scale.FontSpec.Angle = 90;
-
-            InitGraph(ref graphTestsRun, "Tests run");
-            InitGraph(ref graphDuration, "Duration");
-            InitGraph(ref graphFailures, "Failures");
-            InitGraph(ref graphMemoryHistory, "Memory used");
-
-            panelMemoryGraph.Controls.Add(graphMemory);
-            historyTable.Controls.Add(graphMemoryHistory, 0, 0);
-            historyTable.Controls.Add(graphFailures, 0, 0);
-            historyTable.Controls.Add(graphDuration, 0, 0);
-            historyTable.Controls.Add(graphTestsRun, 0, 0);
+            return graph;
         }
 
-        private void InitGraph(ref ZedGraphControl graph, string title)
+        private int _cursorIndex;
+
+        private string GraphOnPointValueEvent(ZedGraphControl sender, GraphPane pane, CurveItem curve, int iPt)
         {
-            graph = new ZedGraphControl
+            _cursorIndex = iPt;
+            return (string) curve[iPt].Tag;
+        }
+
+        private Point _mouseDownLocation;
+
+        private bool GraphOnMouseUpEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        {
+            if (mouseEventArgs.Button == MouseButtons.Left && mouseEventArgs.Location == _mouseDownLocation)
+                _tabs[_previousTab].MemoryGraphClick(_cursorIndex);
+            return false;
+        }
+
+        private bool GraphOnMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        {
+            if (mouseEventArgs.Button == MouseButtons.Left)
+                _mouseDownLocation = mouseEventArgs.Location;
+            return false;
+        }
+
+        private void InitQuality()
+        {
+            graphMemory = CreateMemoryGraph();
+            panelMemoryGraph.Controls.Add(graphMemory);
+        }
+
+        public void InitNightly()
+        {
+            nightlyGraphMemory = CreateMemoryGraph();
+            nightlyGraphPanel.Controls.Add(nightlyGraphMemory);
+
+            graphTestsRun = InitGraph("Tests run");
+            graphDuration = InitGraph("Duration");
+            graphFailures = InitGraph("Failures");
+            graphMemoryHistory = InitGraph("Memory used");
+
+            nightlyTrendsTable.Controls.Add(graphMemoryHistory, 0, 0);
+            nightlyTrendsTable.Controls.Add(graphFailures, 0, 0);
+            nightlyTrendsTable.Controls.Add(graphDuration, 0, 0);
+            nightlyTrendsTable.Controls.Add(graphTestsRun, 0, 0);
+        }
+
+        private ZedGraphControl InitGraph(string title)
+        {
+            var graph = new ZedGraphControl
             {
                 Dock = DockStyle.Fill,
                 EditButtons = MouseButtons.Left,
@@ -377,6 +409,8 @@ namespace SkylineTester
             pane.YAxis.Scale.MaxGrace = 0.05;
             pane.XAxis.Scale.FontSpec.Angle = 90;
             pane.Legend.IsVisible = false;
+
+            return graph;
         }
 
         public bool HasBuildPrerequisites
@@ -402,7 +436,13 @@ namespace SkylineTester
 
         private void RunUI(Action action)
         {
-            Invoke(action);
+            try
+            {
+                Invoke(action);
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
     }
 }

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 // Fix incorrect handling of double click in TreeView.
@@ -24,10 +25,35 @@ namespace SkylineTester
 {
     public partial class MyTreeView : TreeView
     {
+        private readonly List<TreeNode> _foundNodes = new List<TreeNode>(); 
+
         protected override void WndProc(ref Message m)
         {
             // Filter WM_LBUTTONDBLCLK
             if (m.Msg != 0x203) base.WndProc(ref m);
+        }
+
+        public int Find(string text, int position)
+        {
+            Focus();
+            _foundNodes.Clear();
+            Find(text.ToLower(), Nodes[0]);
+            if (position >= _foundNodes.Count)
+                return -1;
+            SelectedNode = _foundNodes[position];
+            return position + 1;
+        }
+
+        private void Find(string text, TreeNode startNode)
+        {
+            while (startNode != null)
+            {
+                if (startNode.Text.ToLower().Contains(text))
+                    _foundNodes.Add(startNode);
+                if (startNode.Nodes.Count != 0)
+                    Find(text, startNode.Nodes[0]); 
+                startNode = startNode.NextNode;
+            }
         }
     }
 }

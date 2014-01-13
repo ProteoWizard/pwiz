@@ -95,6 +95,9 @@
   <PropertyGroup />
   <ItemGroup>
     <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Win32.TaskScheduler">
+      <HintPath>.\Microsoft.Win32.TaskScheduler.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -128,6 +131,12 @@
       <DependentUpon>DeleteWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Extensions.cs" />
+    <Compile Include="FindWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FindWindow.Designer.cs">
+      <DependentUpon>FindWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Main.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -155,8 +164,8 @@
     <Compile Include="Summary.cs" />
     <Compile Include="TabBase.cs" />
     <Compile Include="TabBuild.cs" />
-    <Compile Include="TabErrors.cs" />
     <Compile Include="TabForms.cs" />
+    <Compile Include="TabNightly.cs" />
     <Compile Include="TabOutput.cs" />
     <Compile Include="TabQuality.cs" />
     <Compile Include="TabTests.cs" />
@@ -178,6 +187,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DeleteWindow.resx">
       <DependentUpon>DeleteWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FindWindow.resx">
+      <DependentUpon>FindWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MemoryChartWindow.resx">
       <DependentUpon>MemoryChartWindow.cs</DependentUpon>

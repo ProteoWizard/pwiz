@@ -173,25 +173,25 @@
     <value>Remove Peak</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="noStandardContextMenuItem.Text" xml:space="preserve">
     <value>None</value>
   </data>
   <data name="normStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="normStandardContextMenuItem.Text" xml:space="preserve">
     <value>Normalization</value>
   </data>
   <data name="qcStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
     <value>QC</value>
   </data>
   <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>149, 22</value>
   </data>
   <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
     <value>iRT</value>
@@ -258,7 +258,7 @@
     <value>Replicates</value>
   </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>170, 286</value>
+    <value>170, 264</value>
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>

@@ -33,8 +33,8 @@ namespace SkylineTester
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
         public Func<string, bool> FilterFunc { get; set; }
+        public Action<string> ColorLine { get; set; }
         public Action FinishedOneCommand { get; set; }
-        public bool DoLiveUpdate { get; set; }
         public int NextCommand { get; set; }
 
         private string _workingDirectory;
@@ -405,9 +405,6 @@ namespace SkylineTester
             if (!string.IsNullOrEmpty(LogFile))
                 Try.Multi<Exception>(() => File.AppendAllText(LogFile, logLines));
 
-            if (!DoLiveUpdate)
-                return;
-
             // Scroll if text box is already scrolled to bottom.
             int previousLength = Math.Max(0, TextLength - 1);
             var point = GetPositionFromCharIndex(previousLength);
@@ -455,10 +452,8 @@ namespace SkylineTester
             _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineColor = lineColor});
         }
  
-        public void Load(string file)
+        public void Load(string file, Action loadDone = null)
         {
-            if (_logFile == file)
-                return;
             _logFile = file;
 
             if (!File.Exists(file))
@@ -475,6 +470,8 @@ namespace SkylineTester
             var colorWorker = new BackgroundWorker();
             colorWorker.DoWork += (sender, args) =>
             {
+                IgnorePaint++;
+
                 int startIndex = 0;
                 while (true)
                 {
@@ -509,19 +506,26 @@ namespace SkylineTester
                         {
                             Select(start, endIndex - start);
                             SelectionColor = match.LineColor;
+                            if (ColorLine != null)
+                                ColorLine(text.Substring(start, endIndex - start));
                         });
                     }
 
                     // Move to next line.
                     startIndex = endIndex;
                 }
+
+                IgnorePaint--;
+
+                if (loadDone != null)
+                    loadDone();
             };
             colorWorker.RunWorkerAsync();
         }
 
         public void AddLines(string[] lines)
         {
-            DoPaint = false;
+            IgnorePaint++;
             foreach (var line in lines)
             {
                 ColorMatch match = null;
@@ -546,7 +550,7 @@ namespace SkylineTester
                     }
                 });
             }
-            DoPaint = true;
+            IgnorePaint--;
         }
 
         private const short WM_PAINT = 0x00f;
@@ -555,7 +559,7 @@ namespace SkylineTester
         private const int SB_ENDSCROLL = 8;
 
         // ReSharper disable once ConvertToConstant.Global
-        public bool DoPaint = true;
+        public int IgnorePaint { get; set; }
 
         private bool _scrolling;
 
@@ -564,7 +568,7 @@ namespace SkylineTester
             // Code courtesy of Mark Mihevc
             // sometimes we want to eat the paint message so we don't have to see all the
             // flicker from when we select the text to change the color.
-            if (m.Msg == WM_PAINT && !DoPaint)
+            if (m.Msg == WM_PAINT && IgnorePaint != 0)
             {
                 m.Result = IntPtr.Zero; // not painting, must set this to IntPtr.Zero, otherwise serious problems.
                 return;
@@ -573,7 +577,7 @@ namespace SkylineTester
             if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL)
                 _scrolling = ((short)m.WParam != SB_ENDSCROLL);
 
-            base.WndProc(ref m); // message other than WM_PAINT, jsut do what you normally do.
+            base.WndProc(ref m);
         }
 
         #endregion

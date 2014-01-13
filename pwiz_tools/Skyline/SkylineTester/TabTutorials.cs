@@ -29,6 +29,11 @@ namespace SkylineTester
             MainWindow.InitLanguages(MainWindow.TutorialsLanguage);
         }
 
+        public override void Enter()
+        {
+            MainWindow.DefaultButton = MainWindow.RunTutorials;
+        }
+
         public override bool Run()
         {
             StartLog("Tutorials");
@@ -55,6 +60,11 @@ namespace SkylineTester
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
             return true;
+        }
+
+        public override int Find(string text, int position)
+        {
+            return MainWindow.TutorialsTree.Find(text, position);
         }
     }
 }

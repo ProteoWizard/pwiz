@@ -32,9 +32,8 @@ namespace pwiz.Skyline
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineWindow));
-            this.contextMenuTreeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuTreeNode = new System.Windows.Forms.ContextMenuStrip();
             this.cutContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pasteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,7 +55,7 @@ namespace pwiz.Skyline
             this.replicatesTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bestReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip();
             this.aionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,7 +82,7 @@ namespace pwiz.Skyline
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
             this.showLibraryChromatogramsSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuChromatogram = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuChromatogram = new System.Windows.Forms.ContextMenuStrip();
             this.removePeakGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeaksGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeaksGraphSubMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -132,7 +131,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator26 = new System.Windows.Forms.ToolStripSeparator();
-            this.contextMenuRetentionTimes = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuRetentionTimes = new System.Windows.Forms.ContextMenuStrip();
             this.timeGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -167,7 +166,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator38 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomOutRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator25 = new System.Windows.Forms.ToolStripSeparator();
-            this.contextMenuPeakAreas = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuPeakAreas = new System.Windows.Forms.ContextMenuStrip();
             this.areaGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
