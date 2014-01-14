@@ -111,8 +111,8 @@ namespace SkylineTester
             _updateTimer.Tick += (s, a) => RunUI(UpdateQuality);
             _updateTimer.Start();
 
-            var args = "offscreen=on quality=on loop={0} pass0={1} pass1={2} {3}".With(
-               int.Parse(MainWindow.PassCount.Text),
+            var args = "offscreen=on quality=on{0} pass0={1} pass1={2} {3}".With(
+                MainWindow.QualityPassDefinite.Checked ? " loop=" + int.Parse(MainWindow.QualityPassCount.Text) : "",
                 MainWindow.Pass0.Checked.ToString(),
                 MainWindow.Pass1.Checked.ToString(),
                 MainWindow.QualityChooseTests.Checked ? TabTests.GetTestList() : "");

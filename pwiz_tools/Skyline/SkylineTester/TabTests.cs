@@ -36,8 +36,8 @@ namespace SkylineTester
         {
             if (MainWindow.RunFullQualityPass.Checked)
             {
-                MainWindow.QualityRunNow.Checked = true;
-                MainWindow.PassCount.Text = "1";
+                MainWindow.QualityPassDefinite.Checked = true;
+                MainWindow.QualityPassCount.Value = 1;
                 MainWindow.Pass0.Checked = true;
                 MainWindow.Pass1.Checked = true;
                 MainWindow.QualityChooseTests.Checked = true;

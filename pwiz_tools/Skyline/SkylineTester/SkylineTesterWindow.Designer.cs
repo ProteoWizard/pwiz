@@ -127,11 +127,12 @@ namespace SkylineTester
             this.qualityAllTests = new System.Windows.Forms.RadioButton();
             this.qualityChooseTests = new System.Windows.Forms.RadioButton();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
-            this.passCount = new System.Windows.Forms.NumericUpDown();
+            this.qualityPassIndefinite = new System.Windows.Forms.RadioButton();
+            this.qualityPassCount = new System.Windows.Forms.NumericUpDown();
             this.pass1 = new System.Windows.Forms.CheckBox();
             this.pass0 = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.qualityRunNow = new System.Windows.Forms.RadioButton();
+            this.qualityPassDefinite = new System.Windows.Forms.RadioButton();
             this.panelMemoryGraph = new System.Windows.Forms.Panel();
             this.label18 = new System.Windows.Forms.Label();
             this.runQuality = new System.Windows.Forms.Button();
@@ -154,7 +155,7 @@ namespace SkylineTester
             this.nightlyTestName = new System.Windows.Forms.Label();
             this.nightlyThumbnail = new SkylineTester.WindowThumbnail();
             this.nightlyGraphPanel = new System.Windows.Forms.Panel();
-            this.nightllyDeleteRun = new System.Windows.Forms.Button();
+            this.nightlyDeleteRun = new System.Windows.Forms.Button();
             this.nightlyViewLog = new System.Windows.Forms.Button();
             this.nightlyLabelLeaks = new System.Windows.Forms.Label();
             this.nightlyLabelFailures = new System.Windows.Forms.Label();
@@ -167,6 +168,7 @@ namespace SkylineTester
             this.nightlyRunDate = new System.Windows.Forms.ComboBox();
             this.label29 = new System.Windows.Forms.Label();
             this.groupBox20 = new System.Windows.Forms.GroupBox();
+            this.buttonNow = new System.Windows.Forms.Button();
             this.nightlyStartTime = new System.Windows.Forms.DateTimePicker();
             this.nightlyBuildType = new System.Windows.Forms.DomainUpDown();
             this.label31 = new System.Windows.Forms.Label();
@@ -245,7 +247,7 @@ namespace SkylineTester
             this.groupBox11.SuspendLayout();
             this.groupBox9.SuspendLayout();
             this.groupBox8.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.passCount)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.qualityPassCount)).BeginInit();
             this.tabNightly.SuspendLayout();
             this.nightlyTableLayout.SuspendLayout();
             this.groupBox17.SuspendLayout();
@@ -1165,8 +1167,6 @@ namespace SkylineTester
             // build64
             // 
             this.build64.AutoSize = true;
-            this.build64.Checked = true;
-            this.build64.CheckState = System.Windows.Forms.CheckState.Checked;
             this.build64.Location = new System.Drawing.Point(9, 46);
             this.build64.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.build64.Name = "build64";
@@ -1178,6 +1178,8 @@ namespace SkylineTester
             // build32
             // 
             this.build32.AutoSize = true;
+            this.build32.Checked = true;
+            this.build32.CheckState = System.Windows.Forms.CheckState.Checked;
             this.build32.Location = new System.Drawing.Point(9, 21);
             this.build32.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.build32.Name = "build32";
@@ -1213,8 +1215,8 @@ namespace SkylineTester
             this.qualityTableLayout.Margin = new System.Windows.Forms.Padding(0);
             this.qualityTableLayout.Name = "qualityTableLayout";
             this.qualityTableLayout.RowCount = 2;
-            this.qualityTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.qualityTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
+            this.qualityTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 46.80412F));
+            this.qualityTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 53.19588F));
             this.qualityTableLayout.Size = new System.Drawing.Size(700, 485);
             this.qualityTableLayout.TabIndex = 32;
             // 
@@ -1228,7 +1230,7 @@ namespace SkylineTester
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(700, 194);
+            this.panel1.Size = new System.Drawing.Size(700, 226);
             this.panel1.TabIndex = 0;
             // 
             // groupBox7
@@ -1240,7 +1242,7 @@ namespace SkylineTester
             this.groupBox7.Controls.Add(this.qualityThumbnail);
             this.groupBox7.Location = new System.Drawing.Point(376, 0);
             this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(324, 190);
+            this.groupBox7.Size = new System.Drawing.Size(324, 222);
             this.groupBox7.TabIndex = 35;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Skyline windows";
@@ -1251,7 +1253,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.qualityTestName.AutoEllipsis = true;
             this.qualityTestName.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.qualityTestName.Location = new System.Drawing.Point(6, 167);
+            this.qualityTestName.Location = new System.Drawing.Point(6, 199);
             this.qualityTestName.Name = "qualityTestName";
             this.qualityTestName.Size = new System.Drawing.Size(312, 20);
             this.qualityTestName.TabIndex = 35;
@@ -1265,7 +1267,7 @@ namespace SkylineTester
             this.qualityThumbnail.Location = new System.Drawing.Point(8, 19);
             this.qualityThumbnail.Name = "qualityThumbnail";
             this.qualityThumbnail.ProcessId = 0;
-            this.qualityThumbnail.Size = new System.Drawing.Size(310, 145);
+            this.qualityThumbnail.Size = new System.Drawing.Size(310, 177);
             this.qualityThumbnail.TabIndex = 34;
             // 
             // groupBox11
@@ -1285,7 +1287,7 @@ namespace SkylineTester
             this.groupBox11.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox11.Name = "groupBox11";
             this.groupBox11.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox11.Size = new System.Drawing.Size(137, 190);
+            this.groupBox11.Size = new System.Drawing.Size(137, 222);
             this.groupBox11.TabIndex = 32;
             this.groupBox11.TabStop = false;
             this.groupBox11.Text = "Run results";
@@ -1387,11 +1389,11 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Left)));
             this.groupBox9.Controls.Add(this.qualityAllTests);
             this.groupBox9.Controls.Add(this.qualityChooseTests);
-            this.groupBox9.Location = new System.Drawing.Point(0, 108);
+            this.groupBox9.Location = new System.Drawing.Point(0, 137);
             this.groupBox9.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox9.Name = "groupBox9";
             this.groupBox9.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox9.Size = new System.Drawing.Size(224, 82);
+            this.groupBox9.Size = new System.Drawing.Size(224, 85);
             this.groupBox9.TabIndex = 31;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "Test selection";
@@ -1422,27 +1424,44 @@ namespace SkylineTester
             // 
             // groupBox8
             // 
-            this.groupBox8.Controls.Add(this.passCount);
+            this.groupBox8.Controls.Add(this.qualityPassIndefinite);
+            this.groupBox8.Controls.Add(this.qualityPassCount);
             this.groupBox8.Controls.Add(this.pass1);
             this.groupBox8.Controls.Add(this.pass0);
             this.groupBox8.Controls.Add(this.label7);
-            this.groupBox8.Controls.Add(this.qualityRunNow);
+            this.groupBox8.Controls.Add(this.qualityPassDefinite);
             this.groupBox8.Location = new System.Drawing.Point(0, 0);
             this.groupBox8.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox8.Name = "groupBox8";
             this.groupBox8.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox8.Size = new System.Drawing.Size(224, 100);
+            this.groupBox8.Size = new System.Drawing.Size(224, 129);
             this.groupBox8.TabIndex = 30;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Run options";
             // 
-            // passCount
+            // qualityPassIndefinite
             // 
-            this.passCount.Location = new System.Drawing.Point(60, 23);
-            this.passCount.Name = "passCount";
-            this.passCount.Size = new System.Drawing.Size(41, 20);
-            this.passCount.TabIndex = 11;
-            this.passCount.Value = new decimal(new int[] {
+            this.qualityPassIndefinite.AutoSize = true;
+            this.qualityPassIndefinite.Location = new System.Drawing.Point(8, 48);
+            this.qualityPassIndefinite.Margin = new System.Windows.Forms.Padding(4);
+            this.qualityPassIndefinite.Name = "qualityPassIndefinite";
+            this.qualityPassIndefinite.Size = new System.Drawing.Size(97, 17);
+            this.qualityPassIndefinite.TabIndex = 12;
+            this.qualityPassIndefinite.Text = "Run indefinitely";
+            this.qualityPassIndefinite.UseVisualStyleBackColor = true;
+            // 
+            // qualityPassCount
+            // 
+            this.qualityPassCount.Location = new System.Drawing.Point(60, 23);
+            this.qualityPassCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.qualityPassCount.Name = "qualityPassCount";
+            this.qualityPassCount.Size = new System.Drawing.Size(41, 20);
+            this.qualityPassCount.TabIndex = 11;
+            this.qualityPassCount.Value = new decimal(new int[] {
             1,
             0,
             0,
@@ -1453,7 +1472,7 @@ namespace SkylineTester
             this.pass1.AutoSize = true;
             this.pass1.Checked = true;
             this.pass1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.pass1.Location = new System.Drawing.Point(8, 71);
+            this.pass1.Location = new System.Drawing.Point(8, 95);
             this.pass1.Name = "pass1";
             this.pass1.Size = new System.Drawing.Size(163, 17);
             this.pass1.TabIndex = 10;
@@ -1465,7 +1484,7 @@ namespace SkylineTester
             this.pass0.AutoSize = true;
             this.pass0.Checked = true;
             this.pass0.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.pass0.Location = new System.Drawing.Point(8, 48);
+            this.pass0.Location = new System.Drawing.Point(8, 72);
             this.pass0.Name = "pass0";
             this.pass0.Size = new System.Drawing.Size(161, 17);
             this.pass0.TabIndex = 9;
@@ -1482,28 +1501,28 @@ namespace SkylineTester
             this.label7.TabIndex = 8;
             this.label7.Text = "passes";
             // 
-            // qualityRunNow
+            // qualityPassDefinite
             // 
-            this.qualityRunNow.AutoSize = true;
-            this.qualityRunNow.Checked = true;
-            this.qualityRunNow.Location = new System.Drawing.Point(8, 23);
-            this.qualityRunNow.Margin = new System.Windows.Forms.Padding(4);
-            this.qualityRunNow.Name = "qualityRunNow";
-            this.qualityRunNow.Size = new System.Drawing.Size(45, 17);
-            this.qualityRunNow.TabIndex = 1;
-            this.qualityRunNow.TabStop = true;
-            this.qualityRunNow.Text = "Run";
-            this.qualityRunNow.UseVisualStyleBackColor = true;
+            this.qualityPassDefinite.AutoSize = true;
+            this.qualityPassDefinite.Checked = true;
+            this.qualityPassDefinite.Location = new System.Drawing.Point(8, 23);
+            this.qualityPassDefinite.Margin = new System.Windows.Forms.Padding(4);
+            this.qualityPassDefinite.Name = "qualityPassDefinite";
+            this.qualityPassDefinite.Size = new System.Drawing.Size(45, 17);
+            this.qualityPassDefinite.TabIndex = 1;
+            this.qualityPassDefinite.TabStop = true;
+            this.qualityPassDefinite.Text = "Run";
+            this.qualityPassDefinite.UseVisualStyleBackColor = true;
             // 
             // panelMemoryGraph
             // 
             this.panelMemoryGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelMemoryGraph.Location = new System.Drawing.Point(0, 200);
+            this.panelMemoryGraph.Location = new System.Drawing.Point(0, 232);
             this.panelMemoryGraph.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
             this.panelMemoryGraph.Name = "panelMemoryGraph";
-            this.panelMemoryGraph.Size = new System.Drawing.Size(700, 285);
+            this.panelMemoryGraph.Size = new System.Drawing.Size(700, 253);
             this.panelMemoryGraph.TabIndex = 32;
             // 
             // label18
@@ -1634,7 +1653,7 @@ namespace SkylineTester
             this.groupBox19.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox19.Name = "groupBox19";
             this.groupBox19.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox19.Size = new System.Drawing.Size(224, 133);
+            this.groupBox19.Size = new System.Drawing.Size(240, 133);
             this.groupBox19.TabIndex = 35;
             this.groupBox19.TabStop = false;
             this.groupBox19.Text = "Build root";
@@ -1645,7 +1664,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label34.Location = new System.Drawing.Point(9, 79);
             this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(208, 44);
+            this.label34.Size = new System.Drawing.Size(224, 44);
             this.label34.TabIndex = 28;
             this.label34.Text = "(Absolute path or path relative to User folder)";
             this.label34.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1669,7 +1688,7 @@ namespace SkylineTester
             this.nightlyRoot.Location = new System.Drawing.Point(9, 21);
             this.nightlyRoot.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.nightlyRoot.Name = "nightlyRoot";
-            this.nightlyRoot.Size = new System.Drawing.Size(208, 20);
+            this.nightlyRoot.Size = new System.Drawing.Size(224, 20);
             this.nightlyRoot.TabIndex = 3;
             this.nightlyRoot.Text = "Documents\\SkylineNightly";
             // 
@@ -1693,7 +1712,7 @@ namespace SkylineTester
             this.groupBox22.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox22.Name = "groupBox22";
             this.groupBox22.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox22.Size = new System.Drawing.Size(224, 86);
+            this.groupBox22.Size = new System.Drawing.Size(240, 86);
             this.groupBox22.TabIndex = 34;
             this.groupBox22.TabStop = false;
             this.groupBox22.Text = "Source";
@@ -1729,7 +1748,7 @@ namespace SkylineTester
             this.nightlyBranchUrl.Location = new System.Drawing.Point(85, 49);
             this.nightlyBranchUrl.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.nightlyBranchUrl.Name = "nightlyBranchUrl";
-            this.nightlyBranchUrl.Size = new System.Drawing.Size(132, 20);
+            this.nightlyBranchUrl.Size = new System.Drawing.Size(148, 20);
             this.nightlyBranchUrl.TabIndex = 2;
             this.nightlyBranchUrl.Text = "https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME";
             // 
@@ -1741,7 +1760,7 @@ namespace SkylineTester
             this.groupBox18.Controls.Add(this.nightlyTestName);
             this.groupBox18.Controls.Add(this.nightlyThumbnail);
             this.groupBox18.Controls.Add(this.nightlyGraphPanel);
-            this.groupBox18.Controls.Add(this.nightllyDeleteRun);
+            this.groupBox18.Controls.Add(this.nightlyDeleteRun);
             this.groupBox18.Controls.Add(this.nightlyViewLog);
             this.groupBox18.Controls.Add(this.nightlyLabelLeaks);
             this.groupBox18.Controls.Add(this.nightlyLabelFailures);
@@ -1753,11 +1772,11 @@ namespace SkylineTester
             this.groupBox18.Controls.Add(this.nightlyLabel1);
             this.groupBox18.Controls.Add(this.nightlyRunDate);
             this.groupBox18.Controls.Add(this.label29);
-            this.groupBox18.Location = new System.Drawing.Point(232, 0);
+            this.groupBox18.Location = new System.Drawing.Point(248, 0);
             this.groupBox18.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox18.Name = "groupBox18";
             this.groupBox18.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox18.Size = new System.Drawing.Size(468, 335);
+            this.groupBox18.Size = new System.Drawing.Size(452, 335);
             this.groupBox18.TabIndex = 32;
             this.groupBox18.TabStop = false;
             this.groupBox18.Text = "Run results";
@@ -1768,9 +1787,9 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.nightlyTestName.AutoEllipsis = true;
             this.nightlyTestName.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.nightlyTestName.Location = new System.Drawing.Point(317, 104);
+            this.nightlyTestName.Location = new System.Drawing.Point(292, 104);
             this.nightlyTestName.Name = "nightlyTestName";
-            this.nightlyTestName.Size = new System.Drawing.Size(144, 20);
+            this.nightlyTestName.Size = new System.Drawing.Size(128, 20);
             this.nightlyTestName.TabIndex = 35;
             this.nightlyTestName.Text = "test name";
             // 
@@ -1778,10 +1797,10 @@ namespace SkylineTester
             // 
             this.nightlyThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.nightlyThumbnail.Location = new System.Drawing.Point(317, 21);
+            this.nightlyThumbnail.Location = new System.Drawing.Point(294, 21);
             this.nightlyThumbnail.Name = "nightlyThumbnail";
             this.nightlyThumbnail.ProcessId = 0;
-            this.nightlyThumbnail.Size = new System.Drawing.Size(144, 79);
+            this.nightlyThumbnail.Size = new System.Drawing.Size(151, 79);
             this.nightlyThumbnail.TabIndex = 34;
             // 
             // nightlyGraphPanel
@@ -1791,26 +1810,26 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.nightlyGraphPanel.Location = new System.Drawing.Point(11, 126);
             this.nightlyGraphPanel.Name = "nightlyGraphPanel";
-            this.nightlyGraphPanel.Size = new System.Drawing.Size(450, 202);
+            this.nightlyGraphPanel.Size = new System.Drawing.Size(434, 202);
             this.nightlyGraphPanel.TabIndex = 32;
             // 
-            // nightllyDeleteRun
+            // nightlyDeleteRun
             // 
-            this.nightllyDeleteRun.Location = new System.Drawing.Point(205, 90);
-            this.nightllyDeleteRun.Margin = new System.Windows.Forms.Padding(4);
-            this.nightllyDeleteRun.Name = "nightllyDeleteRun";
-            this.nightllyDeleteRun.Size = new System.Drawing.Size(96, 26);
-            this.nightllyDeleteRun.TabIndex = 31;
-            this.nightllyDeleteRun.Text = "Delete run";
-            this.nightllyDeleteRun.UseVisualStyleBackColor = true;
-            this.nightllyDeleteRun.Click += new System.EventHandler(this.buttonDeleteRun_Click);
+            this.nightlyDeleteRun.Location = new System.Drawing.Point(189, 92);
+            this.nightlyDeleteRun.Margin = new System.Windows.Forms.Padding(4);
+            this.nightlyDeleteRun.Name = "nightlyDeleteRun";
+            this.nightlyDeleteRun.Size = new System.Drawing.Size(88, 26);
+            this.nightlyDeleteRun.TabIndex = 31;
+            this.nightlyDeleteRun.Text = "Delete run";
+            this.nightlyDeleteRun.UseVisualStyleBackColor = true;
+            this.nightlyDeleteRun.Click += new System.EventHandler(this.buttonDeleteRun_Click);
             // 
             // nightlyViewLog
             // 
-            this.nightlyViewLog.Location = new System.Drawing.Point(205, 56);
+            this.nightlyViewLog.Location = new System.Drawing.Point(189, 58);
             this.nightlyViewLog.Margin = new System.Windows.Forms.Padding(4);
             this.nightlyViewLog.Name = "nightlyViewLog";
-            this.nightlyViewLog.Size = new System.Drawing.Size(96, 26);
+            this.nightlyViewLog.Size = new System.Drawing.Size(88, 26);
             this.nightlyViewLog.TabIndex = 30;
             this.nightlyViewLog.Text = "View log";
             this.nightlyViewLog.UseVisualStyleBackColor = true;
@@ -1903,7 +1922,7 @@ namespace SkylineTester
             this.nightlyRunDate.Location = new System.Drawing.Point(85, 21);
             this.nightlyRunDate.Margin = new System.Windows.Forms.Padding(4);
             this.nightlyRunDate.Name = "nightlyRunDate";
-            this.nightlyRunDate.Size = new System.Drawing.Size(216, 21);
+            this.nightlyRunDate.Size = new System.Drawing.Size(192, 21);
             this.nightlyRunDate.TabIndex = 1;
             this.nightlyRunDate.SelectedIndexChanged += new System.EventHandler(this.comboRunDate_SelectedIndexChanged);
             // 
@@ -1919,6 +1938,7 @@ namespace SkylineTester
             // 
             // groupBox20
             // 
+            this.groupBox20.Controls.Add(this.buttonNow);
             this.groupBox20.Controls.Add(this.nightlyStartTime);
             this.groupBox20.Controls.Add(this.nightlyBuildType);
             this.groupBox20.Controls.Add(this.label31);
@@ -1930,10 +1950,20 @@ namespace SkylineTester
             this.groupBox20.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox20.Name = "groupBox20";
             this.groupBox20.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox20.Size = new System.Drawing.Size(224, 100);
+            this.groupBox20.Size = new System.Drawing.Size(240, 100);
             this.groupBox20.TabIndex = 30;
             this.groupBox20.TabStop = false;
             this.groupBox20.Text = "Run";
+            // 
+            // buttonNow
+            // 
+            this.buttonNow.Location = new System.Drawing.Point(173, 17);
+            this.buttonNow.Name = "buttonNow";
+            this.buttonNow.Size = new System.Drawing.Size(59, 23);
+            this.buttonNow.TabIndex = 32;
+            this.buttonNow.Text = "now";
+            this.buttonNow.UseVisualStyleBackColor = true;
+            this.buttonNow.Click += new System.EventHandler(this.buttonNow_Click);
             // 
             // nightlyStartTime
             // 
@@ -1944,6 +1974,7 @@ namespace SkylineTester
             this.nightlyStartTime.ShowUpDown = true;
             this.nightlyStartTime.Size = new System.Drawing.Size(82, 20);
             this.nightlyStartTime.TabIndex = 31;
+            this.nightlyStartTime.Value = new System.DateTime(2014, 1, 14, 18, 0, 0, 0);
             // 
             // nightlyBuildType
             // 
@@ -1952,7 +1983,7 @@ namespace SkylineTester
             this.nightlyBuildType.Location = new System.Drawing.Point(85, 69);
             this.nightlyBuildType.Name = "nightlyBuildType";
             this.nightlyBuildType.ReadOnly = true;
-            this.nightlyBuildType.Size = new System.Drawing.Size(56, 20);
+            this.nightlyBuildType.Size = new System.Drawing.Size(82, 20);
             this.nightlyBuildType.TabIndex = 30;
             this.nightlyBuildType.Text = "32 bit";
             this.nightlyBuildType.Wrap = true;
@@ -1960,7 +1991,7 @@ namespace SkylineTester
             // label31
             // 
             this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(147, 47);
+            this.label31.Location = new System.Drawing.Point(170, 47);
             this.label31.Name = "label31";
             this.label31.Size = new System.Drawing.Size(33, 13);
             this.label31.TabIndex = 6;
@@ -1989,7 +2020,7 @@ namespace SkylineTester
             0,
             0});
             this.nightlyDuration.Name = "nightlyDuration";
-            this.nightlyDuration.Size = new System.Drawing.Size(56, 20);
+            this.nightlyDuration.Size = new System.Drawing.Size(82, 20);
             this.nightlyDuration.TabIndex = 5;
             this.nightlyDuration.Value = new decimal(new int[] {
             12,
@@ -2489,7 +2520,7 @@ namespace SkylineTester
             this.groupBox9.PerformLayout();
             this.groupBox8.ResumeLayout(false);
             this.groupBox8.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.passCount)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.qualityPassCount)).EndInit();
             this.tabNightly.ResumeLayout(false);
             this.nightlyTableLayout.ResumeLayout(false);
             this.groupBox17.ResumeLayout(false);
@@ -2627,7 +2658,7 @@ namespace SkylineTester
         private CheckBox pass1;
         private CheckBox pass0;
         private Label label7;
-        private RadioButton qualityRunNow;
+        private RadioButton qualityPassDefinite;
         private Label label18;
         private WindowThumbnail qualityThumbnail;
         private Label qualityTestName;
@@ -2650,7 +2681,7 @@ namespace SkylineTester
         private Label nightlyTestName;
         private WindowThumbnail nightlyThumbnail;
         private Panel nightlyGraphPanel;
-        private Button nightllyDeleteRun;
+        private Button nightlyDeleteRun;
         private Button nightlyViewLog;
         private Label nightlyLabelLeaks;
         private Label nightlyLabelFailures;
@@ -2693,8 +2724,10 @@ namespace SkylineTester
         private NumericUpDown pauseFormSeconds;
         private NumericUpDown pauseTutorialsSeconds;
         private NumericUpDown runLoopsCount;
-        private NumericUpDown passCount;
+        private NumericUpDown qualityPassCount;
         private ToolStripMenuItem documentationToolStripMenuItem;
+        private Button buttonNow;
+        private RadioButton qualityPassIndefinite;
     }
 }
 

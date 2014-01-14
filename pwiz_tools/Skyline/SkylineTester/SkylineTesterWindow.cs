@@ -564,8 +564,8 @@ namespace SkylineTester
                 startSln,
 
                 // Quality
-                qualityRunNow,
-                passCount,
+                qualityPassDefinite,
+                qualityPassCount,
                 pass0,
                 pass1,
                 qualityAllTests,
@@ -886,6 +886,7 @@ namespace SkylineTester
         public Label            LabelTestsRun               { get { return labelTestsRun; } }
         public DomainUpDown     NightlyBuildType            { get { return nightlyBuildType; } }
         public Button           NightlyDeleteBuild          { get { return nightlyDeleteBuild; } }
+        public Button           NightlyDeleteRun            { get { return nightlyDeleteRun; } }
         public NumericUpDown    NightlyDuration             { get { return nightlyDuration; } }
         public Label            NightlyLabelDuration        { get { return nightlyLabelDuration; } }
         public Label            NightlyLabelFailures        { get { return nightlyLabelFailures; } }
@@ -904,14 +905,14 @@ namespace SkylineTester
         public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
-        public NumericUpDown    PassCount                   { get { return passCount; } }
         public RadioButton      PauseFormDelay              { get { return pauseFormDelay; } }
         public NumericUpDown    PauseFormSeconds            { get { return pauseFormSeconds; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
         public TabPage          QualityPage                 { get { return tabQuality; } }
-        public RadioButton      QualityRunNow               { get { return qualityRunNow; } }
+        public NumericUpDown    QualityPassCount            { get { return qualityPassCount; } }
+        public RadioButton      QualityPassDefinite         { get { return qualityPassDefinite; } }
         public Label            QualityTestName             { get { return qualityTestName; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public CheckBox         RegenerateCache             { get { return regenerateCache; } }
@@ -1087,6 +1088,11 @@ namespace SkylineTester
                 ts.RootFolder.DeleteTask(TabNightly.NIGHTLY_TASK_NAME, false);
             }
             buttonDeleteNightlyTask.Enabled = false;
+        }
+
+        private void buttonNow_Click(object sender, EventArgs e)
+        {
+            nightlyStartTime.Value = DateTime.Now;
         }
 
         #endregion Control events

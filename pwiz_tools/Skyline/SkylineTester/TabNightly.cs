@@ -63,6 +63,7 @@ namespace SkylineTester
                 MainWindow.NightlyBuildType.SelectedIndex = 0;
 
             MainWindow.NightlyDeleteBuild.Enabled = Directory.Exists(MainWindow.GetNightlyRoot());
+            MainWindow.NightlyDeleteRun.Enabled = MainWindow.Summary.Runs.Count > 0;
 
             UpdateThumbnail();
             UpdateGraph();
@@ -99,7 +100,22 @@ namespace SkylineTester
                 dt.StartBoundary = startTime;
                 dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                 dt.Enabled = true;
-                //td.Settings.WakeToRun = true;
+                bool canWakeToRun = false;
+                try
+                {
+                    td.Settings.WakeToRun = true;
+                    canWakeToRun = true;
+                }
+// ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+
+                if (!canWakeToRun)
+                    MessageBox.Show(
+                        "Warning: There was an error creating a task that can wake your computer from sleep." +
+                        " You can use the Task Scheduler to modify the task to wake up, or make sure your computer is awake at " +
+                        startTime.ToShortTimeString());
 
                 // Add an action that will launch SkylineTester whenever the trigger fires
                 td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile, MainWindow.ExeDir));
@@ -466,6 +482,8 @@ namespace SkylineTester
 
                 MainWindow.Summary.Runs.Remove(run);
             }
+
+            MainWindow.NightlyDeleteRun.Enabled = MainWindow.Summary.Runs.Count > 0;
 
             int selectedIndex = MainWindow.NightlyRunDate.SelectedIndex;
             MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);

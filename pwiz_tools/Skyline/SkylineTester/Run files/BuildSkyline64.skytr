@@ -31,8 +31,8 @@
   <updateBuild>false</updateBuild>
   <incrementalBuild>false</incrementalBuild>
   <startSln>false</startSln>
-  <qualityRunOne>true</qualityRunOne>
-  <passCount>1</passCount>
+  <qualityPassDefinite>true</qualityPassDefinite>
+  <qualityPassCount>1</qualityPassCount>
   <qualityRunSchedule>false</qualityRunSchedule>
   <qualityStartTime>6:00 PM</qualityStartTime>
   <qualityEndTime>8:00 AM</qualityEndTime>
