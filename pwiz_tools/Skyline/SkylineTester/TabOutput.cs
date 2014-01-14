@@ -21,7 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
+using EnvDTE;
 
 namespace SkylineTester
 {
@@ -158,6 +161,113 @@ namespace SkylineTester
             textBox.Select(start, end - start);
         }
 
+        public void CommandShellSelectionChanged()
+        {
+            if (MainWindow.CommandShell.SelectionLength > 0)
+                return;
+
+            // Scan forward to line end.
+            var text = MainWindow.CommandShell.Text;
+            int end = text.Length;
+            if (end == 0)
+                return;
+            int lineEnd = MainWindow.CommandShell.SelectionStart;
+            while (lineEnd < end && text[lineEnd] != '\n')
+                lineEnd++;
+            int lineNumberStart = lineEnd - 1;
+            if (!Char.IsDigit(text, lineNumberStart))
+                return;
+            while (lineNumberStart >= 0 && Char.IsDigit(text, lineNumberStart))
+                lineNumberStart--;
+            if (lineNumberStart < 0)
+                return;
+            lineNumberStart++;
+            const string fileLinePattern = ":line ";
+            if (lineNumberStart < fileLinePattern.Length)
+                return;
+            var testFileLinePattern = text.Substring(lineNumberStart - fileLinePattern.Length, fileLinePattern.Length);
+            if (testFileLinePattern != fileLinePattern)
+                return;
+            var dte = GetDTE();
+            if (dte == null)
+                return;
+            var fileStart = text.LastIndexOf(" in ", lineNumberStart, StringComparison.CurrentCulture);
+            if (fileStart < 0)
+                return;
+            fileStart += " in ".Length;
+            var file = text.Substring(fileStart, lineNumberStart - fileLinePattern.Length - fileStart);
+            var lineNumberText = text.Substring(lineNumberStart, lineEnd - lineNumberStart);
+
+            // Open in Visual Studio and go to the indicated line number.
+            dte.ExecuteCommand("File.OpenFile", file);
+            dte.ExecuteCommand("Edit.GoTo", lineNumberText);
+
+            // Bring Visual Studio to the foreground.
+            SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
+
+            Marshal.ReleaseComObject(dte);
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("ole32.dll")]
+        private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+
+        // from http://blogs.msdn.com/b/kirillosenkov/archive/2011/08/10/how-to-get-dte-from-visual-studio-process-id.aspx
+        public static DTE GetDTE()
+        {
+            const string id = "!VisualStudio.DTE.";
+            object runningObject = null;
+
+            IBindCtx bindCtx = null;
+            IRunningObjectTable rot = null;
+            IEnumMoniker enumMonikers = null;
+
+            try
+            {
+                Marshal.ThrowExceptionForHR(CreateBindCtx(reserved: 0, ppbc: out bindCtx));
+                bindCtx.GetRunningObjectTable(out rot);
+                rot.EnumRunning(out enumMonikers);
+
+                IMoniker[] moniker = new IMoniker[1];
+                IntPtr numberFetched = IntPtr.Zero;
+                while (enumMonikers.Next(1, moniker, numberFetched) == 0)
+                {
+                    IMoniker runningObjectMoniker = moniker[0];
+
+                    string name = null;
+
+                    try
+                    {
+                        if (runningObjectMoniker != null)
+                            runningObjectMoniker.GetDisplayName(bindCtx, null, out name);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Do nothing, there is something in the ROT that we do not have access to.
+                    }
+
+                    if (!string.IsNullOrEmpty(name) && name.StartsWith(id, StringComparison.Ordinal))
+                    {
+                        Marshal.ThrowExceptionForHR(rot.GetObject(runningObjectMoniker, out runningObject));
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                if (enumMonikers != null)
+                    Marshal.ReleaseComObject(enumMonikers);
+                if (rot != null)
+                    Marshal.ReleaseComObject(rot);
+                if (bindCtx != null)
+                    Marshal.ReleaseComObject(bindCtx);
+            }
+
+            return (DTE)runningObject;
+        }
+
         public void ErrorSelectionChanged()
         {
             if (_addingErrors)
@@ -166,7 +276,7 @@ namespace SkylineTester
             _addingErrors = true;
             try
             {
-                SelectLine(MainWindow.ErrorConsole, MainWindow.ErrorConsole.SelectionStart);
+                SelectLine(MainWindow.ErrorConsole, MainWindow.ErrorConsole.SelectionStart - 1);
                 var searchText = MainWindow.ErrorConsole.SelectedText;
                 if (searchText.StartsWith("  "))
                 {

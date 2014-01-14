@@ -204,6 +204,7 @@ namespace SkylineTester
             commandShell.AddColorPattern("...skipped ", Color.Orange);
             commandShell.AddColorPattern("...failed ", Color.Red);
             commandShell.AddColorPattern("!!!", Color.Red);
+            commandShell.AddColorPattern("   at ", ":line ", Color.Blue);
 
             commandShell.ColorLine = line =>
             {
@@ -1001,6 +1002,11 @@ namespace SkylineTester
         private void selectBuildMenuOpening(object sender, EventArgs e)
         {
             SelectBuild();
+        }
+
+        private void commandShell_SelectionChanged(object sender, EventArgs e)
+        {
+            _tabOutput.CommandShellSelectionChanged();
         }
 
         private void errorConsole_SelectionChanged(object sender, EventArgs e)

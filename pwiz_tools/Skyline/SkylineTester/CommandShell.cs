@@ -442,6 +442,7 @@ namespace SkylineTester
         private class ColorMatch
         {
             public string LineStart;
+            public string LineContains;
             public Color LineColor;
         }
 
@@ -450,6 +451,11 @@ namespace SkylineTester
         public void AddColorPattern(string lineStart, Color lineColor)
         {
             _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineColor = lineColor});
+        }
+ 
+        public void AddColorPattern(string lineStart, string lineContains, Color lineColor)
+        {
+            _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineContains = lineContains, LineColor = lineColor});
         }
  
         public void Load(string file, Action loadDone = null)
@@ -493,6 +499,13 @@ namespace SkylineTester
                         var lineStart = text.Substring(startIndex, colorMatch.LineStart.Length);
                         if (lineStart == colorMatch.LineStart)
                         {
+                            if (colorMatch.LineContains != null)
+                            {
+                                int lineContainsIndex = text.IndexOf(colorMatch.LineContains, startIndex,
+                                    StringComparison.CurrentCulture);
+                                if (lineContainsIndex < 0 || lineContainsIndex > text.IndexOf('\n', startIndex))
+                                    continue;
+                            }
                             match = colorMatch;
                             break;
                         }

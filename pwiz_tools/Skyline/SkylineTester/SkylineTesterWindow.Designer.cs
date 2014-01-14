@@ -2078,6 +2078,7 @@ namespace SkylineTester
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
             this.commandShell.WordWrap = false;
+            this.commandShell.SelectionChanged += new System.EventHandler(this.commandShell_SelectionChanged);
             // 
             // errorConsole
             // 
