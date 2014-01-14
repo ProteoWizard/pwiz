@@ -151,22 +151,25 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
                 break;
             }
             vector<double> unpressed; // for checking excessive accurary loss
-			double numpressErrorTolerance = 0.0;
+            double numpressErrorTolerance = 0.0;
             switch (config_.numpress) {
                 case Numpress_Linear:
                     byteCount = MSNumpress::encodeLinear(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
+                    numpressed.resize(byteCount);
                     if ((numpressErrorTolerance=config_.numpressLinearErrorTolerance) > 0) // decompress to check accuracy loss
                         MSNumpress::decodeLinear(numpressed,unpressed); 
                     break;
 
                 case Numpress_Pic:
                     byteCount = MSNumpress::encodePic(data, dataSize, &numpressed[0]);
-					numpressErrorTolerance = 0.5; // it's an integer rounding, so always +- 0.5
-					MSNumpress::decodePic(numpressed,unpressed); // but susceptable to overflow, so always check
+                    numpressed.resize(byteCount);
+                    numpressErrorTolerance = 0.5; // it's an integer rounding, so always +- 0.5
+                    MSNumpress::decodePic(numpressed,unpressed); // but susceptable to overflow, so always check
                     break; 
 
                 case Numpress_Slof:
                     byteCount = MSNumpress::encodeSlof(data, dataSize, &numpressed[0], config_.numpressFixedPoint);
+                    numpressed.resize(byteCount);
                     if ((numpressErrorTolerance=config_.numpressSlofErrorTolerance) > 0) // decompress to check accuracy loss
                         MSNumpress::decodeSlof(numpressed,unpressed); 
                     break;
