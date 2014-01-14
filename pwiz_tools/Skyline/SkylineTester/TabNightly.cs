@@ -98,7 +98,7 @@ namespace SkylineTester
                 dt.StartBoundary = startTime;
                 dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                 dt.Enabled = true;
-                td.Settings.WakeToRun = true;
+                //td.Settings.WakeToRun = true;
 
                 // Add an action that will launch SkylineTester whenever the trigger fires
                 td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile, MainWindow.ExeDir));
@@ -106,6 +106,7 @@ namespace SkylineTester
                 // Register the task in the root folder
                 ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
             }
+            MainWindow.DeleteNightlyTask.Enabled = true;
 
             if (DateTime.Now > startTime && startTime < DateTime.Now + new TimeSpan(0, 5, 0))
             {
@@ -188,10 +189,7 @@ namespace SkylineTester
                 : new[] {64};
             TabBuild.CreateBuildCommands(MainWindow.GetNightlyRoot(), architectures, true, false);
 
-            var args = "offscreen=on quality=on loop=-1 pass0={0} pass1={1}".With(
-                MainWindow.Pass0.Checked.ToString(),
-                MainWindow.Pass1.Checked.ToString());
-            MainWindow.AddTestRunner(args);
+            MainWindow.AddTestRunner("offscreen=on quality=on loop=-1");
 
             MainWindow.RunCommands();
         }
