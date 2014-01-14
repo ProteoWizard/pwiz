@@ -11,7 +11,6 @@
   <tutorialsDemoMode>true</tutorialsDemoMode>
   <tutorialsLanguage>English</tutorialsLanguage>
   <tutorialsTree>Tutorial tests,TestAbsoluteQuantificationTutorial,TestCEOptimizationTutorial,TestCustomReportsTutorial,TestExistingExperimentsTutorial,TestGroupedStudiesTutorial,TestIrtTutorial,TestLibraryExplorerTutorial,TestMethodEditTutorial,TestMethodRefinementTutorial,TestMs1Tutorial,TestMSstatsTutorial,TestPeakPickingTutorial,TestQuasarTutorial,TestTargetedMSMSTutorial</tutorialsTree>
-  <pauseTestsScreenShots>false</pauseTestsScreenShots>
   <offscreen>false</offscreen>
   <runLoops>true</runLoops>
   <runLoopsCount>1</runLoopsCount>

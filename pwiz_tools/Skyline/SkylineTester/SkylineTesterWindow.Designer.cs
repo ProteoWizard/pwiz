@@ -50,6 +50,7 @@ namespace SkylineTester
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.formsTree = new SkylineTester.MyTreeView();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.pauseFormSeconds = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.pauseFormDelay = new System.Windows.Forms.RadioButton();
             this.pauseFormButton = new System.Windows.Forms.RadioButton();
@@ -60,6 +61,7 @@ namespace SkylineTester
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.tutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.pauseTutorialsSeconds = new System.Windows.Forms.NumericUpDown();
             this.tutorialsDemoMode = new System.Windows.Forms.RadioButton();
             this.label5 = new System.Windows.Forms.Label();
             this.pauseTutorialsDelay = new System.Windows.Forms.RadioButton();
@@ -73,11 +75,10 @@ namespace SkylineTester
             this.testsJapanese = new System.Windows.Forms.CheckBox();
             this.testsChinese = new System.Windows.Forms.CheckBox();
             this.testsEnglish = new System.Windows.Forms.CheckBox();
-            this.pauseGroup = new System.Windows.Forms.GroupBox();
-            this.pauseTestsScreenShots = new System.Windows.Forms.CheckBox();
             this.windowsGroup = new System.Windows.Forms.GroupBox();
             this.offscreen = new System.Windows.Forms.CheckBox();
             this.iterationsGroup = new System.Windows.Forms.GroupBox();
+            this.runLoopsCount = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
             this.runLoops = new System.Windows.Forms.RadioButton();
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
@@ -113,7 +114,7 @@ namespace SkylineTester
             this.qualityTestName = new System.Windows.Forms.Label();
             this.qualityThumbnail = new SkylineTester.WindowThumbnail();
             this.groupBox11 = new System.Windows.Forms.GroupBox();
-            this.buttonOpenLog = new System.Windows.Forms.Button();
+            this.buttonViewLog = new System.Windows.Forms.Button();
             this.labelLeaks = new System.Windows.Forms.Label();
             this.labelFailures = new System.Windows.Forms.Label();
             this.labelTestsRun = new System.Windows.Forms.Label();
@@ -126,6 +127,7 @@ namespace SkylineTester
             this.qualityAllTests = new System.Windows.Forms.RadioButton();
             this.qualityChooseTests = new System.Windows.Forms.RadioButton();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.passCount = new System.Windows.Forms.NumericUpDown();
             this.pass1 = new System.Windows.Forms.CheckBox();
             this.pass0 = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
@@ -153,7 +155,7 @@ namespace SkylineTester
             this.nightlyThumbnail = new SkylineTester.WindowThumbnail();
             this.nightlyGraphPanel = new System.Windows.Forms.Panel();
             this.nightllyDeleteRun = new System.Windows.Forms.Button();
-            this.nightlyShowOutput = new System.Windows.Forms.Button();
+            this.nightlyViewLog = new System.Windows.Forms.Button();
             this.nightlyLabelLeaks = new System.Windows.Forms.Label();
             this.nightlyLabelFailures = new System.Windows.Forms.Label();
             this.nightlyLabelTestsRun = new System.Windows.Forms.Label();
@@ -178,7 +180,7 @@ namespace SkylineTester
             this.outputSplitContainer = new System.Windows.Forms.SplitContainer();
             this.commandShell = new SkylineTester.CommandShell();
             this.errorConsole = new System.Windows.Forms.RichTextBox();
-            this.buttonOpenOutput = new System.Windows.Forms.Button();
+            this.buttonOpenLog = new System.Windows.Forms.Button();
             this.comboBoxOutput = new System.Windows.Forms.ComboBox();
             this.label19 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
@@ -204,6 +206,7 @@ namespace SkylineTester
             this.zip32Bit = new System.Windows.Forms.ToolStripMenuItem();
             this.zip64Bit = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.radioButton3 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
@@ -211,10 +214,6 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.pauseFormSeconds = new System.Windows.Forms.NumericUpDown();
-            this.pauseTutorialsSeconds = new System.Windows.Forms.NumericUpDown();
-            this.runLoopsCount = new System.Windows.Forms.NumericUpDown();
-            this.passCount = new System.Windows.Forms.NumericUpDown();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -222,15 +221,17 @@ namespace SkylineTester
             this.groupBox13.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pauseFormSeconds)).BeginInit();
             this.tabTutorials.SuspendLayout();
             this.groupBox14.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).BeginInit();
             this.tabTests.SuspendLayout();
             this.groupBox15.SuspendLayout();
-            this.pauseGroup.SuspendLayout();
             this.windowsGroup.SuspendLayout();
             this.iterationsGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.runLoopsCount)).BeginInit();
             this.testsGroup.SuspendLayout();
             this.tabBuild.SuspendLayout();
             this.groupBox10.SuspendLayout();
@@ -244,6 +245,7 @@ namespace SkylineTester
             this.groupBox11.SuspendLayout();
             this.groupBox9.SuspendLayout();
             this.groupBox8.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.passCount)).BeginInit();
             this.tabNightly.SuspendLayout();
             this.nightlyTableLayout.SuspendLayout();
             this.groupBox17.SuspendLayout();
@@ -259,10 +261,6 @@ namespace SkylineTester
             this.outputSplitContainer.Panel2.SuspendLayout();
             this.outputSplitContainer.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pauseFormSeconds)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.runLoopsCount)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.passCount)).BeginInit();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -397,7 +395,7 @@ namespace SkylineTester
             // 
             this.regenerateCache.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.regenerateCache.AutoSize = true;
-            this.regenerateCache.Location = new System.Drawing.Point(348, 640);
+            this.regenerateCache.Location = new System.Drawing.Point(299, 547);
             this.regenerateCache.Margin = new System.Windows.Forms.Padding(4);
             this.regenerateCache.Name = "regenerateCache";
             this.regenerateCache.Size = new System.Drawing.Size(137, 17);
@@ -461,6 +459,18 @@ namespace SkylineTester
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Pause";
             // 
+            // pauseFormSeconds
+            // 
+            this.pauseFormSeconds.Location = new System.Drawing.Point(99, 23);
+            this.pauseFormSeconds.Name = "pauseFormSeconds";
+            this.pauseFormSeconds.Size = new System.Drawing.Size(41, 20);
+            this.pauseFormSeconds.TabIndex = 6;
+            this.pauseFormSeconds.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -474,24 +484,24 @@ namespace SkylineTester
             // pauseFormDelay
             // 
             this.pauseFormDelay.AutoSize = true;
-            this.pauseFormDelay.Checked = true;
             this.pauseFormDelay.Location = new System.Drawing.Point(8, 23);
             this.pauseFormDelay.Margin = new System.Windows.Forms.Padding(4);
             this.pauseFormDelay.Name = "pauseFormDelay";
             this.pauseFormDelay.Size = new System.Drawing.Size(70, 17);
             this.pauseFormDelay.TabIndex = 1;
-            this.pauseFormDelay.TabStop = true;
             this.pauseFormDelay.Text = "Pause for";
             this.pauseFormDelay.UseVisualStyleBackColor = true;
             // 
             // pauseFormButton
             // 
             this.pauseFormButton.AutoSize = true;
+            this.pauseFormButton.Checked = true;
             this.pauseFormButton.Location = new System.Drawing.Point(8, 52);
             this.pauseFormButton.Margin = new System.Windows.Forms.Padding(4);
             this.pauseFormButton.Name = "pauseFormButton";
             this.pauseFormButton.Size = new System.Drawing.Size(103, 17);
             this.pauseFormButton.TabIndex = 0;
+            this.pauseFormButton.TabStop = true;
             this.pauseFormButton.Text = "Pause for button";
             this.pauseFormButton.UseVisualStyleBackColor = true;
             // 
@@ -593,6 +603,13 @@ namespace SkylineTester
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pause";
             // 
+            // pauseTutorialsSeconds
+            // 
+            this.pauseTutorialsSeconds.Location = new System.Drawing.Point(100, 23);
+            this.pauseTutorialsSeconds.Name = "pauseTutorialsSeconds";
+            this.pauseTutorialsSeconds.Size = new System.Drawing.Size(41, 20);
+            this.pauseTutorialsSeconds.TabIndex = 7;
+            // 
             // tutorialsDemoMode
             // 
             this.tutorialsDemoMode.AutoSize = true;
@@ -656,7 +673,6 @@ namespace SkylineTester
             this.tabTests.Controls.Add(this.runTests);
             this.tabTests.Controls.Add(this.label17);
             this.tabTests.Controls.Add(this.groupBox15);
-            this.tabTests.Controls.Add(this.pauseGroup);
             this.tabTests.Controls.Add(this.windowsGroup);
             this.tabTests.Controls.Add(this.iterationsGroup);
             this.tabTests.Controls.Add(this.testsGroup);
@@ -699,7 +715,7 @@ namespace SkylineTester
             this.groupBox15.Controls.Add(this.testsJapanese);
             this.groupBox15.Controls.Add(this.testsChinese);
             this.groupBox15.Controls.Add(this.testsEnglish);
-            this.groupBox15.Location = new System.Drawing.Point(11, 277);
+            this.groupBox15.Location = new System.Drawing.Point(11, 214);
             this.groupBox15.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Padding = new System.Windows.Forms.Padding(4);
@@ -754,30 +770,6 @@ namespace SkylineTester
             this.testsEnglish.Text = "English";
             this.testsEnglish.UseVisualStyleBackColor = true;
             // 
-            // pauseGroup
-            // 
-            this.pauseGroup.Controls.Add(this.pauseTestsScreenShots);
-            this.pauseGroup.Location = new System.Drawing.Point(11, 214);
-            this.pauseGroup.Margin = new System.Windows.Forms.Padding(4);
-            this.pauseGroup.Name = "pauseGroup";
-            this.pauseGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.pauseGroup.Size = new System.Drawing.Size(280, 55);
-            this.pauseGroup.TabIndex = 20;
-            this.pauseGroup.TabStop = false;
-            this.pauseGroup.Text = "Pause";
-            // 
-            // pauseTestsScreenShots
-            // 
-            this.pauseTestsScreenShots.AutoSize = true;
-            this.pauseTestsScreenShots.Location = new System.Drawing.Point(8, 23);
-            this.pauseTestsScreenShots.Margin = new System.Windows.Forms.Padding(4);
-            this.pauseTestsScreenShots.Name = "pauseTestsScreenShots";
-            this.pauseTestsScreenShots.Size = new System.Drawing.Size(201, 17);
-            this.pauseTestsScreenShots.TabIndex = 2;
-            this.pauseTestsScreenShots.Text = "Pause for screen shots (tutorials only)";
-            this.pauseTestsScreenShots.UseVisualStyleBackColor = true;
-            this.pauseTestsScreenShots.CheckedChanged += new System.EventHandler(this.pauseTestsForScreenShots_CheckedChanged);
-            // 
             // windowsGroup
             // 
             this.windowsGroup.Controls.Add(this.offscreen);
@@ -800,7 +792,6 @@ namespace SkylineTester
             this.offscreen.TabIndex = 1;
             this.offscreen.Text = "Off screen";
             this.offscreen.UseVisualStyleBackColor = true;
-            this.offscreen.CheckedChanged += new System.EventHandler(this.offscreen_CheckedChanged);
             // 
             // iterationsGroup
             // 
@@ -816,6 +807,23 @@ namespace SkylineTester
             this.iterationsGroup.TabIndex = 17;
             this.iterationsGroup.TabStop = false;
             this.iterationsGroup.Text = "Run options";
+            // 
+            // runLoopsCount
+            // 
+            this.runLoopsCount.Location = new System.Drawing.Point(64, 23);
+            this.runLoopsCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.runLoopsCount.Name = "runLoopsCount";
+            this.runLoopsCount.Size = new System.Drawing.Size(41, 20);
+            this.runLoopsCount.TabIndex = 8;
+            this.runLoopsCount.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // label2
             // 
@@ -1028,7 +1036,7 @@ namespace SkylineTester
             this.groupBox16.Size = new System.Drawing.Size(698, 149);
             this.groupBox16.TabIndex = 28;
             this.groupBox16.TabStop = false;
-            this.groupBox16.Text = "Build type";
+            this.groupBox16.Text = "Code synchronizaton";
             // 
             // startSln
             // 
@@ -1264,7 +1272,7 @@ namespace SkylineTester
             // 
             this.groupBox11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.groupBox11.Controls.Add(this.buttonOpenLog);
+            this.groupBox11.Controls.Add(this.buttonViewLog);
             this.groupBox11.Controls.Add(this.labelLeaks);
             this.groupBox11.Controls.Add(this.labelFailures);
             this.groupBox11.Controls.Add(this.labelTestsRun);
@@ -1282,16 +1290,16 @@ namespace SkylineTester
             this.groupBox11.TabStop = false;
             this.groupBox11.Text = "Run results";
             // 
-            // buttonOpenLog
+            // buttonViewLog
             // 
-            this.buttonOpenLog.Location = new System.Drawing.Point(20, 118);
-            this.buttonOpenLog.Margin = new System.Windows.Forms.Padding(4);
-            this.buttonOpenLog.Name = "buttonOpenLog";
-            this.buttonOpenLog.Size = new System.Drawing.Size(96, 26);
-            this.buttonOpenLog.TabIndex = 30;
-            this.buttonOpenLog.Text = "Open log";
-            this.buttonOpenLog.UseVisualStyleBackColor = true;
-            this.buttonOpenLog.Click += new System.EventHandler(this.buttonOpenLog_Click);
+            this.buttonViewLog.Location = new System.Drawing.Point(20, 118);
+            this.buttonViewLog.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonViewLog.Name = "buttonViewLog";
+            this.buttonViewLog.Size = new System.Drawing.Size(96, 26);
+            this.buttonViewLog.TabIndex = 30;
+            this.buttonViewLog.Text = "View log";
+            this.buttonViewLog.UseVisualStyleBackColor = true;
+            this.buttonViewLog.Click += new System.EventHandler(this.buttonOpenLog_Click);
             // 
             // labelLeaks
             // 
@@ -1427,6 +1435,18 @@ namespace SkylineTester
             this.groupBox8.TabIndex = 30;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Run options";
+            // 
+            // passCount
+            // 
+            this.passCount.Location = new System.Drawing.Point(60, 23);
+            this.passCount.Name = "passCount";
+            this.passCount.Size = new System.Drawing.Size(41, 20);
+            this.passCount.TabIndex = 11;
+            this.passCount.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // pass1
             // 
@@ -1722,7 +1742,7 @@ namespace SkylineTester
             this.groupBox18.Controls.Add(this.nightlyThumbnail);
             this.groupBox18.Controls.Add(this.nightlyGraphPanel);
             this.groupBox18.Controls.Add(this.nightllyDeleteRun);
-            this.groupBox18.Controls.Add(this.nightlyShowOutput);
+            this.groupBox18.Controls.Add(this.nightlyViewLog);
             this.groupBox18.Controls.Add(this.nightlyLabelLeaks);
             this.groupBox18.Controls.Add(this.nightlyLabelFailures);
             this.groupBox18.Controls.Add(this.nightlyLabelTestsRun);
@@ -1785,16 +1805,16 @@ namespace SkylineTester
             this.nightllyDeleteRun.UseVisualStyleBackColor = true;
             this.nightllyDeleteRun.Click += new System.EventHandler(this.buttonDeleteRun_Click);
             // 
-            // nightlyShowOutput
+            // nightlyViewLog
             // 
-            this.nightlyShowOutput.Location = new System.Drawing.Point(205, 56);
-            this.nightlyShowOutput.Margin = new System.Windows.Forms.Padding(4);
-            this.nightlyShowOutput.Name = "nightlyShowOutput";
-            this.nightlyShowOutput.Size = new System.Drawing.Size(96, 26);
-            this.nightlyShowOutput.TabIndex = 30;
-            this.nightlyShowOutput.Text = "Show output";
-            this.nightlyShowOutput.UseVisualStyleBackColor = true;
-            this.nightlyShowOutput.Click += new System.EventHandler(this.buttonOpenLog_Click);
+            this.nightlyViewLog.Location = new System.Drawing.Point(205, 56);
+            this.nightlyViewLog.Margin = new System.Windows.Forms.Padding(4);
+            this.nightlyViewLog.Name = "nightlyViewLog";
+            this.nightlyViewLog.Size = new System.Drawing.Size(96, 26);
+            this.nightlyViewLog.TabIndex = 30;
+            this.nightlyViewLog.Text = "View log";
+            this.nightlyViewLog.UseVisualStyleBackColor = true;
+            this.nightlyViewLog.Click += new System.EventHandler(this.buttonOpenLog_Click);
             // 
             // nightlyLabelLeaks
             // 
@@ -2024,7 +2044,7 @@ namespace SkylineTester
             // 
             this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(160)))), ((int)(((byte)(180)))));
             this.tabOutput.Controls.Add(this.outputSplitContainer);
-            this.tabOutput.Controls.Add(this.buttonOpenOutput);
+            this.tabOutput.Controls.Add(this.buttonOpenLog);
             this.tabOutput.Controls.Add(this.comboBoxOutput);
             this.tabOutput.Controls.Add(this.label19);
             this.tabOutput.Controls.Add(this.buttonStop);
@@ -2055,7 +2075,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 278;
+            this.outputSplitContainer.SplitterDistance = 254;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2073,12 +2093,12 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 278);
+            this.commandShell.Size = new System.Drawing.Size(693, 254);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
             this.commandShell.WordWrap = false;
-            this.commandShell.SelectionChanged += new System.EventHandler(this.commandShell_SelectionChanged);
+            this.commandShell.MouseClick += new System.Windows.Forms.MouseEventHandler(this.commandShell_MouseClick);
             // 
             // errorConsole
             // 
@@ -2091,21 +2111,21 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 165);
+            this.errorConsole.Size = new System.Drawing.Size(693, 189);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
             // 
-            // buttonOpenOutput
+            // buttonOpenLog
             // 
-            this.buttonOpenOutput.Location = new System.Drawing.Point(300, 51);
-            this.buttonOpenOutput.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonOpenOutput.Name = "buttonOpenOutput";
-            this.buttonOpenOutput.Size = new System.Drawing.Size(89, 23);
-            this.buttonOpenOutput.TabIndex = 33;
-            this.buttonOpenOutput.Text = "Open log";
-            this.buttonOpenOutput.UseVisualStyleBackColor = true;
-            this.buttonOpenOutput.Click += new System.EventHandler(this.buttonOpenOutput_Click);
+            this.buttonOpenLog.Location = new System.Drawing.Point(300, 51);
+            this.buttonOpenLog.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonOpenLog.Name = "buttonOpenLog";
+            this.buttonOpenLog.Size = new System.Drawing.Size(89, 23);
+            this.buttonOpenLog.TabIndex = 33;
+            this.buttonOpenLog.Text = "Open log";
+            this.buttonOpenLog.UseVisualStyleBackColor = true;
+            this.buttonOpenLog.Click += new System.EventHandler(this.buttonOpenOutput_Click);
             // 
             // comboBoxOutput
             // 
@@ -2328,15 +2348,23 @@ namespace SkylineTester
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.documentationToolStripMenuItem,
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
             // 
+            // documentationToolStripMenuItem
+            // 
+            this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
+            this.documentationToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
+            this.documentationToolStripMenuItem.Text = "Documentation...";
+            this.documentationToolStripMenuItem.Click += new System.EventHandler(this.documentationToolStripMenuItem_Click);
+            // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.aboutToolStripMenuItem.Text = "About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.about_Click);
             // 
@@ -2399,34 +2427,6 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // pauseFormSeconds
-            // 
-            this.pauseFormSeconds.Location = new System.Drawing.Point(99, 23);
-            this.pauseFormSeconds.Name = "pauseFormSeconds";
-            this.pauseFormSeconds.Size = new System.Drawing.Size(41, 20);
-            this.pauseFormSeconds.TabIndex = 6;
-            // 
-            // pauseTutorialsSeconds
-            // 
-            this.pauseTutorialsSeconds.Location = new System.Drawing.Point(100, 23);
-            this.pauseTutorialsSeconds.Name = "pauseTutorialsSeconds";
-            this.pauseTutorialsSeconds.Size = new System.Drawing.Size(41, 20);
-            this.pauseTutorialsSeconds.TabIndex = 7;
-            // 
-            // runLoopsCount
-            // 
-            this.runLoopsCount.Location = new System.Drawing.Point(64, 23);
-            this.runLoopsCount.Name = "runLoopsCount";
-            this.runLoopsCount.Size = new System.Drawing.Size(41, 20);
-            this.runLoopsCount.TabIndex = 8;
-            // 
-            // passCount
-            // 
-            this.passCount.Location = new System.Drawing.Point(60, 23);
-            this.passCount.Name = "passCount";
-            this.passCount.Size = new System.Drawing.Size(41, 20);
-            this.passCount.TabIndex = 11;
-            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -2453,20 +2453,21 @@ namespace SkylineTester
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pauseFormSeconds)).EndInit();
             this.tabTutorials.ResumeLayout(false);
             this.groupBox14.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).EndInit();
             this.tabTests.ResumeLayout(false);
             this.groupBox15.ResumeLayout(false);
             this.groupBox15.PerformLayout();
-            this.pauseGroup.ResumeLayout(false);
-            this.pauseGroup.PerformLayout();
             this.windowsGroup.ResumeLayout(false);
             this.windowsGroup.PerformLayout();
             this.iterationsGroup.ResumeLayout(false);
             this.iterationsGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.runLoopsCount)).EndInit();
             this.testsGroup.ResumeLayout(false);
             this.testsGroup.PerformLayout();
             this.tabBuild.ResumeLayout(false);
@@ -2488,6 +2489,7 @@ namespace SkylineTester
             this.groupBox9.PerformLayout();
             this.groupBox8.ResumeLayout(false);
             this.groupBox8.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.passCount)).EndInit();
             this.tabNightly.ResumeLayout(false);
             this.nightlyTableLayout.ResumeLayout(false);
             this.groupBox17.ResumeLayout(false);
@@ -2508,10 +2510,6 @@ namespace SkylineTester
             this.outputSplitContainer.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pauseFormSeconds)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.runLoopsCount)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.passCount)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -2542,7 +2540,6 @@ namespace SkylineTester
         private Button runForms;
         private TabPage tabTutorials;
         private Button runTutorials;
-        private GroupBox pauseGroup;
         private CheckBox testsFrench;
         private GroupBox windowsGroup;
         private CheckBox offscreen;
@@ -2563,7 +2560,6 @@ namespace SkylineTester
         private RadioButton pauseTutorialsDelay;
         private RadioButton pauseTutorialsScreenShots;
         private RadioButton tutorialsDemoMode;
-        private CheckBox pauseTestsScreenShots;
         private CheckBox regenerateCache;
         private TabPage tabBuild;
         private GroupBox groupBox6;
@@ -2610,12 +2606,12 @@ namespace SkylineTester
         private ToolStripMenuItem helpToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ComboBox comboBoxOutput;
-        private Button buttonOpenOutput;
+        private Button buttonOpenLog;
         private TableLayoutPanel qualityTableLayout;
         private Panel panel1;
         private GroupBox groupBox11;
         private Panel panelMemoryGraph;
-        private Button buttonOpenLog;
+        private Button buttonViewLog;
         private Label labelLeaks;
         private Label labelFailures;
         private Label labelTestsRun;
@@ -2655,7 +2651,7 @@ namespace SkylineTester
         private WindowThumbnail nightlyThumbnail;
         private Panel nightlyGraphPanel;
         private Button nightllyDeleteRun;
-        private Button nightlyShowOutput;
+        private Button nightlyViewLog;
         private Label nightlyLabelLeaks;
         private Label nightlyLabelFailures;
         private Label nightlyLabelTestsRun;
@@ -2698,6 +2694,7 @@ namespace SkylineTester
         private NumericUpDown pauseTutorialsSeconds;
         private NumericUpDown runLoopsCount;
         private NumericUpDown passCount;
+        private ToolStripMenuItem documentationToolStripMenuItem;
     }
 }
 

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace SkylineTester
         public const string SummaryLog = "Summary.log";
         public const string SkylineTesterZip = "SkylineTester.zip";
         public const string SkylineTesterFiles = "SkylineTester Files";
-
+        public const string DocumentationLink = "https://skyline.gs.washington.edu/labkey/wiki/home/development/page.view?name=SkylineTesterDoc";
         public string Subversion { get; private set; }
         public string Devenv { get; private set; }
         public string RootDir { get; private set; }
@@ -227,10 +228,9 @@ namespace SkylineTester
                 if (line.StartsWith("#@ "))
                 {
                     // Update status.
-                    var parts = line.Split(' ');
                     RunUI(() =>
                     {
-                        RunningTestName = parts[2];
+                        RunningTestName = line.Remove(0, "#@ Running ".Length).TrimEnd('.');
                         statusLabel.Text = line.Substring(3);
                     });
                     return false;
@@ -539,7 +539,6 @@ namespace SkylineTester
                 tutorialsTree,
 
                 // Tests
-                pauseTestsScreenShots,
                 offscreen,
                 runLoops,
                 runLoopsCount,
@@ -588,6 +587,18 @@ namespace SkylineTester
         private void exit_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void documentationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.Start(DocumentationLink);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Could not open web browser to show link: " + DocumentationLink);
+            }
         }
 
         private void about_Click(object sender, EventArgs e)
@@ -856,7 +867,7 @@ namespace SkylineTester
         public RadioButton      BuildTrunk                  { get { return buildTrunk; } }
         public Button           ButtonDeleteBuild           { get { return buttonDeleteBuild; } }
         public Button           ButtonOpenLog               { get { return buttonOpenLog; } }
-        public Button           ButtonOpenOutput            { get { return buttonOpenOutput; } }
+        public Button           ButtonViewLog               { get { return buttonViewLog; } }
         public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
         public CommandShell     CommandShell                { get { return commandShell; } }
         public Button           DeleteNightlyTask           { get { return buttonDeleteNightlyTask; } }
@@ -887,16 +898,15 @@ namespace SkylineTester
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
         public Label            NightlyTestName             { get { return nightlyTestName; } }
         public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }
+        public Button           NightlyViewLog              { get { return nightlyViewLog; } }
         public RadioButton      NukeBuild                   { get { return nukeBuild; } }
         public CheckBox         Offscreen                   { get { return offscreen; } }
-        public Button           OutputOpenLog               { get { return buttonOpenOutput; } }
         public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
         public NumericUpDown    PassCount                   { get { return passCount; } }
         public RadioButton      PauseFormDelay              { get { return pauseFormDelay; } }
         public NumericUpDown    PauseFormSeconds            { get { return pauseFormSeconds; } }
-        public CheckBox         PauseTestsScreenShots       { get { return pauseTestsScreenShots; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
@@ -914,8 +924,9 @@ namespace SkylineTester
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
-        public CheckBox         StartSln                    { get { return startSln; } }
+        public ToolStripStatusLabel  SelectedBuild          { get { return selectedBuild; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
+        public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
         public MyTreeView       TestsTree                   { get { return testsTree; } }
         public CheckBox         TestsChinese                { get { return testsChinese; } }
@@ -962,16 +973,6 @@ namespace SkylineTester
             _tabNightly.DeleteBuild();
         }
 
-        private void pauseTestsForScreenShots_CheckedChanged(object sender, EventArgs e)
-        {
-            _tabTests.PauseTestsForScreenShotsChanged();
-        }
-
-        private void offscreen_CheckedChanged(object sender, EventArgs e)
-        {
-            _tabTests.OffscreenChanged();
-        }
-
         private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
         {
             _tabNightly.RunDateChanged();
@@ -1004,9 +1005,9 @@ namespace SkylineTester
             SelectBuild();
         }
 
-        private void commandShell_SelectionChanged(object sender, EventArgs e)
+        private void commandShell_MouseClick(object sender, MouseEventArgs e)
         {
-            _tabOutput.CommandShellSelectionChanged();
+            _tabOutput.CommandShellMouseClick();
         }
 
         private void errorConsole_SelectionChanged(object sender, EventArgs e)

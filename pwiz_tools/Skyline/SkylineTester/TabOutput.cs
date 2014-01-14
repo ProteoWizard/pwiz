@@ -40,24 +40,17 @@ namespace SkylineTester
  
         public override void Enter()
         {
-            MainWindow.OutputOpenLog.Height = MainWindow.ComboOutput.Height + 2;
+            MainWindow.ButtonOpenLog.Height = MainWindow.ComboOutput.Height + 2;
             _loadDone = false;
 
-            MainWindow.InitLogSelector(MainWindow.ComboOutput, MainWindow.ButtonOpenOutput);
-            if (MainWindow.NightlyRunDate.Items.Count == 0)
-            {
-                MainWindow.ButtonOpenOutput.Enabled = false;
-            }
-            else
-            {
-                int selectedIndex = 0;
-                if (File.Exists(MainWindow.DefaultLogFile) && MainWindow.LastRunName != null)
-                    MainWindow.ComboOutput.Items.Insert(0, MainWindow.LastRunName + " output");
-                if (MainWindow.LastTabIndex == MainWindow.NightlyTabIndex && MainWindow.NightlyRunDate.SelectedIndex >= 0)
-                    selectedIndex = MainWindow.NightlyRunDate.SelectedIndex + MainWindow.ComboOutput.Items.Count - MainWindow.NightlyRunDate.Items.Count;
-                MainWindow.ComboOutput.SelectedIndex = selectedIndex;
-                MainWindow.ButtonOpenOutput.Enabled = true;
-            }
+            MainWindow.InitLogSelector(MainWindow.ComboOutput, MainWindow.ButtonOpenLog);
+            if (File.Exists(MainWindow.DefaultLogFile) && MainWindow.LastRunName != null)
+                MainWindow.ComboOutput.Items.Insert(0, MainWindow.LastRunName + " output");
+            MainWindow.ComboOutput.SelectedIndex =
+                (MainWindow.LastTabIndex == MainWindow.NightlyTabIndex && MainWindow.NightlyRunDate.SelectedIndex >= 0)
+                ? MainWindow.NightlyRunDate.SelectedIndex + MainWindow.ComboOutput.Items.Count - MainWindow.NightlyRunDate.Items.Count
+                : (MainWindow.ComboOutput.Items.Count > 0 ? 0 : -1);
+            MainWindow.ButtonOpenLog.Enabled = MainWindow.ComboOutput.Items.Count > 0;
 
             MainWindow.DefaultButton = null;
         }
@@ -161,7 +154,7 @@ namespace SkylineTester
             textBox.Select(start, end - start);
         }
 
-        public void CommandShellSelectionChanged()
+        public void CommandShellMouseClick()
         {
             if (MainWindow.CommandShell.SelectionLength > 0)
                 return;
@@ -226,7 +219,7 @@ namespace SkylineTester
 
             try
             {
-                Marshal.ThrowExceptionForHR(CreateBindCtx(reserved: 0, ppbc: out bindCtx));
+                Marshal.ThrowExceptionForHR(CreateBindCtx(0, out bindCtx));
                 bindCtx.GetRunningObjectTable(out rot);
                 rot.EnumRunning(out enumMonikers);
 

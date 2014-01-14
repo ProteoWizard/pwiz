@@ -39,13 +39,14 @@ namespace SkylineTester
         private Timer _updateTimer;
         private Timer _stopTimer;
         private int _revision;
+        private string _saveSelectedBuild; 
         private readonly List<string> _labels = new List<string>();
         private readonly List<string> _findTest = new List<string>();
 
         public TabNightly()
         {
             WindowThumbnail.MainWindow = MainWindow;
-            MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.ButtonOpenLog);
+            MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
             MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0) 
                 ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1]) 
                 : null;
@@ -56,7 +57,7 @@ namespace SkylineTester
 
         public override void Enter()
         {
-            if (MainWindow.NightlyRunDate.SelectedIndex == -1)
+            if (MainWindow.NightlyRunDate.SelectedIndex == -1 && MainWindow.NightlyRunDate.Items.Count > 0)
                 MainWindow.NightlyRunDate.SelectedIndex = 0;
             if (MainWindow.NightlyBuildType.SelectedIndex == -1)
                 MainWindow.NightlyBuildType.SelectedIndex = 0;
@@ -121,6 +122,8 @@ namespace SkylineTester
 
         public override bool Stop(bool success)
         {
+            MainWindow.SelectedBuild.Text = _saveSelectedBuild;
+
             _updateTimer.Stop();
             _updateTimer = null;
 
@@ -147,6 +150,8 @@ namespace SkylineTester
             _findTest.Clear();
 
             MainWindow.SetStatus("Running nightly pass...");
+            _saveSelectedBuild = MainWindow.SelectedBuild.Text;
+            MainWindow.SelectedBuild.Text = "Nightly ({0}-bit)".With(MainWindow.NightlyBuildType.SelectedIndex == 0 ? 32 : 64);
             MainWindow.ResetElapsedTime();
 
             MainWindow.TestsRun = 0;
@@ -463,7 +468,7 @@ namespace SkylineTester
             }
 
             int selectedIndex = MainWindow.NightlyRunDate.SelectedIndex;
-            MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.ButtonOpenLog);
+            MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
             MainWindow.NightlyRunDate.SelectedIndex = Math.Min(selectedIndex, MainWindow.NightlyRunDate.Items.Count - 1);
             UpdateGraph();
             UpdateHistory();

@@ -44,6 +44,8 @@ namespace SkylineTester
         {
             UpdateQuality();
             MainWindow.DefaultButton = MainWindow.RunQuality;
+            MainWindow.ButtonViewLog.Enabled = (MainWindow.LastRunName == "Quality" &&
+                                                File.Exists(MainWindow.DefaultLogFile));
         }
 
         public void RunFromTestsTab()
@@ -59,6 +61,7 @@ namespace SkylineTester
         public override bool Run()
         {
             MainWindow.LastRunName = "Quality";
+            MainWindow.ButtonViewLog.Enabled = true;
             StartQuality();
             return true;
         }
@@ -172,7 +175,12 @@ namespace SkylineTester
                 _findTest.Clear();
                 if (File.Exists(logFile))
                 {
-                    var logLines = File.ReadAllLines(logFile);
+                    string[] logLines;
+                    lock (MainWindow.CommandShell.LogLock)
+                    {
+                        logLines = File.ReadAllLines(logFile);
+                    }
+
                     foreach (var line in logLines)
                     {
                         if (line.Length > 6 && line[0] == '[' && line[3] == ':' && line[6] == ']')

@@ -74,8 +74,6 @@ namespace SkylineTester
 
             args.Append(" language=");
             args.Append(String.Join(",", cultures));
-            if (MainWindow.PauseTestsScreenShots.Checked)
-                args.Append(" pause=-1");
 
             args.Append(GetTestList());
 
@@ -140,18 +138,6 @@ namespace SkylineTester
                     CheckAllChildNodes(node, nodeChecked);
                 }
             }
-        }
-
-        public void PauseTestsForScreenShotsChanged()
-        {
-            if (MainWindow.PauseTestsScreenShots.Checked)
-                MainWindow.Offscreen.Checked = false;
-        }
-
-        public void OffscreenChanged()
-        {
-            if (MainWindow.Offscreen.Checked)
-                MainWindow.PauseTestsScreenShots.Checked = false;
         }
     }
 }
