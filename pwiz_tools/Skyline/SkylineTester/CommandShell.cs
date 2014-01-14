@@ -36,6 +36,7 @@ namespace SkylineTester
         public Action<string> ColorLine { get; set; }
         public Action FinishedOneCommand { get; set; }
         public int NextCommand { get; set; }
+        public readonly object LogLock = new object();
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
@@ -403,7 +404,12 @@ namespace SkylineTester
 
             // Add to log file.
             if (!string.IsNullOrEmpty(LogFile))
-                Try.Multi<Exception>(() => File.AppendAllText(LogFile, logLines));
+            {
+                lock (LogLock)
+                {
+                    File.AppendAllText(LogFile, logLines);
+                }
+            }
 
             // Scroll if text box is already scrolled to bottom.
             int previousLength = Math.Max(0, TextLength - 1);
