@@ -47,7 +47,7 @@ namespace SkylineTester
             if (File.Exists(MainWindow.DefaultLogFile) && MainWindow.LastRunName != null)
                 MainWindow.ComboOutput.Items.Insert(0, MainWindow.LastRunName + " output");
             MainWindow.ComboOutput.SelectedIndex =
-                (MainWindow.LastTabIndex == MainWindow.NightlyTabIndex && MainWindow.NightlyRunDate.SelectedIndex >= 0)
+                (MainWindow.LastTabIndex == MainWindow.NightlyTabIndex && MainWindow.NightlyRunDate.SelectedIndex >= 0 && MainWindow.LastRunName != "Zip")
                 ? MainWindow.NightlyRunDate.SelectedIndex + MainWindow.ComboOutput.Items.Count - MainWindow.NightlyRunDate.Items.Count
                 : (MainWindow.ComboOutput.Items.Count > 0 ? 0 : -1);
             MainWindow.ButtonOpenLog.Enabled = MainWindow.ComboOutput.Items.Count > 0;

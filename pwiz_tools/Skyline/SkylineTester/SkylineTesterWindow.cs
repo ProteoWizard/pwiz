@@ -192,9 +192,9 @@ namespace SkylineTester
 
             // Try to find where subversion is available.
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            Subversion = ChooseMostRecentFile(
-                Path.Combine(programFiles, @"Subversion\bin\svn.exe"),
-                Path.Combine(programFiles, @"VisualSVN\bin\svn.exe"));
+            Subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
+            if (!File.Exists(Subversion))
+                Subversion = null;
 
             // Find Visual Studio, if available.
             Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
@@ -433,8 +433,8 @@ namespace SkylineTester
         {
             return new[]
             {
-                Path.Combine(ExeDir, @"..\..\x86\Release"),
-                Path.Combine(ExeDir, @"..\..\x64\Release"),
+                Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
+                Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
                 Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
                 Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x64\Release"),
                 Path.Combine(GetNightlyRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
@@ -492,11 +492,10 @@ namespace SkylineTester
 
         private string GetZipPath(int architecture)
         {
-            var buildDir = Path.Combine(RootDir, "SkylineTester Files");
             return
-                (File.Exists(Path.Combine(buildDir, "fileio.dll")) && architecture == 32) ||
-                (File.Exists(Path.Combine(buildDir, "fileio_x64.dll")) && architecture == 64)
-                    ? buildDir
+                (File.Exists(Path.Combine(RootDir, "fileio.dll")) && architecture == 32) ||
+                (File.Exists(Path.Combine(RootDir, "fileio_x64.dll")) && architecture == 64)
+                    ? RootDir
                     : "\\";
         }
 
@@ -627,27 +626,27 @@ namespace SkylineTester
             }
         }
 
-        private void CreateInstallerZipFile(object sender, EventArgs e)
+        private void SaveZipFileInstaller(object sender, EventArgs e)
         {
             var skylineDirectory = GetSkylineDirectory(ExeDir);
             if (skylineDirectory == null)
             {
                 MessageBox.Show(this,
-                    "The zip file can only be created if you're running SkylineTester from the bin directory of the Skyline project directory.");
+                    "To create the zip file, you must run SkylineTester from the bin directory of the Skyline project.");
                 return;
             }
 
-            string zipDirectory;
-            using (var dlg = new CreateZipInstallerWindow())
+            var saveFileDialog = new SaveFileDialog
             {
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                    return;
-                zipDirectory = dlg.ZipDirectory;
-            }
-            var zipFile = Path.Combine(zipDirectory, "SkylineTester.zip");
+                FileName = "SkylineTester.zip",
+                Title = "Save zip file installer", 
+                Filter = "Zip file (*.zip)|*.zip"
+            };
+            if (saveFileDialog.ShowDialog() != DialogResult.OK)
+                return;
 
             TabBase.StartLog("Zip", null, true);
-            commandShell.Add("{0} {1}", Assembly.GetExecutingAssembly().Location.Quote(), zipFile.Quote());
+            commandShell.Add("{0} {1}", Assembly.GetExecutingAssembly().Location.Quote(), saveFileDialog.FileName.Quote());
             RunCommands();
         }
 

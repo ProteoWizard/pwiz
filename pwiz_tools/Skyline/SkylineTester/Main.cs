@@ -138,25 +138,6 @@ namespace SkylineTester
             return skylineDirectory;
         }
 
-        private string ChooseMostRecentFile(params string[] files)
-        {
-            string mostRecent = null;
-            foreach (var file in files)
-            {
-                if (!File.Exists(file))
-                    continue;
-                if (mostRecent != null)
-                {
-                    var fileDate = File.GetLastWriteTime(file);
-                    var otherDate = File.GetLastWriteTime(mostRecent);
-                    if (fileDate < otherDate)
-                        continue;
-                }
-                mostRecent = file;
-            }
-            return mostRecent;
-        }
-
         public void AddTestRunner(string args)
         {
             //MemoryChartWindow.Start("TestRunnerMemory.log");
