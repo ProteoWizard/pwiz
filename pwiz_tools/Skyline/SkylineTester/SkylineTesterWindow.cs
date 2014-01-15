@@ -403,6 +403,7 @@ namespace SkylineTester
         {
             _runningTab = null;
             commandShell.Stop();
+            Settings.Default.SavedSettings = SaveSettings();
             Settings.Default.Save();
             base.OnClosed(e);
         }
@@ -1092,12 +1093,6 @@ namespace SkylineTester
             };
             ShowOutput();
             return 0;
-        }
-
-        private void saveSettingsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.SavedSettings = SaveSettings();
-            Settings.Default.Save();
         }
 
         private void buttonDeleteNightlyTask_Click(object sender, EventArgs e)
