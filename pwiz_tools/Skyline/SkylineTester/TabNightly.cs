@@ -84,6 +84,9 @@ namespace SkylineTester
 
         public override bool Run()
         {
+            if (!MainWindow.HasBuildPrerequisites)
+                return false;
+
             var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
             MainWindow.Save(skytFile);
 
