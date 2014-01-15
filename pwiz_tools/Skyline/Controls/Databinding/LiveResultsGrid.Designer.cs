@@ -49,7 +49,6 @@
             // bindingListSource
             // 
             this.bindingListSource.RowSource = new object[0];
-            this.bindingListSource.CurrentChanged += new System.EventHandler(this.bindingListSource_CurrentChanged);
             // 
             // navBar
             // 
