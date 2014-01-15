@@ -122,7 +122,7 @@ namespace SkylineTester
                         startTime.ToShortTimeString());
 
                 // Add an action that will launch SkylineTester whenever the trigger fires
-                td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile, MainWindow.ExeDir));
+                td.Actions.Add(new ExecAction(MainWindow.Exe, skytFile.Quote(), MainWindow.ExeDir));
 
                 // Register the task in the root folder
                 ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
