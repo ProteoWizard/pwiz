@@ -51,7 +51,12 @@ namespace SkylineTester
             }
 
             StartLog("Build", MainWindow.DefaultLogFile, true);
-            CreateBuildCommands(MainWindow.GetBuildRoot(), architectures, MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked);
+            CreateBuildCommands(
+                GetBranchUrl(),
+                MainWindow.GetBuildRoot(), 
+                architectures, 
+                MainWindow.NukeBuild.Checked, 
+                MainWindow.UpdateBuild.Checked);
             MainWindow.RunCommands();
             return true;
         }
@@ -99,10 +104,9 @@ namespace SkylineTester
                 : MainWindow.BranchUrl.Text;
         }
 
-        public static void CreateBuildCommands(string buildRoot, IList<int> architectures, bool nukeBuild, bool updateBuild)
+        public static void CreateBuildCommands(string branchUrl, string buildRoot, IList<int> architectures, bool nukeBuild, bool updateBuild)
         {
             var commandShell = MainWindow.CommandShell;
-            var branchUrl = GetBranchUrl();
             var branchParts = branchUrl.Split('/');
             var branchName = "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var subversion = MainWindow.Subversion;

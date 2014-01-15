@@ -579,7 +579,7 @@ namespace SkylineTester
                 nightlyStartTime,
                 nightlyDuration,
                 nightlyBuildType,
-                nightlyTrunk,
+                nightlyBuildTrunk,
                 nightlyBranch,
                 nightlyBranchUrl,
                 nightlyRoot);
@@ -902,6 +902,8 @@ namespace SkylineTester
         public Label            LabelLeaks                  { get { return labelLeaks; } }
         public Label            LabelSpecifyPath            { get { return labelSpecifyPath; } }
         public Label            LabelTestsRun               { get { return labelTestsRun; } }
+        public TextBox          NightlyBranchUrl            { get { return nightlyBranchUrl; } }
+        public RadioButton      NightlyBuildTrunk           { get { return nightlyBuildTrunk; } }
         public DomainUpDown     NightlyBuildType            { get { return nightlyBuildType; } }
         public Button           NightlyDeleteBuild          { get { return nightlyDeleteBuild; } }
         public Button           NightlyDeleteRun            { get { return nightlyDeleteRun; } }
