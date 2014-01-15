@@ -48,7 +48,7 @@ namespace SkylineTester
                     StartInfo =
                     {
                         FileName = nestedSkylineTester, 
-                        Arguments = string.Join(" ", args), 
+                        Arguments = args.Length > 0 ? args[0].Quote() : "", 
                         WorkingDirectory = nestedDirectory
                     }
                 };
