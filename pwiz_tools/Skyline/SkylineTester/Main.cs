@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using SkylineTester.Properties;
 using TestRunnerLib;
 using ZedGraph;
 using Timer = System.Windows.Forms.Timer;
@@ -258,7 +259,7 @@ namespace SkylineTester
         {
             if (Summary == null)
             {
-                var summaryLog = Path.Combine(RootDir, NightlyLogsDirectory, SummaryLog);
+                var summaryLog = Path.Combine(Settings.Default.NightlyLogsDir, SummaryLog);
                 Summary = new Summary(summaryLog);
             }
         }

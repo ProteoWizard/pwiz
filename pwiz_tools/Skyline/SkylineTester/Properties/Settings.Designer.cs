@@ -70,5 +70,17 @@ namespace SkylineTester.Properties {
                 this["SavedSettings"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string NightlyLogsDir {
+            get {
+                return ((string)(this["NightlyLogsDir"]));
+            }
+            set {
+                this["NightlyLogsDir"] = value;
+            }
+        }
     }
 }

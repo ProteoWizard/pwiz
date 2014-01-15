@@ -40,7 +40,7 @@ namespace SkylineTester
     {
         #region Fields
 
-        public const string NightlyLogsDirectory = "Quality logs";
+        public const string DefaultNightlyLogsDir = "Documents\\SkylineTester nightly logs";
         public const string SummaryLog = "Summary.log";
         public const string SkylineTesterZip = "SkylineTester.zip";
         public const string SkylineTesterFiles = "SkylineTester Files";
@@ -137,6 +137,10 @@ namespace SkylineTester
                 Size = size;
             if (maximize)
                 WindowState = FormWindowState.Maximized;
+
+            if (string.IsNullOrEmpty(Settings.Default.NightlyLogsDir))
+                Settings.Default.NightlyLogsDir =
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), DefaultNightlyLogsDir);
         }
 
         public SkylineTesterWindow(string[] args)
@@ -582,6 +586,20 @@ namespace SkylineTester
 
             XDocument doc = new XDocument(root);
             return doc.ToString();
+        }
+
+
+        private void setNightlyLogsFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var nightlyWindow = new NightlyLogsWindow())
+            {
+                nightlyWindow.NightlyLogsDir = Settings.Default.NightlyLogsDir;
+                if (nightlyWindow.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.NightlyLogsDir = nightlyWindow.NightlyLogsDir;
+                    Settings.Default.Save();
+                }
+            }
         }
 
         private void exit_Click(object sender, EventArgs e)

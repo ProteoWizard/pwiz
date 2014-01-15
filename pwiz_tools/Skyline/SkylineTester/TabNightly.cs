@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
+using SkylineTester.Properties;
 using ZedGraph;
 
 namespace SkylineTester
@@ -125,13 +126,15 @@ namespace SkylineTester
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
 
-            if (DateTime.Now > startTime && startTime < DateTime.Now + new TimeSpan(0, 5, 0))
+            if (startTime <= DateTime.Now && startTime + TimeSpan.FromMinutes(5) > DateTime.Now)
             {
                 StartNightly();
                 return true;
             }
 
             var hours = (startTime - DateTime.Now).Hours;
+            if (hours < 0)
+                hours += 24;
             MessageBox.Show("Nightly build will start in about {0} hours.".With(hours));
             return false;
         }
@@ -157,7 +160,8 @@ namespace SkylineTester
 
         public override void MemoryGraphClick(int index)
         {
-            Find(_findTest[index], 0);
+            if (index < _findTest.Count)
+                Find(_findTest[index], 0);
         }
 
         private void StartNightly()
@@ -174,7 +178,7 @@ namespace SkylineTester
 
             if (File.Exists(MainWindow.DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(MainWindow.DefaultLogFile), 4, false);
-            var nightlyDirectory = Path.Combine(MainWindow.RootDir, SkylineTesterWindow.NightlyLogsDirectory);
+            var nightlyDirectory = Settings.Default.NightlyLogsDir;
             if (!Directory.Exists(nightlyDirectory))
                 Directory.CreateDirectory(nightlyDirectory);
             MainWindow.LastTestResult = null;

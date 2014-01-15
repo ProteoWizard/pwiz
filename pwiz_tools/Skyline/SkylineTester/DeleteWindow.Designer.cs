@@ -60,7 +60,7 @@
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancel.Location = new System.Drawing.Point(445, 0);
+            this.buttonCancel.Location = new System.Drawing.Point(445, 2);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 26);
             this.buttonCancel.TabIndex = 8;
@@ -73,13 +73,12 @@
             this.labelDeletingFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelDeletingFile.AutoEllipsis = true;
-            this.labelDeletingFile.Location = new System.Drawing.Point(0, 2);
+            this.labelDeletingFile.Location = new System.Drawing.Point(0, 7);
             this.labelDeletingFile.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.labelDeletingFile.Name = "labelDeletingFile";
             this.labelDeletingFile.Size = new System.Drawing.Size(440, 23);
             this.labelDeletingFile.TabIndex = 7;
             this.labelDeletingFile.Text = "Deleting filename";
-            this.labelDeletingFile.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // DeleteWindow
             // 
