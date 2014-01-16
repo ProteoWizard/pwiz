@@ -1055,7 +1055,8 @@ namespace SkylineTester
 
         private void errorConsole_SelectionChanged(object sender, EventArgs e)
         {
-            _tabOutput.ErrorSelectionChanged();
+            if (_tabOutput != null)
+                _tabOutput.ErrorSelectionChanged();
         }
 
         private void SkylineTesterWindow_Move(object sender, EventArgs e)

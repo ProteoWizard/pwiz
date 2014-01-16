@@ -144,8 +144,10 @@ namespace SkylineTester
 
         public override bool Stop(bool success)
         {
-            if (!success)
-                MainWindow.SelectBuild(_saveSelectedBuild);
+            MainWindow.SelectBuild(
+                success
+                ? (_architecture == 32 ? SkylineTesterWindow.BuildDirs.nightly32 : SkylineTesterWindow.BuildDirs.nightly64)
+                : _saveSelectedBuild);
 
             _updateTimer.Stop();
             _updateTimer = null;
@@ -214,18 +216,20 @@ namespace SkylineTester
             });
             _stopTimer.Start();
 
-            var architectures = (MainWindow.NightlyBuildType.SelectedIndex == 0)
-                ? new[] {32}
-                : new[] {64};
+            _architecture = (MainWindow.NightlyBuildType.SelectedIndex == 0)
+                ? 32
+                : 64;
             var branchUrl = MainWindow.NightlyBuildTrunk.Checked
                 ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
-            TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), architectures, true, false);
+            TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), new []{_architecture}, true, false);
 
             MainWindow.AddTestRunner("offscreen=on quality=on loop=-1");
 
             MainWindow.RunCommands();
         }
+
+        private int _architecture;
 
         private void UpdateNightly()
         {
