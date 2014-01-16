@@ -33,10 +33,10 @@ namespace pwiz.Skyline.Model.Find
         private readonly string _calculatorName;
         private readonly int _selectedCalculator;
         private bool _isLastNodeMatch;
-        private readonly Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures> _featureDictionary;
+        private readonly Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> _featureDictionary;
 
         public MissingScoresFinder(string calculatorName, int selectedCalculator, 
-                                   Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures> featureDictionary)
+                                   Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> featureDictionary)
         {
             _calculatorName = calculatorName;
             _selectedCalculator = selectedCalculator;
@@ -83,8 +83,13 @@ namespace pwiz.Skyline.Model.Find
             var key = new KeyValuePair<int, int>(nodePep.Id.GlobalIndex, chromInfo.FileId.GlobalIndex);
             if (!_featureDictionary.ContainsKey(key))
                 return false;
-            var features = _featureDictionary[key];
-            return IsUnknownScore(features, _selectedCalculator);
+            var listFeatures = _featureDictionary[key];
+            foreach (var features in listFeatures)
+            {
+                if (IsUnknownScore(features, _selectedCalculator))
+                    return true;
+            }
+            return false;
         }
 
         private static bool IsUnknownScore(PeakTransitionGroupFeatures features, int selectedCalculator)

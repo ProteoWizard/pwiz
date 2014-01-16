@@ -1081,7 +1081,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private readonly PeakTransitionGroupFeatures[] _peakTransitionGroupFeaturesList;
 
-            public Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures> PeakTransitionGroupDictionary { get; private set; }
+            public Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
             public TargetDecoyGenerator(IPeakScoringModel scoringModel)
             {
                 // Determine which calculators will be used to score peaks in this document.
@@ -1098,12 +1098,20 @@ namespace pwiz.Skyline.SettingsUI
 
             private void PopulateDictionary()
             {
-                PeakTransitionGroupDictionary = new Dictionary<KeyValuePair<int, int>, PeakTransitionGroupFeatures>();
+                PeakTransitionGroupDictionary = new Dictionary<KeyValuePair<int, int>, List<PeakTransitionGroupFeatures>>();
                 foreach (var transitionGroupFeatures in _peakTransitionGroupFeaturesList)
                 {
                     var pepId = transitionGroupFeatures.Id.NodePep.Id.GlobalIndex;
                     var fileId = transitionGroupFeatures.Id.ChromatogramSet.FindFile(transitionGroupFeatures.Id.FilePath).GlobalIndex;
-                    PeakTransitionGroupDictionary.Add(new KeyValuePair<int, int>(pepId, fileId), transitionGroupFeatures);
+                    var key = new KeyValuePair<int, int>(pepId, fileId);
+                    if (PeakTransitionGroupDictionary.ContainsKey(key))
+                    {
+                        PeakTransitionGroupDictionary[key].Add(transitionGroupFeatures);
+                    }
+                    else
+                    {
+                        PeakTransitionGroupDictionary.Add(key, new List<PeakTransitionGroupFeatures> { transitionGroupFeatures });
+                    } 
                 }
             }
 
