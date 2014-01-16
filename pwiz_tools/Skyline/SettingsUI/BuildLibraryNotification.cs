@@ -96,6 +96,7 @@ namespace pwiz.Skyline.SettingsUI
         public void OnRemove()
         {
             _displayTimer.Stop();
+            _animator.Release();
             Close();
             Dispose();
         }

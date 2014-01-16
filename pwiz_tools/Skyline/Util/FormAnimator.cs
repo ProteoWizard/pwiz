@@ -195,6 +195,15 @@ namespace pwiz.Skyline.Util
             HideParams = hideParams;
         }
 
+        public void Release()
+        {
+            if (Form != null)
+            {
+                Form.VisibleChanged -= Form_VisibleChanged;
+                Form = null;
+            }
+        }
+
         /// <summary>
         /// Animates the form automatically when it is shown or hidden.
         /// </summary>
