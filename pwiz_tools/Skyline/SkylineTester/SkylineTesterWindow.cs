@@ -60,6 +60,7 @@ namespace SkylineTester
         public string RunningTestName { get; private set; }
         public int LastTabIndex { get; private set; }
         public int NightlyTabIndex { get; private set; }
+        public BuildDirs SelectedBuild { get; private set; }
 
         private Button _defaultButton;
         public Button DefaultButton
@@ -201,7 +202,7 @@ namespace SkylineTester
             if (!File.Exists(Devenv))
                 Devenv = null;
 
-            SelectBuild();
+            FindBuilds();
 
             commandShell.StopButton = buttonStop;
             commandShell.AddColorPattern("# ", Color.DarkGreen);
@@ -430,6 +431,18 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+        public enum BuildDirs
+        {
+            bin32,
+            bin64,
+            build32,
+            build64,
+            nightly32,
+            nightly64,
+            zip32,
+            zip64
+        }
+
         private string[] GetPossibleBuildDirs()
         {
             return new[]
@@ -445,34 +458,52 @@ namespace SkylineTester
             };
         }
 
-        public void SelectBuild()
+        public void FindBuilds()
         {
             var buildDirs = GetPossibleBuildDirs();
 
-            // Disable selection of builds that don't exist.
-            ToolStripMenuItem selectedItem = null;
+            // Determine which builds exist.
             for (int i = 0; i < buildDirs.Length; i++)
             {
-                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[i];
-
                 if (!File.Exists(Path.Combine(buildDirs[i], "Skyline.exe")) &&
                     !File.Exists(Path.Combine(buildDirs[i], "Skyline-daily.exe")))
                 {
                     buildDirs[i] = null;
-                    item.Visible = false;
-                    item.Checked = false;
-                }
-                else
-                {
-                    item.Visible = true;
-                    if (item.Checked || selectedItem == null)
-                        selectedItem = item;
                 }
             }
 
-            if (selectedItem == null)
-                throw new ApplicationException("Couldn't find any Skyline executable to run");
+            // Hide builds that don't exist.
+            int defaultIndex = int.MaxValue;
+            for (int i = 0; i < buildDirs.Length; i++)
+            {
+                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[i];
+                if (buildDirs[i] == null)
+                    item.Visible = false;
+                else
+                {
+                    item.Visible = true;
+                    defaultIndex = Math.Min(defaultIndex, i);
+                }
+            }
 
+            // Select first available build if previously selected build doesn't exist.
+            SelectBuild(buildDirs[(int) SelectedBuild] != null ? SelectedBuild : (BuildDirs) defaultIndex);
+        }
+
+        public void SelectBuild(BuildDirs select)
+        {
+            SelectedBuild = select;
+
+            // Clear all checks.
+            foreach (var buildDirType in (BuildDirs[])Enum.GetValues(typeof(BuildDirs)))
+            {
+                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[(int) buildDirType];
+                item.Checked = false;
+            }
+
+            // Check the selected build.
+            var selectedItem = (ToolStripMenuItem)selectBuildMenuItem.DropDownItems[(int) select];
+            selectedItem.Visible = true;
             selectedItem.Checked = true;
             selectedBuild.Text = selectedItem.Text;
         }
@@ -480,15 +511,7 @@ namespace SkylineTester
         public string GetSelectedBuildDir()
         {
             var buildDirs = GetPossibleBuildDirs();
-
-            for (int i = 0; i < buildDirs.Length; i++)
-            {
-                var item = (ToolStripMenuItem) selectBuildMenuItem.DropDownItems[i];
-                if (item.Checked)
-                    return buildDirs[i];
-            }
-
-            throw new ApplicationException("Couldn't find selected build directory");
+            return buildDirs[(int) SelectedBuild];
         }
 
         private string GetZipPath(int architecture)
@@ -945,7 +968,6 @@ namespace SkylineTester
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
-        public ToolStripStatusLabel  SelectedBuild          { get { return selectedBuild; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
@@ -1023,7 +1045,7 @@ namespace SkylineTester
 
         private void selectBuildMenuOpening(object sender, EventArgs e)
         {
-            SelectBuild();
+            FindBuilds();
         }
 
         private void commandShell_MouseClick(object sender, MouseEventArgs e)

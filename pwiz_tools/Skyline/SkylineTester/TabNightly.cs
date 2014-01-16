@@ -40,7 +40,7 @@ namespace SkylineTester
         private Timer _updateTimer;
         private Timer _stopTimer;
         private int _revision;
-        private string _saveSelectedBuild; 
+        private SkylineTesterWindow.BuildDirs _saveSelectedBuild; 
         private readonly List<string> _labels = new List<string>();
         private readonly List<string> _findTest = new List<string>();
 
@@ -144,7 +144,8 @@ namespace SkylineTester
 
         public override bool Stop(bool success)
         {
-            MainWindow.SelectedBuild.Text = _saveSelectedBuild;
+            if (!success)
+                MainWindow.SelectBuild(_saveSelectedBuild);
 
             _updateTimer.Stop();
             _updateTimer = null;
@@ -173,8 +174,9 @@ namespace SkylineTester
             _findTest.Clear();
 
             MainWindow.SetStatus("Running nightly pass...");
-            _saveSelectedBuild = MainWindow.SelectedBuild.Text;
-            MainWindow.SelectedBuild.Text = "Nightly ({0}-bit)".With(MainWindow.NightlyBuildType.SelectedIndex == 0 ? 32 : 64);
+            var architecture = MainWindow.NightlyBuildType.SelectedIndex == 0 ? 32 : 64;
+            MainWindow.SelectBuild(architecture == 32 ? SkylineTesterWindow.BuildDirs.nightly32 : SkylineTesterWindow.BuildDirs.nightly64);
+            _saveSelectedBuild = MainWindow.SelectedBuild;
             MainWindow.ResetElapsedTime();
 
             MainWindow.TestsRun = 0;
