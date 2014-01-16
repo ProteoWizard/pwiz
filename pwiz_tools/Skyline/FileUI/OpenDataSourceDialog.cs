@@ -626,14 +626,33 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            // perhaps the user has typed an entire filename into the text box?
-            if (DataSourceUtil.IsDataSource(sourcePathTextBox.Text) || 
-               DataSourceUtil.IsDataSource(new DirectoryInfo(sourcePathTextBox.Text)) // some input "files" are directories
-)            {
-                DataSources = new[] { sourcePathTextBox.Text };
-                DialogResult = DialogResult.OK;
-                return;
+            try
+            {
+                // perhaps the user has typed an entire filename into the text box - ir just garbage
+                if (DataSourceUtil.IsDataSource(sourcePathTextBox.Text) ||
+                    DataSourceUtil.IsDataSource(new DirectoryInfo(sourcePathTextBox.Text)))
+                    // some input "files" are directories
+                {
+                    var fileOrDirName = sourcePathTextBox.Text;
+                    bool exists;
+                    bool triedAddingDirectory = false;
+                    while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
+                    {
+                        if (triedAddingDirectory)
+                            break;
+                        fileOrDirName = Path.Combine(CurrentDirectory, fileOrDirName);
+                        triedAddingDirectory = true;
+                    }
+                    if (exists)
+                    {
+                        DataSources = new[] {fileOrDirName};
+                        DialogResult = DialogResult.OK;
+                        return;
+                    }
+                }
             }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch {} // guard against user typed-in-garbage
 
 
             // No files or folders selected: Show an error message.
