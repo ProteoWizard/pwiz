@@ -28,6 +28,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 {
     public partial class ChooseColumnsTab : ViewEditorWidget
     {
+        private bool _inLabelEdit;
         public ChooseColumnsTab()
         {
             InitializeComponent();
@@ -36,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         protected override void OnViewChange()
         {
             base.OnViewChange();
+            _inLabelEdit = false;
             availableFieldsTreeColumns.RootColumn = ViewInfo.ParentColumn;
             availableFieldsTreeColumns.ShowAdvancedFields = ViewEditor.ShowHiddenFields;
             availableFieldsTreeColumns.SublistId = ViewInfo.SublistId;
@@ -259,8 +261,17 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ColumnSpecs = ColumnSpecs.Where((columnSpec, index) => !listViewColumns.Items[index].Selected).ToArray();
         }
 
+        private void listViewColumns_BeforeLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            _inLabelEdit = true;
+        }
+
         private void listViewColumns_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
+            if (!_inLabelEdit)
+            {
+                return;
+            }
             var columns = ColumnSpecs.ToArray();
             if (string.IsNullOrEmpty(e.Label))
             {

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.ColumnHeader colHdrName;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChooseColumnsTab));
             this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
@@ -74,6 +75,7 @@
             this.listViewColumns.UseCompatibleStateImageBehavior = false;
             this.listViewColumns.View = System.Windows.Forms.View.Details;
             this.listViewColumns.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listViewColumns_AfterLabelEdit);
+            this.listViewColumns.BeforeLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listViewColumns_BeforeLabelEdit);
             this.listViewColumns.ItemActivate += new System.EventHandler(this.ListViewColumnsOnItemActivate);
             this.listViewColumns.SelectedIndexChanged += new System.EventHandler(this.ListViewColumnsOnSelectedIndexChanged);
             this.listViewColumns.SizeChanged += new System.EventHandler(this.ListViewColumnsOnSizeChanged);

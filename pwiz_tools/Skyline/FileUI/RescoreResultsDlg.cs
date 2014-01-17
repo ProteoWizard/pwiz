@@ -53,8 +53,15 @@ namespace pwiz.Skyline.FileUI
         public void Rescore(bool asNewFile)
         {
             var document = DocumentUIContainer.DocumentUI;
+            if (!document.Settings.HasResults)
+            {
+                // TODO(nicksh):move this to a resource
+                MessageDlg.Show(this, "There are not results in this document");
+                return;
+            }
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
+                // TODO(nicksh):move this to a resource
                 MessageDlg.Show(this, "All results must be completely imported before they can be re-scored.");
                 return;
             }

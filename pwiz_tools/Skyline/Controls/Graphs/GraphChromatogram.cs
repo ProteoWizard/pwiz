@@ -607,7 +607,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void UpdateUINoReenter(bool selectionChanged, bool forceZoom)
         {
             // Must be called by UpdateUI, which sets the reentrancy flag.
-            Assume.IsTrue(_inUpdateUI);
+            Assume.IsTrue(_inUpdateUI, "Update UI re-entrancy");
 
             IsCacheInvalidated = false;
 
@@ -631,7 +631,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Assume.IsNotNull(chromatograms, "chromatograms");
                 Assume.IsNotNull(ChromGroupInfos, "ChromGroupInfos");
-                retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
+                if (ChromGroupInfos != null && ChromGroupInfos.Length > 0 && null != ChromGroupInfos[0])
+                {
+                    retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
+                }
                 if (null != timeRegressionFunction)
                 {
                     xAxisTitle = retentionTimeTransformOp.GetAxisTitle(RTPeptideValue.Retention);
