@@ -1,6 +1,6 @@
-﻿namespace TestArgCollector
+﻿namespace ExampleArgCollector
 {
-    class TestToolUtil
+    class ExampleToolUtil
     {
     }
     //User define ARGUMENT_COUNT for arguemnts being sent from UI.  Do not include 

@@ -1,16 +1,17 @@
 ﻿using System.Globalization;
 using System.Windows.Forms;
 
-namespace TestArgCollector
+namespace ExampleArgCollector
 {
-    public partial class TestToolUI : Form
+    public partial class ExampleToolUI : Form
     {
         public string[] Arguments { get; private set; }
 
-        public TestToolUI(string[] oldArguments)
+        public ExampleToolUI(string[] oldArguments)
         {
 
             InitializeComponent();
+            comboBoxTest.SelectedIndex = 0;
             Arguments = oldArguments;
         }
 
@@ -73,7 +74,7 @@ namespace TestArgCollector
         public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
         {
 
-            using (var dlg = new TestToolUI(oldArgs))
+            using (var dlg = new ExampleToolUI(oldArgs))
             {
                 if (parent != null)
                 {

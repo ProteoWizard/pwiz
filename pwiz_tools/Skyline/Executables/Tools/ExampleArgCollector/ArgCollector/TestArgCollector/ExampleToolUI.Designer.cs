@@ -1,6 +1,6 @@
-﻿namespace TestArgCollector
+﻿namespace ExampleArgCollector
 {
-    partial class TestToolUI
+    partial class ExampleToolUI
     {
         /// <summary>
         /// Required designer variable.
