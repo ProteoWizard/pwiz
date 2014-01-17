@@ -628,27 +628,24 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                // perhaps the user has typed an entire filename into the text box - ir just garbage
-                if (DataSourceUtil.IsDataSource(sourcePathTextBox.Text) ||
-                    DataSourceUtil.IsDataSource(new DirectoryInfo(sourcePathTextBox.Text)))
-                    // some input "files" are directories
+                // perhaps the user has typed an entire filename into the text box - or just garbage
+                var fileOrDirName = sourcePathTextBox.Text;
+                bool exists;
+                bool triedAddingDirectory = false;
+                while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
                 {
-                    var fileOrDirName = sourcePathTextBox.Text;
-                    bool exists;
-                    bool triedAddingDirectory = false;
-                    while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
-                    {
-                        if (triedAddingDirectory)
-                            break;
-                        fileOrDirName = Path.Combine(CurrentDirectory, fileOrDirName);
-                        triedAddingDirectory = true;
-                    }
-                    if (exists)
-                    {
-                        DataSources = new[] {fileOrDirName};
-                        DialogResult = DialogResult.OK;
-                        return;
-                    }
+                    if (triedAddingDirectory)
+                        break;
+                    fileOrDirName = Path.Combine(CurrentDirectory, fileOrDirName);
+                    triedAddingDirectory = true;
+                }
+                if (exists &&  
+                    (DataSourceUtil.IsDataSource(fileOrDirName) ||
+                     DataSourceUtil.IsDataSource(new DirectoryInfo(fileOrDirName)))) // some input "files" are directories
+                {
+                    DataSources = new[] {fileOrDirName};
+                    DialogResult = DialogResult.OK;
+                    return;
                 }
             }
 // ReSharper disable once EmptyGeneralCatchClause
