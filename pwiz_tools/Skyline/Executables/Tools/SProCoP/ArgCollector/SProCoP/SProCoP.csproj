@@ -56,7 +56,6 @@
     <Compile Include="SProCoPUI.Designer.cs">
       <DependentUpon>SProCoPUI.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="SProCoPUI.resx">
       <DependentUpon>SProCoPUI.cs</DependentUpon>
