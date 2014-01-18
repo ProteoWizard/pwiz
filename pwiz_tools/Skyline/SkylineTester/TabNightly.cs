@@ -234,9 +234,6 @@ namespace SkylineTester
 
         private void UpdateNightly()
         {
-            if (MainWindow.Tabs.SelectedTab != MainWindow.NightlyPage)
-                return;
-
             UpdateThumbnail();
             UpdateRun();
             if (MainWindow.NightlyRunDate.SelectedIndex == 0)
