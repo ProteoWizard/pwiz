@@ -507,6 +507,36 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-scaffold
   : check-scaffold ;
 
+# Test mzid format from ByOnic
+
+make output/byonic.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/byonic-test.mzid output/byonic.blib
+  : 
+  : build-byonic ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/byonic.blib reference/byonic.check
+  : $(compare-reqs)
+    <dependency>build-byonic
+  : check-byonic ;
+
+# Test mzid format from MSGF+
+
+make output/msgf-mzid.blib : inputs/empty : @common.copy : $(test_output_req) ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/msgf-test.mzid output/msgf-mzid.blib
+  : 
+  : build-msgf-mzid ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/msgf-mzid.blib reference/msgf-mzid.check
+  : $(compare-reqs)
+    <dependency>build-msgf-mzid
+  : check-msgf-mzid ;
+
 # Test waters csv format
 
 make output/mse.blib : inputs/empty : @common.copy : $(test_output_req) ;
