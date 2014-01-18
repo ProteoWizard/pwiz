@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var listPeakSets in _listListPeakSets)
             {
                 // Score the peaks under the legacy model score
-                foreach (var peakSet in listPeakSets)
+                foreach (var peakSet in listPeakSets.Where(peakSet => peakSet != null))
                 {
                     peakSet.ScorePeptideSets(detailedCalcs, _document);
                 }
@@ -451,7 +451,7 @@ namespace pwiz.Skyline.Model.Results
                 var peakNext = allPeakGroups[0];
                 allPeakGroups.RemoveAt(0);
 
-                var peakSetNext = FindCoelutingPeptidePeaks(peakNext, allPeakGroups);
+                var peakSetNext = FindCoelutingPeptidePeaks(dataSets, peakNext, allPeakGroups);
                 listPeakSets.Add(peakSetNext);
             }
 
@@ -464,11 +464,6 @@ namespace pwiz.Skyline.Model.Results
 
                 foreach (var peak in peakSet.OrderedPeaks)
                 {
-                    // Ignore precursors with unknown relative RT. They do not participate
-                    // in peptide peak matching.
-                    if (peak.Data.NodeGroup != null && peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown)
-                        continue;
-
                     peak.SetBestPeak(peakBest, i);
 
                     // The first peak seen is the best peak
@@ -487,8 +482,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     foreach (var peak in peakSet)
                     {
-                        if (peak.Length == peakNarrowest.Length ||
-                            (peak.Data.NodeGroup != null && peak.Data.NodeGroup.RelativeRT == RelativeRT.Unknown))
+                        if (peak.PeakGroup == null || peak.Length == peakNarrowest.Length)
                             continue;
                         peak.Data.NarrowPeak(peak.PeakGroup, peakNarrowest, i);
                     }
@@ -526,7 +520,8 @@ namespace pwiz.Skyline.Model.Results
                     var peakSet = listPeakSets[i];
                     foreach (var peptideChromDataPeak in peakSet)
                     {
-                        peptideChromDataPeak.Data.SetPeakSet(peptideChromDataPeak.PeakGroup, i);
+                        if (peptideChromDataPeak.PeakGroup != null)
+                            peptideChromDataPeak.Data.SetPeakSet(peptideChromDataPeak.PeakGroup, i);
                     }
                 }
             }
@@ -537,10 +532,13 @@ namespace pwiz.Skyline.Model.Results
         /// groups from different precursors for the same peptide, which overlap in time with the
         /// high scoring peak.
         /// </summary>
+        /// <param name="dataSets">Chromatogram data sets from which to create peptide peaks</param>
         /// <param name="dataPeakMax">High scoring precursor peak group</param>
         /// <param name="allPeakGroups">List of all lower scoring precursor peak groups for the same peptide</param>
         /// <returns>A list of coeluting precursor peak groups for this peptide</returns>
-        private PeptideChromDataPeakList FindCoelutingPeptidePeaks(PeptideChromDataPeak dataPeakMax, IList<PeptideChromDataPeak> allPeakGroups)
+        private PeptideChromDataPeakList FindCoelutingPeptidePeaks(IEnumerable<ChromDataSet> dataSets,
+                                                                   PeptideChromDataPeak dataPeakMax,
+                                                                   IList<PeptideChromDataPeak> allPeakGroups)
         {
             TransitionGroupDocNode nodeGroupMax = dataPeakMax.Data.NodeGroup;
             int startMax = dataPeakMax.StartIndex;
@@ -550,7 +548,7 @@ namespace pwiz.Skyline.Model.Results
             // Initialize the collection of peaks with this peak
             var listPeaks = new PeptideChromDataPeakList(NodePep, FileInfo, dataPeakMax);
             // Enumerate the precursors for this peptide
-            foreach (var chromData in _dataSets)
+            foreach (var chromData in dataSets)
             {
                 // Skip the precursor for the max peak itself
                 if (ReferenceEquals(chromData, dataPeakMax.Data))
@@ -576,7 +574,9 @@ namespace pwiz.Skyline.Model.Results
                         continue;
 
                     int timeIndex = peakGroup.TimeIndex;
-                    if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
+                    if ((nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching) ||
+                        // Matching label types (i.e. different charge states of same label type should always match)
+                        ReferenceEquals(nodeGroup.TransitionGroup.LabelType, nodeGroupMax.TransitionGroup.LabelType))
                     {
                         // If the peaks are supposed to have the same elution time,
                         // then be more strict about how they overlap
@@ -697,7 +697,10 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsStandard { get { return Data.IsStandard; } }
 
-        public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData { get { return PeakGroup; } }
+        public IList<ITransitionPeakData<IDetailedPeakData>> TranstionPeakData
+        {
+            get { return PeakGroup ?? ChromDataPeakList.EMPTY; }
+        }
 
         /// <summary>
         /// Entire peak set
@@ -823,7 +826,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             CombinedScore = ScoringModel.Score(modelFeatures);
-            foreach (var peak in this)
+            foreach (var peak in this.Where(peak => peak.PeakGroup != null))
             {
                 peak.PeakGroup.DetailScores = detailFeatures;
             }

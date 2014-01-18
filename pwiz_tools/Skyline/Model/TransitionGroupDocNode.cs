@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -2226,6 +2227,11 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 return result;
             }
+        }
+
+        public override string ToString()
+        {
+            return TextUtil.SpaceSeparate(TransitionGroup.Peptide.ToString(), TransitionGroup.ToString());
         }
 
         #endregion

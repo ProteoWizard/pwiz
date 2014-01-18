@@ -278,6 +278,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.LabelAtoms = prop);
         }
 
+        public StaticMod ChangeRelativeRT(RelativeRT prop)
+        {
+            return ChangeProp(ImClone(this), im => im.RelativeRT = prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable

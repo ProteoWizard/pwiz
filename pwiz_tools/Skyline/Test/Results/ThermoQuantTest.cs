@@ -291,11 +291,43 @@ namespace pwiz.SkylineTest.Results
         }
 
         /// <summary>
-        /// Verifies that canceling an import cleans up correctly.
+        /// Verifies importing reference peptides with non-matching retention times
+        /// works.
         /// </summary>
-        //[TestMethod]
-        public void ThermoPeakEditTest()
+        [TestMethod]
+        public void ThermoNonMatchingRTTest()
         {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath;
+            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            string extRaw = ExtensionTestContext.ExtThermoRaw;
+            var listChromatograms = new List<ChromatogramSet>
+                                        {
+                                            new ChromatogramSet("rep03", new[]
+                                                                             {
+                                                                                 testFilesDir.GetTestPath(
+                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + extRaw)
+                                                                             }),
+                                        };
+
+            ValidateRelativeRT(RelativeRT.Preceding, doc, docPath, listChromatograms);
+            ValidateRelativeRT(RelativeRT.Overlapping, doc, docPath, listChromatograms);
+            ValidateRelativeRT(RelativeRT.Unknown, doc, docPath, listChromatograms);
+        }
+
+        private static void ValidateRelativeRT(RelativeRT relativeRT, SrmDocument doc, string docPath, List<ChromatogramSet> listChromatograms)
+        {
+            FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
+
+            SrmSettings settings = doc.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeHeavyModifications(
+                    mods.HeavyModifications.Select(m => m.ChangeRelativeRT(relativeRT)).ToArray()));
+            var docMods = doc.ChangeSettings(settings);
+            var docResults = docMods.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            var docContainer = new ResultsTestDocumentContainer(docMods, docPath);
+            Assert.IsTrue(docContainer.SetDocument(docResults, docMods, true));
+            docContainer.AssertComplete();
+            docContainer.Release();
         }
 
         private static bool IsCacheOrTempFile(string path)

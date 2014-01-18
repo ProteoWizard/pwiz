@@ -988,7 +988,7 @@ namespace pwiz.Skyline.Model.Results
         {
             ChromDataPeakList peakSetAdd = null;
             int startIndex, endIndex;
-            // TODO: Need to do something reasonable for Deuterium elution time shifts
+            // TODO: Need to do something more reasonable for Deuterium elution time shifts
             bool matchBounds = GetLocalPeakBounds(bestPeptidePeak, out startIndex, out endIndex);
 
             if (peakSet != null)
@@ -1006,6 +1006,15 @@ namespace pwiz.Skyline.Model.Results
                 if (matchBounds)
                 {
                     var peak = peakSet[0].Peak;
+                    // If this peak and the best peak for this peptide are allowed to be shifted in
+                    // relationship to each other, then make that shift be the delta between the apex
+                    // times of the two peaks.  They still need to be the same width.
+                    if (!IsSameRT(bestPeptidePeak.Data))
+                    {
+                        int deltaBounds = GetLocalIndex(bestPeptidePeak.TimeIndex) - peak.TimeIndex;
+                        startIndex = Math.Max(0, startIndex + deltaBounds);
+                        endIndex = Math.Min(Times.Length - 1, endIndex + deltaBounds);
+                    }
 
                     // Reset the range of the best peak, if the chromatograms for this peak group
                     // overlap with the best peptide peak at all.  Resetting the range of the best
@@ -1037,6 +1046,10 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataPeak peakAdd;
                 if (startIndex < endIndex)
                 {
+                    // CONSIDER: Not that great for peaks that are expected to be shifted in relationship
+                    //           to each other, since this will force them to have the same boundaries,
+                    //           but if no evidence of a peak was found, it is hard to understand what
+                    //           could be done better.
                     var chromData = BestChromatogram;
                     peakAdd = new ChromDataPeak(chromData, chromData.CalcPeak(startIndex, endIndex));
                 }
@@ -1047,6 +1060,12 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) {IsForcedIntegration = true};
+            }
+            else
+            {
+                // Otherwise, insert an empty peak
+                var peakAdd = new ChromDataPeak(BestChromatogram, null);
+                peakSetAdd = new ChromDataPeakList(peakAdd, _listChromData) { IsForcedIntegration = true };
             }
 
             if (peakSetAdd != null)
@@ -1073,6 +1092,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Returns true if the peak boundaries should be reset to the startIndex and endIndex
+        /// values output from this function.
+        /// </summary>
+        /// <param name="bestPeptidePeak">The best peak for this peptide, which will be in its own scale</param>
+        /// <param name="startIndex">The start index this peak should have, if return is true</param>
+        /// <param name="endIndex">The end index this peak should have, if return is false</param>
+        /// <returns>True if peak bounds should be reset</returns>
         private bool GetLocalPeakBounds(PeptideChromDataPeak bestPeptidePeak, out int startIndex, out int endIndex)
         {
             if (bestPeptidePeak == null)
@@ -1082,7 +1109,7 @@ namespace pwiz.Skyline.Model.Results
             }
             startIndex = Math.Max(0, GetLocalIndex(bestPeptidePeak.StartIndex));
             endIndex = Math.Min(Times.Length - 1, GetLocalIndex(bestPeptidePeak.EndIndex));
-            return IsSameRT(bestPeptidePeak.Data);
+            return IsSameRT(bestPeptidePeak.Data) || IsShiftedRT(bestPeptidePeak.Data);
         }
 
         private int GetLocalIndex(int indexPeptide)
@@ -1092,8 +1119,16 @@ namespace pwiz.Skyline.Model.Results
 
         private bool IsSameRT(ChromDataSet chromDataSet)
         {
-            return NodeGroup.RelativeRT == RelativeRT.Matching &&
-                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Matching;
+            return (NodeGroup.RelativeRT == RelativeRT.Matching && chromDataSet.NodeGroup.RelativeRT == RelativeRT.Matching) ||
+                ReferenceEquals(NodeGroup.TransitionGroup.LabelType, chromDataSet.NodeGroup.TransitionGroup.LabelType);
+        }
+
+        private bool IsShiftedRT(ChromDataSet chromDataSet)
+        {
+            return NodeGroup.RelativeRT == RelativeRT.Preceding ||
+                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Preceding ||
+                NodeGroup.RelativeRT == RelativeRT.Overlapping ||
+                chromDataSet.NodeGroup.RelativeRT == RelativeRT.Overlapping;
         }
 
         public override string ToString()

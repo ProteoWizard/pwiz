@@ -465,6 +465,12 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     internal sealed class ChromDataPeakList : Collection<ChromDataPeak>, IList<ITransitionPeakData<IDetailedPeakData>>
     {
+        public static readonly ChromDataPeakList EMPTY = new ChromDataPeakList();
+
+        private ChromDataPeakList()
+        {
+        }
+        
         public ChromDataPeakList(ChromDataPeak peak)
         {
             Add(peak);
