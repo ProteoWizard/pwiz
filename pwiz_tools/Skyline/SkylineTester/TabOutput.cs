@@ -346,8 +346,9 @@ namespace SkylineTester
             foreach (var jumpItem in _jumpList)
             {
                 if (jumpItem.Index > 0)
-                    MainWindow.OutputJumpTo.Items.Add(jumpItem.Pattern);
+                    MainWindow.OutputJumpTo.Items.Add("    " + jumpItem.Pattern);
             }
+            MainWindow.OutputJumpTo.Items.Add("    End");
             MainWindow.OutputJumpTo.SelectedIndex = 0;
         }
 
@@ -355,10 +356,10 @@ namespace SkylineTester
         {
             if (jumpToIndex == 0)
                 return;
-            var pattern = (string) MainWindow.OutputJumpTo.Items[jumpToIndex];
+            var pattern = "\n" + ((string) MainWindow.OutputJumpTo.Items[jumpToIndex]).TrimStart();
             var index = _jumpList.FindIndex(
                 jumpToPattern => jumpToPattern.Pattern == pattern);
-            MainWindow.CommandShell.Select(_jumpList[index].Index + 1, 0);
+            MainWindow.CommandShell.Select(index >= 0 ? _jumpList[index].Index + 1 : MainWindow.CommandShell.TextLength - 1, 0);
             MainWindow.CommandShell.ScrollToCaret();
             MainWindow.OutputJumpTo.SelectedIndex = 0;
         }
