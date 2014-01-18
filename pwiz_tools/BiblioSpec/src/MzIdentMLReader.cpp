@@ -92,7 +92,7 @@ bool MzIdentMLReader::parseFile(){
             break;
         case MSGF_ANALYSIS:
             scoreType = MSGF_SCORE;
-            lookUpBy_ = INDEX_ID;
+            lookUpBy_ = SCAN_NUM_ID;
             break;
     }
 
@@ -166,10 +166,29 @@ void MzIdentMLReader::collectPsms(){
 
                 // now get the psm info
                 curPSM_ = new PSM();
-                curPSM_->specName = (analysisType_ != BYONIC_ANALYSIS) ?
-                    idStr : result.cvParam(MS_spectrum_title).valueAs<string>();
-                if (idStr.compare(0, 6, "index=") == 0)
-                    curPSM_->specIndex = boost::lexical_cast<int>(idStr.substr(6));
+                switch (analysisType_) {
+                    case BYONIC_ANALYSIS:
+                        curPSM_->specName = result.cvParam(MS_spectrum_title).valueAs<string>();
+                        break;
+                    case MSGF_ANALYSIS:
+                        if (result.hasCVParam(MS_scan_number_s__OBSOLETE)) {
+                            curPSM_->specKey = result.cvParam(MS_scan_number_s__OBSOLETE).valueAs<int>();
+                        } else {
+                            // If still no scan number, look for it in the spectrum id
+                            vector<string> parts;
+                            boost::split(parts, idStr, boost::is_any_of(" "));
+                            for (vector<string>::const_iterator i = parts.begin(); i != parts.end(); ++i) {
+                                if (idStr.compare(0, 6, "scan=") == 0) {
+                                    curPSM_->specKey = boost::lexical_cast<int>(idStr.substr(5));
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        curPSM_->specName = idStr;
+                        break;
+                }
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
                 extractModifications(item.peptidePtr, curPSM_);
