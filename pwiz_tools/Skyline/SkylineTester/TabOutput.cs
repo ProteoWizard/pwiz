@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
@@ -71,6 +72,20 @@ namespace SkylineTester
             _buildProblems.Clear();
             _failedTests.Clear();
             _leakingTests.Clear();
+            _jumpList = new List<JumpToPattern>
+            {
+                new JumpToPattern("# Nightly started"),
+                new JumpToPattern("# Checking out Skyline"),
+                new JumpToPattern("# Building Skyline"),
+                new JumpToPattern("# Pass 0:"),
+                new JumpToPattern("# Pass 1:"),
+                new JumpToPattern("# Pass 2+:"),
+                new JumpToPattern("# Nightly finished"),
+            };
+
+            MainWindow.OutputJumpTo.Items.Clear();
+            MainWindow.OutputJumpTo.Items.Add("Jump to:");
+            MainWindow.OutputJumpTo.SelectedIndex = 0;
         }
 
         public void LoadDone()
@@ -132,12 +147,15 @@ namespace SkylineTester
 
         public void ProcessError(string line)
         {
+            if (_jumpList == null)
+                return;
             if (line.StartsWith("..."))
                 _buildProblems.Add(line);
             else if (line.Contains(" LEAKED "))
                 _leakingTests.Add(line);
             else
                 _failedTests.Add(line);
+            _jumpList.Add(new JumpToPattern(line));
             if (_loadDone)
                 ShowErrors();
         }
@@ -149,6 +167,8 @@ namespace SkylineTester
                 start--;
             start++;
             int end = position;
+            if (end < 0)
+                return;
             while (end < textBox.TextLength && textBox.Text[end] != '\n')
                 end++;
             textBox.Select(start, end - start);
@@ -291,6 +311,56 @@ namespace SkylineTester
                 Console.WriteLine(ex.Message);
             }
             _addingErrors = false;
+        }
+
+        private class JumpToPattern
+        {
+            public readonly string Pattern;
+            public int Index;
+            public int LastSearchIndex;
+
+            public JumpToPattern(string pattern)
+            {
+                Pattern = "\n" + pattern;
+            }
+        }
+
+        private List<JumpToPattern> _jumpList;
+
+        public void PrepareJumpTo()
+        {
+            foreach (var jumpItem in _jumpList)
+            {
+                if (jumpItem.Index > 0)
+                    continue;
+                jumpItem.Index = 1 + MainWindow.CommandShell.Text.IndexOf(
+                    jumpItem.Pattern, jumpItem.LastSearchIndex, StringComparison.CurrentCulture);
+                jumpItem.LastSearchIndex = MainWindow.CommandShell.TextLength;
+            }
+
+            _jumpList = _jumpList.OrderBy(item => item.Index).ToList();
+
+
+            MainWindow.OutputJumpTo.Items.Clear();
+            MainWindow.OutputJumpTo.Items.Add("Jump to:");
+            foreach (var jumpItem in _jumpList)
+            {
+                if (jumpItem.Index > 0)
+                    MainWindow.OutputJumpTo.Items.Add(jumpItem.Pattern);
+            }
+            MainWindow.OutputJumpTo.SelectedIndex = 0;
+        }
+
+        public void JumpTo(int jumpToIndex)
+        {
+            if (jumpToIndex == 0)
+                return;
+            var pattern = (string) MainWindow.OutputJumpTo.Items[jumpToIndex];
+            var index = _jumpList.FindIndex(
+                jumpToPattern => jumpToPattern.Pattern == pattern);
+            MainWindow.CommandShell.Select(_jumpList[index].Index + 1, 0);
+            MainWindow.CommandShell.ScrollToCaret();
+            MainWindow.OutputJumpTo.SelectedIndex = 0;
         }
     }
 }

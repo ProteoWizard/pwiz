@@ -225,6 +225,7 @@ namespace SkylineTester
             TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), new []{_architecture}, true, false);
 
             MainWindow.AddTestRunner("offscreen=on quality=on loop=-1");
+            MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();
         }

@@ -945,6 +945,7 @@ namespace SkylineTester
         public Button           NightlyViewLog              { get { return nightlyViewLog; } }
         public RadioButton      NukeBuild                   { get { return nukeBuild; } }
         public CheckBox         Offscreen                   { get { return offscreen; } }
+        public ComboBox         OutputJumpTo                { get { return outputJumpTo; } }
         public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
@@ -1132,6 +1133,16 @@ namespace SkylineTester
             nightlyStartTime.Value = DateTime.Now;
         }
 
+        private void outputJumpTo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _tabOutput.JumpTo(outputJumpTo.SelectedIndex);
+        }
+
+        private void outputJumpTo_Click(object sender, EventArgs e)
+        {
+            _tabOutput.PrepareJumpTo();
+        }
+
         #endregion Control events
-    }
+
 }

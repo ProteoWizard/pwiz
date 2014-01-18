@@ -179,6 +179,7 @@ namespace SkylineTester
             this.label33 = new System.Windows.Forms.Label();
             this.runNightly = new System.Windows.Forms.Button();
             this.tabOutput = new System.Windows.Forms.TabPage();
+            this.outputJumpTo = new System.Windows.Forms.ComboBox();
             this.outputSplitContainer = new System.Windows.Forms.SplitContainer();
             this.commandShell = new SkylineTester.CommandShell();
             this.errorConsole = new System.Windows.Forms.RichTextBox();
@@ -2074,6 +2075,7 @@ namespace SkylineTester
             // tabOutput
             // 
             this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(160)))), ((int)(((byte)(180)))));
+            this.tabOutput.Controls.Add(this.outputJumpTo);
             this.tabOutput.Controls.Add(this.outputSplitContainer);
             this.tabOutput.Controls.Add(this.buttonOpenLog);
             this.tabOutput.Controls.Add(this.comboBoxOutput);
@@ -2086,6 +2088,18 @@ namespace SkylineTester
             this.tabOutput.Size = new System.Drawing.Size(722, 580);
             this.tabOutput.TabIndex = 5;
             this.tabOutput.Text = "Output";
+            // 
+            // outputJumpTo
+            // 
+            this.outputJumpTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.outputJumpTo.FormattingEnabled = true;
+            this.outputJumpTo.Location = new System.Drawing.Point(238, 52);
+            this.outputJumpTo.Margin = new System.Windows.Forms.Padding(4);
+            this.outputJumpTo.Name = "outputJumpTo";
+            this.outputJumpTo.Size = new System.Drawing.Size(254, 21);
+            this.outputJumpTo.TabIndex = 36;
+            this.outputJumpTo.SelectedIndexChanged += new System.EventHandler(this.outputJumpTo_SelectedIndexChanged);
+            this.outputJumpTo.Click += new System.EventHandler(this.outputJumpTo_Click);
             // 
             // outputSplitContainer
             // 
@@ -2106,7 +2120,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 242;
+            this.outputSplitContainer.SplitterDistance = 224;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2124,7 +2138,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 242);
+            this.commandShell.Size = new System.Drawing.Size(693, 224);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2142,14 +2156,15 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 201);
+            this.errorConsole.Size = new System.Drawing.Size(693, 219);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
             // 
             // buttonOpenLog
             // 
-            this.buttonOpenLog.Location = new System.Drawing.Point(300, 51);
+            this.buttonOpenLog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonOpenLog.Location = new System.Drawing.Point(620, 50);
             this.buttonOpenLog.Margin = new System.Windows.Forms.Padding(0);
             this.buttonOpenLog.Name = "buttonOpenLog";
             this.buttonOpenLog.Size = new System.Drawing.Size(89, 23);
@@ -2165,7 +2180,7 @@ namespace SkylineTester
             this.comboBoxOutput.Location = new System.Drawing.Point(16, 52);
             this.comboBoxOutput.Margin = new System.Windows.Forms.Padding(4);
             this.comboBoxOutput.Name = "comboBoxOutput";
-            this.comboBoxOutput.Size = new System.Drawing.Size(271, 21);
+            this.comboBoxOutput.Size = new System.Drawing.Size(214, 21);
             this.comboBoxOutput.TabIndex = 32;
             this.comboBoxOutput.SelectedIndexChanged += new System.EventHandler(this.comboBoxOutput_SelectedIndexChanged);
             // 
@@ -2727,6 +2742,7 @@ namespace SkylineTester
         private Button buttonNow;
         private RadioButton qualityPassIndefinite;
         private ToolStripMenuItem setNightlyLogsFolderToolStripMenuItem;
+        private ComboBox outputJumpTo;
     }
 }
 
