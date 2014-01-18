@@ -28,6 +28,8 @@ namespace TestRunnerLib
         public FindLanguages(string executingDirectory, params string[] addLanguages)
         {
             _languages = new List<string>(addLanguages);
+            if (!Directory.Exists(executingDirectory))
+                return;
 
             foreach (var resourcesDll in Directory.EnumerateFiles(executingDirectory, "*.resources.dll", SearchOption.AllDirectories))
             {
