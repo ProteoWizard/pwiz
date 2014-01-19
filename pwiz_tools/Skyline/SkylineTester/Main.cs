@@ -34,6 +34,8 @@ namespace SkylineTester
     {
         private void Run(object sender, EventArgs e)
         {
+            ShiftKeyPressed = (ModifierKeys == Keys.Shift);
+
             // Stop running task.
             if (_runningTab != null)
             {
@@ -413,6 +415,30 @@ namespace SkylineTester
                 }
 
                 return true;
+            }
+        }
+
+        public void RunUI(Action action, int delayMsec = 0)
+        {
+            if (delayMsec == 0)
+            {
+                try
+                {
+                    Invoke(action);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+            else
+            {
+                var delayStart = new Timer { Interval = delayMsec };
+                delayStart.Tick += (sender, args) =>
+                {
+                    ((Timer)sender).Stop();
+                    RunUI(action);
+                };
+                delayStart.Start();
             }
         }
 

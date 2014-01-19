@@ -87,10 +87,23 @@ namespace SkylineTester
             if (!MainWindow.HasBuildPrerequisites)
                 return false;
 
+            var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
+
+            if (MainWindow.ShiftKeyPressed)
+            {
+                var result = MessageBox.Show(
+                    MainWindow, 
+                    "Nightly build will start 15 seconds after you press OK.", 
+                    "Run nightly",
+                    MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return false;
+                startTime = DateTime.Now + TimeSpan.FromSeconds(15);
+                MainWindow.NightlyStartTime.Value = startTime;
+            }
+
             var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
             MainWindow.Save(skytFile);
-
-            var startTime = DateTime.Parse(MainWindow.NightlyStartTime.Text);
 
             using (TaskService ts = new TaskService())
             {
@@ -129,9 +142,15 @@ namespace SkylineTester
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
 
+            if (MainWindow.ShiftKeyPressed)
+            {
+                MainWindow.Close();
+                return false;
+            }
+
             if (startTime <= DateTime.Now && startTime + TimeSpan.FromMinutes(5) > DateTime.Now)
             {
-                StartNightly();
+                RunUI(StartNightly, 500);
                 return true;
             }
 

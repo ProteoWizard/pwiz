@@ -64,6 +64,7 @@ namespace SkylineTester
         public int LastTabIndex { get; private set; }
         public int NightlyTabIndex { get; private set; }
         public BuildDirs SelectedBuild { get; private set; }
+        public bool ShiftKeyPressed { get; private set; }
 
         private Button _defaultButton;
 
@@ -423,10 +424,13 @@ namespace SkylineTester
 
         private void TabChanged(object sender, EventArgs e)
         {
-            _tabs[_previousTab].Leave();
-            LastTabIndex = _previousTab;
-            _previousTab = tabs.SelectedIndex;
-            _tabs[_previousTab].Enter();
+            RunUI(() =>
+            {
+                _tabs[_previousTab].Leave();
+                LastTabIndex = _previousTab;
+                _previousTab = tabs.SelectedIndex;
+                _tabs[_previousTab].Enter();
+            }, 500);
 
             _findPosition = 0;
         }
@@ -912,405 +916,85 @@ namespace SkylineTester
 
         #region Accessors
 
-        public TextBox BranchUrl
-        {
-            get { return branchUrl; }
-        }
-
-        public CheckBox Build32
-        {
-            get { return build32; }
-        }
-
-        public CheckBox Build64
-        {
-            get { return build64; }
-        }
-
-        public TextBox BuildRoot
-        {
-            get { return buildRoot; }
-        }
-
-        public RadioButton BuildTrunk
-        {
-            get { return buildTrunk; }
-        }
-
-        public Button ButtonDeleteBuild
-        {
-            get { return buttonDeleteBuild; }
-        }
-
-        public Button ButtonOpenLog
-        {
-            get { return buttonOpenLog; }
-        }
-
-        public Button ButtonViewLog
-        {
-            get { return buttonViewLog; }
-        }
-
-        public ComboBox ComboOutput
-        {
-            get { return comboBoxOutput; }
-        }
-
-        public CommandShell CommandShell
-        {
-            get { return commandShell; }
-        }
-
-        public Button DeleteNightlyTask
-        {
-            get { return buttonDeleteNightlyTask; }
-        }
-
-        public RichTextBox ErrorConsole
-        {
-            get { return errorConsole; }
-        }
-
-        public ComboBox FormsLanguage
-        {
-            get { return formsLanguage; }
-        }
-
-        public MyTreeView FormsTree
-        {
-            get { return formsTree; }
-        }
-
-        public ZedGraphControl GraphDuration
-        {
-            get { return graphDuration; }
-        }
-
-        public ZedGraphControl GraphFailures
-        {
-            get { return graphFailures; }
-        }
-
-        public ZedGraphControl GraphMemory
-        {
-            get { return graphMemory; }
-        }
-
-        public ZedGraphControl GraphMemoryHistory
-        {
-            get { return graphMemoryHistory; }
-        }
-
-        public ZedGraphControl GraphTestsRun
-        {
-            get { return graphTestsRun; }
-        }
-
-        public Label LabelDuration
-        {
-            get { return labelDuration; }
-        }
-
-        public Label LabelFailures
-        {
-            get { return labelFailures; }
-        }
-
-        public Label LabelLeaks
-        {
-            get { return labelLeaks; }
-        }
-
-        public Label LabelSpecifyPath
-        {
-            get { return labelSpecifyPath; }
-        }
-
-        public Label LabelTestsRun
-        {
-            get { return labelTestsRun; }
-        }
-
-        public TextBox NightlyBranchUrl
-        {
-            get { return nightlyBranchUrl; }
-        }
-
-        public RadioButton NightlyBuildTrunk
-        {
-            get { return nightlyBuildTrunk; }
-        }
-
-        public DomainUpDown NightlyBuildType
-        {
-            get { return nightlyBuildType; }
-        }
-
-        public Button NightlyDeleteBuild
-        {
-            get { return nightlyDeleteBuild; }
-        }
-
-        public Button NightlyDeleteRun
-        {
-            get { return nightlyDeleteRun; }
-        }
-
-        public NumericUpDown NightlyDuration
-        {
-            get { return nightlyDuration; }
-        }
-
-        public Label NightlyLabelDuration
-        {
-            get { return nightlyLabelDuration; }
-        }
-
-        public Label NightlyLabelFailures
-        {
-            get { return nightlyLabelFailures; }
-        }
-
-        public Label NightlyLabelLeaks
-        {
-            get { return nightlyLabelLeaks; }
-        }
-
-        public Label NightlyLabelTestsRun
-        {
-            get { return nightlyLabelTestsRun; }
-        }
-
-        public ZedGraphControl NightlyGraphMemory
-        {
-            get { return nightlyGraphMemory; }
-        }
-
-        public TabPage NightlyPage
-        {
-            get { return tabNightly; }
-        }
-
-        public TextBox NightlyRoot
-        {
-            get { return nightlyRoot; }
-        }
-
-        public ComboBox NightlyRunDate
-        {
-            get { return nightlyRunDate; }
-        }
-
-        public DateTimePicker NightlyStartTime
-        {
-            get { return nightlyStartTime; }
-        }
-
-        public Label NightlyTestName
-        {
-            get { return nightlyTestName; }
-        }
-
-        public WindowThumbnail NightlyThumbnail
-        {
-            get { return nightlyThumbnail; }
-        }
-
-        public Button NightlyViewLog
-        {
-            get { return nightlyViewLog; }
-        }
-
-        public RadioButton NukeBuild
-        {
-            get { return nukeBuild; }
-        }
-
-        public CheckBox Offscreen
-        {
-            get { return offscreen; }
-        }
-
-        public ComboBox OutputJumpTo
-        {
-            get { return outputJumpTo; }
-        }
-
-        public SplitContainer OutputSplitContainer
-        {
-            get { return outputSplitContainer; }
-        }
-
-        public CheckBox Pass0
-        {
-            get { return pass0; }
-        }
-
-        public CheckBox Pass1
-        {
-            get { return pass1; }
-        }
-
-        public RadioButton PauseFormDelay
-        {
-            get { return pauseFormDelay; }
-        }
-
-        public NumericUpDown PauseFormSeconds
-        {
-            get { return pauseFormSeconds; }
-        }
-
-        public RadioButton PauseTutorialsScreenShots
-        {
-            get { return pauseTutorialsScreenShots; }
-        }
-
-        public NumericUpDown PauseTutorialsSeconds
-        {
-            get { return pauseTutorialsSeconds; }
-        }
-
-        public RadioButton QualityChooseTests
-        {
-            get { return qualityChooseTests; }
-        }
-
-        public TabPage QualityPage
-        {
-            get { return tabQuality; }
-        }
-
-        public NumericUpDown QualityPassCount
-        {
-            get { return qualityPassCount; }
-        }
-
-        public RadioButton QualityPassDefinite
-        {
-            get { return qualityPassDefinite; }
-        }
-
-        public Label QualityTestName
-        {
-            get { return qualityTestName; }
-        }
-
-        public WindowThumbnail QualityThumbnail
-        {
-            get { return qualityThumbnail; }
-        }
-
-        public CheckBox RegenerateCache
-        {
-            get { return regenerateCache; }
-        }
-
-        public Button RunBuild
-        {
-            get { return runBuild; }
-        }
-
-        public Button RunForms
-        {
-            get { return runForms; }
-        }
-
-        public CheckBox RunFullQualityPass
-        {
-            get { return runFullQualityPass; }
-        }
-
-        public RadioButton RunIndefinitely
-        {
-            get { return runIndefinitely; }
-        }
-
-        public NumericUpDown RunLoopsCount
-        {
-            get { return runLoopsCount; }
-        }
-
-        public Button RunNightly
-        {
-            get { return runNightly; }
-        }
-
-        public Button RunQuality
-        {
-            get { return runQuality; }
-        }
-
-        public Button RunTests
-        {
-            get { return runTests; }
-        }
-
-        public Button RunTutorials
-        {
-            get { return runTutorials; }
-        }
-
-        public RadioButton SkipCheckedTests
-        {
-            get { return skipCheckedTests; }
-        }
-
-        public CheckBox StartSln
-        {
-            get { return startSln; }
-        }
-
-        public TabControl Tabs
-        {
-            get { return tabs; }
-        }
-
-        public MyTreeView TestsTree
-        {
-            get { return testsTree; }
-        }
-
-        public CheckBox TestsChinese
-        {
-            get { return testsChinese; }
-        }
-
-        public CheckBox TestsEnglish
-        {
-            get { return testsEnglish; }
-        }
-
-        public CheckBox TestsFrench
-        {
-            get { return testsFrench; }
-        }
-
-        public CheckBox TestsJapanese
-        {
-            get { return testsJapanese; }
-        }
-
-        public RadioButton TutorialsDemoMode
-        {
-            get { return tutorialsDemoMode; }
-        }
-
-        public ComboBox TutorialsLanguage
-        {
-            get { return tutorialsLanguage; }
-        }
-
-        public MyTreeView TutorialsTree
-        {
-            get { return tutorialsTree; }
-        }
-
-        public RadioButton UpdateBuild
-        {
-            get { return updateBuild; }
-        }
+        public TextBox          BranchUrl                   { get { return branchUrl; } }
+        public CheckBox         Build32                     { get { return build32; } }
+        public CheckBox         Build64                     { get { return build64; } }
+        public TextBox          BuildRoot                   { get { return buildRoot; } }
+        public RadioButton      BuildTrunk                  { get { return buildTrunk; } }
+        public Button           ButtonDeleteBuild           { get { return buttonDeleteBuild; } }
+        public Button           ButtonOpenLog               { get { return buttonOpenLog; } }
+        public Button           ButtonViewLog               { get { return buttonViewLog; } }
+        public ComboBox         ComboOutput                 { get { return comboBoxOutput; } }
+        public CommandShell     CommandShell                { get { return commandShell; } }
+        public Button           DeleteNightlyTask           { get { return buttonDeleteNightlyTask; } }
+        public RichTextBox      ErrorConsole                { get { return errorConsole; } }
+        public ComboBox         FormsLanguage               { get { return formsLanguage; } }
+        public MyTreeView       FormsTree                   { get { return formsTree; } }
+        public ZedGraphControl  GraphDuration               { get { return graphDuration; } }
+        public ZedGraphControl  GraphFailures               { get { return graphFailures; } }
+        public ZedGraphControl  GraphMemory                 { get { return graphMemory; } }
+        public ZedGraphControl  GraphMemoryHistory          { get { return graphMemoryHistory; } }
+        public ZedGraphControl  GraphTestsRun               { get { return graphTestsRun; } }
+        public Label            LabelDuration               { get { return labelDuration; } }
+        public Label            LabelFailures               { get { return labelFailures; } }
+        public Label            LabelLeaks                  { get { return labelLeaks; } }
+        public Label            LabelSpecifyPath            { get { return labelSpecifyPath; } }
+        public Label            LabelTestsRun               { get { return labelTestsRun; } }
+        public TextBox          NightlyBranchUrl            { get { return nightlyBranchUrl; } }
+        public RadioButton      NightlyBuildTrunk           { get { return nightlyBuildTrunk; } }
+        public DomainUpDown     NightlyBuildType            { get { return nightlyBuildType; } }
+        public Button           NightlyDeleteBuild          { get { return nightlyDeleteBuild; } }
+        public Button           NightlyDeleteRun            { get { return nightlyDeleteRun; } }
+        public NumericUpDown    NightlyDuration             { get { return nightlyDuration; } }
+        public Label            NightlyLabelDuration        { get { return nightlyLabelDuration; } }
+        public Label            NightlyLabelFailures        { get { return nightlyLabelFailures; } }
+        public Label            NightlyLabelLeaks           { get { return nightlyLabelLeaks; } }
+        public Label            NightlyLabelTestsRun        { get { return nightlyLabelTestsRun; } }
+        public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
+        public TextBox          NightlyRoot                 { get { return nightlyRoot; } }
+        public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
+        public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
+        public Label            NightlyTestName             { get { return nightlyTestName; } }
+        public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }
+        public Button           NightlyViewLog              { get { return nightlyViewLog; } }
+        public RadioButton      NukeBuild                   { get { return nukeBuild; } }
+        public CheckBox         Offscreen                   { get { return offscreen; } }
+        public ComboBox         OutputJumpTo                { get { return outputJumpTo; } }
+        public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
+        public CheckBox         Pass0                       { get { return pass0; } }
+        public CheckBox         Pass1                       { get { return pass1; } }
+        public RadioButton      PauseFormDelay              { get { return pauseFormDelay; } }
+        public NumericUpDown    PauseFormSeconds            { get { return pauseFormSeconds; } }
+        public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
+        public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
+        public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
+        public TabPage          QualityPage                 { get { return tabQuality; } }
+        public NumericUpDown    QualityPassCount            { get { return qualityPassCount; } }
+        public RadioButton      QualityPassDefinite         { get { return qualityPassDefinite; } }
+        public Label            QualityTestName             { get { return qualityTestName; } }
+        public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
+        public CheckBox         RegenerateCache             { get { return regenerateCache; } }
+        public Button           RunBuild                    { get { return runBuild; } }
+        public Button           RunForms                    { get { return runForms; } }
+        public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
+        public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
+        public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
+        public Button           RunNightly                  { get { return runNightly; } }
+        public Button           RunQuality                  { get { return runQuality; } }
+        public Button           RunTests                    { get { return runTests; } }
+        public Button           RunTutorials                { get { return runTutorials; } }
+        public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
+        public CheckBox         StartSln                    { get { return startSln; } }
+        public TabControl       Tabs                        { get { return tabs; } }
+        public MyTreeView       TestsTree                   { get { return testsTree; } }
+        public CheckBox         TestsChinese                { get { return testsChinese; } }
+        public CheckBox         TestsEnglish                { get { return testsEnglish; } }
+        public CheckBox         TestsFrench                 { get { return testsFrench; } }
+        public CheckBox         TestsJapanese               { get { return testsJapanese; } }
+        public RadioButton      TutorialsDemoMode           { get { return tutorialsDemoMode; } }
+        public ComboBox         TutorialsLanguage           { get { return tutorialsLanguage; } }
+        public MyTreeView       TutorialsTree               { get { return tutorialsTree; } }
+        public RadioButton      UpdateBuild                 { get { return updateBuild; } }
 
         #endregion Accessors
 
@@ -1408,9 +1092,6 @@ namespace SkylineTester
 
         private void findTestToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //if (tabs.SelectedIndex > TabTestsIndex && tabs.SelectedIndex != TabOutputIndex)
-            //    return;
-
             using (var findWindow = new FindWindow())
             {
                 if (findWindow.ShowDialog() != DialogResult.OK)

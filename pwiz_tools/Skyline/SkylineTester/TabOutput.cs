@@ -82,6 +82,7 @@ namespace SkylineTester
                 new JumpToPattern("# Pass 2+:"),
                 new JumpToPattern("# Nightly finished"),
             };
+            _findIndex = 0;
 
             MainWindow.OutputJumpTo.Items.Clear();
             MainWindow.OutputJumpTo.Items.Add("Jump to:");
@@ -111,17 +112,19 @@ namespace SkylineTester
                 AddHeading("Build problems");
                 foreach (var problem in _buildProblems)
                     MainWindow.ErrorConsole.AppendText("  {0}".With(problem));
-                MainWindow.ErrorConsole.AppendText("\n");
             }
             if (_failedTests.Count > 0)
             {
+                if (MainWindow.ErrorConsole.TextLength > 0)
+                    MainWindow.ErrorConsole.AppendText("\n");
                 AddHeading("Failed tests");
                 foreach (var test in _failedTests)
                     MainWindow.ErrorConsole.AppendText("  {0}\n".With(test.Split(' ')[1]));
-                MainWindow.ErrorConsole.AppendText("\n");
             }
             if (_leakingTests.Count > 0)
             {
+                if (MainWindow.ErrorConsole.TextLength > 0)
+                    MainWindow.ErrorConsole.AppendText("\n");
                 AddHeading("Leaking tests");
                 foreach (var test in _leakingTests)
                 {
@@ -130,7 +133,6 @@ namespace SkylineTester
                     var leakedBytes = parts[3];
                     MainWindow.ErrorConsole.AppendText("  {0,-46} {1,8} bytes\n".With(testName, leakedBytes));
                 }
-                MainWindow.ErrorConsole.AppendText("\n");
             }
             _addingErrors = false;
 
@@ -289,7 +291,7 @@ namespace SkylineTester
             _addingErrors = true;
             try
             {
-                SelectLine(MainWindow.ErrorConsole, MainWindow.ErrorConsole.SelectionStart - 1);
+                SelectLine(MainWindow.ErrorConsole, MainWindow.ErrorConsole.SelectionStart);
                 var searchText = MainWindow.ErrorConsole.SelectedText;
                 if (searchText.StartsWith("  "))
                 {
@@ -317,7 +319,6 @@ namespace SkylineTester
         {
             public readonly string Pattern;
             public int Index;
-            public int LastSearchIndex;
 
             public JumpToPattern(string pattern)
             {
@@ -326,16 +327,37 @@ namespace SkylineTester
         }
 
         private List<JumpToPattern> _jumpList;
+        private int _findIndex;
 
         public void PrepareJumpTo()
         {
+            var text = MainWindow.CommandShell.Text;
+            int findCount = 0;
             foreach (var jumpItem in _jumpList)
             {
-                if (jumpItem.Index > 0)
-                    continue;
-                jumpItem.Index = 1 + MainWindow.CommandShell.Text.IndexOf(
-                    jumpItem.Pattern, jumpItem.LastSearchIndex, StringComparison.CurrentCulture);
-                jumpItem.LastSearchIndex = MainWindow.CommandShell.TextLength;
+                if (jumpItem.Index == 0)
+                    findCount++;
+            }
+
+            while (findCount > 0)
+            {
+                if (_findIndex == text.Length)
+                    break;
+                int index = text.IndexOf('\n', _findIndex);
+                if (index < 0)
+                    break;
+                foreach (var jumpItem in _jumpList)
+                {
+                    if (jumpItem.Index == 0 &&
+                        text.Length - index >= jumpItem.Pattern.Length &&
+                        text.IndexOf(jumpItem.Pattern, index, jumpItem.Pattern.Length, StringComparison.CurrentCulture) == index)
+                    {
+                        jumpItem.Index = index;
+                        findCount--;
+                        break;
+                    }
+                }
+                _findIndex = index + 1;
             }
 
             _jumpList = _jumpList.OrderBy(item => item.Index).ToList();
@@ -356,12 +378,13 @@ namespace SkylineTester
         {
             if (jumpToIndex == 0)
                 return;
+            MainWindow.OutputJumpTo.SelectedIndex = 0;
             var pattern = "\n" + ((string) MainWindow.OutputJumpTo.Items[jumpToIndex]).TrimStart();
             var index = _jumpList.FindIndex(
                 jumpToPattern => jumpToPattern.Pattern == pattern);
             MainWindow.CommandShell.Select(index >= 0 ? _jumpList[index].Index + 1 : MainWindow.CommandShell.TextLength - 1, 0);
             MainWindow.CommandShell.ScrollToCaret();
-            MainWindow.OutputJumpTo.SelectedIndex = 0;
+            MainWindow.CommandShell.Focus();
         }
     }
 }

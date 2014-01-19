@@ -80,9 +80,9 @@ namespace SkylineTester
                 MainWindow.ShowOutput();
         }
 
-        public static void RunUI(Action action)
+        public static void RunUI(Action action, int delayMsec = 0)
         {
-            MainWindow.Invoke(action);
+            MainWindow.RunUI(action, delayMsec);
         }
     }
 }
