@@ -170,13 +170,22 @@ namespace pwiz.Skyline
                 // Force live reports (though tests may reset this)
                 //Settings.Default.EnableLiveReports = true;
 
-                using (MainWindow = new SkylineWindow())
-                {
-                    // Position window offscreen for stress testing.
-                    if (SkylineOffscreen)
-                        FormEx.SetOffscreen(MainWindow);
+                MainWindow = new SkylineWindow();
 
-                    Application.Run(MainWindow);
+                // Position window offscreen for stress testing.
+                if (SkylineOffscreen)
+                    FormEx.SetOffscreen(MainWindow);
+
+                Application.Run(MainWindow);
+
+                // Occasional cross-thread access exception during stress testing.  Not sure why.
+                try
+                {
+                    MainWindow.Dispose();
+                }
+// ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
                 }
             }
             catch (Exception x)

@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestUtil
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
-        private const int WAIT_TIME = 60*1000;    // 1 minute
+        private const int WAIT_TIME = 60 * 1000;    // 1 minute
 
         static AbstractFunctionalTest()
         {
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestUtil
                 Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead."); // Not L10N
                 return _testFilesZips[0];
             }
-            set { TestFilesZipPaths = new[] {value}; }
+            set { TestFilesZipPaths = new[] { value }; }
         }
 
         /// <summary>
@@ -87,8 +87,8 @@ namespace pwiz.SkylineTestUtil
                     {
                         string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                         string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads");
-                        string urlFolder = zipPath.Split('/')[zipPath.Split('/').Length-2]; // usually "tutorial" or "PerfTest"
-                        string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0])+urlFolder.Substring(1)); // "tutorial"->"Tutorial"
+                        string urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
+                        string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
                         string zipFilePath = Path.Combine(targetFolder, fileName);
                         if (!File.Exists(zipFilePath))
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestUtil
                 Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead."); // Not L10N
                 return TestFilesDirs[0];
             }
-            set { TestFilesDirs = new[] {value}; }
+            set { TestFilesDirs = new[] { value }; }
         }
         public TestFilesDir[] TestFilesDirs { get; set; }
 
@@ -134,18 +134,18 @@ namespace pwiz.SkylineTestUtil
         protected static void RunUI(Action act)
         {
             SkylineInvoke(() =>
-                              {
-                                  try
-                                  {
-                                      act();
-                                  }
-                                  catch(Exception e)
-                                  {
-                                      Assert.Fail(e.ToString());
-                                  }
-                              });
+            {
+                try
+                {
+                    act();
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail(e.ToString());
+                }
+            });
         }
-        
+
         private static void SkylineInvoke(Action act)
         {
             SkylineWindow.Invoke(act);
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestUtil
             if (waitForDocument)
                 WaitForDocumentChange(doc);
         }
-        
+
         protected static void SelectNode(SrmDocument.Level level, int iNode)
         {
             var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected static void SetClipboardTextUI(string text)
         {
-            RunUI(() => SetClipboardText(text));            
+            RunUI(() => SetClipboardText(text));
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestUtil
 
         protected static void SetExcelFileClipboardText(string filePath, string page, int columns, bool hasHeader)
         {
-            SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));            
+            SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));
         }
 
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
@@ -287,12 +287,12 @@ namespace pwiz.SkylineTestUtil
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
-            int waitCycles = millis/SLEEP_INTERVAL;
-            
+            int waitCycles = millis / SLEEP_INTERVAL;
+
             // Wait a little longer for stress test.
             if (Program.StressTest)
             {
-                waitCycles = waitCycles*150/100;
+                waitCycles = waitCycles * 150 / 100;
             }
 
             // Wait longer if running multiple processes simultaneously.
@@ -304,8 +304,7 @@ namespace pwiz.SkylineTestUtil
             // Wait a little longer for debug build.
             if (ExtensionTestContext.IsDebugMode)
             {
-                waitCycles = waitCycles*150/100;
-
+                waitCycles = waitCycles * 150 / 100;
             }
 
             return waitCycles;
@@ -398,7 +397,7 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForCondition(int millis, Func<bool> func)
         {
             int waitCycles = GetWaitCycles(millis);
-            for (int i = 0; i < waitCycles; i ++)
+            for (int i = 0; i < waitCycles; i++)
             {
                 if (func())
                     return true;
@@ -419,7 +418,7 @@ namespace pwiz.SkylineTestUtil
             for (int i = 0; i < waitCycles; i++)
             {
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));                
+                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -458,9 +457,9 @@ namespace pwiz.SkylineTestUtil
             if (IsCheckLiveReportsCompatibility)
                 CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             if (IsDemoMode)
-                Thread.Sleep(3*1000);
+                Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
-                Thread.Sleep(Program.PauseSeconds*1000);
+                Thread.Sleep(Program.PauseSeconds * 1000);
             else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
                 PauseAndContinueForm.Show(description);
         }
@@ -549,10 +548,15 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-                while (Program.MainWindow == null || !Program.MainWindow.IsHandleCreated)
+                int waitCycles = GetWaitCycles();
+                for (int i = 0; i < waitCycles; i++)
                 {
+                    if (Program.MainWindow != null && Program.MainWindow.IsHandleCreated)
+                        break;
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
+                Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
+                    "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 Settings.Default.Reset();
                 Settings.Default.EnableLiveReports = IsEnableLiveReports;
                 RunTest();
@@ -570,7 +574,7 @@ namespace pwiz.SkylineTestUtil
         {
             // Clean-up before running the test
             RunUI(() => SkylineWindow.UseKeysOverride = true);
-            
+
             // Use internal clipboard for testing so that we don't collide with other processes
             // using the clipboard during a test run.
             ClipboardEx.UseInternalClipboard();
@@ -584,7 +588,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             DoTest();
-            
+
             if (doClipboardCheck)
             {
                 RunUI(() => Assert.AreEqual(clipboardCheckText, Clipboard.GetText()));
@@ -632,9 +636,9 @@ namespace pwiz.SkylineTestUtil
 
             // Actually throwing an exception can cause an infinite loop in MSTest
             _testExceptions.AddRange(from form in OpenForms
-                                        where !(form is SkylineWindow)
-                                        select new AssertFailedException(
-                                            String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
+                                     where !(form is SkylineWindow)
+                                     select new AssertFailedException(
+                                         String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
 
             _testCompleted = true;
 
@@ -674,7 +678,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         SkylineWindow.LoadLayout(fileStream);
                     }
-                });            
+                });
             }
         }
 
@@ -683,11 +687,11 @@ namespace pwiz.SkylineTestUtil
         public void FindNode(string searchText)
         {
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-                                                                   {
-                                                                       findPeptideDlg.SearchString = searchText;
-                                                                       findPeptideDlg.FindNext();
-                                                                       findPeptideDlg.Close();
-                                                                   });
+            {
+                findPeptideDlg.SearchString = searchText;
+                findPeptideDlg.FindNext();
+                findPeptideDlg.Close();
+            });
         }
 
         public static void RemovePeptide(string peptideSequence, bool isDecoy = false)
@@ -703,7 +707,7 @@ namespace pwiz.SkylineTestUtil
             {
                 findPeptideDlg.SearchString = peptideSequence;
                 findPeptideDlg.FindNext();
-                while(!SkylineWindow.SequenceTree.SelectedDocNodes.Contains(nodePeptide))
+                while (!SkylineWindow.SequenceTree.SelectedDocNodes.Contains(nodePeptide))
                     findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
@@ -762,7 +766,7 @@ namespace pwiz.SkylineTestUtil
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
             RunUI(() => addStaticModDlg.Modification = mod);
-            
+
             if (pauseForScreenShot)
                 PauseForScreenShot();
 
@@ -823,7 +827,7 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
             WaitForCondition(waitForLoadSeconds * 1000,
-                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
+                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
         }
 
         public void ImportResultsFiles(IEnumerable<string> fileNames, int waitForLoadSeconds = 420)

@@ -390,7 +390,7 @@ namespace TestRunner
             {
                 pass++;
                 passEnd++;
-                if (loopCount < 0)
+                if (loopCount <= 0)
                     passEnd = int.MaxValue;
                 languages = qualityLanguages;
             }

@@ -1494,7 +1494,7 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         public static void TryTwice(Action action)
         {
-            Try<IOException>(action, 2);
+            Try<IOException>(action, 4);
         }
 
         /// <summary>
@@ -1507,7 +1507,7 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         /// <param name="loopCount">how many loops to try before failing</param>
         /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
-        public static void Try<TEx>(Action action, int loopCount, int milliseconds = 500) where TEx : Exception
+        public static void Try<TEx>(Action action, int loopCount = 4, int milliseconds = 500) where TEx : Exception
         {
             for (int i = 1; i < loopCount; i++)
             {

@@ -22,6 +22,7 @@ using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -52,27 +53,30 @@ namespace pwiz.SkylineTestUtil
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
             try
             {
-                using (ZipFile zipFile = ZipFile.Read(pathZip))
+                Helpers.Try<Exception>(() =>
                 {
-                    foreach (ZipEntry zipEntry in zipFile)
+                    using (ZipFile zipFile = ZipFile.Read(pathZip))
                     {
-                        bool persist = false;
-                        if (persistentFiles != null)
+                        foreach (ZipEntry zipEntry in zipFile)
                         {
-                            foreach (var persistentFile in persistentFiles)
+                            bool persist = false;
+                            if (persistentFiles != null)
                             {
-                                if (zipEntry.FileName.Replace('\\', '/').Contains(persistentFile.Replace('\\', '/')))
+                                foreach (var persistentFile in persistentFiles)
                                 {
-                                    zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
-                                    persist = true;
-                                    break;
+                                    if (zipEntry.FileName.Replace('\\', '/').Contains(persistentFile.Replace('\\', '/')))
+                                    {
+                                        zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
+                                        persist = true;
+                                        break;
+                                    }
                                 }
                             }
+                            if (!persist)
+                                zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                         }
-                        if (!persist)
-                            zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                     }
-                }
+                });
             }
             catch (Exception ex)
             {
