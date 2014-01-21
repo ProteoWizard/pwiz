@@ -526,8 +526,7 @@ namespace pwiz.SkylineTestUtil
                         continue;
                     try
                     {
-                        var dir2 = dir;
-                        Helpers.TryTwice(dir2.Dispose);
+                        dir.Dispose();
                     }
                     catch (Exception x)
                     {
