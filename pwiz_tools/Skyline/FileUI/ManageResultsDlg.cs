@@ -461,13 +461,21 @@ namespace pwiz.Skyline.FileUI
 
         public void MinimizeResults()
         {
-            using (var dlg = new MinimizeResultsDlg(DocumentUIContainer))
+            var dlg = new MinimizeResultsDlg(DocumentUIContainer);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    // If the MinimizeResultsDlg did work then cancel out of this dialog
-                    DialogResult = DialogResult.Cancel;
-                }
+                // If the MinimizeResultsDlg did work then cancel out of this dialog
+                DialogResult = DialogResult.Cancel;
+            }
+
+            // Got exception: Can't call Dispose while doing CreateHandle???
+            try
+            {
+                dlg.Dispose();
+            }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch (Exception)
+            {
             }
         }
 

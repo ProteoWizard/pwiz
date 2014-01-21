@@ -61,7 +61,7 @@ namespace TestRunner
 
         public bool ArgAsBool(string argName)
         {
-            switch (_args[argName].ToLower())
+            switch (_args[argName].ToLower().Trim())
             {
                 case "on":
                 case "true":

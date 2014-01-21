@@ -338,7 +338,8 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+                if (i == waitCycles - 1)
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
             }
             return null;
         }
@@ -402,7 +403,8 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForCondition", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+                if (i == waitCycles - 1)
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForCondition", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
             }
             return false;
         }
@@ -422,7 +424,8 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+                if (i == waitCycles - 1)
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
             }
             return false;
         }
@@ -519,10 +522,12 @@ namespace pwiz.SkylineTestUtil
             {
                 foreach (TestFilesDir dir in TestFilesDirs)
                 {
+                    if (dir == null)
+                        continue;
                     try
                     {
-                        if (dir != null)
-                            dir.Dispose();
+                        var dir2 = dir;
+                        Helpers.TryTwice(dir2.Dispose);
                     }
                     catch (Exception x)
                     {
@@ -548,15 +553,10 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-                int waitCycles = GetWaitCycles();
-                for (int i = 0; i < waitCycles; i++)
+                while (Program.MainWindow == null || !Program.MainWindow.IsHandleCreated)
                 {
-                    if (Program.MainWindow != null && Program.MainWindow.IsHandleCreated)
-                        break;
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
-                Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
-                    "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 Settings.Default.Reset();
                 Settings.Default.EnableLiveReports = IsEnableLiveReports;
                 RunTest();

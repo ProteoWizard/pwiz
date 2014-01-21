@@ -49,10 +49,10 @@ namespace pwiz.Skyline.Util
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-
             if (Program.FunctionalTest && disposing)
                 _undisposedForms.Remove(this);
+
+            base.Dispose(disposing);
         }
 
         public void CheckDisposed()

@@ -110,7 +110,8 @@ namespace TestRunnerLib
         private static string GetAssemblyPath(string assembly)
         {
             var runnerExeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (runnerExeDirectory == null) throw new ApplicationException("Can't find path to TestRunner.exe");
+            if (runnerExeDirectory == null)
+                throw new ApplicationException("Can't find path to TestRunner.exe");
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
