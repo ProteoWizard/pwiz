@@ -1,0 +1,104 @@
+<html>
+<head>
+<!--
+FILE: index.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 5/9/11
+PROJECT: BiblioSpec
+-->
+
+<title>BiblioSpec 2.0</title>
+
+<body bgcolor=white>
+<blockquote>
+<img src="BiblioSpec_logo.gif" alt="BiblioSpec"/>
+<p>
+<b>BiblioSpec</b> is a suite of software tools for creating and
+searching MS/MS peptide spectrum libraries. 
+
+<h3>New in version 2.0</h3>
+<p>
+BiblioSpec 2.0 stores spectrum libraries as 
+<a href="http://www.sqlite.org/">sqlite3</a> files. Sqlite3 is a
+light-weight, open-source database format which can be read and
+manipulated with any sqlite3 tools in addition to BiblioSpec.  For
+more information about the library format, see the 
+<a href="fileFormats.html#lib">file formats</a> page.  The new format
+is a departure from <a href="v1.0/index.html">version 1.0</a> which
+uses a unique binary format.  This means that tools and libraries from
+the two versions are not compatible.  There is, however, a 
+<a href="soon.html">conversion tool</a> for turning a version
+1.0 library into a sqlite3 library. </p>
+
+
+<h3>BiblioSpec components</h3>
+The <b>BiblioSpec</b> package contains the following programs: </p> 
+
+<ul>
+<li>
+<a href="BlibBuild.html">BlibBuild</a> creates a library of peptide
+MS/MS spectra from a variety of different database search results.
+
+<li>
+<a href="BlibFilter.html">BlibFilter</a> removes redundant spectra from a library.
+
+<li>
+<a href="BlibSearch.html">BlibSearch</a> searches a spectrum library
+for matches to query spectra, printing the results to a
+<a href="fileFormats.html#report">report file.</a></li>
+
+<li>
+<a href="BlibToMs2.html">BlibToMS2</a> writes a library in a text 
+<a href="fileFormats.html#ms2">MS2</a> file format.
+
+<li>
+<a href="soon.html">LibToSqlite3</a> converts a 
+<a href="v1.0/index.html">BiblioSpec 1.0</a> library to a 2.0 library
+in sqlite3 format.
+
+</ul>
+
+<h3>Downloads</h3>
+
+<p>
+BiblioSpec 2.0 is freely available under the BSD license.  Follow
+these links to download </p>
+<ul>
+<li><a href="download.html">pre-compiled binaries</a>
+<li><a href="download.html">source code</a>
+</ul
+
+<p>
+Several reference libraries will be available soon for download.
+
+<h3>More information</h3>
+
+<p>
+An overview of all <a href="fileFormats.html">file formats</a>
+including a list of all the database search files that can be used to
+build libraries.
+
+<p>
+Join a <a href="soon.html">users list</a> to receive updates about new
+releases.
+
+<p>
+Join a <a href="soon.html">support list</a> to ask questions and discuss
+BiblioSpec with users and developers.
+
+<p>
+Send questions and comments to <img src="email.png">
+
+<hr>
+<p>
+BiblioSpec is written by Barbara Frewen, Ning Zhang, Brendan MacLean, Michael
+J. MacCoss, William Stafford Noble in the Department of Genome
+Sciences at the University of Washington. 
+
+
+</blockquote>
+
+
+</body>
+
+</html>

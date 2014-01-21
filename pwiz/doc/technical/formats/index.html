@@ -1,0 +1,127 @@
+<html>
+
+<head>
+    <title>ProteoWizard Technical Documentation: Installation and Data Formats</title>
+    <link rel="stylesheet" href="../main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+    <a href="../index.html">Technical documentation home</a>
+
+    <h2>ProteoWizard Installation and Data Formats</h2>
+    <hr/>
+
+    <h3>Installation</h3>
+    <p>
+        To install the ProteoWizard tools, download the binary package for your platform, and unzip it into the
+        directory of your choice.
+    </p>
+    <p>
+        For convenience, adjust your "PATH" environment variable to include your ProteoWizard tools directory, so
+        that the command line tools may be run from any directory.
+    </p>
+
+    <hr/>
+
+    <h3>Open Formats</h3>
+    <p>
+        ProteoWizard supports the reading/writing of the following open formats on all platforms:
+    </p>
+    <ul>
+        <li><a href="mzml.html">mzML</a></li>
+        <li><a href="mzxml.html">mzXML</a></li>
+        <li>MGF</li>
+        <li>MS2/CMS2/BMS2
+        <li><a href="mzidentml.html">mzIdentML</a></li>
+    </ul>
+
+    <hr/>
+
+    <h3>Proprietary Formats supported by ProteoWizard</h3>
+
+    <p>
+        ProteoWizard depends on vendor-supplied software libraries to access data 
+        in proprietary formats.
+    </p>
+
+    <h4>Common requirements:</h4>
+    <ul>
+        <li>Windows XP, Vista, or 7</li>
+        <li><a href="http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en" target="_blank">MSVC 2008 SP1 Redistributable Package (x86)</a> installed</li>
+        <li><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=ab99342f-5d1a-413d-8319-81da479ab0d7&displaylang=en" target="_blank">.NET Framework 3.5 SP1</a> installed</li>
+    </ul>
+
+    <p>
+        You can check to see whether the required components are installed:
+        <ul>
+            <li>(Windows XP) Control Panel->Add/Remove Programs</li>
+            <li>(Windows Vista/7) Control Panel->Programs and Features</li>
+        </ul>
+    </p>
+    
+
+    <h4>Vendor-specific requirements:</h4>
+
+    <p>
+        Accessing certain vendor-format data files requires a separate download/install, as indicated in the table below.
+    </p>
+
+    <table>
+        <tr>
+            <th>Vendor</th>
+            <th>Formats</th>
+            <th>Vendor Required Software</th>
+            <th>Required Runtime Libraries</th>
+            <th>License</td>
+        </tr>
+        <tr>
+            <td>Agilent</td>
+            <td>MassHunter .d</td>
+            <td>distributed with ProteoWizard</td>
+            <td>none</td>
+            <td>Apache</td>
+        </tr>
+        <tr>
+            <td>Applied Biosystems</td>
+            <td>WIFF</td>
+            <td><a href="https://products.appliedbiosystems.com/ab/en/US/adirect/ab?cmd=catNavigate2&catID=601524" target="_blank">Protein Pilot 3 free trial</a></td>
+            <td>none</td>
+            <td>Protein Pilot</td>
+        </tr>
+        <tr>
+            <td>Applied Biosystems</td>
+            <td>T2D</td>
+            <td><a href="https://products.appliedbiosystems.com/ab/en/US/adirect/ab?cmd=catNavigate2&catID=601640" target="_blank">Data Explorer</a></td>
+            <td>none</td>
+            <td>Data Explorer</td>
+        </tr>
+        <tr>
+            <td>Bruker</td>
+            <td>Compass .d, YEP, BAF, FID</td>
+            <td>distributed with ProteoWizard</td>
+            <td><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647&displaylang=en" target="_blank">MSVC 2005 SP1 x86 redistributable</a></td>
+            <td>NDA</td>
+        </tr>
+        <tr>
+            <td>Thermo Fisher</td>
+            <td>RAW</td>
+            <td>distributed with ProteoWizard</td>
+            <td>none</td>
+            <td><a href="http://proteowizard.svn.sourceforge.net/viewvc/proteowizard/trunk/pwiz/pwiz/utility/vendor_api/thermo/LICENSE" target="_blank">MSFileReader</a></td>
+        </tr>
+        <tr>
+            <td>Waters</td>
+            <td>MassLynx .raw</td>
+            <td><a href="http://www.waters.com/waters/nav.htm?locale=en_US&cid=513164" target="_blank">MassLynx</a></td>
+            <td>none</td>
+            <td>MassLynx</td>
+        </tr>
+    </table>
+
+    <br/>
+    <hr/>
+    <a href="../index.html">Technical documentation home</a>
+
+</body>
+</html>
+

@@ -1,0 +1,77 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: hello_pwiz tutorial</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+<h1>hello_pwiz Tutorial</h1>
+
+<p>
+    We highly recommend using the Boost Build system for new projects. &nbsp;  Nothing will prevent you
+    from creating a Visual Studio, XCode, or makefile project that uses ProteoWizard.  Instructions to 
+    get you started are <a href="tutorial_hello_non_boost.html">here</a>&nbsp;
+    However, using the Boost Build system from the start will help you create a tool that
+    runs on all major platforms (Windows, Linux, OSX).
+</p>
+
+<p>
+    This tutorial will take you through the steps to create a new command-line tool using ProteoWizard,
+    using the Boost Build system.
+</p>
+
+<ol>
+    <li><p>
+    Download and <a href="building.html">build ProteoWizard</a>.&nbsp;  
+    In what follows, <code>&lt;pwiz_root&gt;</code> refers to the directory where you put ProteoWizard. 
+    </p></li>
+
+    <li><p>
+    Make a new directory <code>&lt;pwiz_root&gt;/hello_pwiz</code>
+    </p></li>
+
+    <li>
+    <p>
+    Put these two files in <code>&lt;pwiz_root&gt;/hello_pwiz</code>:
+        <ul>
+        <li> <code><a href="hello_pwiz/hello_pwiz.cpp">hello_pwiz.cpp</a></code> </li>
+        <li> <code><a href="hello_pwiz/Jamfile.jam">Jamfile.jam</a></code> </li>
+        </ul>
+    </p>
+    <p>
+    (These files may also be found in <code>&lt;pwiz_root&gt;/doc/technical/hello_pwiz</code>).
+    </p></li>
+
+    <li><p>
+    Build hello_pwiz from <code>&lt;pwiz_root&gt;</code>:<br/>
+    <code>
+    $ quickbuild.sh hello_pwiz
+    </code>
+    </p></li>
+
+    <li><p>
+    You should now have an executable <code>hello_pwiz</code> in <code>&lt;pwiz_root&gt;/hello_pwiz</code>  You can test it:<br/>
+    <code>
+    $ hello_pwiz/hello_pwiz example_data/tiny.pwiz.1.1.mzML
+    </code>
+    </li></p>
+
+</ol>
+
+<p>
+    Now you're up and running!
+</p>
+
+<br/>
+
+<hr/>
+<a href="index.html">Technical documentation home</a>
+
+
+</body>
+
+
+</html>
+

@@ -1,0 +1,1372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:mqm="http://www.matrixscience.com/xmlns/schema/quantitation_1" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.matrixscience.com/xmlns/schema/quantitation_1" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="quantitation" type="mqm:quantitationType">
+		<xs:annotation>
+			<xs:documentation>Configuration file for Mascot quantitation methods</xs:documentation>
+		</xs:annotation>
+		<xs:unique name="method_name_unique">
+			<xs:selector xpath="mqm:method"/>
+			<xs:field xpath="@name"/>
+		</xs:unique>
+	</xs:element>
+	<xs:simpleType name="calcType">
+		<xs:annotation>
+			<xs:documentation>How to calculate ratio for protein</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="median">
+				<xs:annotation>
+					<xs:documentation>Protein ratio is the median of the peptide ratios</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="average">
+				<xs:annotation>
+					<xs:documentation>Protein ratio is the unweighted average of the peptide ratios</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="weighted">
+				<xs:annotation>
+					<xs:documentation>Protein ratio is the weighted average of the peptide ratios</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="componentType">
+		<xs:annotation>
+			<xs:documentation>Data for individual peak</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="moverz" type="mqm:moverzType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Reporter ion m/z</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="modifications" type="mqm:modification_groupType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Can be variable or exclusive, with maximum of one exclusive group</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isotope" type="mqm:isotopeType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Element for non-SILAC metabolic labelling. Applies to residues only.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="file_index" type="mqm:file_indexType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Data file identifier (replicate) </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="correction" type="mqm:correctionType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Isotope and impurity correction factors for this component</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="name" type="mqm:componentNameType" use="required">
+			<xs:annotation>
+				<xs:documentation>Used to identify this component in the expression for a ratio</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="isotopeType">
+		<xs:annotation>
+			<xs:documentation>Specifies which element should be substituted by which isotope. Empty element means "no substitutions".</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="old" type="mqm:elementType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Isotope to be replaced, usually the most abundant natural isotope of the element</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="new" type="mqm:elementType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Isotopic label</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="compositionType">
+		<xs:annotation>
+			<xs:documentation>Unimod composition</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="element" type="mqm:elementRefType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Chemical element reference</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="correctionTypeType">
+		<xs:annotation>
+			<xs:documentation>Isotope corrrection factor</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="AB certificate">
+				<xs:annotation>
+					<xs:documentation>Percentage isotopic impurities for each reagent as tabulated on a Certificate of Analysis.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="averagine">
+				<xs:annotation>
+					<xs:documentation>Mass dependent isotope overlap. Isotope purity specified using element attribute of correction</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="impurity">
+				<xs:annotation>
+					<xs:documentation>Isotope under-enrichment</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="elementType">
+		<xs:annotation>
+			<xs:documentation>symbols for elements</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="integrationMethodType">
+		<xs:annotation>
+			<xs:documentation>Integration method</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="none">
+				<xs:annotation>
+					<xs:documentation>No integration</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="simpsons">
+				<xs:annotation>
+					<xs:documentation>Numerical integration using Simpsons rule</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="gaussian">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="trapezium">
+				<xs:annotation>
+					<xs:documentation>Numerical integration using the trapezium rule</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="emg">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="quadratic">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="quartic">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ionSeriesType">
+		<xs:annotation>
+			<xs:documentation>symbols for sequence ion series</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="a">
+				<xs:annotation>
+					<xs:documentation>a series fragment ions</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="b">
+				<xs:annotation>
+					<xs:documentation>b series fragment ions</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="c">
+				<xs:annotation>
+					<xs:documentation>c series fragment ions</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="x">
+				<xs:annotation>
+					<xs:documentation>x series fragment ions</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="y">
+				<xs:annotation>
+					<xs:documentation>y series fragment ions</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="z">
+				<xs:annotation>
+					<xs:documentation>z series fragment ions</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="z+1"/>
+			<xs:enumeration value="z+2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="local_definitionType">
+		<xs:annotation>
+			<xs:documentation>Composition based modification definition</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="specificity" type="mqm:specificityType" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Unimod style specificity</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="delta" type="mqm:compositionType">
+				<xs:annotation>
+					<xs:documentation>The modification delta defined as a composition</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Ignore" type="mqm:compositionType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Artefact peaks associated with this modification</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="title" type="xs:string" use="required">
+			<xs:annotation>
+				<xs:documentation>Name conforming to Mascot modification naming rules</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="massUnitType">
+		<xs:annotation>
+			<xs:documentation>mass tolerance units</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Da">
+				<xs:annotation>
+					<xs:documentation>Daltons</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="mmu">
+				<xs:annotation>
+					<xs:documentation>milliDaltons</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="%">
+				<xs:annotation>
+					<xs:documentation>Fraction expressed as parts per 100</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="ppm">
+				<xs:annotation>
+					<xs:documentation>Fraction expressed as parts per million</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="minorVersion_t">
+		<xs:annotation>
+			<xs:documentation>Schema minor version number</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:unsignedShort">
+			<xs:maxInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="modeType">
+		<xs:annotation>
+			<xs:documentation>Specificity for a group of modifications</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="fixed">
+				<xs:annotation>
+					<xs:documentation>Quantitative modification</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="variable">
+				<xs:annotation>
+					<xs:documentation>Non-quantitative modification</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="exclusive">
+				<xs:annotation>
+					<xs:documentation>A given peptide may carry one or the other set of modifications, but never a mixture of both</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="normaliseType">
+		<xs:annotation>
+			<xs:documentation>normalisation method</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="none">
+				<xs:annotation>
+					<xs:documentation>No normalisation</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="sum">
+				<xs:annotation>
+					<xs:documentation>(Reporter protocol only) The total intensity of each reporter ion, summed across all MS/MS spectra, is made equal</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="average">
+				<xs:annotation>
+					<xs:documentation>For each ratio, the geometric mean of all reported values for peptide matches is made unity</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="median">
+				<xs:annotation>
+					<xs:documentation>For each ratio, the median of all reported values for peptide matches is made unity</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="outlierType">
+		<xs:annotation>
+			<xs:documentation>method of detecting outliers</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="none">
+				<xs:annotation>
+					<xs:documentation>No outlier removal</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="dixons">
+				<xs:annotation>
+					<xs:documentation>Detect and remove outliers using Dixon's method</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="auto">
+				<xs:annotation>
+					<xs:documentation>Detect and remove outliers using Dixon's method or Rosner's method according to the number of values</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="grubbs">
+				<xs:annotation>
+					<xs:documentation>Detect and remove outliers using Grubb's method</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="rosners">
+				<xs:annotation>
+					<xs:documentation>Detect and remove outliers using Rosner's method</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="parametersType">
+		<xs:annotation>
+			<xs:documentation>Parameter name and value pair</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="parameter" type="mqm:parameterType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Name and value pair</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="positionType">
+		<xs:annotation>
+			<xs:documentation>Unimod position</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Anywhere">
+				<xs:annotation>
+					<xs:documentation>Unrestricted</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Any N-term">
+				<xs:annotation>
+					<xs:documentation>Modification only if residue or terminus is at peptide N-term</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Any C-term">
+				<xs:annotation>
+					<xs:documentation>Modification only if residue or terminus is at peptide C-term</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Protein N-term">
+				<xs:annotation>
+					<xs:documentation>Modification only if residue or terminus is at N-term of intact protein</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Protein C-term">
+				<xs:annotation>
+					<xs:documentation>Modification only if residue or terminus is at C-term of intact protein</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="precursorRangeType">
+		<xs:annotation>
+			<xs:documentation>Integration mass range</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="envelope">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="monoisotopic 5%">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="monoisotopic 50%">
+				<xs:annotation>
+					<xs:documentation>Not used</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="proteinScoreType">
+		<xs:annotation>
+			<xs:documentation>Mascot protein score method</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="standard">
+				<xs:annotation>
+					<xs:documentation>Use Mascot standard protein scoring</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="mudpit">
+				<xs:annotation>
+					<xs:documentation>Use Mascot mudpit protein scoring</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ratioType">
+		<xs:annotation>
+			<xs:documentation>A ratio to be reported</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="numerator_component" type="mqm:numerator_denominatorType" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Each component has a coefficient to allow linear combinations to be specified.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="denominator_component" type="mqm:numerator_denominatorType" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Each component has a coefficient to allow linear combinations to be specified.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="name" type="mqm:ratioNameType" use="required">
+			<xs:annotation>
+				<xs:documentation>Descriptive label suitable for use in a report, e.g. 117/114. Must be unique</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="scanType">
+		<xs:annotation>
+			<xs:documentation>Data source for integration</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="survey">
+				<xs:annotation>
+					<xs:documentation>Precursor peak area from survey scan</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="zoom">
+				<xs:annotation>
+					<xs:documentation>Precursor peak area from zoom scan</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="header">
+				<xs:annotation>
+					<xs:documentation>XIC value taken from file header</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="fragments">
+				<xs:annotation>
+					<xs:documentation>Sum of fragment peak areas from MS/MS scan</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="mrm">
+				<xs:annotation>
+					<xs:documentation>Multiple reaction monitoring</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="siteType">
+		<xs:annotation>
+			<xs:documentation>Unimod site</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="A">
+				<xs:annotation>
+					<xs:documentation>Alanine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="C">
+				<xs:annotation>
+					<xs:documentation>Cysteine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="D">
+				<xs:annotation>
+					<xs:documentation>Aspartic acid</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="E">
+				<xs:annotation>
+					<xs:documentation>Glutamic acid</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F">
+				<xs:annotation>
+					<xs:documentation>Phenylalanine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="G">
+				<xs:annotation>
+					<xs:documentation>Glycine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="H">
+				<xs:annotation>
+					<xs:documentation>Histidine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="I">
+				<xs:annotation>
+					<xs:documentation>Isoleucine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="J">
+				<xs:annotation>
+					<xs:documentation>Unassigned</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="K">
+				<xs:annotation>
+					<xs:documentation>Lysine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="L">
+				<xs:annotation>
+					<xs:documentation>Leucine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="M">
+				<xs:annotation>
+					<xs:documentation>Methionine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="N">
+				<xs:annotation>
+					<xs:documentation>Asparagine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="O">
+				<xs:annotation>
+					<xs:documentation>Unassigned</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="P">
+				<xs:annotation>
+					<xs:documentation>Proline</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Q">
+				<xs:annotation>
+					<xs:documentation>Glutamine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="R">
+				<xs:annotation>
+					<xs:documentation>Arginine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="S">
+				<xs:annotation>
+					<xs:documentation>Serine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="T">
+				<xs:annotation>
+					<xs:documentation>Threonine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="U">
+				<xs:annotation>
+					<xs:documentation>Selenocysteine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="V">
+				<xs:annotation>
+					<xs:documentation>Valine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="W">
+				<xs:annotation>
+					<xs:documentation>Tryptophan</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Y">
+				<xs:annotation>
+					<xs:documentation>Tyrosine</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="N-term">
+				<xs:annotation>
+					<xs:documentation>Amino terminus</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="C-term">
+				<xs:annotation>
+					<xs:documentation>Carboxy terminus</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="thresholdType">
+		<xs:annotation>
+			<xs:documentation>Significance threshold for peptide matches</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="minimum score">
+				<xs:annotation>
+					<xs:documentation>Significance threshold for peptide matches is a minimum score</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="maximum expect">
+				<xs:annotation>
+					<xs:documentation>Significance threshold for peptide matches is a maximum expectation value</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="at least identity">
+				<xs:annotation>
+					<xs:documentation>Significance threshold for peptide matches is score at or above identity threshold</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="at least homology">
+				<xs:annotation>
+					<xs:documentation>Significance threshold for peptide matches is score at or above homology threshold</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="timeUnitType">
+		<xs:annotation>
+			<xs:documentation>time unit units</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="seconds">
+				<xs:annotation>
+					<xs:documentation>seconds</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="minutes">
+				<xs:annotation>
+					<xs:documentation>minutes</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="%">
+				<xs:annotation>
+					<xs:documentation>Fraction expressed as parts per 100</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="ppm">
+				<xs:annotation>
+					<xs:documentation>Fraction expressed as parts per million</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--Types below here created to simplify xml validation-->
+	<xs:complexType name="averageType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="componentNameType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="compType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="correctionType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:double">
+				<xs:attribute name="shift" type="xs:integer" use="optional">
+					<xs:annotation>
+						<xs:documentation>Used with type=AB certificate, e.g -1</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="type" type="mqm:correctionTypeType" use="optional" default="AB certificate">
+					<xs:annotation>
+						<xs:documentation>Type of isotope correction</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="element" type="xs:string" use="optional">
+					<xs:annotation>
+						<xs:documentation>Used with type=impurity, e.g. 18O</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="elementRefType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="symbol" type="mqm:elementType" use="required">
+			<xs:annotation>
+				<xs:documentation>Symbol for element or isotope</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="number" type="xs:integer" use="optional" default="1">
+			<xs:annotation>
+				<xs:documentation>Count for this element or isotope. Can be negative</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="emptyType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="file_indexType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="integrationType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType">
+				<xs:attribute name="method" type="mqm:integrationMethodType" use="required">
+					<xs:annotation>
+						<xs:documentation>Integration algorithm</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="source" type="mqm:scanType" use="optional" default="survey">
+					<xs:annotation>
+						<xs:documentation>Scan type containing data to be integrated</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="mass_delta" type="xs:double" use="optional">
+					<xs:annotation>
+						<xs:documentation>Not used</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="mass_delta_unit" type="mqm:massUnitType" use="optional" default="Da">
+					<xs:annotation>
+						<xs:documentation>Not used</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="elution_time_delta" type="xs:double" use="optional">
+					<xs:annotation>
+						<xs:documentation>Elution time difference allowed when trying to pair up components</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="elution_time_delta_unit" type="mqm:timeUnitType" use="optional" default="seconds">
+					<xs:annotation>
+						<xs:documentation>Units for elution_time_delta</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="elution_profile_correlation_threshold" type="xs:double" use="optional">
+					<xs:annotation>
+						<xs:documentation>Threshold on the standard error for a straight line fit of the component intensities used to calculate a ratio.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="processing_options" type="mqm:processing_optionsType" use="optional">
+					<xs:annotation>
+						<xs:documentation>Not used</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="precursor_range" type="mqm:precursorRangeType" use="optional" default="envelope">
+					<xs:annotation>
+						<xs:documentation>Not used</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="massType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="0.0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="methodNameType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="methodType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="modifications" type="mqm:modification_groupType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Can be fixed or variable, but not exclusive</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="component" type="mqm:componentType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Identifies a component used to calculate a ratio. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="report_ratio" type="mqm:ratioType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Ratio to be reported</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="exclusion" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Exclude peptides from quantitation if they contain modifications from this group</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="seq" type="mqm:seqType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Sequence qualifier in Mascot notation, e.g. *-TSL</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="comp" type="mqm:compType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Composition qualifier in Mascot notation, e.g. *[C]</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="quality" type="mqm:qualityType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Quality thresholds for selecting individual spectra or matches</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="integration" type="mqm:integrationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Method and parameters to be used to integrate precursor over time. If missing, no integration is performed</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="outliers" type="mqm:outliersType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Method and parameters to be used to remove outliers. If missing, no outlier removal is performed</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="normalisation" type="mqm:normalisationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Method of normailsing ratios for a complete data set. If missing, no normalisation is performed</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="protocol" type="mqm:protocolType">
+				<xs:annotation>
+					<xs:documentation>How the quantitative information is obtained</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="name" type="mqm:methodNameType" use="required">
+			<xs:annotation>
+				<xs:documentation>Descriptive name that will appear in drop down lists, etc.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="constrain_search" type="xs:boolean" use="optional" default="true">
+			<xs:annotation>
+				<xs:documentation>If any modification group specifies exclusive mode, then apply this constraint during the search so that only matches that can be used for quantitation will be returned.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="protein_ratio_type" type="mqm:calcType" use="optional" default="average">
+			<xs:annotation>
+				<xs:documentation>Method of calculating the ratio for the protein from the individual peptide ratios.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="report_detail" type="xs:boolean" use="optional" default="true">
+			<xs:annotation>
+				<xs:documentation>Whether to display quantitation results at the peptide match level</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="min_num_peptides" type="xs:integer" use="optional" default="2">
+			<xs:annotation>
+				<xs:documentation>Minimum number of peptide matches for reporting quantitation at protein level</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="prot_score_type" type="mqm:proteinScoreType" use="optional">
+			<xs:annotation>
+				<xs:documentation>standard or mudpit</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sig_threshold_value" type="mqm:sig_threshold_valueType" use="optional">
+			<xs:annotation>
+				<xs:documentation>Mascot score significance threshold as a probabliltiy</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="show_sub_sets" type="xs:double" use="optional">
+			<xs:annotation>
+				<xs:documentation>Whether to show proteins which contain a sub-set of peptide matches</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="require_bold_red" type="xs:boolean" use="optional">
+			<xs:annotation>
+				<xs:documentation>Only show proteins that contain a least one "bold red" peptide match</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="description" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation>Free text string for description</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="mod_fileType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="modification_groupNameType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="modification_groupType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="mod_file" type="mqm:mod_fileType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A Mascot modification name</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="unmodified" type="mqm:unmodifiedType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Unimod style specificity for an unmodified residue or terminus</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="local_definition" type="mqm:local_definitionType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A complete modification definition</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation>Used to identify the modification group in an exclusion element </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="mode" type="mqm:modeType" use="required">
+			<xs:annotation>
+				<xs:documentation>One of fixed, variable or exclusive. Applies to all the modifications in the group</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="moverzType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="monoisotopic" type="mqm:massType" use="required">
+			<xs:annotation>
+				<xs:documentation>Monoisotopic m/z</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="average" type="mqm:massType" use="required">
+			<xs:annotation>
+				<xs:documentation>Average m/z</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="multiplexType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType">
+				<xs:sequence>
+					<xs:element name="ion_series" type="mqm:ionSeriesType" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation>Fragment ion series (multiplex)</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+				<xs:attribute name="exclude_internal_label" type="xs:boolean" use="optional" default="true">
+					<xs:annotation>
+						<xs:documentation>Label allowed at terminus only</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="ion_intensity_threshold" type="xs:double" use="optional" default="0.1">
+					<xs:annotation>
+						<xs:documentation>Fragment ion intensity threshold as fraction of base peak</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="exclude_isobaric_fragments" type="xs:boolean" use="optional" default="true">
+					<xs:annotation>
+						<xs:documentation>Exclude fragment ions which have a potential isobaric interferences</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="min_ion_pairs" type="xs:integer" use="optional" default="4">
+					<xs:annotation>
+						<xs:documentation>Minimum number of fragment ion pairs required before a peptide match is used for quantitation</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="NeutralLossType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:compositionType">
+				<xs:attribute name="flag" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>Neutral losses can be potentially a scoring series (false) or non-scoring satellite peaks (true)</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="normalisationType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType">
+				<xs:attribute name="method" type="mqm:normaliseType" use="required">
+					<xs:annotation>
+						<xs:documentation>Name of normalisation procedure</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="numerator_denominatorType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string" use="required">
+					<xs:annotation>
+						<xs:documentation>component name</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="coefficient" type="xs:double" use="optional" default="1.0">
+					<xs:annotation>
+						<xs:documentation>Coefficient used to form linear combination of values</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="outliersType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType">
+				<xs:attribute name="method" type="mqm:outlierType" use="required">
+					<xs:annotation>
+						<xs:documentation>Outlier detection algorithm</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="parameterNameType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="parameterType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:anySimpleType">
+				<xs:attribute name="name" type="mqm:parameterNameType" use="required">
+					<xs:annotation>
+						<xs:documentation>Name of the parameter</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="description" type="xs:string" use="optional">
+					<xs:annotation>
+						<xs:documentation>Free text description of this parameter</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="PepNeutralLossType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:compositionType">
+				<xs:attribute name="required" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>True if this is a required neutral loss</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="precursorType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType">
+				<xs:attribute name="allow_mass_time_match" type="xs:boolean" use="required">
+					<xs:annotation>
+						<xs:documentation>False to require database matches for all components in a ratio</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="allow_elution_shift" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>True to allow the components in a ratio to have shifted elution times</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="all_charge_states" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>True to extend the mass and time matching to cover contiguous charge states</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="processing_optionsType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="5"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="protocolType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="null" type="mqm:emptyType">
+				<xs:annotation>
+					<xs:documentation>No quantitation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="reporter" type="mqm:reporterType">
+				<xs:annotation>
+					<xs:documentation>Use intensities of specific reporter ion fragment peaks within an MS/MS spectrum</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="precursor" type="mqm:precursorType">
+				<xs:annotation>
+					<xs:documentation>Use intensities of precursors within a single dataset</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="multiplex" type="mqm:multiplexType">
+				<xs:annotation>
+					<xs:documentation>Use intensities of sequence ion fragment peaks within an MS/MS spectrum</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="replicate" type="mqm:replicateType">
+				<xs:annotation>
+					<xs:documentation>Use intensities of precursors from multiple datasets</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="average" type="mqm:averageType">
+				<xs:annotation>
+					<xs:documentation>Use average intensities of precursors in a database search result</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="qualityType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType">
+				<xs:attribute name="min_precursor_charge" type="xs:integer" use="optional" default="1">
+					<xs:annotation>
+						<xs:documentation>Unsigned integer, corresponding to abs(charge)</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="isolated_precursor" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>True to test for the presence of interfering peaks in the survey scan</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="minimum_a1" type="xs:double" use="optional" default="0.0">
+					<xs:annotation>
+						<xs:documentation>Hsu, J. L., et al., Beyond quantitative proteomics: Signal enhancement of the a(1) ion as a mass tag for peptide sequencing using dimethyl labeling, Journal of Proteome Research 4 101-108 (2005)</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="pep_threshold_type" type="mqm:thresholdType" use="optional" default="maximum expect">
+					<xs:annotation>
+						<xs:documentation>Type of significance threshold for peptide matches</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="pep_threshold_value" type="xs:double" use="optional" default="0.05">
+					<xs:annotation>
+						<xs:documentation>Value of significance threshold for peptide matches (only used by certain threshold types)</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="quantitationType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="method" type="mqm:methodType" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A complete method, identified by a descriptive name</xs:documentation>
+				</xs:annotation>
+				<xs:unique name="component_name_unique">
+					<xs:selector xpath="mqm:component"/>
+					<xs:field xpath="@name"/>
+				</xs:unique>
+				<xs:key name="component_name_key">
+					<xs:selector xpath="mqm:component"/>
+					<xs:field xpath="@name"/>
+				</xs:key>
+				<xs:unique name="report_ratio_name_unique">
+					<xs:selector xpath="mqm:report_ratio"/>
+					<xs:field xpath="@name"/>
+				</xs:unique>
+				<xs:keyref name="report_ratio_numerator_constraint" refer="mqm:component_name_key">
+					<xs:selector xpath="mqm:report_ratio/mqm:numerator_component"/>
+					<xs:field xpath="@name"/>
+				</xs:keyref>
+				<xs:keyref name="report_ratio_denominator_constraint" refer="mqm:component_name_key">
+					<xs:selector xpath="mqm:report_ratio/mqm:denominator_component"/>
+					<xs:field xpath="@name"/>
+				</xs:keyref>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="majorVersion" type="xs:unsignedShort" use="required" fixed="1">
+			<xs:annotation>
+				<xs:documentation>Major version number</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="minorVersion" type="mqm:minorVersion_t" use="required">
+			<xs:annotation>
+				<xs:documentation>Minor version number</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="ratioNameType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="replicateType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="reporterType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="mqm:parametersType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="seqType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="sig_threshold_valueType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:double">
+			<xs:minInclusive value="1E-18"/>
+			<xs:maxInclusive value="1E-1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="specificityType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="NeutralLoss" type="mqm:NeutralLossType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A neutral loss for the sequence ions, e.g. loss of phosphate</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PepNeutralLoss" type="mqm:PepNeutralLossType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A neutral loss from the precursor</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="site" type="mqm:siteType" use="required">
+			<xs:annotation>
+				<xs:documentation>Residue code or terminus label</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="position" type="mqm:positionType" use="required">
+			<xs:annotation>
+				<xs:documentation>E.g. Anywhere</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="unmodifiedType">
+		<xs:annotation>
+			<xs:documentation>Type created to simplify xml validation</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="site" type="mqm:siteType" use="required">
+					<xs:annotation>
+						<xs:documentation>Residue code or terminus label</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="position" type="mqm:positionType" use="required">
+					<xs:annotation>
+						<xs:documentation>E.g. Anywhere</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+</xs:schema>

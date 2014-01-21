@@ -1,0 +1,66 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="seems.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ShowScanMzLabels" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowChromatogramTimeLabels" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowScanMatchedAnnotations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowScanUnmatchedAnnotations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ChromatogramMatchToleranceOverride" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ScanMatchToleranceOverride" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="TimeMatchTolerance" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
+    <Setting Name="MzMatchTolerance" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.5</Value>
+    </Setting>
+    <Setting Name="MainFormLocation" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="MainFormWindowState" Type="System.Windows.Forms.FormWindowState" Scope="User">
+      <Value Profile="(Default)">Normal</Value>
+    </Setting>
+    <Setting Name="MainFormSize" Type="System.Drawing.Size" Scope="User">
+      <Value Profile="(Default)">640, 480</Value>
+    </Setting>
+    <Setting Name="ShowScanIntensityLabels" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowChromatogramUnmatchedAnnotations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowChromatogramMatchedAnnotations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ShowChromatogramIntensityLabels" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="TimeMatchToleranceUnit" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MzMatchToleranceUnit" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="LastGraphFormLocation" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="LastGraphFormWindowState" Type="System.Windows.Forms.FormWindowState" Scope="User">
+      <Value Profile="(Default)">Maximized</Value>
+    </Setting>
+    <Setting Name="LastGraphFormSize" Type="System.Drawing.Size" Scope="User">
+      <Value Profile="(Default)">320, 240</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

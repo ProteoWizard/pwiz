@@ -1,0 +1,14 @@
+#!/bin/bash
+
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
+
+packagedir=build/packages/$(scripts/release/get_version)
+
+ls -lt $packagedir
+
+echo "Ready to upload to SourceForge"
+read -p "user: " user 
+
+rsync -avP -e ssh $packagedir/* $user@frs.sourceforge.net:uploads/
+

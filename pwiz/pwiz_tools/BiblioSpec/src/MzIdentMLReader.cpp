@@ -1,0 +1,309 @@
+//
+// $Id$
+//
+//
+// Original author: Barbara Frewen <frewen@u.washington.edu>
+//
+// Copyright 2012 University of Washington - Seattle, WA 98195
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+/**
+ * The MzIdentMLReader class definition.  A class to parse the
+ * mzIdentML files, particularly those produced by Scaffold.
+ */
+
+#include "MzIdentMLReader.h"
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+
+using namespace std;
+using namespace pwiz;
+using namespace identdata;
+
+namespace BiblioSpec {
+
+MzIdentMLReader::MzIdentMLReader
+    (BlibBuilder& maker,
+     const char* mzidFileName,
+     const ProgressIndicator* const parent_progress)
+    : BuildParser(maker, mzidFileName, parent_progress)
+{
+    analysisType_ = UNKNOWN_ANALYSIS;
+    pwizReader_ = new IdentDataFile(mzidFileName);
+    list_iter_ = pwizReader_->dataCollection.analysisData.spectrumIdentificationList.begin();
+    list_end_ = pwizReader_->dataCollection.analysisData.spectrumIdentificationList.end();
+
+    lookUpBy_ = NAME_ID;
+    scoreThreshold_ = 0;
+}
+
+MzIdentMLReader::~MzIdentMLReader()
+{
+    delete pwizReader_;
+}
+    
+/**
+ * Implementation of BuildParser virtual method.  Reads the .mzid file,
+ * stores psms, organized by spectrum file, and imports all spectra.
+ */
+bool MzIdentMLReader::parseFile(){
+    Verbosity::debug("Reading psms from the file.");
+    collectPsms();
+    
+    // for each file
+    if( fileMap_.size() > 1 ){
+        initSpecFileProgress((int)fileMap_.size());
+    }
+    
+    map<string, string> mapSourceFiles;
+    vector<pwiz::identdata::SourceFilePtr>& sourceFiles = pwizReader_->dataCollection.inputs.sourceFile;
+    for(size_t i = 0; i < sourceFiles.size(); i++){
+        string location = sourceFiles[i]->location;
+        if (!location.empty())
+        {
+            size_t dot = location.find_last_of('.');
+            size_t slash = location.find_last_of("\\/");
+            string key = (dot != string::npos && slash != string::npos && slash < dot)
+                ? location.substr(slash + 1, dot - slash - 1)
+                : location;
+            mapSourceFiles[key] = location;
+        }
+    }
+
+    PSM_SCORE_TYPE scoreType = UNKNOWN_SCORE_TYPE;
+    switch (analysisType_) {
+        case SCAFFOLD_ANALYSIS:
+            scoreType = SCAFFOLD_SOMETHING;
+            break;
+        case BYONIC_ANALYSIS:
+            scoreType = BYONIC_PEP;
+            break;
+        case MSGF_ANALYSIS:
+            scoreType = MSGF_SCORE;
+            lookUpBy_ = SCAN_NUM_ID;
+            break;
+    }
+
+    map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
+    vector<const char*> specExtensions;
+    specExtensions.push_back(".MGF");
+    specExtensions.push_back(".mzXML");
+    specExtensions.push_back(".mzML");
+    for(; fileIterator != fileMap_.end(); ++fileIterator) {
+        vector<string> pathParts;
+        boost::split(pathParts, fileIterator->first, boost::is_any_of(";"));
+        string specFileroot = getFileRoot(pathParts[0]);
+        setSpecFileName(specFileroot.c_str(), specExtensions);
+
+        string sourceFile = pathParts[1];
+        if (!mapSourceFiles[sourceFile].empty())
+            sourceFile = mapSourceFiles[sourceFile];
+
+        // move from map to psms_
+        psms_ = fileIterator->second;
+        if (sourceFile.empty())
+            buildTables(scoreType);
+        else
+            buildTables(scoreType, sourceFile);
+    }
+
+    return true;
+}
+
+/**
+ *  Read through the whole file to find all PSMs.  Save those that
+ *  pass the score threshold and are not decoys.  Nested data
+ *  structure is
+ *  SpectrumIdentificationList -- lists of spectra, one list per file
+ *     SpectrumIdentificationResult -- the spectra in each list
+ *         SpectrumIdenficiationItem -- specific peptide match to the spec
+ *             PeptideEvidencePtr -- one for each prot in which pep is found
+ */
+void MzIdentMLReader::collectPsms(){
+    // 1 SpectrumIdentificationList = 1 .MGF file
+    for(; list_iter_ != list_end_; ++list_iter_){
+        
+        // 1 SpectrumIdentifiationResult = 1 spectrum
+        for(result_iter_ = (**list_iter_).spectrumIdentificationResult.begin(); 
+            result_iter_ != (**list_iter_).spectrumIdentificationResult.end();
+            ++result_iter_)
+        {
+            SpectrumIdentificationResult& result = **result_iter_;
+            string idStr = result.spectrumID;
+            string filename = result.spectraDataPtr->location;
+            filename += ";";
+            filename += getFilenameFromID(idStr);
+            
+            // 1 SpectrumIdentificationItem = 1 psm
+            for(item_iter_ = result.spectrumIdentificationItem.begin(); 
+                item_iter_ != result.spectrumIdentificationItem.end();
+                ++item_iter_)
+            {
+                SpectrumIdentificationItem& item = **item_iter_;
+
+                // only include top-ranked PSMs, skip decoys
+                if( item.rank != 1 || item.peptideEvidencePtr.front()->isDecoy ){ 
+                    continue;
+                }
+
+                // skip if it doesn't pass score threshold
+                double score = getScore(item);
+                if (!passThreshold(score)) {
+                    continue;
+                }
+
+                // now get the psm info
+                curPSM_ = new PSM();
+                switch (analysisType_) {
+                    case BYONIC_ANALYSIS:
+                        curPSM_->specName = result.cvParam(MS_spectrum_title).valueAs<string>();
+                        break;
+                    case MSGF_ANALYSIS:
+                        if (result.hasCVParam(MS_scan_number_s__OBSOLETE)) {
+                            curPSM_->specKey = result.cvParam(MS_scan_number_s__OBSOLETE).valueAs<int>();
+                        } else {
+                            // If still no scan number, look for it in the spectrum id
+                            vector<string> parts;
+                            boost::split(parts, idStr, boost::is_any_of(" "));
+                            for (vector<string>::const_iterator i = parts.begin(); i != parts.end(); ++i) {
+                                if (idStr.compare(0, 6, "scan=") == 0) {
+                                    curPSM_->specKey = boost::lexical_cast<int>(idStr.substr(5));
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        curPSM_->specName = idStr;
+                        break;
+                }
+                curPSM_->score = score;
+                curPSM_->charge = item.chargeState;
+                extractModifications(item.peptidePtr, curPSM_);
+                
+                // add the psm to the map
+                Verbosity::comment(V_DETAIL, "For file %s adding PSM: "
+                                   "scan '%s', charge %d, sequence '%s'.",
+                                   filename.c_str(), curPSM_->specName.c_str(),
+                                   curPSM_->charge, curPSM_->unmodSeq.c_str());
+                map<string, vector<PSM*> >::iterator mapAccess = 
+                    fileMap_.find(filename);
+                if( mapAccess == fileMap_.end() ){ // not found, add the file
+                    vector<PSM*> tmpPsms(1, curPSM_);
+                    fileMap_[filename] = tmpPsms;
+                } else {  // add this psm to existing file entry
+                    (mapAccess->second).push_back(curPSM_);
+                }
+                curPSM_ = NULL;
+            } // next item (PSM)
+        } // next result (spectrum)
+    } // next list (file)
+}
+
+
+/**
+ * Using the modified peptide sequence, with modifications of the form
+ * +mass or -mass, set the unmodSeq and mods fields of the psm.
+ */
+void MzIdentMLReader::extractModifications(PeptidePtr peptide, PSM* psm){
+
+    vector<ModificationPtr>::const_iterator itMod=peptide->modification.begin(); 
+    vector<SubstitutionModificationPtr>::const_iterator itSubst=peptide->substitutionModification.begin(); 
+    while (itMod!=peptide->modification.end() || itSubst!=peptide->substitutionModification.end()){
+
+        int location;
+        double massDelta;
+        if (itMod!=peptide->modification.end() && (itSubst==peptide->substitutionModification.end() ||
+                                                   (*itMod)->location < (*itSubst)->location)) {
+            ModificationPtr mod = *itMod++;
+            location = mod->location;
+            massDelta = mod->monoisotopicMassDelta != 0 ? mod->monoisotopicMassDelta : mod->avgMassDelta;
+        } else {
+            SubstitutionModificationPtr mod = *itSubst++;
+            location = mod->location;
+            massDelta = mod->monoisotopicMassDelta != 0 ? mod->monoisotopicMassDelta : mod->avgMassDelta;
+        }
+        // N-terminal modifications can be set to location zero, which is not supported
+        // in BiblioSpec.  Instead, N-terminal modifications are treated as modifictions
+        // to the first amino acid residue, as in X! Tandem.
+        location = max(location, 1);
+        psm->mods.push_back(SeqMod(location, massDelta));
+    }
+
+    psm->unmodSeq = peptide->peptideSequence;
+}
+
+/**
+ * Look through the CVParams of the item and return the score for the
+ * peptide probability.
+ */
+double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
+
+    // look through all params to find the probability
+    vector<CVParam>::const_iterator it=item.cvParams.begin(); 
+    for(; it!=item.cvParams.end(); ++it){
+        string name = cvTermInfo((*it).cvid).name;
+        if (name == "Scaffold: Peptide Probability" // ": " in file but being
+            || name == "Scaffold:Peptide Probability") { // returned as ":P"
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = SCAFFOLD_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(SCAFFOLD);
+            } else if (analysisType_ != SCAFFOLD_ANALYSIS)
+                Verbosity::error("Scaffold score(s) found in non-Scaffold analysis");
+            return boost::lexical_cast<double>(it->value);
+        } else if (name == "Byonic: Peptide AbsLogProb") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = BYONIC_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(BYONIC);
+            } else if (analysisType_ != BYONIC_ANALYSIS)
+                Verbosity::error("ByOnic score(s) found in non-ByOnic analysis");
+            return pow(10, -1 * boost::lexical_cast<double>(it->value));
+        } else if (name == "MS-GF:QValue") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = MSGF_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(MSGF);
+            } else if (analysisType_ != MSGF_ANALYSIS)
+                Verbosity::error("MSGF+ score(s) found in non-MSGF+ analysis");
+            return boost::lexical_cast<double>(it->value);
+        }
+    }
+
+    return 0; // shouldn't get to here, warning?
+}
+
+bool MzIdentMLReader::passThreshold(double score)
+{
+    switch (analysisType_) {
+        // Scores where lower is better
+        case BYONIC_ANALYSIS:
+        case MSGF_ANALYSIS:
+            return score <= scoreThreshold_;
+        // Scores where higher is better
+        case SCAFFOLD_ANALYSIS:
+            return score >= scoreThreshold_;
+    }
+    Verbosity::error("Can't determine cutoff score, unknown analysis type");
+}
+
+} // namespace
+
+
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * End:
+ */

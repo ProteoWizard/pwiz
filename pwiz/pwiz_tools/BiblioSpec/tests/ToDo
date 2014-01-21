@@ -1,0 +1,48 @@
+Outstanding issues with BibloSpec Tests
+
+1. Mascot tests (build-mascot, check-mascot, build-mascot-15N,
+check-mascot-15N) all require msparser support.  Run those tests
+conditionally on the presence of msparser.  Ideally, we would also run
+a test expected to fail in the absence of msparser.  Boost-build has
+run-fail rule that is just like run, but expects the test to fail.
+
+2. Adding spectra to existing libraries isn't working.  For this test,
+one of the input files gets modified.  Each time this test is run,
+this input file needs to be generated from a clean copy of the
+unmodified file.  This is not currently implemented.  It's also
+possible that there is another problem with this test.  The first step
+would be to run the test commands by hand as they are given in the
+Jamfile (run BlibBuild, run sqlite <db> < check-lib.sql) and confirm
+that they produce the expected output. 
+
+3. BlibFilter is broken on Windows.  Seems that BlibFilter does not
+always select the same best spectrum per peptide on Windows as it does
+on Linux.  In these tests, there are some cases where the same
+spectrum is included twice from demo.ms2 and demo-copy.cms2.  This
+provides an easy way to make sure there are duplicate spectra to
+filter.  
+
+In the case of selecting between two spectra, the results were
+stablized by sorting spec by their ID in the source file (which were
+changed between demo.ms2 and demo-copy.cms2).  In the case of
+selecting between more than two spec, there is at least one case 
+where the maximum average dot product is different on Windows than it
+is on Linux.  This may be due to differences in floating point numbers
+or something else.  One possibly easy way to fix the test would be to
+change the input spectra so that there are not exact copies of the
+same spec in the library.  Adding one peak to spec in demo.ms2 would
+be an easy way to do this.  Would potentially change the results of
+other tests, too.  Ultimately, it would probably be good to figure out
+why the filtered libraries are not the same.
+
+4. BlibSearch is broken on Windows.  These tests were never checked on
+Windows, so it is not surprising.  It may be that the libraries being
+searched are the product of other tests and have been filtered.  In
+that case, it could be the underlying library that is different rather
+than the search results per se.  Try the test on a library built on
+Linux. 
+
+Some specifics on the differences:  In search-decoy, there is a
+different decoy spectrum reported as the best match for at least one
+query.  In search-demo, the dot product is slightly different and the
+number of ions matched is different for the same library spec ID.

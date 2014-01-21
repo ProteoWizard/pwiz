@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AssemblyInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filters\ChromSmoother.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrawPeak.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrawPeakAnnotator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrawPeakFinder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CrawPeakMethod.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msmat\crawutils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filters\GaussSmoother.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ManagedCrawdad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AutoNative.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filters\ChromSmoother.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="counted_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrawPeak.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrawPeakAnnotator.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrawPeakFinder.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CrawPeakMethod.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msmat\crawutils.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filters\GaussSmoother.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagedCrawdad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="Submit.bat">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Update.bat">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

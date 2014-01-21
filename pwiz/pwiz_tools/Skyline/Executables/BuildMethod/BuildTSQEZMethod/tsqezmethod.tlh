@@ -1,0 +1,130 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb50e106).
+//
+// c:\proj\util\tsqezmethbuild\debug\tsqezmethod.tlh
+//
+// C++ source equivalent of Win32 type library C:\\Program Files\\Thermo\\EZMethodXML2.1\\TSQEZMethod.dll
+// compiler-generated file created 09/04/09 at 19:31:15 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace TSQEZMethodLib {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("c9ca7c8c-c924-4c8a-8ed4-1ee46a6cd4cb"))
+/* LIBID */ __TSQEZMethodLib;
+struct /* coclass */ TSQ_EZ_Method;
+struct __declspec(uuid("29b79ccf-f8c6-4a4e-86dc-367804af5ed9"))
+/* dual interface */ ITSQ_EZ_Method;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(ITSQ_EZ_Method, __uuidof(ITSQ_EZ_Method));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("cbb3c0e3-5d3c-4ebd-b83d-160787f95970"))
+TSQ_EZ_Method;
+    // [ default ] interface ITSQ_EZ_Method
+
+struct __declspec(uuid("29b79ccf-f8c6-4a4e-86dc-367804af5ed9"))
+ITSQ_EZ_Method : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT New ( );
+    HRESULT Open (
+        _bstr_t bstrFilePath );
+    HRESULT Save (
+        BSTR * pbstrValidationError );
+    HRESULT SaveAs (
+        _bstr_t bstrFilePath,
+        BSTR * pbstrValidationError );
+    HRESULT Close ( );
+    HRESULT ExportXML (
+        _bstr_t bstrFile );
+    HRESULT ImportXML (
+        _bstr_t bstrFile,
+        BSTR * pbstrError );
+    HRESULT ExportXMLStream (
+        BSTR * pbstrXml );
+    HRESULT ImportXMLStream (
+        _bstr_t bstrXml,
+        BSTR * pbstrError );
+    HRESULT ExportMassListXML (
+        _bstr_t bstrFile );
+    HRESULT ImportMassListXML (
+        _bstr_t bstrFile,
+        BSTR * pbstrError );
+    HRESULT ExportMassListXMLStream (
+        BSTR * pbstrXml );
+    HRESULT ImportMassListXMLStream (
+        _bstr_t bstrXml,
+        BSTR * pbstrError );
+    VARIANT_BOOL Validate (
+        BSTR * pbstrError );
+    HRESULT ImportTuneFile (
+        _bstr_t bstrTuneFile,
+        BSTR * pbstrError );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_New ( ) = 0;
+      virtual HRESULT __stdcall raw_Open (
+        /*[in]*/ BSTR bstrFilePath ) = 0;
+      virtual HRESULT __stdcall raw_Save (
+        /*[out]*/ BSTR * pbstrValidationError ) = 0;
+      virtual HRESULT __stdcall raw_SaveAs (
+        /*[in]*/ BSTR bstrFilePath,
+        /*[out]*/ BSTR * pbstrValidationError ) = 0;
+      virtual HRESULT __stdcall raw_Close ( ) = 0;
+      virtual HRESULT __stdcall raw_ExportXML (
+        /*[in]*/ BSTR bstrFile ) = 0;
+      virtual HRESULT __stdcall raw_ImportXML (
+        /*[in]*/ BSTR bstrFile,
+        /*[out]*/ BSTR * pbstrError ) = 0;
+      virtual HRESULT __stdcall raw_ExportXMLStream (
+        /*[out]*/ BSTR * pbstrXml ) = 0;
+      virtual HRESULT __stdcall raw_ImportXMLStream (
+        /*[in]*/ BSTR bstrXml,
+        /*[out]*/ BSTR * pbstrError ) = 0;
+      virtual HRESULT __stdcall raw_ExportMassListXML (
+        /*[in]*/ BSTR bstrFile ) = 0;
+      virtual HRESULT __stdcall raw_ImportMassListXML (
+        /*[in]*/ BSTR bstrFile,
+        /*[out]*/ BSTR * pbstrError ) = 0;
+      virtual HRESULT __stdcall raw_ExportMassListXMLStream (
+        /*[out]*/ BSTR * pbstrXml ) = 0;
+      virtual HRESULT __stdcall raw_ImportMassListXMLStream (
+        /*[in]*/ BSTR bstrXml,
+        /*[out]*/ BSTR * pbstrError ) = 0;
+      virtual HRESULT __stdcall raw_Validate (
+        /*[out]*/ BSTR * pbstrError,
+        /*[out,retval]*/ VARIANT_BOOL * pbReturn ) = 0;
+      virtual HRESULT __stdcall raw_ImportTuneFile (
+        /*[in]*/ BSTR bstrTuneFile,
+        /*[out]*/ BSTR * pbstrError ) = 0;
+};
+
+//
+// Wrapper method implementations
+//
+
+#include "tsqezmethod.tli"
+
+} // namespace TSQEZMethodLib
+
+#pragma pack(pop)

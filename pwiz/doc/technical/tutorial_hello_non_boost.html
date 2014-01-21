@@ -1,0 +1,114 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: hello_pwiz tutorial</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+<h1>hello_pwiz Tutorial for other build tools</h1>
+
+<p>
+    In order to create a Visual Studio, XCode, or makefile project that uses ProteoWizard, it is 
+    convenient to have all of the libraries in one place.  By default, each one is found down a different
+    directory path unique for one build configuration (e.g. debug or release, static or shared linking).  
+    Having chosen a build configuration you can use the "install" feature to copy those libraries to a 
+    central location. This tutorial will take you through the steps of installing the ProteoWizard 
+    libraries and headers and creating a new command-line tool using ProteoWizard.
+</p>
+
+<ol>
+    <li><p>
+    Download and <a href="building.html">build ProteoWizard</a>.&nbsp;  
+    In what follows, <code>&lt;pwiz_root&gt;</code> refers to the directory where you put ProteoWizard. 
+    </p></li>
+
+    <li><p>
+    Copy the libraries and header files to a central location by running this command from 
+    <code>&lt;pwiz_root&gt;</code>:<br>
+    <code>
+    $ ./quickbuild.sh libraries
+    </code>
+
+    <p>
+    The default system-dependent installation location can be changed with the option 
+    <code>--prefix</code>.  For example, the command
+    <code>
+    $ ./quickbuild.sh libraries --prefix=$HOME/extern
+    </code>
+    will copy the libraries to $HOME/extern/lib and the header files to $HOME/extern/include.  Or you
+    can control the two locations independently with the options <code>--libdir</code> and 
+    <code>--includedir</code>.
+
+    <p>
+    The default directories are
+    <table>
+    <tr><th>Windows</th><td>C:\\</td></tr>
+    <tr><th>Linux</th><td>/usr/local</td></tr>
+    <tr><th>MacOS</th><td>/usr/local</td></tr>
+    </table> 
+
+    <li><p>
+    Make a new directory <code>hello</code> and copy the example file <code><a href=
+    "hello_pwiz/hello_pwiz.cpp">&lt;pwiz_root&gt;/doc/technical/hello_pwiz/hello_pwiz.cpp</a></code>
+    to it.
+
+    <li><p>
+    Build hello_pwiz with the build tools of your choice.  Set your header file include path
+    to look in <code>&lt;prefix&gt;/include</code> and set your library include path to look in
+    <code>&lt;prefix&gt;/lib</code>.  Link to these libraries.
+    <ul>
+    <li>pwiz_data_msdata 
+    <li>pwiz_data_common 
+    <li>pwiz_utility_misc 
+    <li>pwiz_utility_minimxml
+    <li>pwiz_data_msdata_version 
+    <li>boost_system
+    <li>boost_iostreams
+    <li>boost_filesystem
+    <li>boost_thread
+    <li>boost_regex
+    <li>z
+    <li>pthread 
+    </ul>
+
+    <p>
+    Note that this list is specific to the hello_pwiz tool.  Other tools may require additional libraries.
+    Note too that the library names will differ depending on the build configuration.  For example,
+    pwiz_data_msdata has these names:
+    <table>
+    <tr><th>&nbsp;</th><th>Windows</th><th>Linux</th><th>MacOS</th></tr>
+    <tr><th>static linking</th><td>libpwiz_data_msdata.lib</td><td>libpwiz_data_msdata.a</td><td></td></tr>
+    <tr><th>shared linking</th><td>pwiz_data_msdata.dll</td><td>libpwiz_data_msdata.so</td><td></td></tr>
+    </table>
+    <p>
+    Here is an example build command using the g++ compiler.<br>
+    <code>
+    g++ -I/user/local/include/ hello_pwiz.cpp -L/user/local/lib -lpwiz_data_msdata -lpwiz_data_common -lboost_system-gcc44-mt-s -lboost_iostreams-gcc44-mt-s -lpwiz_utility_misc -lboost_filesystem-gcc44-mt-s -lpwiz_utility_minimxml -lz-gcc44-mt-s-1_2 -lboost_thread-gcc44-mt-s -lboost_regex-gcc44-mt-s -pthread -lpwiz_data_msdata_version -o hello_pwiz
+    </code>
+
+    <li><p>
+    You should now have an executable <code>hello_pwiz</code>.  You can test it:<br/>
+    <code>
+    $ hello_pwiz &lt;pwiz_root&gt;example_data/tiny.pwiz.1.1.mzML
+    </code>
+    </li></p>
+
+</ol>
+
+<p>
+    Now you're up and running!
+</p>
+
+<br/>
+
+<hr/>
+<a href="index.html">Technical documentation home</a>
+
+
+</body>
+
+
+</html>
+
