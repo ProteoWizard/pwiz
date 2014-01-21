@@ -424,15 +424,12 @@ namespace SkylineTester
 
         private void TabChanged(object sender, EventArgs e)
         {
-            RunUI(() =>
-            {
-                _tabs[_previousTab].Leave();
-                LastTabIndex = _previousTab;
-                _previousTab = tabs.SelectedIndex;
-                _tabs[_previousTab].Enter();
-            }, 500);
-
+            _tabs[_previousTab].Leave();
+            LastTabIndex = _previousTab;
+            _previousTab = tabs.SelectedIndex;
             _findPosition = 0;
+
+            RunUI(() => _tabs[_previousTab].Enter(), 500);
         }
 
         public void ShowOutput()

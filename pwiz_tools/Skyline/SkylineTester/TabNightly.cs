@@ -253,8 +253,12 @@ namespace SkylineTester
 
         private void UpdateNightly()
         {
-            UpdateThumbnail();
             UpdateRun();
+
+            if (MainWindow.Tabs.SelectedIndex != MainWindow.NightlyTabIndex)
+                return;
+
+            UpdateThumbnail();
             if (MainWindow.NightlyRunDate.SelectedIndex == 0)
                 UpdateGraph();
             UpdateHistory();

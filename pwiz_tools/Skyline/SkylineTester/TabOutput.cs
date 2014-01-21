@@ -382,7 +382,7 @@ namespace SkylineTester
             var pattern = "\n" + ((string) MainWindow.OutputJumpTo.Items[jumpToIndex]).TrimStart();
             var index = _jumpList.FindIndex(
                 jumpToPattern => jumpToPattern.Pattern == pattern);
-            MainWindow.CommandShell.Select(index >= 0 ? _jumpList[index].Index + 1 : MainWindow.CommandShell.TextLength - 1, 0);
+            MainWindow.CommandShell.Select(index >= 0 ? _jumpList[index].Index + 1 : MainWindow.CommandShell.TextLength, 0);
             MainWindow.CommandShell.ScrollToCaret();
             MainWindow.CommandShell.Focus();
         }
