@@ -177,16 +177,6 @@ namespace pwiz.Skyline
                     FormEx.SetOffscreen(MainWindow);
 
                 Application.Run(MainWindow);
-
-                // Occasional cross-thread access exception during stress testing.  Not sure why.
-                try
-                {
-                    MainWindow.Dispose();
-                }
-// ReSharper disable once EmptyGeneralCatchClause
-                catch (Exception)
-                {
-                }
             }
             catch (Exception x)
             {

@@ -468,15 +468,10 @@ namespace pwiz.Skyline.FileUI
                 DialogResult = DialogResult.Cancel;
             }
 
-            // Got exception: Can't call Dispose while doing CreateHandle???
-            try
-            {
-                dlg.Dispose();
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch (Exception)
-            {
-            }
+            // NOTE: We do a manual Dispose rather than "using", because something in the constructor
+            // is occasionally throwing an exception.  Unfortunately, that exception gets masked when
+            // "using" calls Dispose during exception processing, and Dispose throws an exception.
+            dlg.Dispose();
         }
 
         private string[] FindMissingFiles(IEnumerable<ChromatogramSet> chromatogramSets)

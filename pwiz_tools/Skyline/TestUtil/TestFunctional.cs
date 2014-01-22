@@ -552,10 +552,15 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-                while (Program.MainWindow == null || !Program.MainWindow.IsHandleCreated)
+                int waitCycles = GetWaitCycles();
+                for (int i = 0; i < waitCycles; i++)
                 {
+                    if (Program.MainWindow != null && Program.MainWindow.IsHandleCreated)
+                        break;
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
+                Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
+                    "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
                 Settings.Default.Reset();
                 Settings.Default.EnableLiveReports = IsEnableLiveReports;
                 RunTest();
