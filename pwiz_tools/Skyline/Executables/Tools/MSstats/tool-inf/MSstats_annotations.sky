@@ -36,7 +36,6 @@
         <value>Healthy</value>
       </annotation>
       <annotation name="BioReplicate" targets="replicate" type="text" />
-      <annotation name="Run" targets="replicate" type="text" />
     </data_settings>
   </settings_summary>
 </srm_settings>

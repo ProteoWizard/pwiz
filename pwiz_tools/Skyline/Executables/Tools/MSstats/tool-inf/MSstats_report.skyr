@@ -13,7 +13,7 @@
       <column name="T1">Precursor.IsotopeLabelType</column>
       <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_Condition</column>
       <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_BioReplicate</column>
-      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_Run</column>
+      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.FileName</column>
       <column name="T2">Area</column>
       <column name="T1">Precursor.Peptide.StandardType</column>
     </select>
