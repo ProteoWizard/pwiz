@@ -17,6 +17,8 @@ sink()
 
 # Input data
 arguments<-commandArgs(trailingOnly=TRUE);
+# arguments--> C:\Users\Ijae\AppData\Local\Temp\MSstats_Design_Sample_Size_MSstats_Input.csv 1 2 1 1 TRUE 0.05 1.25 1.75
+
 
 ### test argument
 #cat("arguments--> ")
@@ -27,7 +29,7 @@ arguments<-commandArgs(trailingOnly=TRUE);
 #arguments<-c("address", "TRUE", "1", "1", "0.80", "0.05", "1.25", "1.75")
 
 cat("\n\n =======================================")
-cat("\n ** Reading MSstat reports..... \n")
+cat("\n ** Reading the data for MSstats..... \n")
 
 raw<-read.csv(arguments[1])
 
@@ -35,15 +37,19 @@ raw<-read.csv(arguments[1])
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
 
 # get standard protein name from StandardType column
-standardproname<-NULL
+standardpepname<-""
 if(sum(unique(raw$StandardType) %in% "Normalization")!=0){
-	standardproname<-as.character(unique(raw[raw$StandardType=="Normalization","ProteinName"]))
+	standardpepname<-as.character(unique(raw[raw$StandardType=="Normalization","PeptideSequence"]))
 }
 
-# change column name as Intensity
+# change column name 'Area' as Intensity
 colnames(raw)[colnames(raw)=="Area"]<-"Intensity"
 raw$Intensity<-as.character(raw$Intensity)
 raw$Intensity<-as.numeric(raw$Intensity)
+
+# change column name 'FileName' as Run
+colnames(raw)[colnames(raw)=="FileName"]<-"Run"
+
 
 ## impute zero to NA
 raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
@@ -68,21 +74,32 @@ cat("\n ** Data Processing for analysis..... \n")
 optionnormalize<-arguments[2]
 
 ## first check name of global standard
-#if(optionnormalize==3 & is.null(standardproname)){
+#if(optionnormalize==3 & is.null(standardpepname)){
 #	stop(message("Please assign the global standards peptides for normalization using standard proteins."))
 #}
 
 ## input is character??
 if(optionnormalize==0){ inputnormalize<-FALSE }
-if(optionnormalize==1){ inputnormalize<-"constant" }
+if(optionnormalize==1){ inputnormalize<-"equalizeMedians" }
 if(optionnormalize==2){ inputnormalize<-"quantile" }
 if(optionnormalize==3){ inputnormalize<-"globalStandards" }
 if(optionnormalize!=0 & optionnormalize!=1 & optionnormalize!=2 & optionnormalize!=3){ inputnormalize<-FALSE }
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardproname))
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname))
 
 if(class(quantData)!="try-error"){
-	write.csv(quantData,file="dataProcessedData.csv")
+
+	allfiles<-list.files()
+	num<-0
+	filenaming<-"dataProcessedData"
+	finalfile<-"dataProcessedData.csv"
+
+	while(is.element(finalfile,allfiles)){
+		num<-num+1
+		finalfile<-paste(paste(filenaming,num,sep="-"),".csv",sep="")
+	}
+
+	write.csv(quantData,file=finalfile)
 	cat("\n Saved dataProcessedData.csv \n")
 }
 #else{
@@ -154,7 +171,18 @@ result.sample<-try(designSampleSize(data=quantData,numSample=inputnsample,numPep
 #result.sample<-designSampleSize(data=quantData,numSample=TRUE,numPep=2,numTran=3,desiredFC=c(1.25,1.75),FDR=0.05,power=0.8)
 
 if(class(result.sample)!="try-error"){
-	write.csv(result.sample,"SampleSizeCalculation.csv")
+
+	allfiles<-list.files()
+	num<-0
+	filenaming<-"SampleSizeCalculation"
+	finalfile<-"SampleSizeCalculation.csv"
+
+	while(is.element(finalfile,allfiles)){
+		num<-num+1
+		finalfile<-paste(paste(filenaming,num,sep="-"),".csv",sep="")
+	}
+
+	write.csv(result.sample,file=finalfile)
 	cat("\n Saved the Sample Size Calculation. \n")
 }
 #else{
@@ -166,7 +194,18 @@ if(class(result.sample)!="try-error"){
 # visualization for sample size calculation
 
 if(class(result.sample)!="try-error"){
-	pdf("SampleSizePlot.pdf")
+
+	allfiles<-list.files()
+	num<-0
+	filenaming<-"SampleSizePlot"
+	finalfile<-"SampleSizePlot.pdf"
+
+	while(is.element(finalfile,allfiles)){
+		num<-num+1
+		finalfile<-paste(paste(filenaming,num,sep="-"),".pdf",sep="")
+	}
+
+	pdf(finalfile)
 	designSampleSizePlots(data=result.sample)
 	dev.off()
 	cat("\n Saved SampleSizePlot.pdf \n \n")

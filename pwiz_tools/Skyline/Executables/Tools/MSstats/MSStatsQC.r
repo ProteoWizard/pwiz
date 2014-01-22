@@ -25,7 +25,7 @@ arguments<-commandArgs(trailingOnly=TRUE);
 
 
 cat("\n\n =======================================")
-cat("\n ** Reading MSstat reports..... \n")
+cat("\n ** Reading the data for MSstats..... \n")
 
 
 raw<-read.csv(arguments[1])
@@ -34,15 +34,19 @@ raw<-read.csv(arguments[1])
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
 
 # get standard protein name from StandardType column
-standardproname<-""
+standardpepname<-""
 if(sum(unique(raw$StandardType) %in% "Normalization")!=0){
-	standardproname<-as.character(unique(raw[raw$StandardType=="Normalization","ProteinName"]))
+	standardpepname<-as.character(unique(raw[raw$StandardType=="Normalization","PeptideSequence"]))
 }
 
 # change column name as Intensity
 colnames(raw)[colnames(raw)=="Area"]<-"Intensity"
 raw$Intensity<-as.character(raw$Intensity)
 raw$Intensity<-as.numeric(raw$Intensity)
+
+# change column name 'FileName' as Run
+colnames(raw)[colnames(raw)=="FileName"]<-"Run"
+
 
 ## impute zero to NA
 raw[!is.na(raw$Intensity)&raw$Intensity==0,"Intensity"]<-NA
@@ -68,15 +72,26 @@ optionnormalize<-arguments[2]
 
 ## input is character??
 if(optionnormalize==0){ inputnormalize<-FALSE }
-if(optionnormalize==1){ inputnormalize<-"constant" }
+if(optionnormalize==1){ inputnormalize<-"equalizeMedians" }
 if(optionnormalize==2){ inputnormalize<-"quantile" }
 if(optionnormalize==3){ inputnormalize<-"globalStandards" }
 if(optionnormalize!=0 & optionnormalize!=1 & optionnormalize!=2 & optionnormalize!=3){ inputnormalize<-FALSE }
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardproname))
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname))
 
 if(class(quantData)!="try-error"){
-	write.csv(quantData,file="dataProcessedData.csv")
+
+	allfiles<-list.files()
+	num<-0
+	filenaming<-"dataProcessedData"
+	finalfile<-"dataProcessedData.csv"
+
+	while(is.element(finalfile,allfiles)){
+		num<-num+1
+		finalfile<-paste(paste(filenaming,num,sep="-"),".csv",sep="")
+	}
+
+	write.csv(quantData,file=finalfile)
 	cat("\n Saved dataProcessedData.csv \n")
 }
 #else{
