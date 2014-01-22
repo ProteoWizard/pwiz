@@ -514,9 +514,7 @@ namespace pwiz.Skyline.ToolsUI
         public static bool IsInstalled(string identifier)
         {
             return Settings.Default.ToolList.Contains(
-                description =>
-                    description.PackageIdentifier != null &&
-                    description.PackageIdentifier.Equals(identifier));
+                description => Equals(description.PackageIdentifier, identifier));
         }
 
         /// <returns>True if the a tool with the given identifier is the most recent.</returns>
@@ -524,8 +522,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             return Settings.Default.ToolList.Contains(
                     description =>
-                        !string.IsNullOrEmpty(description.PackageIdentifier) &&
-                        description.PackageIdentifier.Equals(identifier) &&
+                        Equals(description.PackageIdentifier, identifier) &&
                         !string.IsNullOrEmpty(description.PackageVersion) &&
                         new Version(description.PackageVersion) >= new Version(version));
         }
@@ -534,8 +531,8 @@ namespace pwiz.Skyline.ToolsUI
         /// is not installed, returns null.</returns>
         public static string GetCurrentVersion(string identifier)
         {
-            var tool =
-                Settings.Default.ToolList.FirstOrDefault(description => description.PackageIdentifier.Equals(identifier));
+            var tool = Settings.Default.ToolList.FirstOrDefault(
+                description => Equals(description.PackageIdentifier, identifier));
             return tool != null ? tool.PackageVersion : null;
         }
 
