@@ -240,8 +240,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public PrecursorResultSummary(Precursor precursor, IEnumerable<PrecursorResult> results)
             : base(precursor.DataSchema)
         {
-            // ReSharper disable once CSharpWarnings::CS0612
+#pragma warning disable 612
             Precursor = precursor;
+#pragma warning restore 612
             var bestRetentionTimes = new List<double>();
             var maxFhwms = new List<double>();
             var totalAreas = new List<double>();

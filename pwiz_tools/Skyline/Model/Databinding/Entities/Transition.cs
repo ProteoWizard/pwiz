@@ -184,8 +184,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public TransitionResultSummary(Transition transition, IEnumerable<TransitionResult> results)
             : base(transition.DataSchema)
         {
-            // ReSharper disable once CSharpWarnings::CS0612
+#pragma warning disable 612
             Transition = transition;
+#pragma warning restore 612
             var retentionTimes = new List<double>();
             var fwhms = new List<double>();
             var areas = new List<double>();
