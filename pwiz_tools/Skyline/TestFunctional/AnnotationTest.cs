@@ -497,6 +497,7 @@ namespace pwiz.SkylineTestFunctional
             });
             const string newValueOfReplicateAnnotation = "New value of replicate annotation";
             Assert.IsNull(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Annotations.GetAnnotation(ANNOTATION_REPLICATE));
+            WaitForConditionUI(() => resultsGridForm.IsComplete);
             RunUI(() =>
             {
                 var colAnnotationReplicate = resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => col.HeaderText == ANNOTATION_REPLICATE);

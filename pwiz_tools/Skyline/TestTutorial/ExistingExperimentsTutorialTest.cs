@@ -443,6 +443,10 @@ namespace pwiz.SkylineTestTutorial
                               SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.PeptideGroups, 0);
                       });
             WaitForGraphs();
+            if (IsEnableLiveReports)
+            {
+                WaitForConditionUI(() => FindOpenForm<LiveResultsGrid>().IsComplete);
+            }
             RunUI(() =>
             {
                 ResultsGridForm.SynchronizeSelection = false;
