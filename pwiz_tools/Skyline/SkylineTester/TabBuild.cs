@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -129,6 +130,15 @@ namespace SkylineTester
                     commandShell.Add("{0} cleanup {1}", subversion.Quote(), buildRoot.Quote());
                     commandShell.Add("{0} update {1}", subversion.Quote(), buildRoot.Quote());
                 }
+            }
+
+            if (nukeBuild || updateBuild)
+            {
+                string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                string tutorialsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads", "Tutorials");
+                commandShell.Add("#@ Deleting Tutorials directory...\n");
+                commandShell.Add("# Deleting Tutorials directory...");
+                commandShell.Add("rmdir /s {0}", tutorialsFolder);
             }
 
             if (nukeBuild)
