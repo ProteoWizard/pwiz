@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         private bool _isDisposed;
 
         public Database()
-            : this(null)
-        {            
+            : this(SrmSettingsList.GetDefault())
+        {
         }
 
         public Database(SrmSettings settings)

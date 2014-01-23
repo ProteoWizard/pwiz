@@ -55,13 +55,13 @@ namespace pwiz.Skyline.Model.Hibernate
             configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml")); // Not L10N
             if (settings != null)
                 AddRatioColumns(configuration, settings);
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.protein, typeof(DbProtein));
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.peptide, typeof(DbPeptide));
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor, typeof(DbPrecursor));
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition, typeof(DbTransition));
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.replicate, typeof(DbProteinResult));
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor_result, typeof(DbPrecursorResult));
-            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition_result, typeof(DbTransitionResult));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.protein, typeof(DbProtein));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.peptide, typeof(DbPeptide));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.precursor, typeof(DbPrecursor));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.transition, typeof(DbTransition));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.replicate, typeof(DbProteinResult));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.precursor_result, typeof(DbPrecursorResult));
+            AddAnnotations(configuration, settings, AnnotationDef.AnnotationTarget.transition_result, typeof(DbTransitionResult));
             return configuration;
         }
 
@@ -130,10 +130,10 @@ namespace pwiz.Skyline.Model.Hibernate
             }
         }
 
-        private static void AddAnnotations(Configuration configuration, AnnotationDef.AnnotationTarget annotationTarget, Type persistentClass)
+        private static void AddAnnotations(Configuration configuration, SrmSettings settings, AnnotationDef.AnnotationTarget annotationTarget, Type persistentClass)
         {
             var mapping = configuration.GetClassMapping(persistentClass);
-            foreach (var annotationDef in Properties.Settings.Default.AnnotationDefList)
+            foreach (var annotationDef in settings.DataSettings.AnnotationDefs)
             {
                 if (!annotationDef.AnnotationTargets.Contains(annotationTarget))
                 {
