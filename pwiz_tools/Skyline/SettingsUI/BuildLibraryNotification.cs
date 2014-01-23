@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -79,6 +80,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void Notify()
         {
+            LocalizationHelper.InitThread();
+
             // Start the timer that will count how long to display it
             _displayTimer.Start();
 

@@ -238,10 +238,11 @@ namespace SkylineTester
             _architecture = (MainWindow.NightlyBuildType.SelectedIndex == 0)
                 ? 32
                 : 64;
+            var architectureList = new[] {_architecture};
             var branchUrl = MainWindow.NightlyBuildTrunk.Checked
                 ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
-            TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), new []{_architecture}, true, false);
+            TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), architectureList, true, false);
 
             MainWindow.AddTestRunner("offscreen=on quality=on loop=-1");
             MainWindow.CommandShell.Add("# Nightly finished.");

@@ -244,14 +244,14 @@
     <value>9, 9</value>
   </data>
   <data name="lblReportError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 36</value>
+    <value>422, 36</value>
   </data>
   <data name="lblReportError.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="lblReportError.Text" xml:space="preserve">
-    <value>An unexpected error has occurred, as shown below.
-Report the error to help improve Skyline.</value>
+    <value>An unexpected error has occurred.  You should save your work
+and restart Skyline.  Report the error to help improve Skyline.</value>
   </data>
   <data name="&gt;&gt;lblReportError.Name" xml:space="preserve">
     <value>lblReportError</value>

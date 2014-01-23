@@ -133,9 +133,11 @@ namespace pwiz.Skyline
                     if (Install.Type == Install.InstallType.release &&
                             (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty))
                     {
-                        var dlg = new UpgradeDlg(licenseVersion);
-                        if (dlg.ShowDialog() == DialogResult.Cancel)
-                            return;
+                        using (var dlg = new UpgradeDlg(licenseVersion))
+                        {
+                            if (dlg.ShowDialog() == DialogResult.Cancel)
+                                return;
+                        }
                     }
 
                     try
@@ -169,6 +171,14 @@ namespace pwiz.Skyline
 
                 // Force live reports (though tests may reset this)
                 //Settings.Default.EnableLiveReports = true;
+
+                if (ReportShutdownDlg.HadUnexpectedShutdown())
+                {
+                    using (var reportShutdownDlg = new ReportShutdownDlg())
+                    {
+                        reportShutdownDlg.ShowDialog();
+                    }
+                }
 
                 MainWindow = new SkylineWindow();
 
@@ -249,6 +259,31 @@ namespace pwiz.Skyline
                     Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
                     Application.ThreadException += ThreadExceptionEventHandler;
                 }
+
+                // Add handler for non-UI thread exceptions. 
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            }
+        }
+
+        private static readonly object _unhandledExceptionLock = new object();
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            // Only the first unhandled exception is reported.
+            lock (_unhandledExceptionLock)
+            {
+                try
+                {
+                    ReportShutdownDlg.SaveExceptionFile((Exception)e.ExceptionObject);
+                }
+// ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex.ToString());
+                }
+
+                // Other threads may continue to execute and cause unhandled exceptions.  Kill the process as soon as possible.
+                Process.GetCurrentProcess().Kill();
             }
         }
 

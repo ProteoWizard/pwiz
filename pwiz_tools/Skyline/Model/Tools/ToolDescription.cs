@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -345,13 +346,12 @@ namespace pwiz.Skyline.Model.Tools
                                     
             if (args != null && initDir != null)
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo(command, args) {WorkingDirectory = initDir};
+                ProcessStartInfo startInfo = new ProcessStartInfo(command, args) {WorkingDirectory = initDir, UseShellExecute = false};
                 if (OutputToImmediateWindow)
                 {
                     startInfo.RedirectStandardOutput = true;
                     startInfo.RedirectStandardError = true;
                     startInfo.CreateNoWindow = true;
-                    startInfo.UseShellExecute = false;
                 }
 
                 // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.
@@ -417,14 +417,21 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 catch (Exception ex)
                 {
-                    if (ex is FileNotFoundException)
+                    if (ex is Win32Exception)
                     {
-                        exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(Resources.ToolDescription_RunTool_File_not_found_,
-                                    Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_)));
+                        exceptionHandler.HandleException(new Exception(
+                            TextUtil.LineSeparate(
+                                Resources.ToolDescription_RunTool_File_not_found_,
+                                Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_),
+                            ex));
                     }
                     else
                     {
-                        exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__, ex.Message)));
+                        exceptionHandler.HandleException(new Exception(
+                            TextUtil.LineSeparate(
+                                Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__,
+                                ex.Message),
+                            ex));
                     }
                 }
 
@@ -449,8 +456,11 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 catch (Exception x)
                 {
-                    exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(string.Format(Resources.ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_, pathReportCsv),
-                                                                                         x.Message)));
+                    exceptionHandler.HandleException(new Exception(
+                        TextUtil.LineSeparate(
+                            string.Format(Resources.ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_, pathReportCsv),
+                            x.Message),
+                        x));
                     return false;
                 }
             }
@@ -463,16 +473,20 @@ namespace pwiz.Skyline.Model.Tools
             }
             catch (Exception x)
             {
-                exceptionHandler.HandleException(new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_,
-                                                                             Title), x));
+                exceptionHandler.HandleException(new Exception(
+                    string.Format(
+                        Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_,
+                        Title),
+                    x));
                 return false;
             }
 
             Type type = assembly.GetType(ArgsCollectorClassName);
             if (type == null)
             {
-                exceptionHandler.HandleException(new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again,
-                                                                             Title)));
+                exceptionHandler.HandleException(new Exception(
+                    string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again,
+                        Title)));
                 return false;
             }
 
@@ -497,13 +511,17 @@ namespace pwiz.Skyline.Model.Tools
                 if (string.IsNullOrEmpty(message))
                 {
                     exceptionHandler.HandleException(
-                        new Exception(string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title)));
+                        new Exception(string.Format(
+                            Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title),
+                        x));
                 }
                 else
                 {
-                    exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
-                                                                                                       Title),
-                                                                                         message)));
+                    exceptionHandler.HandleException(new Exception(
+                        TextUtil.LineSeparate(
+                            string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_, Title),
+                            message),
+                        x));
                 }
             }
             string[] commandLineArguments = answer as string[];

@@ -32,8 +32,9 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ReportErrorDlg : FormEx
     {
-        private readonly Exception _exception;
-        private readonly StackTrace _stackTraceExceptionCaughtAt;
+        private string _exceptionType;
+        private string _exceptionMessage;
+        private string _stackTraceText;
 
         public static string UserGuid
         {
@@ -46,18 +47,13 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        protected ReportErrorDlg()
+        {
+        }
+
         public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
-            _exception = e;
-            _stackTraceExceptionCaughtAt = stackTraceExceptionCaughtAt;
-
-            InitializeComponent();
-
-            Icon = Resources.Skyline;
-
-            tbErrorDescription.Text = e.Message;
-
-            tbSourceCodeLocation.Text = StackTraceText;
+            Init(e.GetType().Name, e.Message, GetStackTraceText(e, stackTraceExceptionCaughtAt));
 
             Install.InstallType installType = Install.Type;
 
@@ -73,19 +69,31 @@ namespace pwiz.Skyline.Alerts
                 btnCancel.Click += btnOK_Click;
                 AcceptButton = btnCancel;
 
-                lblReportError.Text = new StringBuilder()
-                    .AppendLine(Resources.ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below)
-                    .Append(Resources.ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted)
-                    .ToString();
+                SetTitleAndIntroText(
+                    Text,
+                    Resources.ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below,
+                    Resources.ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted);
             }
         }
 
-        private string PostTitle
+        protected void Init(string exceptionType, string exceptionMessage, string stackTraceText)
+        {
+            InitializeComponent();
+
+            _exceptionType = exceptionType;
+            _exceptionMessage = exceptionMessage;
+            _stackTraceText = stackTraceText;
+
+            Icon = Resources.Skyline;
+            tbErrorDescription.Text = _exceptionMessage;
+            tbSourceCodeLocation.Text = stackTraceText;
+        }
+
+        protected virtual string PostTitle
         {
             get
             {
-                string exceptionType = _exception.GetType().Name;
-                var stackTraceReader = new StringReader(_exception.StackTrace);
+                var stackTraceReader = new StringReader(_stackTraceText);
                 string line;
                 while ((line = stackTraceReader.ReadLine()) != null)
                 {
@@ -104,10 +112,10 @@ namespace pwiz.Skyline.Alerts
                         string version = Install.Version;
                         string guid = UserGuid;
                         guid = guid.Substring(guid.LastIndexOf('-') + 1);
-                        return userInputIndicator + exceptionType + " | " + location + " | " + version + " | " + guid;
+                        return userInputIndicator + _exceptionType + " | " + location + " | " + version + " | " + guid;
                     }
                 }
-                return exceptionType;
+                return _exceptionType;
             }
         }
 
@@ -118,7 +126,7 @@ namespace pwiz.Skyline.Alerts
                 Settings.Default.StackTraceListVersion = Install.Version;
             }
 
-            SendErrorReport(MessageBody, ExceptionType);
+            SendErrorReport(MessageBody, _exceptionType);
 
             DialogResult = DialogResult.OK;
         }
@@ -141,31 +149,28 @@ namespace pwiz.Skyline.Alerts
             webClient.UploadValues(address, form);
         }
 
-        private string StackTraceText
+        protected static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null)
         {
-            get
+            StringBuilder stackTrace = new StringBuilder("Stack trace:"); // Not L10N
+
+            stackTrace.AppendLine().AppendLine(exception.StackTrace).AppendLine();
+
+            for (var x = exception.InnerException; x != null; x = x.InnerException)
             {
-                StringBuilder stackTrace = new StringBuilder("Stack trace:"); // Not L10N
-
-                stackTrace.AppendLine().AppendLine(_exception.StackTrace).AppendLine();
-
-                for (var x = _exception.InnerException; x != null; x = x.InnerException)
-                {
-                    if (ReferenceEquals(x, _exception.InnerException))
-                        stackTrace.AppendLine("Inner exceptions:"); // Not L10N
-                    else
-                        stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
-                    stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
-                    stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
-                    stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
-                }
-                if (null != _stackTraceExceptionCaughtAt)
-                {
-                    stackTrace.AppendLine("Exception caught at: ");
-                    stackTrace.AppendLine(_stackTraceExceptionCaughtAt.ToString());
-                }
-                return stackTrace.ToString();
+                if (ReferenceEquals(x, exception.InnerException))
+                    stackTrace.AppendLine("Inner exceptions:"); // Not L10N
+                else
+                    stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
+                stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
+                stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
+                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
             }
+            if (null != stackTraceExceptionCaughtAt)
+            {
+                stackTrace.AppendLine("Exception caught at: ");
+                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
+            }
+            return stackTrace.ToString();
         }
 
     
@@ -190,8 +195,8 @@ namespace pwiz.Skyline.Alerts
 
                 sb.Append("Installation ID: ").AppendLine(UserGuid); // Not L10N
 
-                sb.Append("Exception type: ").AppendLine(ExceptionType); // Not L10N
-                sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine(); // Not L10N
+                sb.Append("Exception type: ").AppendLine(_exceptionType); // Not L10N
+                sb.Append("Error message: ").AppendLine(_exceptionMessage).AppendLine(); // Not L10N
                 
                 // Stack trace with any inner exceptions
                 sb.AppendLine(tbSourceCodeLocation.Text);
@@ -200,13 +205,13 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        private string ExceptionType
+        protected void SetTitleAndIntroText(string title, string line1, string line2)
         {
-            get
-            {
-                var type = _exception.GetType();
-                return type.FullName;
-            }
+            Text = title;
+            lblReportError.Text = new StringBuilder()
+                .AppendLine(line1)
+                .Append(line2)
+                .ToString();
         }
 
         private void btnClipboard_Click(object sender, EventArgs e)

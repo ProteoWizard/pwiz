@@ -6174,4 +6174,13 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
     <value>Second best peaks normal distribution</value>
   </data>
+  <data name="ReportShutdownDlg_ReportShutdownDlg_Unexpected_Shutdown" xml:space="preserve">
+    <value>Unexpected Shutdown</value>
+  </data>
+  <data name="ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_" xml:space="preserve">
+    <value>Skyline had an unexpected error the last time you ran it.</value>
+  </data>
+  <data name="ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_" xml:space="preserve">
+    <value>Report the error to help improve Skyline.</value>
+  </data>
 </root>

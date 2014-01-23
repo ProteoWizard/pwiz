@@ -867,11 +867,10 @@ namespace pwiz.SkylineTestFunctional
             });
             RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), messageDlg =>
             {
-                AssertEx.AreComparableStrings(Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__ + "{0}", messageDlg.Message, 1);
-                //AssertEx.AreComparableStrings(TextUtil.LineSeparate(
-                //        Resources.ToolDescription_RunTool_File_not_found_,
-                //        Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_), 
-                //        messageDlg.Message, 0);
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(
+                        Resources.ToolDescription_RunTool_File_not_found_,
+                        Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_), 
+                        messageDlg.Message, 0);
                 messageDlg.OkDialog();
             });
           }

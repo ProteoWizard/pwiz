@@ -1494,7 +1494,7 @@ namespace pwiz.Skyline.Util
         /// <param name="action">action to try</param>
         public static void TryTwice(Action action)
         {
-            Try<IOException>(action, 4);
+            Try<IOException>(action);
         }
 
         /// <summary>

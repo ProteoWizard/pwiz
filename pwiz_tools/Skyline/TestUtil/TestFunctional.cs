@@ -292,7 +292,13 @@ namespace pwiz.SkylineTestUtil
             // Wait a little longer for stress test.
             if (Program.StressTest)
             {
-                waitCycles = waitCycles * 150 / 100;
+                waitCycles = waitCycles * 2;
+            }
+
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                // When debugger is attached, some vendor readers are S-L-O-W!
+                waitCycles *= 10;
             }
 
             // Wait longer if running multiple processes simultaneously.
@@ -721,6 +727,8 @@ namespace pwiz.SkylineTestUtil
             Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
                 Equals(peptideSequence, nodePep.Peptide.Sequence) &&
                 isDecoy == nodePep.IsDecoy)));
+            if (nodePeptide == null)
+                Assert.Fail(); // Resharper
             AssertEx.IsDocumentState(SkylineWindow.Document, null,
                                      docStart.PeptideGroupCount,
                                      docStart.PeptideCount - 1,

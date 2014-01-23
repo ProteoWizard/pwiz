@@ -70,7 +70,8 @@ namespace pwiz.SkylineTestUtil
         {
             TestContext = testContext;
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
-            Assert.IsNotNull(zipBaseName);  // Resharper
+            if (zipBaseName == null)
+                Assert.Fail("Null zip base name");  // Resharper
             directoryName = directoryName != null
                 ? Path.Combine(directoryName, zipBaseName)
                 : zipBaseName;

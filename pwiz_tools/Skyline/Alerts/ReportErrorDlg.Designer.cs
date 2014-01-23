@@ -118,7 +118,6 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ControlBox = false;
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.tbErrorDescription);
             this.Controls.Add(this.tbEmail);

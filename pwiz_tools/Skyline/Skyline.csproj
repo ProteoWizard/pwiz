@@ -156,6 +156,9 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ReportShutdownDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Alerts\FilterMatchedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
