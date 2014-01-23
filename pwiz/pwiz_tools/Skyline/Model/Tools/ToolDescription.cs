@@ -670,9 +670,9 @@ namespace pwiz.Skyline.Model.Tools
                 result = (result * 397) ^ ArgsCollectorDllPath.GetHashCode();
                 result = (result * 397) ^ ArgsCollectorClassName.GetHashCode();
                 result = (result * 397) ^ ToolDirPath.GetHashCode();
-                result = (result * 397) ^ PackageVersion.GetHashCode();
-                result = (result * 397) ^ PackageIdentifier.GetHashCode();
-                result = (result * 397) ^ PackageName.GetHashCode();
+                result = (result * 397) ^ (PackageVersion == null ? 0 : PackageVersion.GetHashCode());
+                result = (result * 397) ^ (PackageIdentifier == null ? 0 : PackageIdentifier.GetHashCode());
+                result = (result * 397) ^ (PackageName == null ? 0 : PackageName.GetHashCode());
                 return result;
             }
         }
