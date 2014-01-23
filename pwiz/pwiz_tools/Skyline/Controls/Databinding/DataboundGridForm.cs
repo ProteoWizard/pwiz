@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         #region Methods exposed for testing
         public BindingListSource BindingListSource { get; protected set; }
-        public BoundDataGridView DataGridView { get; protected set; }
+        public BoundDataGridViewEx DataGridView { get; protected set; }
         public NavBar NavBar { get; protected set; }
 
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)

@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LiveResultsGrid));
-            this.boundDataGridView = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
+            this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
@@ -77,7 +77,7 @@
         #endregion
 
         private Common.DataBinding.Controls.BindingListSource bindingListSource;
-        private Common.DataBinding.Controls.BoundDataGridView boundDataGridView;
+        private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView;
         private Common.DataBinding.Controls.NavBar navBar;
     }
 }

@@ -32,7 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DocumentGridForm));
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
-            this.boundDataGridView = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
+            this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             this.SuspendLayout();
@@ -76,6 +76,6 @@
 
         private Common.DataBinding.Controls.NavBar navBar;
         private Common.DataBinding.Controls.BindingListSource bindingListSource;
-        private Common.DataBinding.Controls.BoundDataGridView boundDataGridView;
+        private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView;
     }
 }

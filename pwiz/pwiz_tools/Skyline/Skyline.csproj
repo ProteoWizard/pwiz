@@ -244,6 +244,9 @@
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandLine.cs" />
+    <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\Databinding\DataboundGridForm.cs">
       <SubType>Form</SubType>
     </Compile>
