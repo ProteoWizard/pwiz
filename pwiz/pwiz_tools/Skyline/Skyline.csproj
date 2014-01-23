@@ -587,6 +587,7 @@
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
+    <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\SkylineViewContext.cs" />

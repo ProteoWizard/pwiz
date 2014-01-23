@@ -45,10 +45,12 @@
             this.boundDataGridView.DataSource = this.bindingListSource;
             resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.Name = "boundDataGridView";
+            this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             // 
             // bindingListSource
             // 
             this.bindingListSource.RowSource = new object[0];
+            this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
             // 
             // navBar
             // 

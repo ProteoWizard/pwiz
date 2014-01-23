@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
@@ -30,6 +31,8 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
@@ -43,6 +46,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private IList<IdentityPath> _selectedIdentityPaths = ImmutableList.Empty<IdentityPath>();
         private SequenceTree _sequenceTree;
         private IList<AnnotationDef> _annotations;
+        private FindResult _pendingFindResult;
 
         private readonly IDictionary<Type, string> _rowTypeToActiveView
             = new Dictionary<Type, string>();
@@ -76,8 +80,6 @@ namespace pwiz.Skyline.Controls.Databinding
             SetSequenceTree(null);
             base.OnHandleDestroyed(e);
         }
-
-
 
         private void SkylineWindow_DocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
         {
@@ -130,6 +132,65 @@ namespace pwiz.Skyline.Controls.Databinding
                 _selectedIdentityPaths = ImmutableList.ValueOf(value);
                 UpdateViewContext();
             }
+        }
+
+        public int? GetReplicateIndex()
+        {
+            return GetReplicateIndex(bindingListSource.Current as RowItem);
+        }
+
+        public void SetReplicateIndex(int replicateIndex)
+        {
+            _pendingFindResult = null;
+            if (replicateIndex == GetReplicateIndex())
+            {
+                return;
+            }
+            for (int iRow = 0; iRow < bindingListSource.Count; iRow++)
+            {
+                if (replicateIndex == GetReplicateIndex(bindingListSource[iRow] as RowItem))
+                {
+                    bindingListSource.Position = iRow;
+                }
+            }
+        }
+
+        private int? GetReplicateIndex(RowItem rowItem)
+        {
+            if (rowItem == null)
+            {
+                return null;
+            }
+            var replicate = rowItem.Value as Replicate;
+            if (null != replicate)
+            {
+                return replicate.ReplicateIndex;
+            }
+            var result = rowItem.Value as Result;
+            if (null != result)
+            {
+                return result.GetResultFile().Replicate.ReplicateIndex;
+            }
+            return null;
+        }
+
+        public ChromFileInfoId GetCurrentChromFileInfoId()
+        {
+            return GetChromFileInfoId(bindingListSource.Current as RowItem);
+        }
+
+        private ChromFileInfoId GetChromFileInfoId(RowItem rowItem)
+        {
+            if (null == rowItem)
+            {
+                return null;
+            }
+            var result = rowItem.Value as Result;
+            if (null != result)
+            {
+                return result.GetResultFile().ChromFileInfoId;
+            }
+            return null;
         }
 
         private void UpdateViewContext()
@@ -198,9 +259,14 @@ namespace pwiz.Skyline.Controls.Databinding
             if (null == bindingListSource.ViewContext ||
                 !bindingListSource.ViewContext.BuiltInViews.Contains(builtInViewSpec))
             {
+                var oldViewContext = bindingListSource.ViewContext as ResultsGridViewContext;
+                if (null != oldViewContext)
+                {
+                    oldViewContext.RememberColumnWidths(boundDataGridView);
+                }
                 Debug.Assert(null != builtInViewName);
                 var builtInView = new ViewInfo(parentColumn, builtInViewSpec);
-                var viewContext = new SkylineViewContext(_dataSchema,
+                var viewContext = new ResultsGridViewContext(_dataSchema,
                     new[] {new RowSourceInfo(rowSource, builtInView)});
                 string activeViewName;
                 _rowTypeToActiveView.TryGetValue(rowType, out activeViewName);
@@ -217,6 +283,97 @@ namespace pwiz.Skyline.Controls.Databinding
                 bindingListSource.SetViewContext(viewContext, activeView);
             }
             bindingListSource.RowSource = rowSource;
+        }
+
+        public void HighlightFindResult(FindResult findResult)
+        {
+            if (!IsComplete)
+            {
+                _pendingFindResult = findResult;
+                return;
+            }
+            var bookmarkEnumerator = BookmarkEnumerator.TryGet(_dataSchema.Document, findResult.Bookmark);
+            if (bookmarkEnumerator == null)
+            {
+                return;
+            }
+            var chromInfo = bookmarkEnumerator.CurrentChromInfo;
+            if (chromInfo == null)
+            {
+                return;
+            }
+            int? iRowMatch = null;
+
+            for (int iRow = 0; iRow < bindingListSource.Count; iRow++)
+            {
+                var rowItem = bindingListSource[iRow] as RowItem;
+                if (rowItem == null)
+                {
+                    continue;
+                }
+                var replicate = rowItem.Value as Replicate;
+                if (replicate != null)
+                {
+                    if (replicate.Files.Any(file => ReferenceEquals(file.ChromFileInfoId, chromInfo.FileId)))
+                    {
+                        iRowMatch = iRow;
+                        break;
+                    }
+                }
+                var result = rowItem.Value as Result;
+                if (null != result)
+                {
+                    if (ReferenceEquals(result.GetResultFile().ChromFileInfoId, chromInfo.FileId))
+                    {
+                        iRowMatch = iRow;
+                        break;
+                    }
+                }
+            }
+            if (!iRowMatch.HasValue)
+            {
+                return;
+            }
+            bindingListSource.Position = iRowMatch.Value;
+            DataGridViewColumn column;
+            if (findResult.FindMatch.Note)
+            {
+                column = FindColumn(PropertyPath.Root.Property("Note"));
+            }
+            else if (findResult.FindMatch.AnnotationName != null)
+            {
+                column = FindColumn(PropertyPath.Root.Property(
+                    AnnotationDef.ANNOTATION_PREFIX + findResult.FindMatch.AnnotationName));
+            }
+            else
+            {
+                return;
+            }
+            if (null != column && null != DataGridView.CurrentRow)
+            {
+                DataGridView.CurrentCell = DataGridView.CurrentRow.Cells[column.Index];
+            }
+        }
+
+        private void bindingListSource_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            if (e.ListChangedType == ListChangedType.Reset)
+            {
+                if (null != SkylineWindow.SequenceTree)
+                {
+                    SetReplicateIndex(SkylineWindow.SequenceTree.ResultsIndex);
+                }
+            }
+        }
+
+        private void boundDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            if (null != _pendingFindResult)
+            {
+                var pendingFindResult = _pendingFindResult;
+                _pendingFindResult = null;
+                BeginInvoke(new Action<FindResult>(HighlightFindResult), pendingFindResult);
+            }
         }
     }
 }
