@@ -101,11 +101,13 @@ namespace pwiz.SkylineTestUtil
         /// <returns>Absolute path to the file for use in tests</returns>
         public string GetTestPath(string relativePath)
         {
-            if ((PersistentFiles != null) && PersistentFiles.Contains(relativePath))
+            if ((PersistentFiles != null) && (PersistentFiles.Contains(relativePath) || PersistentFiles.Any(relativePath.Contains)))
             {
                 // persistent file - probably so because it's large. 
                 return Path.Combine(PersistentFilesDir, relativePath);
             }
+            if (!Directory.Exists(FullPath)) // can happen when all files are in the persistant area, but we're creating a new one as part of the test
+                Directory.CreateDirectory(FullPath);
             return Path.Combine(FullPath, relativePath);
         }
 
