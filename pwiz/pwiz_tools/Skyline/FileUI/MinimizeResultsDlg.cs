@@ -424,6 +424,10 @@ namespace pwiz.Skyline.FileUI
                 {
                     
                 }
+                catch (Exception e)
+                {
+                    Program.ReportException(e);
+                }
             }
 
             private void UpdateStatistics()
