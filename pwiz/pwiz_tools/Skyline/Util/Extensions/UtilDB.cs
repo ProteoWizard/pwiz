@@ -20,7 +20,7 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using pwiz.Skyline.Properties;
-using zlib;
+using Ionic.Zlib;
 
 namespace pwiz.Skyline.Util.Extensions
 {
@@ -77,27 +77,25 @@ namespace pwiz.Skyline.Util.Extensions
             return res;
         }
 
-        public static byte[] Uncompress(this byte[] compressed, int sizeUncompressed)
+        public static byte[] Uncompress(this byte[] compressed, int sizeUncompressed, bool checkSizeDifference)
         {
             if (compressed.Length == sizeUncompressed)
                 return compressed;
 
-            byte[] uncompressed = new byte[sizeUncompressed];
-            ZOutputStream zstream = new ZOutputStream(new MemoryStream(uncompressed));
-            zstream.Write(compressed, 0, compressed.Length);
-            zstream.finish();
-            if (zstream.TotalOut != sizeUncompressed)
+            var uncompressed = ZlibStream.UncompressBuffer(compressed);
+            if (checkSizeDifference && (uncompressed.Length != sizeUncompressed))
                 throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);  // Not L10N
             return uncompressed;
         }
 
-// ReSharper disable InconsistentNaming
-        private enum Levels { Z_DEFAULT_COMPRESSION = -1 }
-// ReSharper restore InconsistentNaming
+        public static byte[] Uncompress(this byte[] compressed, int sizeUncompressed)
+        {
+            return Uncompress(compressed,sizeUncompressed,true);
+        }
 
         public static byte[] Compress(this byte[] uncompressed)
         {
-            return uncompressed.Compress((int) Levels.Z_DEFAULT_COMPRESSION);
+            return uncompressed.Compress(6);  // The default compression level, with a good balance of speed and compression efficiency.
         }
 
         public static byte[] Compress(this byte[] uncompressed, int level)
@@ -105,21 +103,23 @@ namespace pwiz.Skyline.Util.Extensions
             if (level == 0)
                 return uncompressed;
 
-            MemoryStream stream = new MemoryStream(uncompressed.Length);
-            ZOutputStream zstream = new ZOutputStream(stream, level);
-            zstream.Write(uncompressed, 0, uncompressed.Length);
-            zstream.finish();
+            byte[] result;
+            using (var ms = new MemoryStream())
+            {
+                using (var compressor =
+                        new ZlibStream(ms, CompressionMode.Compress, CompressionLevel.Level0+level))
+                    compressor.Write(uncompressed, 0, uncompressed.Length);
+                result =  ms.ToArray();
+            }
 
-            int total = (int) zstream.TotalOut;
+
             // If compression did not improve the situation, then use
             // uncompressed bytes.
-            if (total >= uncompressed.Length)
+            if (result.Length >= uncompressed.Length)
                 return uncompressed;
-
-            byte[] result = new byte[total];
-            Array.Copy(stream.GetBuffer(), result, total);
 
             return result;
         }
+
     }
 }
