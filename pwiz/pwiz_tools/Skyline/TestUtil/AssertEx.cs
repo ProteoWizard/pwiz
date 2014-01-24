@@ -525,5 +525,19 @@ namespace pwiz.SkylineTestUtil
                 Assert.AreEqual(num1.Value, num2.Value, diff);
             }
         }
+
+        public static void AreEqualLines(string expected, string actual)
+        {
+            Assert.AreEqual(LineBracket(expected), LineBracket(actual));
+        }
+
+        /// <summary>
+        /// Puts newlines before and after a string to make error reporting clearer
+        /// </summary>
+        private static string LineBracket(string text)
+        {
+            var sb = new StringBuilder();
+            return sb.AppendLine().AppendLine(text).ToString();
+        }
     }
 }

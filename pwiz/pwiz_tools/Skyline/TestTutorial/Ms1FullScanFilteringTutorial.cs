@@ -73,25 +73,23 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_ANNOTATIONS =
             {
-                "35.7;-23 ppm|36.6;0 ppm|32.4;-6 ppm|33.2;0 ppm|34.1;+6.8 ppm|34.3;+2.4 ppm|35.2;+7.2 ppm|37.5;-1.7 ppm|38.5;-1.6 ppm|39.1;+3.4 ppm", // Not L10N
-                "39.0;-13.1 ppm;(idotp 0.90)|34.1;-0.5 ppm|35.7;-47.9 ppm|36.1;-36.4 ppm;(idotp 0.97)|37.8;-11.6 ppm|37.9;0 ppm|35.0;-18.5 ppm|36.5;-41.4 ppm|40.9;0 ppm", // Not L10N
-                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.5 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|39.1;0 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.9 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm|32.2;0 ppm|34.6;-46.3 ppm|39.7;-0.3 ppm", // Not L10N
+                "35.7;-23 ppm|36.6;0 ppm|32.4;-6 ppm|33.2;0 ppm|34.1;+6.8 ppm|37.5;-1.7 ppm|38.5;-1.6 ppm|39.1;+3.4 ppm", // Not L10N
+                "39.0;-13.1 ppm;(idotp 0.90)|34.1;-0.5 ppm|34.6;-19.7 ppm|35.7;-47.9 ppm|36.1;-36.4 ppm;(idotp 0.97)|37.8;-11.6 ppm|37.8;0 ppm|36.5;-41.4 ppm|40.9;0 ppm", // Not L10N
+                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
+                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
+                "37.0;-6.5 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
+                "37.0;-6.9 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm|32.2;0 ppm|34.6;-46.3 ppm", // Not L10N
                 "37.4;-1.5 ppm|40.8;-20.7 ppm|33.2;+25.8 ppm|34.9;-41 ppm", // Not L10N
                 "37.5;0 ppm|32.8;-13.6 ppm|34.1;-8.5 ppm|35.5;0 ppm|36.0;+9.6 ppm|36.9;-2.6 ppm|38.8;0 ppm|39.6;0 ppm|42.0;-5.4 ppm", // Not L10N
                 "34.1;-3.9 ppm|36.1;+11.2 ppm|40.6;-7.9 ppm;(idotp 0.91)|38.2;+19.9 ppm;(idotp 0.83)", // Not L10N
                 "37.7;-4.1 ppm|34.1;-3.9 ppm|36.1;+11.2 ppm|40.8;+4.5 ppm", // Not L10N
-                "34.5;+2.9 ppm|35.3;+5.6 ppm|37.5;0 ppm|38.9;-28.1 ppm;(idotp 0.80)|36.6;0 ppm;(idotp 0.89)|37.5;0 ppm|39.4;0 ppm|40.9;-2.4 ppm", // Not L10N
-                "35.7;+2.4 ppm|39.3;-14.3 ppm;(idotp 0.74)|42.1;0 ppm;(idotp 0.84)|43.2;0 ppm;(idotp 0.79)", // Not L10N
-                "35.3;+5.6 ppm;(idotp 0.78)|38.9;-31.2 ppm;(idotp 0.65)|34.5;0 ppm|36.8;0 ppm|37.3;0 ppm;(idotp 0.71)|39.4;0 ppm|41.1;-12.7 ppm|38.0;-11.5 ppm", // Not L10N
-                "35.7;+2.4 ppm;(idotp 0.67)|42.3;-8 ppm|42.5;-6.3 ppm|38.4;+10.6 ppm;(idotp 0.54)", // Not L10N
-                "36.1;-5.2 ppm|37.3;-20.8 ppm|38.2;0 ppm|39.1;0 ppm|39.9;-0.5 ppm|32.2;-0.5 ppm|34.3;0 ppm|34.8;0 ppm", // Not L10N
+                "34.5;+2.9 ppm|35.3;0 ppm|35.3;+5.6 ppm|37.5;0 ppm|38.9;-28.1 ppm;(idotp 0.80)|36.5;0 ppm|36.6;0 ppm;(idotp 0.89)|39.4;0 ppm|40.9;-2.4 ppm", // Not L10N
+                "35.7;+2.4 ppm|39.3;-14.3 ppm", // Not L10N
+                "35.3;0 ppm|35.3;+5.6 ppm;(idotp 0.78)|38.9;-31.2 ppm;(idotp 0.65)|34.5;0 ppm|36.8;0 ppm|36.8;0 ppm|37.3;0 ppm;(idotp 0.71)|39.4;0 ppm|41.1;-12.7 ppm", // Not L10N
+                "35.7;+2.4 ppm;(idotp 0.67)|38.4;+10.6 ppm;(idotp 0.54)", // Not L10N
+                "36.1;-5.2 ppm|37.3;-20.8 ppm|38.2;0 ppm|38.5;0 ppm|39.1;0 ppm|39.9;-0.5 ppm|32.2;-0.5 ppm|34.3;0 ppm|34.8;0 ppm", // Not L10N
                 "41.9;0 ppm|37.5;-11.9 ppm|34.7;0 ppm|32.5;0 ppm|42.4;-16.1 ppm", // Not L10N
                 "35.9;-16.3 ppm|33.0;-47.7 ppm|39.5;-53.6 ppm", // Not L10N
-                "24.6;-28.4 ppm|22.1;-18 ppm|23.3;-35.2 ppm|25.9;0 ppm|27.0;-34.9 ppm|28.6;-38.8 ppm", // Not L10N
-                "24.4;-11.6 ppm|21.8;0 ppm|23.3;-9.1 ppm|26.1;0 ppm|26.4;-13.2 ppm|26.8;-15 ppm|27.8;-33.7 ppm|28.6;-39.3 ppm", // Not L10N 
                 "","","","","","","","","","","" // room to grow Not L10N
             };
 
@@ -251,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
             const int TIB_L = 0; // index for Tib_L
             const int TIP3 = 1; // index for Tip3
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 51, 52, 156);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 49, 50, 0, 146, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 47, 48, 0, 142, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 49, 50, 0, 143, 0);
             string Tib_LFilename = searchFiles[TIB_L].Replace(".group.xml", PreferedExtAbWiff);
             string Tip3Filename = searchFiles[TIP3].Replace(".group.xml", PreferedExtAbWiff);
@@ -313,13 +311,13 @@ namespace pwiz.SkylineTestTutorial
 
             int atest = 0;
 
-            CheckAnnotations(TIB_L,0,EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, 0, atest++);
             int pepIndex = 3;
             RunUI(() => SkylineWindow.CollapsePeptides());
             RunUI(() => SkylineWindow.ShowAlignedPeptideIDTimes(true));
             ChangePeakBounds(TIB_L, pepIndex, 38.79, 39.385);
             PauseForScreenShot("page 20 - chromatogram graphs"); // Not L10N
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
 
             var alignmentForm = ShowDialog<AlignmentForm>(() => SkylineWindow.ShowRetentionTimeAlignmentForm());
             RunUI(() =>
@@ -337,11 +335,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowChromatogramLegends(true));
             Assert.IsTrue(8 == pepIndex);
             PauseForScreenShot("page 22 - chromatograms for 9th peptide");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]); 
+            CheckAnnotations(TIB_L, pepIndex, atest++); 
 
             ZoomSingle(TIP3,32.6, 41.4); // simulate the wheel scroll described in tutorial
             PauseForScreenShot("page 23 - showing all peaks for 1_MCF_TiB_L");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]); 
+            CheckAnnotations(TIB_L, pepIndex, atest++); 
 
             // current TIB_L peak should have idotp .87 and ppm -6.9
             Assert.AreEqual(0.87, GetTransitionGroupChromInfo(TIB_L, pepIndex).IsotopeDotProduct ?? -1, .005);
@@ -352,7 +350,7 @@ namespace pwiz.SkylineTestTutorial
             // now current TIB_L peak should have idotp .9 and ppm -6.5
             Assert.AreEqual(0.9, GetTransitionGroupChromInfo(TIB_L, pepIndex).IsotopeDotProduct ?? -1, .005);
             Assert.AreEqual(-6.5, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
 
             var undoIndex = SkylineWindow.Document.RevisionIndex; // preserve for simulating ctrl-z
 
@@ -364,33 +362,33 @@ namespace pwiz.SkylineTestTutorial
             PickPeakBoth(pepIndex, 36.992836, 37.3896027); // select peak for both chromatograms at these respective retention times
             ZoomSingle(TIP3, 32.4, 39.6); // set the view for screenshot
             PauseForScreenShot("page 26 - comparing 33 and 37 minute peaks");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
+            CheckAnnotations(TIP3, pepIndex, atest++);
 
             RevertDoc(undoIndex); // undo changes
             pepIndex=JumpToPeptide("ASLGSLEGEAEAEASSPKGK"); // Not L10N
             Assert.IsTrue(10 == pepIndex);
             PauseForScreenShot("page 27 - chromatograms for peptide ASLGSLEGEAEAEASSPKGK");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
+            CheckAnnotations(TIP3, pepIndex, atest++);
 
             PickTransitions(pepIndex, m1Thru4); // turn on M+3 and M+4
             ChangePeakBounds(TIP3, pepIndex, 37.35, 38.08);
             ZoomSingle(TIP3, 36.65, 39.11); // simulate the wheel scroll described in tutorial
             PauseForScreenShot("page 28, upper - chromatograms for peptide ASLGSLEGEAEAEASSPKGK with adjusted integration");
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIP3, pepIndex, atest++);
 
             RevertDoc(undoIndex); // undo changes
             pepIndex = JumpToPeptide("AEGEWEDQEALDYFSDKESGK"); // Not L10N
             PauseForScreenShot("page 28, lower - chromatograms for peptide AEGEWEDQEALDYFSDKESGK");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
+            CheckAnnotations(TIP3, pepIndex, atest++);
 
             int[] m1Thru5 = { 1, 2, 3, 4, 5, 6 };
             PickTransitions(pepIndex, m1Thru5); // turn on M+3 M+4 and M+5
             PauseForScreenShot("page 29 - chromatogram graphs");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
+            CheckAnnotations(TIP3, pepIndex, atest++);
 
             JumpToPeptide("ALVEFESNPEETREPGSPPSVQR"); // Not L10N
             PauseForScreenShot("page 30 - chromatograms for peptide ALVEFESNPEETREPGSPPSVQR "); 
@@ -401,8 +399,8 @@ namespace pwiz.SkylineTestTutorial
             int[] m1Thru7 = { 1, 2, 3, 4, 5, 6, 7, 8 };
             PickTransitions(pepIndex, m1Thru7); // enable [M+3] [M+4] [M+5] [M+6] [M+7]
             PauseForScreenShot("page 31 lower - peak area plot");
-            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+            CheckAnnotations(TIB_L, pepIndex, atest++);
+            CheckAnnotations(TIP3, pepIndex, atest++);
 
             // page 32 zooming setup
             RunUI(() => 
@@ -431,7 +429,7 @@ namespace pwiz.SkylineTestTutorial
             ZoomBoth(35.05,36.9,480);
             PauseForScreenShot("page 34 lower - effect of zoom ");  
             ChangePeakBounds(TIP3, pepIndex, 35.7, 36.5); // adjust integration per tutorial 
-            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest++]); // check the new idotp values
+            CheckAnnotations(TIP3, pepIndex, atest++); // check the new idotp values
 
             /* pepIndex = */ JumpToPeptide("DQVANSAFVER"); // Not L10N
             PauseForScreenShot("page 35 upper - chromatograms for peptide DQVANSAFVER");
@@ -452,7 +450,7 @@ namespace pwiz.SkylineTestTutorial
 //                    new IdentityPath(pathPep, nodeGroup.TransitionGroup), nodeTran.Transition);
 //            });
 //            PauseForScreenShot("page 36 - M+1 only, with adjusted integration");
-//            CheckAnnotations(TIB_L, pepIndex, EXPECTED_ANNOTATIONS[atest++]);
+//            CheckAnnotations(TIB_L, pepIndex, atest++);
 //            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest]);
 
             var docAfter = SkylineWindow.Document;
@@ -645,7 +643,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
         }
 
-        private void CheckAnnotations(int chromindex, int pepindex, string expected)
+        private void CheckAnnotations(int chromIndex, int pepIndex, int annotIndex)
         {
             RunUI(() =>
             {
@@ -658,24 +656,14 @@ namespace pwiz.SkylineTestTutorial
             });
 
             WaitForGraphs();
-            string annotations = string.Join(@"|", GetPointAnnotationStrings(chromindex, pepindex)).Replace("\n",";");
+            string annotations = string.Join(@"|", GetPointAnnotationStrings(chromIndex, pepIndex)).Replace("\n",";");
             // Normalize decimal separator
             annotations = annotations.Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, 
                                               CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
             if (IsRecordMode)
-// ReSharper disable once LocalizableElement
                 Console.WriteLine(@"""{0}"", // Not L10N", annotations);  // Not L10N
             else
-                Assert.AreEqual(LineBracket(expected), LineBracket(annotations));
-        }
-
-        /// <summary>
-        /// Puts newlines before and after a string to make error reporting clearer
-        /// </summary>
-        private string LineBracket(string text)
-        {
-            var sb = new StringBuilder();
-            return sb.AppendLine().AppendLine(text).ToString();
+                AssertEx.AreEqualLines(EXPECTED_ANNOTATIONS[annotIndex], annotations);
         }
 
         private void PickTransitions(int pepIndex, int[] transIndexes, string screenshotPromptA = null, string screenshotPromptB = null)
