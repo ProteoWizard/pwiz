@@ -1045,14 +1045,7 @@ namespace SkylineTester
 
         private void selectBuild_Click(object sender, EventArgs e)
         {
-            var clickedItem = (ToolStripMenuItem) sender;
-
-            // Clear all checks.
-            foreach (ToolStripMenuItem item in selectBuildMenuItem.DropDownItems)
-                item.Checked = false;
-
-            clickedItem.Checked = true;
-            selectedBuild.Text = clickedItem.Text;
+            SelectBuild((BuildDirs) selectBuildMenuItem.DropDownItems.IndexOf((ToolStripMenuItem)sender));
         }
 
         private void selectBuildMenuOpening(object sender, EventArgs e)
