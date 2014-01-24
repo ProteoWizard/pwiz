@@ -1300,6 +1300,25 @@ namespace pwiz.Skyline.Model.DocSettings
                 TransitionIntegration integration = TransitionSettings.Integration ?? defTran.Integration;
                 TransitionInstrument instrument = TransitionSettings.Instrument ?? defTran.Instrument;
                 TransitionFullScan fullScan = TransitionSettings.FullScan ?? defTran.FullScan;
+                // Backward compatibility with v2.1, get a RT filter length from peptide prediction settings
+                if (fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows &&
+                    fullScan.RetentionTimeFilterLength == 0 &&
+                    PeptideSettings.Prediction != null)
+                {
+                    double rtFilterLen = 0;
+                    if (PeptideSettings.Prediction.UseMeasuredRTs)
+                    {
+                        rtFilterLen = PeptideSettings.Prediction.MeasuredRTWindow.Value / 2;
+                    }
+                    else if (PeptideSettings.Prediction.RetentionTime != null)
+                    {
+                        rtFilterLen = PeptideSettings.Prediction.RetentionTime.TimeWindow / 2;
+                    }
+                    if (rtFilterLen > 0)
+                    {
+                        fullScan = fullScan.ChangeRetentionTimeFilter(fullScan.RetentionTimeFilterType, rtFilterLen);
+                    }
+                }
                 TransitionSettings transitionSettings = new TransitionSettings(prediction,
                                                                                filter,
                                                                                libraries,

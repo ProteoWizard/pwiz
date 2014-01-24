@@ -36,6 +36,7 @@ using DigitalRune.Windows.Docking;
 using log4net;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -1514,6 +1515,14 @@ namespace pwiz.Skyline
                 {
                     bookmark = bookmark.ChangeChromFileInfoId(resultsGridForm.ResultsGrid.GetCurrentChromFileInfoId());
                 }
+                else
+                {
+                    var liveResultsGrid = _resultsGridForm as LiveResultsGrid;
+                    if (null != liveResultsGrid)
+                    {
+                        bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
+                    }
+                }
             }            
             var findResult = DocumentUI.SearchDocument(bookmark,
                 findOptions, displaySettings);
@@ -1610,10 +1619,17 @@ namespace pwiz.Skyline
             {
                 ShowResultsGrid(true);
                 ResultsGridForm resultsGridForm = _resultsGridForm as ResultsGridForm;
-                // TODO(nicksh)
                 if (null != resultsGridForm)
                 {
                     resultsGridForm.ResultsGrid.HighlightFindResult(findResult);
+                }
+                else
+                {
+                    LiveResultsGrid liveResultGrid = _resultsGridForm as LiveResultsGrid;
+                    if (null != liveResultGrid)
+                    {
+                        liveResultGrid.HighlightFindResult(findResult);
+                    }
                 }
                 return;
             }
@@ -3321,7 +3337,6 @@ namespace pwiz.Skyline
             if (_resultsGridForm is ResultsGridForm)
             {
                 var resultsGridForm = (ResultsGridForm) _resultsGridForm;
-                // TODO(nicksh)
                 if (null != resultsGridForm)
                 {
                     // ReSharper disable once RedundantCheckBeforeAssignment
@@ -3330,7 +3345,16 @@ namespace pwiz.Skyline
                         resultsGridForm.ResultsIndex = ComboResults.SelectedIndex;
                     }
                 }
-            } 
+            }
+            else
+            {
+                var liveResultsGrid = (LiveResultsGrid) _resultsGridForm;
+                if (null != liveResultsGrid)
+                {
+                    liveResultsGrid.SetReplicateIndex(ComboResults.SelectedIndex);
+                }
+            }
+
             if (SequenceTree.ResultsIndex != ComboResults.SelectedIndex)
             {
                 // Show the right result set in the tree view.

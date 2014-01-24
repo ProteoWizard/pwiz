@@ -138,10 +138,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="zlib.net, Version=1.0.3.0, Culture=neutral, PublicKeyToken=47d7877cb3620160">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Lib\zlib.net.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Alerts\AboutDlg.cs">
@@ -247,6 +243,9 @@
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandLine.cs" />
+    <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\Databinding\DataboundGridForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -590,6 +589,7 @@
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
+    <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\SkylineViewContext.cs" />

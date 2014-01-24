@@ -1198,7 +1198,21 @@ namespace pwiz.Skyline.Model.Lib
         public string LibName { get { return Library.Name; } }
         public object SpectrumKey { get; private set; }
         public string FilePath { get; private set; }
-        public string FileName { get { return Path.GetFileName(FilePath); } }
+
+        public string FileName
+        {
+            get
+            {
+                try
+                {
+                    return Path.GetFileName(FilePath);
+                }
+                catch
+                {
+                    return FilePath;
+                }
+            }
+        }
         public double? RetentionTime { get; private set; }
         public bool IsBest { get; private set; }
 

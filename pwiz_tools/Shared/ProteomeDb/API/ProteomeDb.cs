@@ -50,8 +50,7 @@ namespace pwiz.ProteomeDatabase.API
 
         public void Dispose()
         {
-            var databaseResource = _databaseResource;
-            _databaseResource = null;
+            DatabaseResource databaseResource = Interlocked.Exchange(ref _databaseResource, null);
             if (null != databaseResource)
             {
                 databaseResource.Release();

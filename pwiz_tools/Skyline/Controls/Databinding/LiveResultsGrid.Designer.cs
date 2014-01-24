@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LiveResultsGrid));
-            this.boundDataGridView = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
+            this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
@@ -45,10 +45,12 @@
             this.boundDataGridView.DataSource = this.bindingListSource;
             resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.Name = "boundDataGridView";
+            this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             // 
             // bindingListSource
             // 
             this.bindingListSource.RowSource = new object[0];
+            this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
             // 
             // navBar
             // 
@@ -75,7 +77,7 @@
         #endregion
 
         private Common.DataBinding.Controls.BindingListSource bindingListSource;
-        private Common.DataBinding.Controls.BoundDataGridView boundDataGridView;
+        private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView;
         private Common.DataBinding.Controls.NavBar navBar;
     }
 }

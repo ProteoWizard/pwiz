@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.IO;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
-using zlib;
 
 namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 {
@@ -53,19 +51,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
                     return null;
                 }
                 var expectedSize = (sizeof (float) + sizeof (float)*NumTransitions)*NumPoints;
-                byte[] uncompressedBytes;
-                if (expectedSize == Chromatogram.Length)
-                {
-                    uncompressedBytes = Chromatogram;
-                }
-                else
-                {
-                    var memoryStream = new MemoryStream();
-                    ZOutputStream zstream = new ZOutputStream(memoryStream);
-                    zstream.Write(Chromatogram, 0, Chromatogram.Length);
-                    zstream.finish();
-                    uncompressedBytes = memoryStream.ToArray();
-                }
+
+                var uncompressedBytes = Chromatogram.Uncompress(expectedSize,false); // don't throw if the uncompressed buffer isn't the size we expected, that's normal here per NickSh
+
                 float[] times;
                 float[][] intensities;
                 short[][] massErrors;
