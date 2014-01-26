@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Util
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            if (Parent == null)
+            if (Program.SkylineOffscreen && Parent == null)
                 FormEx.SetOffscreen(this);
         }
 
