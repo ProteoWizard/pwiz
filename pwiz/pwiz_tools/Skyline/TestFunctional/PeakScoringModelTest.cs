@@ -20,7 +20,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -48,6 +50,11 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\PeakScoringModelTest.zip";
             RunFunctionalTest();
         }
+
+        /// <summary>
+        /// Change to true to write coefficient arrays
+        /// </summary>
+        private bool IsRecordMode { get { return true; } }
 
         protected override void DoTest()
         {
@@ -104,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
                         {
                             editDlg.PeakCalculatorsGrid.SelectRow(i);
                         }
-                        Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
+                        VerifyBias(editDlg, -15.704713);
                     });
                 OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -120,36 +127,38 @@ namespace pwiz.SkylineTestFunctional
                 _format = editDlg.PeakCalculatorWeightFormat;
                 _percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
                 var gridGen = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
-                gridGen.AddRow(true, 0.4886, 0.1710);
-                gridGen.AddRow(false, double.NaN, double.NaN);
-                gridGen.AddRow(true, 2.6711, 0.0408);
-                gridGen.AddRow(true, 1.5071, 0.0795);
-                gridGen.AddRow(true, -0.2925, 0.1850);
-                gridGen.AddRow(true, 0.4533, 0.0791);
+                gridGen.AddRow(true, 0.48860995167457, 0.170973053593376);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
-                gridGen.AddRow(true, 4.2907, 0.1145);
-                gridGen.AddRow(true, 10.0902, 0.5022);
-                gridGen.AddRow(true, 0.2666, -0.2189);
-                gridGen.AddRow(true, 0.1933, 0.0467);
+                gridGen.AddRow(true, 2.67109701510138, 0.0408005068231353);
+                gridGen.AddRow(true, 1.50712591210319, 0.0795497355458455);
+                gridGen.AddRow(true, -0.292480898013309, 0.184973759845997);
+                gridGen.AddRow(true, 0.453336885852221, 0.0791011770023855);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(false, double.NaN, double.NaN);
+                gridGen.AddRow(true, 4.29065029878176, 0.114507300156016);
+                gridGen.AddRow(true, 10.0901840317841, 0.502202185784951);
+                gridGen.AddRow(true, 0.266645696864057, -0.2188577065193);
+                gridGen.AddRow(true, 0.193302429861149, 0.0467499877675933);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 _cellValuesOriginal = gridGen.Rows;
                 var gridGenNew = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
-                gridGenNew.AddRow(true, 0.5569, 0.2111);
-                gridGenNew.AddRow(false, double.NaN, double.NaN);
-                gridGenNew.AddRow(false, double.NaN, double.NaN);
-                gridGenNew.AddRow(true, 2.7995, 0.1416);
-                gridGenNew.AddRow(true, -0.5237, 0.2518);
+                gridGenNew.AddRow(true, 0.556891999247085, 0.211137488318622);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
-                gridGenNew.AddRow(true, 4.9975, 0.1395);
-                gridGenNew.AddRow(true, 9.0669, 0.4515);
-                gridGenNew.AddRow(true, 0.3698, -0.2679);
-                gridGenNew.AddRow(true, 0.2942, 0.0723);
+                gridGenNew.AddRow(true, 2.79949794550521, 0.141613018186037);
+                gridGenNew.AddRow(true, -0.523657759164734, 0.25180459703838);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(false, double.NaN, double.NaN);
+                gridGenNew.AddRow(true, 4.99754800810911, 0.139520491845392);
+                gridGenNew.AddRow(true, 9.06686068378878, 0.451542605832472);
+                gridGenNew.AddRow(true, 0.369799770183224, -0.267941262030579);
+                gridGenNew.AddRow(true, 0.294221367335344, 0.0723230608096753);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
                 gridGenNew.AddRow(false, double.NaN, double.NaN);
@@ -160,19 +169,19 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
                         VerifyCellValues(editDlg, _cellValuesOriginal);
-                        Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
+                        VerifyBias(editDlg, -15.704713);
                         // Manually uncheck two of the scores
-                        editDlg.SetChecked(2, false);
-                        editDlg.SetChecked(5, false);
+                        editDlg.SetChecked(3, false);
+                        editDlg.SetChecked(6, false);
                         editDlg.TrainModelClick();
                         VerifyCellValues(editDlg, cellValuesNew);
-                        Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -13.727219, 1e-5);
+                        VerifyBias(editDlg, -13.727219);
                         // Re-check the scores, show that model goes back to normal
-                        editDlg.SetChecked(2, true);
-                        editDlg.SetChecked(5, true);
+                        editDlg.SetChecked(3, true);
+                        editDlg.SetChecked(6, true);
                         editDlg.TrainModelClick();
                         VerifyCellValues(editDlg, _cellValuesOriginal);
-                        Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -15.704713, 1e-5);
+                        VerifyBias(editDlg, -15.704713);
                         editDlg.PeakScoringModelName = "test2"; // Not L10N
                     });
                OkDialog(editDlg, editDlg.OkDialog);
@@ -236,12 +245,12 @@ namespace pwiz.SkylineTestFunctional
                 editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 Assert.AreEqual(editDlg.PeakScoringModelName, "legacy1");
                 editDlg.TrainModelClick();
-                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -8.741136, 1e-5);
+                VerifyBias(editDlg, -8.741136);
                 VerifyCellValues(editDlg, cellValuesLegacy);
                 editDlg.UsesSecondBest = true;
                 editDlg.UsesDecoys = false;
                 editDlg.TrainModelClick();
-                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, -7.65547, 1e-5);
+                VerifyBias(editDlg, -7.65547);
                 VerifyCellValues(editDlg, cellValuesLegacyNew);
                 editDlg.UsesSecondBest = false;
                 peakScoringModelBase = editDlg.PeakScoringModel as LegacyScoringModel;
@@ -320,7 +329,7 @@ namespace pwiz.SkylineTestFunctional
                 // ReSharper disable PossibleNullReferenceException
                 Assert.IsTrue(peakScoringModelMProphet.UsesDecoys);
                 // ReSharper restore PossibleNullReferenceException
-                Assert.AreEqual(peakScoringModelMProphet.PeakFeatureCalculators.Count, 16);
+                Assert.AreEqual(peakScoringModelMProphet.PeakFeatureCalculators.Count, 17);
             });
         }
 
@@ -354,18 +363,19 @@ namespace pwiz.SkylineTestFunctional
             gridGen.AddRow(false, double.NaN, double.NaN);
             var cellValuesOld = gridGen.Rows;
             var gridGenNew = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
-            gridGenNew.AddRow(true, 0.4690, 0.1680);
-            gridGenNew.AddRow(false, double.NaN, double.NaN);
-            gridGenNew.AddRow(true, 3.1637, 0.0500);
-            gridGenNew.AddRow(false, double.NaN, double.NaN);
-            gridGenNew.AddRow(true, -0.3664, 0.2210);
-            gridGenNew.AddRow(true, 0.3440, 0.0730);
+            gridGenNew.AddRow(true, 0.468991270136803, 0.167611646183892);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
-            gridGenNew.AddRow(true, 4.8301, 0.1240);
-            gridGenNew.AddRow(true, 10.2590, 0.5080);
-            gridGenNew.AddRow(true, 0.2756, -0.2200);
-            gridGenNew.AddRow(true, 0.3640, 0.0760);
+            gridGenNew.AddRow(true, 3.16371037361604, 0.0498919873689149);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(true, -0.366353764037373, 0.220741150021445);
+            gridGenNew.AddRow(true, 0.344001903693265, 0.0733719825511845);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(false, double.NaN, double.NaN);
+            gridGenNew.AddRow(true, 4.83008662115738, 0.123825807541892);
+            gridGenNew.AddRow(true, 10.2590201995847, 0.508435811598136);
+            gridGenNew.AddRow(true, 0.275627427251619, -0.219767578971277);
+            gridGenNew.AddRow(true, 0.36402008538419, 0.0758891937058132);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
@@ -391,7 +401,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestIncompatibleDataSet()
         {
             // Define an incompatible model
-            var weights = new[] {0.5322, -1.0352, double.NaN, 1.4744, 0.0430, 0.0477, -0.2740, double.NaN, 
+            var weights = new[] {0.5322, -1.0352, double.NaN, double.NaN, 1.4744, 0.0430, 0.0477, -0.2740, double.NaN, 
                                  2.0096, 7.7726, -0.0566, 0.4751, double.NaN, double.NaN, double.NaN, double.NaN};
             var parameters = new LinearModelParams(weights, -2.5);
             var incompatibleModel = new MProphetPeakScoringModel("incompatible", parameters, null, true);
@@ -406,6 +416,7 @@ namespace pwiz.SkylineTestFunctional
             gridGen.AddRow(true, weights[i++], double.NaN);
             gridGen.AddRow(false, weights[i++], double.NaN);
             gridGen.AddRow(false, weights[i++], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
             gridGen.AddRow(true, weights[i++], double.NaN);
             gridGen.AddRow(true, weights[i++], double.NaN);
             gridGen.AddRow(true, weights[i++], double.NaN);
@@ -418,7 +429,7 @@ namespace pwiz.SkylineTestFunctional
             gridGen.AddRow(false, weights[i++], double.NaN);
             gridGen.AddRow(false, weights[i++], double.NaN);
             gridGen.AddRow(false, weights[i++], double.NaN);
-            gridGen.AddRow(false, weights[i], double.NaN);
+            gridGen.AddRow(false, weights[i++], double.NaN);
             var cellValuesIncompatible = gridGen.Rows;
 
             var reintegrateDlgIncompatible = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -434,7 +445,7 @@ namespace pwiz.SkylineTestFunctional
                 editDlgTemp.TrainModelClick();
                 // Cell values go back to the standard trained model after we train and enable calculators, 
                 // despite having been loaded with weird values
-                editDlgTemp.SetChecked(2, true);
+                editDlgTemp.SetChecked(3, true);
                 editDlgTemp.TrainModelClick();
                 VerifyCellValues(editDlgTemp, _cellValuesOriginal);
                 editDlgTemp.CancelDialog();
@@ -461,8 +472,8 @@ namespace pwiz.SkylineTestFunctional
                 // Find missing scores
                 editDlgTemp.PeakScoringModelName = "missing_scores";
                 editDlgTemp.TrainModelClick();
-                editDlgTemp.PeakCalculatorsGrid.SelectRow(2);
-                editDlgTemp.FindMissingValues(2);
+                editDlgTemp.PeakCalculatorsGrid.SelectRow(3);
+                editDlgTemp.FindMissingValues(3);
                 editDlgTemp.OkDialog();
             });
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
@@ -487,17 +498,17 @@ namespace pwiz.SkylineTestFunctional
             RunEditPeakScoringDlg("missing_scores", editDlgTemp =>
             {
                 // No missing values for these scores any more
-                Assert.IsTrue(editDlgTemp.IsActiveCell(2, 0));
-                Assert.IsTrue(editDlgTemp.IsActiveCell(8, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(3, 0));
                 Assert.IsTrue(editDlgTemp.IsActiveCell(9, 0));
                 Assert.IsTrue(editDlgTemp.IsActiveCell(10, 0));
+                Assert.IsTrue(editDlgTemp.IsActiveCell(11, 0));
                
                 // But they aren't automatically enabled
-                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[2].IsEnabled);
-                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[8].IsEnabled);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[3].IsEnabled);
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[9].IsEnabled);
                 Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[10].IsEnabled);
-                editDlgTemp.SetChecked(9, true);
+                Assert.IsFalse(editDlgTemp.PeakCalculatorsGrid.Items[11].IsEnabled);
+                editDlgTemp.SetChecked(10, true);
                 editDlgTemp.TrainModelClick();
                 editDlgTemp.OkDialog();
             });
@@ -569,7 +580,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private static void VerifyCellValues(EditPeakScoringModelDlg editDlg, IList<string[]> expectedValues, double sumWeights = 1.0)
+        private void VerifyCellValues(EditPeakScoringModelDlg editDlg, IList<string[]> expectedValues, double sumWeights = 1.0)
         {
             // Verify expected number of rows.
             Assert.AreEqual(editDlg.PeakCalculatorsGrid.RowCount, expectedValues.Count);
@@ -577,17 +588,32 @@ namespace pwiz.SkylineTestFunctional
             double sumNormWeights = 0;
             for (int row = 0; row < expectedValues.Count; row++)
             {
+                var readModeSb = new StringBuilder();
                 // Verify expected number of columns.
                 Assert.AreEqual(4, expectedValues[row].Length);
 
                 for (int col = 0; col < expectedValues[row].Length; col++)
                 {
                     var expectedValue = expectedValues[row][col];
-                    if (expectedValue == null)
-                        continue;
 
                     // Verify cell value.
                     var actualValue = editDlg.PeakCalculatorsGrid.GetCellValue(col, row);
+                    if (IsRecordMode)
+                    {
+                        if (col == 0)
+                        {
+                            readModeSb.Append("gridGen.AddRow(" + (actualValue == null ? "" : actualValue.ToLower()));
+                        }
+                        if (col == 2)
+                        {
+                            readModeSb.Append("," + (string.IsNullOrEmpty(actualValue) ? "double.NaN" : actualValue));
+                        }
+                        if (col == 3)
+                        {
+                            readModeSb.Append("," + (string.IsNullOrEmpty(actualValue) ? "double.NaN" : actualValue) + ");");
+                            Console.WriteLine(readModeSb.ToString());
+                        }
+                    }
                     if (col == 2  && !string.IsNullOrEmpty(actualValue))
                         actualValue = double.Parse(actualValue).ToString(editDlg.PeakCalculatorWeightFormat);
                     if (col == 3 && !string.IsNullOrEmpty(actualValue))
@@ -595,10 +621,32 @@ namespace pwiz.SkylineTestFunctional
                         sumNormWeights += double.Parse(actualValue);
                         actualValue = double.Parse(actualValue).ToString(editDlg.PeakCalculatorPercentContributionFormat);
                     }
-                    Assert.AreEqual(expectedValue, actualValue);
+                    if(!IsRecordMode)
+                    {
+                        if (expectedValue == null)
+                        {
+                            Assert.IsTrue(string.IsNullOrEmpty(actualValue));
+                        }
+                        else
+                        {
+                            Assert.AreEqual(expectedValue, actualValue);
+                        }
+                    }
                 }
             }
             Assert.AreEqual(sumNormWeights, sumWeights, 0.005);
+        }
+
+        private void VerifyBias(EditPeakScoringModelDlg editDlg, double bias)
+        {
+            if (IsRecordMode)
+            {
+                Console.WriteLine(editDlg.PeakScoringModel.Parameters.Bias.ToString(CultureInfo.CurrentCulture)); 
+            }
+            else
+            {
+                Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, bias, 1e-5);
+            }
         }
     }
 }

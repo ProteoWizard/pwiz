@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -76,20 +77,30 @@ namespace TestPerf
             // OpenSWATH dataset (water background)
             var dataSetComparer = new DataSetComparer(GetTestPath("AQUA4_Water_picked_hroest.sky", "OpenSWATH_Water"), "Manual", true);
             dataSetComparer.Add(GetTestPath("OpenSWATH_SM3_GoldStandardAutomatedResults_water_peakgroups.txt", "OpenSWATH_Water"), "OpenSWATH", false);
+            dataSetComparer.Add(GetTestPath("water_all_scores.csv", "OpenSWATH_Water"), "OpenSWATH_Dario", false);
+            dataSetComparer.Add(GetTestPath("water_7_scores.csv", "OpenSWATH_Water"), "OpenSWATH_Dario_mprophet", false);
             dataSetComparer.RunFullTestDataSet(GetTestPath("AQUA4_Water_picked_hroest_full_rescore_iRT_plus.sky", "OpenSWATH_Water"), rescore, true, false, "_iRT_plus");
             dataSetComparer.ExportQValues(GetTestPath("AQUA4_Water_picked_hroest", "OpenSWATH_Water"));
+            dataSetComparer.ExportResults(GetTestPath("AQUA4_Water_picked_hroest_compare.txt", "OpenSWATH_Water"));
 
             // OpenSWATH dataset (yeast background)
             var dataSetComparerYeast = new DataSetComparer(GetTestPath("AQUA4_Yeast_picked_georger_2.sky", "OpenSWATH_Yeast"), "Manual", true);
             dataSetComparerYeast.Add(GetTestPath("OpenSWATH_SM3_GoldStandardAutomatedResults_yeast_peakgroups.txt", "OpenSWATH_Yeast"), "OpenSWATH", false);
+            dataSetComparerYeast.Add(GetTestPath("yeast_all_scores.csv", "OpenSWATH_Yeast"), "OpenSWATH_Dario", false);
+            dataSetComparerYeast.Add(GetTestPath("yeast_7_scores.csv", "OpenSWATH_Yeast"), "OpenSWATH_Dario_mprophet", false);
             dataSetComparerYeast.RunFullTestDataSet(GetTestPath("AQUA4_Yeast_picked_georger_2_full_rescore_iRT_plus.sky", "OpenSWATH_Yeast"), rescore, true, false, "_iRT_plus");
             dataSetComparerYeast.ExportQValues(GetTestPath("AQUA4_Yeast_picked_georger_2", "OpenSWATH_Yeast"));
+            dataSetComparerYeast.ExportResults(GetTestPath("AQUA4_Yeast_picked_georger_2_compare.txt", "OpenSWATH_Yeast"));
 
             // OpenSWATH dataset (human background)
             var dataSetComparerHuman = new DataSetComparer(GetTestPath("AQUA4_Human_picked_napedro2.sky", "OpenSWATH_Human"), "Manual", true);
             dataSetComparerHuman.Add(GetTestPath("OpenSWATH_SM3_GoldStandardAutomatedResults_human_peakgroups.txt", "OpenSWATH_Human"), "OpenSWATH", false);
+            dataSetComparerHuman.Add(GetTestPath("human_all_scores.csv", "OpenSWATH_Human"), "OpenSWATH_Dario", false);
+            dataSetComparerHuman.Add(GetTestPath("human_7_scores.csv", "OpenSWATH_Human"), "OpenSWATH_Dario_mprophet", false);
+            dataSetComparerHuman.Add(GetTestPath("human_skyline_to_mprophet.csv", "OpenSWATH_Human"), "OpenSWATH_Dario_hybrid", false);
             dataSetComparerHuman.RunFullTestDataSet(GetTestPath("AQUA4_Human_picked_napedro2_full_rescore_iRT_plus.sky", "OpenSWATH_Human"), rescore, true, false, "_iRT_plus");
             dataSetComparerHuman.ExportQValues(GetTestPath("AQUA4_Human_picked_napedro2", "OpenSWATH_Human"));
+            dataSetComparerHuman.ExportResults(GetTestPath("AQUA4_Human_picked_napedro2_compare.txt", "OpenSWATH_Human"));
 
             // Olga_srm_vantage
             var dataSetComparerOlgaSV = new DataSetComparer(GetTestPath("SRMCourse_DosR-hDP__TSQv_true.sky", "Olga_srm_course_vantage"), "Manual", true);
@@ -128,6 +139,8 @@ namespace TestPerf
             public PeakBoundsSource SourceTrue { get; private set; }
             public IList<string> Names { get; private set; }
             public IList<double?> ScoreValues { get; private set; }
+
+            const char SEPARATOR = TextUtil.SEPARATOR_TSV;
 
             public DataSetComparer(string fileName, string name, bool isSrmDocument) : this(new PeakBoundsSource(fileName, name, isSrmDocument))
             {
@@ -241,16 +254,16 @@ namespace TestPerf
                     editDlgDefaultPlus.SelectedModelItem = "Default";
                     editDlgDefaultPlus.UsesDecoys = usesDecoys;
                     editDlgDefaultPlus.UsesSecondBest = usesSecondBest;
-                    editDlgDefault.PeakCalculatorsGrid.Items[6].IsEnabled = true;
-                    editDlgDefault.PeakCalculatorsGrid.Items[5].IsEnabled = true;
-                    editDlgDefault.PeakCalculatorsGrid.Items[4].IsEnabled = true;
+                    editDlgDefaultPlus.PeakCalculatorsGrid.Items[6].IsEnabled = true;
+                    editDlgDefaultPlus.PeakCalculatorsGrid.Items[5].IsEnabled = true;
+                    editDlgDefaultPlus.PeakCalculatorsGrid.Items[4].IsEnabled = true;
                     editDlgDefaultPlus.PeakScoringModelName = "default_plus";
                     editDlgDefaultPlus.TrainModel(true);
                 });
                 OkDialog(editDlgDefaultPlus, editDlgDefaultPlus.OkDialog);
                 RunUI(() =>
                 {
-                    reintegrateDlgDefault.ScoreAnnotation = true;
+                    reintegrateDlgDefaultPlus.ScoreAnnotation = true;
                     reintegrateDlgDefaultPlus.ReintegrateAll = true;
                     reintegrateDlgDefaultPlus.AddAnnotation = true;
                     reintegrateDlgDefaultPlus.OverwriteManual = true;
@@ -267,13 +280,14 @@ namespace TestPerf
                 {
                     editDlg.UsesDecoys = usesDecoys;
                     editDlg.UsesSecondBest = usesSecondBest;
+                    editDlg.PeakCalculatorsGrid.Items[17].IsEnabled = false;
                     editDlg.PeakScoringModelName = "mProphet";
-                    editDlg.TrainModel();
+                    editDlg.TrainModel(true);
                 });
                 OkDialog(editDlg, editDlg.OkDialog);
                 RunUI(() =>
                 {
-                    reintegrateDlgDefault.ScoreAnnotation = true;
+                    reintegrateDlg.ScoreAnnotation = true;
                     reintegrateDlg.ReintegrateAll = true;
                     reintegrateDlg.AddAnnotation = true;
                     reintegrateDlg.OverwriteManual = true;
@@ -283,7 +297,106 @@ namespace TestPerf
 
                 RunUI(() => Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrateAll" + appendText)));
 
+                // Reintegrate
+                var reintegrateDlgAll = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+                var editDlgAll = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgAll.AddPeakScoringModel);
+                RunUI(() =>
+                {
+                    editDlgAll.UsesDecoys = usesDecoys;
+                    editDlgAll.UsesSecondBest = usesSecondBest;
+                    editDlgAll.PeakCalculatorsGrid.Items[17].IsEnabled = true;
+                    editDlgAll.PeakScoringModelName = "mProphet_rt2";
+                    editDlgAll.TrainModel(true);
+                });
+                OkDialog(editDlgAll, editDlgAll.OkDialog);
+                RunUI(() =>
+                {
+                    reintegrateDlgAll.ScoreAnnotation = true;
+                    reintegrateDlgAll.ReintegrateAll = true;
+                    reintegrateDlgAll.AddAnnotation = true;
+                    reintegrateDlgAll.OverwriteManual = true;
+                });
+                OkDialog(reintegrateDlgAll, reintegrateDlgAll.OkDialog);
+                WaitForDocumentLoaded();
+
+                RunUI(() => Add(new PeakBoundsSource(SkylineWindow.Document, "SkylineModelReintegrateAll_rt2" + appendText)));
+
                 Settings.Default.PeakScoringModelList.Clear();
+            }
+
+            public void ExportResults(string fileName)
+            {
+                using (var saver = new FileSaver(fileName))
+                using (var writer = new StreamWriter(saver.SafeName))
+                {
+                    ExportResults(writer);
+                    writer.Flush();
+                    writer.Close();
+                    saver.Commit();
+                }
+            }
+
+            public void ExportResults(TextWriter writer)
+            {
+                WriteHeader(writer);
+                foreach (var peakDataKey in SourceTrue.DictPeakBoundaries.Keys)
+                {
+                    WriteLine(writer, peakDataKey);
+                }
+            }
+
+            public void WriteHeader(TextWriter writer)
+            {
+                var namesArray = new List<string>
+                {
+                    "FileName",
+                    "Sequence",
+                    "IsFalsePositive",
+                    "IsWrongPeakFalsePositive",
+                    "Apex",
+                    "TrueStart",
+                    "TrueEnd",
+                    "NormPeakDistance",
+                    "Score",
+                    "QValue"
+                };
+                foreach (var comparer in Comparers)
+                {
+                    foreach (var name in namesArray)
+                    {
+                        writer.WriteDsvField(name + "_" + comparer.Name, SEPARATOR);
+                        writer.Write(SEPARATOR);
+                    }
+                }
+                writer.WriteLine();
+            }
+
+            public void WriteLine(TextWriter writer, PeakDataKey key)
+            {
+                var cultureInfo = CultureInfo.CurrentCulture;
+                foreach (var comparer in Comparers)
+                {
+                    var peakBoundsMatch = comparer.PeakBoundsMatchDict[key];
+                    var fieldsArray = new List<string>
+                    {
+                        Convert.ToString(peakBoundsMatch.Key.FileName, cultureInfo),
+                        Convert.ToString(peakBoundsMatch.Key.PeptideModifiedSequence, cultureInfo),
+                        Convert.ToString(!peakBoundsMatch.IsCorrectCall(), cultureInfo),
+                        Convert.ToString(peakBoundsMatch.IsIncorrectCall(), cultureInfo),
+                        Convert.ToString(peakBoundsMatch.PickedBounds.Apex, cultureInfo),
+                        Convert.ToString(peakBoundsMatch.TrueBounds.Start, cultureInfo),
+                        Convert.ToString(peakBoundsMatch.TrueBounds.End, cultureInfo),
+                        Convert.ToString(peakBoundsMatch.NormPeakDistance, cultureInfo),
+                        Convert.ToString(peakBoundsMatch.Score, cultureInfo),
+                        Convert.ToString(peakBoundsMatch.QValue, cultureInfo),
+                    };
+                    foreach (var name in fieldsArray)
+                    {
+                        writer.WriteDsvField(name, SEPARATOR);
+                        writer.Write(SEPARATOR);
+                    }
+                }
+                writer.WriteLine();
             }
         }
 
@@ -295,6 +408,8 @@ namespace TestPerf
 
             public IList<PeakDataKey> Unmatched { get; private set; }
 
+            public Dictionary<PeakDataKey, PeakBoundsMatch> PeakBoundsMatchDict { get; private set; }
+
             public string Name { get; private set; }
 
             public Dictionary<double?, MatchStatistics> QValueData { get; private set; }
@@ -304,6 +419,7 @@ namespace TestPerf
                 Name = pickedSource.Name;
                 Unmatched = new List<PeakDataKey>();
                 QValueData = new Dictionary<double?, MatchStatistics>();
+                PeakBoundsMatchDict = new Dictionary<PeakDataKey, PeakBoundsMatch>();
                 var pickedPeaks = pickedSource.DictPeakBoundaries;
                 var truePeaks = trueSource.DictPeakBoundaries;
                 _peakBoundsMatchList = new List<PeakBoundsMatch>();
@@ -313,7 +429,9 @@ namespace TestPerf
                     {
                         pickedPeaks.Add(peakDataKey, new PeakBounds(double.NaN, double.NaN, double.NaN));
                     }
-                    _peakBoundsMatchList.Add(new PeakBoundsMatch(peakDataKey, pickedPeaks[peakDataKey], truePeaks[peakDataKey]));
+                    var peakBoundsMatch = new PeakBoundsMatch(peakDataKey, pickedPeaks[peakDataKey], truePeaks[peakDataKey]);
+                    _peakBoundsMatchList.Add(peakBoundsMatch);
+                    PeakBoundsMatchDict.Add(peakDataKey, peakBoundsMatch);
                 }
                 foreach (var peakDataKey in pickedPeaks.Keys)
                 {
@@ -769,7 +887,7 @@ namespace TestPerf
             }
 
             //public bool ArePeaksSame { get { return !double.IsNaN(PeakDistance) && PeakDistance < MIN_PEAK_SEP; } }
-            public bool ArePeaksSame { get { return !double.IsNaN(NormPeakDistance) && NormPeakDistance < MIN_PEAK_SEP; } }
+            public bool ArePeaksSame { get { return !double.IsNaN(NormPeakDistance) && Math.Abs(NormPeakDistance) < MIN_PEAK_SEP; } }
             public bool IsMissingTrue { get { return TrueBounds.IsMissing; } }
             public bool IsMissingPicked { get { return PickedBounds.IsMissing; } }
 
@@ -878,7 +996,7 @@ namespace TestPerf
             }
 
             public double Center { get { return (Start + End) / 2; } }
-            public double Width { get { return (End - Start) / 2; } }
+            public double Width { get { return End - Start; } }
 
             public bool IsMissing { get { return double.IsNaN(Start) || double.IsNaN(End) || Width <= 0; } }
         }

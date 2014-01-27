@@ -6174,4 +6174,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
     <value>Second best peaks normal distribution</value>
   </data>
+  <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
+    <value>Retention time difference squared</value>
+  </data>
 </root>

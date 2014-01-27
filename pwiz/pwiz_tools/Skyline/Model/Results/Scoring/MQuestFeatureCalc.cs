@@ -60,12 +60,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
             double? predictedRT = predictor.GetRetentionTime(seqModified, fileId);
             if (!predictedRT.HasValue)
                 return float.NaN;
-            return (float) Math.Abs(measuredRT.Value - predictedRT.Value);
+            return (float) RtScoreFunction(measuredRT.Value - predictedRT.Value);
         }
 
         public override bool IsReversedScore { get { return true; } }
 
         protected abstract bool IsIonType(TransitionDocNode nodeTran);
+
+        public abstract double RtScoreFunction(double rtValue);
     }
 
     class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
@@ -75,6 +77,26 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
             return !nodeTran.IsMs1;
+        }
+
+        public override double RtScoreFunction(double rtValue)
+        {
+            return Math.Abs(rtValue);
+        }
+    }
+
+    class MQuestRetentionTimeSquaredPredictionCalc : AbstractMQuestRetentionTimePredictionCalc
+    {
+        public MQuestRetentionTimeSquaredPredictionCalc() : base(Resources.MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared, "Retention time squared difference") { }  // Not L10N
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return !nodeTran.IsMs1;
+        }
+
+        public override double RtScoreFunction(double rtValue)
+        {
+            return rtValue * rtValue;
         }
     }
 

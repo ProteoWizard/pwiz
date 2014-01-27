@@ -8992,6 +8992,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Retention time difference squared.
+        /// </summary>
+        public static string MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared {
+            get {
+                return ResourceManager.GetString("MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc" +
+                        "_Retention_time_difference_squared", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shape.
         /// </summary>
         public static string MQuestShapeCalc_MQuestShapeCalc_Shape {
