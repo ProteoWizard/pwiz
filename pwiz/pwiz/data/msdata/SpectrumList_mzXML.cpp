@@ -55,6 +55,7 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     virtual SpectrumPtr spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const;
 
     private:
+    SpectrumPtr spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults, bool isRecursiveCall) const;
     shared_ptr<istream> is_;
     const MSData& msd_;
     vector<SpectrumIdentityFromMzXML> index_;
@@ -542,23 +543,27 @@ class HandlerScan : public SAXParser::Handler
 
 SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) const
 {
-    return spectrum(index, getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData, NULL);
+    return spectrum(index, getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData, NULL, false);
 }
 
 /// get a copy of the seed spectrum with its binary data populated
 /// this is useful for formats like mzXML that can delay loading of binary data
 /// - client may assume the underlying Spectrum* is valid 
 SpectrumPtr SpectrumList_mzXMLImpl::spectrum(const SpectrumPtr &seed, bool getBinaryData) const {
-    return spectrum(seed->index, getBinaryData ? IO::ReadBinaryDataOnly: IO::IgnoreBinaryData, &seed);
+    return spectrum(seed->index, getBinaryData ? IO::ReadBinaryDataOnly: IO::IgnoreBinaryData, &seed, false);
 }
 
 SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const
+{
+    return spectrum(index, binaryDataFlag, defaults, false);
+}
+
+SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults, bool isRecursiveCall) const
 {
     if (index > index_.size())
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Index out of bounds.");
 
     // allocate Spectrum object and read it in
-
     SpectrumPtr result(new Spectrum);
     if (!result.get())
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Out of memory.");
@@ -599,6 +604,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
     // hack to get parent scanNumber if precursorScanNum wasn't set
 
     if (msLevel > 1 &&
+        !isRecursiveCall && // in an all-MS2 file we can run out of stack
         !result->precursors.empty() &&
         result->precursors.front().spectrumID.empty())
     {
@@ -856,7 +862,8 @@ string SpectrumList_mzXMLImpl::getPrecursorID(int precursorMsLevel, size_t index
         if (index && (cachedMsLevel == 0))
         {
             // populate the missing MS level
-            SpectrumPtr s = spectrum(index, false);
+            SpectrumPtr s = spectrum(index, IO::IgnoreBinaryData, NULL, true); // avoid excessive recursion
+
             cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
         }
         if (cachedMsLevel == precursorMsLevel) 
