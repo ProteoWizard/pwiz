@@ -782,7 +782,7 @@ namespace pwiz.ProteowizardWrapper
             using (var spectrum = SpectrumList.spectrum(scanIndex, _detailStartTime))
             {
                 double? startTime = GetStartTime(spectrum);
-                if (startTime.HasValue || _detailStartTime == DetailLevel.FullMetadata)
+                if (startTime.HasValue || _detailStartTime == DetailLevel.FullData)
                     return startTime ?? 0;
 
                 // If level is not found with faster metadata methods, try the slower ones.
@@ -790,12 +790,16 @@ namespace pwiz.ProteowizardWrapper
                     _detailStartTime = DetailLevel.FastMetadata;
                 else if (_detailStartTime == DetailLevel.FastMetadata)
                     _detailStartTime = DetailLevel.FullMetadata;
+                else if (_detailStartTime == DetailLevel.FullMetadata)
+                    _detailStartTime = DetailLevel.FullData;
                 return GetStartTime(scanIndex);
             }
         }
 
         private static double? GetStartTime(Spectrum spectrum)
         {
+            if (spectrum.scanList.scans.Count == 0)
+                return null;
             var scan = spectrum.scanList.scans[0];
             CVParam param = scan.cvParam(CVID.MS_scan_start_time);
             if (param.empty())
