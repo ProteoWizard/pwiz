@@ -40,9 +40,10 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(197, 10);
+            this.btnOk.Location = new System.Drawing.Point(263, 12);
+            this.btnOk.Margin = new System.Windows.Forms.Padding(4);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
+            this.btnOk.Size = new System.Drawing.Size(100, 28);
             this.btnOk.TabIndex = 7;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
@@ -52,9 +53,10 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(197, 39);
+            this.btnCancel.Location = new System.Drawing.Point(263, 48);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.Size = new System.Drawing.Size(100, 28);
             this.btnCancel.TabIndex = 8;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
@@ -63,26 +65,29 @@
             // checkBoxTest
             // 
             this.checkBoxTest.AutoSize = true;
-            this.checkBoxTest.Location = new System.Drawing.Point(12, 12);
+            this.checkBoxTest.Location = new System.Drawing.Point(16, 15);
+            this.checkBoxTest.Margin = new System.Windows.Forms.Padding(4);
             this.checkBoxTest.Name = "checkBoxTest";
-            this.checkBoxTest.Size = new System.Drawing.Size(78, 17);
+            this.checkBoxTest.Size = new System.Drawing.Size(96, 21);
             this.checkBoxTest.TabIndex = 9;
             this.checkBoxTest.Text = "Check Box";
             this.checkBoxTest.UseVisualStyleBackColor = true;
             // 
             // textBoxTest
             // 
-            this.textBoxTest.Location = new System.Drawing.Point(67, 37);
+            this.textBoxTest.Location = new System.Drawing.Point(89, 46);
+            this.textBoxTest.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxTest.Name = "textBoxTest";
-            this.textBoxTest.Size = new System.Drawing.Size(100, 20);
+            this.textBoxTest.Size = new System.Drawing.Size(132, 22);
             this.textBoxTest.TabIndex = 10;
             // 
             // labelTextBoxTest
             // 
             this.labelTextBoxTest.AutoSize = true;
-            this.labelTextBoxTest.Location = new System.Drawing.Point(9, 40);
+            this.labelTextBoxTest.Location = new System.Drawing.Point(12, 49);
+            this.labelTextBoxTest.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelTextBoxTest.Name = "labelTextBoxTest";
-            this.labelTextBoxTest.Size = new System.Drawing.Size(52, 13);
+            this.labelTextBoxTest.Size = new System.Drawing.Size(66, 17);
             this.labelTextBoxTest.TabIndex = 11;
             this.labelTextBoxTest.Text = "Text Box:";
             // 
@@ -95,27 +100,29 @@
             "Option 2",
             "Option 3",
             "Option 4"});
-            this.comboBoxTest.Location = new System.Drawing.Point(81, 78);
+            this.comboBoxTest.Location = new System.Drawing.Point(108, 96);
+            this.comboBoxTest.Margin = new System.Windows.Forms.Padding(4);
             this.comboBoxTest.Name = "comboBoxTest";
-            this.comboBoxTest.Size = new System.Drawing.Size(85, 21);
+            this.comboBoxTest.Size = new System.Drawing.Size(112, 24);
             this.comboBoxTest.TabIndex = 12;
             // 
             // labelComboBoxTest
             // 
             this.labelComboBoxTest.AutoSize = true;
-            this.labelComboBoxTest.Location = new System.Drawing.Point(11, 81);
+            this.labelComboBoxTest.Location = new System.Drawing.Point(15, 100);
+            this.labelComboBoxTest.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.labelComboBoxTest.Name = "labelComboBoxTest";
-            this.labelComboBoxTest.Size = new System.Drawing.Size(64, 13);
+            this.labelComboBoxTest.Size = new System.Drawing.Size(83, 17);
             this.labelComboBoxTest.TabIndex = 13;
             this.labelComboBoxTest.Text = "Combo Box:";
             // 
-            // TestToolUI
+            // ExampleToolUI
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(284, 118);
+            this.ClientSize = new System.Drawing.Size(379, 145);
             this.Controls.Add(this.labelComboBoxTest);
             this.Controls.Add(this.comboBoxTest);
             this.Controls.Add(this.labelTextBoxTest);
@@ -124,11 +131,12 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "TestToolUI";
+            this.Name = "ExampleToolUI";
             this.ShowInTaskbar = false;
-            this.Text = "TestToolUI";
+            this.Text = "ExampleToolUI";
             this.ResumeLayout(false);
             this.PerformLayout();
 

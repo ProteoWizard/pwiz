@@ -1,7 +1,5 @@
 ##R Script Template : Skyline Tool Store
-# Produces Shewhart Control Charts and Pareto Analysis for Evaulating Proteomic Experiments
-# for Rv2.13 or later must be installed along with the qcc library from R and Skyline
-# (https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/begin.view)
+# Created by Yuval Boss, Department of Genome Sciences at UW.
 
 options (echo = FALSE)
 debug <- FALSE

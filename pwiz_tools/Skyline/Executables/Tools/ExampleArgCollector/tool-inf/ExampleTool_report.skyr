@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ReportSpecList>
   <revision index="1" />
-  <report name="Example Input">
+  <report name="Test Input">
     <table name="T1">DbTransition</table>
     <table name="T2">DbTransitionResult</table>
     <select>

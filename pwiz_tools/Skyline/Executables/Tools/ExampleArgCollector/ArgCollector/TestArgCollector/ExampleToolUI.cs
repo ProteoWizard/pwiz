@@ -11,7 +11,7 @@ namespace ExampleArgCollector
         {
 
             InitializeComponent();
-            comboBoxTest.SelectedIndex = 0;
+            comboBoxTest.SelectedIndex = 1;
             Arguments = oldArguments;
         }
 

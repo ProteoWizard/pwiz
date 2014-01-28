@@ -3,7 +3,7 @@
     class ExampleToolUtil
     {
     }
-    //User define ARGUMENT_COUNT for arguemnts being sent from UI.  Do not include 
+    //User define ARGUMENT_COUNT for arguments being sent from UI.  Do not include 
     //arguments in TestArgsCollector.properties
     static class Constants
     {
