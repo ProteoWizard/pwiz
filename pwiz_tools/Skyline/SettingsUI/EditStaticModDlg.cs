@@ -387,22 +387,18 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
                 {
-                    using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
+                    if (DialogResult.OK == MultiButtonMsgDlg.Show(
+                        this,
                         TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings,
                                               string.Format("'{0}'.", mod.Name), // Not L10N
                                               string.Empty,
                                               Resources.EditStaticModDlg_OkDialog_Continue),
                         MultiButtonMsgDlg.BUTTON_OK))
                     {
-                        var result = dlg.ShowDialog(this);
-                        if (result == DialogResult.OK)
-                        {
-                            Modification = newMod;
-                            DialogResult = DialogResult.OK;
-                        }
-                        return;
+                        Modification = newMod;
+                        DialogResult = DialogResult.OK;
                     }
-
+                    return;
                 }
             }
             
@@ -414,21 +410,19 @@ namespace pwiz.Skyline.SettingsUI
                 var matchingMod = UniMod.FindMatchingStaticMod(newMod, IsStructural);
                 if (matchingMod != null && ModNameAvailable(matchingMod.Name))
                 {
-                    using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
-                            TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings,
-                                                  string.Empty,
-                                                  string.Format(Resources.EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___, matchingMod.Name),
-                                                  string.Format(Resources.EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___, name)),
-                            Resources.EditStaticModDlg_OkDialog_Unimod,
-                            Resources.EditStaticModDlg_OkDialog_Custom,
-                            true))
-                    {
-                        var result = dlg.ShowDialog(this);
-                        if (result == DialogResult.Yes)
-                            newMod = matchingMod;   // Unimod
-                        if (result == DialogResult.Cancel)
-                            return;
-                    }
+                    var result = MultiButtonMsgDlg.Show(
+                        this,
+                        TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings,
+                                                string.Empty,
+                                                string.Format(Resources.EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___, matchingMod.Name),
+                                                string.Format(Resources.EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___, name)),
+                        Resources.EditStaticModDlg_OkDialog_Unimod,
+                        Resources.EditStaticModDlg_OkDialog_Custom,
+                        true);
+                    if (result == DialogResult.Yes)
+                        newMod = matchingMod;   // Unimod
+                    if (result == DialogResult.Cancel)
+                        return;
                 }
             }
             else
@@ -441,15 +435,14 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Finally, if the modification name is found in Unimod, but the modification in Unimod does not 
                     // match the dialog modification, prompt the user to use the Unimod modification definition instead.
-                    using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
-                            TextUtil.LineSeparate(string.Format(Resources.EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___, name),
-                                                  string.Empty,
-                                                  Resources.EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name),
-                            MultiButtonMsgDlg.BUTTON_OK))
+                    if (DialogResult.OK != MultiButtonMsgDlg.Show(
+                        this,
+                        TextUtil.LineSeparate(string.Format(Resources.EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___, name),
+                                                string.Empty,
+                                                Resources.EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name),
+                        MultiButtonMsgDlg.BUTTON_OK))
                     {
-                        var result = dlg.ShowDialog(this);
-                        if (result != DialogResult.OK)
-                            return;
+                        return;
                     }
                 }
             }

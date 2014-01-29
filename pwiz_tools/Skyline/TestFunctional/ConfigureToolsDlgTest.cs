@@ -18,11 +18,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -45,6 +48,8 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             Settings.Default.ToolList.Clear();
+
+            TestToolDescErrors();
 
             TestQuasarDeprecated();
 
@@ -81,6 +86,72 @@ namespace pwiz.SkylineTestFunctional
             TestImmediateWindow();
 
             TestCascadingMenuItems();
+
+        }
+
+        private void TestToolDescErrors()
+        {
+            RunErrorCase(
+                "Missing arg collector",    // Not L10N  
+                @"C:\NotHere\Args.dll",     // Not L10N
+                "NoClass",  // Not L10N
+                Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_);
+
+            string dllPath = TestFilesDir.GetTestPath("ExampleArgCollector.dll"); // Not L10N
+            // Copy to bin directory rather than loading an assembly in the TestFilesDir, because we can't
+            // unlock the file once we load the assembly, and the unit test base class tries to delete
+            // TestFilesDir when the test is done.
+            var skylineDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
+            string dllCopyPath = Path.Combine(skylineDir, Path.GetFileName(dllPath) ?? string.Empty);
+            try
+            {
+                File.Copy(dllPath, dllCopyPath, true);
+            }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch (Exception)
+            {
+            }
+
+            RunErrorCase(
+                "Missing arg collector class",  // Not L10N
+                dllCopyPath,
+                "NoClass",  // Not L10N
+                Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again);
+            
+            RunErrorCase(
+                "Wrong arg collector class",  // Not L10N
+                dllCopyPath,
+                "ExampleArgCollector.ExampleToolUI",  // Not L10N
+                Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_);
+            
+            // Clean up.
+            Settings.Default.ToolList.Clear();
+            RunUI(SkylineWindow.PopulateToolsMenu);
+        }
+
+        private void RunErrorCase(string toolName, string argCollector, string argCollectorClass, string errorMessage)
+        {
+            Settings.Default.ToolList.Add(new ToolDescription(
+                toolName,
+                "Not.here",
+                string.Empty,
+                string.Empty,
+                true,
+                null,
+                argCollector,
+                argCollectorClass,
+                "NotHere",
+                new List<AnnotationDef>(),
+                "1.0",
+                "urn:not:here",
+                "NotHere"));
+            RunUI(SkylineWindow.PopulateToolsMenu);
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(Settings.Default.ToolList.Count - 1),
+                dlg =>
+                {
+                    AssertEx.Contains(dlg.Message, string.Format(errorMessage, toolName));
+                    dlg.OkDialog();
+                });
         }
 
         public class FakeWebHelper : IWebHelpers

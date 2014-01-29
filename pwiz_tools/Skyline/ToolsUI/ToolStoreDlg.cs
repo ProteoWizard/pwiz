@@ -149,7 +149,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException.GetType() == typeof (MessageException))
+                if (ex.InnerException.GetType() == typeof (ToolExecutionException))
                     MessageDlg.Show(this, ex.Message);
                 else
                 {
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.ToolsUI
         public IList<ToolStoreItem> GetToolStoreItems()
         {
             if (FailToConnect)
-                throw new MessageException(FailToConnectMessage);
+                throw new ToolExecutionException(FailToConnectMessage);
             
             if (ToolStoreItems != null)
                 return ToolStoreItems;
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.ToolsUI
         public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
         {
             if (FailDownload)
-                throw new MessageException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
+                throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
 
             if (TestDownloadPath != null)
                 return TestDownloadPath;
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     string fileName = Path.GetFileName(item.FilePath);
                     if (fileName == null)
-                        throw new MessageException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
+                        throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
                     
                     string path = Path.Combine(directory, fileName);
                     File.Copy(item.FilePath, path, true);
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            throw new MessageException(Resources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+            throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)

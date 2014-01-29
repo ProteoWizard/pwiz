@@ -144,7 +144,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException.GetType() == typeof (MessageException))
+                if (ex.InnerException.GetType() == typeof (ToolExecutionException))
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.ToolsUI
                 var olderUri = new Uri(baseUri + "old/" + _version + "/" + exe);
 
                 if (!webClient.DownloadFileAsync(recentUri, DownloadPath) && !webClient.DownloadFileAsync(olderUri, DownloadPath))
-                    throw new MessageException(
+                    throw new ToolExecutionException(
                         TextUtil.LineSeparate(
                             Resources.RInstaller_DownloadR_Download_failed_,
                             Resources
@@ -192,7 +192,7 @@ namespace pwiz.Skyline.ToolsUI
             var processRunner = TestRunProcess ?? new SynchronousRunProcess();
             // an exit code of 0 indicates a successful installation
             if (processRunner.RunProcess(new Process {StartInfo = new ProcessStartInfo {FileName = DownloadPath}}) != 0)
-                throw new MessageException(
+                throw new ToolExecutionException(
                     Resources.RInstaller_InstallR_R_installation_was_not_completed__Cancelling_tool_installation_);
         }
 
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.ToolsUI
             catch(TargetInvocationException ex)
             {
                 //Win32Exception is thrown when the user does not ok Administrative Privileges
-                if (ex.InnerException is MessageException || ex.InnerException is System.ComponentModel.Win32Exception) 
+                if (ex.InnerException is ToolExecutionException || ex.InnerException is System.ComponentModel.Win32Exception) 
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;
@@ -229,7 +229,7 @@ namespace pwiz.Skyline.ToolsUI
 
             if (!PackageInstallHelpers.CheckForInternetConnection())
             {
-                throw new MessageException(
+                throw new ToolExecutionException(
                     TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Error__No_internet_connection_,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
 
@@ -242,11 +242,11 @@ namespace pwiz.Skyline.ToolsUI
                 int exitCode = processRunner.RunProcess(argumentBuilder.ToString(), true, _writer);
                 if (exitCode == EXIT_EARLY_CODE) // When the user exits the command script before it finishes.
                 {
-                    throw new MessageException(string.Format(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_));
+                    throw new ToolExecutionException(string.Format(Resources.RInstaller_InstallPackages_Error__Package_installation_did_not_complete__Output_logged_to_the_Immediate_Window_));
                 }
                 if (exitCode != 0)
                 {
-                    throw new MessageException(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_);
+                    throw new ToolExecutionException(Resources.RInstaller_InstallPackages_Unknown_Error_installing_packages__Output_logged_to_the_Immediate_Window_);
                 }
 
                 //Check for packages again. 
@@ -255,13 +255,13 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (failedPackages.Count == 1)
                     {
-                        throw new MessageException(
+                        throw new ToolExecutionException(
                             string.Format(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
                                                                 string.Empty,
                                                                 Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_), failedPackages.First().Name));
                     }
                     IEnumerable<string> failedPackagesTitles = failedPackages.Select(p => p.Name);
-                    throw new MessageException(
+                    throw new ToolExecutionException(
                         TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_following_packages_failed_to_install_,
                                                             string.Empty,                                    
                                                             TextUtil.LineSeparate(failedPackagesTitles),
@@ -271,7 +271,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (IOException ex)
             {
-                throw new MessageException(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_,
+                throw new ToolExecutionException(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_,
                                                                   string.Empty,
                                                                   ex.Message));
             }

@@ -76,7 +76,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException x)
             {
-                if (x.InnerException.GetType() == typeof(MessageException))
+                if (x.InnerException.GetType() == typeof(ToolExecutionException))
                     MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
                 else
                     throw;
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 result = ToolInstaller.UnpackZipTool(fullpath, new InstallZipToolHelper(install));
             }
-            catch (MessageException x)
+            catch (ToolExecutionException x)
             {
                 MessageDlg.Show(parent, x.Message);
             }
@@ -220,20 +220,16 @@ namespace pwiz.Skyline.ToolsUI
                 message = String.Format(reportMessageFormat, TextUtil.LineSeparate(reportTitles));
             }
 
-            using (
-                var dlg = new MultiButtonMsgDlg(message, buttonText,
-                                                Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true))
+            DialogResult result = MultiButtonMsgDlg.Show(
+                null, message, buttonText, Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true);
+            switch (result)
             {
-                DialogResult result = dlg.ShowDialog();
-                switch (result)
-                {
-                    case DialogResult.Cancel:
-                        return null;
-                    case DialogResult.Yes:
-                        return true;
-                    case DialogResult.No:
-                        return false;
-                }
+                case DialogResult.Cancel:
+                    return null;
+                case DialogResult.Yes:
+                    return true;
+                case DialogResult.No:
+                    return false;
             }
             return false;
         }
@@ -275,22 +271,19 @@ namespace pwiz.Skyline.ToolsUI
 
             string messageFormat = TextUtil.LineSeparate(annotationMessage, question);
 
-            using (var dlg =
-                new MultiButtonMsgDlg(
-                    String.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)),
-                    Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite,
-                    Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true))
+            DialogResult result = MultiButtonMsgDlg.Show(
+                null,
+                String.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)),
+                Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite,
+                Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true);
+            switch (result)
             {
-                DialogResult result = dlg.ShowDialog();
-                switch (result)
-                {
-                    case DialogResult.Cancel:
-                        return null;
-                    case DialogResult.Yes:
-                        return true;
-                    case DialogResult.No:
-                        return false;
-                }
+                case DialogResult.Cancel:
+                    return null;
+                case DialogResult.Yes:
+                    return true;
+                case DialogResult.No:
+                    return false;
             }
             return false;
         }

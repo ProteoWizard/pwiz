@@ -156,7 +156,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException is MessageException)
+                if (ex.InnerException is ToolExecutionException)
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;
@@ -181,7 +181,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(waitBroker, 1))
             {
                 if (!webClient.DownloadFileAsync(downloadUri, DownloadPath = Path.GetTempPath() + fileName))
-                    throw new MessageException(TextUtil.LineSeparate(
+                    throw new ToolExecutionException(TextUtil.LineSeparate(
                         Resources.PythonInstaller_DownloadPython_Download_failed_, 
                         Resources.PythonInstaller_DownloadPython_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
             }
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.ToolsUI
                     Arguments = "/i \"" + DownloadPath + "\"", // Not L10N
                 };
             if (processRunner.RunProcess(new Process {StartInfo = startInfo}) != 0)
-                throw new MessageException(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_);
+                throw new ToolExecutionException(Resources.PythonInstaller_InstallPython_Python_installation_failed__Canceling_tool_installation_);
         }
 
         private bool GetPackages()
@@ -243,21 +243,19 @@ namespace pwiz.Skyline.ToolsUI
                     // if it can't be found, install it
                     if (pipPath == null || TestingPip)
                     {
-                        using (var dlg = new MultiButtonMsgDlg(
-                                Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
-                                Resources.PythonInstaller_InstallPackages_Install))
+                        DialogResult result = MultiButtonMsgDlg.Show(
+                            this,
+                            Resources.PythonInstaller_InstallPackages_Skyline_uses_the_Python_tool_setuptools_and_the_Python_package_manager_Pip_to_install_packages_from_source__Click_install_to_begin_the_installation_process_,
+                            Resources.PythonInstaller_InstallPackages_Install);
+                        if (result == DialogResult.OK && GetPip())
                         {
-                            DialogResult result = dlg.ShowDialog(this);
-                            if (result == DialogResult.OK && GetPip())
-                            {
-                                pipPath = PythonUtil.GetPipPath(_version);
-                                MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
-                            }
-                            else
-                            {
-                                MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
-                                return false;
-                            }
+                            pipPath = PythonUtil.GetPipPath(_version);
+                            MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Pip_installation_complete_);
+                        }
+                        else
+                        {
+                            MessageDlg.Show(this, Resources.PythonInstaller_InstallPackages_Python_package_installation_cannot_continue__Canceling_tool_installation_);
+                            return false;
                         }
                     }
 
@@ -271,7 +269,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException is MessageException)
+                if (ex.InnerException is ToolExecutionException)
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;
@@ -319,7 +317,7 @@ namespace pwiz.Skyline.ToolsUI
 
             if (failedDownloads.Count != 0)
             {
-                throw new MessageException(
+                throw new ToolExecutionException(
                         TextUtil.LineSeparate(
                             Resources.PythonInstaller_DownloadPackages_Failed_to_download_the_following_packages_,
                             string.Empty,
@@ -337,7 +335,7 @@ namespace pwiz.Skyline.ToolsUI
                 var processRunner = TestRunProcess ?? new SynchronousRunProcess();
                 if (processRunner.RunProcess(new Process { StartInfo = new ProcessStartInfo(package) }) != 0)
                 {
-                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_);
+                    throw new ToolExecutionException(Resources.PythonInstaller_InstallPackages_Package_Installation_was_not_completed__Canceling_tool_installation_);
                 }
             }
         }
@@ -348,7 +346,7 @@ namespace pwiz.Skyline.ToolsUI
             if (packages.Count != 0)
             {
                 if (!File.Exists(pipPath) && !TestingPip)
-                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
+                    throw new ToolExecutionException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
 
                 var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
                 foreach (var package in packages)
@@ -365,11 +363,11 @@ namespace pwiz.Skyline.ToolsUI
                 try
                 {
                     if (pipedProcessRunner.RunProcess(argumentBuilder.ToString(), false, _writer) != 0)
-                        throw new MessageException(Resources.PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_);
+                        throw new ToolExecutionException(Resources.PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_);
                 }
                 catch (IOException)
                 {
-                    throw new MessageException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
+                    throw new ToolExecutionException(Resources.PythonInstaller_InstallPackages_Unknown_error_installing_packages_);
                 }
             }
         }
@@ -391,7 +389,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException ex)
             {
-                if (ex.InnerException is MessageException)
+                if (ex.InnerException is ToolExecutionException)
                 {
                     MessageDlg.Show(this, ex.Message);
                     return false;
@@ -422,7 +420,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!webClient.DownloadFileAsync(new Uri(setupToolsScript), SetupToolsPath) ||
                     !webClient.DownloadFileAsync(new Uri(pipScript), PipPath))
                 {
-                    throw new MessageException(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
+                    throw new ToolExecutionException(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
                 }
             }
         }
@@ -443,11 +441,11 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 if (pipedProcessRunner.RunProcess(argumentBuilder.ToString(), false, _writer) != 0)
-                    throw new MessageException(Resources.PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__);
+                    throw new ToolExecutionException(Resources.PythonInstaller_InstallPip_Pip_installation_failed__Error_log_output_in_immediate_window__);
             }
             catch (IOException)
             {
-                throw new MessageException(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip_);
+                throw new ToolExecutionException(Resources.PythonInstaller_InstallPip_Unknown_error_installing_pip_);
             }
         }
 

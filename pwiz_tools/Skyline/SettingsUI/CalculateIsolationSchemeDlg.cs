@@ -290,13 +290,16 @@ namespace pwiz.Skyline.SettingsUI
             double.TryParse(textOverlap.Text, out overlap);
             if (cbOptimizeWindowPlacement.Checked && overlap != 0)
             {
-                using (var dlg = new MultiButtonMsgDlg(Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization,
-                                                       MultiButtonMsgDlg.BUTTON_OK))
+                if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
+                    this,
+                    Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization,
+                    MultiButtonMsgDlg.BUTTON_OK))
                 {
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                        cbOptimizeWindowPlacement.Checked = false;
-                    else
-                        textOverlap.Text = string.Empty;
+                    cbOptimizeWindowPlacement.Checked = false;
+                }
+                else
+                {
+                    textOverlap.Text = string.Empty;
                 }
             }
 

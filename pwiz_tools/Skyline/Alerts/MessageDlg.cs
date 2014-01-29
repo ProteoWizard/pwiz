@@ -32,11 +32,11 @@ namespace pwiz.Skyline.Alerts
         {
             using (var dlg = new MessageDlg(message))
             {
-                dlg.ShowDialog(parent);
+                dlg.ShowWithTimeout(parent, message);
             }
         }
 
-        public MessageDlg(string message)
+        protected MessageDlg(string message)
         {
             InitializeComponent();
 

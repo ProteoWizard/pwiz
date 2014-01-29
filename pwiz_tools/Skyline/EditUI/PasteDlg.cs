@@ -285,11 +285,8 @@ namespace pwiz.Skyline.EditUI
             {
                 string message = TextUtil.LineSeparate(Resources.PasteDlg_AddPeptides_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
                                                         string.Empty, strNameMatches);
-                using (var dlg = new MultiButtonMsgDlg(message, Resources.PasteDlg_AddPeptides_OK))
-                {
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                        return null;
-                }
+                if (MultiButtonMsgDlg.Show(this, message, Resources.PasteDlg_AddPeptides_OK) == DialogResult.Cancel)
+                    return null;
             }
             var backgroundProteome = GetBackgroundProteome(document);
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)

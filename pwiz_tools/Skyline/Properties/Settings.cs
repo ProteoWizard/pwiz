@@ -1390,10 +1390,9 @@ namespace pwiz.Skyline.Properties
                 var message = TextUtil.LineSeparate(Resources.RTScoreCalculatorList_AcceptList_The_regressions,
                                                     TextUtil.LineSeparate(listMissingCalc.Select(reg => reg.Name)),
                                                     Resources.RTScoreCalculatorList_AcceptList_will_be_deleted_because_the_calculators_they_depend_on_have_changed_Do_you_want_to_continue);
-                using (var dlg = new MultiButtonMsgDlg(message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                if (DialogResult.Yes != MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
-                    if(dlg.ShowDialog(owner) != DialogResult.Yes)
-                        return false;
+                    return false;
                 }
             }
 

@@ -309,23 +309,21 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     Program.MainWindow.FocusDocument();
-                    using (var reloadExplorerMsg = new MultiButtonMsgDlg(
-                            string.Format(Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_, _selectedLibName),
-                            Resources.ViewLibraryDlg_MatchModifications_Yes, Resources.ViewLibraryDlg_MatchModifications_No, true))
+                    var result = MultiButtonMsgDlg.Show(
+                        this,
+                        string.Format(Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_, _selectedLibName),
+                        Resources.ViewLibraryDlg_MatchModifications_Yes, Resources.ViewLibraryDlg_MatchModifications_No, true);
+                    if (result == DialogResult.Yes)
                     {
-                        var result = reloadExplorerMsg.ShowDialog(this);
-                        if (result == DialogResult.Yes)
+                        if (Settings.Default.SpectralLibraryList.Count == 0)
                         {
-                            if (Settings.Default.SpectralLibraryList.Count == 0)
-                            {
-                                MessageDlg.Show(this, Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings);
-                                Close();
-                                return;
-                            }
-                            InitializeLibrariesComboBox();
-                            comboLibrary.SelectedIndex = 0;
-                            Activate();
+                            MessageDlg.Show(this, Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings);
+                            Close();
+                            return;
                         }
+                        InitializeLibrariesComboBox();
+                        comboLibrary.SelectedIndex = 0;
+                        Activate();
                     }
                 }
             }
@@ -467,17 +465,14 @@ namespace pwiz.Skyline.SettingsUI
                                                         Resources.ViewLibraryDlg_MatchModifications__0__Would_you_like_to_use_the_Unimod_definitions_for__1__modifications_The_document_will_not_change_until_peptides_with_these_modifications_are_added,
                                                         matcher.UnmatchedSequences.Any() ? (TextUtil.LineSeparate(matcher.UninterpretedMods, string.Empty, string.Empty)) : string.Empty, 
                                                         matcher.UnmatchedSequences.Any() ? Resources.ViewLibraryDlg_MatchModifications_the_matching : Resources.ViewLibraryDlg_MatchModifications_these));
-                using (var dlg =
-                    new MultiButtonMsgDlg(message,
-                                          Resources.ViewLibraryDlg_MatchModifications_Yes,
-                                          Resources.ViewLibraryDlg_MatchModifications_No, false))
+                if (DialogResult.Yes != MultiButtonMsgDlg.Show(
+                    this,
+                    message,
+                    Resources.ViewLibraryDlg_MatchModifications_Yes,
+                    Resources.ViewLibraryDlg_MatchModifications_No, false))
                 {
-                    var result = dlg.ShowDialog(this);
-                    if (result != DialogResult.Yes)
-                    {
-                        _matcher.ClearMatches();
-                        return false;
-                    }
+                    _matcher.ClearMatches();
+                    return false;
                 }
             }
             _matcher = matcher;
@@ -1339,18 +1334,16 @@ namespace pwiz.Skyline.SettingsUI
                 var message = TextUtil.LineSeparate(string.Format(
                     Resources.ViewLibraryDlg_CheckLibraryInSettings_The_library__0__is_not_currently_added_to_your_document, _selectedLibName),
                     Resources.ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it);
-                using (var libraryNotAddedMsgDlg =
-                    new MultiButtonMsgDlg(message, Resources.ViewLibraryDlg_MatchModifications_Yes, Resources.ViewLibraryDlg_MatchModifications_No, true))
-                {
-                    var result = libraryNotAddedMsgDlg.ShowDialog(this);
-                    if (result == DialogResult.No)
-                        return result;
-                    if (result == DialogResult.Yes)
-                        Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, doc =>
-                            doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
-                                pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
-                                new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
-                }
+                var result = MultiButtonMsgDlg.Show(
+                    this, message, Resources.ViewLibraryDlg_MatchModifications_Yes,
+                    Resources.ViewLibraryDlg_MatchModifications_No, true);
+                if (result == DialogResult.No)
+                    return result;
+                if (result == DialogResult.Yes)
+                    Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, doc =>
+                        doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
+                            pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
+                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
             }
             return DialogResult.OK;
         }
@@ -1446,10 +1439,13 @@ namespace pwiz.Skyline.SettingsUI
                                         : Resources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
                                     duplicatePeptides, unmatchedPeptides, entrySuffix));
             }
-            using (var addLibraryPepsDlg = new MultiButtonMsgDlg(msg, Resources.ViewLibraryDlg_AddAllPeptides_Add_All) { Tag = numUnmatchedPeptides })
+            if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
+                this,
+                msg,
+                Resources.ViewLibraryDlg_AddAllPeptides_Add_All,
+                numUnmatchedPeptides))
             {
-                if (addLibraryPepsDlg.ShowDialog(this) == DialogResult.Cancel)
-                    return;
+                return;
             }
             PeptideModifications modsNew = null;
             if (_matcher.HasMatches)

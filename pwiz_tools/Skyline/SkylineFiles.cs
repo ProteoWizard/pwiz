@@ -529,16 +529,15 @@ namespace pwiz.Skyline
         {
             if (Dirty)
             {
-                using (var dlg = new MultiButtonMsgDlg(Resources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
-                    Resources.SkylineWindow_CheckSaveDocument_Yes, Resources.SkylineWindow_CheckSaveDocument_No, true))
+                var result = MultiButtonMsgDlg.Show(this,
+                    Resources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
+                    Resources.SkylineWindow_CheckSaveDocument_Yes, Resources.SkylineWindow_CheckSaveDocument_No, true);
+                    switch (result)
                 {
-                    switch (dlg.ShowDialog(this))
-                    {
-                        case DialogResult.Yes:
-                            return SaveDocument();
-                        case DialogResult.Cancel:
-                            return false;
-                    }
+                    case DialogResult.Yes:
+                        return SaveDocument();
+                    case DialogResult.Cancel:
+                        return false;
                 }
             }
             return true;
@@ -1155,11 +1154,11 @@ namespace pwiz.Skyline
                     {
                         var message = TextUtil.LineSeparate(Resources.SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
                                                             string.Empty, strNameMatches);
-                        using (var dlg = new MultiButtonMsgDlg(
+                        if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
+                            this,
                             string.Format(message), Resources.SkylineWindow_ImportFasta_OK))
                         {
-                            if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                                return;
+                            return;
                         }
                     }
                 }
@@ -1860,31 +1859,31 @@ namespace pwiz.Skyline
             var servers = Settings.Default.ServerList;
             if (servers.Count == 0)
             {
-                using (var dlg = new MultiButtonMsgDlg(
-                    TextUtil.LineSeparate(Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to,
-                    Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
-                    Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
-                    Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue, true))
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_publish_to,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
+                    Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue,
+                    true);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                object tag = null;
+                if (buttonPress == DialogResult.Yes)
                 {
-                    DialogResult buttonPress = dlg.ShowDialog(this);
-                    if (buttonPress == DialogResult.Cancel)
-                        return;
-
-                    object tag = null;
-                    if (buttonPress == DialogResult.Yes)
-                    {
-                        // person intends to register                   
-                        WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html");
-                        tag = true;
-                    }
-
-                    var serverPanoramaWeb = new Server(EditServerDlg.PANORAMA_WEB, string.Empty, string.Empty);
-                    var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
-                    if (newServer == null)
-                        return;
-
-                    servers.Add(newServer);
+                    // person intends to register                   
+                    WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html");
+                    tag = true;
                 }
+
+                var serverPanoramaWeb = new Server(EditServerDlg.PANORAMA_WEB, string.Empty, string.Empty);
+                var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
+                if (newServer == null)
+                    return;
+
+                servers.Add(newServer);
             }
 
             using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))

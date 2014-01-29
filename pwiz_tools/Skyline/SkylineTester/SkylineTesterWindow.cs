@@ -221,7 +221,7 @@ namespace SkylineTester
             commandShell.AddColorPattern("...skipped ", Color.Orange);
             commandShell.AddColorPattern("...failed ", Color.Red);
             commandShell.AddColorPattern("!!!", Color.Red);
-            commandShell.AddColorPattern("   at ", ":line ", Color.Blue);
+            commandShell.AddColorPatternEx("   at ", ":line ", Color.Blue);
 
             commandShell.ColorLine = line =>
             {

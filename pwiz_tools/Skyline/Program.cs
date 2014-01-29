@@ -62,7 +62,8 @@ namespace pwiz.Skyline
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static IList<string> ShownForms { get; set; }        // List of forms shown. 
-        
+        public static List<Exception> TestExceptions { get; set; }
+ 
         private static bool _initialized;                           // Flag to do some initialization just once per process.
         private static string _name;                                // Program name.
 
@@ -303,6 +304,12 @@ namespace pwiz.Skyline
         /// </summary>
         public static void ReportException(Exception exception)
         {
+            if (TestExceptions != null)
+            {
+                AddTestException(exception);
+                return;
+            }
+
             Trace.TraceError("Unhandled exception: {0}", exception);
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
@@ -321,6 +328,12 @@ namespace pwiz.Skyline
 
         private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
+            if (TestExceptions != null)
+            {
+                AddTestException(e.Exception);
+                return;
+            }
+
             Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
@@ -332,6 +345,14 @@ namespace pwiz.Skyline
             {
                 reportForm.ShowDialog(MainWindow);
             }         
+        }
+
+        public static void AddTestException(Exception exception)
+        {
+            lock (TestExceptions)
+            {
+                TestExceptions.Add(exception);
+            }
         }
 
         public static SkylineWindow MainWindow { get; private set; }

@@ -74,14 +74,17 @@ namespace pwiz.Skyline.Alerts
         public static void SaveExceptionFile(Exception exception)
         {
             var exceptionInfo = Environment.NewLine + exception + Environment.NewLine;
-            Trace.WriteLine(exceptionInfo);
+            Trace.TraceError(exceptionInfo);
             Console.WriteLine(exceptionInfo);
 
-            var exceptionInfo2 = new StringBuilder();
-            exceptionInfo2.AppendLine(exception.GetType().FullName);
-            exceptionInfo2.AppendLine(exception.Message);
-            exceptionInfo2.AppendLine(GetStackTraceText(exception));
-            File.WriteAllText(GetExceptionFile(), exceptionInfo2.ToString());
+            if (!Program.FunctionalTest)
+            {
+                var exceptionInfo2 = new StringBuilder();
+                exceptionInfo2.AppendLine(exception.GetType().FullName);
+                exceptionInfo2.AppendLine(exception.Message);
+                exceptionInfo2.AppendLine(GetStackTraceText(exception));
+                File.WriteAllText(GetExceptionFile(), exceptionInfo2.ToString());
+            }
         }
 
         /// <summary>

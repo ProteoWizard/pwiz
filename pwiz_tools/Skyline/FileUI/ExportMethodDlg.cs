@@ -559,17 +559,16 @@ namespace pwiz.Skyline.FileUI
                 }                    
             }
 
-            if (!documentExport.HasAllRetentionTimeStandards())
+            if (!documentExport.HasAllRetentionTimeStandards() &&
+                DialogResult.Cancel == MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides,
+                        Resources.ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results,
+                        Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue),
+                    Resources.ExportMethodDlg_OkDialog_OK))
             {
-                using (var messageDlg = new MultiButtonMsgDlg(
-                            TextUtil.LineSeparate(
-                                          Resources.ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides,
-                                          Resources.ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results,
-                                          Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue), Resources.ExportMethodDlg_OkDialog_OK))
-                {
-                    if (messageDlg.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                }
+                return;
             }
 
             //This will populate _exportProperties
@@ -616,19 +615,16 @@ namespace pwiz.Skyline.FileUI
                           .AppendLine(dpName ?? Resources.ExportMethodDlg_OkDialog_None);
                     }
                     sb.AppendLine().Append(Resources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
-                    using (var dlg = new MultiButtonMsgDlg(sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                    var result = MultiButtonMsgDlg.Show(this, sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
+                    if (result == DialogResult.Yes)
                     {
-                        var result = dlg.ShowDialog(this);
-                        if (result == DialogResult.Yes)
-                        {
-                            documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
-                        }
-                        else if (result == DialogResult.Cancel)
-                        {
-                            comboInstrument.Focus();
-                            e.Cancel = true;
-                            return;
-                        }
+                        documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
+                    }
+                    else if (result == DialogResult.Cancel)
+                    {
+                        comboInstrument.Focus();
+                        e.Cancel = true;
+                        return;
                     }
                 }
             }

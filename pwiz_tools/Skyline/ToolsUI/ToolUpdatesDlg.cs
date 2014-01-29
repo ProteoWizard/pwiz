@@ -147,7 +147,7 @@ namespace pwiz.Skyline.ToolsUI
                     tool.FilePath = _updateHelper.GetToolZipFile(waitBroker, tool._packageIdentifer, individualDir.FullName);
                     successfulDownloads.Add(tool);
                 }
-                catch (MessageException)
+                catch (ToolExecutionException)
                 {
                     failedDownloads.Add(tool._packageName);
                 }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         result = _updateHelper.UnpackZipTool(tool.FilePath, new ToolInstallUI.InstallZipToolHelper(_parent.InstallProgram));
                     }
-                    catch (MessageException x)
+                    catch (ToolExecutionException x)
                     {
                         failedUpdates.Add(tool._packageName, x.Message);
                         exceptionThrown = true;

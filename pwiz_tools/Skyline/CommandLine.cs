@@ -1905,7 +1905,7 @@ namespace pwiz.Skyline
                 result = ToolInstaller.UnpackZipTool(path, new AddZipToolHelper(resolveConflicts, overwriteAnnotations, _out, filename, ppc,
                                                                                programPath, arePackagesHandled));
             }
-            catch (MessageException x)
+            catch (ToolExecutionException x)
             {
                 _out.WriteLine(x.Message);
             }

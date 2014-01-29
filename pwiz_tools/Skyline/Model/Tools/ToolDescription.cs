@@ -54,11 +54,6 @@ namespace pwiz.Skyline.Model.Tools
         string FindProgramPath(ProgramPathContainer programPathContainer);
     }
 
-    public interface IExceptionHandler
-    {        
-        void HandleException(Exception e);
-    }
-
     [XmlRoot("ToolDescription")]
     public class ToolDescription : IXmlSerializable, IKeyContainer<string>
     {
@@ -152,7 +147,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        public string GetUrl(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
+        public string GetUrl(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
         {
             if (!IsWebPage)
                 return null;
@@ -161,7 +156,7 @@ namespace pwiz.Skyline.Model.Tools
             const string paramSep = "&"; // Not L10N
             if (!string.IsNullOrEmpty(Arguments))
             {
-                string query = GetArguments(doc, toolMacroProvider, exceptionHandler);
+                string query = GetArguments(doc, toolMacroProvider, progressMonitor);
                 if (query == null)
                     return null;
 
@@ -175,12 +170,12 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         /// <param name="doc"> Document for report data. </param>
         /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
-        /// <param name="exceptionHandler">Interface for handling exceptions across threads. </param>
+        /// <param name="progressMonitor">Progress monitor. </param>
         /// <returns> Arguments with macros replaced or null if one of the macros was missing 
         /// (eg. no selected peptide for $(SelPeptide) then the return value is null </returns>
-        public string GetArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
+        public string GetArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
         {
-            return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, exceptionHandler);
+            return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, progressMonitor);
         }
 
         /// <summary>
@@ -188,17 +183,17 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         /// <param name="doc"> Document for report data. </param>
         /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
-        /// <param name="exceptionHandler"> Interface for throwing exceptions across threads. </param>
+        /// <param name="progressMonitor">Progress monitor. </param>
         /// <returns> InitialDirectory with macros replaced or null if one of the macros was missing 
         /// (eg. no document for $(DocumentDir) then the return value is null </returns>
-        public string GetInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
+        public string GetInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
         {
-            return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, exceptionHandler);
+            return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, progressMonitor);
         }
 
-        private string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
+        private string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
         {
-            return ToolMacros.ReplaceMacrosCommand(doc, toolMacroProvider, this, exceptionHandler);            
+            return ToolMacros.ReplaceMacrosCommand(doc, toolMacroProvider, this, progressMonitor);            
         }
         
         /// <summary>
@@ -207,9 +202,9 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="document"> The document to base reports off of. </param>
         /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
         /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
-        /// <param name="exceptionHandler"> An interface for throwing exceptions to be dealt with on different threads. </param>
+        /// <param name="progressMonitor"> Progress monitor. </param>
         /// <param name="parent">A parent control to invoke to display args collectors in, if necessary. Can be null. </param>
-        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent) 
+        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent) 
         {
             if (Annotations != null && Annotations.Count != 0)
             {
@@ -227,7 +222,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 var webHelpers = WebHelpers ?? new WebHelpers();
 
-                string url = GetUrl(document, toolMacroProvider, exceptionHandler);
+                string url = GetUrl(document, toolMacroProvider, progressMonitor);
                 if (string.IsNullOrEmpty(url))
                     return;
 
@@ -237,14 +232,14 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else // It has a selected report that must be posted. 
                 {
-                    PostToLink(url, document, exceptionHandler, webHelpers);
+                    PostToLink(url, document, progressMonitor, webHelpers);
                 }
             }
             else // Not a website. Needs its own thread.
             {                
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
-                RunExecutable(document, newToolMacroProvider, textWriter, exceptionHandler, parent);                
+                RunExecutable(document, newToolMacroProvider, textWriter, progressMonitor, parent);                
             }           
         }
 
@@ -286,7 +281,7 @@ namespace pwiz.Skyline.Model.Tools
 
             if (missingAnnotations.Count != 0)
             {
-                throw new MessageException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted, 
+                throw new ToolExecutionException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted, 
                                                                   string.Empty, 
                                                                   TextUtil.LineSeparate(missingAnnotations), 
                                                                   string.Empty, 
@@ -296,7 +291,7 @@ namespace pwiz.Skyline.Model.Tools
 
             if (uncheckedAnnotations.Count != 0)
             {
-                throw new MessageException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
+                throw new ToolExecutionException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
                                                                  string.Empty, 
                                                                  TextUtil.LineSeparate(uncheckedAnnotations), 
                                                                  string.Empty,
@@ -304,23 +299,33 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        private Thread PostToLink(string url, SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
+        private Thread PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
         {
-            var thread = new Thread(() => PostToLinkBackground(url, doc, exceptionHandler, webHelpers));
+            var thread = new Thread(() => PostToLinkBackground(url, doc, progressMonitor, webHelpers));
             thread.Start();
             return thread;
         }
 
-        private void PostToLinkBackground(string url, SrmDocument doc, IExceptionHandler exceptionHandler, IWebHelpers webHelpers)
+        private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
         {
-            string report = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, exceptionHandler);
+            string report = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, progressMonitor);
             if (report != null)
                 webHelpers.PostToLink(url, report);
         }
 
-        private Thread RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent)
+        private Thread RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
         {
-            var thread = new Thread(() => RunExecutableBackground(document, toolMacroProvider, textWriter, exceptionHandler, parent));
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    RunExecutableBackground(document, toolMacroProvider, textWriter, progressMonitor, parent);
+                }
+                catch (Exception e)
+                {
+                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
+                }
+            });
             LocalizationHelper.InitThread(thread);
             thread.Start();
             return thread;
@@ -332,17 +337,17 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="document"> Contains the document to base reports off of, as well as to serve as the parent for args collector forms. </param>
         /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
         /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
-        /// <param name="exceptionHandler"> Interface to enable throwing exceptions on other threads. </param>
+        /// <param name="progressMonitor"> Progress monitor. </param>
         /// <param name="parent">If there is an Args Collector form, it will be showed on this control. Can be null. </param>
-        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler, Control parent)
+        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
         {                                                
             // Need to know if $(InputReportTempPath) is an argument to determine if a report should be piped to stdin or not.
             bool containsInputReportTempPath = Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH);
-            string command = GetCommand(document, toolMacroProvider, exceptionHandler);
+            string command = GetCommand(document, toolMacroProvider, progressMonitor);
             if (command == null) // Has already thrown the error.
                 return;
-            string args = GetArguments(document, toolMacroProvider, exceptionHandler);
-            string initDir = GetInitialDirectory(document, toolMacroProvider, exceptionHandler); // If either of these fails an Exception is thrown.
+            string args = GetArguments(document, toolMacroProvider, progressMonitor);
+            string initDir = GetInitialDirectory(document, toolMacroProvider, progressMonitor); // If either of these fails an Exception is thrown.
                                     
             if (args != null && initDir != null)
             {
@@ -358,7 +363,7 @@ namespace pwiz.Skyline.Model.Tools
                 string reportCsv = null;
                 if (!string.IsNullOrEmpty(ReportTitle) && !containsInputReportTempPath) // Then pipe to stdin.
                 {
-                    reportCsv = ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, exceptionHandler);
+                    reportCsv = ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, progressMonitor);
                     startInfo.RedirectStandardInput = true;
                 }
 
@@ -370,7 +375,7 @@ namespace pwiz.Skyline.Model.Tools
                         ? ToolMacros.GetReportTempPath(ReportTitle, Title)
                         : null;
 
-                    if (!CallArgsCollector(exceptionHandler, parent, args, reportCsv, pathReportCsv, startInfo))
+                    if (!CallArgsCollector(parent, args, reportCsv, pathReportCsv, startInfo))
                         return;
                 }
                
@@ -419,19 +424,19 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     if (ex is Win32Exception)
                     {
-                        exceptionHandler.HandleException(new Exception(
+                        throw new ToolExecutionException(
                             TextUtil.LineSeparate(
                                 Resources.ToolDescription_RunTool_File_not_found_,
                                 Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_),
-                            ex));
+                            ex);
                     }
                     else
                     {
-                        exceptionHandler.HandleException(new Exception(
+                        throw new ToolExecutionException(
                             TextUtil.LineSeparate(
                                 Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__,
                                 ex.Message),
-                            ex));
+                            ex);
                     }
                 }
 
@@ -445,7 +450,7 @@ namespace pwiz.Skyline.Model.Tools
             }      
         }
 
-        private bool CallArgsCollector(IExceptionHandler exceptionHandler, Control parent, string args, string reportCsv, string pathReportCsv, ProcessStartInfo startInfo)
+        private bool CallArgsCollector(Control parent, string args, string reportCsv, string pathReportCsv, ProcessStartInfo startInfo)
         {
             string csvToParse = reportCsv;
             if (csvToParse == null && pathReportCsv != null)
@@ -456,12 +461,11 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 catch (Exception x)
                 {
-                    exceptionHandler.HandleException(new Exception(
+                    throw new ToolExecutionException(
                         TextUtil.LineSeparate(
                             string.Format(Resources.ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0_, pathReportCsv),
                             x.Message),
-                        x));
-                    return false;
+                        x);
                 }
             }
 
@@ -473,26 +477,24 @@ namespace pwiz.Skyline.Model.Tools
             }
             catch (Exception x)
             {
-                exceptionHandler.HandleException(new Exception(
+                throw new ToolExecutionException(
                     string.Format(
                         Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_,
                         Title),
-                    x));
-                return false;
+                    x);
             }
 
             Type type = assembly.GetType(ArgsCollectorClassName);
             if (type == null)
             {
-                exceptionHandler.HandleException(new Exception(
+                throw new ToolExecutionException(
                     string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again,
-                        Title)));
-                return false;
+                        Title));
             }
 
 
             object[] collectorArgs = {parent, csvToParse, (oldArgs != null) ? CommandLine.ParseArgs(oldArgs) : null};
-            object answer = null;
+            object answer;
 
             try
             {
@@ -510,18 +512,17 @@ namespace pwiz.Skyline.Model.Tools
                 string message = x.Message;
                 if (string.IsNullOrEmpty(message))
                 {
-                    exceptionHandler.HandleException(
-                        new Exception(string.Format(
-                            Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title),
-                        x));
+                    throw new ToolExecutionException(
+                        string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title),
+                        x);
                 }
                 else
                 {
-                    exceptionHandler.HandleException(new Exception(
+                    throw new ToolExecutionException(
                         TextUtil.LineSeparate(
                             string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_, Title),
                             message),
-                        x));
+                        x);
                 }
             }
             string[] commandLineArguments = answer as string[];
@@ -740,11 +741,11 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    public class MessageException : Exception
+    public class ToolExecutionException : Exception
     {
-        public MessageException(string message) : base(message){}
+        public ToolExecutionException(string message) : base(message){}
 
-        public MessageException(string message, Exception innerException) : base(message, innerException){}
+        public ToolExecutionException(string message, Exception innerException) : base(message, innerException){}
     }
 
     public static class ToolDescriptionHelpers
@@ -756,9 +757,9 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="doc">Document to create the report from.</param>                
         /// <param name="reportTitle">Title of the reportSpec to make a report from.</param>
         /// <param name="toolTitle">Title of tool for exception error message.</param>
-        /// <param name="exceptionHandler">Handler for any exception thrown or null, if exceptions are to be thrown directly to caller</param>
+        /// <param name="progressMonitor">Progress monitor.</param>
         /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
-        public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle, IExceptionHandler exceptionHandler)
+        public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle, IProgressMonitor progressMonitor)
         {
             if (Settings.Default.EnableLiveReports)
             {
@@ -769,20 +770,16 @@ namespace pwiz.Skyline.Model.Tools
                 var viewSpec = viewContext.CustomViews.First(view2 => view2.Name == reportTitle);
                 if (null == viewSpec)
                 {
-                    var x = new Exception(string.Format(
-                    Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
-                    toolTitle, reportTitle));
-                    if (exceptionHandler == null)
-                        throw x;
-
-                    exceptionHandler.HandleException(x);
-                    return null;
+                    throw new ToolExecutionException(
+                        string.Format(
+                            Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
+                            toolTitle, reportTitle));
                 }
                 var status =
                     new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                         reportTitle));
                 var writer = new StringWriter();
-                if (viewContext.Export(exceptionHandler as IProgressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer, 
+                if (viewContext.Export(progressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer, 
                     new DsvWriter(CultureInfo.InvariantCulture, TextUtil.CsvSeparator)))
                 {
                     return writer.ToString();
@@ -793,17 +790,12 @@ namespace pwiz.Skyline.Model.Tools
             if (reportSpec == null)
             {
                 // Complain that the report no longer exist.
-                var x = new Exception(string.Format(
+                throw new ToolExecutionException(string.Format(
                         Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
-                if (exceptionHandler == null)
-                    throw x;
-
-                exceptionHandler.HandleException(x);
-                return null;
             }
 
-            return ToolReportCache.Instance.GetReport(doc, reportSpec, exceptionHandler as IProgressMonitor);
+            return ToolReportCache.Instance.GetReport(doc, reportSpec, progressMonitor);
         }
 
         public static string GetToolsDirectory()

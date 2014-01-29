@@ -236,18 +236,16 @@ namespace pwiz.Skyline.FileUI
             string messageFormat = existing.Count == 1 ?
                Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
                multipleMessage;
-            using (var dlg = new MultiButtonMsgDlg(string.Format(messageFormat, TextUtil.LineSeparate(existing)), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+            var result = MultiButtonMsgDlg.Show(null, string.Format(messageFormat, TextUtil.LineSeparate(existing)),
+                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
+            if (result == DialogResult.Yes)
             {
-                var result = dlg.ShowDialog();
-                if (result == DialogResult.Yes)
-                {
-                    // Overwrite everything
-                    existing.Clear();
-                }
-                else if (result == DialogResult.Cancel)
-                {
-                    return null;
-                }
+                // Overwrite everything
+                existing.Clear();
+            }
+            else if (result == DialogResult.Cancel)
+            {
+                return null;
             }
             return existing;
         }

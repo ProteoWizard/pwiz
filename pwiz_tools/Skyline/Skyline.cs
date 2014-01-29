@@ -76,8 +76,7 @@ namespace pwiz.Skyline
             IDocumentUIContainer,
             IProgressMonitor,
             ILibraryBuildNotificationContainer,
-            IToolMacroProvider,
-            IExceptionHandler
+            IToolMacroProvider
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -2649,7 +2648,7 @@ namespace pwiz.Skyline
                 {
                     AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
                 }
-                catch (MessageException e)
+                catch (ToolExecutionException e)
                 {
                     MessageDlg.Show(_parent, e.Message);
                 }
@@ -2959,16 +2958,14 @@ namespace pwiz.Skyline
                                            var strNameMatches = matcher.FoundMatches;
                                 if (!string.IsNullOrEmpty(strNameMatches))
                                 {
-                                    using (var dlg = new MultiButtonMsgDlg(
+                                    if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
+                                        this,
                                         string.Format(TextUtil.LineSeparate(Resources.SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,string.Empty,
                                             strNameMatches)), Resources.OK))
                                     {
-                                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                                        {
-                                            e.Node.Text = EmptyNode.TEXT_EMPTY;
-                                            e.Node.EnsureVisible();
-                                            return;
-                                        }
+                                        e.Node.Text = EmptyNode.TEXT_EMPTY;
+                                        e.Node.EnsureVisible();
+                                        return;
                                     }
                                 }
                                 peptideDocNodes.Add(matcher.GetModifiedNode(labelText).ChangeSettings(settings, SrmSettingsDiff.ALL));
@@ -3808,19 +3805,6 @@ namespace pwiz.Skyline
             {
                 return FindProgramPath(programPathContainer);
             }
-        }
-
-        #endregion
-
-        #region Implementation of IExceptionHandler
-
-        /// <summary>
-        /// Implementation of IExceptionHandler. Enables Exceptions to be thrown to the SkylineWindow from other threads.
-        /// </summary>
-        /// <param name="e"></param>
-        public void HandleException(Exception e)
-        {            
-            RunUIAction(() => MessageDlg.Show(this, e.Message));
         }
 
         #endregion

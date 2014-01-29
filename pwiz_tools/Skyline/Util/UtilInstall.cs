@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Util
         /// <param name="address">The Uri of the file to download</param>
         /// <param name="path">The path to download the file to, including the name of 
         /// the file, e.g "C:\Users\Trevor\Downloads\example.txt"</param>
-        /// <exception cref="MessageException">Thrown if the user cancels the download 
+        /// <exception cref="ToolExecutionException">Thrown if the user cancels the download 
         /// using the instances' LongWaitBroker</exception>
         /// <returns>True if the downlaod was successful, otherwise false</returns>
         public bool DownloadFileAsync(Uri address, string path)
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Util
                 if (_longWaitBroker.IsCanceled)
                 {
                     _webClient.CancelAsync();
-                    throw new MessageException(
+                    throw new ToolExecutionException(
                         Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
                 }
             }
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Util
         public bool DownloadFileAsync(Uri address, string fileName)
         {
             if (CancelDownload)
-                throw new MessageException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
+                throw new ToolExecutionException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
             return DownloadSuccess;
         }
 

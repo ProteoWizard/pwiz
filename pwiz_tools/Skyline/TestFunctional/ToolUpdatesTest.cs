@@ -167,14 +167,14 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Test for failing to update a tool due to a MessageException during installation.
+        /// Test for failing to update a tool due to a ToolExecutionException during installation.
         /// </summary>
         private static void TestUpdateFailureMessageException()
         {
             Settings.Default.ToolList.Add(SAMPLE_TOOL);
             var toolUpdatesDlg = FormatToolUpdatesDlg(true,
                                                       FormatUpdateHelper(FormatToolStoreClient(true),
-                                                                         CreateTestInstallFunction(new MessageException(EXCEPTION_MESSAGE), false)),
+                                                                         CreateTestInstallFunction(new ToolExecutionException(EXCEPTION_MESSAGE), false)),
                                                       false);
             var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
             Assert.AreEqual(

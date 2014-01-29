@@ -459,7 +459,7 @@ namespace SkylineTester
             _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineColor = lineColor});
         }
  
-        public void AddColorPattern(string lineStart, string lineContains, Color lineColor)
+        public void AddColorPatternEx(string lineStart, string lineContains, Color lineColor)
         {
             _colorMatchList.Add(new ColorMatch {LineStart = lineStart, LineContains = lineContains, LineColor = lineColor});
         }

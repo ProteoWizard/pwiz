@@ -54,7 +54,6 @@ namespace pwiz.SkylineTestUtil
         }
 
 
-        private readonly List<Exception> _testExceptions = new List<Exception>();
         private bool _testCompleted;
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
@@ -389,7 +388,11 @@ namespace pwiz.SkylineTestUtil
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
         /// to be taken.
         /// </summary>
-        public static bool IsPauseForScreenShots { get; set; }
+        public static bool IsPauseForScreenShots
+        {
+            get { return Program.PauseSeconds < 0; }
+            set { Program.PauseSeconds = value ? -1 : 0; }
+        }
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
@@ -405,7 +408,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
+            else if (IsPauseForScreenShots)
                 PauseAndContinueForm.Show(description);
         }
 
@@ -423,6 +426,7 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 Program.FunctionalTest = true;
+                Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
 
                 // Unzip test files.
@@ -456,7 +460,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                _testExceptions.Add(x);
+                Program.AddTestException(x);
             }
 
             // Delete unzipped test files.
@@ -472,15 +476,15 @@ namespace pwiz.SkylineTestUtil
                     }
                     catch (Exception x)
                     {
-                        _testExceptions.Add(x);
+                        Program.AddTestException(x);
                     }
                 }
             }
 
-            if (_testExceptions.Count > 0)
+            if (Program.TestExceptions.Count > 0)
             {
-                Log<AbstractFunctionalTest>.Exception("Functional test exception", _testExceptions[0]); // Not L10N
-                Assert.Fail(_testExceptions[0].ToString());
+                Log<AbstractFunctionalTest>.Exception("Functional test exception", Program.TestExceptions[0]); // Not L10N
+                Assert.Fail(Program.TestExceptions[0].ToString());
             }
 
             if (!_testCompleted)
@@ -510,7 +514,7 @@ namespace pwiz.SkylineTestUtil
             catch (Exception x)
             {
                 // Save exception for reporting from main thread.
-                _testExceptions.Add(x);
+                Program.AddTestException(x);
             }
 
             EndTest();
@@ -558,7 +562,7 @@ namespace pwiz.SkylineTestUtil
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 
-                if (_testExceptions.Count == 0)
+                if (Program.TestExceptions.Count == 0)
                 {
                     // Long wait for library build notifications
                     RunUI(() => SkylineWindow.RemoveLibraryBuildNotification());
@@ -570,7 +574,7 @@ namespace pwiz.SkylineTestUtil
             catch (Exception x)
             {
                 // An exception occurred outside RunTest
-                _testExceptions.Add(x);
+                Program.AddTestException(x);
             }
 
             foreach (var messageDlg in OpenForms.OfType<MessageDlg>())
@@ -581,10 +585,11 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Actually throwing an exception can cause an infinite loop in MSTest
-            _testExceptions.AddRange(from form in OpenForms
-                                     where !(form is SkylineWindow)
-                                     select new AssertFailedException(
-                                         String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
+            Program.TestExceptions.AddRange(
+                from form in OpenForms
+                where !(form is SkylineWindow)
+                select new AssertFailedException(
+                    String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
 
             _testCompleted = true;
 

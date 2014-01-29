@@ -27,7 +27,38 @@ namespace pwiz.Skyline.Util
 {
     public class FormEx : Form
     {
+        private const int TIMEOUT_SECONDS = 10;
+
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
+
+        public DialogResult ShowWithTimeout(IWin32Window parent, string message)
+        {
+            if (Program.FunctionalTest && Program.PauseSeconds == 0)
+            {
+                bool timeout = false;
+                var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000, Enabled = true };
+                timeoutTimer.Tick += (sender, args) =>
+                {
+                    timeoutTimer.Stop();
+                    if (!timeout)
+                    {
+                        timeout = true;
+                        Close();
+                    }
+                };
+                var result = ShowDialog(parent);
+                timeoutTimer.Stop();
+                if (timeout)
+                    throw new TimeoutException(
+                        string.Format("{0} not closed for {1} seconds. Message = {2}", // Not L10N
+                            GetType(),
+                            TIMEOUT_SECONDS,
+                            message));
+                return result;
+            }
+
+            return ShowDialog(parent);
+        }
 
         protected override void OnLoad(EventArgs e)
         {

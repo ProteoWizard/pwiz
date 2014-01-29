@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model.Tools
             string name = Path.GetFileNameWithoutExtension(pathToZip);
             if (name == null)
             {                
-                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
+                throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
             }
             // This helps with zipfiles that have spaces in the titles. 
             // Consider: We may want to add quotes around usages of the $(ToolDir) macro incase the Tool directory has spaces in one of its directory names.
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model.Tools
             string outerToolsFolderPath = ToolDescriptionHelpers.GetToolsDirectory();
             if (string.IsNullOrEmpty(outerToolsFolderPath))
             {
-                throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
+                throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
             }
             string tempFolderPath = Path.Combine(outerToolsFolderPath, "Temp"); //Not L10N
 
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.Tools
                     }
                     catch (Exception)
                     {
-                        throw new MessageException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_);
+                        throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_);
                     }
                 }
 
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Model.Tools
                 var toolInfDir = new DirectoryInfo(Path.Combine(tempToolPath, TOOL_INF));
                 if (!toolInfDir.Exists)
                 {
-                    throw new MessageException(TextUtil.LineSeparate(
+                    throw new ToolExecutionException(TextUtil.LineSeparate(
                             Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_,
                             string.Format(Resources.ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required__0__directory_, TOOL_INF)));
                 }
@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Model.Tools
                             pathToPackageInstallScript = Path.Combine(tempToolPath, TOOL_INF, INSTALL_R_PACKAGES);
                             if (!File.Exists(pathToPackageInstallScript))
                             {
-                                throw new MessageException(TextUtil.LineSeparate(string.Format(Resources.ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip, name),
+                                throw new ToolExecutionException(TextUtil.LineSeparate(string.Format(Resources.ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip, name),
                                                                         string.Empty,
                                                                         string.Format(Resources.ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_, INSTALL_R_PACKAGES)));
                             }
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 if (string.IsNullOrEmpty(prop))
                 {
-                    throw new MessageException(TextUtil.LineSeparate(
+                    throw new ToolExecutionException(TextUtil.LineSeparate(
                         Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
                         string.Format(Resources.ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_,
                                       INFO_PROPERTIES, name)));
@@ -492,7 +492,7 @@ namespace pwiz.Skyline.Model.Tools
                 catch (Exception)
                 {
                     // Failed to read the .properties file
-                    throw new MessageException(string.Format(Resources.ToolInstaller_GetToolInfo_Failed_to_process_the__0__file, INFO_PROPERTIES));
+                    throw new ToolExecutionException(string.Format(Resources.ToolInstaller_GetToolInfo_Failed_to_process_the__0__file, INFO_PROPERTIES));
                 }
 
                 toolInfo.SetPackageVersion(readin.Version);
@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Model.Tools
             }
             else //No info.properties file in the tool-inf directory.
             {
-                throw new MessageException(TextUtil.LineSeparate(
+                throw new ToolExecutionException(TextUtil.LineSeparate(
                     Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
                     string.Format(Resources.ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_,
                                   INFO_PROPERTIES, TOOL_INF)));

@@ -32,12 +32,28 @@ namespace pwiz.Skyline.Alerts
 
         private const int MAX_HEIGHT = 500;
 
+        public static DialogResult Show(IWin32Window parent, string message, string btnText, object tag = null)
+        {
+            using (var dlg = new MultiButtonMsgDlg(message, btnText) {Tag = tag})
+            {
+                return dlg.ShowWithTimeout(parent, message);
+            }
+        }
+
+        public static DialogResult Show(IWin32Window parent, string message, string btnYesText, string btnNoText, bool allowCancel, object tag = null)
+        {
+            using (var dlg = new MultiButtonMsgDlg(message, btnYesText, btnNoText, allowCancel) {Tag = tag})
+            {
+                return dlg.ShowWithTimeout(parent, message);
+            }
+        }
+
         /// <summary>
         /// Show a message box with a Cancel button and one other button.
         /// </summary>
         /// <param name="message">The message to show</param>
         /// <param name="btnText">The text to show in the non-Cancel button (DialogResult.OK)</param>
-        public MultiButtonMsgDlg(string message, string btnText)
+        private MultiButtonMsgDlg(string message, string btnText)
             : this(message, null, btnText, true)
         {
         }
@@ -46,25 +62,25 @@ namespace pwiz.Skyline.Alerts
         /// Show a message box with a Cancel button and two other buttons.
         /// </summary>
         /// <param name="message">The message to show</param>
-        /// <param name="btn0Text">The text to show in the left-most, default button (DialogResult.Yes)</param>
-        /// <param name="btn1Text">The text to show in the second, non-default button (DialogResult.No)</param>
+        /// <param name="btnYesText">The text to show in the left-most, default button (DialogResult.Yes)</param>
+        /// <param name="btnNoText">The text to show in the second, non-default button (DialogResult.No)</param>
         /// <param name="allowCancel">When this is true a Cancel button is the button furthest to the
         /// right. Otherwise, only the two named buttons are visible.</param>
-        public MultiButtonMsgDlg(string message, string btn0Text, string btn1Text, bool allowCancel)
+        private MultiButtonMsgDlg(string message, string btnYesText, string btnNoText, bool allowCancel)
         {
             InitializeComponent();
 
             Text = Program.Name;
             if (allowCancel)
-                btn1.Text = btn1Text;
+                btn1.Text = btnNoText;
             else
             {
-                btn1.Text = btn0Text;
-                btnCancel.Text = btn1Text;
+                btn1.Text = btnYesText;
+                btnCancel.Text = btnNoText;
             }
 
-            if (allowCancel && btn0Text != null)
-                btn0.Text = btn0Text;
+            if (allowCancel && btnYesText != null)
+                btn0.Text = btnYesText;
             else
             {
                 btn0.Visible = false;
