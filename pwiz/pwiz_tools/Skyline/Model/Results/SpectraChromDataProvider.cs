@@ -102,10 +102,10 @@ namespace pwiz.Skyline.Model.Results
                 // If possible, find the maximum retention time in order to scale the chromatogram graph.
                 if (allChromData != null && (filter.EnabledMsMs || filter.EnabledMs))
                 {
-                    var dataSpectrum = dataFile.GetSpectrum(lenSpectra - 1);
-                    if (dataSpectrum.RetentionTime.HasValue)
+                    var retentionTime = dataFile.GetStartTime(lenSpectra - 1);
+                    if (retentionTime.HasValue)
                     {
-                        allChromData.MaxRetentionTime = (float) dataSpectrum.RetentionTime.Value;
+                        allChromData.MaxRetentionTime = (float) retentionTime.Value;
                         allChromData.MaxRetentionTimeKnown = true;
                         allChromData.Progressive = true;
                     }

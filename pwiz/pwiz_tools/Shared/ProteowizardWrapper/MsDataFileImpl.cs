@@ -66,6 +66,8 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
+        private DetailLevel _detailStartTime = DetailLevel.InstantMetadata;
+
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
             return binaryDataArray.data.ToArray();
@@ -777,14 +779,27 @@ namespace pwiz.ProteowizardWrapper
 
         public double? GetStartTime(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex))
+            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailStartTime))
             {
-                return GetStartTime(spectrum);
+                double? startTime = GetStartTime(spectrum);
+                if (startTime.HasValue || _detailStartTime == DetailLevel.FullData)
+                    return startTime ?? 0;
+
+                // If level is not found with faster metadata methods, try the slower ones.
+                if (_detailStartTime == DetailLevel.InstantMetadata)
+                    _detailStartTime = DetailLevel.FastMetadata;
+                else if (_detailStartTime == DetailLevel.FastMetadata)
+                    _detailStartTime = DetailLevel.FullMetadata;
+                else if (_detailStartTime == DetailLevel.FullMetadata)
+                    _detailStartTime = DetailLevel.FullData;
+                return GetStartTime(scanIndex);
             }
         }
 
         private static double? GetStartTime(Spectrum spectrum)
         {
+            if (spectrum.scanList.scans.Count == 0)
+                return null;
             var scan = spectrum.scanList.scans[0];
             CVParam param = scan.cvParam(CVID.MS_scan_start_time);
             if (param.empty())
