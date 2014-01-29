@@ -58,7 +58,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;buildcheck=0;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=on;pass1=on;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
@@ -237,6 +237,7 @@ namespace TestRunner
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
+            var screenShotList = commandLineArgs.ArgAsString("screenshotlist");
             var formList = commandLineArgs.ArgAsString("form");
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
@@ -276,6 +277,12 @@ namespace TestRunner
 
             List<string> shownForms = (formList == "__REGEN__") ? new List<string>() : null;
             runTests.Skyline.Set("ShownForms", shownForms);
+            List<string> screenShotForms = null;
+            if (!string.IsNullOrEmpty(screenShotList))
+            {
+                screenShotForms = new List<string>();
+                runTests.Skyline.Set("ScreenShotForms", screenShotForms);
+            }
 
             // Prepare for showing specific forms, if desired.
             var formLookup = new FormLookup();
@@ -439,6 +446,12 @@ namespace TestRunner
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
                 removeList.Clear();
+            }
+
+            if (screenShotForms != null)
+            {
+                screenShotForms.Sort();
+                File.WriteAllLines(screenShotList, screenShotForms);
             }
 
             return runTests.FailureCount == 0;

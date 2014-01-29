@@ -27,8 +27,9 @@ namespace pwiz.Skyline.Util
 {
     public class FormEx : Form
     {
-        private const int TIMEOUT_SECONDS = 10;
+        public static FormEx LastShownForm { get; private set; }
 
+        private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
 
         public DialogResult ShowWithTimeout(IWin32Window parent, string message)
@@ -71,6 +72,12 @@ namespace pwiz.Skyline.Util
             // Track undisposed forms.
             if (Program.FunctionalTest)
                 _undisposedForms.Add(this);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            LastShownForm = this;
         }
 
         protected override bool ShowWithoutActivation

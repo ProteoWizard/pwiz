@@ -62,6 +62,7 @@ namespace pwiz.Skyline
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static IList<string> ShownForms { get; set; }        // List of forms shown. 
+        public static IList<string> ScreenShotForms { get; set; }   // List of shown forms that will pause for screen shots. 
         public static List<Exception> TestExceptions { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.

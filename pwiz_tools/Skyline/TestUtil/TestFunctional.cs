@@ -410,6 +410,14 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if (IsPauseForScreenShots)
                 PauseAndContinueForm.Show(description);
+
+            // Add to list of screen shot forms.
+            if (Program.ScreenShotForms != null && Form.ActiveForm != null)
+            {
+                var screenShotForm = FormEx.LastShownForm.GetType().Name;
+                if (!Program.ScreenShotForms.Contains(screenShotForm))
+                    Program.ScreenShotForms.Add(screenShotForm);
+            }
         }
 
         public static void OkDialog(Form form, Action okAction)

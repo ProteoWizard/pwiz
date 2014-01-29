@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace SkylineTester
@@ -54,7 +55,9 @@ namespace SkylineTester
                 args.Append(" pause=");
                 args.Append(pauseSeconds);
             }
-            args.Append(" test=");
+            args.Append(" screenshotlist=\"");
+            args.Append(Path.Combine(MainWindow.RootDir, "ScreenShotForms.txt"));
+            args.Append("\" test=");
             args.Append(String.Join(",", testList));
 
             MainWindow.AddTestRunner(args.ToString());
