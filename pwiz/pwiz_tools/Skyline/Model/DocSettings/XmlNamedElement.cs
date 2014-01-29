@@ -173,6 +173,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public Identity Id { get; private set; }
+
+        protected XmlNamedIdElement ChangeId(Identity id)
+        {
+            return ChangeProp(ImClone(this), im => im.Id = id);
+        }
     }
 
     public sealed class NameComparer<TElem> : IEqualityComparer<TElem>

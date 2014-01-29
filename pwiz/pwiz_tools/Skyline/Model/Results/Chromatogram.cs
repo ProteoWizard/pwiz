@@ -365,17 +365,22 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramSet ChangeOptimizationFunction(OptimizableRegression prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.OptimizationFunction = v, prop);
+            return ChangeProp(ImClone(this), im => im.OptimizationFunction = prop);
         }
 
         public ChromatogramSet ChangeAnnotations(Annotations prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Annotations = v, prop);
+            return ChangeProp(ImClone(this), im => im.Annotations = prop);
         }
 
         public ChromatogramSet ChangeUseForRetentionTimeFilter(bool value)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.UseForRetentionTimeFilter = v, value);
+            return ChangeProp(ImClone(this), im => im.UseForRetentionTimeFilter = value);
+        }
+
+        public ChromatogramSet ChangeId()
+        {
+            return ChangeProp(ImClone(this), im => im.ChangeId(new ChromatogramSetId()));
         }
 
         #endregion

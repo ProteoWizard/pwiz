@@ -298,6 +298,14 @@ namespace pwiz.Skyline.Model.Results
             results._statusLoading = resultsCache._statusLoading;
             results._listPartialCaches = resultsCache._listPartialCaches;
             results._cacheFinal = resultsCache._cacheFinal;
+            if (resultsCache._cacheRecalc != null &&
+                resultsCache._listPartialCaches != null &&
+                resultsCache._listPartialCaches.Count == 1)
+            {
+                // If rescoring, then after the first partial cache is complete, reset the IDs of
+                // all the ChromatogramSets to force recalculation of all peaks
+                results.Chromatograms = results.Chromatograms.Select(c => c.ChangeId()).ToArray();
+            }
 
             // If both sets have partial caches, merge them
             if (_listPartialCaches != null && results._listPartialCaches != null)
