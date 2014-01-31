@@ -262,9 +262,6 @@ namespace pwiz.SkylineTestUtil
                     string formType = typeof(TDlg).Name;
                     if (Program.PauseForms != null && Program.PauseForms.Contains(formType))
                     {
-// ReSharper disable LocalizableElement
-                        RunUI(() => tForm.Text += "  (" + formType + ")");
-// ReSharper restore LocalizableElement
                         Program.PauseForms.Remove(formType);
                         if (Program.PauseSeconds > 0)
                             Thread.Sleep(Program.PauseSeconds * 1000);
@@ -272,9 +269,10 @@ namespace pwiz.SkylineTestUtil
                             PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
                     }
 
-                    if (Program.ShownForms != null && !Program.ShownForms.Contains(formType))
-                        Program.ShownForms.Add(formType);
-
+                    // Add to list of screen shot forms.
+                    if (Program.ScreenShotForms != null && !Program.ScreenShotForms.Contains(formType))
+                        Program.ScreenShotForms.Add(formType);
+                    
                     return tForm;
                 }
 
@@ -412,7 +410,7 @@ namespace pwiz.SkylineTestUtil
                 PauseAndContinueForm.Show(description);
 
             // Add to list of screen shot forms.
-            if (Program.ScreenShotForms != null && Form.ActiveForm != null)
+            if (Program.ScreenShotForms != null && FormEx.LastShownForm != null)
             {
                 var screenShotForm = FormEx.LastShownForm.GetType().Name;
                 if (!Program.ScreenShotForms.Contains(screenShotForm))

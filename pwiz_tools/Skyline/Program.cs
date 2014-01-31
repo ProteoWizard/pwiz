@@ -58,10 +58,11 @@ namespace pwiz.Skyline
         public static bool DemoMode { get; set; }
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
+        public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
-        public static IList<string> ShownForms { get; set; }        // List of forms shown. 
+        public static List<string> ShownForms { get; set; }         // List of forms shown. 
         public static IList<string> ScreenShotForms { get; set; }   // List of shown forms that will pause for screen shots. 
         public static List<Exception> TestExceptions { get; set; }
  
@@ -118,6 +119,8 @@ namespace pwiz.Skyline
 
             CommonFormEx.TestMode = FunctionalTest;
             CommonFormEx.Offscreen = SkylineOffscreen;
+            CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
+            CommonFormEx.ShownForms = FormEx.ShownForms = ShownForms;
 
             try
             {

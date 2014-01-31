@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -185,6 +186,8 @@ namespace TestRunnerLib
             Thread.CurrentThread.CurrentCulture = saveCulture;
             Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
+            MemoryManagement.FlushMemory();
+
             const int mb = 1024*1024;
             var managedMemory = GC.GetTotalMemory(true) / mb;
 
@@ -228,6 +231,25 @@ namespace TestRunnerLib
                 exception.InnerException.Message,
                 exception.InnerException.StackTrace);
             return false;
+        }
+
+        static class MemoryManagement
+        {
+            [DllImportAttribute("kernel32.dll", EntryPoint = "SetProcessWorkingSetSize", ExactSpelling = true, CharSet =
+                CharSet.Ansi, SetLastError = true)]
+
+            private static extern int SetProcessWorkingSetSize(IntPtr process, int minimumWorkingSetSize, int
+                maximumWorkingSetSize);
+
+            public static void FlushMemory()
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
+                }
+            }
         }
 
         private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500) 

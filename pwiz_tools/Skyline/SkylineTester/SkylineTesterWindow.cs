@@ -566,6 +566,7 @@ namespace SkylineTester
                 pauseFormSeconds,
                 pauseFormButton,
                 formsLanguage,
+                showFormNames,
                 formsTree,
 
                 // Tutorials
@@ -574,6 +575,7 @@ namespace SkylineTester
                 pauseTutorialsScreenShots,
                 tutorialsDemoMode,
                 tutorialsLanguage,
+                showFormNamesTutorial,
                 tutorialsTree,
 
                 // Tests
@@ -980,6 +982,8 @@ namespace SkylineTester
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
+        public CheckBox         ShowFormNames               { get { return showFormNames; } }
+        public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }

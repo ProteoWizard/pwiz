@@ -26,7 +26,7 @@ namespace TestRunnerLib
 {
     public class FormLookup
     {
-        private const string CacheFile = "TestRunnerFormLookup.csv";
+        private const string CACHE_FILE = "TestRunnerFormLookup.csv";
 
         private readonly Dictionary<string, List<string>> _formLookup =
             new Dictionary<string, List<string>>();
@@ -36,14 +36,20 @@ namespace TestRunnerLib
             Load();
         }
 
+        private static string CacheFile
+        {
+            get
+            {
+                var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                return Path.Combine(exeDir ?? "", CACHE_FILE);
+            }
+        }
         private void Load()
         {
-            var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var cacheFile = Path.Combine(exeDir ?? "", CacheFile);
-            if (!File.Exists(cacheFile))
+            if (!File.Exists(CacheFile))
                 return;
 
-            foreach (var line in File.ReadAllLines(cacheFile))
+            foreach (var line in File.ReadAllLines(CacheFile))
             {
                 var parts = line.Split(',').ToList();
                 if (parts.Count > 0)
@@ -71,21 +77,39 @@ namespace TestRunnerLib
             File.WriteAllText(CacheFile, sb.ToString());
         }
 
-        public void AddForms(string testName, int testDuration, List<string> forms)
+        public void AddForms(string testName, int testDuration, List<string> forms, List<string> screenShotForms)
         {
-            var testPlusDuration = testName + ":" + testDuration;
+            var testWithScreenShot = testName + ":-" + testDuration;
+            var testNoScreenShot = testName + ":" + testDuration;
             foreach (var form in forms)
             {
                 if (!_formLookup.ContainsKey(form))
                     _formLookup[form] = new List<string>();
-                _formLookup[form].Add(testPlusDuration);
+                _formLookup[form].Add(screenShotForms.Contains(form) ? testWithScreenShot : testNoScreenShot);
             }
             Save();
         }
 
-        public bool HasTest(string form)
+        public enum Status
         {
-            return _formLookup.ContainsKey(form) && _formLookup[form].Count > 0;
+            no_test,
+            test,
+            test_with_screen_shot
+        };
+
+        public Status GetStatus(string form)
+        {
+            if (!_formLookup.ContainsKey(form))
+                return Status.no_test;
+            var testList = _formLookup[form];
+            if (testList.Count == 0)
+                return Status.no_test;
+            foreach (var test in testList)
+            {
+                if (test.Contains(":-"))
+                    return Status.test_with_screen_shot;
+            }
+            return Status.test;
         }
 
         public List<string> FindTests(List<string> forms, out List<string> uncoveredForms)
@@ -105,15 +129,17 @@ namespace TestRunnerLib
                 int minDuration = int.MaxValue;
                 foreach (var testPlusDuration in _formLookup[form])
                 {
+                    bool hasScreenShot = testPlusDuration.Contains(":-");
                     var parts = testPlusDuration.Split(':');
                     var test = parts[0];
                     var duration = int.Parse(parts[1]);
-                    if (tests.Contains(test))
+                    if (tests.Contains(test) && hasScreenShot)
                     {
                         bestTest = null;
                         break;
                     }
-                    if (minDuration > duration)
+                    if ((hasScreenShot && minDuration < duration) ||
+                        (!hasScreenShot && minDuration > duration))
                     {
                         minDuration = duration;
                         bestTest = test;
@@ -137,7 +163,7 @@ namespace TestRunnerLib
 
         public static void CopyCacheFile(string directory)
         {
-            File.Copy(CacheFile, Path.Combine(directory, CacheFile), true);
+            File.Copy(CacheFile, Path.Combine(directory, CACHE_FILE), true);
         }
     }
 }

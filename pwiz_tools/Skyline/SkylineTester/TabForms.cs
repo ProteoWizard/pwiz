@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -63,6 +64,8 @@ namespace SkylineTester
                     pauseSeconds = 0;
                 args.Append(pauseSeconds);
             }
+            if (MainWindow.ShowFormNames.Checked)
+                args.Append(" showformnames=on");
 
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
@@ -78,7 +81,7 @@ namespace SkylineTester
 
         public override int Find(string text, int position)
         {
-            return MainWindow.FormsTree.Find(text, position);
+            return MainWindow.FormsTree.Find(text.Trim(), position);
         }
 
         public static IEnumerable<string> GetFormList()
@@ -102,16 +105,28 @@ namespace SkylineTester
             var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe");
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = Assembly.LoadFrom(skylinePath);
-            var types = assembly.GetTypes();
+            var types = assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Form)) && !type.IsAbstract).ToArray();
             var formLookup = new FormLookup();
 
             foreach (var type in types)
             {
-                if (type.IsSubclassOf(typeof(Form)) && !type.IsAbstract)
+                if (!HasSubclasses(types, type))
                 {
                     var node = new TreeNode(type.Name);
-                    if (!formLookup.HasTest(type.Name))
-                        node.ForeColor = Color.Gray;
+                    switch (formLookup.GetStatus(type.Name))
+                    {
+                        case FormLookup.Status.no_test:
+                            node.ForeColor = Color.Gray;    // No test available.
+                            break;
+
+                        case FormLookup.Status.test:
+                            node.ForeColor = Color.DarkRed; // No screenshot available.
+                            break;
+
+                        case FormLookup.Status.test_with_screen_shot:
+                            node.ForeColor = Color.Black;
+                            break;
+                    }
                     forms.Add(node);
                 }
             }
@@ -121,6 +136,11 @@ namespace SkylineTester
             MainWindow.FormsTree.ExpandAll();
 
             MainWindow.RegenerateCache.Checked = false;
+        }
+
+        private static bool HasSubclasses(IEnumerable<Type> types, Type baseType)
+        {
+            return types.Count(type => type.IsSubclassOf(baseType)) > 0;
         }
     }
 }

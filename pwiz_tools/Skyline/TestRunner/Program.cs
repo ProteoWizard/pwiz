@@ -44,9 +44,9 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll" };
         private static readonly string[] FORMS_DLLS = { "TestFunctional.dll", "TestTutorial.dll" };
-        private const int LeakThreshold = 2000;
+        private const int LeakThreshold = 50000;
         private const int CrtLeakThreshold = 1000;
-        private const int LeakCheckIterations = 4;
+        private const int LeakCheckIterations = 5;
 
         [STAThread]
         static int Main(string[] args)
@@ -58,7 +58,8 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;demo=off;status=off;buildcheck=0;screenshotlist;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;" +
+                "demo=off;showformnames=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=on;pass1=on;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
@@ -232,6 +233,7 @@ namespace TestRunner
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
+            bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
@@ -277,12 +279,11 @@ namespace TestRunner
 
             List<string> shownForms = (formList == "__REGEN__") ? new List<string>() : null;
             runTests.Skyline.Set("ShownForms", shownForms);
-            List<string> screenShotForms = null;
-            if (!string.IsNullOrEmpty(screenShotList))
-            {
-                screenShotForms = new List<string>();
-                runTests.Skyline.Set("ScreenShotForms", screenShotForms);
-            }
+            var screenShotForms = new List<string>();
+            runTests.Skyline.Set("ScreenShotForms", screenShotForms);
+            var allScreenShotForms = new List<string>();
+            if (showFormNames)
+                runTests.Skyline.Set("ShowFormNames", true);
 
             // Prepare for showing specific forms, if desired.
             var formLookup = new FormLookup();
@@ -330,6 +331,7 @@ namespace TestRunner
                     foreach (var test in testList)
                     {
                         testNumber++;
+                        var memoryPoints = new List<double>();
 
                         runTests.Language = new CultureInfo("en");
                         runTests.CheckCrtLeaks = CrtLeakThreshold;
@@ -339,23 +341,23 @@ namespace TestRunner
                             continue;
                         }
                         runTests.CheckCrtLeaks = 0;
+                        memoryPoints.Add(runTests.TotalMemoryBytes);
 
-                        // Check for memory leak by noting memory size increase over multiple runs.
-                        // Check leaks up to 3 times to make sure the test is actually leaking, because
-                        // memory reporting is pretty squishy.
-                        long leakSize = 0;
+                        bool failed = false;
+                        double slope = 0;
+                        int languageIndex = 0;
                         for (int leakCheck = 0; leakCheck < 3; leakCheck++)
                         {
-                            long memorySize = runTests.TotalMemoryBytes;
-                            bool failed = false;
-                            for (int i = 1; i <= qualityPasses; i++)
+                            for (int i = 0; i < qualityPasses; i++)
                             {
-                                runTests.Language = new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
+                                runTests.Language =
+                                    new CultureInfo(qualityLanguages[(++languageIndex)%qualityLanguages.Length]);
                                 if (!runTests.Run(test, 1, testNumber))
                                 {
                                     failed = true;
                                     break;
                                 }
+                                memoryPoints.Add(runTests.TotalMemoryBytes);
                             }
                             if (failed)
                             {
@@ -363,21 +365,17 @@ namespace TestRunner
                                 break;
                             }
 
-                            long leakedPerPass = (runTests.TotalMemoryBytes - memorySize)/qualityPasses;
-                            if (leakedPerPass < LeakThreshold)
-                            {
-                                leakSize = 0;
+                            slope = CalculateSlope(memoryPoints);
+                            if (slope < LeakThreshold)
                                 break;
-                            }
-                            if (leakSize == 0)
-                                leakSize = leakedPerPass;
-                            if (leakSize > leakedPerPass)
-                                leakSize = leakedPerPass;
                         }
 
-                        if (leakSize > LeakThreshold)
+                        if (failed)
+                            continue;
+
+                        if (slope >= LeakThreshold)
                         {
-                            runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, leakSize);
+                            runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, Math.Floor(slope));
                             removeList.Add(test);
                         }
                     }
@@ -424,6 +422,8 @@ namespace TestRunner
                 {
                     testNumber++;
 
+                    screenShotForms.Clear();
+
                     // Run once (or repeat times) for each language.
                     foreach (var language in languages)
                     {
@@ -438,8 +438,14 @@ namespace TestRunner
                     // Record which forms the test showed.
                     if (shownForms != null)
                     {
-                        formLookup.AddForms(test.TestMethod.Name, runTests.LastTestDuration, shownForms);
+                        formLookup.AddForms(test.TestMethod.Name, runTests.LastTestDuration, shownForms, screenShotForms);
                         shownForms.Clear();
+                    }
+
+                    foreach (var form in screenShotForms)
+                    {
+                        if (!allScreenShotForms.Contains(form))
+                            allScreenShotForms.Add(form);
                     }
                 }
 
@@ -448,13 +454,24 @@ namespace TestRunner
                 removeList.Clear();
             }
 
-            if (screenShotForms != null)
+            if (!string.IsNullOrEmpty(screenShotList))
             {
-                screenShotForms.Sort();
-                File.WriteAllLines(screenShotList, screenShotForms);
+                allScreenShotForms.Sort();
+                File.WriteAllLines(screenShotList, allScreenShotForms);
             }
 
             return runTests.FailureCount == 0;
+        }
+
+        private static double CalculateSlope(IEnumerable<double> points)
+        {
+            var yValues = points.ToArray();
+            var xValues = new double[yValues.Length];
+            for (int i = 0; i < xValues.Length; i++)
+                xValues[i] = i;
+            var xStats = new Statistics(xValues);
+            var yStats = new Statistics(yValues);
+            return yStats.Slope(xStats);
         }
 
         // Load list of tests to be run into TestList.

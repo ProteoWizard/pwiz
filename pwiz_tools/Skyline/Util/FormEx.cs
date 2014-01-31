@@ -27,7 +27,9 @@ namespace pwiz.Skyline.Util
 {
     public class FormEx : Form
     {
-        public static FormEx LastShownForm { get; private set; }
+        public static Form LastShownForm { get; set; }
+        public static bool ShowFormNames { get; set; }
+        public static List<string> ShownForms { get; set; } 
 
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
@@ -72,11 +74,22 @@ namespace pwiz.Skyline.Util
             // Track undisposed forms.
             if (Program.FunctionalTest)
                 _undisposedForms.Add(this);
-        }
+
+// ReSharper disable LocalizableElement
+            if (ShowFormNames)
+                Text += "  (" + GetType().Name + ")";
+// ReSharper restore LocalizableElement
+}
 
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
+            if (ShownForms != null)
+            {
+                var name = GetType().Name;
+                if (!ShownForms.Contains(name))
+                    ShownForms.Add(name);
+            }
             LastShownForm = this;
         }
 
@@ -162,6 +175,18 @@ namespace pwiz.Skyline.Util
             base.OnLoad(e);
             if (Parent == null)
                 FormEx.SetOffscreen(this);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (FormEx.ShownForms != null)
+            {
+                var name = GetType().Name;
+                if (!FormEx.ShownForms.Contains(name))
+                    FormEx.ShownForms.Add(name);
+            }
+            FormEx.LastShownForm = this;
         }
 
         protected override bool ShowWithoutActivation

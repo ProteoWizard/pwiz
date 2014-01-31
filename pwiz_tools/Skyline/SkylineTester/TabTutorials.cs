@@ -44,6 +44,8 @@ namespace SkylineTester
 
             var args = new StringBuilder("offscreen=off loop=1 language=");
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
+            if (MainWindow.ShowFormNamesTutorial.Checked)
+                args.Append(" showformnames=on");
             if (MainWindow.TutorialsDemoMode.Checked)
                 args.Append(" demo=on");
             else
@@ -67,7 +69,7 @@ namespace SkylineTester
 
         public override int Find(string text, int position)
         {
-            return MainWindow.TutorialsTree.Find(text, position);
+            return MainWindow.TutorialsTree.Find(text.Trim(), position);
         }
     }
 }

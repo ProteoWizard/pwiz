@@ -27,6 +27,8 @@ namespace pwiz.Common.Controls
     {
         public static bool TestMode { get; set; }
         public static bool Offscreen { get; set; }
+        public static bool ShowFormNames { get; set; }
+        public static List<string> ShownForms { get; set; } 
 
         private static readonly List<CommonFormEx> _undisposedForms = new List<CommonFormEx>();
 
@@ -41,6 +43,22 @@ namespace pwiz.Common.Controls
             // Track undisposed forms.
             if (TestMode)
                 _undisposedForms.Add(this);
+
+// ReSharper disable LocalizableElement
+            if (ShowFormNames)
+                Text += "  (" + GetType().Name + ")";
+// ReSharper restore LocalizableElement
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (ShownForms != null)
+            {
+                var name = GetType().Name;
+                if (!ShownForms.Contains(name))
+                    ShownForms.Add(name);
+            }
         }
 
         protected override bool ShowWithoutActivation

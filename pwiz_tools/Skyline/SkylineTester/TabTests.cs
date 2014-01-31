@@ -84,7 +84,7 @@ namespace SkylineTester
 
         public override int Find(string text, int position)
         {
-            return MainWindow.TestsTree.Find(text, position);
+            return MainWindow.TestsTree.Find(text.Trim(), position);
         }
 
         public static string GetTestList()
