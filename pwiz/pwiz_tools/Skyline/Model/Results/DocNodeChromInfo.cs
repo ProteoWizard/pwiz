@@ -219,16 +219,15 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsUserSetAuto { get { return UserSet == UserSet.IMPORTED || UserSet == UserSet.REINTEGRATED; } }
 
+        public bool IsUserSetMatched { get { return UserSet == UserSet.MATCHED; }}
+
         public bool IsUserModified { get { return IsUserSetManual || !Annotations.IsEmpty; } }
 
         #region Property change methods
 
         public TransitionGroupChromInfo ChangeRatios(IList<RatioValue> prop)
         {
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im.Ratios = prop;
-                                                 });
+            return ChangeProp(ImClone(this), im => im.Ratios = prop);
         }
 
         public TransitionGroupChromInfo ChangeAnnotations(Annotations annotations)
@@ -236,6 +235,11 @@ namespace pwiz.Skyline.Model.Results
             if (Equals(annotations, Annotations))
                 return this;
             return ChangeProp(ImClone(this), im => im.Annotations = annotations);
+        }
+
+        public TransitionGroupChromInfo ChangeUserSet(UserSet prop)
+        {
+            return ChangeProp(ImClone(this), im => im.UserSet = prop);
         }
 
         #endregion
@@ -399,6 +403,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsUserSetAuto { get { return UserSet == UserSet.IMPORTED || UserSet == UserSet.REINTEGRATED; } }
 
+        public bool IsUserSetMatched { get { return UserSet == UserSet.MATCHED; } }
+
         public bool IsUserModified { get { return !Equals(UserSet, UserSet.FALSE) || !Annotations.IsEmpty; } }
 
         public bool IsEmpty { get { return EndRetentionTime == 0; } }
@@ -478,6 +484,11 @@ namespace pwiz.Skyline.Model.Results
             if (Equals(annotations, Annotations))
                 return this;
             return ChangeProp(ImClone(this), im => im.Annotations = annotations);
+        }
+
+        public TransitionChromInfo ChangeUserSet(UserSet prop)
+        {
+            return ChangeProp(ImClone(this), im => im.UserSet = prop);
         }
 
         #endregion
@@ -780,7 +791,49 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    public enum UserSet { TRUE, FALSE, IMPORTED, REINTEGRATED }
+    public enum UserSet
+    {
+        TRUE,   // SET by manual integration
+        FALSE,  // Best peak picked during results import
+        IMPORTED,   // Import peak boundaries
+        REINTEGRATED,   // Edit > Refine > Reintagrate
+        MATCHED // Forced by peak matching when adding missing label type precursors
+    }
+
+    public static class UserSetExtension
+    {
+        private static readonly UserSet[] USER_SET_PRIORITY_LIST =
+            {
+                UserSet.FALSE,
+                UserSet.TRUE,
+                UserSet.IMPORTED,
+                UserSet.REINTEGRATED,
+                UserSet.MATCHED
+            };
+
+        public static UserSet GetBest(UserSet us1, UserSet us2, bool includeFalse = false)
+        {
+            for (int i = includeFalse ? 0 : 1; i < USER_SET_PRIORITY_LIST.Length; i++)
+            {
+                UserSet usCurrent = USER_SET_PRIORITY_LIST[i];
+                if (us1 == usCurrent || us2 == usCurrent)
+                    return usCurrent;
+            }
+            return UserSet.FALSE;            
+        }
+
+        public static bool IsOverride(this UserSet userSetPrimary, UserSet userSetSecondary)
+        {
+            var userSetBest = GetBest(userSetPrimary, userSetSecondary, true);
+            // If primary is already best, then this is not an override
+            if (userSetBest == userSetPrimary)
+                return false;
+            // Otherwise, only override MATCHED with anything and anything with FALSE
+            // This keeps importing and reintegrating from resetting each other's peaks
+            // when the specifide boundaries are not different.
+            return (userSetPrimary == UserSet.MATCHED || userSetSecondary == UserSet.FALSE);
+        }        
+    }
 
     /// <summary>
     /// Base class for a single measured result for a single <see cref="DocNode"/>

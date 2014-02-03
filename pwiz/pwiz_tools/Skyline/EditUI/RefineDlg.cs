@@ -115,6 +115,12 @@ namespace pwiz.Skyline.EditUI
             set { comboRefineLabelType.SelectedItem = value.ToString(); }
         }
 
+        public bool AddLabelType
+        {
+            get { return cbAdd.Checked; }
+            set { cbAdd.Checked = value; }
+        }
+
         public void OkDialog()
         {
             // TODO: Remove this

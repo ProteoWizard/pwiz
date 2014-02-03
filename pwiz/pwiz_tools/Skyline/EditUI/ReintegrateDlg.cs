@@ -26,6 +26,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -94,7 +95,8 @@ namespace pwiz.Skyline.EditUI
                             {
                                 throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_);
                             }
-                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, checkBoxAnnotation.Checked, pm, _scoreAnnotation);
+                            // TODO: Add a checkbox for including decoys.  Probably most of the time real users won't want to bother with reintegrating decoys
+                            Document = resultsHandler.ChangePeaks(qCutoff, checkBoxOverwrite.Checked, true, checkBoxAnnotation.Checked, _scoreAnnotation, pm);
                         });
                     if (longWaitDlg.IsCanceled)
                         return;
@@ -107,11 +109,13 @@ namespace pwiz.Skyline.EditUI
                     return;
                 }
             }
-            var settings = Document.Settings;
-            var peptideSettings = settings.PeptideSettings;
-            peptideSettings = peptideSettings.ChangeIntegration(new PeptideIntegration(_driverPeakScoringModel.SelectedItem));
-            settings = settings.ChangePeptideSettings(peptideSettings);
-            Document = Document.ChangeSettings(settings);
+
+            var newPeakScoringModel = _driverPeakScoringModel.SelectedItem;
+            if (!Equals(newPeakScoringModel, Document.Settings.PeptideSettings.Integration.PeakScoringModel))
+            {
+                Document = Document.ChangeSettings(Document.Settings.ChangePeptideIntegration(
+                    i => i.ChangePeakScoringModel(newPeakScoringModel)));
+            }
 
             DialogResult = DialogResult.OK;
         }

@@ -1133,7 +1133,7 @@ namespace pwiz.Skyline.Model
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
             var peak = info.CalcPeak(startIndex, endIndex, flags);
-            userSet = UserSet.IMPORTED; // CONSIDER: Right value?
+            userSet = UserSet.MATCHED;
             if (info.BestPeakIndex != -1)
             {
                 var peakBest = info.GetPeak(info.BestPeakIndex);
@@ -1843,27 +1843,15 @@ namespace pwiz.Skyline.Model
                 UserSet = AddUserSetInfo(UserSet, info.UserSet);
             }
 
-            private static readonly UserSet[] USER_SET_PRIORITY_LIST =
-            {
-                UserSet.TRUE,
-                UserSet.IMPORTED,
-                UserSet.REINTEGRATED
-            };
-
             /// <summary>
             /// Rules for changing the group UserSet based on adding a new transition.  TRUE overrides IMPORTED 
             /// overrides REINTEGRATED overrides FALSE
             /// </summary>
-            /// <param name="groupUserSet"></param> Current UserSet status of the chromatograms for this transition group
-            /// <param name="tranUserSet"></param> Current UserSet status of the chromatogram for the transition to be added
+            /// <param name="groupUserSet">Current UserSet status of the chromatograms for this transition group</param>
+            /// <param name="tranUserSet"> Current UserSet status of the chromatogram for the transition to be added</param>
             private static UserSet AddUserSetInfo(UserSet groupUserSet, UserSet tranUserSet)
             {
-                foreach (var status in USER_SET_PRIORITY_LIST)
-                {
-                    if (tranUserSet == status || groupUserSet == status)
-                        return status;
-                }
-                return UserSet.FALSE;
+                return UserSetExtension.GetBest(groupUserSet, tranUserSet);
             }
 
             public void SetLibInfo(double[] peakAreas, double[] libIntensities)

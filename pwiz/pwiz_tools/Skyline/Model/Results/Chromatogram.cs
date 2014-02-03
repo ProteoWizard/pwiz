@@ -193,6 +193,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private string[] _fileLoadIds;
 
+        /// <summary>
+        /// Counter to differentiate rescored versions
+        /// </summary>
+        private int _rescoreCount;
+
         public ChromatogramSet(string name, IEnumerable<string> msDataFileNames) : this(name, msDataFileNames, Annotations.EMPTY, null)
         {
         }
@@ -378,9 +383,9 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.UseForRetentionTimeFilter = value);
         }
 
-        public ChromatogramSet ChangeId()
+        public ChromatogramSet ChangeRescoreCount()
         {
-            return ChangeProp(ImClone(this), im => im.ChangeId(new ChromatogramSetId()));
+            return ChangeProp(ImClone(this), im => im._rescoreCount++);
         }
 
         #endregion
@@ -599,7 +604,9 @@ namespace pwiz.Skyline.Model.Results
             return base.Equals(obj) 
                 && ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos) 
                 && Equals(obj.Annotations, Annotations)
-                && obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter;
+                && obj.UseForRetentionTimeFilter == UseForRetentionTimeFilter
+                && Equals(obj.OptimizationFunction, OptimizationFunction)
+                && obj._rescoreCount == _rescoreCount;
         }
 
         public override bool Equals(object obj)
@@ -614,12 +621,15 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = base.GetHashCode();
-                result = result*397 + MSDataFileInfos.GetHashCodeDeep();
-                result = result*397 + Annotations.GetHashCode();
-                result = result*397 + UseForRetentionTimeFilter.GetHashCode();
+                result = (result*397) ^ MSDataFileInfos.GetHashCodeDeep();
+                result = (result*397) ^ Annotations.GetHashCode();
+                result = (result*397) ^ UseForRetentionTimeFilter.GetHashCode();
+                result = (result*397) ^ (OptimizationFunction != null ? OptimizationFunction.GetHashCode() : 0);
+                result = (result*397) ^ _rescoreCount;
                 return result;
             }
         }
+
         #endregion
     }
 

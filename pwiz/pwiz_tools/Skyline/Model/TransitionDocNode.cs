@@ -356,14 +356,6 @@ namespace pwiz.Skyline.Model
                 listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount, userSet));
             else
             {
-                // If the target peak is exactly the same as the proposed change,
-                // simply return the original document unchanged
-                foreach (var chromInfo in listChromInfo)
-                {
-                    if (chromInfo.EquivalentTolerant(fileId, step, peak))
-                        return this;
-                }
-
                 bool peakAdded = false;
                 foreach (var chromInfo in listChromInfo)
                 {
@@ -376,6 +368,12 @@ namespace pwiz.Skyline.Model
                             throw new InvalidDataException(string.Format(Resources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
                                                               FragmentIonName));
                         }
+                        
+                        // If the target peak is exactly the same as the proposed change and userSet is not overriding,
+                        // simply return the original node unchanged
+                        if (chromInfo.EquivalentTolerant(fileId, step, peak) && !chromInfo.UserSet.IsOverride(userSet))
+                            return this;
+
                         listChromInfoNew.Add(chromInfo.ChangePeak(peak, userSet));
                         peakAdded = true;
                     }

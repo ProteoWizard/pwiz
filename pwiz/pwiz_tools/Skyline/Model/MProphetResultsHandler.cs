@@ -101,7 +101,12 @@ namespace pwiz.Skyline.Model
             return _qValues.Any(double.IsNaN);
         }
 
-        public SrmDocument ChangePeaks(double qValueCutoff, bool overrideManual = true, bool addAnnotation = false, IProgressMonitor progressMonitor = null, bool addMAnnotation = false)
+        public SrmDocument ChangePeaks(double qValueCutoff,
+                                       bool overrideManual = true,
+                                       bool includeDecoys = true,
+                                       bool addAnnotation = false,
+                                       bool addMAnnotation = false,
+                                       IProgressMonitor progressMonitor = null)
         {
             var annotationNames = from def in Document.Settings.DataSettings.AnnotationDefs
                                   where def.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.precursor_result)
@@ -144,17 +149,20 @@ namespace pwiz.Skyline.Model
             SrmDocument docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
             int i = 0;
+            // Do not count decoys, if they won't be changing
+            int countPeptides = _featureDictionary.Values.Count(e => includeDecoys || !e.Features.Id.NodePep.IsDecoy);
             var status = new ProgressStatus(Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries);
             foreach (var dictEntry in _featureDictionary.Values)
             {
                 var transitionGroupFeatures = dictEntry.Features;
                 if (progressMonitor != null && i % 10 == 0)
-                    progressMonitor.UpdateProgress(status = status.ChangePercentComplete(100 * i / (_featureDictionary.Count + 1)));
+                    progressMonitor.UpdateProgress(status = status.ChangePercentComplete(100 * i / (countPeptides + 1)));
                 // Pick the highest-scoring peak
                 var bestIndex = dictEntry.BestIndex;
                 var bestFeature = transitionGroupFeatures.PeakGroupFeatures[bestIndex];
                 double? startTime = bestFeature.StartTime;
                 double? endTime = bestFeature.EndTime;
+                var userSet = bestFeature.IsMaxPeak ? UserSet.FALSE : UserSet.REINTEGRATED;
                 // Read out node and file paths
                 var nodePepGroup = transitionGroupFeatures.Id.NodePepGroup;
                 var nodePep = transitionGroupFeatures.Id.NodePep;
@@ -162,11 +170,16 @@ namespace pwiz.Skyline.Model
                 var nameSet = transitionGroupFeatures.Id.ChromatogramSet.Name;
                 var labelType = transitionGroupFeatures.Id.LabelType;
                 var qValue = dictEntry.QValue;
+
+                if (!includeDecoys && nodePep.IsDecoy)
+                    continue;
+
                 // Skyline picks no peak at all if none have a low enough q value
                 if (qValue != null && qValue > qValueCutoff)
                 {
                     startTime = null;
                     endTime = null;
+                    userSet = UserSet.REINTEGRATED; // Peak remove requires a non-FALSE UserSet
                 }
                 // Change all peaks in this group (defined by same label type)
                 foreach (TransitionGroupDocNode groupNode in nodePep.Children)
@@ -195,7 +208,7 @@ namespace pwiz.Skyline.Model
                         if (groupInfo.IsUserSetManual && !overrideManual)
                             continue;
                         docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                                   null, startTime, endTime, UserSet.REINTEGRATED, null, false);
+                                                   null, startTime, endTime, userSet, null, false);
                     }
                 }
                 ++i;

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Results
         private ReadOnlyCollection<ChromatogramCache> _listPartialCaches;
         private ReadOnlyCollection<string> _listSharedCachePaths;
         private ProgressStatus _statusLoading;
-        
+
         public MeasuredResults(IList<ChromatogramSet> chromatograms)
         {
             Chromatograms = chromatograms;
@@ -295,17 +295,17 @@ namespace pwiz.Skyline.Model.Results
         {
             // Clone the current node, and update its cache properties.
             var results = ImClone(this);
+
+            // Make sure peaks are adjusted as chromatograms are rescored
+            if (resultsCache._cacheRecalc != null &&
+                resultsCache._listPartialCaches != null)
+            {
+                results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
+            }
+            
             results._statusLoading = resultsCache._statusLoading;
             results._listPartialCaches = resultsCache._listPartialCaches;
             results._cacheFinal = resultsCache._cacheFinal;
-            if (resultsCache._cacheRecalc != null &&
-                resultsCache._listPartialCaches != null &&
-                resultsCache._listPartialCaches.Count == 1)
-            {
-                // If rescoring, then after the first partial cache is complete, reset the IDs of
-                // all the ChromatogramSets to force recalculation of all peaks
-                results.Chromatograms = results.Chromatograms.Select(c => c.ChangeId()).ToArray();
-            }
 
             // If both sets have partial caches, merge them
             if (_listPartialCaches != null && results._listPartialCaches != null)
@@ -344,6 +344,31 @@ namespace pwiz.Skyline.Model.Results
                 results.Chromatograms = chromatogramSets;
 
             return results;
+        }
+
+        /// <summary>
+        /// Increments rescore count on all <see cref="ChromatogramSet"/> objects for
+        /// which there is newly cached data.
+        /// </summary>
+        private IList<ChromatogramSet> GetRescoredChromatograms(MeasuredResults resultsNew)
+        {
+            var listNewCaches = GetNewCaches(resultsNew);
+            return resultsNew.Chromatograms.Select(c => IsCachedChromatogramSet(c, listNewCaches) ? c.ChangeRescoreCount() : c).ToArray();
+        }
+
+        private IList<ChromatogramCache> GetNewCaches(MeasuredResults resultsNew)
+        {
+            if (_listPartialCaches == null)
+                return resultsNew._listPartialCaches;
+            var setCaches = new HashSet<ChromatogramCache>(_listPartialCaches);
+            return resultsNew._listPartialCaches.Where(c => !setCaches.Contains(c)).ToArray();
+        }
+
+        private bool IsCachedChromatogramSet(ChromatogramSet chromatogramSet, IList<ChromatogramCache> listNewCaches)
+        {
+            return listNewCaches.Any(
+                cache => chromatogramSet.MSDataFilePaths.Any(
+                    msDataFilePath => cache.CachedFilePaths.Contains(msDataFilePath)));
         }
 
         public bool TryGetChromatogramSet(string name, out ChromatogramSet chromatogramSet, out int index)

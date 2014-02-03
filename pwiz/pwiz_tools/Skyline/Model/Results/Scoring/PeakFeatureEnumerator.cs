@@ -150,7 +150,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         float retentionTime = summaryPeakData.RetentionTime;
                         float startTime = summaryPeakData.StartTime;
                         float endTime = summaryPeakData.EndTime;
-                        listRunFeatures.Add(new PeakGroupFeatures(retentionTime, startTime, endTime, listFeatures.ToArray()));
+                        bool isMaxPeakIndex = summaryPeakData.IsMaxPeakIndex;
+                        listRunFeatures.Add(new PeakGroupFeatures(retentionTime, startTime, endTime,
+                            isMaxPeakIndex, listFeatures.ToArray()));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures);
@@ -201,6 +203,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             public bool HasArea
             {
                 get { return TransitionPeakData.FirstOrDefault(pd => pd.PeakData != null && pd.PeakData.Area != 0) != null; }
+            }
+
+            public bool IsMaxPeakIndex
+            {
+                get { return _peakIndex == _chromGroupInfoPrimary.BestPeakIndex; }
             }
 
             public bool NextPeakIndex()
@@ -550,17 +557,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public sealed class PeakGroupFeatures
     {
-        public PeakGroupFeatures(float retentionTime, float startTime, float endTime, float[] features)
+        public PeakGroupFeatures(float retentionTime, float startTime, float endTime, bool isMaxPeak, float[] features)
         {
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
+            IsMaxPeak = isMaxPeak;
             Features = features;
         }
 
         public float RetentionTime { get; private set; }
         public float StartTime { get; private set; }
         public float EndTime { get; private set; }
+        public bool IsMaxPeak { get; private set; } // Max peak picked during import
         public float[] Features { get; private set; }
     }
 }
