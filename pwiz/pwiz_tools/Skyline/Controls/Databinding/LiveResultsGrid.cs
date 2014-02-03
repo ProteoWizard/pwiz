@@ -48,9 +48,6 @@ namespace pwiz.Skyline.Controls.Databinding
         private IList<AnnotationDef> _annotations;
         private FindResult _pendingFindResult;
 
-        private readonly IDictionary<Type, string> _rowTypeToActiveView
-            = new Dictionary<Type, string>();
-
         public LiveResultsGrid(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -195,11 +192,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void UpdateViewContext()
         {
-            var oldViewInfo = bindingListSource.ViewInfo;
-            if (null != oldViewInfo)
-            {
-                _rowTypeToActiveView[oldViewInfo.ParentColumn.PropertyType] = oldViewInfo.Name;
-            }
+            RememberActiveView();
             IList rowSource = null;
             Type rowType = null;
             string builtInViewName = null;
@@ -266,12 +259,12 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
                 Debug.Assert(null != builtInViewName);
                 var builtInView = new ViewInfo(parentColumn, builtInViewSpec);
+                var rowSourceInfo = new RowSourceInfo(rowSource, builtInView);
                 var viewContext = new ResultsGridViewContext(_dataSchema,
-                    new[] {new RowSourceInfo(rowSource, builtInView)});
-                string activeViewName;
-                _rowTypeToActiveView.TryGetValue(rowType, out activeViewName);
+                    new[] {rowSourceInfo});
                 ViewInfo activeView = null;
-                if (null != activeViewName)
+                string activeViewName;
+                if (Settings.Default.ResultsGridActiveViews.TryGetValue(rowSourceInfo.Name, out activeViewName))
                 {
                     var activeViewSpec = viewContext.CustomViews.FirstOrDefault(view => view.Name == activeViewName);
                     if (null != activeViewSpec)
@@ -283,6 +276,17 @@ namespace pwiz.Skyline.Controls.Databinding
                 bindingListSource.SetViewContext(viewContext, activeView);
             }
             bindingListSource.RowSource = rowSource;
+        }
+
+        private void RememberActiveView()
+        {
+            var viewInfo = bindingListSource.ViewInfo;
+            if (null != viewInfo)
+            {
+                var activeViews = Settings.Default.ResultsGridActiveViews;
+                activeViews[viewInfo.RowSourceName] = viewInfo.Name;
+                Settings.Default.ResultsGridActiveViews = activeViews;
+            }
         }
 
         public void HighlightFindResult(FindResult findResult)

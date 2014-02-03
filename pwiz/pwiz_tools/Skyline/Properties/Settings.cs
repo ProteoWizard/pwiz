@@ -310,6 +310,20 @@ namespace pwiz.Skyline.Properties
             }
         }
         [UserScopedSettingAttribute]
+        public SerializableDictionary<string, string> ResultsGridActiveViews
+        {
+            get
+            {
+                if (this["ResultsGridActiveViews"] == null)
+                {
+                    var list = new SerializableDictionary<string, string>();
+                    ResultsGridActiveViews = list;
+                }
+                return (SerializableDictionary<string, string>)(this["ResultsGridActiveViews"]);
+            }
+            set { this["ResultsGridActiveViews"] = value; }
+        }
+        [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {
             get
