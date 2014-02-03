@@ -183,7 +183,8 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < peakIndex; i++)
             {
                 var peakBetter = listPeakSets[i].First();
-                if (peakBetter.StartIndex <= peak.TimeIndex && peak.TimeIndex <= peakBetter.EndIndex)
+                // If contained by a better peak, or a better peak contains this peak
+                if (peakBetter.IsContained(peak) || peak.IsContained(peakBetter))
                     return true;
             }
             return false;
@@ -751,6 +752,14 @@ namespace pwiz.Skyline.Model.Results
         /// True if the peak ends at the last available time in the chromatogram
         /// </summary>
         public bool IsRightBound { get { return PeakGroup != null && PeakGroup[0].IsRightBound; } }
+
+        /// <summary>
+        /// Returns true if the apex for the given peak is contained in this peak
+        /// </summary>
+        public bool IsContained(PeptideChromDataPeak peak)
+        {
+            return StartIndex <= peak.TimeIndex && peak.TimeIndex <= EndIndex;
+        }
     }
 
     /// <summary>

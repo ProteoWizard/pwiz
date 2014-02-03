@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 double? massError = peakData.MassError;
                 if (massError.HasValue)
                 {
-                    massErrors.Add(Math.Abs(massError.Value));
+                    massErrors.Add(MassErrorFunction(massError.Value));
                     weights.Add(GetWeight(peakData));
                 }
             }
@@ -69,6 +69,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReversedScore { get { return true; } }
 
         protected abstract bool IsIonType(TransitionDocNode nodeTran);
+
+        protected abstract double MassErrorFunction(double massError);
     }
 
     /// <summary>
@@ -82,6 +84,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return nodeTran != null && !nodeTran.IsMs1;
         }
+
+        protected override double MassErrorFunction(double massError)
+        {
+            return Math.Abs(massError);
+        }
+    }
+
+    /// <summary>
+    /// Calculates the average mass error over product ions 
+    /// </summary>
+    public class NextGenProductMassErrorSquaredCalc : MassErrorCalc
+    {
+        public NextGenProductMassErrorSquaredCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error, "Product mass error squared") { }  // Not L10N
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return nodeTran != null && !nodeTran.IsMs1;
+        }
+
+        protected override double MassErrorFunction(double massError)
+        {
+            return massError * massError;
+        }
     }
 
     /// <summary>
@@ -94,6 +119,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
             return nodeTran != null && nodeTran.IsMs1;
+        }
+
+        protected override double MassErrorFunction(double massError)
+        {
+            return Math.Abs(massError);
         }
     }
 

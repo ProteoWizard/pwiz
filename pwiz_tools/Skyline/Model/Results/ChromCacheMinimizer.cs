@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Util;
@@ -112,7 +113,14 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (readChromatograms)
                 {
-                    chromGroupInfo.ReadChromatogram(ChromatogramCache);
+                    try
+                    {
+                        chromGroupInfo.ReadChromatogram(ChromatogramCache);
+                    }
+                    catch (Exception exception)
+                    {
+                        Trace.TraceWarning("Unable to read chromatogram {0}", exception);
+                    }
                 }
                 MinimizedChromGroup minimizedChromGroup = MinimizeChromGroup(settings,
                     chromGroupInfo, transitionGroupDocNodes);
@@ -201,7 +209,15 @@ namespace pwiz.Skyline.Model.Results
                              };
             if (settings.NoiseTimeRange.HasValue && minRetentionTime < maxRetentionTime)
             {
-                result.SetStartEndTime(chromatogramGroupInfo.Times, (float)(minRetentionTime - settings.NoiseTimeRange), (float)(maxRetentionTime + settings.NoiseTimeRange));
+                if (null == chromatogramGroupInfo.Times)
+                {
+                    // Chromatogram was unreadable.
+                    result.RetainedTransitionIndexes.Clear();
+                }
+                else
+                {
+                    result.SetStartEndTime(chromatogramGroupInfo.Times, (float)(minRetentionTime - settings.NoiseTimeRange), (float)(maxRetentionTime + settings.NoiseTimeRange));
+                }
             }
             return result;
         }

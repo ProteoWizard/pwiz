@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReversedScore { get { return false; } }
     }
 
-    class LegacyUnforcedCountScoreCalc : LegacyCountScoreCalc
+    public class LegacyUnforcedCountScoreCalc : LegacyCountScoreCalc
     {
         public LegacyUnforcedCountScoreCalc() : base(Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count, "Co-elution count") { }  // Not L10N
 
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    class LegacyUnforcedCountScoreStandardCalc : LegacyCountScoreCalc
+    public class LegacyUnforcedCountScoreStandardCalc : LegacyCountScoreCalc
     {
         public LegacyUnforcedCountScoreStandardCalc() : base(Resources.LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard, "Reference co-elution count") { }  // Not L10N
 

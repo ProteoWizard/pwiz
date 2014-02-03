@@ -2431,7 +2431,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (RetentionTimeFilterType != RetentionTimeFilterType.none)
             {
                 writer.WriteAttribute(ATTR.retention_time_filter_type, RetentionTimeFilterType);
-                if (RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                if (RetentionTimeFilterType != RetentionTimeFilterType.none)
                 {
                     writer.WriteAttribute(ATTR.retention_time_filter_length, RetentionTimeFilterLength);
                 }

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -627,39 +626,9 @@ namespace pwiz.Skyline.Model.Results
                 if (!peakSet.Extend())
                     continue;
                 peakSet.SetIdentified(retentionTimes, isAlignedTimes);
-                if (!PeaksRedundant(peakSet, listExtendedSets))
-                    listExtendedSets.Add(peakSet);
+                listExtendedSets.Add(peakSet);
             }
             return listExtendedSets;
-        }
-
-        private static bool PeaksRedundant(ChromDataPeakList peakSetTest, IEnumerable<ChromDataPeakList> peakSets)
-        {
-            foreach (var peakSet in peakSets)
-            {
-                if (PeaksOverlap(peakSet[0].Peak, peakSetTest[0].Peak) &&
-                    // The peaks are not redundant, if they are identified and
-                    // the peaks they overlap with are not.
-                    (!peakSetTest.IsIdentified || peakSet.IsIdentified))
-                {
-                    // Check peaks where their largest peaks overlap to make
-                    // sure they have transitions with measured signal in common.
-                    var sharedPeaks = from dataPeak in (Collection<ChromDataPeak>) peakSet
-                                      join dataPeakTest in (Collection<ChromDataPeak>) peakSetTest on
-                                          dataPeak.Data.Key equals dataPeakTest.Data.Key
-                                      where dataPeak.Peak != null && dataPeakTest.Peak != null
-                                      select dataPeak;
-                    return sharedPeaks.Any();
-                }
-            }
-            return false;
-        }
-
-        private static bool PeaksOverlap(CrawdadPeak peak1, CrawdadPeak peak2)
-        {
-            // Peaks overlap, if they have intersecting area.
-            return Math.Min(peak1.EndIndex, peak2.EndIndex) -
-                   Math.Max(peak1.StartIndex, peak2.StartIndex) > 0;
         }
 
         private IList<ChromDataPeak> MergePeaks()

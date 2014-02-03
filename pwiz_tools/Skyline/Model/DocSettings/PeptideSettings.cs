@@ -2165,6 +2165,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
         public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
 
+        #region Property change methods
+
+        public PeptideIntegration ChangePeakScoringModel(PeakScoringModelSpec prop)
+        {
+            return ChangeProp(ImClone(this), im => im.PeakScoringModel = prop);
+        }
+
+        #endregion
+
         #region Implementation of IXmlSerializable
 
         void IValidating.Validate()

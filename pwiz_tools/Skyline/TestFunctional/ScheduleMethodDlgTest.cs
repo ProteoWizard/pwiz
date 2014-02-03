@@ -101,7 +101,8 @@ namespace pwiz.SkylineTestFunctional
 
             string csvPath2 = TestFilesDir.GetTestPath("160109_Mix1_calcurve_scheduled2.csv");
 
-            ExportScheduledReplicate(csvPath2, replicateCount0, replicateCount0 - 2, false);
+            int replicateIndex = replicateCount0 - 2;
+            ExportScheduledReplicate(csvPath2, replicateCount0, replicateIndex, false);
 
             VerifyRetentionTimeChange(csvPath1, csvPath2);
             
@@ -109,16 +110,20 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(document, SkylineWindow.Document);
 
             // Remove a peak from the scheduling replicate
-            RunUI(() => SkylineWindow.RemovePeak(
-                document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0),
-                document.TransitionGroups.ToArray()[0],
-                null));
+            RunUI(() =>
+            {
+                SkylineWindow.SelectedResultsIndex = replicateIndex;
+                SkylineWindow.RemovePeak(
+                    document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0),
+                    document.TransitionGroups.ToArray()[0],
+                    null);
+            });
 
             var docRemovedPeak = WaitForDocumentChange(document);
 
             string csvPath2A = TestFilesDir.GetTestPath("160109_Mix1_calcurve_scheduled2a.csv");
 
-            ExportScheduledReplicate(csvPath2A, replicateCount0, replicateCount0 - 2, true);
+            ExportScheduledReplicate(csvPath2A, replicateCount0, replicateIndex, true);
 
             VerifyRetentionTimeChange(csvPath2, csvPath2A);
 

@@ -363,14 +363,24 @@ namespace pwiz.Skyline.Model
                 {
                     // CONSIDER: This is a lot like some code in PeptideDocNode.ChangeSettings
                     Debug.Assert(RefineLabelType != null);  // Keep ReSharper from warning
-                    var tranGroup = new TransitionGroup(nodePep.Peptide, nodeGroup.TransitionGroup.PrecursorCharge,
-                                                        RefineLabelType);
+                    var tranGroup = new TransitionGroup(nodePep.Peptide,
+                                                        nodeGroup.TransitionGroup.PrecursorCharge,
+                                                        RefineLabelType,
+                                                        false,
+                                                        nodeGroup.TransitionGroup.DecoyMassShift);
                     var settings = document.Settings;
 //                    string sequence = nodePep.Peptide.Sequence;
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(
                         tranGroup, settings, explicitMods);
 
-                    var nodeGroupMatch = new TransitionGroupDocNode(tranGroup, transitions);
+                    var nodeGroupMatch = new TransitionGroupDocNode(tranGroup,
+                                                                    Annotations.EMPTY,
+                                                                    settings,
+                                                                    explicitMods,
+                                                                    nodeGroup.LibInfo,
+                                                                    null,   // results
+                                                                    transitions,
+                                                                    false);
 
                     nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, nodePep, explicitMods, SrmSettingsDiff.ALL);
 

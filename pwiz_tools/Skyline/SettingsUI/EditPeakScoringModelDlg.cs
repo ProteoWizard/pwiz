@@ -1051,11 +1051,22 @@ namespace pwiz.Skyline.SettingsUI
             get { return _gridViewDriver; }
         }
 
+        public int GetCalculatorRow(string name)
+        {
+            return PeakCalculatorsGrid.Items.IndexOf(w => Equals(w.Name, name));
+        }
+
+        public double? GetCalculatorWeight(Type calcType)
+        {
+            var calc = PeakFeatureCalculator.GetCalculator(calcType);
+            int row = GetCalculatorRow(calc.Name);
+            return PeakCalculatorsGrid.Items[row].Weight;
+        }
+
         public bool IsActiveCell(int row, int column)
         {
             return !gridPeakCalculators.Rows[row].Cells[column].ReadOnly;
         }
-
 
         public void SetChecked(int row, bool value)
         {
@@ -1066,6 +1077,20 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return toolStripFind.Visible; }
             set { toolStripFind.Visible = value; }
+        }
+
+        public int GetTargetCount()
+        {
+            List<IList<double[]>> targetGroups, decoyGroups;
+            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
+            return targetGroups.Count;
+        }
+
+        public int GetDecoyCount()
+        {
+            List<IList<double[]>> targetGroups, decoyGroups;
+            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
+            return decoyGroups.Count;
         }
 
         #endregion

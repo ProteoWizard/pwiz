@@ -59,6 +59,12 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
             return settings.ChangePeptideSettings(setP => setP.ChangeModifications(change(setP.Modifications)));
         }
 
+        public static SrmSettings ChangePeptideIntegration(this SrmSettings settings,
+            ChangeFunc<PeptideIntegration> change)
+        {
+            return settings.ChangePeptideSettings(setP => setP.ChangeIntegration(change(setP.Integration)));
+        }
+
         public static SrmSettings ChangeTransitionSettings(this SrmSettings settings,
             ChangeFunc<TransitionSettings> change)
         {

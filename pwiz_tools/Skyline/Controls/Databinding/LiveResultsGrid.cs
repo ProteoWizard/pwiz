@@ -375,5 +375,44 @@ namespace pwiz.Skyline.Controls.Databinding
                 BeginInvoke(new Action<FindResult>(HighlightFindResult), pendingFindResult);
             }
         }
+
+        private void synchronizeSelectionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ResultsGridSynchSelection = synchronizeSelectionContextMenuItem.Checked;
+        }
+
+        private void chooseColumnsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            navBar.CustomizeView();
+        }
+
+
+        private bool _inReplicateChange;
+        private void bindingListSource_CurrentChanged(object sender, EventArgs e)
+        {
+            if (!Settings.Default.ResultsGridSynchSelection || _inReplicateChange || !bindingListSource.IsComplete)
+            {
+                return;
+            }
+            int? replicateIndex = GetReplicateIndex(bindingListSource.Current as RowItem);
+            try
+            {
+                _inReplicateChange = true;
+                // ReSharper disable once RedundantCheckBeforeAssignment
+                if (replicateIndex.HasValue && replicateIndex != SkylineWindow.SelectedResultsIndex)
+                {
+                    SkylineWindow.SelectedResultsIndex = replicateIndex.Value;
+                }
+            }
+            finally
+            {
+                _inReplicateChange = false;
+            }
+        }
+
+        private void contextMenuResultsGrid_Opening(object sender, CancelEventArgs e)
+        {
+            synchronizeSelectionContextMenuItem.Checked = Settings.Default.ResultsGridSynchSelection;
+        }
     }
 }

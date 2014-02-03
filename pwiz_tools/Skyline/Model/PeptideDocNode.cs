@@ -986,11 +986,13 @@ namespace pwiz.Skyline.Model
                 {
                     // Update transition group ratios
                     var nodeGroupConvert = nodeGroup;
+                    bool isMatching = nodeGroup.RelativeRT == RelativeRT.Matching;
                     var listGroupInfoList = _listResultCalcs.ConvertAll(
                         calc => calc.UpdateTransitonGroupRatios(nodeGroupConvert,
                                                                 nodeGroupConvert.HasResults
                                                                     ? nodeGroupConvert.Results[calc.ResultsIndex]
-                                                                    : null));
+                                                                    : null,
+                                                                isMatching));
                     var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listGroupInfoList);
                     var nodeGroupNew = nodeGroup;
                     if (!ReferenceEquals(resultsGroup, nodeGroup.Results))
@@ -1002,7 +1004,9 @@ namespace pwiz.Skyline.Model
                         // Update transition ratios
                         var nodeTranConvert = nodeTran;
                         var listTranInfoList = _listResultCalcs.ConvertAll(
-                            calc => calc.UpdateTransitonRatios(nodeTranConvert, nodeTranConvert.Results[calc.ResultsIndex]));
+                            calc => calc.UpdateTransitionRatios(nodeTranConvert,
+                                                               nodeTranConvert.Results[calc.ResultsIndex],
+                                                               isMatching));
                         var resultsTran = Results<TransitionChromInfo>.Merge(nodeTran.Results, listTranInfoList);
                         listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
                                              ? nodeTran
@@ -1082,8 +1086,9 @@ namespace pwiz.Skyline.Model
                 return (listInfo[0] != null ? listInfo : null);
             }
 
-            public IList<TransitionChromInfo> UpdateTransitonRatios(TransitionDocNode nodeTran,
-                                                                    IList<TransitionChromInfo> listInfo)
+            public IList<TransitionChromInfo> UpdateTransitionRatios(TransitionDocNode nodeTran,
+                                                                    IList<TransitionChromInfo> listInfo,
+                                                                    bool isMatching)
             {
                 if (Calculators.Count == 0 || listInfo == null)
                     return null;
@@ -1110,7 +1115,10 @@ namespace pwiz.Skyline.Model
                             ratios[count - 1] = calc.CalcTransitionGlobalRatio(nodeTran, labelType);
                         if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
                             infoNew = infoNew.ChangeRatios(ratios);
-                        
+
+                        if (isMatching && calc.IsSetMatching && !infoNew.IsUserSetMatched)
+                            infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
+
                         listInfoNew.Add(infoNew);
                     }
                 }
@@ -1120,7 +1128,8 @@ namespace pwiz.Skyline.Model
             }
 
             public IList<TransitionGroupChromInfo> UpdateTransitonGroupRatios(TransitionGroupDocNode nodeGroup,
-                                                                              IList<TransitionGroupChromInfo> listInfo)
+                                                                              IList<TransitionGroupChromInfo> listInfo,
+                                                                              bool isMatching)
             {
                 if (Calculators.Count == 0 || listInfo == null)
                     return null;
@@ -1149,6 +1158,9 @@ namespace pwiz.Skyline.Model
                             ratios[count - 1] = calc.CalcTransitionGroupGlobalRatio(nodeGroup, labelType);
                         if (!ArrayUtil.EqualsDeep(ratios, info.Ratios))
                             infoNew = infoNew.ChangeRatios(ratios);
+
+                        if (isMatching && calc.IsSetMatching && !infoNew.IsUserSetMatched)
+                            infoNew = infoNew.ChangeUserSet(UserSet.MATCHED);
 
                         listInfoNew.Add(infoNew);
                     }
@@ -1181,6 +1193,7 @@ namespace pwiz.Skyline.Model
             private Dictionary<TransitionKey, float> TranAreas { get; set; }
 
             public bool HasGlobalArea { get { return GlobalStandardArea > 0; }}
+            public bool IsSetMatching { get; private set; }
 
 // ReSharper disable UnusedParameter.Local
             public void AddChromInfo(TransitionGroupDocNode nodeGroup,
@@ -1206,6 +1219,9 @@ namespace pwiz.Skyline.Model
                     RetentionTimesMeasured++;
                     RetentionTimeTotal += info.RetentionTime.Value;
                 }
+
+                if (info.UserSet == UserSet.MATCHED)
+                    IsSetMatching = true;
             }
 
             public void AddChromInfo(TransitionDocNode nodeTran, TransitionChromInfo info)

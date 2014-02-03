@@ -319,8 +319,8 @@ namespace pwiz.SkylineTestTutorial
 //            }
             RunUI(() =>
             {
-                Assert.AreEqual(71, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(213, SkylineWindow.Document.TransitionCount);
+                Assert.AreEqual(72, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(216, SkylineWindow.Document.TransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });

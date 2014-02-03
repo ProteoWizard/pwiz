@@ -699,6 +699,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
+                if (null == library)
+                {
+                    continue;
+                }
                 foreach (var source in library.ListRetentionTimeSources())
                 {
                     int? index = null;
