@@ -283,13 +283,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class SummaryPeakFeatureCalculator : IPeakFeatureCalculator
     {
-        protected SummaryPeakFeatureCalculator(string name, string headerName)
+        protected SummaryPeakFeatureCalculator(string headerName)
         {
-            Name = name;
             HeaderName = headerName;
         }
 
-        public string Name { get; private set; }
+        public abstract string Name { get; }
 
         public string HeaderName { get; private set; }
 

@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class MassErrorCalc : SummaryPeakFeatureCalculator
     {
-        protected MassErrorCalc(string name, string headerName) : base(name, headerName) { }
+        protected MassErrorCalc(string headerName) : base(headerName) { }
 
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<ISummaryPeakData> summaryPeakData)
@@ -78,7 +78,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenProductMassErrorCalc : MassErrorCalc
     {
-        public NextGenProductMassErrorCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error, "Product mass error") {}  // Not L10N
+        public NextGenProductMassErrorCalc() : base("Product mass error") {}  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -96,7 +101,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenProductMassErrorSquaredCalc : MassErrorCalc
     {
-        public NextGenProductMassErrorSquaredCalc() : base(Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error, "Product mass error squared") { }  // Not L10N
+        public NextGenProductMassErrorSquaredCalc() : base("Product mass error squared") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -114,7 +124,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenPrecursorMassErrorCalc : MassErrorCalc
     {
-        public NextGenPrecursorMassErrorCalc() : base(Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error, "Precursor mass error") {} // Not L10N
+        public NextGenPrecursorMassErrorCalc() : base("Precursor mass error") {} // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -134,7 +149,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenIsotopeDotProductCalc : SummaryPeakFeatureCalculator
     {
-        public NextGenIsotopeDotProductCalc() : base(Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product, "Precursor isotope dot product") { }
+        public NextGenIsotopeDotProductCalc() : base("Precursor isotope dot product") { }
+
+        public override string Name
+        {
+            get { return Resources.NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product; }
+        }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {

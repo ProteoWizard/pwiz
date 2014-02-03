@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestRetentionTimePredictionCalc(string name, string headerName) : base(name, headerName) {}
+        protected AbstractMQuestRetentionTimePredictionCalc(string headerName) : base(headerName) {}
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -72,7 +72,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
-        public MQuestRetentionTimePredictionCalc() : base(Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference, "Retention time difference") { }  // Not L10N
+        public MQuestRetentionTimePredictionCalc() : base("Retention time difference") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -87,7 +92,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     class MQuestRetentionTimeSquaredPredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
-        public MQuestRetentionTimeSquaredPredictionCalc() : base(Resources.MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared, "Retention time squared difference") { }  // Not L10N
+        public MQuestRetentionTimeSquaredPredictionCalc() : base("Retention time squared difference") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -152,7 +162,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestIntensityCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestIntensityCalc(string name, string headerName) : base(name, headerName) { }
+        protected AbstractMQuestIntensityCalc(string headerName) : base(headerName) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -169,7 +179,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestIntensityCalc : AbstractMQuestIntensityCalc
     {
-        public MQuestIntensityCalc() : base(Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity, "Intensity") { }  // Not L10N
+        public MQuestIntensityCalc() : base("Intensity") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -183,7 +198,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestIntensityCorrelationCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestIntensityCorrelationCalc(string name, string headerName) : base(name, headerName) { }
+        protected AbstractMQuestIntensityCorrelationCalc(string headerName) : base(headerName) { }
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             var tranGroupPeakDatas = MQuestHelpers.GetAnalyteGroups(summaryPeakData).ToArray();
@@ -221,7 +236,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
     {
-        public MQuestIntensityCorrelationCalc() : base(Resources.MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation, "Library intensity dot-product") { }  // Not L10N
+        public MQuestIntensityCorrelationCalc() : base("Library intensity dot-product") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
@@ -236,7 +256,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractMQuestReferenceCorrelationCalc : SummaryPeakFeatureCalculator
     {
-        protected AbstractMQuestReferenceCorrelationCalc(string name, string headerName) : base(name, headerName) { }
+        protected AbstractMQuestReferenceCorrelationCalc(string headerName) : base(headerName) { }
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
@@ -286,7 +306,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class MQuestReferenceCorrelationCalc : AbstractMQuestReferenceCorrelationCalc
     {
-        public MQuestReferenceCorrelationCalc() : base(Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation, "Reference intensity dot-product") { }  // Not L10N
+        public MQuestReferenceCorrelationCalc() : base("Reference intensity dot-product") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
