@@ -129,6 +129,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DataModel\mapping.xml" />
+    <EmbeddedResource Include="Properties\Resources.ja.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

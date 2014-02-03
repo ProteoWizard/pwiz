@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return true; } }
+        private bool IsRecordMode { get { return false; } }
 
         protected override void DoTest()
         {
