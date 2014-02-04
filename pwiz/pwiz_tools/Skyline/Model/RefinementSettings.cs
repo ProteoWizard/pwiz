@@ -380,7 +380,7 @@ namespace pwiz.Skyline.Model
                                                                     nodeGroup.LibInfo,
                                                                     null,   // results
                                                                     transitions,
-                                                                    false);
+                                                                    transitions == null);
 
                     nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, nodePep, explicitMods, SrmSettingsDiff.ALL);
 
