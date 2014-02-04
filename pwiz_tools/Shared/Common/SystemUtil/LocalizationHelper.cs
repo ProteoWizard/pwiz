@@ -27,7 +27,7 @@ namespace pwiz.Common.SystemUtil
         static LocalizationHelper()
         {
             OriginalCulture = CurrentCulture = Thread.CurrentThread.CurrentCulture;
-            CurrentCulture = new CultureInfo("ja");
+//            CurrentCulture = new CultureInfo("ja");
         }
 
         public static void InitThread()
