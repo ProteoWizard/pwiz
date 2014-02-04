@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -127,19 +129,30 @@ namespace TestRunnerLib
 
                 string bestTest = null;
                 int minDuration = int.MaxValue;
+                bool foundScreenShot = false;
                 foreach (var testPlusDuration in _formLookup[form])
                 {
-                    bool hasScreenShot = testPlusDuration.Contains(":-");
+                    bool testDoesScreenShot = testPlusDuration.Contains(":-");
                     var parts = testPlusDuration.Split(':');
                     var test = parts[0];
-                    var duration = int.Parse(parts[1]);
-                    if (tests.Contains(test) && hasScreenShot)
+                    var duration = Math.Abs(int.Parse(parts[1]));
+                    if (testDoesScreenShot)
                     {
-                        bestTest = null;
-                        break;
+                        if (tests.Contains(test))
+                        {
+                            // This form is already shown by a different test.
+                            bestTest = null;
+                            break;
+                        }
+                        // Keep the test that pauses for this form in the least time.
+                        if (!foundScreenShot || minDuration > duration)
+                        {
+                            foundScreenShot = true;
+                            minDuration = duration;
+                            bestTest = test;
+                        }
                     }
-                    if ((hasScreenShot && minDuration < duration) ||
-                        (!hasScreenShot && minDuration > duration))
+                    else if (!foundScreenShot && minDuration > duration)
                     {
                         minDuration = duration;
                         bestTest = test;

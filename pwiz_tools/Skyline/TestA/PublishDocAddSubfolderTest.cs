@@ -21,11 +21,12 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Skyline.FileUI;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
 {
     [TestClass]
-    public class PublishDocAddSubfolderTest
+    public class PublishDocAddSubfolderTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestAddSubfolder()

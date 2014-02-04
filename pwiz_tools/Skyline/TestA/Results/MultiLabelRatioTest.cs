@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestA.Results
     /// Summary description for MultiLabelTest
     /// </summary>
     [TestClass]
-    public class MultiLabelRatioTest
+    public class MultiLabelRatioTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestCustomReportsCompatibility()

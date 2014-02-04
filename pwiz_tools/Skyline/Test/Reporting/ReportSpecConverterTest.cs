@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest.Reporting
     /// Summary description for ReportSpecConverterTest
     /// </summary>
     [TestClass]
-    public class ReportSpecConverterTest
+    public class ReportSpecConverterTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestMapping()

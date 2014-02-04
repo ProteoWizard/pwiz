@@ -69,6 +69,16 @@ namespace pwiz.Skyline.Properties
             
         }
 
+        public static void Init()
+        {
+            defaultInstance = ((Settings)(Synchronized(new Settings())));
+        }
+
+        public static void Release()
+        {
+            defaultInstance = null;
+        }
+
         /*
         private void SettingChangingEventHandler(object sender, System.Configuration.SettingChangingEventArgs e)
         {

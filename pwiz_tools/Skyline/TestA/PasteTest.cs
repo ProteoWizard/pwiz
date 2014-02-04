@@ -56,12 +56,13 @@ namespace pwiz.SkylineTestA
                new StaticMod("13C K", "R", ModTerminus.C, null, LabelAtoms.C13, null, null)
            };
 
-        private readonly SrmDocument _yeastDocReadOnly;
-        private readonly SrmDocument _study7DocReadOnly;
+        private SrmDocument _yeastDocReadOnly;
+        private SrmDocument _study7DocReadOnly;
         private SrmDocument _yeastDoc;
         private SrmDocument _study7Doc;
 
-        public PasteTest()
+        [TestMethod]
+        public void TestPaste()
         {
             ClearDefaultModifications();
             _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault());
@@ -72,11 +73,7 @@ namespace pwiz.SkylineTestA
                 false, IdentityPath.ROOT, out path);
 
             _study7DocReadOnly = _study7Doc = CreateStudy7Doc();
-        }
 
-        [TestMethod]
-        public void TestPaste()
-        {
             IdentityPath pathRoot = IdentityPath.ROOT;
             
             // Test pasting into document with same implicit modifications does not create any extra explicit modifications.

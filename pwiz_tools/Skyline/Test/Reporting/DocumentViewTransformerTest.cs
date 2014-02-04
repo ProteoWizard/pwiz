@@ -26,13 +26,14 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.SkylineTestUtil;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 
 namespace pwiz.SkylineTest.Reporting
 {
     [TestClass]
-    public class DocumentViewTransformerTest
+    public class DocumentViewTransformerTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestTransitions()

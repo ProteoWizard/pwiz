@@ -386,11 +386,7 @@ namespace pwiz.SkylineTestUtil
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
         /// to be taken.
         /// </summary>
-        public static bool IsPauseForScreenShots
-        {
-            get { return Program.PauseSeconds < 0; }
-            set { Program.PauseSeconds = value ? -1 : 0; }
-        }
+        public static bool IsPauseForScreenShots { get; set; }
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
@@ -410,7 +406,7 @@ namespace pwiz.SkylineTestUtil
                 PauseAndContinueForm.Show(description);
 
             // Add to list of screen shot forms.
-            if (Program.ScreenShotForms != null && FormEx.LastShownForm != null)
+            if (Program.ScreenShotForms != null && FormEx.LastShownForm != null && FormEx.LastShownForm.Visible)
             {
                 var screenShotForm = FormEx.LastShownForm.GetType().Name;
                 if (!Program.ScreenShotForms.Contains(screenShotForm))

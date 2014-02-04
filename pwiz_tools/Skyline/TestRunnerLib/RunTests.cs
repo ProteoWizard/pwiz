@@ -310,6 +310,8 @@ namespace TestRunnerLib
             {
                 if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
+                    if (!DerivesFromAbstractUnitTest(type))
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
                     var methods = type.GetMethods();
@@ -327,6 +329,17 @@ namespace TestRunnerLib
                     }
                 }
             }
+        }
+
+        private static bool DerivesFromAbstractUnitTest(Type type)
+        {
+            while (type != null)
+            {
+                if (type.Name == "AbstractUnitTest")
+                    return true;
+                type = type.BaseType;
+            }
+            return false;
         }
 
         // Determine if the given class or method from an assembly has the given attribute.

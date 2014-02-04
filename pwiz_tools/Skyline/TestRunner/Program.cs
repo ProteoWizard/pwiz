@@ -28,7 +28,6 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-//using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
 //         build from Visual Studio after a full bjam build removes all of the Skyline project
 //         root files from the Skyline bin directory, leaving it un-runnable until a full
@@ -165,20 +164,20 @@ namespace TestRunner
                     if (profiling)
                     {
                         Console.WriteLine("\nRunning each test once to warm up memory...\n");
-                        allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1);
+                        allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1, profiling);
                         Console.WriteLine("\nTaking memory snapshot...\n");
-//                        MemoryProfiler.Snapshot();
+                        MemoryProfiler.Snapshot();
                         if (passes == 0)
                             passes = 1;
                     }
 
-                    allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat) && allTestsPassed;
+                    allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat, profiling) && allTestsPassed;
 
                     // Pause for profiling
                     if (profiling)
                     {
                         Console.WriteLine("\nTaking second memory snapshot...\n");
-//                        MemoryProfiler.Snapshot();
+                        MemoryProfiler.Snapshot();
                     }
                 }
             }
@@ -225,7 +224,14 @@ namespace TestRunner
         }
 
         // Run all test passes.
-        private static bool RunTestPasses(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log, long loopCount, long repeat)
+        private static bool RunTestPasses(
+            List<TestInfo> testList, 
+            List<TestInfo> unfilteredTestList, 
+            CommandLineArgs commandLineArgs, 
+            StreamWriter log, 
+            long loopCount, 
+            long repeat,
+            bool profiling = false)
         {
             bool buildMode = commandLineArgs.ArgAsBool("buildcheck");
             bool randomOrder = commandLineArgs.ArgAsBool("random");
@@ -433,6 +439,8 @@ namespace TestRunner
                             if (!runTests.Run(test, pass, testNumber))
                                 removeList.Add(test);
                         }
+                        if (profiling)
+                            break;
                     }
 
                     // Record which forms the test showed.

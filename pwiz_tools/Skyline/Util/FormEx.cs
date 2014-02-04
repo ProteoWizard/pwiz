@@ -79,7 +79,13 @@ namespace pwiz.Skyline.Util
             if (ShowFormNames)
                 Text += "  (" + GetType().Name + ")";
 // ReSharper restore LocalizableElement
-}
+        }
+
+        public static void Release()
+        {
+            LastShownForm = null;
+            ShownForms = null;
+        }
 
         protected override void OnShown(EventArgs e)
         {

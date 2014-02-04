@@ -34,7 +34,7 @@ namespace pwiz.SkylineTest.Reporting
     /// Summary description for LiveReportPivotTest
     /// </summary>
     [TestClass]
-    public class LiveReportPivotTest
+    public class LiveReportPivotTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestConverted()

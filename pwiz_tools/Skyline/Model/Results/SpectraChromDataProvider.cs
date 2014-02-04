@@ -363,6 +363,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override void Dispose()
         {
+            ChromCollector.ReleaseStatics();
             _chromatograms = null;
             _allocator.Dispose();
         }

@@ -1114,11 +1114,9 @@ namespace SkylineTester
 
         public int FindOutput(string text, int position)
         {
-            commandShell.IgnorePaint++;
             _tabOutput.AfterLoad = () =>
             {
                 _findPosition = _tabOutput.Find(text, position);
-                commandShell.IgnorePaint--;
             };
             ShowOutput();
             return 0;

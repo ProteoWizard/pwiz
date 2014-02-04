@@ -122,7 +122,7 @@ namespace pwiz.SkylineTestUtil
             var log = new Log<AbstractUnitTest>();
             log.Info(TestContext.TestName + " started");
 
-            Settings.Default.Reset();
+            Settings.Init();
 
             STOPWATCH.Restart();
         }
@@ -134,6 +134,9 @@ namespace pwiz.SkylineTestUtil
         public void MyTestCleanup()
         {
             STOPWATCH.Stop();
+
+            Settings.Release();
+            FormEx.Release();
 
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();

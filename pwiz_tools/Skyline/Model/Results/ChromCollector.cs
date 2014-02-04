@@ -128,6 +128,13 @@ namespace pwiz.Skyline.Model.Results
         private static float[] _lastTimes;
         private static int[] _sortIndexes;
 
+        public static void ReleaseStatics()
+        {
+            _lastTimesCollector = null;
+            _lastTimes = null;
+            _sortIndexes = null;
+        }
+
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
