@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model
                    null,
                    null,
                    null,
-                   children ?? new TransitionDocNode[0],
+                   children,
                    children == null)
         {
         }
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model
                                       Results<TransitionGroupChromInfo> results,
                                       TransitionDocNode[] children,
                                       bool autoManageChildren)
-            : base(id, annotations, children, autoManageChildren)
+            : base(id, annotations, children ?? new TransitionDocNode[0], autoManageChildren)
         {
             if (settings != null)
             {
