@@ -200,7 +200,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenCrossWeightedShapeCalc : MQuestWeightedShapeCalc
     {
-        public NextGenCrossWeightedShapeCalc() : base(Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score, "Precursor-product shape score") { }
+        public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { }
+
+        public override string Name
+        {
+            get { return Resources.NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score; }
+        }
 
         protected override IEnumerable<MQuestCrossCorrelation> FilterIons(IEnumerable<MQuestCrossCorrelation> crossCorrMatrix)
         {
@@ -219,7 +224,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public abstract class AbstractNextGenSignalNoiseCalc : DetailedPeakFeatureCalculator
     {
-        protected AbstractNextGenSignalNoiseCalc(string name, string headerName) : base(name, headerName) { }
+        protected AbstractNextGenSignalNoiseCalc(string headerName) : base(headerName) { }
 
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<IDetailedPeakData> summaryPeakData)
@@ -295,7 +300,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public class NextGenSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
     {
-        public NextGenSignalNoiseCalc() : base(Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise, "Signal to noise") { }  // Not L10N
+        public NextGenSignalNoiseCalc() : base("Signal to noise") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise; }
+        }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
