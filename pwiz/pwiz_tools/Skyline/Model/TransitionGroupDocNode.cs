@@ -1166,8 +1166,12 @@ namespace pwiz.Skyline.Model
             {
                 var results = nodeGroup.Results[chromIndex];
                 chromGroupInfoMatch = FindGroupChromInfo(results, fileId, step);
-                if (chromGroupInfoMatch != null)
+                if (chromGroupInfoMatch != null &&
+                    chromGroupInfoMatch.StartRetentionTime.HasValue &&
+                    chromGroupInfoMatch.EndRetentionTime.HasValue)
+                {
                     return true;
+                }
             }
             chromGroupInfoMatch = null;
             return false;

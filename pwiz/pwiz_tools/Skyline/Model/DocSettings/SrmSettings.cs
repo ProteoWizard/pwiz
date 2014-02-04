@@ -332,13 +332,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings MakeSavable(string saveName)
         {
-            // If the name is already set, and there are no measured results
+            // If the name is already set, and there are no measured results or document library
             // then this instance will do.
-            if (Equals(Name, saveName) && MeasuredResults == null)
+            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary)
                 return this;
 
             // Change the name, and remove results information which is document specific
             SrmSettings settingsSavable = (SrmSettings) ChangeName(saveName);
+            settingsSavable = settingsSavable.ChangePeptideLibraries(lib => lib.ChangeDocumentLibrary(false));
             settingsSavable.MeasuredResults = null;
             return settingsSavable;
         }
