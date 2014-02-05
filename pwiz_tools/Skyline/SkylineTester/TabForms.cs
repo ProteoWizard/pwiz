@@ -58,11 +58,6 @@ namespace SkylineTester
                 var formList = GetFormList();
                 args.Append(" form=");
                 args.Append(string.Join(",", formList));
-                args.Append(" pause=");
-                int pauseSeconds = -1;
-                if (MainWindow.PauseFormDelay.Checked && !int.TryParse(MainWindow.PauseFormSeconds.Text, out pauseSeconds))
-                    pauseSeconds = 0;
-                args.Append(pauseSeconds);
             }
             if (MainWindow.ShowFormNames.Checked)
                 args.Append(" showformnames=on");

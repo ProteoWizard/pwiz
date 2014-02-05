@@ -164,7 +164,7 @@ namespace TestRunner
                     if (profiling)
                     {
                         Console.WriteLine("\nRunning each test once to warm up memory...\n");
-                        allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1, profiling);
+                        allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1, true);
                         Console.WriteLine("\nTaking memory snapshot...\n");
                         MemoryProfiler.Snapshot();
                         if (passes == 0)
@@ -258,7 +258,11 @@ namespace TestRunner
                 useVendorReaders = true;
                 showStatus = false;
                 qualityMode = false;
+                pauseSeconds = 0;
             }
+
+            if (!string.IsNullOrEmpty(formList))
+                pauseSeconds = -1;
 
             var runTests = new RunTests(demoMode, buildMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
 

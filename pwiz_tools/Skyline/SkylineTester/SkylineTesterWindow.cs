@@ -562,9 +562,6 @@ namespace SkylineTester
                 tabs,
 
                 // Forms
-                pauseFormDelay,
-                pauseFormSeconds,
-                pauseFormButton,
                 formsLanguage,
                 showFormNames,
                 formsTree,
@@ -962,8 +959,6 @@ namespace SkylineTester
         public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
-        public RadioButton      PauseFormDelay              { get { return pauseFormDelay; } }
-        public NumericUpDown    PauseFormSeconds            { get { return pauseFormSeconds; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }

@@ -42,19 +42,18 @@ namespace SkylineTester
             this.statusRunTime = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabs = new System.Windows.Forms.TabControl();
             this.tabForms = new System.Windows.Forms.TabPage();
+            this.groupBox12 = new System.Windows.Forms.GroupBox();
+            this.showFormNames = new System.Windows.Forms.CheckBox();
+            this.regenerateCache = new System.Windows.Forms.CheckBox();
             this.label15 = new System.Windows.Forms.Label();
             this.groupBox13 = new System.Windows.Forms.GroupBox();
             this.formsLanguage = new System.Windows.Forms.ComboBox();
-            this.regenerateCache = new System.Windows.Forms.CheckBox();
             this.runForms = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.formsTree = new SkylineTester.MyTreeView();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.pauseFormSeconds = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
-            this.pauseFormDelay = new System.Windows.Forms.RadioButton();
-            this.pauseFormButton = new System.Windows.Forms.RadioButton();
             this.tabTutorials = new System.Windows.Forms.TabPage();
+            this.groupBox21 = new System.Windows.Forms.GroupBox();
+            this.showFormNamesTutorial = new System.Windows.Forms.CheckBox();
             this.label16 = new System.Windows.Forms.Label();
             this.groupBox14 = new System.Windows.Forms.GroupBox();
             this.tutorialsLanguage = new System.Windows.Forms.ComboBox();
@@ -217,19 +216,15 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.groupBox12 = new System.Windows.Forms.GroupBox();
-            this.showFormNames = new System.Windows.Forms.CheckBox();
-            this.groupBox21 = new System.Windows.Forms.GroupBox();
-            this.showFormNamesTutorial = new System.Windows.Forms.CheckBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
             this.tabForms.SuspendLayout();
+            this.groupBox12.SuspendLayout();
             this.groupBox13.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pauseFormSeconds)).BeginInit();
             this.tabTutorials.SuspendLayout();
+            this.groupBox21.SuspendLayout();
             this.groupBox14.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -268,8 +263,6 @@ namespace SkylineTester
             this.outputSplitContainer.Panel2.SuspendLayout();
             this.outputSplitContainer.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            this.groupBox12.SuspendLayout();
-            this.groupBox21.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -354,7 +347,6 @@ namespace SkylineTester
             this.tabForms.Controls.Add(this.groupBox13);
             this.tabForms.Controls.Add(this.runForms);
             this.tabForms.Controls.Add(this.groupBox1);
-            this.tabForms.Controls.Add(this.groupBox2);
             this.tabForms.Location = new System.Drawing.Point(4, 28);
             this.tabForms.Margin = new System.Windows.Forms.Padding(4);
             this.tabForms.Name = "tabForms";
@@ -362,6 +354,44 @@ namespace SkylineTester
             this.tabForms.Size = new System.Drawing.Size(722, 580);
             this.tabForms.TabIndex = 1;
             this.tabForms.Text = "Forms";
+            // 
+            // groupBox12
+            // 
+            this.groupBox12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
+            this.groupBox12.Controls.Add(this.showFormNames);
+            this.groupBox12.Controls.Add(this.regenerateCache);
+            this.groupBox12.Location = new System.Drawing.Point(11, 115);
+            this.groupBox12.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox12.Name = "groupBox12";
+            this.groupBox12.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox12.Size = new System.Drawing.Size(280, 77);
+            this.groupBox12.TabIndex = 32;
+            this.groupBox12.TabStop = false;
+            this.groupBox12.Text = "Options";
+            // 
+            // showFormNames
+            // 
+            this.showFormNames.AutoSize = true;
+            this.showFormNames.Checked = true;
+            this.showFormNames.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.showFormNames.Location = new System.Drawing.Point(8, 21);
+            this.showFormNames.Margin = new System.Windows.Forms.Padding(4);
+            this.showFormNames.Name = "showFormNames";
+            this.showFormNames.Size = new System.Drawing.Size(110, 17);
+            this.showFormNames.TabIndex = 21;
+            this.showFormNames.Text = "Show form names";
+            this.showFormNames.UseVisualStyleBackColor = true;
+            // 
+            // regenerateCache
+            // 
+            this.regenerateCache.AutoSize = true;
+            this.regenerateCache.Location = new System.Drawing.Point(8, 46);
+            this.regenerateCache.Margin = new System.Windows.Forms.Padding(4);
+            this.regenerateCache.Name = "regenerateCache";
+            this.regenerateCache.Size = new System.Drawing.Size(137, 17);
+            this.regenerateCache.TabIndex = 20;
+            this.regenerateCache.Text = "Regenerate list of forms";
+            this.regenerateCache.UseVisualStyleBackColor = true;
             // 
             // label15
             // 
@@ -379,7 +409,7 @@ namespace SkylineTester
             // 
             this.groupBox13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
             this.groupBox13.Controls.Add(this.formsLanguage);
-            this.groupBox13.Location = new System.Drawing.Point(11, 137);
+            this.groupBox13.Location = new System.Drawing.Point(11, 50);
             this.groupBox13.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox13.Name = "groupBox13";
             this.groupBox13.Padding = new System.Windows.Forms.Padding(4);
@@ -399,17 +429,6 @@ namespace SkylineTester
             this.formsLanguage.Name = "formsLanguage";
             this.formsLanguage.Size = new System.Drawing.Size(185, 21);
             this.formsLanguage.TabIndex = 0;
-            // 
-            // regenerateCache
-            // 
-            this.regenerateCache.AutoSize = true;
-            this.regenerateCache.Location = new System.Drawing.Point(8, 46);
-            this.regenerateCache.Margin = new System.Windows.Forms.Padding(4);
-            this.regenerateCache.Name = "regenerateCache";
-            this.regenerateCache.Size = new System.Drawing.Size(137, 17);
-            this.regenerateCache.TabIndex = 20;
-            this.regenerateCache.Text = "Regenerate list of forms";
-            this.regenerateCache.UseVisualStyleBackColor = true;
             // 
             // runForms
             // 
@@ -451,68 +470,6 @@ namespace SkylineTester
             this.formsTree.TabIndex = 15;
             this.formsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
-            // groupBox2
-            // 
-            this.groupBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
-            this.groupBox2.Controls.Add(this.pauseFormSeconds);
-            this.groupBox2.Controls.Add(this.label3);
-            this.groupBox2.Controls.Add(this.pauseFormDelay);
-            this.groupBox2.Controls.Add(this.pauseFormButton);
-            this.groupBox2.Location = new System.Drawing.Point(11, 50);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(280, 79);
-            this.groupBox2.TabIndex = 17;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Pause";
-            // 
-            // pauseFormSeconds
-            // 
-            this.pauseFormSeconds.Location = new System.Drawing.Point(99, 21);
-            this.pauseFormSeconds.Name = "pauseFormSeconds";
-            this.pauseFormSeconds.Size = new System.Drawing.Size(41, 20);
-            this.pauseFormSeconds.TabIndex = 6;
-            this.pauseFormSeconds.Value = new decimal(new int[] {
-            5,
-            0,
-            0,
-            0});
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(147, 23);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(47, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "seconds";
-            // 
-            // pauseFormDelay
-            // 
-            this.pauseFormDelay.AutoSize = true;
-            this.pauseFormDelay.Location = new System.Drawing.Point(8, 21);
-            this.pauseFormDelay.Margin = new System.Windows.Forms.Padding(4);
-            this.pauseFormDelay.Name = "pauseFormDelay";
-            this.pauseFormDelay.Size = new System.Drawing.Size(70, 17);
-            this.pauseFormDelay.TabIndex = 1;
-            this.pauseFormDelay.Text = "Pause for";
-            this.pauseFormDelay.UseVisualStyleBackColor = true;
-            // 
-            // pauseFormButton
-            // 
-            this.pauseFormButton.AutoSize = true;
-            this.pauseFormButton.Checked = true;
-            this.pauseFormButton.Location = new System.Drawing.Point(8, 46);
-            this.pauseFormButton.Margin = new System.Windows.Forms.Padding(4);
-            this.pauseFormButton.Name = "pauseFormButton";
-            this.pauseFormButton.Size = new System.Drawing.Size(103, 17);
-            this.pauseFormButton.TabIndex = 0;
-            this.pauseFormButton.TabStop = true;
-            this.pauseFormButton.Text = "Pause for button";
-            this.pauseFormButton.UseVisualStyleBackColor = true;
-            // 
             // tabTutorials
             // 
             this.tabTutorials.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(225)))));
@@ -529,6 +486,30 @@ namespace SkylineTester
             this.tabTutorials.Size = new System.Drawing.Size(722, 580);
             this.tabTutorials.TabIndex = 2;
             this.tabTutorials.Text = "Tutorials";
+            // 
+            // groupBox21
+            // 
+            this.groupBox21.BackColor = System.Drawing.Color.Transparent;
+            this.groupBox21.Controls.Add(this.showFormNamesTutorial);
+            this.groupBox21.Location = new System.Drawing.Point(13, 228);
+            this.groupBox21.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox21.Name = "groupBox21";
+            this.groupBox21.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox21.Size = new System.Drawing.Size(280, 52);
+            this.groupBox21.TabIndex = 33;
+            this.groupBox21.TabStop = false;
+            this.groupBox21.Text = "Options";
+            // 
+            // showFormNamesTutorial
+            // 
+            this.showFormNamesTutorial.AutoSize = true;
+            this.showFormNamesTutorial.Location = new System.Drawing.Point(8, 21);
+            this.showFormNamesTutorial.Margin = new System.Windows.Forms.Padding(4);
+            this.showFormNamesTutorial.Name = "showFormNamesTutorial";
+            this.showFormNamesTutorial.Size = new System.Drawing.Size(110, 17);
+            this.showFormNamesTutorial.TabIndex = 21;
+            this.showFormNamesTutorial.Text = "Show form names";
+            this.showFormNamesTutorial.UseVisualStyleBackColor = true;
             // 
             // label16
             // 
@@ -2126,7 +2107,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 218;
+            this.outputSplitContainer.SplitterDistance = 212;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2144,7 +2125,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 218);
+            this.commandShell.Size = new System.Drawing.Size(693, 212);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2162,7 +2143,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 225);
+            this.errorConsole.Size = new System.Drawing.Size(693, 231);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2478,55 +2459,6 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // groupBox12
-            // 
-            this.groupBox12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
-            this.groupBox12.Controls.Add(this.showFormNames);
-            this.groupBox12.Controls.Add(this.regenerateCache);
-            this.groupBox12.Location = new System.Drawing.Point(11, 202);
-            this.groupBox12.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox12.Name = "groupBox12";
-            this.groupBox12.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox12.Size = new System.Drawing.Size(280, 77);
-            this.groupBox12.TabIndex = 32;
-            this.groupBox12.TabStop = false;
-            this.groupBox12.Text = "Options";
-            // 
-            // showFormNames
-            // 
-            this.showFormNames.AutoSize = true;
-            this.showFormNames.Location = new System.Drawing.Point(8, 21);
-            this.showFormNames.Margin = new System.Windows.Forms.Padding(4);
-            this.showFormNames.Name = "showFormNames";
-            this.showFormNames.Size = new System.Drawing.Size(110, 17);
-            this.showFormNames.TabIndex = 21;
-            this.showFormNames.Text = "Show form names";
-            this.showFormNames.UseVisualStyleBackColor = true;
-            // 
-            // groupBox21
-            // 
-            this.groupBox21.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox21.Controls.Add(this.showFormNamesTutorial);
-            this.groupBox21.Location = new System.Drawing.Point(13, 228);
-            this.groupBox21.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox21.Name = "groupBox21";
-            this.groupBox21.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox21.Size = new System.Drawing.Size(280, 52);
-            this.groupBox21.TabIndex = 33;
-            this.groupBox21.TabStop = false;
-            this.groupBox21.Text = "Options";
-            // 
-            // showFormNamesTutorial
-            // 
-            this.showFormNamesTutorial.AutoSize = true;
-            this.showFormNamesTutorial.Location = new System.Drawing.Point(8, 21);
-            this.showFormNamesTutorial.Margin = new System.Windows.Forms.Padding(4);
-            this.showFormNamesTutorial.Name = "showFormNamesTutorial";
-            this.showFormNamesTutorial.Size = new System.Drawing.Size(110, 17);
-            this.showFormNamesTutorial.TabIndex = 21;
-            this.showFormNamesTutorial.Text = "Show form names";
-            this.showFormNamesTutorial.UseVisualStyleBackColor = true;
-            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -2548,12 +2480,13 @@ namespace SkylineTester
             this.statusStrip1.PerformLayout();
             this.tabs.ResumeLayout(false);
             this.tabForms.ResumeLayout(false);
+            this.groupBox12.ResumeLayout(false);
+            this.groupBox12.PerformLayout();
             this.groupBox13.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pauseFormSeconds)).EndInit();
             this.tabTutorials.ResumeLayout(false);
+            this.groupBox21.ResumeLayout(false);
+            this.groupBox21.PerformLayout();
             this.groupBox14.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
@@ -2609,10 +2542,6 @@ namespace SkylineTester
             this.outputSplitContainer.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.groupBox12.ResumeLayout(false);
-            this.groupBox12.PerformLayout();
-            this.groupBox21.ResumeLayout(false);
-            this.groupBox21.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -2636,10 +2565,6 @@ namespace SkylineTester
         private TabPage tabForms;
         private GroupBox groupBox1;
         private MyTreeView formsTree;
-        private GroupBox groupBox2;
-        private Label label3;
-        private RadioButton pauseFormDelay;
-        private RadioButton pauseFormButton;
         private Button runForms;
         private TabPage tabTutorials;
         private Button runTutorials;
@@ -2792,7 +2717,6 @@ namespace SkylineTester
         private ToolStripMenuItem findNextToolStripMenuItem;
         private Button buttonDeleteNightlyTask;
         private DateTimePicker nightlyStartTime;
-        private NumericUpDown pauseFormSeconds;
         private NumericUpDown pauseTutorialsSeconds;
         private NumericUpDown runLoopsCount;
         private NumericUpDown qualityPassCount;

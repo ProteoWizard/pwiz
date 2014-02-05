@@ -311,7 +311,9 @@ namespace TestRunnerLib
                 if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
                     if (!DerivesFromAbstractUnitTest(type))
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
+// ReSharper disable LocalizableElement
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!"); // Not L10N
+// ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
                     var methods = type.GetMethods();
