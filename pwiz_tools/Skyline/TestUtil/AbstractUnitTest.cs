@@ -136,7 +136,6 @@ namespace pwiz.SkylineTestUtil
             STOPWATCH.Stop();
 
             Settings.Release();
-            FormEx.Release();
 
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();

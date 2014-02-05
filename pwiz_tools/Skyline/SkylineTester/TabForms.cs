@@ -48,29 +48,16 @@ namespace SkylineTester
 
             var args = new StringBuilder("loop=1 offscreen=off language=");
             args.Append(MainWindow.GetCulture(MainWindow.FormsLanguage));
-            if (MainWindow.RegenerateCache.Checked)
-            {
-                args.Append(" form=__REGEN__");
-            }
-            else
-            {
-                // Create list of forms the user wants to see.
-                var formList = GetFormList();
-                args.Append(" form=");
-                args.Append(string.Join(",", formList));
-            }
+                
+            // Create list of forms the user wants to see.
+            var formList = GetFormList();
+            args.Append(" form=");
+            args.Append(string.Join(",", formList));
             if (MainWindow.ShowFormNames.Checked)
                 args.Append(" showformnames=on");
 
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
-            return true;
-        }
-
-        public override bool Stop(bool success)
-        {
-            if (success && MainWindow.RegenerateCache.Checked)
-                CreateFormsTree();
             return true;
         }
 
@@ -107,21 +94,10 @@ namespace SkylineTester
             {
                 if (!HasSubclasses(types, type))
                 {
-                    var node = new TreeNode(type.Name);
-                    switch (formLookup.GetStatus(type.Name))
+                    var node = new TreeNode(type.Name)
                     {
-                        case FormLookup.Status.no_test:
-                            node.ForeColor = Color.Gray;    // No test available.
-                            break;
-
-                        case FormLookup.Status.test:
-                            node.ForeColor = Color.DarkRed; // No screenshot available.
-                            break;
-
-                        case FormLookup.Status.test_with_screen_shot:
-                            node.ForeColor = Color.Black;
-                            break;
-                    }
+                        ForeColor = (formLookup.GetTest(type.Name) != null) ? Color.Black : Color.Gray
+                    };
                     forms.Add(node);
                 }
             }
@@ -129,8 +105,6 @@ namespace SkylineTester
             forms = forms.OrderBy(node => node.Text).ToList();
             MainWindow.FormsTree.Nodes.Add(new TreeNode("Skyline forms", forms.ToArray()));
             MainWindow.FormsTree.ExpandAll();
-
-            MainWindow.RegenerateCache.Checked = false;
         }
 
         private static bool HasSubclasses(IEnumerable<Type> types, Type baseType)

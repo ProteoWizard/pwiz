@@ -967,7 +967,6 @@ namespace SkylineTester
         public RadioButton      QualityPassDefinite         { get { return qualityPassDefinite; } }
         public Label            QualityTestName             { get { return qualityTestName; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
-        public CheckBox         RegenerateCache             { get { return regenerateCache; } }
         public Button           RunBuild                    { get { return runBuild; } }
         public Button           RunForms                    { get { return runForms; } }
         public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }

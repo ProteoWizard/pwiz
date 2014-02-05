@@ -260,19 +260,9 @@ namespace pwiz.SkylineTestUtil
                 if (tForm != null)
                 {
                     string formType = typeof(TDlg).Name;
-                    if (Program.PauseForms != null && Program.PauseForms.Contains(formType))
-                    {
-                        Program.PauseForms.Remove(formType);
-                        if (Program.PauseSeconds > 0)
-                            Thread.Sleep(Program.PauseSeconds * 1000);
-                        else if (Program.PauseSeconds < 0)
-                            PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
-                    }
+                    if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
+                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
 
-                    // Add to list of screen shot forms.
-                    if (Program.ScreenShotForms != null && !Program.ScreenShotForms.Contains(formType))
-                        Program.ScreenShotForms.Add(formType);
-                    
                     return tForm;
                 }
 
@@ -404,14 +394,6 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
                 PauseAndContinueForm.Show(description);
-
-            // Add to list of screen shot forms.
-            if (Program.ScreenShotForms != null && FormEx.LastShownForm != null && FormEx.LastShownForm.Visible)
-            {
-                var screenShotForm = FormEx.LastShownForm.GetType().Name;
-                if (!Program.ScreenShotForms.Contains(screenShotForm))
-                    Program.ScreenShotForms.Add(screenShotForm);
-            }
         }
 
         public static void OkDialog(Form form, Action okAction)

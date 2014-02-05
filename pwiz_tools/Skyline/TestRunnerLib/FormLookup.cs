@@ -17,12 +17,10 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace TestRunnerLib
 {
@@ -30,8 +28,8 @@ namespace TestRunnerLib
     {
         private const string CACHE_FILE = "TestRunnerFormLookup.csv";
 
-        private readonly Dictionary<string, List<string>> _formLookup =
-            new Dictionary<string, List<string>>();
+        private readonly Dictionary<string, string> _formLookup =
+            new Dictionary<string, string>();
  
         public FormLookup()
         {
@@ -46,6 +44,7 @@ namespace TestRunnerLib
                 return Path.Combine(exeDir ?? "", CACHE_FILE);
             }
         }
+
         private void Load()
         {
             if (!File.Exists(CacheFile))
@@ -54,64 +53,16 @@ namespace TestRunnerLib
             foreach (var line in File.ReadAllLines(CacheFile))
             {
                 var parts = line.Split(',').ToList();
-                if (parts.Count > 0)
-                {
-                    var form = parts[0];
-                    parts.RemoveAt(0);
-                    _formLookup[form] = parts;
-                }
+                if (parts.Count == 2)
+                    _formLookup[parts[0]] = parts[1];
             }
         }
 
-        public void Save()
+        public string GetTest(string form)
         {
-            var sb = new StringBuilder();
-            foreach (var pair in _formLookup.OrderBy(p => p.Key))
-            {
-                sb.Append(pair.Key);
-                foreach (var form in pair.Value)
-                {
-                    sb.Append(",");
-                    sb.Append(form);
-                }
-                sb.AppendLine();
-            }
-            File.WriteAllText(CacheFile, sb.ToString());
-        }
-
-        public void AddForms(string testName, int testDuration, List<string> forms, List<string> screenShotForms)
-        {
-            var testWithScreenShot = testName + ":-" + testDuration;
-            var testNoScreenShot = testName + ":" + testDuration;
-            foreach (var form in forms)
-            {
-                if (!_formLookup.ContainsKey(form))
-                    _formLookup[form] = new List<string>();
-                _formLookup[form].Add(screenShotForms.Contains(form) ? testWithScreenShot : testNoScreenShot);
-            }
-            Save();
-        }
-
-        public enum Status
-        {
-            no_test,
-            test,
-            test_with_screen_shot
-        };
-
-        public Status GetStatus(string form)
-        {
-            if (!_formLookup.ContainsKey(form))
-                return Status.no_test;
-            var testList = _formLookup[form];
-            if (testList.Count == 0)
-                return Status.no_test;
-            foreach (var test in testList)
-            {
-                if (test.Contains(":-"))
-                    return Status.test_with_screen_shot;
-            }
-            return Status.test;
+            string test;
+            _formLookup.TryGetValue(form, out test);
+            return test;
         }
 
         public List<string> FindTests(List<string> forms, out List<string> uncoveredForms)
@@ -121,62 +72,14 @@ namespace TestRunnerLib
 
             foreach (var form in forms)
             {
-                if (!_formLookup.ContainsKey(form))
-                {
+                string test = GetTest(form);
+                if (test == null)
                     uncoveredForms.Add(form);
-                    continue;
-                }
-
-                string bestTest = null;
-                int minDuration = int.MaxValue;
-                bool foundScreenShot = false;
-                foreach (var testPlusDuration in _formLookup[form])
-                {
-                    bool testDoesScreenShot = testPlusDuration.Contains(":-");
-                    var parts = testPlusDuration.Split(':');
-                    var test = parts[0];
-                    var duration = Math.Abs(int.Parse(parts[1]));
-                    if (testDoesScreenShot)
-                    {
-                        if (tests.Contains(test))
-                        {
-                            // This form is already shown by a different test.
-                            bestTest = null;
-                            break;
-                        }
-                        // Keep the test that pauses for this form in the least time.
-                        if (!foundScreenShot || minDuration > duration)
-                        {
-                            foundScreenShot = true;
-                            minDuration = duration;
-                            bestTest = test;
-                        }
-                    }
-                    else if (!foundScreenShot && minDuration > duration)
-                    {
-                        minDuration = duration;
-                        bestTest = test;
-                    }
-                }
-
-                if (bestTest != null)
-                    tests.Add(bestTest);
+                else if (!tests.Contains(test))
+                    tests.Add(test);
             }
 
             return tests;
-        }
-
-        public bool IsEmpty {get { return _formLookup.Count == 0; }}
-
-        public static void ClearCache()
-        {
-            if (File.Exists(CacheFile))
-                File.Delete(CacheFile);
-        }
-
-        public static void CopyCacheFile(string directory)
-        {
-            File.Copy(CacheFile, Path.Combine(directory, CACHE_FILE), true);
         }
     }
 }

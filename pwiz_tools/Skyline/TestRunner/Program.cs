@@ -95,8 +95,6 @@ namespace TestRunner
                 Debugger.Break();
             }
 
-            var skylineDirectory = GetSkylineDirectory();
-
             // Create log file.
             var logStream = new FileStream(
                 commandLineArgs.ArgAsString("log"),
@@ -200,14 +198,6 @@ namespace TestRunner
             if (!commandLineArgs.ArgAsBool("status"))
                 Report(commandLineArgs.ArgAsString("log"));
 
-            // If the forms/tests cache was regenerated, copy it to Skyline directory.
-            if (commandLineArgs.ArgAsString("form") == "__REGEN__" && skylineDirectory != null)
-            {
-                var testRunnerDirectory = Path.Combine(skylineDirectory.FullName, "TestRunner");
-                if (Directory.Exists(testRunnerDirectory))
-                    FormLookup.CopyCacheFile(testRunnerDirectory);
-            }
-
             // Ungraceful exit to avoid unwinding errors
             //Process.GetCurrentProcess().Kill();
 
@@ -245,7 +235,6 @@ namespace TestRunner
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
-            var screenShotList = commandLineArgs.ArgAsString("screenshotlist");
             var formList = commandLineArgs.ArgAsString("form");
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
@@ -260,9 +249,6 @@ namespace TestRunner
                 qualityMode = false;
                 pauseSeconds = 0;
             }
-
-            if (!string.IsNullOrEmpty(formList))
-                pauseSeconds = -1;
 
             var runTests = new RunTests(demoMode, buildMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
 
@@ -287,16 +273,8 @@ namespace TestRunner
                 ? new[] {"en"} 
                 : commandLineArgs.ArgAsString("language").Split(',');
 
-            List<string> shownForms = (formList == "__REGEN__") ? new List<string>() : null;
-            runTests.Skyline.Set("ShownForms", shownForms);
-            var screenShotForms = new List<string>();
-            runTests.Skyline.Set("ScreenShotForms", screenShotForms);
-            var allScreenShotForms = new List<string>();
             if (showFormNames)
                 runTests.Skyline.Set("ShowFormNames", true);
-
-            // Prepare for showing specific forms, if desired.
-            var formLookup = new FormLookup();
 
             var executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();
@@ -432,8 +410,6 @@ namespace TestRunner
                 {
                     testNumber++;
 
-                    screenShotForms.Clear();
-
                     // Run once (or repeat times) for each language.
                     foreach (var language in languages)
                     {
@@ -446,30 +422,11 @@ namespace TestRunner
                         if (profiling)
                             break;
                     }
-
-                    // Record which forms the test showed.
-                    if (shownForms != null)
-                    {
-                        formLookup.AddForms(test.TestMethod.Name, runTests.LastTestDuration, shownForms, screenShotForms);
-                        shownForms.Clear();
-                    }
-
-                    foreach (var form in screenShotForms)
-                    {
-                        if (!allScreenShotForms.Contains(form))
-                            allScreenShotForms.Add(form);
-                    }
                 }
 
                 foreach (var removeTest in removeList)
                     testList.Remove(removeTest);
                 removeList.Clear();
-            }
-
-            if (!string.IsNullOrEmpty(screenShotList))
-            {
-                allScreenShotForms.Sort();
-                File.WriteAllLines(screenShotList, allScreenShotForms);
             }
 
             return runTests.FailureCount == 0;
@@ -502,12 +459,7 @@ namespace TestRunner
             // Find which tests best cover the desired forms.
             else
             {
-                if (formArg == "__REGEN__")
-                    FormLookup.ClearCache();
                 var formLookup = new FormLookup();
-                if (formLookup.IsEmpty)
-                    return GetTestList(FORMS_DLLS).OrderBy(e => e.TestMethod.Name).ToList();
-
                 List<string> uncoveredForms;
                 testNames = formLookup.FindTests(LoadList(formArg), out uncoveredForms);
                 if (uncoveredForms.Count > 0)

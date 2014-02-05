@@ -44,7 +44,6 @@ namespace SkylineTester
             this.tabForms = new System.Windows.Forms.TabPage();
             this.groupBox12 = new System.Windows.Forms.GroupBox();
             this.showFormNames = new System.Windows.Forms.CheckBox();
-            this.regenerateCache = new System.Windows.Forms.CheckBox();
             this.label15 = new System.Windows.Forms.Label();
             this.groupBox13 = new System.Windows.Forms.GroupBox();
             this.formsLanguage = new System.Windows.Forms.ComboBox();
@@ -359,12 +358,11 @@ namespace SkylineTester
             // 
             this.groupBox12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(205)))));
             this.groupBox12.Controls.Add(this.showFormNames);
-            this.groupBox12.Controls.Add(this.regenerateCache);
             this.groupBox12.Location = new System.Drawing.Point(11, 115);
             this.groupBox12.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox12.Name = "groupBox12";
             this.groupBox12.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox12.Size = new System.Drawing.Size(280, 77);
+            this.groupBox12.Size = new System.Drawing.Size(280, 49);
             this.groupBox12.TabIndex = 32;
             this.groupBox12.TabStop = false;
             this.groupBox12.Text = "Options";
@@ -381,17 +379,6 @@ namespace SkylineTester
             this.showFormNames.TabIndex = 21;
             this.showFormNames.Text = "Show form names";
             this.showFormNames.UseVisualStyleBackColor = true;
-            // 
-            // regenerateCache
-            // 
-            this.regenerateCache.AutoSize = true;
-            this.regenerateCache.Location = new System.Drawing.Point(8, 46);
-            this.regenerateCache.Margin = new System.Windows.Forms.Padding(4);
-            this.regenerateCache.Name = "regenerateCache";
-            this.regenerateCache.Size = new System.Drawing.Size(137, 17);
-            this.regenerateCache.TabIndex = 20;
-            this.regenerateCache.Text = "Regenerate list of forms";
-            this.regenerateCache.UseVisualStyleBackColor = true;
             // 
             // label15
             // 
@@ -2107,7 +2094,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 212;
+            this.outputSplitContainer.SplitterDistance = 206;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2125,7 +2112,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 212);
+            this.commandShell.Size = new System.Drawing.Size(693, 206);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2143,7 +2130,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 231);
+            this.errorConsole.Size = new System.Drawing.Size(693, 237);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2588,7 +2575,6 @@ namespace SkylineTester
         private RadioButton pauseTutorialsDelay;
         private RadioButton pauseTutorialsScreenShots;
         private RadioButton tutorialsDemoMode;
-        private CheckBox regenerateCache;
         private TabPage tabBuild;
         private GroupBox groupBox6;
         private TextBox branchUrl;
