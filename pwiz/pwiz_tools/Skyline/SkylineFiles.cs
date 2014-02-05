@@ -557,7 +557,7 @@ namespace pwiz.Skyline
         {
             // Make sure results are loaded before performaing a Save As,
             // since the results cache must be copied to the new location.
-            if (!DocumentUI.IsLoaded)
+            if (!DocumentUI.IsSavable)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name);
                 return false;
