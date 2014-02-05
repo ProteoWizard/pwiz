@@ -406,7 +406,8 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_SIM);
             } else if (scanType == "srm" ||
                        scanType == "mrm" || // hack: mzWiff (ABI) and wolf-mrm (Waters) use this value
-                       scanType == "multiplereaction") // hack: Trapper (Agilent) uses this value
+                       scanType == "multiplereaction" || // hack: Trapper (Agilent) uses this value
+                       scanType == "srm_ionprep") // hack: (Bruker) uses this value
             {
                 spectrum_.set(MS_SRM_spectrum);
                 scan.set(MS_SRM);

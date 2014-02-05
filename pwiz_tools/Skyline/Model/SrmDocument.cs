@@ -342,6 +342,25 @@ namespace pwiz.Skyline.Model
             return new HashSet<string>(regressionPeps);
         }
 
+        /// <summary>
+        /// True if the parts of a Skyline document affected by a Save As command are loaded
+        /// </summary>
+        public bool IsSavable
+        {
+            get
+            {
+                // Results cache file must be fully created before a Save As, since it has
+                // the same base name as the document
+                return (!Settings.HasResults || Settings.MeasuredResults.IsLoaded) &&
+                    // Document libraries also have the same base name as the document and must be copied
+                       (!Settings.HasLibraries || !Settings.HasDocumentLibrary || !Settings.PeptideSettings.Libraries.IsLoaded);
+            }
+        }
+
+        /// <summary>
+        /// True if all parts of the document loaded by background loaders have completed loading
+        /// TODO: there are still issues with this, like errors importing results, or missing iRT peptides
+        /// </summary>
         public bool IsLoaded
         {
             get

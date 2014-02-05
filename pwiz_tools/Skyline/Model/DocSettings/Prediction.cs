@@ -58,6 +58,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private ImmutableSortedList<int, RegressionLine> _listFileIdToConversion;
         // Peptide standards used to derive the above conversions
         private ImmutableDictionary<int, PeptideDocNode> _dictStandardPeptides;
+        // May be true when the dictionary is null, because peptides were missing
+        private bool _isMissingStandardPeptides;
 
         private ReadOnlyCollection<MeasuredRetentionTime> _peptidesTimes;
        
@@ -144,6 +146,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         im.Conversion = null;
                         im._listFileIdToConversion = null;
+                        im._isMissingStandardPeptides = (dictStandardPeptides == null);
                         im._dictStandardPeptides = (dictStandardPeptides != null ? MakeReadOnly(dictStandardPeptides) : null);
                     });
         }
@@ -233,8 +236,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 // If prediction settings have change, then do auto-recalc
                 if (previous == null || !ReferenceEquals(this,
-                        previous.Settings.PeptideSettings.Prediction.RetentionTime))
+                    previous.Settings.PeptideSettings.Prediction.RetentionTime))
+                {
+                    // If it has already been determined that standard peptides are missing
+                    // and no previous document is given, then no auto-recalc is required
+                    if (previous == null && _isMissingStandardPeptides)
+                        return document.HasAllRetentionTimeStandards(); // Recalc if all standards are now present
                     return true;
+                }
 
                 // Otherwise, only if any of the transition groups or their results
                 // have changed.  This is important to avoid an infinite loop when

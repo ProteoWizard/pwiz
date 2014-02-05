@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model
                    null,
                    null,
                    null,
-                   children ?? new TransitionDocNode[0],
+                   children,
                    children == null)
         {
         }
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model
                                       Results<TransitionGroupChromInfo> results,
                                       TransitionDocNode[] children,
                                       bool autoManageChildren)
-            : base(id, annotations, children, autoManageChildren)
+            : base(id, annotations, children ?? new TransitionDocNode[0], autoManageChildren)
         {
             if (settings != null)
             {
@@ -1166,8 +1166,12 @@ namespace pwiz.Skyline.Model
             {
                 var results = nodeGroup.Results[chromIndex];
                 chromGroupInfoMatch = FindGroupChromInfo(results, fileId, step);
-                if (chromGroupInfoMatch != null)
+                if (chromGroupInfoMatch != null &&
+                    chromGroupInfoMatch.StartRetentionTime.HasValue &&
+                    chromGroupInfoMatch.EndRetentionTime.HasValue)
+                {
                     return true;
+                }
             }
             chromGroupInfoMatch = null;
             return false;
