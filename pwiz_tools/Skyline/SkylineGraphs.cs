@@ -3511,6 +3511,11 @@ namespace pwiz.Skyline
 
         private void areaPropsContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowAreaPropertyDlg();
+        }
+
+        public void ShowAreaPropertyDlg()
+        {
             using (var dlg = new AreaChartPropertyDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)

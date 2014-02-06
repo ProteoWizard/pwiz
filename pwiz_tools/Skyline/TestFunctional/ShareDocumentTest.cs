@@ -22,6 +22,7 @@ using System.Data.SQLite;
 using System.IO;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -93,6 +94,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Share the minimal document.
             string shareMinPath = TestFilesDirs[1].GetTestPath(zipFileMin);
+            RunDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
             Share(shareMinPath, false, origFileSet, newFileSet, docName);
             Assert.AreEqual(origFileSet[blibName].UncompressedSize,
                             newFileSet[blibName].UncompressedSize);

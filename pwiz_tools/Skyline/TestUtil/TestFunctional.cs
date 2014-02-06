@@ -86,16 +86,24 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.Invoke(act);
         }
 
-        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act = null, bool pause = false) where TDlg : Form
         {
-            RunDlg(show, false, act);
+            RunDlg(show, false, act, pause);
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act = null, bool pause = false) where TDlg : Form
         {
             var doc = SkylineWindow.Document;
             TDlg dlg = ShowDialog<TDlg>(show);
-            RunUI(() => act(dlg));
+            if (pause)
+                PauseTest();
+            RunUI(() =>
+            {
+                if (act != null)
+                    act(dlg);
+                else
+                    dlg.CancelButton.PerformClick();
+            });
             WaitForClosedForm(dlg);
             if (waitForDocument)
                 WaitForDocumentChange(doc);

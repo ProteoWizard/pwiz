@@ -764,6 +764,11 @@ namespace pwiz.Skyline
 
         private void shareDocumentMenuItem_Click(object sender, EventArgs e)
         {
+            ShareDocument();
+        }
+
+        public void ShareDocument()
+        {
             var document = DocumentUI;
             if (!document.IsLoaded)
             {

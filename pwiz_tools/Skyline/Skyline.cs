@@ -1918,6 +1918,11 @@ namespace pwiz.Skyline
 
         private void acceptPeptidesMenuItem_Click(object sender, EventArgs e)
         {
+            AcceptPeptides();
+        }
+
+        public void AcceptPeptides()
+        {
             using (var dlg = new RefineListDlg(DocumentUI))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)

@@ -19,6 +19,8 @@
 
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -32,16 +34,26 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestEditDialogs()
         {
+            TestFilesZip = @"TestFunctional\EditNoteTest.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            RunEditDialogs(); // no data needed to test these
+
+            // Open a .sky file
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
+            RunOtherDialogs();
+        }
+
+        private void RunEditDialogs()
+        {
             // Display transition settings, prediction tab.
             var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => { transitionSettings.SelectedTab = TransitionSettingsUI.TABS.Prediction; });
 
-            RunDlg<EditDPDlg>(transitionSettings.AddToDPList, dlg => dlg.CancelDialog());
+            RunDlg<EditDPDlg>(transitionSettings.AddToDPList);
 
             // Display full scan tab.
             RunUI(() =>
@@ -50,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettings.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
             });
 
-            RunDlg<EditIsotopeEnrichmentDlg>(transitionSettings.AddToEnrichmentsList, dlg => dlg.CancelDialog());
+            RunDlg<EditIsotopeEnrichmentDlg>(transitionSettings.AddToEnrichmentsList);
 
             // Display filter tab.
             RunUI(() =>
@@ -89,6 +101,20 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editList, editList.OkDialog);
             }
             OkDialog(peptideSettings, peptideSettings.CancelButton.PerformClick);
+        }
+
+        private void RunOtherDialogs()
+        {
+            RunDlg<RefineListDlg>(SkylineWindow.AcceptPeptides);
+            RunDlg<ChromatogramRTThresholdDlg>(SkylineWindow.ShowChromatogramRTThresholdDlg);
+
+            var rtReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);
+            RunDlg<RTChartPropertyDlg>(SkylineWindow.ShowRTPropertyDlg);
+            OkDialog(rtReplicateGraph, rtReplicateGraph.Close);
+
+            var areaReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowPeakAreaReplicateComparison);
+            RunDlg<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
+            OkDialog(areaReplicateGraph, areaReplicateGraph.Close);
         }
     }
 }
