@@ -417,17 +417,22 @@ namespace pwiz.Skyline.SettingsUI.Irt
             OkDialog();
         }
 
-        public void btnCalibrate_Click(object sender, EventArgs e)
+        private void btnCalibrate_Click(object sender, EventArgs e)
         {
-            if (LibraryPeptideList.Count == 0)
-                Calibrate();
-            else
-                Recalibrate();
+            Calibrate();
         }
 
         public void Calibrate()
         {
             CheckDisposed();
+            if (LibraryPeptideList.Count == 0)
+                CalibrateOnce();
+            else
+                Recalibrate();
+        }
+
+        private void CalibrateOnce()
+        {
             using (var calibrateDlg = new CalibrateIrtDlg())
             {
                 if (calibrateDlg.ShowDialog(this) == DialogResult.OK)
@@ -437,7 +442,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        public void Recalibrate()
+        private void Recalibrate()
         {
             using (var recalibrateDlg = new RecalibrateIrtDlg(AllPeptides.ToArray()))
             {
@@ -450,6 +455,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         private void btnPeptides_Click(object sender, EventArgs e)
+        {
+            ChangeStandardPeptides();
+        }
+
+        public void ChangeStandardPeptides()
         {
             using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray()))
             {

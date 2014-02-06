@@ -594,6 +594,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void labelRValue_Click(object sender, EventArgs e)
         {
+            ShowDetails();
+        }
+
+        public void ShowDetails()
+        {
 /*
             var calc = _driverCalculators.SelectedItem;
             if (!calc.IsUsable)
@@ -657,6 +662,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             CheckDisposed();
             _driverCalculators.EditList();
+        }
+
+        public void EditCurrentCalculator()
+        {
+            CheckDisposed();
+            _driverCalculators.EditCurrent();
         }
 
         public void ChooseCalculator(string name)

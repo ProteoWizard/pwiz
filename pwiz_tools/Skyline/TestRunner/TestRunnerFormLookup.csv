@@ -1,4 +1,5 @@
 AboutDlg,TestMiscForms
+AddIrtCalculatorDlg,IrtFunctionalTest
 AddIrtPeptidesDlg,IrtFunctionalTest
 AddIrtSpectralLibrary,TestIrtTutorial
 AddIrtStandardsDlg,IrtFunctionalTest
@@ -11,6 +12,7 @@ BuildLibraryDlg,TestFullScanId
 BuildLibraryNotification,TestFullScanId
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
+ChangeIrtPeptidesDlg,IrtFunctionalTest
 ChooseAnnotationsDlg,TestAnnotations
 ChooseSchedulingReplicatesDlg,TestRetentionTimeFilter
 ChromChartPropertyDlg,TestPeakPickingTutorial
@@ -65,6 +67,7 @@ PeptideSettingsUI,TestBackgroundProteome
 PopupPickList,TestPrecursorIon
 PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
+RecalibrateIrtDlg,IrtFunctionalTest
 RefineDlg,TestMethodEditTutorial
 RegressionRTThresholdDlg,TestIrtTutorial
 ReintegrateDlg,TestReintegrateDlg
@@ -72,6 +75,7 @@ RenameProteinsDlg,TestRenameProteins
 RenameResultDlg,TestManageResults
 RescoreResultsDlg,TestManageResults
 RInstaller,TestRInstaller
+RTDetails,IrtFunctionalTest
 SaveSettingsDlg,TestShareSettings
 SchedulingGraphPropertyDlg,TestIrtTutorial
 SchedulingOptionsDlg,TestExportIsolationList

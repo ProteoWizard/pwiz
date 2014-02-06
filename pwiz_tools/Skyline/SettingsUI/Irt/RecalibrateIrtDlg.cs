@@ -124,5 +124,43 @@ namespace pwiz.Skyline.SettingsUI.Irt
             textMinIrt.Text = Math.Min(irt1, irt2).ToString(LocalizationHelper.CurrentCulture);
             textMaxIrt.Text = Math.Max(irt1, irt2).ToString(LocalizationHelper.CurrentCulture);
         }
+
+        #region Functional test support
+
+        public double MinIrt
+        {
+            get { return double.Parse(textMinIrt.Text); }
+            set { textMinIrt.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double MaxIrt
+        {
+            get { return double.Parse(textMaxIrt.Text); }
+            set { textMaxIrt.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public string FixedPoint1
+        {
+            get { return ((DbIrtPeptide) comboFixedPoint1.SelectedItem).Sequence; }
+            set { comboFixedPoint1.SelectedIndex = GetPeptideIndex(comboFixedPoint1, value); }
+        }
+
+        public string FixedPoint2
+        {
+            get { return ((DbIrtPeptide)comboFixedPoint2.SelectedItem).Sequence; }
+            set { comboFixedPoint2.SelectedIndex = GetPeptideIndex(comboFixedPoint2, value); }
+        }
+
+        private static int GetPeptideIndex(ComboBox comboBox, string sequence)
+        {
+            for (int i = 0; i < comboBox.Items.Count; i++)
+            {
+                if (Equals(sequence, ((DbIrtPeptide) comboBox.Items[i]).Sequence))
+                    return i;
+            }
+            return -1;
+        }
+
+        #endregion
     }
 }

@@ -66,7 +66,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        private void OkDialog()
+        public void OkDialog()
         {
             if (Source == IrtCalculatorSource.file)
             {
@@ -146,5 +146,39 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textFilePath.Text = dlg.FileName;
             }
         }
+
+        #region Functional test support
+
+        public string FilePath
+        {
+            get { return textFilePath.Text; }
+            set
+            {
+                Source = IrtCalculatorSource.file;
+                textFilePath.Text = value;
+            }
+        }
+
+        public string CalculatorName
+        {
+            get { return ((RCalcIrt) comboLibrary.SelectedItem).Name; }
+            set
+            {
+                Source = IrtCalculatorSource.settings;
+                comboLibrary.SelectedIndex = GetCalculatorNameIndex(comboLibrary, value);
+            }
+        }
+
+        private static int GetCalculatorNameIndex(ComboBox comboBox, string name)
+        {
+            for (int i = 0; i < comboBox.Items.Count; i++)
+            {
+                if (Equals(name, ((RCalcIrt)comboBox.Items[i]).Name))
+                    return i;
+            }
+            return -1;
+        }
+
+        #endregion
     }
 }
