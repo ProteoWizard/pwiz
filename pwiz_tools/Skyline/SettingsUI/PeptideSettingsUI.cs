@@ -793,6 +793,12 @@ namespace pwiz.Skyline.SettingsUI
             _driverRT.EditList();
         }
 
+        public void EditExclusionList()
+        {
+            CheckDisposed();
+            _driverExclusion.EditList();
+        }
+
         public int MissedCleavages
         { 
             get { return Convert.ToInt32(cbMissedCleavages.SelectedItem); }

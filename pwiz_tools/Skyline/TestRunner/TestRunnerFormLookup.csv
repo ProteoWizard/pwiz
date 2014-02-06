@@ -20,13 +20,17 @@ ConfigureToolsDlg,TestQuasarTutorial
 DefineAnnotationDlg,TestAnnotations
 DocumentGridForm,TestCustomReportsTutorialTestReportSummary
 EditCEDlg,TestOptimization
+EditDPDlg,TestEditDialogs
 EditEnzymeDlg,TestEditSettingsTypes
+EditExclusionDlg,TestEditDialogs
 EditFragmentLossDlg,TestNeutralLoss
 EditIrtCalcDlg,TestRetentionTimeFilter
 EditIsolationSchemeDlg,TestCalculateIsolationWindows
+EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
 EditLibraryDlg,TestRetentionTimeAlignment
 EditListDlg`2,TestEditStaticMod
+EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote
 EditPeakScoringModelDlg,TestPeakScoringModel
 EditPepModsDlg,TestExplicitVariable
@@ -42,7 +46,7 @@ FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
 GenerateDecoysDlg,TestPeakPickingTutorial
 GraphChromatogram,TestCustomReportsTutorial
-GraphRegression,,TestOptimization
+GraphRegression,TestOptimization
 GraphSpectrum,TestMs1Tutorial
 GraphSummary,TestCustomReportsTutorial
 ImmediateWindow,ImmediateWindowTestMethod
@@ -88,6 +92,7 @@ ToolOptionsUI,TestAccessServer
 ToolStoreDlg,TestToolStore
 ToolUpdatesDlg,TestToolUpdates
 TransitionSettingsUI,TestIsolationScheme
+UndoRedoList,*
 UniquePeptidesDlg,TestMethodEditTutorial
 ViewEditor,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId

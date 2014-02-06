@@ -94,9 +94,12 @@ namespace SkylineTester
             {
                 if (!HasSubclasses(types, type))
                 {
+                    var test = formLookup.GetTest(type.Name);
+                    if (test == "*")
+                        continue;
                     var node = new TreeNode(type.Name)
                     {
-                        ForeColor = (formLookup.GetTest(type.Name) != null) ? Color.Black : Color.Gray
+                        ForeColor = (test != null) ? Color.Black : Color.Gray
                     };
                     forms.Add(node);
                 }

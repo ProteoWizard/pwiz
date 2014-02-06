@@ -602,6 +602,11 @@ namespace pwiz.Skyline.SettingsUI
             set { comboDeclusterPotential.SelectedItem = value; }
         }
 
+        public void EditSpecialTransitionsList()
+        {
+            _driverIons.EditList();
+        }
+
         public void EditCEList()
         {
             CheckDisposed();
