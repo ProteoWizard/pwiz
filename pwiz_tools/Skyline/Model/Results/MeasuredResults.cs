@@ -900,7 +900,7 @@ namespace pwiz.Skyline.Model.Results
                 // contain the final cache, but it is not open (Undo-Redo case), then make sure it
                 // is reloaded from scratch, as it may have changed since it was last open.
                 bool cacheExists = File.Exists(cachePath);
-                if (_resultsClone._listPartialCaches != null && cacheExists)
+                if (_resultsClone._listPartialCaches != null && _resultsClone._cacheRecalc == null && cacheExists)
                 {
                     int finalIndex = _resultsClone._listPartialCaches.IndexOf(cache =>
                         Equals(cache.CachePath, cachePath));
@@ -1094,6 +1094,14 @@ namespace pwiz.Skyline.Model.Results
                 int uncachedCount = uncachedPaths.Count;
                 if (uncachedCount > 0)
                 {
+                    // Checkpoint any partial cache changes, in case subsequent builds fail
+                    if (!ArrayUtil.ReferencesEqual(_resultsClone._listPartialCaches,
+                                                   _document.Settings.MeasuredResults._listPartialCaches))
+                    {
+                        Complete(false);
+                        return;
+                    }
+
                     // If more than just a single file will be cached, then create a segmented
                     // status object for marking progress.
                     if (msDataFilePaths.Length > 1 && _status.SegmentCount < uncachedCount)

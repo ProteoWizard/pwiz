@@ -57,124 +57,93 @@
             // navBarButtonViews
             // 
             this.navBarButtonViews.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.navBarButtonViews.Image = ((System.Drawing.Image)(resources.GetObject("navBarButtonViews.Image")));
-            this.navBarButtonViews.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.navBarButtonViews, "navBarButtonViews");
             this.navBarButtonViews.Name = "navBarButtonViews";
-            this.navBarButtonViews.Size = new System.Drawing.Size(50, 22);
-            this.navBarButtonViews.Text = "Views";
             this.navBarButtonViews.DropDownOpening += new System.EventHandler(this.NavBarButtonViewsOnDropDownOpening);
             // 
             // bindingNavigatorMoveFirstItem
             // 
             this.bindingNavigatorMoveFirstItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMoveFirstItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorMoveFirstItem.Image")));
+            resources.ApplyResources(this.bindingNavigatorMoveFirstItem, "bindingNavigatorMoveFirstItem");
             this.bindingNavigatorMoveFirstItem.Name = "bindingNavigatorMoveFirstItem";
-            this.bindingNavigatorMoveFirstItem.RightToLeftAutoMirrorImage = true;
-            this.bindingNavigatorMoveFirstItem.Size = new System.Drawing.Size(23, 22);
-            this.bindingNavigatorMoveFirstItem.Text = "Move first";
             // 
             // bindingNavigatorMovePreviousItem
             // 
             this.bindingNavigatorMovePreviousItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMovePreviousItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorMovePreviousItem.Image")));
+            resources.ApplyResources(this.bindingNavigatorMovePreviousItem, "bindingNavigatorMovePreviousItem");
             this.bindingNavigatorMovePreviousItem.Name = "bindingNavigatorMovePreviousItem";
-            this.bindingNavigatorMovePreviousItem.RightToLeftAutoMirrorImage = true;
-            this.bindingNavigatorMovePreviousItem.Size = new System.Drawing.Size(23, 22);
-            this.bindingNavigatorMovePreviousItem.Text = "Move previous";
             // 
             // bindingNavigatorSeparator
             // 
             this.bindingNavigatorSeparator.Name = "bindingNavigatorSeparator";
-            this.bindingNavigatorSeparator.Size = new System.Drawing.Size(6, 25);
+            resources.ApplyResources(this.bindingNavigatorSeparator, "bindingNavigatorSeparator");
             // 
             // bindingNavigatorPositionItem
             // 
-            this.bindingNavigatorPositionItem.AccessibleName = "Position";
-            this.bindingNavigatorPositionItem.AutoSize = false;
+            resources.ApplyResources(this.bindingNavigatorPositionItem, "bindingNavigatorPositionItem");
             this.bindingNavigatorPositionItem.Name = "bindingNavigatorPositionItem";
-            this.bindingNavigatorPositionItem.Size = new System.Drawing.Size(50, 23);
-            this.bindingNavigatorPositionItem.Text = "0";
-            this.bindingNavigatorPositionItem.ToolTipText = "Current position";
             // 
             // bindingNavigatorCountItem
             // 
             this.bindingNavigatorCountItem.Name = "bindingNavigatorCountItem";
-            this.bindingNavigatorCountItem.Size = new System.Drawing.Size(35, 22);
-            this.bindingNavigatorCountItem.Text = "of {0}";
-            this.bindingNavigatorCountItem.ToolTipText = "Total number of items";
+            resources.ApplyResources(this.bindingNavigatorCountItem, "bindingNavigatorCountItem");
             // 
             // bindingNavigatorSeparator1
             // 
             this.bindingNavigatorSeparator1.Name = "bindingNavigatorSeparator1";
-            this.bindingNavigatorSeparator1.Size = new System.Drawing.Size(6, 25);
+            resources.ApplyResources(this.bindingNavigatorSeparator1, "bindingNavigatorSeparator1");
             // 
             // bindingNavigatorMoveNextItem
             // 
             this.bindingNavigatorMoveNextItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMoveNextItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorMoveNextItem.Image")));
+            resources.ApplyResources(this.bindingNavigatorMoveNextItem, "bindingNavigatorMoveNextItem");
             this.bindingNavigatorMoveNextItem.Name = "bindingNavigatorMoveNextItem";
-            this.bindingNavigatorMoveNextItem.RightToLeftAutoMirrorImage = true;
-            this.bindingNavigatorMoveNextItem.Size = new System.Drawing.Size(23, 22);
-            this.bindingNavigatorMoveNextItem.Text = "Move next";
             // 
             // bindingNavigatorMoveLastItem
             // 
             this.bindingNavigatorMoveLastItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorMoveLastItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorMoveLastItem.Image")));
+            resources.ApplyResources(this.bindingNavigatorMoveLastItem, "bindingNavigatorMoveLastItem");
             this.bindingNavigatorMoveLastItem.Name = "bindingNavigatorMoveLastItem";
-            this.bindingNavigatorMoveLastItem.RightToLeftAutoMirrorImage = true;
-            this.bindingNavigatorMoveLastItem.Size = new System.Drawing.Size(23, 22);
-            this.bindingNavigatorMoveLastItem.Text = "Move last";
             // 
             // bindingNavigatorSeparator2
             // 
             this.bindingNavigatorSeparator2.Name = "bindingNavigatorSeparator2";
-            this.bindingNavigatorSeparator2.Size = new System.Drawing.Size(6, 25);
+            resources.ApplyResources(this.bindingNavigatorSeparator2, "bindingNavigatorSeparator2");
             // 
             // bindingNavigatorAddNewItem
             // 
             this.bindingNavigatorAddNewItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.bindingNavigatorAddNewItem.Image = ((System.Drawing.Image)(resources.GetObject("bindingNavigatorAddNewItem.Image")));
+            resources.ApplyResources(this.bindingNavigatorAddNewItem, "bindingNavigatorAddNewItem");
             this.bindingNavigatorAddNewItem.Name = "bindingNavigatorAddNewItem";
-            this.bindingNavigatorAddNewItem.RightToLeftAutoMirrorImage = true;
-            this.bindingNavigatorAddNewItem.Size = new System.Drawing.Size(23, 22);
-            this.bindingNavigatorAddNewItem.Text = "Add new";
             // 
             // navBarDeleteItem
             // 
             this.navBarDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.navBarDeleteItem.Image = ((System.Drawing.Image)(resources.GetObject("navBarDeleteItem.Image")));
+            resources.ApplyResources(this.navBarDeleteItem, "navBarDeleteItem");
             this.navBarDeleteItem.Name = "navBarDeleteItem";
-            this.navBarDeleteItem.RightToLeftAutoMirrorImage = true;
-            this.navBarDeleteItem.Size = new System.Drawing.Size(23, 22);
-            this.navBarDeleteItem.Text = "Delete";
             this.navBarDeleteItem.Click += new System.EventHandler(this.NavBarDeleteItemOnClick);
             // 
             // navBarButtonExport
             // 
             this.navBarButtonExport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.navBarButtonExport.Image = ((System.Drawing.Image)(resources.GetObject("navBarButtonExport.Image")));
-            this.navBarButtonExport.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.navBarButtonExport, "navBarButtonExport");
             this.navBarButtonExport.Name = "navBarButtonExport";
-            this.navBarButtonExport.Size = new System.Drawing.Size(53, 22);
-            this.navBarButtonExport.Text = "Export...";
             this.navBarButtonExport.Click += new System.EventHandler(this.NavBarButtonExportOnClick);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
             // 
             // toolStripLabel1
             // 
             this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(33, 22);
-            this.toolStripLabel1.Text = "Find:";
+            resources.ApplyResources(this.toolStripLabel1, "toolStripLabel1");
             // 
             // tbxFind
             // 
             this.tbxFind.Name = "tbxFind";
-            this.tbxFind.Size = new System.Drawing.Size(100, 25);
+            resources.ApplyResources(this.tbxFind, "tbxFind");
             this.tbxFind.TextChanged += new System.EventHandler(this.FindBoxOnTextChanged);
             // 
             // navBarButtonMatchCase
@@ -183,24 +152,19 @@
             this.navBarButtonMatchCase.CheckOnClick = true;
             this.navBarButtonMatchCase.CheckState = System.Windows.Forms.CheckState.Checked;
             this.navBarButtonMatchCase.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.navBarButtonMatchCase.Image = ((System.Drawing.Image)(resources.GetObject("navBarButtonMatchCase.Image")));
-            this.navBarButtonMatchCase.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.navBarButtonMatchCase, "navBarButtonMatchCase");
             this.navBarButtonMatchCase.Name = "navBarButtonMatchCase";
-            this.navBarButtonMatchCase.Size = new System.Drawing.Size(23, 22);
-            this.navBarButtonMatchCase.Text = "Match Case";
             this.navBarButtonMatchCase.CheckedChanged += new System.EventHandler(this.NavBarButtonMatchCaseOnCheckedChanged);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
             // 
             // lblFilterApplied
             // 
             this.lblFilterApplied.Name = "lblFilterApplied";
-            this.lblFilterApplied.Size = new System.Drawing.Size(135, 22);
-            this.lblFilterApplied.Text = "(Filtered from XXXXXXX)";
-            this.lblFilterApplied.Visible = false;
+            resources.ApplyResources(this.lblFilterApplied, "lblFilterApplied");
             // 
             // bindingNavigator1
             // 
@@ -228,24 +192,20 @@
             this.navBarButtonMatchCase,
             this.toolStripSeparator2,
             this.lblFilterApplied});
-            this.bindingNavigator1.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.bindingNavigator1, "bindingNavigator1");
             this.bindingNavigator1.MoveFirstItem = this.bindingNavigatorMoveFirstItem;
             this.bindingNavigator1.MoveLastItem = this.bindingNavigatorMoveLastItem;
             this.bindingNavigator1.MoveNextItem = this.bindingNavigatorMoveNextItem;
             this.bindingNavigator1.MovePreviousItem = this.bindingNavigatorMovePreviousItem;
             this.bindingNavigator1.Name = "bindingNavigator1";
             this.bindingNavigator1.PositionItem = this.bindingNavigatorPositionItem;
-            this.bindingNavigator1.Size = new System.Drawing.Size(740, 25);
-            this.bindingNavigator1.TabIndex = 1;
             // 
             // NavBar
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
             this.Controls.Add(this.bindingNavigator1);
             this.Name = "NavBar";
-            this.Size = new System.Drawing.Size(740, 25);
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).EndInit();
             this.bindingNavigator1.ResumeLayout(false);
             this.bindingNavigator1.PerformLayout();
