@@ -3,8 +3,8 @@
   <Description>These are default test settings for a local test run.</Description>
   <Deployment>
     <!-- Localization -->
-    <DeploymentItem filename="bin\x64\Release\ja\Skyline-daily.resources.dll" outputDirectory="ja" />
-    <DeploymentItem filename="bin\x64\Debug\ja\Skyline-daily.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Release\ja\Skyline.resources.dll" outputDirectory="ja" />
+    <DeploymentItem filename="bin\x64\Debug\ja\Skyline.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x64\Release\ja\ProteomeDb.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x64\Debug\ja\ProteomeDb.resources.dll" outputDirectory="ja" />
     <DeploymentItem filename="bin\x64\Release\ja\pwiz.Common.resources.dll" outputDirectory="ja" />

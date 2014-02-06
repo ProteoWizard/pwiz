@@ -202,6 +202,6 @@
     <value>DocumentGridForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

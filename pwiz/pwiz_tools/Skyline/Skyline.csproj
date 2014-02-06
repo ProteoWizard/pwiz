@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Skyline</RootNamespace>
-    <AssemblyName>Skyline-daily</AssemblyName>
+    <AssemblyName>Skyline</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
@@ -27,7 +27,7 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
-    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily2-64\</PublishUrl>
+    <PublishUrl>S:\webapps\ROOT\software\Skyline-release_2_5\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -37,14 +37,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily2-64/</InstallUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release_2_5/</InstallUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>5381</ApplicationRevision>
-    <ApplicationVersion>2.1.1.5381</ApplicationVersion>
+    <ApplicationRevision>5656</ApplicationRevision>
+    <ApplicationVersion>2.4.9.5656</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2181,7 +2181,7 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-    <PublishFile Include="Skyline-daily.pdb">
+    <PublishFile Include="Skyline.pdb">
       <Visible>False</Visible>
       <Group>
       </Group>

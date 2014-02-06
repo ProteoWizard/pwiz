@@ -38,7 +38,7 @@ namespace SkylineRunner
 
         public Program(IEnumerable<string> args)
         {
-            const string skylineAppName = "Skyline-daily";
+            const string skylineAppName = "Skyline";
             string skylinePath = "\"" + Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             skylinePath += "\\Programs\\MacCoss Lab, UW\\" + skylineAppName + ".appref-ms" + "\"";
 

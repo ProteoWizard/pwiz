@@ -163,7 +163,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
     <value>$this</value>
@@ -235,6 +235,6 @@
     <value>LiveResultsGrid</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
