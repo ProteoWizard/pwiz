@@ -353,13 +353,13 @@ namespace pwiz.Skyline.Model
                 // the same base name as the document
                 return (!Settings.HasResults || Settings.MeasuredResults.IsLoaded) &&
                     // Document libraries also have the same base name as the document and must be copied
-                       (!Settings.HasLibraries || !Settings.HasDocumentLibrary || !Settings.PeptideSettings.Libraries.IsLoaded);
+                       (!Settings.HasLibraries || !Settings.HasDocumentLibrary || Settings.PeptideSettings.Libraries.IsLoaded);
             }
         }
 
         /// <summary>
         /// True if all parts of the document loaded by background loaders have completed loading
-        /// TODO: there are still issues with this, like errors importing results, or missing iRT peptides
+        /// TODO: there are still issues with this, like errors importing results
         /// </summary>
         public bool IsLoaded
         {
