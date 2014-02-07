@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Irt
             PeptideModSeq VARCHAR(200),
             iRT REAL,
             Standard BIT,
-            PeakTime BIT
+            TimeSource INT null
         )
         */
         // public virtual long? ID { get; set; } // in DbEntity
