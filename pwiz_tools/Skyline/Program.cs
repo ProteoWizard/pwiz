@@ -75,9 +75,6 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main(string[] args = null)
         {
-            if (!FunctionalTest)
-                Application.SetCompatibleTextRenderingDefault(false);
-
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
