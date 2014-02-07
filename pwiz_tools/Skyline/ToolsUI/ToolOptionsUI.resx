@@ -228,60 +228,6 @@
   <data name="&gt;&gt;tabPanorama.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxLiveReports.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 6</value>
-  </data>
-  <data name="checkBoxLiveReports.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 17</value>
-  </data>
-  <data name="checkBoxLiveReports.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="checkBoxLiveReports.Text" xml:space="preserve">
-    <value>Live Reports (document grid, new results grid)</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Name" xml:space="preserve">
-    <value>checkBoxLiveReports</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.Parent" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLiveReports.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabMisc.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabMisc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>389, 248</value>
-  </data>
-  <data name="tabMisc.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="tabMisc.Text" xml:space="preserve">
-    <value>Miscellaneous</value>
-  </data>
-  <data name="&gt;&gt;tabMisc.Name" xml:space="preserve">
-    <value>tabMisc</value>
-  </data>
-  <data name="&gt;&gt;tabMisc.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabMisc.Parent" xml:space="preserve">
-    <value>tabControl</value>
-  </data>
-  <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -358,6 +304,60 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxLiveReports.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 6</value>
+  </data>
+  <data name="checkBoxLiveReports.Size" type="System.Drawing.Size, System.Drawing">
+    <value>241, 17</value>
+  </data>
+  <data name="checkBoxLiveReports.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="checkBoxLiveReports.Text" xml:space="preserve">
+    <value>Live Reports (document grid, new results grid)</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLiveReports.Name" xml:space="preserve">
+    <value>checkBoxLiveReports</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLiveReports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLiveReports.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLiveReports.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabMisc.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabMisc.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabMisc.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabMisc.Text" xml:space="preserve">
+    <value>Miscellaneous</value>
+  </data>
+  <data name="&gt;&gt;tabMisc.Name" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;tabMisc.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabMisc.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">

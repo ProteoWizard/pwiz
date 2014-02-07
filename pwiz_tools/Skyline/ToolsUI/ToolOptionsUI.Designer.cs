@@ -51,8 +51,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPanorama);
-            this.tabControl.Controls.Add(this.tabMisc);
             this.tabControl.Controls.Add(this.tabLanguage);
+            this.tabControl.Controls.Add(this.tabMisc);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
