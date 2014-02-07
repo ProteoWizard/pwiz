@@ -64,6 +64,12 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestCustomReportsTutorialWithOldReports()
+        {
+            RunTestWithOldReports(TestCustomReportsTutorial);
+        }
+
         private new TestFilesDir TestFilesDir
         {
             get { return TestFilesDirs[0]; }

@@ -56,6 +56,12 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestAbsoluteQuantificationTutorialWithOldReports()
+        {
+            RunTestWithOldReports(TestAbsoluteQuantificationTutorial);
+        }
+
         protected override void DoTest()
         {
             var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";

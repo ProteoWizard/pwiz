@@ -55,6 +55,12 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestQuasarTutorialWithOldReports()
+        {
+            RunTestWithOldReports(TestQuasarTutorial);
+        }
+
         private string GetTestPath(string relativePath)
         {
             const string folderQuaser = "QuaSARTutorial";

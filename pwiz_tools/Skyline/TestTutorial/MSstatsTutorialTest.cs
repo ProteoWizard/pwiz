@@ -48,6 +48,12 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestMSstatsTutorialWithOldReports()
+        {
+            RunTestWithOldReports(TestMSstatsTutorial);
+        }
+
         private string GetTestPath(string relativePath)
         {
             const string folderQuaser = "MSstatsTutorial";

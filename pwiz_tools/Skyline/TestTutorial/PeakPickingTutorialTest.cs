@@ -71,6 +71,12 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestPeakPickingTutorialWithOldReports()
+        {
+            RunTestWithOldReports(TestPeakPickingTutorial);
+        }
+
         private string GetTestPath(string relativePath)
         {
             var folderTutorial = ExtensionTestContext.CanImportAbWiff ? "PeakPicking" : "PeakPickingMzml"; // Not L10N

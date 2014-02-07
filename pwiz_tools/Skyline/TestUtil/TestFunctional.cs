@@ -389,6 +389,20 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsEnableLiveReports { get; set; }
 
+        protected void RunTestWithOldReports(Action testMethod)
+        {
+            bool wasEnableLiveReports = IsEnableLiveReports;
+            try
+            {
+                IsEnableLiveReports = false;
+                testMethod();
+            }
+            finally
+            {
+                IsEnableLiveReports = wasEnableLiveReports;
+            }
+        }
+
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
         public void PauseForScreenShot(string description = null)

@@ -18,6 +18,7 @@ ChooseAnnotationsDlg,TestAnnotations
 ChooseSchedulingReplicatesDlg,TestRetentionTimeFilter
 ChromatogramRTThresholdDlg,TestEditDialogs
 ChromChartPropertyDlg,TestPeakPickingTutorial
+ColumnChooser,TestStandardTypeWithOldReports
 ConfigureToolsDlg,TestQuasarTutorial
 DefineAnnotationDlg,TestAnnotations
 DocumentGridForm,TestCustomReportsTutorialTestReportSummary
@@ -43,6 +44,7 @@ EmptyProteinsDlg,TestImportPeptideSearch
 ExportChromatogramDlg,TestExportChromatogram
 ExportLiveReportDlg,TestReportSummary
 ExportMethodDlg,TestPrecursorIon
+ExportReportDlg,TestReportSummaryWithOldReports
 FilterMatchedPeptidesDlg,TestInsert
 FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
@@ -70,7 +72,9 @@ OpenDataSourceDialog,TestRetentionTimeAlignment
 PasteDlg,TestInsertMod
 PasteFilteredPeptidesDlg,TestLibraryBuild
 PeptideSettingsUI,TestBackgroundProteome
+PivotReportDlg,TestReportSummaryWithOldReports
 PopupPickList,TestPrecursorIon
+PreviewReportDlg,TestReportSummaryWithOldReports
 PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
 RecalibrateIrtDlg,IrtFunctionalTest
@@ -81,6 +85,7 @@ ReintegrateDlg,TestReintegrateDlg
 RenameProteinsDlg,TestRenameProteins
 RenameResultDlg,TestManageResults
 RescoreResultsDlg,TestManageResults
+ResultsGridForm,TestAnnotationsWithOldReports
 RInstaller,TestRInstaller
 RTChartPropertyDlg,TestEditDialogs
 RTDetails,IrtFunctionalTest
