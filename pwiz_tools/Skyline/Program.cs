@@ -19,12 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -73,6 +75,7 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main(string[] args = null)
         {
+            Application.SetCompatibleTextRenderingDefault(false);
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
@@ -122,7 +125,10 @@ namespace pwiz.Skyline
             try
             {
                 Init();
-
+                if (!string.IsNullOrEmpty(Settings.Default.DisplayLanguage))
+                {
+                    LocalizationHelper.CurrentCulture = CultureInfo.GetCultureInfo(Settings.Default.DisplayLanguage);
+                }
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
                 int licenseVersion = Settings.Default.LicenseVersionAccepted;

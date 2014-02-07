@@ -16447,6 +16447,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default ({0}).
+        /// </summary>
+        public static string ToolOptionsUI_ToolOptionsUI_Default___0__ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ToolOptionsUI_Default___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading {0}.
         /// </summary>
         public static string ToolStoreDlg_DownloadSelectedTool_Downloading__0_ {
