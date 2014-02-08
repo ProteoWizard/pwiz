@@ -16,9 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -40,6 +44,38 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<AboutDlg>(
                     () => about.ShowDialog(Program.MainWindow),
                     a => a.Close());
+            }
+
+            // Show Alert link dialog.
+            RunDlg<AlertLinkDlg>(
+                () => WebHelpers.ShowLinkFailure(Program.MainWindow, "http://skyline.maccosslab.org"),
+                d => d.Close());
+
+            // Show shutdown report dialog
+            Assert.IsFalse(ReportShutdownDlg.HadUnexpectedShutdown(true));
+            try
+            {
+                throw new IOException("Something to report");
+            }
+            catch (Exception x)
+            {
+                ReportShutdownDlg.SaveExceptionFile(x, true);
+            }
+            Assert.IsTrue(ReportShutdownDlg.HadUnexpectedShutdown(true));
+            using (var reportShutdownDlg = new ReportShutdownDlg())
+            {
+                RunDlg<ReportShutdownDlg>(
+                    () => reportShutdownDlg.ShowDialog(),
+                    d => d.Close());
+            }
+            Assert.IsFalse(ReportShutdownDlg.HadUnexpectedShutdown(true));
+
+            // Show upgrade dialog
+            using (var dlg = new UpgradeDlg(Program.LICENSE_VERSION_CURRENT - 1))
+            {
+                RunDlg<UpgradeDlg>(
+                    () => dlg.ShowDialog(),
+                    d => d.Close());
             }
         }
     }

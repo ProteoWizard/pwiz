@@ -16,9 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -46,7 +49,26 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ANL_N15_mini.sky")));
+            // First open with library moved to test MissingFileDlg
+            const string libraryName = "N15_ANL_test.blib";
+            string libPath = TestFilesDir.GetTestPath(libraryName);
+            string movedPath = TestFilesDir.GetTestPath("moved_" + libraryName);
+            File.Move(libPath, movedPath);
+
+            const int pepCount = 3;
+            string documentPath = TestFilesDir.GetTestPath("ANL_N15_mini.sky");
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
+                dlg => dlg.OkDialog());
+            SelectNode(SrmDocument.Level.Peptides, 0);
+            WaitForGraphs();
+            RunUI(() => Assert.IsFalse(SkylineWindow.GraphSpectrum.HasSpectrum));
+
+            Assert.AreEqual(pepCount, SkylineWindow.Document.PeptideCount);
+            RunUI(() => SkylineWindow.NewDocument());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
+                dlg => dlg.OkDialog(movedPath));
             RunUI(SkylineWindow.ExpandPrecursors);
 
             Settings.Default.SynchronizeIsotopeTypes = true;
@@ -59,6 +81,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Select the first transition group
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
+            WaitForGraphs();
+            RunUI(() => Assert.IsTrue(SkylineWindow.GraphSpectrum.HasSpectrum));
 
             // Add two new transitions to it
             var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);

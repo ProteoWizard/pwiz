@@ -601,6 +601,8 @@ namespace pwiz.SkylineTestFunctional
                       });
             WaitForClosedForm(peptideSettingsDlg5);
 
+            RunUI(() => SkylineWindow.SaveDocument());
+
             //Switch the file back to the copy, destroying the original
             stream = File.Create(testFilesDir.GetTestPath("irt-c18-copy.irtdb"));
             stream.Close();
@@ -628,6 +630,19 @@ namespace pwiz.SkylineTestFunctional
                                                                 peptideSettingsDlg6.ChooseRegression("None");
                                                                 peptideSettingsDlg6.OkDialog();
                                                             });
+
+            // Finally, close and re-open the document to see MissingFileDlg
+            int pepCount = SkylineWindow.Document.PeptideCount;
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(),
+                dlg => dlg.Btn1Click());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
+                dlg => dlg.OkDialog());
+            Assert.AreEqual(pepCount, SkylineWindow.Document.PeptideCount);
+            RunUI(() => SkylineWindow.NewDocument());
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
+                dlg => dlg.CancelDialog());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());

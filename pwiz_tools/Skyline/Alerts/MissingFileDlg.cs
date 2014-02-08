@@ -64,10 +64,12 @@ namespace pwiz.Skyline.Alerts
 
         public string FilePath { get; private set; }
 
-        public void OkDialog()
+        public void OkDialog(string filePath = null)
         {
+            if (!string.IsNullOrEmpty(filePath))
+                FilePath = filePath;
+
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void btnOpen_Click(object sender, System.EventArgs e)
@@ -89,8 +91,7 @@ namespace pwiz.Skyline.Alerts
                 if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
-                FilePath = openFileDialog.FileName;
-                OkDialog();
+                OkDialog(openFileDialog.FileName);
             }
         }
     }

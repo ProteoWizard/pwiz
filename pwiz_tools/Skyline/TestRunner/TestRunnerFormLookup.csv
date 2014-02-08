@@ -4,6 +4,7 @@ AddIrtPeptidesDlg,IrtFunctionalTest
 AddIrtSpectralLibrary,TestIrtTutorial
 AddIrtStandardsDlg,IrtFunctionalTest
 AddPathsDlg,TestLibraryBuild
+AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,TestCEOptimizationTutorial
 AreaChartPropertyDlg,TestEditDialogs
@@ -66,11 +67,13 @@ ManageResultsDlg,TestManageLibraryRuns
 ManageViewsForm,TestCustomReportsTutorial
 MessageDlg,ImmediateWindowTestMethod
 MinimizeResultsDlg,TestMs1Tutorial
+MissingFileDlg,TestSynchSiblings
 MProphetFeaturesDlg,TestPeakPickingTutorial
 MultiButtonMsgDlg,TestShareSettings
 OpenDataSourceDialog,TestRetentionTimeAlignment
 PasteDlg,TestInsertMod
 PasteFilteredPeptidesDlg,TestLibraryBuild
+PasteTypeDlg,TestExplicitMultiType
 PeptideSettingsUI,TestBackgroundProteome
 PivotReportDlg,TestReportSummaryWithOldReports
 PopupPickList,TestPrecursorIon
@@ -84,6 +87,7 @@ RegressionRTThresholdDlg,TestIrtTutorial
 ReintegrateDlg,TestReintegrateDlg
 RenameProteinsDlg,TestRenameProteins
 RenameResultDlg,TestManageResults
+ReportShutdownDlg,TestMiscForms
 RescoreResultsDlg,TestManageResults
 ResultsGridForm,TestAnnotationsWithOldReports
 RInstaller,TestRInstaller
@@ -97,6 +101,7 @@ ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
 SkylineWindow,ImmediateWindowTestMethod
 SpectrumChartPropertyDlg,TestMs1Tutorial
+SpectrumLibraryInfoDlg,TestManageLibraryRuns
 StatementCompletionForm,TestBackgroundProteome
 ToolOptionsUI,TestAccessServer
 ToolStoreDlg,TestToolStore
@@ -104,5 +109,6 @@ ToolUpdatesDlg,TestToolUpdates
 TransitionSettingsUI,TestIsolationScheme
 UndoRedoList,*
 UniquePeptidesDlg,TestMethodEditTutorial
+UpgradeDlg,TestMiscForms
 ViewEditor,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId

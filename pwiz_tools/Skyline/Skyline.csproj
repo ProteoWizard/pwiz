@@ -704,12 +704,6 @@
     <Compile Include="EditUI\SpectrumChartPropertyDlg.Designer.cs">
       <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\ExportOptimizeDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\ExportOptimizeDlg.Designer.cs">
-      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="FileUI\ShareListDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1316,9 +1310,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.ja.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportOptimizeDlg.ja.resx">
-      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportReportDlg.ja.resx">
       <DependentUpon>ExportReportDlg.cs</DependentUpon>
@@ -2218,10 +2209,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ManageResultsDlg.resx">
       <DependentUpon>ManageResultsDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ExportOptimizeDlg.resx">
-      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\MinimizeResultsDlg.resx">

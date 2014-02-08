@@ -105,9 +105,9 @@ namespace pwiz.Skyline.Controls
                         {                            
                             tool.RunTool(_parent.Document, _parent, _textBoxStreamWriter.WriterHelper, _parent, _parent);
                         }
-                        catch (WebToolException er  )
+                        catch (WebToolException e)
                         {
-                            AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, er.Link, er.Link, false);                            
+                            WebHelpers.ShowLinkFailure(_parent, e.Link);
                         }
                         catch(Exception e)
                         {

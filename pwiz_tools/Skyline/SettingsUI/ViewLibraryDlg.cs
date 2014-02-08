@@ -1508,12 +1508,19 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnLibDetails_Click(object sender, EventArgs e)
         {
+            ShowLibDetails();
+        }
+
+        public void ShowLibDetails()
+        {
             if (_selectedLibrary != null)
             {
                 LibraryDetails libInfo = _selectedLibrary.LibraryDetails;
-                SpectrumLibraryInfoDlg dlg = new SpectrumLibraryInfoDlg(libInfo);
-                // dlg.SetLinks(links);
-                dlg.ShowDialog(this);
+                using (var dlg = new SpectrumLibraryInfoDlg(libInfo))
+                {
+                    // dlg.SetLinks(links);
+                    dlg.ShowDialog(this);
+                }
             }
         }
 

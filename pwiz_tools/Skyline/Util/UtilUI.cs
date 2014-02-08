@@ -252,8 +252,16 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception)
             {
-                AlertLinkDlg.Show(parent, Resources.Could_not_open_web_Browser_to_show_link_, link, link, false);
+                ShowLinkFailure(parent, link);
             }
+        }
+
+        /// <summary>
+        /// Shows a form with a link in it that allows a user to continue attempting failed link navigation
+        /// </summary>
+        public static void ShowLinkFailure(IWin32Window parent, string link)
+        {
+            AlertLinkDlg.Show(parent, Resources.Could_not_open_web_Browser_to_show_link_, link, link, false);
         }
 
         

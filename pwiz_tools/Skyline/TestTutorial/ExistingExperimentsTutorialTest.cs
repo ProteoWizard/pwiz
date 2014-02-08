@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        // [TestMethod]  As needed.  This test takes a lot of time
         public void TestExistingExperimentsTutorialWithOldReports()
         {
             RunTestWithOldReports(TestExistingExperimentsTutorial);

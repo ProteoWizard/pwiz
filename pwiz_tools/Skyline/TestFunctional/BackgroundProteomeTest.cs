@@ -18,11 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -53,12 +56,12 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var buildBackgroundProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(
                 peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
+            string protdbPath = TestFilesDir.GetTestPath(_backgroundProteomeName + ProteomeDb.EXT_PROTDB);
             RunUI(() =>
                 {
                     buildBackgroundProteomeDlg.BuildNew = true;
                     buildBackgroundProteomeDlg.BackgroundProteomeName = _backgroundProteomeName;
-                    buildBackgroundProteomeDlg.BackgroundProteomePath =
-                        TestFilesDir.GetTestPath(_backgroundProteomeName + ".protdb");
+                    buildBackgroundProteomeDlg.BackgroundProteomePath = protdbPath;
                     buildBackgroundProteomeDlg.AddFastaFile(TestFilesDir.GetTestPath("celegans_mini.fasta"));
                 });
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
@@ -68,19 +71,12 @@ namespace pwiz.SkylineTestFunctional
                 });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             // Wait until proteome digestion is done
-            for (int i = 0; i < 1000; i ++ )
+            WaitForCondition(100*1000, () =>
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
-                if (backgroundProteome.HasDigestion(peptideSettings))
-                {
-                    break;
-                }
-                Thread.Sleep(100);
-            }
-            // Make sure digestion was successful
-            var peptideSettingsFinal = Program.ActiveDocument.Settings.PeptideSettings;
-            Assert.IsNotNull(peptideSettingsFinal.BackgroundProteome.HasDigestion(peptideSettingsFinal));
+                return backgroundProteome.HasDigestion(peptideSettings);
+            });
 
             RunUI(() =>
                 {
@@ -112,6 +108,24 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(peptideGroups[0].AutoManageChildren);
             Assert.AreEqual("C37A2.7", peptideGroups[1].Name);
             Assert.IsFalse(peptideGroups[1].AutoManageChildren);
+
+            // Save and re-open with prot db moved to see MissingFileDlg
+            int pepCount = SkylineWindow.Document.PeptideCount;
+            string documentPath = TestFilesDir.GetTestPath("BackgroundProtDoc.sky");
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(documentPath);
+                SkylineWindow.SwitchDocument(new SrmDocument(SrmSettingsList.GetDefault()), null);
+            });
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+            File.Move(protdbPath, TestFilesDir.GetTestPath(_backgroundProteomeName + "-copy" + ProteomeDb.EXT_PROTDB));
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
+                dlg => dlg.OkDialog());
+            Assert.AreEqual(pepCount, SkylineWindow.Document.PeptideCount);
+            RunUI(() => SkylineWindow.NewDocument());
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
+                dlg => dlg.CancelDialog());
+            Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
         }
     }
 }

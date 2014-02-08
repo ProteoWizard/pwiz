@@ -120,6 +120,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumGraphItem GraphItem { get; set; }
 
+        public bool HasSpectrum { get { return GraphItem != null; }}
+
         public string LibraryName
         {
             get { return GraphItem.LibraryName; }
@@ -323,6 +325,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var graphPane = (MSGraphPane) graphControl.MasterPane[0];
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
+            GraphItem = null;
 
             // Try to find a tree node with spectral library info associated
             // with the current selection.

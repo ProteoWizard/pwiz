@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        // [TestMethod]  As needed.  This test takes a lot of time
         public void TestAbsoluteQuantificationTutorialWithOldReports()
         {
             RunTestWithOldReports(TestAbsoluteQuantificationTutorial);

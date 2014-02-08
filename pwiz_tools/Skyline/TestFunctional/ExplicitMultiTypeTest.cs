@@ -18,11 +18,13 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -48,6 +50,11 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.HeavyModList.Clear();
             Settings.Default.StaticModList.Clear();
             Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
+
+            // Show dialog asking user if text is FASTA or peptide list
+            RunDlg<PasteTypeDlg>(() => SkylineWindow.Paste(TextUtil.LineSeparate("QFVLSCVILQFVLSCVILQFVLSCVILQFVLSCVILR",
+                                                                                 "DIEVYCDGAITTKDIEVYCDGAITTKDIEVYCDGAITTK")),
+                dlg => dlg.CancelDialog());
 
             // Add two peptides
             const string pepSequence1 = "QFVLSCVILR";

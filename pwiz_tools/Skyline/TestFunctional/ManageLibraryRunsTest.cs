@@ -21,10 +21,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -79,9 +81,21 @@ namespace pwiz.SkylineTestFunctional
             // Ensure it has a document library, and the library blib and redundant.blib files exist
             Assert.IsTrue(VerifyDocumentLibrary());
 
+            TestLibraryInfo();
             TestRemoveOneLibraryRunAndCorrespondingReplicates();
             TestRemoveOneReplicateAndCorrespondingLibraryRuns();
             TestRemoveAllLibraryRuns();
+        }
+
+        /// <summary>
+        /// Added to show <see cref="SpectrumLibraryInfoDlg"/>
+        /// </summary>
+        private void TestLibraryInfo()
+        {
+            var libExplore = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            RunDlg<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails,
+                dlg => dlg.Close());
+            OkDialog(libExplore, libExplore.CancelDialog);
         }
 
         private void TestRemoveOneReplicateAndCorrespondingLibraryRuns()

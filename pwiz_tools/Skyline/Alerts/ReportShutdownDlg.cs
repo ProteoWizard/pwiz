@@ -38,9 +38,16 @@ namespace pwiz.Skyline.Alerts
         public ReportShutdownDlg()
         {
             // Get details of unhandled exception from file written prior to shutdown.
-            var exceptionFile = GetExceptionFile();
-            var lines = File.ReadAllLines(exceptionFile);
-            Helpers.TryTwice(() => File.Delete(exceptionFile));
+            string[] lines;
+            string exceptionFile = GetExceptionFile();
+            try
+            {
+                lines = File.ReadAllLines(exceptionFile);
+            }
+            finally
+            {
+                Helpers.TryTwice(() => File.Delete(exceptionFile));
+            }
 
             var exceptionType = lines[0];
             var exceptionMessage = new StringBuilder();
@@ -71,13 +78,14 @@ namespace pwiz.Skyline.Alerts
         /// Save details of an unhandled exception in a file prior to Skyline shutdown.
         /// </summary>
         /// <param name="exception">The unhandled exception.</param>
-        public static void SaveExceptionFile(Exception exception)
+        /// <param name="forced">Use true to save a file even when in a functional test</param>
+        public static void SaveExceptionFile(Exception exception, bool forced = false)
         {
             var exceptionInfo = Environment.NewLine + exception + Environment.NewLine;
             Trace.TraceError(exceptionInfo);
             Console.WriteLine(exceptionInfo);
 
-            if (!Program.FunctionalTest)
+            if (forced || !Program.FunctionalTest)
             {
                 var exceptionInfo2 = new StringBuilder();
                 exceptionInfo2.AppendLine(exception.GetType().FullName);
@@ -90,12 +98,12 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Return true if Skyline had an unexpected shutdown during a previous run.
         /// </summary>
-        public static bool HadUnexpectedShutdown()
+        public static bool HadUnexpectedShutdown(bool forced = false)
         {
             var exceptionFile = GetExceptionFile();
             if (File.Exists(exceptionFile))
             {
-                if (!Program.StressTest)
+                if (forced || !Program.StressTest)
                 {
                     // Ignore unhandled exception if it occurred more than 1 day ago.
                     var fileInfo = new FileInfo(exceptionFile);

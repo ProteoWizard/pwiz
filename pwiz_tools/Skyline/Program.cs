@@ -51,7 +51,7 @@ namespace pwiz.Skyline
     /// </summary>
     public static class Program
     {
-        private const int LICENSE_VERSION_CURRENT = 4;
+        public const int LICENSE_VERSION_CURRENT = 4;
         
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing.

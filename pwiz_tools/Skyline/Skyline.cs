@@ -2651,7 +2651,7 @@ namespace pwiz.Skyline
                 }
                 catch (WebToolException e)
                 {
-                    AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
+                    WebHelpers.ShowLinkFailure(_parent, e.Link);
                 }
                 catch (ToolExecutionException e)
                 {
