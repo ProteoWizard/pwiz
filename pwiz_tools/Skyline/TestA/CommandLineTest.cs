@@ -46,6 +46,12 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class CommandLineTest : AbstractUnitTest
     {
+        [TestInitialize]
+        public void CommandLineTestInitialize()
+        {
+            Settings.Default.ToolList.Clear();
+        }
+
         [TestCleanup]
         public new void MyTestCleanup()
         {
