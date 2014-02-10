@@ -145,13 +145,13 @@ namespace pwiz.SkylineTestTutorial
             const string glnPyroGluName = "Gln->pyro-Glu"; // Not L10N
             var glnPyroGlu = new StaticMod(glnPyroGluName, "Q", null, true, "-NH3", LabelAtoms.None, // Not L10N
                                           RelativeRT.Unknown, null, null, null);
-            AddStaticMod(glnPyroGlu, peptideSettingsUI1, true);
+            AddStaticMod(glnPyroGlu, peptideSettingsUI1, "Edit Structural Modification form");
 
             RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {carbamidoName, glnPyroGluName});
             const string label15NName = "Label:15N"; // Not L10N
             var mod15N = new StaticMod(label15NName, null, null, false, null, LabelAtoms.N15,
                               RelativeRT.Matching, null, null, null);
-            AddHeavyMod(mod15N, peptideSettingsUI1, true);
+            AddHeavyMod(mod15N, peptideSettingsUI1, "Edit Structural Modification form");
             RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { label15NName });
             PauseForScreenShot();   // p. 10
 
@@ -305,7 +305,7 @@ namespace pwiz.SkylineTestTutorial
             const string phosphoModName = "Phospho (ST)"; // Not L10N 
             var phosphoSt = new StaticMod(phosphoModName, "S, T", null, true, "HPO3", LabelAtoms.None, // Not L10N
                                           RelativeRT.Unknown, null, null, new[] { new FragmentLoss("H3PO4"), }); // Not L10N
-            AddStaticMod(phosphoSt, peptideSettingsUI2, true);
+            AddStaticMod(phosphoSt, peptideSettingsUI2, "Edit Structural Modifcation form");
 
             // Check Phospho (ST) and Carbamidomethyl Cysteine
             RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, carbamidoName }); // Not L10N

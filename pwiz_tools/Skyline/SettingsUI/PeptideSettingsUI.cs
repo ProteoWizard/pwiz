@@ -47,6 +47,18 @@ namespace pwiz.Skyline.SettingsUI
 // ReSharper restore UnusedMember.Local
 // ReSharper restore InconsistentNaming
 
+        public class DigestionTab : IFormView { }
+        public class PreditonTab : IFormView { }
+        public class FilterTab : IFormView { }
+        public class LibraryTab : IFormView { }
+        public class ModificationsTab : IFormView { }
+//        public class IntegrationTab : IFormView { }    - not yet visible ever
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new DigestionTab(), new PreditonTab(), new FilterTab(), new LibraryTab(), new ModificationsTab()
+        };
+
         private readonly SkylineWindow _parent;
         private readonly LibraryManager _libraryManager;
         private PeptideSettings _peptideSettings;
@@ -752,6 +764,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #region Functional testing support
+
+        public IFormView ShowingFormView
+        {
+            get { return TAB_PAGES[(int)SelectedTab]; }
+        }
 
         public TABS SelectedTab
         {

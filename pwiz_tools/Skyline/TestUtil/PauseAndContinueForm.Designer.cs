@@ -30,6 +30,7 @@
         {
             this.btnContinue = new System.Windows.Forms.Button();
             this.lblDescription = new System.Windows.Forms.Label();
+            this.lblDescriptionLink = new System.Windows.Forms.LinkLabel();
             this.SuspendLayout();
             // 
             // btnContinue
@@ -52,6 +53,18 @@
             this.lblDescription.TabIndex = 1;
             this.lblDescription.Text = "Description";
             // 
+            // lblDescriptionLink
+            // 
+            this.lblDescriptionLink.AutoSize = true;
+            this.lblDescriptionLink.Location = new System.Drawing.Point(32, 13);
+            this.lblDescriptionLink.Name = "lblDescriptionLink";
+            this.lblDescriptionLink.Size = new System.Drawing.Size(60, 13);
+            this.lblDescriptionLink.TabIndex = 2;
+            this.lblDescriptionLink.TabStop = true;
+            this.lblDescriptionLink.Text = "Description";
+            this.lblDescriptionLink.Visible = false;
+            this.lblDescriptionLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblDescriptionLink_LinkClicked);
+            // 
             // PauseAndContinueForm
             // 
             this.AcceptButton = this.btnContinue;
@@ -59,6 +72,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(101, 69);
             this.ControlBox = false;
+            this.Controls.Add(this.lblDescriptionLink);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnContinue);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
@@ -76,5 +90,6 @@
 
         private System.Windows.Forms.Button btnContinue;
         private System.Windows.Forms.Label lblDescription;
+        private System.Windows.Forms.LinkLabel lblDescriptionLink;
     }
 }

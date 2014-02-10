@@ -25,8 +25,17 @@ using DigitalRune.Windows.Docking;
 
 namespace pwiz.Skyline.Util
 {
+    public interface IMultipleViewProvider
+    {
+        FormEx.IFormView ShowingFormView { get; }
+    }
+
     public class FormEx : Form
     {
+        public interface IFormView   // Marker interface
+        {             
+        }
+
         public static bool ShowFormNames { get; set; }
 
         private const int TIMEOUT_SECONDS = 10;

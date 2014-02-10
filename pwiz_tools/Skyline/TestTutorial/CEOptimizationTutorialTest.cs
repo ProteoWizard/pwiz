@@ -40,13 +40,14 @@ namespace pwiz.SkylineTestTutorial
     /// </summary>
     [TestClass]
     public class CEOptimizationTutorialTest : AbstractFunctionalTest
-    { 
-        
+    {
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
+
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf";
 
             TestFilesZipPaths = new[]
                 {
@@ -77,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => editList.SelectItem("Thermo")); // Not L10N
             EditCEDlg editItem = ShowDialog<EditCEDlg>(editList.EditItem);
 
-            PauseForScreenShot();   // Edit Collision Energy Regression form
+            PauseForScreenShot("Edit Collision Energy Equation form", 3, typeof(EditCEDlg));
 
             ChargeRegressionLine regressionLine2 = new ChargeRegressionLine(2, 0.034, 3.314); 
             ChargeRegressionLine regressionLine3 = new ChargeRegressionLine(3, 0.044, 3.314);
@@ -103,7 +104,7 @@ namespace pwiz.SkylineTestTutorial
                     exportMethodDlg.MethodType = ExportMethodType.Standard;
                 });
 
-                PauseForScreenShot();   // Export Transition List form
+                PauseForScreenShot("Export Transition List form", 4, typeof(ExportMethodDlg.TransitionListView));
 
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
                 WaitForClosedForm(exportMethodDlg);
@@ -140,7 +141,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPeptides();
             });
 
-            PauseForScreenShot();   // Skyline window
+            PauseForScreenShot("Main Skyline window", 5);
 
             // Creating Optimization Methods, p. 5
             {
@@ -155,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
                     exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                 });
 
-                PauseForScreenShot();   // Export Transition List form
+                PauseForScreenShot("Export Transition List form", 6, typeof(ExportMethodDlg.TransitionListView));
 
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr.csv"))); // Not L10N
                 WaitForClosedForm(exportMethodDlg);
@@ -187,7 +188,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p8.view"));
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
 
-            PauseForScreenShot();   // Skyline window
+            PauseForScreenShot("Main Skyline window", 8);
             
             // p. 8
             // Not L10N
@@ -197,7 +198,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
 
-            PauseForScreenShot();   // Skyline window
+            PauseForScreenShot("Main Skyline window", 9);
 
             RunUI(SkylineWindow.EditDelete);
 
@@ -215,7 +216,7 @@ namespace pwiz.SkylineTestTutorial
 
             var graphRegression = ShowDialog<GraphRegression>(addItem.ShowGraph);
 
-            PauseForScreenShot();   // Collision Energy Regression graphs
+            PauseForScreenShot("Collision Energy Regression graphs", 10, typeof(GraphRegression));
 
             var graphDatas = graphRegression.RegressionGraphDatas.ToArray();
             Assert.AreEqual(2, graphDatas.Length);

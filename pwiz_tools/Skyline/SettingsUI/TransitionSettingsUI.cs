@@ -32,11 +32,22 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class TransitionSettingsUI : FormEx
+    public partial class TransitionSettingsUI : FormEx, IMultipleViewProvider
     {
 // ReSharper disable InconsistentNaming
-        public enum TABS { Prediction, Filter, Library, Instrument, FullScan, Peaks } // Not L10N       
+        public enum TABS { Prediction, Filter, Library, Instrument, FullScan } // Not L10N       
 // ReSharper restore InconsistentNaming
+
+        public class PreditonTab : IFormView {}
+        public class FilterTab : IFormView {}
+        public class LibraryTab : IFormView {}
+        public class InstrumentTab : IFormView {}
+        public class FullScanTab : IFormView {}
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new PreditonTab(), new FilterTab(), new LibraryTab(), new InstrumentTab(), new FullScanTab()
+        };
 
         private readonly SkylineWindow _parent;
         private TransitionSettings _transitionSettings;
@@ -494,6 +505,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #region Functional testing support
+
+        public IFormView ShowingFormView
+        {
+            get { return TAB_PAGES[(int) SelectedTab]; }
+        }
 
         public TABS SelectedTab
         {

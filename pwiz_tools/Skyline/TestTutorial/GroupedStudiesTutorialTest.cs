@@ -99,10 +99,10 @@ namespace pwiz.SkylineTestTutorial
 
             var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyK, peptideSettingsUI, true);
+            AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification form");
             var modHeavyR = new StaticMod(HEAVY_R, "R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyR, peptideSettingsUI, true);
+            AddHeavyMod(modHeavyR, peptideSettingsUI, "Edit Isotope Modification form");
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
             PauseForScreenShot();
 

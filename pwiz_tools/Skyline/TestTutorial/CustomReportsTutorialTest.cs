@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -50,11 +51,14 @@ namespace pwiz.SkylineTestTutorial
     public class CustomReportsTutorialTest : AbstractFunctionalTest
     {
         const string customReportName = "Overview";
+
         [TestMethod]
         public void TestCustomReportsTutorial()
         {
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
+
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -105,16 +109,17 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        protected void DoCustomReportsTest() {
+        protected void DoCustomReportsTest()
+        {
             // Creating a Simple Custom Report, p. 3
             var exportReportDlg = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Export Report form", 3, typeof(ExportReportDlg));
 
             // p. 4
             var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg.EditList);
             var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
             RunUI(() => pivotReportDlg.ReportName = customReportName);
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form (old)", 4, typeof(PivotReportDlg));
 
             // p. 5
             RunUI(() =>
@@ -134,7 +139,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(pivotReportDlg.TrySelect(id));
                 }
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form (old)", 5, typeof(PivotReportDlg));
 
             // p. 6
             RunUI(() =>
@@ -154,7 +159,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(4, pivotReportDlg.ColumnCount);
                 pivotReportDlg.PivotReplicate = true;
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form (old)", 7, typeof(PivotReportDlg));
 
             // p. 7
             {
@@ -164,17 +169,17 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(20, previewReportDlg.RowCount);
                     Assert.AreEqual(58, previewReportDlg.ColumnCount);
                 });
-                PauseForScreenShot();
+                PauseForScreenShot("Preview Report form (old)", 8, typeof(PreviewReportDlg));
 
                 OkDialog(previewReportDlg, previewReportDlg.OkDialog);
             }
 
             // p. 8
             OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Export Reports form", 9, typeof(EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>));
 
             OkDialog(editReportListDlg, editReportListDlg.OkDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Export Report form", 9, typeof(ExportReportDlg));
 
             OkDialog(exportReportDlg, exportReportDlg.CancelClick);
 
@@ -191,7 +196,7 @@ namespace pwiz.SkylineTestTutorial
             // p. 10
             {
                 var shareListDlg = ShowDialog<ShareListDlg<ReportSpecList, ReportSpec>>(exportReportDlg1.ShowShare);
-                PauseForScreenShot();
+                PauseForScreenShot("Share Report Definitions form", 11, typeof(ShareListDlg<ReportSpecList, ReportSpec>));
 
                 RunUI(() => shareListDlg.ChosenNames = new[] { customReportName }); // Not L10N
                 OkDialog(shareListDlg, () => shareListDlg.OkDialog(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr"))); // Not L10N
@@ -200,7 +205,7 @@ namespace pwiz.SkylineTestTutorial
             // Managing Report Templayes in Skyline, p. 10
             var editReportListDlg0 = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg0.SelectItem(customReportName));
-            PauseForScreenShot();   // p. 11
+            PauseForScreenShot("Edit Reports form", 11, typeof(EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>));   // p. 11
 
             RunUI(() =>
             {
@@ -216,7 +221,7 @@ namespace pwiz.SkylineTestTutorial
                 editReportListDlg0.RemoveItem();
             });
             OkDialog(editReportListDlg0, editReportListDlg0.OkDialog);
-            PauseForScreenShot();   // p. 12
+            PauseForScreenShot("Export Report form", 13, typeof(ExportReportDlg));   // p. 13
 
             RunUI(() =>
             {
@@ -234,7 +239,7 @@ namespace pwiz.SkylineTestTutorial
             var editReportListDlg1 = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg1.SelectItem(customReportName)); // Not L10N
             var pivotReportDlg0 = ShowDialog<PivotReportDlg>(editReportListDlg1.CopyItem);
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form (old)", 14, typeof(PivotReportDlg));
 
             RunUI(() =>
             {
@@ -273,7 +278,7 @@ namespace pwiz.SkylineTestTutorial
                 }
                 pivotReportDlg0.PivotReplicate = false;
             });
-            PauseForScreenShot();   // p. 15
+            PauseForScreenShot("Edit Report form (old) expanded to show selected columns", 16, typeof(PivotReportDlg));
 
             int columnCount = 0;
             int rowCount = 0;
@@ -294,7 +299,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
                     Assert.AreEqual(rowCount / 2, previewReportDlg.RowCount);
                 });
-                PauseForScreenShot();
+                PauseForScreenShot("Preview Report form (old)", 17, typeof(PreviewReportDlg));
                 OkDialog(previewReportDlg, previewReportDlg.OkDialog);
             }
             RunUI(() =>
@@ -303,7 +308,7 @@ namespace pwiz.SkylineTestTutorial
                 pivotReportDlg0.OkDialog();
                 editReportListDlg1.OkDialog();
             });
-            PauseForScreenShot();   // p. 17
+            PauseForScreenShot("Export Report form", 18, typeof(ExportReportDlg));
 
             OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);
 
@@ -315,17 +320,17 @@ namespace pwiz.SkylineTestTutorial
                       });
             var exportReportDlg2 = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunUI(() => exportReportDlg2.Import(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))); // Not L10N
-            PauseForScreenShot();
+            PauseForScreenShot("Export Report form (old)", 19, typeof(ExportReportDlg));
 
             var editReportListDlg2 = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg2.EditList);
             RunUI(() => editReportListDlg2.SelectItem("Summary Statistics")); // Not L10N
             var pivotReportDlg1 = ShowDialog<PivotReportDlg>(editReportListDlg2.EditItem);
             RunUI(() => Assert.AreEqual(11, pivotReportDlg1.ColumnCount));
-            PauseForScreenShot();   // p. 19
+            PauseForScreenShot("Edit Report form (old)", null, typeof(PivotReportDlg));
 
             {
                 var previewReportDlg = ShowDialog<PreviewReportDlg>(pivotReportDlg1.ShowPreview);
-                PauseForScreenShot();   // p. 20
+                PauseForScreenShot("Preview Report form (old)", 20, typeof(PreviewReportDlg));
 
                 OkDialog(previewReportDlg, previewReportDlg.OkDialog);
             }
@@ -343,11 +348,11 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
-            PauseForScreenShot();   // p. 21
+            PauseForScreenShot("Peak Areas view", 24, typeof(AreaGraphController));   // Consider multiple view for Peak Areas and Retention Times
 
-            // Results Grid View, p. 22
+            // Results Grid View, p. 25
             var resultsGridForm = ShowDialog<ResultsGridForm>(() => SkylineWindow.ShowResultsGrid(true));
-            PauseForScreenShot();
+            PauseForScreenShot("Results Grid over main window (old)", 25, typeof(ResultsGridForm));
 
             ResultsGrid resultsGrid = null;
             RunUI(() =>
@@ -357,7 +362,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
             });
             WaitForGraphs();
-            PauseForScreenShot();   // p. 23
+            PauseForScreenShot("Main window layout (old)", 26);
 
             RunUI(() =>
                       {
@@ -386,7 +391,7 @@ namespace pwiz.SkylineTestTutorial
                                              });
                 columnChooser.DialogResult = DialogResult.OK;
             });
-            PauseForScreenShot();   // p. 24
+            PauseForScreenShot("Main window with fewer columns in Results Grid (old)");   // p. 24
 
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 
@@ -400,12 +405,12 @@ namespace pwiz.SkylineTestTutorial
                 defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.true_false;
                 defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.precursor_result);
             });
-            PauseForScreenShot();   // p. 25
+            PauseForScreenShot("Define Annotation form", 28, typeof(DefineAnnotationDlg));   // p. 25
 
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot();   // p. 26
+            PauseForScreenShot("Annotation Settings form", 29, typeof(ChooseAnnotationsDlg));   // p. 26
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
@@ -420,7 +425,7 @@ namespace pwiz.SkylineTestTutorial
                           Assert.IsNotNull(colNote);
                           colTailing.DisplayIndex = colNote.DisplayIndex + 1;
                       });
-            PauseForScreenShot();   // p. 27
+            PauseForScreenShot("Main window with Results Grid showing Tailing column (old)", 31);   // p. 27
         }
 
         protected void DoLiveReportsTest()
@@ -437,13 +442,13 @@ namespace pwiz.SkylineTestTutorial
         {
             // Creating a Simple Custom Report, p. 3
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Export Report form", 3, typeof(ExportLiveReportDlg));
 
             // p. 4
             var editReportListDlg = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddItem);
             RunUI(() => viewEditor.ViewName = customReportName);
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form", 4, typeof(ViewEditor));
 
             // p. 5
             RunUI(() =>
@@ -455,7 +460,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form", 5, typeof(ViewEditor));
 
             // p. 6
             RunUI(() =>
@@ -475,7 +480,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
                 viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form", 7, typeof(ViewEditor));
             // p. 7
             {
                 var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
@@ -485,24 +490,23 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(20, previewReportDlg.RowCount);
                     Assert.AreEqual(58, previewReportDlg.ColumnCount);
                 });
-                PauseForScreenShot();
+                PauseForScreenShot("Preview form", 8, typeof(DocumentGridForm));
 
                 OkDialog(previewReportDlg, previewReportDlg.Close);
             }
 
             // p. 8
             OkDialog(viewEditor, viewEditor.OkDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Reports form", 9, typeof(EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>));
 
             OkDialog(editReportListDlg, editReportListDlg.OkDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Export Report form", 9, typeof(ExportLiveReportDlg));
 
             OkDialog(exportReportDlg, exportReportDlg.CancelClick);
         }
 
         protected void DoExportingReportDataToAFile()
         {
-
             // Exporting Report Data to a File, p. 9
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg0 =>
             {
@@ -519,7 +523,7 @@ namespace pwiz.SkylineTestTutorial
             // p. 10
             {
                 var shareListDlg = ShowDialog<ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>>(exportReportDlg1.ShowShare);
-                PauseForScreenShot();
+                PauseForScreenShot("Save Report Definitions form", 11, typeof(ShareListDlg<ReportOrViewSpecList, ReportOrViewSpec>));
 
                 RunUI(() => shareListDlg.ChosenNames = new[] { customReportName }); // Not L10N
                 OkDialog(shareListDlg, () => shareListDlg.OkDialog(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr"))); // Not L10N
@@ -528,7 +532,7 @@ namespace pwiz.SkylineTestTutorial
             // Managing Report Templayes in Skyline, p. 10
             var editReportListDlg0 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg0.SelectItem(customReportName));
-            PauseForScreenShot();   // p. 11
+            PauseForScreenShot("Edit Reports form", 12, typeof(EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>));   // p. 11
 
             RunUI(() =>
             {
@@ -544,7 +548,7 @@ namespace pwiz.SkylineTestTutorial
                 editReportListDlg0.RemoveItem();
             });
             OkDialog(editReportListDlg0, editReportListDlg0.OkDialog);
-            PauseForScreenShot();   // p. 12
+            PauseForScreenShot("Export Report form", 13, typeof(ExportLiveReportDlg));
 
             RunUI(() =>
             {
@@ -561,7 +565,7 @@ namespace pwiz.SkylineTestTutorial
             var editReportListDlg1 = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg1.SelectItem(customReportName)); // Not L10N
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg1.CopyItem);
-            PauseForScreenShot();
+            PauseForScreenShot("Edit Report form", 14, typeof(ViewEditor));
 
             RunUI(() =>
             {
@@ -602,7 +606,7 @@ namespace pwiz.SkylineTestTutorial
                 pivotWidget.SetPivotReplicate(false);
                 viewEditor.Height = Math.Max(viewEditor.Height, 610);
             });
-            PauseForScreenShot();   // p. 15
+            PauseForScreenShot("Edit Report form expanded to show selected columns", 16, typeof(ViewEditor));
 
             int columnCount = 0;
             int rowCount = 0;
@@ -625,7 +629,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
                     Assert.AreEqual(rowCount / 2, previewReportDlg.RowCount);
                 });
-                PauseForScreenShot("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"");
+                PauseForScreenShot("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"", 17, typeof(DocumentGridForm));
                 OkDialog(previewReportDlg, previewReportDlg.Close);
             }
             RunUI(() =>
@@ -634,7 +638,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.OkDialog();
                 editReportListDlg1.OkDialog();
             });
-            PauseForScreenShot();   // p. 17
+            PauseForScreenShot("Export Report form", 18, typeof(ExportLiveReportDlg));
 
             OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);
         }
@@ -656,13 +660,13 @@ namespace pwiz.SkylineTestTutorial
                     .ImportViewsFromFile(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr")));
                 manageViewsForm.RefreshUi(true);
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Manage Views form", 19, typeof(ManageViewsForm));
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            PauseForScreenShot("Click the views dropdown and highlight 'Summary_stats'");
+            PauseForScreenShot("Click the views dropdown and highlight 'Summary_stats'", 20, typeof(DocumentGridForm));
 
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
-            PauseForScreenShot();
+            PauseForScreenShot("Document Grid with summary statistics", 20, typeof(DocumentGridForm));
 
             var viewEditor = ShowDialog<ViewEditor>(documentGridForm.NavBar.CustomizeView);
             RunUI(() => Assert.AreEqual(11, viewEditor.ChooseColumnsTab.ColumnCount));
@@ -673,7 +677,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsFalse(indexCvTotalArea < 0, "{0} < 0", indexCvTotalArea);
                 viewEditor.ChooseColumnsTab.ActivateColumn(indexCvTotalArea);
             });
-            PauseForScreenShot(); // p. 19
+            PauseForScreenShot("Customize View forrm", 21, typeof(ViewEditor));
             RunUI(()=>viewEditor.TabControl.SelectTab(1));
             RunUI(() =>
             {
@@ -681,9 +685,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN));
                 viewEditor.FilterTab.SetFilterOperand(0, ".2");
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Customize View - Filter tab", 22, typeof(ViewEditor));
             RunUI(viewEditor.OkDialog);
-            PauseForScreenShot();
+            PauseForScreenShot("Document Grid filtered", 23, typeof(DocumentGridForm));
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
@@ -691,18 +695,18 @@ namespace pwiz.SkylineTestTutorial
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
-            PauseForScreenShot("Highlight the menu item 'View>Peak Areas>Replicate Comparison'");
+            PauseForScreenShot("Highlight the menu item 'View>Peak Areas>Replicate Comparison'", 23);
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
-            PauseForScreenShot(); // p. 21
+            PauseForScreenShot("Peak Areas view", 24, typeof(AreaGraphController));
         }
         protected void DoResultsGridView()
         {
             // Results Grid View, p. 22
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("ResultsGridInFrontOfPeakAreas.view"));
-            PauseForScreenShot("Take full screen capture of floating windows");
+            PauseForScreenShot("Take full screen capture of floating windows", 25, typeof(LiveResultsGrid));
             RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("DockedResultsGridAndPeakAreas.view"));
-            PauseForScreenShot();
+            PauseForScreenShot("Main window layout", 26);
 
             var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
@@ -713,7 +717,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedPath = ((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode.Nodes[0]).Path;
             });
             WaitForGraphs();
-            PauseForScreenShot();   // p. 23
+            PauseForScreenShot("Results Grid view subsection", 27);
 
             RunUI(() =>
             {
@@ -753,7 +757,7 @@ namespace pwiz.SkylineTestTutorial
                 }
                 resultsGridViewEditor.DialogResult = DialogResult.OK;
             });
-            PauseForScreenShot();   // p. 24
+            PauseForScreenShot("Results grid with fewer columns (missing?)");  // No longer in tutorial?
 
             RunUI(() => SkylineWindow.SelectedNode.Expand());
 
@@ -767,12 +771,12 @@ namespace pwiz.SkylineTestTutorial
                 defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.true_false;
                 defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.precursor_result);
             });
-            PauseForScreenShot();   // p. 25
+            PauseForScreenShot("Define Annotation form", 28, typeof(DefineAnnotationDlg));
 
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot();   // p. 26
+            PauseForScreenShot("Annotation Settings form", 29, typeof(ChooseAnnotationsDlg));   // p. 26
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
@@ -786,9 +790,9 @@ namespace pwiz.SkylineTestTutorial
                     PropertyPath.Root.Property(AnnotationDef.ANNOTATION_PREFIX + "Tailing")));
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Customize View form showing Tailing annotation checked", 30, typeof(ViewEditor));
             OkDialog(viewEditor, viewEditor.OkDialog);
-            PauseForScreenShot();   // p. 27
+            PauseForScreenShot("Main window with Tailing column added to Results Grid");   // p. 27
         }
     }
 }

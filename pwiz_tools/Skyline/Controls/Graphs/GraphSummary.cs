@@ -28,7 +28,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphSummary : DockableFormEx, IUpdatable
+    public partial class GraphSummary : DockableFormEx, IUpdatable, IMultipleViewProvider
     {
         private const string FONT_FACE = "Arial"; // Not L10N
         private const int FONT_SIZE = 10;
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
         }
 
-        public interface IController
+        public interface IController : FormEx.IFormView
         {
             GraphSummary GraphSummary { get; set; }
 
@@ -160,6 +160,8 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public IController Controller { get { return _controller; } }
+
+        public FormEx.IFormView ShowingFormView { get { return _controller; } }
 
         public IStateProvider StateProvider { get { return _stateProvider; } }
 

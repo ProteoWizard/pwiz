@@ -35,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditStaticModDlg : FormEx
+    public partial class EditStaticModDlg : FormEx, IMultipleViewProvider
     {
         private StaticMod _modification;
         private readonly StaticMod _originalModification;
@@ -733,6 +733,19 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #region Functional test support
+
+        public class StructuralModView : IFormView {}
+        public class IsotopeModView : IFormView {}
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                if (_heavy)
+                    return new IsotopeModView();
+                return new StructuralModView();
+            }
+        }
 
         public int LossSelectedIndex
         {

@@ -27,12 +27,26 @@ namespace pwiz.SkylineTestUtil
 {
     public partial class PauseAndContinueForm : Form
     {
-        public PauseAndContinueForm(string description = null)
+        private readonly string _linkUrl;
+
+        public PauseAndContinueForm(string description = null, string link = null)
         {
             InitializeComponent();
+            _linkUrl = link;
+            if (link != null)
+            {
+                lblDescriptionLink.Left = lblDescription.Left;
+                lblDescription.Visible = false;
+                lblDescriptionLink.Visible = true;
+                if (string.IsNullOrEmpty(description))
+                    description = "Show screenshot";
+            }
             if (description != null)
             {
-                lblDescription.Text = description;
+                if (link == null)
+                    lblDescription.Text = description;
+                else
+                    lblDescriptionLink.Text = description;
             }
             else
             {
@@ -42,9 +56,10 @@ namespace pwiz.SkylineTestUtil
                 lblDescription.Visible = false;
             }
 
+            int descriptionWidth = link == null ? lblDescription.Width : lblDescriptionLink.Width;
             // Adjust dialog width to accommodate description.
-            if (lblDescription.Width > btnContinue.Width)
-                Width = lblDescription.Width + lblDescription.Left*2;
+            if (descriptionWidth > btnContinue.Width)
+                Width = descriptionWidth + lblDescription.Left*2;
 
             // Finally make sure the button is fully visible
             Height += Math.Max(0, (btnContinue.Bottom + btnContinue.Left) - ClientRectangle.Bottom);
@@ -63,14 +78,14 @@ namespace pwiz.SkylineTestUtil
 
         private static readonly object _pauseLock = new object();
 
-        public static void Show(string description = null)
+        public static void Show(string description = null, string link = null)
         {
             ClipboardEx.UseInternalClipboard(false);
 
             RunUI(() =>
             {
                 SkylineWindow.UseKeysOverride = false;
-                var dlg = new PauseAndContinueForm(description) { Left = SkylineWindow.Left };
+                var dlg = new PauseAndContinueForm(description, link) { Left = SkylineWindow.Left };
                 const int spacing = 15;
                 var screen = Screen.FromControl(SkylineWindow);
                 if (SkylineWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
@@ -110,5 +125,10 @@ namespace pwiz.SkylineTestUtil
         }
 
         private static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
+
+        private void lblDescriptionLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            WebHelpers.OpenLink(_linkUrl);
+        }
     }
 }

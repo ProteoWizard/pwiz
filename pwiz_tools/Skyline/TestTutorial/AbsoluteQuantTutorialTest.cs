@@ -50,6 +50,8 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf";
+
             TestFilesZip = ExtensionTestContext.CanImportThermoRaw
                                ? @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip"
                                : @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuantMzml.zip";
@@ -78,7 +80,7 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
                               transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
                           });
-                PauseForScreenShot();
+                PauseForScreenShot("Transition Settings - Prediction tab", 4, typeof(TransitionSettingsUI.PreditonTab));
 
                 RunUI(() =>
                           {
@@ -91,7 +93,7 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
                               transitionSettingsUI.SpecialIons = new string[0];
                           });
-                PauseForScreenShot();
+                PauseForScreenShot("Transition Settings - Filter tab", 4, typeof(TransitionSettingsUI.FilterTab));
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(doc);
@@ -100,13 +102,13 @@ namespace pwiz.SkylineTestTutorial
             // Configuring Peptide settings p. 4
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
-            PauseForScreenShot();
+            PauseForScreenShot("Peptide Settings - Modification tab", 5, typeof(PeptideSettingsUI.ModificationsTab));
 
             var modHeavyK = new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyK, peptideSettingsUI, true);
+            AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification over Transition Settings", 5);
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { modHeavyK.Name });
-            PauseForScreenShot();
+            PauseForScreenShot("Peptide Settings - Modification tab with mod added", 5, typeof(PeptideSettingsUI.ModificationsTab));
 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
@@ -116,7 +118,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(pasteDlg.PastePeptides);
-                PauseForScreenShot();
+                PauseForScreenShot("Insert Peptide List", 6, typeof(PasteDlg.PeptideListTab));
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
             }
@@ -124,7 +126,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
-            PauseForScreenShot();
+            PauseForScreenShot("Main window with Targets view", 6);
 
             // Exporting a transition list p. 6
             {
@@ -136,7 +138,7 @@ namespace pwiz.SkylineTestTutorial
                               exportMethodDlg.OptimizeType = ExportOptimize.NONE;
                               exportMethodDlg.MethodType = ExportMethodType.Standard;
                           });
-                PauseForScreenShot();
+                PauseForScreenShot("Export Transition List", 7, typeof (ExportMethodDlg.TransitionListView));
 
                 OkDialog(exportMethodDlg, () =>
                     exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("Quant_Abs_Thermo_TSQ_Vantage.csv")));
@@ -144,7 +146,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Importing RAW files into Skyline p. 7
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            PauseForScreenShot();
+            PauseForScreenShot("Import Results - click OK to get shot of Import Results Files and then cancel", 8, typeof(ImportResultsDlg));
 
             RunUI(() =>
             {
@@ -171,7 +173,7 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            PauseForScreenShot();
+            PauseForScreenShot("Main window with imported data", 9);
 
             // Analyzing SRM Data from FOXN1-GST Sample p. 9
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults,
@@ -216,7 +218,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.TransitionGroups.First().TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light", 10);
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1));
             WaitForGraphs();
@@ -226,7 +228,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.TransitionGroups.ToArray()[1].TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for heavy", 10);
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides, 0));
             WaitForGraphs();
@@ -239,7 +241,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionGroupCount = SkylineWindow.DocumentUI.Peptides.First().TransitionGroupCount;
                 CheckGstGraphs(transitionGroupCount, transitionGroupCount - 1);
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Main window with totals graphs for light and heavy and FOXN1-GST", 11);
             const int columnsToAddCount = 4;
             var columnSeparator = TextUtil.CsvSeparator;
             if (IsEnableLiveReports)
@@ -269,7 +271,8 @@ namespace pwiz.SkylineTestTutorial
                         }
                         Assert.AreEqual(columnsToAdd.Length, viewEditor.ChooseColumnsTab.ColumnCount);
                     });
-                    PauseForScreenShot();
+                    // TODO: MultiViewProvider not yet supported in Common
+                    PauseForScreenShot("Edit Report form", 12, typeof(ViewEditor));
 
                     OkDialog(viewEditor, viewEditor.OkDialog);
                 }
@@ -309,7 +312,7 @@ namespace pwiz.SkylineTestTutorial
                         }
                         Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
                     });
-                    PauseForScreenShot();
+                    PauseForScreenShot("Preview Report", null, typeof(PivotReportDlg));
 
                     OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
                 }

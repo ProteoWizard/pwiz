@@ -38,7 +38,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class PasteDlg : FormEx
+    public partial class PasteDlg : FormEx, IMultipleViewProvider
     {
         private readonly StatementCompletionTextBox _statementCompletionEditBox;
         private bool _noErrors;
@@ -1305,6 +1305,24 @@ namespace pwiz.Skyline.EditUI
         }
 
         #region Testing
+
+        public class FastaTab : IFormView {}
+        public class ProteinListTab : IFormView { }
+        public class PeptideListTab : IFormView { }
+        public class TransitionLisTab : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new FastaTab(), new ProteinListTab(), new PeptideListTab(), new TransitionLisTab()
+        };
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                return TAB_PAGES[tabControl1.SelectedIndex];
+            }
+        }
 
         public int PeptideRowCount
         {

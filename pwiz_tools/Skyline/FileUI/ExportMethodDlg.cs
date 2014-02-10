@@ -37,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public sealed partial class ExportMethodDlg : FormEx
+    public sealed partial class ExportMethodDlg : FormEx, IMultipleViewProvider
     {
         public static string TRANS_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
         public static string CONCUR_TRANS_TXT { get { return Resources.ExportMethodDlg_CONCUR_TRANS_TXT; } }
@@ -1414,6 +1414,26 @@ namespace pwiz.Skyline.FileUI
         }
 
         #region Functional Test Support
+
+        public class TransitionListView : IFormView { }
+        public class IsolationListView : IFormView { }
+        public class MethodView : IFormView { }
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                switch (_fileType)
+                {
+                    case ExportFileType.List:
+                        return new TransitionListView();
+                    case ExportFileType.IsolationList:
+                        return new IsolationListView();
+                    default:
+                        return new MethodView();
+                }
+            }
+        }
 
         public void SetTemplateFile(string templateFile)
         {

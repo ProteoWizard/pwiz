@@ -405,7 +405,14 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
-        public void PauseForScreenShot(string description = null)
+        public string LinkPdf { get; set; }
+
+        private string LinkPage(int? pageNum)
+        {
+            return pageNum.HasValue ? LinkPdf + "#page=" + pageNum : null;
+        }
+
+        public void PauseForScreenShot(string description = null, int? pageNum = null, params Type[] formTypes)
         {
             if (IsCheckLiveReportsCompatibility)
                 CheckReportCompatibility.CheckAll(SkylineWindow.Document);
@@ -414,7 +421,11 @@ namespace pwiz.SkylineTestUtil
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
-                PauseAndContinueForm.Show(description);
+            {
+                if (pageNum.HasValue)
+                    description = string.Format("page {0} - {1}", pageNum, description);
+                PauseAndContinueForm.Show(description, LinkPage(pageNum));
+            }
         }
 
         public static void OkDialog(Form form, Action okAction)
@@ -704,29 +715,31 @@ namespace pwiz.SkylineTestUtil
             return ShowDialog<EditStaticModDlg>(editModsDlg.AddItem);
         }
 
-        public void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
+        public void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, string pauseText = null, int? pausePage = null)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(mod, editStaticModsDlg, pauseForScreenShot);
+            AddMod(mod, editStaticModsDlg, pauseText, pausePage, typeof(EditStaticModDlg.StructuralModView));
         }
 
-        public void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, bool pauseForScreenShot = false)
+        public void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI, string pauseText = null, int? pausePage = null)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(mod, editStaticModsDlg, pauseForScreenShot);
+            AddMod(mod, editStaticModsDlg, pauseText, pausePage, typeof(EditStaticModDlg.IsotopeModView));
         }
 
         private void AddMod(StaticMod mod,
                             EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg,
-                            bool pauseForScreenShot)
+                            string pauseText,
+                            int? pausePage,
+                            Type viewType)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
             RunUI(() => addStaticModDlg.Modification = mod);
 
-            if (pauseForScreenShot)
-                PauseForScreenShot();
+            if (pauseText != null || pausePage.HasValue)
+                PauseForScreenShot(pauseText, pausePage, viewType);
 
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
             OkDialog(editModsDlg, editModsDlg.OkDialog);

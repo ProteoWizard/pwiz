@@ -119,10 +119,10 @@ namespace pwiz.SkylineTestTutorial
 
             var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyK, peptideSettingsUI, true);
+            AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification form");
             var modHeavyR = new StaticMod(HEAVY_R, "R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyR, peptideSettingsUI, true);
+            AddHeavyMod(modHeavyR, peptideSettingsUI, "Edit Isotope Modification form");
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForCondition(
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestTutorial
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var mod13Cr = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, false, null, LabelAtoms.C13,
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(mod13Cr, peptideSettingsUI1, true);
+            AddHeavyMod(mod13Cr, peptideSettingsUI1, "Edit Isotope Modification form");
             RunUI(() =>
                       {
                           peptideSettingsUI1.PickedHeavyMods = new[] { "Label:13C(6) (C-term R)", HEAVY_K };
