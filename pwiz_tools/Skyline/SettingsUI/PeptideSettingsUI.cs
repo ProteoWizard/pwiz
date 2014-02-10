@@ -37,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class PeptideSettingsUI : FormEx
+    public partial class PeptideSettingsUI : FormEx, IMultipleViewProvider
     {
         private const int BORDER_BOTTOM_HEIGHT = 16;
 
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.SettingsUI
 // ReSharper restore InconsistentNaming
 
         public class DigestionTab : IFormView { }
-        public class PreditonTab : IFormView { }
+        public class PredictionTab : IFormView { }
         public class FilterTab : IFormView { }
         public class LibraryTab : IFormView { }
         public class ModificationsTab : IFormView { }
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new DigestionTab(), new PreditonTab(), new FilterTab(), new LibraryTab(), new ModificationsTab()
+            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab()
         };
 
         private readonly SkylineWindow _parent;

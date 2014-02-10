@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -1309,18 +1310,20 @@ namespace pwiz.Skyline.EditUI
         public class FastaTab : IFormView {}
         public class ProteinListTab : IFormView { }
         public class PeptideListTab : IFormView { }
-        public class TransitionLisTab : IFormView { }
+        public class TransitionListTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new FastaTab(), new ProteinListTab(), new PeptideListTab(), new TransitionLisTab()
+            new FastaTab(), new ProteinListTab(), new PeptideListTab(), new TransitionListTab()
         };
 
         public IFormView ShowingFormView
         {
             get
             {
-                return TAB_PAGES[tabControl1.SelectedIndex];
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
             }
         }
 

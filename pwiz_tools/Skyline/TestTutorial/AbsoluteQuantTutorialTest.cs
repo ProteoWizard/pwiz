@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
                               transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
                           });
-                PauseForScreenShot("Transition Settings - Prediction tab", 4, typeof(TransitionSettingsUI.PreditonTab));
+                PauseForScreenShot("Transition Settings - Prediction tab", 4, typeof(TransitionSettingsUI.PredictionTab));
 
                 RunUI(() =>
                           {

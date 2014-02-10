@@ -78,6 +78,20 @@ namespace SkylineTester
             return formList;
         }
 
+        private static bool IsForm(Type type)
+        {
+            if (type.IsAbstract)
+                return false;
+            if (type.IsSubclassOf(typeof (Form)))
+                return !Implements(type, "IMultipleViewProvider");
+            return Implements(type, "IFormView");
+        }
+
+        private static bool Implements(Type type, string interfaceName)
+        {
+            return type.GetInterfaces().Any(t => t.Name == interfaceName);
+        }
+
         public static void CreateFormsTree()
         {
             MainWindow.FormsTree.Nodes.Clear();
@@ -87,17 +101,20 @@ namespace SkylineTester
             var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe");
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
             var assembly = Assembly.LoadFrom(skylinePath);
-            var types = assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Form)) && !type.IsAbstract).ToArray();
+            var types = assembly.GetTypes().Where(IsForm).ToArray();
             var formLookup = new FormLookup();
 
             foreach (var type in types)
             {
                 if (!HasSubclasses(types, type))
                 {
-                    var test = formLookup.GetTest(type.Name);
+                    var typeName = Implements(type, "IFormView") && type.DeclaringType != null
+                        ? type.DeclaringType.Name + "." + type.Name
+                        : type.Name;
+                    var test = formLookup.GetTest(typeName);
                     if (test == "*")
                         continue;
-                    var node = new TreeNode(type.Name)
+                    var node = new TreeNode(typeName)
                     {
                         ForeColor = (test != null) ? Color.Black : Color.Gray
                     };

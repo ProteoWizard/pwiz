@@ -268,6 +268,14 @@ namespace pwiz.SkylineTestUtil
                 if (tForm != null)
                 {
                     string formType = typeof(TDlg).Name;
+                    var multipleViewProvider = tForm as IMultipleViewProvider;
+                    if (multipleViewProvider != null)
+                    {
+                        formType += "." + multipleViewProvider.ShowingFormView.GetType().Name;
+                        var formName = "(" + typeof (TDlg).Name + ")";
+                        if (tForm.Text.EndsWith(formName))
+                            tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
+                    }
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
                         PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
 

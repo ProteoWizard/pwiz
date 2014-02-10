@@ -62,6 +62,8 @@ namespace TestRunnerLib
         {
             string test;
             _formLookup.TryGetValue(form, out test);
+            if (string.IsNullOrEmpty(test))
+                test = null;
             return test;
         }
 

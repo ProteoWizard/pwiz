@@ -38,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
         public enum TABS { Prediction, Filter, Library, Instrument, FullScan } // Not L10N       
 // ReSharper restore InconsistentNaming
 
-        public class PreditonTab : IFormView {}
+        public class PredictionTab : IFormView {}
         public class FilterTab : IFormView {}
         public class LibraryTab : IFormView {}
         public class InstrumentTab : IFormView {}
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PreditonTab(), new FilterTab(), new LibraryTab(), new InstrumentTab(), new FullScanTab()
+            new PredictionTab(), new FilterTab(), new LibraryTab(), new InstrumentTab(), new FullScanTab()
         };
 
         private readonly SkylineWindow _parent;
@@ -508,7 +508,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public IFormView ShowingFormView
         {
-            get { return TAB_PAGES[(int) SelectedTab]; }
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
         }
 
         public TABS SelectedTab
