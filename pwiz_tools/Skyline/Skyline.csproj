@@ -2366,6 +2366,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.resx">
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>

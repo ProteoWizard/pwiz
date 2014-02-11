@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -42,9 +43,7 @@ namespace pwiz.Skyline.SettingsUI
         private const int BORDER_BOTTOM_HEIGHT = 16;
 
 // ReSharper disable InconsistentNaming
-// ReSharper disable UnusedMember.Local
         public enum TABS { Digest, Prediction, Filter, Library, Modifications, Integration }
-// ReSharper restore UnusedMember.Local
 // ReSharper restore InconsistentNaming
 
         public class DigestionTab : IFormView { }
@@ -767,7 +766,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public IFormView ShowingFormView
         {
-            get { return TAB_PAGES[(int)SelectedTab]; }
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
         }
 
         public TABS SelectedTab

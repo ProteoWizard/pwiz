@@ -420,7 +420,18 @@ namespace pwiz.SkylineTestUtil
             return pageNum.HasValue ? LinkPdf + "#page=" + pageNum : null;
         }
 
-        public void PauseForScreenShot(string description = null, int? pageNum = null, params Type[] formTypes)
+        public void PauseForScreenShot(string description = null, int? pageNum = null)
+        {
+            PauseForScreenShot(description, pageNum, null);
+        }
+
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null)
+            where TView : IFormView
+        {
+            PauseForScreenShot(description, pageNum, typeof(TView));
+        }
+
+        private void PauseForScreenShot(string description, int? pageNum, Type formType)
         {
             if (IsCheckLiveReportsCompatibility)
                 CheckReportCompatibility.CheckAll(SkylineWindow.Document);

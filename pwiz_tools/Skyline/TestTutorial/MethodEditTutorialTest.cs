@@ -85,7 +85,11 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Library;
                     peptideSettingsUI1.PickedLibraries = new[] { YEAST_ATLAS };
                 });
+            WaitForOpenForm<PeptideSettingsUI>();   // To show Library tab for Forms testing
             PauseForScreenShot("page 3 - Peptide Settings | Library"); // Not L10N
+
+            RunUI(() => peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Digest);
+            WaitForOpenForm<PeptideSettingsUI>();   // To show Digestion tab for Forms testing
 
             // Creating a Background Proteome File, p. 3
             FileEx.SafeDelete(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB)); // Not L10N
@@ -104,10 +108,6 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
 
-            RunUI(() =>
-            {
-                peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Digest;
-            });
             PauseForScreenShot("page 5 - Peptide Settings | Digestion"); // Not L10N
 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
@@ -162,6 +162,7 @@ namespace pwiz.SkylineTestTutorial
                         transitionSettingsUI.ProductCharges = "1"; // Not L10N
                         transitionSettingsUI.FragmentTypes = "y, b"; // Not L10N
                     });
+                WaitForOpenForm<TransitionSettingsUI>();   // To show Filter tab for Forms testing
                 PauseForScreenShot("page 8 Transition Settings | Filter"); // Not L10N
                 RunUI(() =>
                     {
@@ -390,7 +391,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("page 22: For Screenshots, First hover over YBL087C, then over 672.671+++"); // Not L10N
 
             // Preparing to Measure, p. 21
-            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
+            RunDlg<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.Prediction), transitionSettingsUI =>
             {
                 transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap"); // Not L10N
                 transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI"); // Not L10N

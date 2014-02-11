@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => editList.SelectItem("Thermo")); // Not L10N
             EditCEDlg editItem = ShowDialog<EditCEDlg>(editList.EditItem);
 
-            PauseForScreenShot("Edit Collision Energy Equation form", 3, typeof(EditCEDlg));
+            PauseForScreenShot<EditCEDlg>("Edit Collision Energy Equation form", 3);
 
             ChargeRegressionLine regressionLine2 = new ChargeRegressionLine(2, 0.034, 3.314); 
             ChargeRegressionLine regressionLine3 = new ChargeRegressionLine(3, 0.044, 3.314);
@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestTutorial
                     exportMethodDlg.MethodType = ExportMethodType.Standard;
                 });
 
-                PauseForScreenShot("Export Transition List form", 4, typeof(ExportMethodDlg.TransitionListView));
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 4);
 
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
                 WaitForClosedForm(exportMethodDlg);
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
                     exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                 });
 
-                PauseForScreenShot("Export Transition List form", 6, typeof(ExportMethodDlg.TransitionListView));
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 6);
 
                 RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr.csv"))); // Not L10N
                 WaitForClosedForm(exportMethodDlg);
@@ -216,7 +216,7 @@ namespace pwiz.SkylineTestTutorial
 
             var graphRegression = ShowDialog<GraphRegression>(addItem.ShowGraph);
 
-            PauseForScreenShot("Collision Energy Regression graphs", 10, typeof(GraphRegression));
+            PauseForScreenShot<GraphRegression>("Collision Energy Regression graphs", 10);
 
             var graphDatas = graphRegression.RegressionGraphDatas.ToArray();
             Assert.AreEqual(2, graphDatas.Length);

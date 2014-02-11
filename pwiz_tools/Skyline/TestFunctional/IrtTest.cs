@@ -61,7 +61,8 @@ namespace pwiz.SkylineTestFunctional
             string documentPath = testFilesDir.GetTestPath("iRT Test.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
-            var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(
+                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
             var editRT1 = ShowDialog<EditRTDlg>(peptideSettingsDlg1.AddRTRegression);
             var irtDlg1 = ShowDialog<EditIrtCalcDlg>(editRT1.AddCalculator);
             

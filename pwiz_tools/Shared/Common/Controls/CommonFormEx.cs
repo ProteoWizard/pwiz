@@ -23,7 +23,7 @@ using System.Windows.Forms;
 
 namespace pwiz.Common.Controls
 {
-    public class CommonFormEx : Form
+    public class CommonFormEx : Form, IFormView
     {
         public static bool TestMode { get; set; }
         public static bool Offscreen { get; set; }

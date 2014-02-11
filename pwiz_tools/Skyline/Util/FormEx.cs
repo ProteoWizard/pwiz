@@ -22,20 +22,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Util
 {
-    public interface IMultipleViewProvider
+    public class FormEx : Form, IFormView
     {
-        FormEx.IFormView ShowingFormView { get; }
-    }
-
-    public class FormEx : Form
-    {
-        public interface IFormView   // Marker interface
-        {             
-        }
-
         public static bool ShowFormNames { get; set; }
 
         private const int TIMEOUT_SECONDS = 10;
@@ -156,7 +148,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class DockableFormEx : DockableForm
+    public class DockableFormEx : DockableForm, IFormView
     {
         protected override void OnParentChanged(EventArgs e)
         {

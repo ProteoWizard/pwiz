@@ -87,6 +87,7 @@
     <Compile Include="Controls\FindBox.Designer.cs">
       <DependentUpon>FindBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\IFormView.cs" />
     <Compile Include="Controls\RecordNavBar.cs">
       <SubType>UserControl</SubType>
     </Compile>

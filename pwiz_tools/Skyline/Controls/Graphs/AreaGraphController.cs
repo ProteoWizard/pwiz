@@ -20,6 +20,7 @@
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -54,6 +55,8 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public GraphSummary GraphSummary { get; set; }
+
+        public IFormView FormView { get { return new GraphSummary.AreaGraphView(); } }
 
         public void OnActiveLibraryChanged()
         {

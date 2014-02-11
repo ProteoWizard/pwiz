@@ -70,7 +70,8 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.StaticModList.Add(variableLossMod);
 
             // Bring up add modification dialog
-            var peptideSettingsUI = ShowPeptideSettings();
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(() =>
+                SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Modifications));
             var editModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
             var addModDlg = ShowAddModDlg(editModsDlg);
             // Try a few things with new loss UI on the phospho loss modification
@@ -142,6 +143,7 @@ namespace pwiz.SkylineTestFunctional
             // Check the phospho loss modification
             RunUI(() => peptideSettingsUI.PickedStaticMods =
                 new List<string>(peptideSettingsUI.PickedStaticMods) { phosphoLossMod.Name }.ToArray());
+            WaitForOpenForm<PeptideSettingsUI>(); // Show Modifications tab for form testing
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Add FASTA sequence

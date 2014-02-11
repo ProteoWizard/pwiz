@@ -31,7 +31,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
     /// <summary>
     /// User interface for choosing which columns should go in a view, and setting the filter and sort.
     /// </summary>
-    public partial class ViewEditor : CommonFormEx, IViewEditor
+    public partial class ViewEditor : CommonFormEx, IViewEditor, IMultipleViewProvider
     {
         private bool _inChangeView;
         private bool _showHiddenFields;
@@ -50,6 +50,15 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             get { return tabPageSource; }
             set { tabPageSource = value; }
         }
+
+        public class ChooseColumnsView : IFormView {}
+        public class FilterView : IFormView {}
+        // public class SourceView : IFormView {}   inaccessible
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new ChooseColumnsView(), new FilterView(), // new SourceView() innaccessible
+        };
 
         public ViewEditor(IViewContext viewContext, ViewInfo viewInfo)
         {
@@ -224,6 +233,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             set
             {
                 tabPageSource.Visible = value;
+            }
+        }
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
             }
         }
 

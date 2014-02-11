@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
                               transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
                           });
-                PauseForScreenShot("Transition Settings - Prediction tab", 4, typeof(TransitionSettingsUI.PredictionTab));
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 4);
 
                 RunUI(() =>
                           {
@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
                               transitionSettingsUI.SpecialIons = new string[0];
                           });
-                PauseForScreenShot("Transition Settings - Filter tab", 4, typeof(TransitionSettingsUI.FilterTab));
+                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 4);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(doc);
@@ -102,13 +102,13 @@ namespace pwiz.SkylineTestTutorial
             // Configuring Peptide settings p. 4
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
-            PauseForScreenShot("Peptide Settings - Modification tab", 5, typeof(PeptideSettingsUI.ModificationsTab));
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modification tab", 5);
 
             var modHeavyK = new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification over Transition Settings", 5);
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { modHeavyK.Name });
-            PauseForScreenShot("Peptide Settings - Modification tab with mod added", 5, typeof(PeptideSettingsUI.ModificationsTab));
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modification tab with mod added", 5);
 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(pasteDlg.PastePeptides);
-                PauseForScreenShot("Insert Peptide List", 6, typeof(PasteDlg.PeptideListTab));
+                PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List", 6);
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
             }
@@ -138,7 +138,7 @@ namespace pwiz.SkylineTestTutorial
                               exportMethodDlg.OptimizeType = ExportOptimize.NONE;
                               exportMethodDlg.MethodType = ExportMethodType.Standard;
                           });
-                PauseForScreenShot("Export Transition List", 7, typeof (ExportMethodDlg.TransitionListView));
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List", 7);
 
                 OkDialog(exportMethodDlg, () =>
                     exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("Quant_Abs_Thermo_TSQ_Vantage.csv")));
@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Importing RAW files into Skyline p. 7
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            PauseForScreenShot("Import Results - click OK to get shot of Import Results Files and then cancel", 8, typeof(ImportResultsDlg));
+            PauseForScreenShot<ImportResultsDlg>("Import Results - click OK to get shot of Import Results Files and then cancel", 8);
 
             RunUI(() =>
             {
@@ -272,7 +272,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.AreEqual(columnsToAdd.Length, viewEditor.ChooseColumnsTab.ColumnCount);
                     });
                     // TODO: MultiViewProvider not yet supported in Common
-                    PauseForScreenShot("Edit Report form", 12, typeof(ViewEditor));
+                    PauseForScreenShot<ViewEditor>("Edit Report form", 12);
 
                     OkDialog(viewEditor, viewEditor.OkDialog);
                 }
@@ -312,7 +312,7 @@ namespace pwiz.SkylineTestTutorial
                         }
                         Assert.AreEqual(columnsToAdd.Length, pivotReportDlg.ColumnCount);
                     });
-                    PauseForScreenShot("Preview Report", null, typeof(PivotReportDlg));
+                    PauseForScreenShot<PivotReportDlg>("Preview Report");
 
                     OkDialog(pivotReportDlg, pivotReportDlg.OkDialog);
                 }

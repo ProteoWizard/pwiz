@@ -85,13 +85,12 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(transitionSettings, transitionSettings.CancelButton.PerformClick);
 
             // Display peptide settings, filter tab.
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => { peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Filter; });
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(() =>
+                SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Filter));
 
             {
-                var editList =
-                    ShowDialog<EditListDlg<SettingsListBase<PeptideExcludeRegex>, PeptideExcludeRegex>>(
-                        peptideSettings.EditExclusionList);
+                var editList = ShowDialog<EditListDlg<SettingsListBase<PeptideExcludeRegex>, PeptideExcludeRegex>>(
+                    peptideSettings.EditExclusionList);
 
                 RunDlg<EditExclusionDlg>(editList.EditItem, editExclusionDlg =>
                 {

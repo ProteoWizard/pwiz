@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -44,7 +45,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
         }
 
-        public interface IController : FormEx.IFormView
+        public interface IController
         {
             GraphSummary GraphSummary { get; set; }
 
@@ -55,7 +56,12 @@ namespace pwiz.Skyline.Controls.Graphs
             void OnUpdateGraph();
 
             bool HandleKeyDownEvent(object sender, KeyEventArgs e);
+
+            IFormView FormView { get; }
         }
+
+        public class RTGraphView : IFormView {}
+        public class AreaGraphView : IFormView {}
 
         public interface IStateProvider
         {
@@ -161,7 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IController Controller { get { return _controller; } }
 
-        public FormEx.IFormView ShowingFormView { get { return _controller; } }
+        public IFormView ShowingFormView { get { return _controller.FormView; } }
 
         public IStateProvider StateProvider { get { return _stateProvider; } }
 

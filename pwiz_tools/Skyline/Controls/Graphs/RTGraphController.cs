@@ -20,6 +20,7 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -40,6 +41,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public static double OutThreshold { get { return Settings.Default.RTResidualRThreshold; } }
 
         public GraphSummary GraphSummary { get; set; }
+
+        public IFormView FormView { get { return new GraphSummary.RTGraphView(); } }
 
         public bool ShowDelete(Point mousePt)
         {
