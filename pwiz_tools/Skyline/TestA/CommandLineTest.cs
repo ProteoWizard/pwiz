@@ -46,17 +46,14 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class CommandLineTest : AbstractUnitTest
     {
-        [TestInitialize]
-        public void CommandLineTestInitialize()
+        protected override void Initialize()
         {
             Settings.Default.ToolList.Clear();
         }
 
-        [TestCleanup]
-        public new void MyTestCleanup()
+        protected override void Cleanup()
         {
             Settings.Default.ToolList.Clear();
-            base.MyTestCleanup();
         }        
 
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";

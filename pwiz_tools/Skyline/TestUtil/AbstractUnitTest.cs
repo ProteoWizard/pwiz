@@ -125,6 +125,7 @@ namespace pwiz.SkylineTestUtil
             Settings.Init();
 
             STOPWATCH.Restart();
+            Initialize();
         }
 
         /// <summary>
@@ -133,6 +134,7 @@ namespace pwiz.SkylineTestUtil
         [TestCleanup]
         public void MyTestCleanup()
         {
+            Cleanup();
             STOPWATCH.Stop();
 
             Settings.Release();
@@ -145,6 +147,9 @@ namespace pwiz.SkylineTestUtil
                 string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
                 STOPWATCH.ElapsedMilliseconds / 1000.0));
         }
+
+        protected virtual void Initialize() {}
+        protected virtual void Cleanup() {}
 
         protected bool IsProfiling
         {
