@@ -315,6 +315,12 @@ namespace BiblioSpec
                     // equal, discard other and skip this
                     else if (score == other->score)
                     {
+                        if (sequence == other->unmodSeq)
+                        {
+                            // same score, but also same sequence, ignore the new one
+                            ++psmsSkipped;
+                            continue;
+                        }
                         Verbosity::debug("Peptide %d (%s) had the same score as another peptide (%s) "
                                          "referencing spectrum %d (ignoring both peptides).",
                                          peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
@@ -348,6 +354,7 @@ namespace BiblioSpec
                     {
                         ambiguousSpectra.erase(ambiguousCheck);
                         curPSM_ = new PSM();
+                        processedSpectraSearch->second = curPSM_;
                     }
                     else
                     {
