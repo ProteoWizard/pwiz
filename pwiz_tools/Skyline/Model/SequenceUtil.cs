@@ -481,13 +481,13 @@ namespace pwiz.Skyline.Model
 
         private void AddMod(char aa, StaticMod mod, double[] modMasses, double[] modMassesExtra, string[] modFormulas)
         {
-            modMasses[aa] = modMasses[char.ToLower(aa)] += GetModMass(aa, mod);
+            modMasses[aa] = modMasses[char.ToLowerInvariant(aa)] += GetModMass(aa, mod);
             
             // Deal with formulas and unexplained masses
             double unexplainedMass;
             string formula = GetModFormula(aa, mod, out unexplainedMass);
-            modFormulas[aa] = modFormulas[char.ToLower(aa)] = CombineFormulas(modFormulas[aa], formula);
-            modMassesExtra[aa] = modMassesExtra[char.ToLower(aa)] += unexplainedMass;
+            modFormulas[aa] = modFormulas[char.ToLowerInvariant(aa)] = CombineFormulas(modFormulas[aa], formula);
+            modMassesExtra[aa] = modMassesExtra[char.ToLowerInvariant(aa)] += unexplainedMass;
         }
 
         private string CombineFormulas(string formula1, string formula2)

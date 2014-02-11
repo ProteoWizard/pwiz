@@ -23,6 +23,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
@@ -87,9 +88,9 @@ namespace pwiz.Skyline.Model
             WaitBroker.Message = DefaultMessage;
 
             string extractDir = Path.GetFileName(SharedPath) ?? string.Empty;
-            if (extractDir.ToLower().EndsWith(EXT_SKY_ZIP))
+            if (PathEx.HasExtension(extractDir, EXT_SKY_ZIP))
                 extractDir = extractDir.Substring(0, extractDir.Length - EXT_SKY_ZIP.Length);
-            else if (extractDir.ToLower().EndsWith(EXT))
+            else if (PathEx.HasExtension(extractDir, EXT))
                 extractDir = extractDir.Substring(0, extractDir.Length - EXT.Length);
 
             using (ZipFile zip = ZipFile.Read(SharedPath))

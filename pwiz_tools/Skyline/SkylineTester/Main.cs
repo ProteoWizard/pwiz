@@ -213,9 +213,13 @@ namespace SkylineTester
             }
         }
 
+        /// <summary>
+        /// Returns the set of languages which should always be present, regardless of the
+        /// presence of resource DLLs.
+        /// </summary>
         private IEnumerable<string> GetLanguages()
         {
-            return (new FindLanguages(GetSelectedBuildDir(), "en", "fr").Enumerate());
+            return (new FindLanguages(GetSelectedBuildDir(), "en", "fr", "tr").Enumerate());
         }
 
         public void InitLanguages(ComboBox comboBox)

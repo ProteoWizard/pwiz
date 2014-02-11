@@ -36,7 +36,7 @@ namespace TestRunnerLib
                 var file = Path.GetFileName(resourcesDll);
                 if (file == null)
                     continue;
-                if (file.ToLower().StartsWith("skyline"))
+                if (file.ToLowerInvariant().StartsWith("skyline"))
                 {
                     var language = Path.GetFileName(Path.GetDirectoryName(resourcesDll));
                     if (!_languages.Contains(language))

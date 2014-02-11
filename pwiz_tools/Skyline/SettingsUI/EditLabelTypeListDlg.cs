@@ -79,7 +79,7 @@ namespace pwiz.Skyline.SettingsUI
             var dictIdsToNames = new Dictionary<string, string>();
             foreach (var labelType in LabelTypes)
             {
-                string lowerCaseId = Helpers.MakeId(labelType.Name).ToLower();
+                string lowerCaseId = Helpers.MakeId(labelType.Name).ToLowerInvariant();
                 if (Equals(lowerCaseId, IsotopeLabelType.light.Name))
                 {
                     MessageDlg.Show(this, string.Format(Resources.EditLabelTypeListDlg_OkDialog_The_name__0__conflicts_with_the_default_light_isotope_label_type,

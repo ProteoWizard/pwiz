@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Util
 
             for (Match m = r.Match(rawClipboardText); m.Success; m = m.NextMatch())
             {
-                string key = m.Groups[1].Value.ToLower();
+                string key = m.Groups[1].Value.ToLowerInvariant();
                 string val = m.Groups[2].Value;
 
                 switch (key)

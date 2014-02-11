@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model
         public static bool TryGetIdFromUnimod(string unimodString, out int uniModId)
         {
             const string prefixString = "unimod:"; // Not L10N
-            if (!unimodString.ToLower().StartsWith(prefixString))
+            if (!unimodString.ToLowerInvariant().StartsWith(prefixString))
             {
                 uniModId = 0;
                 return false;

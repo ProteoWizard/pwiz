@@ -187,7 +187,17 @@ namespace pwiz.Skyline
                     }
                 }
 
-                MainWindow = new SkylineWindow();
+                // Careful, a throw out of the SkylineWindow constructor without this
+                // catch causes Skyline just to appear to silently never start.  Makes for
+                // some difficult debugging.
+                try
+                {
+                    MainWindow = new SkylineWindow();
+                }
+                catch (Exception x)
+                {
+                    ReportExceptionUI(x, new StackTrace(1, true));
+                }
 
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)

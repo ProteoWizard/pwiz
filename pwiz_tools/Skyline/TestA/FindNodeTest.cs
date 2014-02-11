@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.TransitionGroups, listTransitionGroups.Count - 1), pathFound);
             
             // Test children can find other parents.
-            pathFound = doc.SearchDocumentForString(pathFound, listPeptides[0].Peptide.Sequence.ToLower(), displaySettings, true, false);
+            pathFound = doc.SearchDocumentForString(pathFound, listPeptides[0].Peptide.Sequence.ToLowerInvariant(), displaySettings, true, false);
             Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Peptides, 0), pathFound);
 
             // Test forward and backward searching in succession
@@ -86,8 +86,8 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(countHeavyForward > 0);
             Assert.AreEqual(countHeavyForward, CountOccurrances(doc, heavyText, displaySettings, true, true));
             // More tests of case insensitive searching
-            Assert.AreEqual(0, CountOccurrances(doc, heavyText.ToUpper(), displaySettings, false, true));
-            Assert.AreEqual(countHeavyForward, CountOccurrances(doc, heavyText.ToUpper(), displaySettings, false, false));
+            Assert.AreEqual(0, CountOccurrances(doc, heavyText.ToUpperInvariant(), displaySettings, false, true));
+            Assert.AreEqual(countHeavyForward, CountOccurrances(doc, heavyText.ToUpperInvariant(), displaySettings, false, false));
             Assert.AreEqual(1, CountOccurrances(doc, "hgflpr", displaySettings, true, false));
         }
 

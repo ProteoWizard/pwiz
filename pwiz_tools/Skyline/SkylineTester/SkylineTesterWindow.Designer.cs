@@ -215,6 +215,7 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.testsTurkish = new System.Windows.Forms.CheckBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -688,6 +689,7 @@ namespace SkylineTester
             // groupBox15
             // 
             this.groupBox15.BackColor = System.Drawing.Color.Transparent;
+            this.groupBox15.Controls.Add(this.testsTurkish);
             this.groupBox15.Controls.Add(this.testsFrench);
             this.groupBox15.Controls.Add(this.testsJapanese);
             this.groupBox15.Controls.Add(this.testsChinese);
@@ -696,7 +698,7 @@ namespace SkylineTester
             this.groupBox15.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox15.Size = new System.Drawing.Size(280, 146);
+            this.groupBox15.Size = new System.Drawing.Size(280, 163);
             this.groupBox15.TabIndex = 26;
             this.groupBox15.TabStop = false;
             this.groupBox15.Text = "Language";
@@ -704,7 +706,7 @@ namespace SkylineTester
             // testsFrench
             // 
             this.testsFrench.AutoSize = true;
-            this.testsFrench.Location = new System.Drawing.Point(8, 81);
+            this.testsFrench.Location = new System.Drawing.Point(8, 79);
             this.testsFrench.Margin = new System.Windows.Forms.Padding(4);
             this.testsFrench.Name = "testsFrench";
             this.testsFrench.Size = new System.Drawing.Size(59, 17);
@@ -715,7 +717,7 @@ namespace SkylineTester
             // testsJapanese
             // 
             this.testsJapanese.AutoSize = true;
-            this.testsJapanese.Location = new System.Drawing.Point(8, 110);
+            this.testsJapanese.Location = new System.Drawing.Point(8, 107);
             this.testsJapanese.Margin = new System.Windows.Forms.Padding(4);
             this.testsJapanese.Name = "testsJapanese";
             this.testsJapanese.Size = new System.Drawing.Size(72, 17);
@@ -726,7 +728,7 @@ namespace SkylineTester
             // testsChinese
             // 
             this.testsChinese.AutoSize = true;
-            this.testsChinese.Location = new System.Drawing.Point(9, 52);
+            this.testsChinese.Location = new System.Drawing.Point(9, 51);
             this.testsChinese.Margin = new System.Windows.Forms.Padding(4);
             this.testsChinese.Name = "testsChinese";
             this.testsChinese.Size = new System.Drawing.Size(64, 17);
@@ -2446,6 +2448,17 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
+            // testsTurkish
+            // 
+            this.testsTurkish.AutoSize = true;
+            this.testsTurkish.Location = new System.Drawing.Point(8, 135);
+            this.testsTurkish.Margin = new System.Windows.Forms.Padding(4);
+            this.testsTurkish.Name = "testsTurkish";
+            this.testsTurkish.Size = new System.Drawing.Size(61, 17);
+            this.testsTurkish.TabIndex = 4;
+            this.testsTurkish.Text = "Turkish";
+            this.testsTurkish.UseVisualStyleBackColor = true;
+            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -2715,6 +2728,7 @@ namespace SkylineTester
         private CheckBox showFormNames;
         private GroupBox groupBox21;
         private CheckBox showFormNamesTutorial;
+        private CheckBox testsTurkish;
     }
 }
 

@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
@@ -248,8 +249,7 @@ namespace pwiz.Skyline.ToolsUI
         public static bool CheckExtension(string path)
         {
             // Avoid Path.GetExtension() because it throws an exception for an invalid path
-            path = path.ToLower();
-            return EXTENSIONS.Any(extension => path.EndsWith(extension));
+            return EXTENSIONS.Any(extension => PathEx.HasExtension(path, extension));
         }
 
         public bool CheckPassTool(int toolIndex)

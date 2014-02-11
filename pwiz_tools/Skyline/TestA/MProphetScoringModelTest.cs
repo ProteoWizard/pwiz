@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestA
             var varColumns = new List<int>();
             for (int i = 0; i < data.Header.Length; i++)
             {
-                var heading = data.Header[i].Trim().ToLower();
+                var heading = data.Header[i].Trim().ToLowerInvariant();
                 if (heading.StartsWith("main_var"))         // Not L10N
                     mainVarColumn = i;
                 else if (heading.StartsWith("var_"))        // Not L10N

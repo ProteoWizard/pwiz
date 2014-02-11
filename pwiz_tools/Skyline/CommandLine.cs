@@ -222,7 +222,7 @@ namespace pwiz.Skyline
             if (value == null)
                 return null;
 
-            switch (value.ToUpper())
+            switch (value.ToUpperInvariant())
             {
                 case OPT_NONE:
                     return null;
@@ -438,7 +438,7 @@ namespace pwiz.Skyline
 
                 else if (IsNameValue(pair, "report-conflict-resolution"))
                 {
-                    string input = pair.Value.ToLower();
+                    string input = pair.Value.ToLowerInvariant();
                     if (input == "overwrite")
                     {
                         ResolveSkyrConflictsBySkipping = false;
@@ -455,7 +455,7 @@ namespace pwiz.Skyline
                 }
                 else if (IsNameValue(pair, "tool-zip-conflict-resolution"))
                 {
-                    string input = pair.Value.ToLower();
+                    string input = pair.Value.ToLowerInvariant();
                     if (input == "overwrite")
                     {
                         ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.overwrite;
@@ -467,7 +467,7 @@ namespace pwiz.Skyline
                 }
                 else if (IsNameValue(pair, "tool-zip-overwrite-annotations"))
                 {
-                    string input = pair.Value.ToLower();
+                    string input = pair.Value.ToLowerInvariant();
                     if (input == "true")
                     {
                         ResolveZipToolAnotationConflictsBySkipping = true;
@@ -541,7 +541,7 @@ namespace pwiz.Skyline
 
                 else if (IsNameValue(pair, "tool-conflict-resolution"))
                 {
-                    string input = pair.Value.ToLower();
+                    string input = pair.Value.ToLowerInvariant();
                     if (input == "overwrite")
                     {
                         ResolveToolConflictsBySkipping = false;

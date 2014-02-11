@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model
                 if (char.IsUpper(Name[0]))
                     return Name;
 
-                return Name[0].ToString(CultureInfo.InvariantCulture).ToUpper() +
+                return Name[0].ToString(CultureInfo.InvariantCulture).ToUpperInvariant() +
                     (Name.Length > 1 ? Name.Substring(1) : string.Empty);
             }
         }

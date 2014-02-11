@@ -2631,7 +2631,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.height, chromInfo.Height);
             writer.WriteAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
-            writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLower());
+            writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
@@ -2824,7 +2824,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
                 writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
-                writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLower());
+                writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);

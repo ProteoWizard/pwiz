@@ -78,7 +78,7 @@ namespace pwiz.Common.SystemUtil
                 if (writer != null && !line.StartsWith(HideLinePrefix))
                     writer.WriteLine(line);
 
-                if (progress == null || line.ToLower().StartsWith("error"))
+                if (progress == null || line.ToLowerInvariant().StartsWith("error"))
                 {
                     sbError.AppendLine(line);
                 }

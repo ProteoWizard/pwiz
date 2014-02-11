@@ -388,7 +388,7 @@ namespace pwiz.Skyline.Model
 
             return string.Format("{0} - {1}{2}{3}{4}", // Not L10N
                                  AA,
-                                 IonType.ToString().ToLower(),
+                                 IonType.ToString().ToLowerInvariant(),
                                  Ordinal,
                                  GetDecoyText(DecoyMassShift),
                                  GetChargeIndicator(Charge));

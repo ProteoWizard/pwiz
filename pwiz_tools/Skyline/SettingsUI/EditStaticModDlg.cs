@@ -652,7 +652,7 @@ namespace pwiz.Skyline.SettingsUI
         private void ValidateAACombo()
         {
             // Force proper format
-            string aas = comboAA.Text.ToUpper();
+            string aas = comboAA.Text.ToUpperInvariant();
 
             var sb = new StringBuilder();
             var seenAas = new bool[128];

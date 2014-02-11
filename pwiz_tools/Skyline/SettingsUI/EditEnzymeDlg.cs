@@ -251,7 +251,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         public static bool ValidateAATextBox(this MessageBoxHelper helper, CancelEventArgs e, TextBox control, bool allowEmpty, out string aaText)
         {
-            aaText = control.Text.Trim().ToUpper();
+            aaText = control.Text.Trim().ToUpperInvariant();
             if (aaText.Length == 0)
             {
                 if (!allowEmpty)

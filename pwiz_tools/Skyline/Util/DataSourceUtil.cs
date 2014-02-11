@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -96,7 +97,7 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(FileInfo fileInfo)
         {
-            switch (fileInfo.Extension.ToLower())
+            switch (fileInfo.Extension.ToLowerInvariant())
             {
                 case EXT_THERMO_RAW: return TYPE_THERMO_RAW;
                 case EXT_WIFF: return TYPE_WIFF;
@@ -116,7 +117,7 @@ namespace pwiz.Skyline.Util
 
         public static bool IsWiffFile(string fileName)
         {
-            return fileName.ToLower().EndsWith(EXT_WIFF);
+            return PathEx.HasExtension(fileName, EXT_WIFF);
         }
 
         public static bool IsFolderType(string type)
@@ -146,7 +147,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (reader.NodeType == XmlNodeType.Element)
                         {
-                            switch (reader.Name.ToLower())
+                            switch (reader.Name.ToLowerInvariant())
                             {
                                 // Not L10N
                                 case "mzml":

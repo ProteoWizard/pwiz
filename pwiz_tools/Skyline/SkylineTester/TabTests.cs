@@ -71,6 +71,8 @@ namespace SkylineTester
                 cultures.Add(new CultureInfo("fr-FR"));
             if (MainWindow.TestsJapanese.Checked)
                 cultures.Add(new CultureInfo("ja"));
+            if (MainWindow.TestsTurkish.Checked)
+                cultures.Add(new CultureInfo("tr-TR"));
 
             args.Append(" language=");
             args.Append(String.Join(",", cultures));

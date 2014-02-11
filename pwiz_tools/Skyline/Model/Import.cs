@@ -866,7 +866,7 @@ namespace pwiz.Skyline.Model
                     double tempDouble;
                     if (!double.TryParse(fieldValue, NumberStyles.Number, provider, out tempDouble))
                     {
-                        if (fieldValue.Length > 2 && !EXCLUDE_PROTEIN_VALUES.Contains(fieldValue.ToLower()))
+                        if (fieldValue.Length > 2 && !EXCLUDE_PROTEIN_VALUES.Contains(fieldValue.ToLowerInvariant()))
                             listDescriptive.Add(i);
                     }                    
                 }
@@ -901,7 +901,7 @@ namespace pwiz.Skyline.Model
                     {
                         foreach (int i in listDescriptive)
                         {
-                            if (headers[i].ToLower().Contains("protein")) // Not L10N : Since many transition list files are generated in English
+                            if (headers[i].ToLowerInvariant().Contains("protein")) // Not L10N : Since many transition list files are generated in English
                                 return i;
                         }
                     }

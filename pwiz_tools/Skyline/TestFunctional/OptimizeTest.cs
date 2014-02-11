@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -57,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             // Remove all results files with the wrong extension for the current locale
             foreach (var fileName in Directory.GetFiles(TestFilesDir.FullPath, "*_REP*.*", SearchOption.AllDirectories))
             {
-                if (!fileName.ToLower().EndsWith(ExtensionTestContext.ExtThermoRaw.ToLower()))
+                if (!PathEx.HasExtension(fileName, ExtensionTestContext.ExtThermoRaw))
                     FileEx.SafeDelete(fileName);
             }
 

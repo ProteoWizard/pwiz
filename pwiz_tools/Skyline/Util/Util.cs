@@ -1194,7 +1194,7 @@ namespace pwiz.Skyline.Util
                         sb.Append('_'); // Not L10N
                     lastC = c;
                     if (capitalize && sb.Length == 0)
-                        sb.Append(c.ToString(CultureInfo.InvariantCulture).ToUpper());
+                        sb.Append(c.ToString(CultureInfo.InvariantCulture).ToUpperInvariant());
                     else
                         sb.Append(c);
                 }

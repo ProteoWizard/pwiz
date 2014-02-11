@@ -363,7 +363,7 @@ namespace pwiz.Skyline.Model
                     int decoyNum;
                     if (!int.TryParse(decoyString, out decoyNum))
                     {
-                        switch (decoyString.ToLower())
+                        switch (decoyString.ToLowerInvariant())
                         {
                             case "false": // Not L10N
                                 decoyNum = 0;

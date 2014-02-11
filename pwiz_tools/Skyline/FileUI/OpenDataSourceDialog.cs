@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.FileUI
         {
             foreach(ListViewItem item in listView.Items)
             {
-                if (item.Text.ToLower().EndsWith(extension.ToLower()) &&
+                if (PathEx.HasExtension(item.Text, extension) &&
                     (accept == null || accept(item.Text)))
                 {
                     listView.SelectedIndices.Add(item.Index);

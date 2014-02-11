@@ -744,9 +744,9 @@ namespace pwiz.Skyline.Util
             switch (enumCase)
             {
                 case EnumCase.lower:
-                    return value.ToLower();
+                    return value.ToLowerInvariant();
                 case EnumCase.upper:
-                    return value.ToUpper();
+                    return value.ToUpperInvariant();
                 default:
                     return value;
             }

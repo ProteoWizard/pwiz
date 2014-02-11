@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Xml.Linq;
 
@@ -59,7 +60,7 @@ namespace SkylineTester
             foreach (var run in Runs)
             {
                 var runElement = new XElement("Run");
-                runElement.Add(new XElement("Date", run.Date.ToString("G")));
+                runElement.Add(new XElement("Date", run.Date.ToString("G", CultureInfo.InvariantCulture)));
                 runElement.Add(new XElement("Revision", run.Revision));
                 runElement.Add(new XElement("RunMinutes", run.RunMinutes));
                 runElement.Add(new XElement("TestsRun", run.TestsRun));
@@ -85,31 +86,31 @@ namespace SkylineTester
                 var run = new Run();
                 foreach (var element in runElement.Descendants())
                 {
-                    switch (element.Name.ToString().ToLower())
+                    switch (element.Name.ToString().ToLowerInvariant())
                     {
                         case "date":
-                            run.Date = DateTime.Parse(element.Value);
+                            run.Date = DateTime.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "revision":
-                            run.Revision = int.Parse(element.Value);
+                            run.Revision = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "runminutes":
-                            run.RunMinutes = int.Parse(element.Value);
+                            run.RunMinutes = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "testsrun":
-                            run.TestsRun = int.Parse(element.Value);
+                            run.TestsRun = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "failures":
-                            run.Failures = int.Parse(element.Value);
+                            run.Failures = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "leaks":
-                            run.Leaks = int.Parse(element.Value);
+                            run.Leaks = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "managedmemory":
-                            run.ManagedMemory = int.Parse(element.Value);
+                            run.ManagedMemory = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "totalmemory":
-                            run.TotalMemory = int.Parse(element.Value);
+                            run.TotalMemory = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                     }
                 }

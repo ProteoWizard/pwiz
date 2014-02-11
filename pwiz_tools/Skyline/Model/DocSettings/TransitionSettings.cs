@@ -801,7 +801,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
         {
-            return ArrayUtil.Parse(s, v => (IonType) Enum.Parse(typeof (IonType), v.ToLower().Replace(PRECURSOR_ION_CHAR, IonType.precursor.ToString())),
+            return ArrayUtil.Parse(s, v => (IonType) Enum.Parse(typeof (IonType), v.ToLowerInvariant().Replace(PRECURSOR_ION_CHAR, IonType.precursor.ToString())),
                                    TextUtil.SEPARATOR_CSV, defaultTypes);
         }
 

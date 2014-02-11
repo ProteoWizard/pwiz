@@ -83,6 +83,7 @@ namespace SkylineTester
         {
             {"en", "English"},
             {"fr", "French"},
+            {"tr", "Turkish"},
             {"ja", "Japanese"},
             {"zh-CHS", "Chinese"}
         };
@@ -584,6 +585,7 @@ namespace SkylineTester
                 testsChinese,
                 testsFrench,
                 testsJapanese,
+                testsTurkish,
                 testsTree,
                 runCheckedTests,
                 skipCheckedTests,
@@ -986,6 +988,7 @@ namespace SkylineTester
         public CheckBox         TestsEnglish                { get { return testsEnglish; } }
         public CheckBox         TestsFrench                 { get { return testsFrench; } }
         public CheckBox         TestsJapanese               { get { return testsJapanese; } }
+        public CheckBox         TestsTurkish                { get { return testsTurkish; } }
         public RadioButton      TutorialsDemoMode           { get { return tutorialsDemoMode; } }
         public ComboBox         TutorialsLanguage           { get { return tutorialsLanguage; } }
         public MyTreeView       TutorialsTree               { get { return tutorialsTree; } }

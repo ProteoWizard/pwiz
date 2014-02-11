@@ -135,10 +135,10 @@ namespace pwiz.SkylineTest.Reporting
                 ResultSet resultSet = pivotReport.Execute(database);
                 Assert.AreEqual(7, resultSet.ColumnInfos.Count);
                 // Assert that "light" appears earlier in the crosstab columns than "heavy".
-                Assert.IsTrue(resultSet.ColumnInfos[3].Caption.ToLower().StartsWith("light"));
-                Assert.IsTrue(resultSet.ColumnInfos[4].Caption.ToLower().StartsWith("light"));
-                Assert.IsTrue(resultSet.ColumnInfos[5].Caption.ToLower().StartsWith("heavy"));
-                Assert.IsTrue(resultSet.ColumnInfos[6].Caption.ToLower().StartsWith("heavy"));
+                Assert.IsTrue(resultSet.ColumnInfos[3].Caption.ToLowerInvariant().StartsWith("light"));
+                Assert.IsTrue(resultSet.ColumnInfos[4].Caption.ToLowerInvariant().StartsWith("light"));
+                Assert.IsTrue(resultSet.ColumnInfos[5].Caption.ToLowerInvariant().StartsWith("heavy"));
+                Assert.IsTrue(resultSet.ColumnInfos[6].Caption.ToLowerInvariant().StartsWith("heavy"));
                 // TODO(nicksh): write asserts that the rows contain correct data.
             }
         }

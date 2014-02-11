@@ -193,13 +193,31 @@ namespace pwiz.Skyline.Model.DocSettings
         private readonly AAMassLookup[] _aaMassLookups;
         private bool _completed;
 
+        private int ToStructuralIndex(char aa)
+        {
+            char c = char.ToLowerInvariant(aa);
+            // Check range, because we used to use Char.ToLower(), which had problems with Turkish I
+            if ('a' > c || c > 'z')
+                throw new ArgumentOutOfRangeException(string.Format("Error converting {0} to {1}.", aa, c));    // Not L10N
+            return c;
+        }
+
+        private int ToIsotopeIndex(char aa)
+        {
+            char c = char.ToUpperInvariant(aa);
+            // Check range, because we used to use Char.ToLower(), which had problems with Turkish i
+            if ('A' > c || c > 'Z')
+                throw new ArgumentOutOfRangeException(string.Format("Error converting {0} to {1}.", aa, c));    // Not L10N
+            return c;
+        }
+
         public ModMassLookup()
         {
             _aaMassLookups = new AAMassLookup[128];
             foreach (char aa in UniMod.AMINO_ACIDS)
             {
                 _aaMassLookups[aa] = new AAMassLookup();
-                _aaMassLookups[Char.ToLower(aa)] = new AAMassLookup();
+                _aaMassLookups[Char.ToLowerInvariant(aa)] = new AAMassLookup();
             }
         }
 
@@ -208,7 +226,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (_completed)
                 throw new InvalidOperationException(Resources.ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup);
             // If structural, store in lowercase AA.
-            _aaMassLookups[structural ? Char.ToLower(aa) : Char.ToUpper(aa)]
+            _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)]
                 .Add(CALC.GetModMass(aa, mod), mod, allowDuplicates);
         }
 
@@ -217,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!_completed)
                 throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
-            var massLookup = _aaMassLookups[structural ? Char.ToLower(aa) : Char.ToUpper(aa)];
+            var massLookup = _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)];
             return massLookup != null ? massLookup.ClosestMatch(mass, roundTo, terminus, specific) : null;
         }
 
@@ -225,8 +243,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             foreach (char aa in UniMod.AMINO_ACIDS)
             {
-                _aaMassLookups[aa].Sort();
-                _aaMassLookups[Char.ToLower(aa)].Sort();
+                _aaMassLookups[ToStructuralIndex(aa)].Sort();
+                _aaMassLookups[ToIsotopeIndex(aa)].Sort();
             }
             _completed = true;
         }

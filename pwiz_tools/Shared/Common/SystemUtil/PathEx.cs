@@ -28,14 +28,18 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Determines whether the file name in the given path has a
         /// specific extension.  Because this is Windows, the comparison
-        /// is case insensitive.
+        /// is case insensitive.  Note that ToLowerInvariant() is used to make
+        /// sure it works for Turkish with extensions containing the letter i
+        /// (e.g. .wiff).  This does, however, make this function only work
+        /// for extenstions with only lower ASCII characters, which all of
+        /// ours are.
         /// </summary>
         /// <param name="path">Path to check</param>
-        /// <param name="ext">Extension to check for</param>
+        /// <param name="ext">Extension to check for (only lower ASCII)</param>
         /// <returns>True if the path has the extension</returns>
         public static bool HasExtension(string path, string ext)
         {
-            return path.ToLower().EndsWith(ext.ToLower());
+            return path.ToLowerInvariant().EndsWith(ext.ToLowerInvariant());
         }
 
         public static string GetCommonRoot(IEnumerable<string> paths)
