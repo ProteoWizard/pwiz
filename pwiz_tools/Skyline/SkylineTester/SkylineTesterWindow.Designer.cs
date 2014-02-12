@@ -35,6 +35,7 @@ namespace SkylineTester
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineTesterWindow));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.mainPanel = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -49,7 +50,14 @@ namespace SkylineTester
             this.formsLanguage = new System.Windows.Forms.ComboBox();
             this.runForms = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.formsTree = new SkylineTester.MyTreeView();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.labelSelectedFormsCount = new System.Windows.Forms.ToolStripLabel();
+            this.clearSeenButton = new System.Windows.Forms.ToolStripButton();
+            this.labelFormsSeenPercent = new System.Windows.Forms.ToolStripLabel();
+            this.formsGrid = new System.Windows.Forms.DataGridView();
+            this.FormColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.TestColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabTutorials = new System.Windows.Forms.TabPage();
             this.groupBox21 = new System.Windows.Forms.GroupBox();
             this.showFormNamesTutorial = new System.Windows.Forms.CheckBox();
@@ -57,7 +65,6 @@ namespace SkylineTester
             this.groupBox14 = new System.Windows.Forms.GroupBox();
             this.tutorialsLanguage = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.tutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.pauseTutorialsSeconds = new System.Windows.Forms.NumericUpDown();
             this.tutorialsDemoMode = new System.Windows.Forms.RadioButton();
@@ -69,6 +76,7 @@ namespace SkylineTester
             this.runTests = new System.Windows.Forms.Button();
             this.label17 = new System.Windows.Forms.Label();
             this.groupBox15 = new System.Windows.Forms.GroupBox();
+            this.testsTurkish = new System.Windows.Forms.CheckBox();
             this.testsFrench = new System.Windows.Forms.CheckBox();
             this.testsJapanese = new System.Windows.Forms.CheckBox();
             this.testsChinese = new System.Windows.Forms.CheckBox();
@@ -82,7 +90,6 @@ namespace SkylineTester
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
             this.runFullQualityPass = new System.Windows.Forms.CheckBox();
-            this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
             this.tabBuild = new System.Windows.Forms.TabPage();
@@ -110,7 +117,6 @@ namespace SkylineTester
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.qualityTestName = new System.Windows.Forms.Label();
-            this.qualityThumbnail = new SkylineTester.WindowThumbnail();
             this.groupBox11 = new System.Windows.Forms.GroupBox();
             this.buttonViewLog = new System.Windows.Forms.Button();
             this.labelLeaks = new System.Windows.Forms.Label();
@@ -151,7 +157,6 @@ namespace SkylineTester
             this.nightlyBranchUrl = new System.Windows.Forms.TextBox();
             this.groupBox18 = new System.Windows.Forms.GroupBox();
             this.nightlyTestName = new System.Windows.Forms.Label();
-            this.nightlyThumbnail = new SkylineTester.WindowThumbnail();
             this.nightlyGraphPanel = new System.Windows.Forms.Panel();
             this.nightlyDeleteRun = new System.Windows.Forms.Button();
             this.nightlyViewLog = new System.Windows.Forms.Button();
@@ -179,7 +184,6 @@ namespace SkylineTester
             this.tabOutput = new System.Windows.Forms.TabPage();
             this.outputJumpTo = new System.Windows.Forms.ComboBox();
             this.outputSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.commandShell = new SkylineTester.CommandShell();
             this.errorConsole = new System.Windows.Forms.RichTextBox();
             this.buttonOpenLog = new System.Windows.Forms.Button();
             this.comboBoxOutput = new System.Windows.Forms.ComboBox();
@@ -214,8 +218,12 @@ namespace SkylineTester
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
+            this.tutorialsTree = new SkylineTester.MyTreeView();
+            this.testsTree = new SkylineTester.MyTreeView();
+            this.qualityThumbnail = new SkylineTester.WindowThumbnail();
+            this.nightlyThumbnail = new SkylineTester.WindowThumbnail();
+            this.commandShell = new SkylineTester.CommandShell();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.testsTurkish = new System.Windows.Forms.CheckBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -223,6 +231,8 @@ namespace SkylineTester
             this.groupBox12.SuspendLayout();
             this.groupBox13.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.formsGrid)).BeginInit();
             this.tabTutorials.SuspendLayout();
             this.groupBox21.SuspendLayout();
             this.groupBox14.SuspendLayout();
@@ -435,7 +445,8 @@ namespace SkylineTester
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.formsTree);
+            this.groupBox1.Controls.Add(this.toolStrip1);
+            this.groupBox1.Controls.Add(this.formsGrid);
             this.groupBox1.Location = new System.Drawing.Point(299, 50);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
@@ -445,18 +456,102 @@ namespace SkylineTester
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Forms";
             // 
-            // formsTree
+            // toolStrip1
             // 
-            this.formsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.toolStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.toolStrip1.AutoSize = false;
+            this.toolStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(200)))), ((int)(((byte)(190)))));
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.labelSelectedFormsCount,
+            this.clearSeenButton,
+            this.labelFormsSeenPercent});
+            this.toolStrip1.Location = new System.Drawing.Point(8, 21);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(395, 25);
+            this.toolStrip1.TabIndex = 1;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // labelSelectedFormsCount
+            // 
+            this.labelSelectedFormsCount.Margin = new System.Windows.Forms.Padding(8, 1, 0, 2);
+            this.labelSelectedFormsCount.Name = "labelSelectedFormsCount";
+            this.labelSelectedFormsCount.Size = new System.Drawing.Size(59, 22);
+            this.labelSelectedFormsCount.Text = "0 selected";
+            // 
+            // clearSeenButton
+            // 
+            this.clearSeenButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.clearSeenButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.clearSeenButton.Image = ((System.Drawing.Image)(resources.GetObject("clearSeenButton.Image")));
+            this.clearSeenButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.clearSeenButton.Name = "clearSeenButton";
+            this.clearSeenButton.Padding = new System.Windows.Forms.Padding(0, 0, 6, 0);
+            this.clearSeenButton.Size = new System.Drawing.Size(71, 22);
+            this.clearSeenButton.Text = "Clear seen";
+            this.clearSeenButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.clearSeenButton.Click += new System.EventHandler(this.clearSeenButton_Click);
+            // 
+            // labelFormsSeenPercent
+            // 
+            this.labelFormsSeenPercent.Margin = new System.Windows.Forms.Padding(80, 1, 0, 2);
+            this.labelFormsSeenPercent.Name = "labelFormsSeenPercent";
+            this.labelFormsSeenPercent.Size = new System.Drawing.Size(107, 22);
+            this.labelFormsSeenPercent.Text = "0% of 0 forms seen";
+            this.labelFormsSeenPercent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // formsGrid
+            // 
+            this.formsGrid.AllowUserToAddRows = false;
+            this.formsGrid.AllowUserToDeleteRows = false;
+            this.formsGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.formsTree.CheckBoxes = true;
-            this.formsTree.Location = new System.Drawing.Point(8, 23);
-            this.formsTree.Margin = new System.Windows.Forms.Padding(4);
-            this.formsTree.Name = "formsTree";
-            this.formsTree.Size = new System.Drawing.Size(394, 451);
-            this.formsTree.TabIndex = 15;
-            this.formsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            this.formsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.formsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.FormColumn,
+            this.TestColumn,
+            this.SeenColumn});
+            this.formsGrid.Location = new System.Drawing.Point(8, 49);
+            this.formsGrid.Name = "formsGrid";
+            this.formsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.formsGrid.Size = new System.Drawing.Size(395, 426);
+            this.formsGrid.TabIndex = 0;
+            this.formsGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.formsGrid_CellContentClick);
+            this.formsGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.formsGrid_CellEndEdit);
+            this.formsGrid.SelectionChanged += new System.EventHandler(this.formsGrid_SelectionChanged);
+            // 
+            // FormColumn
+            // 
+            this.FormColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.FormColumn.HeaderText = "Form";
+            this.FormColumn.Name = "FormColumn";
+            this.FormColumn.ReadOnly = true;
+            this.FormColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // TestColumn
+            // 
+            this.TestColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.TestColumn.HeaderText = "Test";
+            this.TestColumn.Name = "TestColumn";
+            this.TestColumn.ReadOnly = true;
+            this.TestColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.TestColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // SeenColumn
+            // 
+            this.SeenColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle1.Format = "N0";
+            dataGridViewCellStyle1.NullValue = null;
+            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
+            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle1;
+            this.SeenColumn.HeaderText = "Seen";
+            this.SeenColumn.MinimumWidth = 40;
+            this.SeenColumn.Name = "SeenColumn";
+            this.SeenColumn.Width = 57;
             // 
             // tabTutorials
             // 
@@ -551,19 +646,6 @@ namespace SkylineTester
             this.groupBox3.TabIndex = 24;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Tutorials";
-            // 
-            // tutorialsTree
-            // 
-            this.tutorialsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tutorialsTree.CheckBoxes = true;
-            this.tutorialsTree.Location = new System.Drawing.Point(8, 23);
-            this.tutorialsTree.Margin = new System.Windows.Forms.Padding(4);
-            this.tutorialsTree.Name = "tutorialsTree";
-            this.tutorialsTree.Size = new System.Drawing.Size(392, 450);
-            this.tutorialsTree.TabIndex = 15;
-            this.tutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
             // groupBox4
             // 
@@ -702,6 +784,17 @@ namespace SkylineTester
             this.groupBox15.TabIndex = 26;
             this.groupBox15.TabStop = false;
             this.groupBox15.Text = "Language";
+            // 
+            // testsTurkish
+            // 
+            this.testsTurkish.AutoSize = true;
+            this.testsTurkish.Location = new System.Drawing.Point(8, 135);
+            this.testsTurkish.Margin = new System.Windows.Forms.Padding(4);
+            this.testsTurkish.Name = "testsTurkish";
+            this.testsTurkish.Size = new System.Drawing.Size(61, 17);
+            this.testsTurkish.TabIndex = 4;
+            this.testsTurkish.Text = "Turkish";
+            this.testsTurkish.UseVisualStyleBackColor = true;
             // 
             // testsFrench
             // 
@@ -867,19 +960,6 @@ namespace SkylineTester
             this.runFullQualityPass.TabIndex = 32;
             this.runFullQualityPass.Text = "Run full quality pass";
             this.runFullQualityPass.UseVisualStyleBackColor = true;
-            // 
-            // testsTree
-            // 
-            this.testsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.testsTree.CheckBoxes = true;
-            this.testsTree.Location = new System.Drawing.Point(8, 23);
-            this.testsTree.Margin = new System.Windows.Forms.Padding(4);
-            this.testsTree.Name = "testsTree";
-            this.testsTree.Size = new System.Drawing.Size(392, 394);
-            this.testsTree.TabIndex = 15;
-            this.testsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
             // skipCheckedTests
             // 
@@ -1235,17 +1315,6 @@ namespace SkylineTester
             this.qualityTestName.Size = new System.Drawing.Size(312, 20);
             this.qualityTestName.TabIndex = 35;
             this.qualityTestName.Text = "test name";
-            // 
-            // qualityThumbnail
-            // 
-            this.qualityThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.qualityThumbnail.Location = new System.Drawing.Point(8, 19);
-            this.qualityThumbnail.Name = "qualityThumbnail";
-            this.qualityThumbnail.ProcessId = 0;
-            this.qualityThumbnail.Size = new System.Drawing.Size(310, 177);
-            this.qualityThumbnail.TabIndex = 34;
             // 
             // groupBox11
             // 
@@ -1770,16 +1839,6 @@ namespace SkylineTester
             this.nightlyTestName.TabIndex = 35;
             this.nightlyTestName.Text = "test name";
             // 
-            // nightlyThumbnail
-            // 
-            this.nightlyThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.nightlyThumbnail.Location = new System.Drawing.Point(294, 21);
-            this.nightlyThumbnail.Name = "nightlyThumbnail";
-            this.nightlyThumbnail.ProcessId = 0;
-            this.nightlyThumbnail.Size = new System.Drawing.Size(151, 79);
-            this.nightlyThumbnail.TabIndex = 34;
-            // 
             // nightlyGraphPanel
             // 
             this.nightlyGraphPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -2096,34 +2155,12 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 206;
+            this.outputSplitContainer.SplitterDistance = 134;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
-            // commandShell
-            // 
-            this.commandShell.ColorLine = null;
-            this.commandShell.DefaultDirectory = null;
-            this.commandShell.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.commandShell.FilterFunc = null;
-            this.commandShell.FinishedOneCommand = null;
-            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.commandShell.IgnorePaint = 0;
-            this.commandShell.Location = new System.Drawing.Point(0, 0);
-            this.commandShell.LogFile = null;
-            this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
-            this.commandShell.Name = "commandShell";
-            this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 206);
-            this.commandShell.StopButton = null;
-            this.commandShell.TabIndex = 2;
-            this.commandShell.Text = "";
-            this.commandShell.WordWrap = false;
-            this.commandShell.MouseClick += new System.Windows.Forms.MouseEventHandler(this.commandShell_MouseClick);
-            // 
             // errorConsole
             // 
-            this.errorConsole.Cursor = System.Windows.Forms.Cursors.Hand;
             this.errorConsole.DetectUrls = false;
             this.errorConsole.Dock = System.Windows.Forms.DockStyle.Fill;
             this.errorConsole.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -2132,7 +2169,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 237);
+            this.errorConsole.Size = new System.Drawing.Size(693, 309);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2436,6 +2473,74 @@ namespace SkylineTester
             this.radioButton5.Text = "Pause for screenshot";
             this.radioButton5.UseVisualStyleBackColor = true;
             // 
+            // tutorialsTree
+            // 
+            this.tutorialsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tutorialsTree.CheckBoxes = true;
+            this.tutorialsTree.Location = new System.Drawing.Point(8, 23);
+            this.tutorialsTree.Margin = new System.Windows.Forms.Padding(4);
+            this.tutorialsTree.Name = "tutorialsTree";
+            this.tutorialsTree.Size = new System.Drawing.Size(392, 450);
+            this.tutorialsTree.TabIndex = 15;
+            this.tutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            // 
+            // testsTree
+            // 
+            this.testsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.testsTree.CheckBoxes = true;
+            this.testsTree.Location = new System.Drawing.Point(8, 23);
+            this.testsTree.Margin = new System.Windows.Forms.Padding(4);
+            this.testsTree.Name = "testsTree";
+            this.testsTree.Size = new System.Drawing.Size(392, 394);
+            this.testsTree.TabIndex = 15;
+            this.testsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            // 
+            // qualityThumbnail
+            // 
+            this.qualityThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.qualityThumbnail.Location = new System.Drawing.Point(8, 19);
+            this.qualityThumbnail.Name = "qualityThumbnail";
+            this.qualityThumbnail.ProcessId = 0;
+            this.qualityThumbnail.Size = new System.Drawing.Size(310, 177);
+            this.qualityThumbnail.TabIndex = 34;
+            // 
+            // nightlyThumbnail
+            // 
+            this.nightlyThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.nightlyThumbnail.Location = new System.Drawing.Point(294, 21);
+            this.nightlyThumbnail.Name = "nightlyThumbnail";
+            this.nightlyThumbnail.ProcessId = 0;
+            this.nightlyThumbnail.Size = new System.Drawing.Size(151, 79);
+            this.nightlyThumbnail.TabIndex = 34;
+            // 
+            // commandShell
+            // 
+            this.commandShell.ColorLine = null;
+            this.commandShell.DefaultDirectory = null;
+            this.commandShell.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.commandShell.FilterFunc = null;
+            this.commandShell.FinishedOneCommand = null;
+            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.commandShell.IgnorePaint = 0;
+            this.commandShell.Location = new System.Drawing.Point(0, 0);
+            this.commandShell.LogFile = null;
+            this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
+            this.commandShell.Name = "commandShell";
+            this.commandShell.NextCommand = 0;
+            this.commandShell.Size = new System.Drawing.Size(693, 134);
+            this.commandShell.StopButton = null;
+            this.commandShell.TabIndex = 2;
+            this.commandShell.Text = "";
+            this.commandShell.WordWrap = false;
+            this.commandShell.MouseClick += new System.Windows.Forms.MouseEventHandler(this.commandShell_MouseClick);
+            // 
             // myTreeView1
             // 
             this.myTreeView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -2447,17 +2552,6 @@ namespace SkylineTester
             this.myTreeView1.Name = "myTreeView1";
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
-            // 
-            // testsTurkish
-            // 
-            this.testsTurkish.AutoSize = true;
-            this.testsTurkish.Location = new System.Drawing.Point(8, 135);
-            this.testsTurkish.Margin = new System.Windows.Forms.Padding(4);
-            this.testsTurkish.Name = "testsTurkish";
-            this.testsTurkish.Size = new System.Drawing.Size(61, 17);
-            this.testsTurkish.TabIndex = 4;
-            this.testsTurkish.Text = "Turkish";
-            this.testsTurkish.UseVisualStyleBackColor = true;
             // 
             // SkylineTesterWindow
             // 
@@ -2484,6 +2578,9 @@ namespace SkylineTester
             this.groupBox12.PerformLayout();
             this.groupBox13.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.formsGrid)).EndInit();
             this.tabTutorials.ResumeLayout(false);
             this.groupBox21.ResumeLayout(false);
             this.groupBox21.PerformLayout();
@@ -2564,7 +2661,6 @@ namespace SkylineTester
         private RadioButton runCheckedTests;
         private TabPage tabForms;
         private GroupBox groupBox1;
-        private MyTreeView formsTree;
         private Button runForms;
         private TabPage tabTutorials;
         private Button runTutorials;
@@ -2729,6 +2825,14 @@ namespace SkylineTester
         private GroupBox groupBox21;
         private CheckBox showFormNamesTutorial;
         private CheckBox testsTurkish;
+        private DataGridView formsGrid;
+        private ToolStrip toolStrip1;
+        private ToolStripLabel labelSelectedFormsCount;
+        private ToolStripButton clearSeenButton;
+        private DataGridViewLinkColumn FormColumn;
+        private DataGridViewLinkColumn TestColumn;
+        private DataGridViewTextBoxColumn SeenColumn;
+        private ToolStripLabel labelFormsSeenPercent;
     }
 }
 

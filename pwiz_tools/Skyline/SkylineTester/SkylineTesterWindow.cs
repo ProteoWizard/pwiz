@@ -31,6 +31,7 @@ using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using SkylineTester.Properties;
+using TestRunnerLib;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
 
@@ -67,6 +68,7 @@ namespace SkylineTester
         public bool ShiftKeyPressed { get; private set; }
 
         private Button _defaultButton;
+        private bool _restart;
 
         public Button DefaultButton
         {
@@ -362,7 +364,7 @@ namespace SkylineTester
                     TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
 
                     // Add forms to forms tree view.
-                    TabForms.CreateFormsTree();
+                    _tabForms.CreateFormsGrid();
                 });
             }
             catch (Exception ex)
@@ -383,6 +385,11 @@ namespace SkylineTester
             }
         }
 
+        public static bool Implements(Type type, string interfaceName)
+        {
+            return type.GetInterfaces().Any(t => t.Name == interfaceName);
+        }
+
         public IEnumerable<string> GetTestInfos(string testDll)
         {
             var dllPath = Path.Combine(ExeDir, testDll);
@@ -391,7 +398,7 @@ namespace SkylineTester
 
             foreach (var type in types)
             {
-                if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
+                if (type.IsClass && HasAttribute(type, "TestClassAttribute") && !Implements(type, "IHideFromSkylineTester"))
                 {
                     var methods = type.GetMethods();
                     foreach (var method in methods)
@@ -565,7 +572,6 @@ namespace SkylineTester
                 // Forms
                 formsLanguage,
                 showFormNames,
-                formsTree,
 
                 // Tutorials
                 pauseTutorialsDelay,
@@ -927,7 +933,8 @@ namespace SkylineTester
         public Button           DeleteNightlyTask           { get { return buttonDeleteNightlyTask; } }
         public RichTextBox      ErrorConsole                { get { return errorConsole; } }
         public ComboBox         FormsLanguage               { get { return formsLanguage; } }
-        public MyTreeView       FormsTree                   { get { return formsTree; } }
+        public DataGridView     FormsGrid                   { get { return formsGrid; } }
+        public ToolStripLabel   FormsSeenPercent            { get { return labelFormsSeenPercent; } }
         public ZedGraphControl  GraphDuration               { get { return graphDuration; } }
         public ZedGraphControl  GraphFailures               { get { return graphFailures; } }
         public ZedGraphControl  GraphMemory                 { get { return graphMemory; } }
@@ -1141,6 +1148,52 @@ namespace SkylineTester
         private void outputJumpTo_Click(object sender, EventArgs e)
         {
             _tabOutput.PrepareJumpTo();
+        }
+
+        private void formsGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex > 1)
+                return;
+
+            if (e.ColumnIndex == 1)
+            {
+                var testLink = formsGrid.Rows[e.RowIndex].Cells[1].Value;
+                if (testLink != null)
+                {
+                    var testName = testLink.ToString();
+                    for (int i = 0; i < formsGrid.RowCount; i++)
+                    {
+                        formsGrid.Rows[i].Selected = (formsGrid.Rows[i].Cells[1].Value.ToString() == testName);
+                    }
+                }
+            }
+
+            // If there is an active run, stop it and then restart.
+            _restart = (_runningTab != null);
+
+            // Start new run.
+            Run(this, null);
+        }
+
+        private void formsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != 2)
+                return;
+
+            int value;
+            int.TryParse(formsGrid.Rows[e.RowIndex].Cells[2].Value.ToString(), out value);
+            formsGrid.Rows[e.RowIndex].Cells[2].Value = value;
+        }
+
+        private void clearSeenButton_Click(object sender, EventArgs e)
+        {
+            FormSeen.Clear();
+            _tabForms.UpdateForms();
+        }
+
+        private void formsGrid_SelectionChanged(object sender, EventArgs e)
+        {
+            labelSelectedFormsCount.Text = formsGrid.SelectedRows.Count + " selected";
         }
 
         #endregion Control events

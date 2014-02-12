@@ -123,6 +123,7 @@
     <Compile Include="CheckReportCompatibility.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
+    <Compile Include="FormSeen.cs" />
     <Compile Include="MemoryProfiler.cs" />
     <Compile Include="MemoryStreamManager.cs" />
     <Compile Include="MovedDirectory.cs" />

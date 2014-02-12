@@ -19,7 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -31,15 +31,13 @@ namespace SkylineTester
 {
     public class TabForms : TabBase
     {
-        public TabForms()
-        {
-            CreateFormsTree();
-        }
+        private Timer _updateTimer;
 
         public override void Enter()
         {
             MainWindow.InitLanguages(MainWindow.FormsLanguage);
             MainWindow.DefaultButton = MainWindow.RunForms;
+            UpdateForms();
         }
 
         public override bool Run()
@@ -58,22 +56,78 @@ namespace SkylineTester
 
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
+
+            _updateTimer = new Timer { Interval = 1000 };
+            _updateTimer.Tick += (s, a) => UpdateForms();
+            _updateTimer.Start();
+
             return true;
+        }
+
+        public override bool Stop(bool success)
+        {
+            _updateTimer.Stop();
+            _updateTimer = null;
+            return true;
+        }
+
+        public void UpdateForms()
+        {
+            var formSeen = new FormSeen();
+
+            RunUI(() =>
+            {
+                int allSeen = 0;
+                int formsCount = MainWindow.FormsGrid.RowCount;
+                for (int i = 0; i < formsCount; i++)
+                {
+                    int seenCount = formSeen.GetSeenCount(MainWindow.FormsGrid.Rows[i].Cells[0].Value.ToString());
+                    if (seenCount > 0)
+                        allSeen++;
+                    MainWindow.FormsGrid.Rows[i].Cells[2].Value = seenCount;
+                }
+
+                MainWindow.FormsSeenPercent.Text = string.Format("{0}% of {1} forms seen", 100*allSeen/formsCount, formsCount);
+            });
         }
 
         public override int Find(string text, int position)
         {
-            return MainWindow.FormsTree.Find(text.Trim(), position);
+            text = text.Trim();
+            for (int i = position; i < MainWindow.FormsGrid.RowCount; i++)
+            {
+                var value = MainWindow.FormsGrid.Rows[i].Cells[0].Value;
+                if (value != null &&
+                    value.ToString().IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    MainWindow.FormsGrid.ClearSelection();
+                    MainWindow.FormsGrid.Rows[i].Selected = true;
+                    ScrollGrid();
+                    return i + 1;
+                }
+            }
+            return -1;
+        }
+
+        private void ScrollGrid()
+        {
+            int halfWay = (MainWindow.FormsGrid.DisplayedRowCount(false) / 2);
+            if (MainWindow.FormsGrid.FirstDisplayedScrollingRowIndex + halfWay > MainWindow.FormsGrid.SelectedRows[0].Index ||
+                (MainWindow.FormsGrid.FirstDisplayedScrollingRowIndex + MainWindow.FormsGrid.DisplayedRowCount(false) - halfWay) <= MainWindow.FormsGrid.SelectedRows[0].Index)
+            {
+                int targetRow = MainWindow.FormsGrid.SelectedRows[0].Index;
+
+                targetRow = Math.Max(targetRow - halfWay, 0);
+                MainWindow.FormsGrid.FirstDisplayedScrollingRowIndex = targetRow;
+            }
         }
 
         public static IEnumerable<string> GetFormList()
         {
             var formList = new List<string>();
-            var skylineNode = MainWindow.FormsTree.Nodes[0];
-            foreach (TreeNode node in skylineNode.Nodes)
+            foreach (DataGridViewRow row in MainWindow.FormsGrid.SelectedRows)
             {
-                if (node.Checked)
-                    formList.Add(node.Text);
+                formList.Add(row.Cells[0].Value.ToString());
             }
             return formList;
         }
@@ -83,20 +137,16 @@ namespace SkylineTester
             if (type.IsAbstract)
                 return false;
             if (type.IsSubclassOf(typeof (Form)))
-                return !Implements(type, "IMultipleViewProvider");
-            return Implements(type, "IFormView");
+                return !SkylineTesterWindow.Implements(type, "IMultipleViewProvider");
+            return SkylineTesterWindow.Implements(type, "IFormView");
         }
 
-        private static bool Implements(Type type, string interfaceName)
+        public void CreateFormsGrid()
         {
-            return type.GetInterfaces().Any(t => t.Name == interfaceName);
-        }
+            // Remove excessive underlines from Form and Test links.
+            ((DataGridViewLinkColumn) MainWindow.FormsGrid.Columns[0]).LinkBehavior = LinkBehavior.NeverUnderline;
+            ((DataGridViewLinkColumn) MainWindow.FormsGrid.Columns[1]).LinkBehavior = LinkBehavior.NeverUnderline;
 
-        public static void CreateFormsTree()
-        {
-            MainWindow.FormsTree.Nodes.Clear();
-
-            var forms = new List<TreeNode>();
             var skylinePath = Path.Combine(MainWindow.ExeDir, "Skyline.exe");
             var skylineDailyPath = Path.Combine(MainWindow.ExeDir, "Skyline-daily.exe");
             skylinePath = File.Exists(skylinePath) ? skylinePath : skylineDailyPath;
@@ -108,23 +158,20 @@ namespace SkylineTester
             {
                 if (!HasSubclasses(types, type))
                 {
-                    var typeName = Implements(type, "IFormView") && type.DeclaringType != null
+                    var typeName = SkylineTesterWindow.Implements(type, "IFormView") && type.DeclaringType != null
                         ? type.DeclaringType.Name + "." + type.Name
                         : type.Name;
                     var test = formLookup.GetTest(typeName);
                     if (test == "*")
                         continue;
-                    var node = new TreeNode(typeName)
-                    {
-                        ForeColor = (test != null) ? Color.Black : Color.Gray
-                    };
-                    forms.Add(node);
+                    MainWindow.FormsGrid.Rows.Add(typeName, test, 0);
                 }
             }
 
-            forms = forms.OrderBy(node => node.Text).ToList();
-            MainWindow.FormsTree.Nodes.Add(new TreeNode("Skyline forms", forms.ToArray()));
-            MainWindow.FormsTree.ExpandAll();
+            MainWindow.FormsGrid.Sort(MainWindow.FormsGrid.Columns[0], ListSortDirection.Ascending);
+            MainWindow.FormsGrid.ClearSelection();
+            MainWindow.FormsGrid.Rows[0].Selected = true;
+            UpdateForms();
         }
 
         private static bool HasSubclasses(IEnumerable<Type> types, Type baseType)

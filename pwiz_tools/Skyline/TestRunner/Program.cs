@@ -56,7 +56,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;wait=off;" +
                 "demo=off;showformnames=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=on;pass1=on;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
@@ -199,6 +199,9 @@ namespace TestRunner
 
             // Ungraceful exit to avoid unwinding errors
             //Process.GetCurrentProcess().Kill();
+
+            if (commandLineArgs.ArgAsBool("wait"))
+                Console.ReadKey();
 
             return allTestsPassed ? 0 : 1;
         }

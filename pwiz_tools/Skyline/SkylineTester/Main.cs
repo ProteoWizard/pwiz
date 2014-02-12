@@ -113,6 +113,12 @@ namespace SkylineTester
             }
 
             SetStatus();
+
+            if (_restart)
+            {
+                _restart = false;
+                Run(null, null);
+            }
         }
 
         public string GetBuildRoot()

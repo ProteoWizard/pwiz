@@ -6,7 +6,7 @@ AddIrtStandardsDlg,IrtFunctionalTest
 AddPathsDlg,TestLibraryBuild
 AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
-AllChromatogramsGraph,TestCEOptimizationTutorial
+AllChromatogramsGraph,*
 AreaChartPropertyDlg,TestEditDialogs
 AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
@@ -23,7 +23,7 @@ ChromChartPropertyDlg,TestPeakPickingTutorial
 ColumnChooser,TestStandardTypeWithOldReports
 ConfigureToolsDlg,TestQuasarTutorial
 DefineAnnotationDlg,TestAnnotations
-DocumentGridForm,TestCustomReportsTutorialTestReportSummary
+DocumentGridForm,TestReportSummary
 EditCEDlg,TestOptimization
 EditDPDlg,TestEditDialogs
 EditEnzymeDlg,TestEditSettingsTypes
@@ -112,7 +112,7 @@ SchedulingOptionsDlg,TestExportIsolationList
 SequenceTreeForm,ImmediateWindowTestMethod
 ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
-SkylineWindow,ImmediateWindowTestMethod
+SkylineWindow,*
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns
 StatementCompletionForm,TestBackgroundProteome

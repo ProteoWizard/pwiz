@@ -42,6 +42,8 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
+    public interface IHideFromSkylineTester {}
+
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
@@ -277,7 +279,11 @@ namespace pwiz.SkylineTestUtil
                             tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
                     }
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
+                    {
+                        var formSeen = new FormSeen();
+                        formSeen.Saw(formType);
                         PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
+                    }
 
                     return tForm;
                 }
@@ -391,7 +397,18 @@ namespace pwiz.SkylineTestUtil
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
         /// to be taken.
         /// </summary>
-        public static bool IsPauseForScreenShots { get; set; }
+        private static bool _isPauseForScreenShots;
+
+        public static bool IsPauseForScreenShots
+        {
+            get { return _isPauseForScreenShots; }
+            set
+            {
+                _isPauseForScreenShots = value;
+                if (_isPauseForScreenShots) 
+                    Program.PauseSeconds = -1;
+            }
+        }
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
@@ -441,6 +458,8 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if (IsPauseForScreenShots || Program.PauseSeconds < 0)
             {
+                var formSeen = new FormSeen();
+                formSeen.Saw(formType);
                 if (pageNum.HasValue)
                     description = string.Format("page {0} - {1}", pageNum, description);
                 PauseAndContinueForm.Show(description, LinkPage(pageNum));
