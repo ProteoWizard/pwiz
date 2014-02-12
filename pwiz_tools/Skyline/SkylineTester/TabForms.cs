@@ -77,8 +77,11 @@ namespace SkylineTester
 
             RunUI(() =>
             {
-                int allSeen = 0;
                 int formsCount = MainWindow.FormsGrid.RowCount;
+                if (formsCount < 1)
+                    return;
+
+                int allSeen = 0;
                 for (int i = 0; i < formsCount; i++)
                 {
                     int seenCount = formSeen.GetSeenCount(MainWindow.FormsGrid.Rows[i].Cells[0].Value.ToString());

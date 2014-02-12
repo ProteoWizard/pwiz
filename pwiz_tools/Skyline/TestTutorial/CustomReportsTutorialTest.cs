@@ -326,7 +326,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => editReportListDlg2.SelectItem("Summary Statistics")); // Not L10N
             var pivotReportDlg1 = ShowDialog<PivotReportDlg>(editReportListDlg2.EditItem);
             RunUI(() => Assert.AreEqual(11, pivotReportDlg1.ColumnCount));
-            PauseForScreenShot<PivotReportDlg>("Edit Report form (old)", null);
+            PauseForScreenShot<PivotReportDlg>("Edit Report form (old)");
 
             {
                 var previewReportDlg = ShowDialog<PreviewReportDlg>(pivotReportDlg1.ShowPreview);
