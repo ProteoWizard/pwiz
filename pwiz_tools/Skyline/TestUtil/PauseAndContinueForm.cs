@@ -128,7 +128,18 @@ namespace pwiz.SkylineTestUtil
 
         private void lblDescriptionLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(_linkUrl);
+            GotoLink();
+        }
+
+        private void PauseAndContinueForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F1)
+                GotoLink();
+        }
+
+        public void GotoLink()
+        {
+            WebHelpers.OpenLink(_linkUrl);            
         }
     }
 }

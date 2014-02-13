@@ -187,6 +187,7 @@
     <None Include="CEOptimizationViews.zip" />
     <None Include="CustomReportsViews.zip" />
     <None Include="ExistingExperimentsViews.zip" />
+    <None Include="IrtViews.zip" />
     <None Include="MethodRefinementViews.zip" />
     <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />

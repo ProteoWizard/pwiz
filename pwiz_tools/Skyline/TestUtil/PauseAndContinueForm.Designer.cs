@@ -76,11 +76,13 @@
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnContinue);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PauseAndContinueForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Pause Test";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PauseAndContinueForm_KeyDown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
