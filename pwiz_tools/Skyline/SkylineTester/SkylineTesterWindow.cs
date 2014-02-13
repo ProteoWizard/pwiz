@@ -598,11 +598,12 @@ namespace SkylineTester
                 runFullQualityPass,
 
                 // Build
-                build32,
-                build64,
                 buildTrunk,
                 buildBranch,
                 branchUrl,
+                buildRoot,
+                build32,
+                build64,
                 nukeBuild,
                 updateBuild,
                 incrementalBuild,
