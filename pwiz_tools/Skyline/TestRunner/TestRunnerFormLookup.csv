@@ -12,7 +12,7 @@ AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg,TestFullScanId
-BuildLibraryNotification,TestFullScanId
+BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 ChangeIrtPeptidesDlg,IrtFunctionalTest
@@ -109,7 +109,7 @@ RTDetails,IrtFunctionalTest
 SaveSettingsDlg,TestShareSettings
 SchedulingGraphPropertyDlg,TestIrtTutorial
 SchedulingOptionsDlg,TestExportIsolationList
-SequenceTreeForm,ImmediateWindowTestMethod
+SequenceTreeForm,*
 ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
 SkylineWindow,*
