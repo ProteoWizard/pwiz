@@ -18,10 +18,12 @@
  */
 
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -139,7 +141,21 @@ namespace pwiz.SkylineTestUtil
 
         public void GotoLink()
         {
-            WebHelpers.OpenLink(_linkUrl);            
+            WebHelpers.OpenLink(_linkUrl);
+
+            ActionUtil.RunAsync(() =>
+            {
+                Thread.Sleep(1000);
+                Invoke(new Action(() =>
+                {
+                    SetForegroundWindow(Handle);
+                    btnContinue.Focus();
+                }));
+            });
         }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 }
