@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
 {
@@ -28,7 +29,7 @@ namespace CommonTest.DataBinding
     /// Summary description for CollectionInfoTest
     /// </summary>
     [TestClass]
-    public class CollectionInfoTest
+    public class CollectionInfoTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingArray()

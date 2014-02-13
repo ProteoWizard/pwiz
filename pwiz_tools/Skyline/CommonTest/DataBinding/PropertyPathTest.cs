@@ -19,11 +19,12 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
 {
     [TestClass]
-    public class PropertyPathTest
+    public class PropertyPathTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingCompareTo()

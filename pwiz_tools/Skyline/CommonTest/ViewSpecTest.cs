@@ -2,6 +2,7 @@
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest
 {
@@ -9,7 +10,7 @@ namespace CommonTest
     /// Summary description for ViewSpecTest
     /// </summary>
     [TestClass]
-    public class ViewSpecTest
+    public class ViewSpecTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestViewSpecXml()

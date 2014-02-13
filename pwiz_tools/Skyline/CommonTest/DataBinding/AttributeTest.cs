@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
 {
@@ -10,7 +11,7 @@ namespace CommonTest.DataBinding
     /// </summary>
     // ReSharper disable LocalizableElement
     [TestClass]
-    public class AttributeTest
+    public class AttributeTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingChildDisplayName()

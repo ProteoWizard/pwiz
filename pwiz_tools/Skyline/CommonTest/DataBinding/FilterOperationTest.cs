@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
 {
@@ -11,7 +12,7 @@ namespace CommonTest.DataBinding
     /// Summary description for FilterOperationTest
     /// </summary>
     [TestClass]
-    public class FilterOperationTest
+    public class FilterOperationTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingChar()

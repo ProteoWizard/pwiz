@@ -24,6 +24,7 @@ using CommonTest.DataBinding.SampleData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding.Controls
 {
@@ -31,7 +32,7 @@ namespace CommonTest.DataBinding.Controls
     /// Summary description for BoundDataGridViewTest
     /// </summary>
     [TestClass]
-    public class BoundDataGridViewTest
+    public class BoundDataGridViewTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingSubList()

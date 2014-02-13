@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
 {
@@ -30,7 +31,7 @@ namespace CommonTest.DataBinding
     /// Summary description for BoundListTest
     /// </summary>
     [TestClass]
-    public class BoundListTest
+    public class BoundListTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingInsertOnly()

@@ -21,6 +21,7 @@ using CommonTest.DataBinding.SampleData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding.Controls
 {
@@ -28,7 +29,7 @@ namespace CommonTest.DataBinding.Controls
     /// Summary description for AvailableFieldsTest
     /// </summary>
     [TestClass]
-    public class AvailableFieldsTreeTest
+    public class AvailableFieldsTreeTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingMapAttribute()

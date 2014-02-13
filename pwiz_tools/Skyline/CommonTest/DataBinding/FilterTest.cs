@@ -21,11 +21,12 @@ using CommonTest.DataBinding.SampleData;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
 {
     [TestClass]
-    public class FilterTest
+    public class FilterTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestDataBindingIsNotNullFilter()
