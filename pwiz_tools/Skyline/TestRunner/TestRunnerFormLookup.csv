@@ -67,7 +67,7 @@ ImportResultsNameDlg,TestOptimization
 ImportResultsSamplesDlg,TestExistingExperimentsTutorial
 LiveResultsGrid,TestAnnotations
 LocateFileDlg,TestInstallTools
-LongWaitDlg,TestBackgroundProteome
+LongWaitDlg,TestLongWait
 ManageResultsDlg,TestManageLibraryRuns
 ManageViewsForm,TestCustomReportsTutorial
 MessageDlg,ImmediateWindowTestMethod

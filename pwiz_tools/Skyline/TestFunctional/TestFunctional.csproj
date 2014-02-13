@@ -159,6 +159,7 @@
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="LiveReportsFilterTest.cs" />
+    <Compile Include="LongWaitTest.cs" />
     <Compile Include="ManageLibraryRunsTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
