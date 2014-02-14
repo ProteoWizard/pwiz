@@ -607,6 +607,7 @@ namespace SkylineTester
                 nukeBuild,
                 updateBuild,
                 incrementalBuild,
+                runBuildVerificationTests,
                 startSln,
 
                 // Quality
@@ -978,6 +979,7 @@ namespace SkylineTester
         public Label            QualityTestName             { get { return qualityTestName; } }
         public WindowThumbnail  QualityThumbnail            { get { return qualityThumbnail; } }
         public Button           RunBuild                    { get { return runBuild; } }
+        public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
         public Button           RunForms                    { get { return runForms; } }
         public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }

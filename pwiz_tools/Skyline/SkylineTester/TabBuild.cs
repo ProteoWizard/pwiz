@@ -57,7 +57,8 @@ namespace SkylineTester
                 MainWindow.GetBuildRoot(), 
                 architectures, 
                 MainWindow.NukeBuild.Checked, 
-                MainWindow.UpdateBuild.Checked);
+                MainWindow.UpdateBuild.Checked,
+                MainWindow.RunBuildVerificationTests.Checked);
             MainWindow.RunCommands();
             return true;
         }
@@ -105,7 +106,13 @@ namespace SkylineTester
                 : MainWindow.BranchUrl.Text;
         }
 
-        public static void CreateBuildCommands(string branchUrl, string buildRoot, IList<int> architectures, bool nukeBuild, bool updateBuild)
+        public static void CreateBuildCommands(
+            string branchUrl, 
+            string buildRoot, 
+            IList<int> architectures, 
+            bool nukeBuild, 
+            bool updateBuild,
+            bool runBuildTests)
         {
             var commandShell = MainWindow.CommandShell;
             var branchParts = branchUrl.Split('/');
@@ -153,9 +160,10 @@ namespace SkylineTester
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
+                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses toolset=msvc-10.0 nolog",
                     Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
-                    architecture);
+                    architecture,
+                    runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe");
             }
 
             commandShell.Add("# Build done.");

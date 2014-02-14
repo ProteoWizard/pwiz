@@ -93,6 +93,9 @@ namespace SkylineTester
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
             this.tabBuild = new System.Windows.Forms.TabPage();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.startSln = new System.Windows.Forms.CheckBox();
+            this.runBuildVerificationTests = new System.Windows.Forms.CheckBox();
             this.label14 = new System.Windows.Forms.Label();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
             this.labelSpecifyPath = new System.Windows.Forms.Label();
@@ -100,7 +103,6 @@ namespace SkylineTester
             this.buildRoot = new System.Windows.Forms.TextBox();
             this.buttonBrowseBuild = new System.Windows.Forms.Button();
             this.groupBox16 = new System.Windows.Forms.GroupBox();
-            this.startSln = new System.Windows.Forms.CheckBox();
             this.incrementalBuild = new System.Windows.Forms.RadioButton();
             this.updateBuild = new System.Windows.Forms.RadioButton();
             this.nukeBuild = new System.Windows.Forms.RadioButton();
@@ -246,6 +248,7 @@ namespace SkylineTester
             ((System.ComponentModel.ISupportInitialize)(this.runLoopsCount)).BeginInit();
             this.testsGroup.SuspendLayout();
             this.tabBuild.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.groupBox10.SuspendLayout();
             this.groupBox16.SuspendLayout();
             this.groupBox6.SuspendLayout();
@@ -555,7 +558,7 @@ namespace SkylineTester
             // 
             // tabTutorials
             // 
-            this.tabTutorials.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(220)))), ((int)(((byte)(225)))));
+            this.tabTutorials.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(222)))), ((int)(((byte)(228)))));
             this.tabTutorials.Controls.Add(this.groupBox21);
             this.tabTutorials.Controls.Add(this.label16);
             this.tabTutorials.Controls.Add(this.groupBox14);
@@ -729,7 +732,7 @@ namespace SkylineTester
             // 
             // tabTests
             // 
-            this.tabTests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(230)))), ((int)(((byte)(210)))));
+            this.tabTests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(195)))), ((int)(((byte)(220)))), ((int)(((byte)(210)))));
             this.tabTests.Controls.Add(this.runTests);
             this.tabTests.Controls.Add(this.label17);
             this.tabTests.Controls.Add(this.groupBox15);
@@ -989,7 +992,8 @@ namespace SkylineTester
             // 
             // tabBuild
             // 
-            this.tabBuild.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(225)))), ((int)(((byte)(190)))));
+            this.tabBuild.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(195)))), ((int)(((byte)(210)))), ((int)(((byte)(195)))));
+            this.tabBuild.Controls.Add(this.groupBox2);
             this.tabBuild.Controls.Add(this.label14);
             this.tabBuild.Controls.Add(this.groupBox10);
             this.tabBuild.Controls.Add(this.groupBox16);
@@ -1003,6 +1007,45 @@ namespace SkylineTester
             this.tabBuild.Size = new System.Drawing.Size(722, 580);
             this.tabBuild.TabIndex = 3;
             this.tabBuild.Text = "Build";
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.startSln);
+            this.groupBox2.Controls.Add(this.runBuildVerificationTests);
+            this.groupBox2.Location = new System.Drawing.Point(153, 245);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
+            this.groupBox2.Size = new System.Drawing.Size(556, 74);
+            this.groupBox2.TabIndex = 31;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Options";
+            // 
+            // startSln
+            // 
+            this.startSln.AutoSize = true;
+            this.startSln.Location = new System.Drawing.Point(7, 42);
+            this.startSln.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.startSln.Name = "startSln";
+            this.startSln.Size = new System.Drawing.Size(213, 17);
+            this.startSln.TabIndex = 27;
+            this.startSln.Text = "Open Skyline in Visual Studio after build";
+            this.startSln.UseVisualStyleBackColor = true;
+            // 
+            // runBuildVerificationTests
+            // 
+            this.runBuildVerificationTests.AutoSize = true;
+            this.runBuildVerificationTests.Checked = true;
+            this.runBuildVerificationTests.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.runBuildVerificationTests.Location = new System.Drawing.Point(7, 21);
+            this.runBuildVerificationTests.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.runBuildVerificationTests.Name = "runBuildVerificationTests";
+            this.runBuildVerificationTests.Size = new System.Drawing.Size(150, 17);
+            this.runBuildVerificationTests.TabIndex = 26;
+            this.runBuildVerificationTests.Text = "Run build verification tests";
+            this.runBuildVerificationTests.UseVisualStyleBackColor = true;
             // 
             // label14
             // 
@@ -1084,7 +1127,6 @@ namespace SkylineTester
             // 
             this.groupBox16.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox16.Controls.Add(this.startSln);
             this.groupBox16.Controls.Add(this.incrementalBuild);
             this.groupBox16.Controls.Add(this.updateBuild);
             this.groupBox16.Controls.Add(this.nukeBuild);
@@ -1092,21 +1134,10 @@ namespace SkylineTester
             this.groupBox16.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox16.Name = "groupBox16";
             this.groupBox16.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox16.Size = new System.Drawing.Size(698, 149);
+            this.groupBox16.Size = new System.Drawing.Size(698, 100);
             this.groupBox16.TabIndex = 28;
             this.groupBox16.TabStop = false;
             this.groupBox16.Text = "Code synchronizaton";
-            // 
-            // startSln
-            // 
-            this.startSln.AutoSize = true;
-            this.startSln.Location = new System.Drawing.Point(7, 122);
-            this.startSln.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.startSln.Name = "startSln";
-            this.startSln.Size = new System.Drawing.Size(213, 17);
-            this.startSln.TabIndex = 27;
-            this.startSln.Text = "Open Skyline in Visual Studio after build";
-            this.startSln.UseVisualStyleBackColor = true;
             // 
             // incrementalBuild
             // 
@@ -1208,15 +1239,13 @@ namespace SkylineTester
             // 
             // groupBox5
             // 
-            this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox5.Controls.Add(this.build64);
             this.groupBox5.Controls.Add(this.build32);
             this.groupBox5.Location = new System.Drawing.Point(11, 245);
             this.groupBox5.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox5.Size = new System.Drawing.Size(698, 74);
+            this.groupBox5.Size = new System.Drawing.Size(134, 74);
             this.groupBox5.TabIndex = 20;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Architecture";
@@ -1247,7 +1276,7 @@ namespace SkylineTester
             // 
             // tabQuality
             // 
-            this.tabQuality.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(228)))), ((int)(((byte)(222)))), ((int)(((byte)(190)))));
+            this.tabQuality.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(212)))), ((int)(((byte)(190)))));
             this.tabQuality.Controls.Add(this.qualityTableLayout);
             this.tabQuality.Controls.Add(this.label18);
             this.tabQuality.Controls.Add(this.runQuality);
@@ -2109,7 +2138,7 @@ namespace SkylineTester
             // 
             // tabOutput
             // 
-            this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(160)))), ((int)(((byte)(180)))));
+            this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(140)))), ((int)(((byte)(160)))));
             this.tabOutput.Controls.Add(this.outputJumpTo);
             this.tabOutput.Controls.Add(this.outputSplitContainer);
             this.tabOutput.Controls.Add(this.buttonOpenLog);
@@ -2155,7 +2184,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 134;
+            this.outputSplitContainer.SplitterDistance = 122;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2169,7 +2198,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 309);
+            this.errorConsole.Size = new System.Drawing.Size(693, 321);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2534,7 +2563,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 134);
+            this.commandShell.Size = new System.Drawing.Size(693, 122);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2600,6 +2629,8 @@ namespace SkylineTester
             this.testsGroup.ResumeLayout(false);
             this.testsGroup.PerformLayout();
             this.tabBuild.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.groupBox10.ResumeLayout(false);
             this.groupBox10.PerformLayout();
             this.groupBox16.ResumeLayout(false);
@@ -2833,6 +2864,8 @@ namespace SkylineTester
         private DataGridViewLinkColumn TestColumn;
         private DataGridViewTextBoxColumn SeenColumn;
         private ToolStripLabel labelFormsSeenPercent;
+        private GroupBox groupBox2;
+        private CheckBox runBuildVerificationTests;
     }
 }
 
