@@ -76,10 +76,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (TargetInvocationException x)
             {
-                if (x.InnerException.GetType() == typeof(MessageException))
-                    MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
-                else
-                    throw;
+                MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
             }
         }
 
