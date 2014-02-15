@@ -213,6 +213,7 @@ namespace pwiz.Skyline
             }
 
             // Release main window memory during tests
+            MainWindow.Dispose();
             MainWindow = null;
         }
 

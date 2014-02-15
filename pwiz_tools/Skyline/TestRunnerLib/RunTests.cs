@@ -189,13 +189,13 @@ namespace TestRunnerLib
             MemoryManagement.FlushMemory();
 
             const int mb = 1024*1024;
-            var managedMemory = GC.GetTotalMemory(true) / mb;
+            var managedMemory = (double) GC.GetTotalMemory(true) / mb;
 
             if (exception == null)
             {
                 // Test succeeded.
                 Log(
-                    "{0,3} failures, {1}/{2} MB, {3} sec.\r\n", 
+                    "{0,3} failures, {1:F2}/{2:F1} MB, {3} sec.\r\n", 
                     FailureCount, 
                     managedMemory, 
                     TotalMemory,
@@ -206,7 +206,7 @@ namespace TestRunnerLib
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
                 {
-                    stringWriter.WriteLine(TotalMemory.ToString(CultureInfo.InvariantCulture));
+                    stringWriter.WriteLine(TotalMemory.ToString("F1"));
                 }
                 return true;
             }
@@ -226,7 +226,7 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo] = 1;
 
             Log(
-                "{0,3} failures, {1}/{2} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
+                "{0,3} failures, {1:F2}/{2:F1} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
                 FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
                 exception.InnerException.Message,
                 exception.InnerException.StackTrace);
@@ -273,12 +273,12 @@ namespace TestRunnerLib
                 action();
         }
 
-        public int TotalMemory
+        public double TotalMemory
         {
             get
             {
                 const int mb = 1024*1024;
-                return (int) (TotalMemoryBytes / mb);
+                return (double) TotalMemoryBytes / mb;
             }
         }
 

@@ -194,8 +194,8 @@ namespace SkylineTester
                             var memory = line.Substring(i + 10).Split('/');
                             var managedMemory = double.Parse(memory[0]);
                             var totalMemory = double.Parse(memory[1].Split(' ')[0]);
-                            var managedTag = "{0} MB\n{1} {2}".With(managedMemory, testNumber, testName);
-                            var totalTag = "{0} MB\n{1} {2}".With(totalMemory, testNumber, testName);
+                            var managedTag = "{0} MB\n{1:F2} {2:F1}".With(managedMemory, testNumber, testName);
+                            var totalTag = "{0} MB\n{1:F2} {2:F1}".With(totalMemory, testNumber, testName);
 
                             if (managedPointList.Count > 0 && _labels[_labels.Count - 1] == testNumber)
                             {
