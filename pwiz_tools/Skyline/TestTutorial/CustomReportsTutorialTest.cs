@@ -651,7 +651,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPeptides();
             });
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"WideSummaryStatistics.view"));
+            RestoreViewOnScreen(19);
             var documentGridForm = FindOpenForm<DocumentGridForm>();
             var manageViewsForm = ShowDialog<ManageViewsForm>(documentGridForm.ManageViews);
             RunUI(() =>
@@ -702,10 +702,10 @@ namespace pwiz.SkylineTestTutorial
         }
         protected void DoResultsGridView()
         {
-            // Results Grid View, p. 22
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("ResultsGridInFrontOfPeakAreas.view"));
+            // Results Grid View
+            RestoreViewOnScreen(25);
             PauseForScreenShot<LiveResultsGrid>("Take full screen capture of floating windows", 25);
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath("DockedResultsGridAndPeakAreas.view"));
+            RestoreViewOnScreen(26);
             PauseForScreenShot("Main window layout", 26);
 
             var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));

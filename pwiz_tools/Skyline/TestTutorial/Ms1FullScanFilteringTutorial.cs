@@ -284,7 +284,7 @@ namespace pwiz.SkylineTestTutorial
                         SkylineWindow.Height = 792;
                     }
                 });
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p13.view"));
+            RestoreViewOnScreen(13);
             PauseForScreenShot("page 15 - imported data - TIB_L annotations don't agree with tutorial");   // p. 12
  
            RunUIWithDocumentWait(() =>
@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot("page 17 - peak area view (show context menu)");
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p15.view"));
+            RestoreViewOnScreen(15);
             RunUI(() =>
             {
                 SkylineWindow.AutoZoomBestPeak();
@@ -412,14 +412,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
             PauseForScreenShot("page 32 - effects of zoom settings");
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p33.view")); // float the  Library Match window TODO this causes a crash at next call to ChangePeakBounds, in pwiz.Skyline.Controls.Graphs.GraphChromatogram.ChromGroupInfos.get() Line 492 , why?
+            RestoreViewOnScreen(33); // float the  Library Match window TODO this causes a crash at next call to ChangePeakBounds, in pwiz.Skyline.Controls.Graphs.GraphChromatogram.ChromGroupInfos.get() Line 492 , why?
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(Tip3Filename, 37.6076f))); // set the Library Match view
             PauseForScreenShot("page 33 - 5b_MCF7_TiTip3 (37.61 Min)");
 
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(Tib_LFilename, 37.0335f))); // set the Library Match view
             PauseForScreenShot("page 33 - 1_MCF_TiB_L (37.03 min)");
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p34.view")); // back to normal view
+            RestoreViewOnScreen(34); // back to normal view
 
             pepIndex = JumpToPeptide("GVVDSEDLPLNISR"); // Not L10N
             RunUI(() => SkylineWindow.ShowChromatogramLegends(true));

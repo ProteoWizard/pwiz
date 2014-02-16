@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode("K.LVNELTEFAK.T [65, 74]");
             // Ensure Graphs look like p17. (checked)
             WaitForGraphs();
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p18.view"));
+            RestoreViewOnScreen(18);
             PauseForScreenShot("p. 19 - Imported data");
 
             const double minDotp = 0.9;

@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestTutorial
             // Ensure graphs look like p. 3 and 4
             WaitForGraphs();
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p04.view"));
+            RestoreViewOnScreen(04);
             PauseForScreenShot("Main window showing chromatograms and RT graph", 4);   // Skyline window with docked RT replicate comparison graph
 
             RunUI(() =>
@@ -202,7 +202,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowRTLinearRegressionGraph);
             WaitForGraphs();
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p08.view"));
+            RestoreViewOnScreen(08);
             PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times Regression graph metafile", 8);   // RT Regression graph
 
             RunUI(() =>
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestTutorial
                           SkylineWindow.ImportFiles(standardDocumentFile);
                       });
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p09.view"));
+            RestoreViewOnScreen(09);
             PauseForScreenShot("Targets tree clipped out of main winodw", 9);   // Target tree
 
             RunUI(() =>
@@ -330,7 +330,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<FindNodeDlg>("Find form", 14);
 
-                RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p15.view"));
+                RestoreViewOnScreen(15);
 
                 RunUI(() =>
                 {
@@ -402,7 +402,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(findAllForm.Close);
             WaitForClosedForm(findAllForm);
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p17.view"));
+            RestoreViewOnScreen(17);
 
             // Calculate new iRT values for human peptides, p. 16
             {
@@ -571,7 +571,7 @@ namespace pwiz.SkylineTestTutorial
                     });
             WaitForGraphs();
 
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p27.view"));
+            RestoreViewOnScreen(27);
             PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 27);   // Chromatogram graph
 
             RunUI(() =>
@@ -584,7 +584,7 @@ namespace pwiz.SkylineTestTutorial
                       });
 
             // Import retention times from a spectral library, p. 28
-            RestoreViewOnScreen(TestFilesDirs[1].GetTestPath(@"p17.view")); // get regression graph back
+            RestoreViewOnScreen(17); // get regression graph back
             {
                 var editIrtCalc = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);
                 var addLibrayDlg = ShowDialog<AddIrtSpectralLibrary>(editIrtCalc.AddLibrary);

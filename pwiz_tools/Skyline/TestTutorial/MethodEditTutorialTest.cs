@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[3].Nodes[0];
             });
-            RestoreViewOnScreen(TestFilesDirs[2].GetTestPath(@"p07.view"));
+            RestoreViewOnScreen(07);
             PauseForScreenShot("Main window", 7); // Not L10N
 
             RunUI(() =>

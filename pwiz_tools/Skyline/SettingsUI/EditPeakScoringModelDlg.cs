@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
@@ -36,7 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditPeakScoringModelDlg : FormEx
+    public partial class EditPeakScoringModelDlg : FormEx, IMultipleViewProvider
     {
         private const int HISTOGRAM_BAR_COUNT = 20;
         private readonly Color _targetColor = Color.DarkBlue;
@@ -60,6 +61,16 @@ namespace pwiz.Skyline.SettingsUI
         private SortableBindingList<PeakCalculatorWeight> PeakCalculatorWeights { get { return _gridViewDriver.Items; } }
         
         private enum ColumnNames { enabled, calculator_name, weight, percent_contribution }
+
+        public class ModelTab : IFormView { }
+        public class FeaturesTab : IFormView { }
+        public class PvalueTab : IFormView { }
+        public class QvalueTab : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new ModelTab(), new FeaturesTab(), new PvalueTab(), new QvalueTab()
+        };
 
         /// <summary>
         /// Create a new scoring model, or edit an existing model.
@@ -1004,6 +1015,16 @@ namespace pwiz.Skyline.SettingsUI
         #endregion
 
         #region Functional test support
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
+        }
 
         public string PeakScoringModelName
         {
