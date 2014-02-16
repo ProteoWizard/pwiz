@@ -30,13 +30,15 @@ namespace pwiz.SkylineTestUtil
     public partial class PauseAndContinueForm : Form
     {
         private readonly string _linkUrl;
+        private readonly bool _showMatchingPage;
 
-        public PauseAndContinueForm(string description = null, string link = null)
+        public PauseAndContinueForm(string description = null, string link = null, bool showMatchingPages = false)
         {
             InitializeComponent();
             _linkUrl = link;
-            if (link != null)
+            if (!string.IsNullOrEmpty(link))
             {
+                _showMatchingPage = showMatchingPages;
                 lblDescriptionLink.Left = lblDescription.Left;
                 lblDescription.Visible = false;
                 lblDescriptionLink.Visible = true;
@@ -80,14 +82,14 @@ namespace pwiz.SkylineTestUtil
 
         private static readonly object _pauseLock = new object();
 
-        public static void Show(string description = null, string link = null)
+        public static void Show(string description = null, string link = null, bool showMatchingPages = false)
         {
             ClipboardEx.UseInternalClipboard(false);
 
             RunUI(() =>
             {
                 SkylineWindow.UseKeysOverride = false;
-                var dlg = new PauseAndContinueForm(description, link) { Left = SkylineWindow.Left };
+                var dlg = new PauseAndContinueForm(description, link, showMatchingPages) { Left = SkylineWindow.Left };
                 const int spacing = 15;
                 var screen = Screen.FromControl(SkylineWindow);
                 if (SkylineWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
@@ -119,6 +121,13 @@ namespace pwiz.SkylineTestUtil
                 ClipboardEx.UseInternalClipboard();
                 RunUI(() => SkylineWindow.UseKeysOverride = true);
             }
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            if (_showMatchingPage)
+                GotoLink();
+            base.OnShown(e);
         }
 
         protected static void RunUI(Action act)

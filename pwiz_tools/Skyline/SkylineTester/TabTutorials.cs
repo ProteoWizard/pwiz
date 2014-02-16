@@ -46,6 +46,8 @@ namespace SkylineTester
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
             if (MainWindow.ShowFormNamesTutorial.Checked)
                 args.Append(" showformnames=on");
+            if (MainWindow.ShowMatchingPagesutorial.Checked)
+                args.Append(" showpages=on");
             if (MainWindow.TutorialsDemoMode.Checked)
                 args.Append(" demo=on");
             else

@@ -580,6 +580,7 @@ namespace SkylineTester
                 tutorialsDemoMode,
                 tutorialsLanguage,
                 showFormNamesTutorial,
+                showMatchingPagesTutorial,
                 tutorialsTree,
 
                 // Tests
@@ -989,6 +990,7 @@ namespace SkylineTester
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
+        public CheckBox         ShowMatchingPagesutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
@@ -1197,6 +1199,14 @@ namespace SkylineTester
         private void formsGrid_SelectionChanged(object sender, EventArgs e)
         {
             labelSelectedFormsCount.Text = formsGrid.SelectedRows.Count + " selected";
+        }
+
+        private void pauseTutorialsScreenShots_CheckedChanged(object sender, EventArgs e)
+        {
+            bool pauseChecked = pauseTutorialsScreenShots.Checked;
+            showMatchingPagesTutorial.Enabled = pauseChecked;
+            if (!pauseChecked)
+                showMatchingPagesTutorial.Checked = false;
         }
 
         #endregion Control events

@@ -57,7 +57,7 @@ namespace TestRunner
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
                 "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;wait=off;" +
-                "demo=off;showformnames=off;status=off;buildcheck=0;screenshotlist;" +
+                "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=on;pass1=on;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
@@ -232,6 +232,7 @@ namespace TestRunner
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
+            bool showMatchingPages = commandLineArgs.ArgAsBool("showpages");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
@@ -277,6 +278,8 @@ namespace TestRunner
 
             if (showFormNames)
                 runTests.Skyline.Set("ShowFormNames", true);
+            if (showMatchingPages)
+                runTests.Skyline.Set("ShowMatchingPages", true);
 
             var executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();

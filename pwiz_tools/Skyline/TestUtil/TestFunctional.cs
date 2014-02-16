@@ -410,6 +410,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool IsShowMatchingTutorialPages { get; set; }
+
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
         public static bool IsEnableLiveReports { get; set; }
@@ -462,7 +464,8 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 if (pageNum.HasValue)
                     description = string.Format("page {0} - {1}", pageNum, description);
-                PauseAndContinueForm.Show(description, LinkPage(pageNum));
+                bool showMathingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
+                PauseAndContinueForm.Show(description, LinkPage(pageNum), showMathingPages);
             }
         }
 
@@ -671,6 +674,12 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(layoutStream);
             RunUI(() => SkylineWindow.LoadLayout(layoutStream));
             WaitForConditionUI(() => true);
+        }
+
+        public void RestoreViewOnScreen(int pageNum)
+        {
+            var viewsDir = TestFilesDirs.First(dir => dir.FullPath.EndsWith("Views"));
+            RestoreViewOnScreen(viewsDir.GetTestPath(string.Format(@"p{0:0#}.view", pageNum)));
         }
 
         public void RestoreViewOnScreen(string viewFilePath)
