@@ -213,8 +213,9 @@ namespace pwiz.Skyline
                 Console.Write(x.StackTrace);
             }
 
-            // Release main window memory during tests
-            MainWindow.Dispose();
+            // Release main window memory during tests, but do not call Dispose() - it annoys TeamCity
+            // builds for some unknown reason.
+            //MainWindow.Dispose(); // DON'T DO THIS!
             MainWindow = null;
         }
 
