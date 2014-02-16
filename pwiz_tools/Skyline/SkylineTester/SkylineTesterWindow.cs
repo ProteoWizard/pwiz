@@ -990,7 +990,7 @@ namespace SkylineTester
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
-        public CheckBox         ShowMatchingPagesutorial   { get { return showMatchingPagesTutorial; } }
+        public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
