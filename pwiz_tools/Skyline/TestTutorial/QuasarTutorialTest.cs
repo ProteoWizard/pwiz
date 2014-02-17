@@ -38,7 +38,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class QuasarTutorialTest : AbstractFunctionalTest
+    public class QuasarTutorialTest : AbstractFunctionalTest, IHideFromSkylineTester
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);

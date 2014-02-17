@@ -36,7 +36,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class MSstatsTutorialTest : AbstractFunctionalTest 
+    public class MSstatsTutorialTest : AbstractFunctionalTest, IHideFromSkylineTester
     {
         [TestMethod]
         public void TestMSstatsTutorial()

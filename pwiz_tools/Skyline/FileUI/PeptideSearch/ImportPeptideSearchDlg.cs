@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -35,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    public partial class ImportPeptideSearchDlg : FormEx
+    public partial class ImportPeptideSearchDlg : FormEx, IMultipleViewProvider
     {
         public enum Pages
         {
@@ -45,6 +46,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ms1_full_scan_settings_page,
             import_fasta_page
         }
+
+        public class SpectraPage : IFormView { }
+        public class ChromatogramsPage : IFormView { }
+        public class MatchModsPage : IFormView { }
+        public class Ms1FullScanPage : IFormView { }
+        public class FastaPage : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new SpectraPage(), new ChromatogramsPage(), new MatchModsPage(), new Ms1FullScanPage(), new FastaPage()
+        };
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
         {
@@ -445,6 +457,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         #region Functional testing support
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = wizardPagesImportPeptideSearch.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
+        }
 
         public bool IsNextButtonEnabled
         {
