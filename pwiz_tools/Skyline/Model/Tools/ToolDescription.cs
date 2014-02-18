@@ -351,12 +351,13 @@ namespace pwiz.Skyline.Model.Tools
                                     
             if (args != null && initDir != null)
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo(command, args) {WorkingDirectory = initDir, UseShellExecute = false};
+                ProcessStartInfo startInfo = new ProcessStartInfo(command, args) {WorkingDirectory = initDir};
                 if (OutputToImmediateWindow)
                 {
                     startInfo.RedirectStandardOutput = true;
                     startInfo.RedirectStandardError = true;
                     startInfo.CreateNoWindow = true;
+                    startInfo.UseShellExecute = false;
                 }
 
                 // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.
