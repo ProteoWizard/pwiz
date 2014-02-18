@@ -38,13 +38,14 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release_2_5/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release_2_5/</UpdateUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>5656</ApplicationRevision>
-    <ApplicationVersion>2.4.9.5656</ApplicationVersion>
+    <ApplicationRevision>5675</ApplicationRevision>
+    <ApplicationVersion>2.5.0.5675</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
