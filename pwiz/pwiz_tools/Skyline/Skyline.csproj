@@ -1135,8 +1135,248 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Alerts\AboutDlg.ja.resx">
+      <DependentUpon>AboutDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\AlertLinkDlg.ja.resx">
+      <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\EmptyProteinsDlg.ja.resx">
+      <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.ja.resx">
+      <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ImportDocResultsDlg.ja.resx">
+      <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\LocateFileDlg.ja.resx">
+      <DependentUpon>LocateFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MessageDlg.ja.resx">
+      <DependentUpon>MessageDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MissingFileDlg.ja.resx">
+      <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.ja.resx">
+      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
+      <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PasteTypeDlg.ja.resx">
+      <DependentUpon>PasteTypeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
+      <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareTypeDlg.ja.resx">
+      <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.ja.resx">
+      <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
+      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ColumnChooser.ja.resx">
+      <DependentUpon>ColumnChooser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.ja.resx">
+      <DependentUpon>DataboundGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DocumentGridForm.ja.resx">
+      <DependentUpon>DocumentGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\ExportLiveReportDlg.ja.resx">
+      <DependentUpon>ExportLiveReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\LiveResultsGrid.ja.resx">
+      <DependentUpon>LiveResultsGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.ja.resx">
+      <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FindResultsForm.ja.resx">
+      <DependentUpon>FindResultsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AlignmentForm.ja.resx">
+      <DependentUpon>AlignmentForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.ja.resx">
+      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AsyncRenderControl.ja.resx">
+      <DependentUpon>AsyncRenderControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.ja.resx">
+      <DependentUpon>GraphChromatogram.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphRegression.ja.resx">
+      <DependentUpon>GraphRegression.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.ja.resx">
+      <DependentUpon>GraphSpectrum.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphSummary.ja.resx">
+      <DependentUpon>GraphSummary.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ImmediateWindow.ja.resx">
+      <DependentUpon>ImmediateWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\LongWaitDlg.ja.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PopupPickList.ja.resx">
+      <DependentUpon>PopupPickList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ResultsGridForm.ja.resx">
+      <DependentUpon>ResultsGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTree.ja.resx">
+      <DependentUpon>SequenceTree.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTreeForm.ja.resx">
+      <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\StatementCompletionForm.ja.resx">
+      <DependentUpon>StatementCompletionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TreeViewMS.ja.resx">
+      <DependentUpon>TreeViewMS.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\UndoRedoList.ja.resx">
+      <DependentUpon>UndoRedoList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AreaChartPropertyDlg.ja.resx">
+      <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.ja.resx">
+      <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.ja.resx">
+      <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.ja.resx">
+      <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditNoteDlg.ja.resx">
+      <DependentUpon>EditNoteDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditPepModsDlg.ja.resx">
+      <DependentUpon>EditPepModsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\FindNodeDlg.ja.resx">
+      <DependentUpon>FindNodeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\GenerateDecoysDlg.ja.resx">
+      <DependentUpon>GenerateDecoysDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PasteDlg.ja.resx">
+      <DependentUpon>PasteDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineDlg.ja.resx">
+      <DependentUpon>RefineDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineListDlg.ja.resx">
+      <DependentUpon>RefineListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RegressionRTThresholdDlg.ja.resx">
+      <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ReintegrateDlg.ja.resx">
+      <DependentUpon>ReintegrateDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RenameProteinsDlg.ja.resx">
+      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RTChartPropertyDlg.ja.resx">
+      <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.ja.resx">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SpectrumChartPropertyDlg.ja.resx">
+      <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\UniquePeptidesDlg.ja.resx">
+      <DependentUpon>UniquePeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.ja.resx">
+      <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportChromatogramDlg.ja.resx">
+      <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportMethodDlg.ja.resx">
+      <DependentUpon>ExportMethodDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportOptimizeDlg.ja.resx">
+      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportReportDlg.ja.resx">
+      <DependentUpon>ExportReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsDlg.ja.resx">
+      <DependentUpon>ImportResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsNameDlg.ja.resx">
+      <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsSamplesDlg.ja.resx">
+      <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ManageResultsDlg.ja.resx">
+      <DependentUpon>ManageResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MinimizeResultsDlg.ja.resx">
+      <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.ja.resx">
+      <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.ja.resx">
+      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
+      <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportFastaControl.ja.resx">
+      <DependentUpon>ImportFastaControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.ja.resx">
+      <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsControl.ja.resx">
+      <DependentUpon>ImportResultsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.ja.resx">
+      <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PivotReportDlg.ja.resx">
+      <DependentUpon>PivotReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PreviewReportDlg.ja.resx">
+      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RenameResultDlg.ja.resx">
+      <DependentUpon>RenameResultDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RescoreResultsDlg.ja.resx">
+      <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\SchedulingOptionsDlg.ja.resx">
+      <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ShareListDlg.ja.resx">
+      <DependentUpon>ShareListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
@@ -1161,6 +1401,114 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddPathsDlg.ja.resx">
+      <DependentUpon>AddPathsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.ja.resx">
+      <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.ja.resx">
+      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.ja.resx">
+      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
+      <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.ja.resx">
+      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.ja.resx">
+      <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCEDlg.ja.resx">
+      <DependentUpon>EditCEDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditDPDlg.ja.resx">
+      <DependentUpon>EditDPDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.ja.resx">
+      <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditExclusionDlg.ja.resx">
+      <DependentUpon>EditExclusionDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.ja.resx">
+      <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.ja.resx">
+      <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsotopeEnrichmentDlg.ja.resx">
+      <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.ja.resx">
+      <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLibraryDlg.ja.resx">
+      <DependentUpon>EditLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditListDlg.ja.resx">
+      <DependentUpon>EditListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.ja.resx">
+      <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.ja.resx">
+      <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditRTDlg.ja.resx">
+      <DependentUpon>EditRTDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditStaticModDlg.ja.resx">
+      <DependentUpon>EditStaticModDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.ja.resx">
+      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">
+      <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtPeptidesDlg.ja.resx">
+      <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtSpectralLibrary.ja.resx">
+      <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.ja.resx">
+      <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.ja.resx">
+      <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.ja.resx">
+      <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.ja.resx">
+      <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.ja.resx">
+      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.ja.resx">
+      <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\RTDetails.ja.resx">
+      <DependentUpon>RTDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.ja.resx">
+      <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.ja.resx">
+      <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.ja.resx">
+      <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Skyline.ja.resx">
+      <DependentUpon>Skyline.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Skyline_Daily.ico" />
     <EmbeddedResource Include="Alerts\AboutDlg.resx">
@@ -1289,6 +1637,10 @@
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.ja.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -1310,18 +1662,33 @@
       <DependentUpon>Skyline.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.ja.resx">
+      <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.resx">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\PythonInstaller.ja.resx">
+      <DependentUpon>PythonInstaller.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
       <DependentUpon>PythonInstaller.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\RInstaller.ja.resx">
+      <DependentUpon>RInstaller.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolOptionsUI.ja.resx">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
@@ -1340,8 +1707,14 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="ToolsUI\ToolStoreDlg.ja.resx">
+      <DependentUpon>ToolStoreDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.ja.resx">
+      <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.resx">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>

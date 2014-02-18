@@ -214,16 +214,37 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\FindBox.ja.resx">
+      <DependentUpon>FindBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\FindBox.resx">
       <DependentUpon>FindBox.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\RecordNavBar.ja.resx">
+      <DependentUpon>RecordNavBar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\RecordNavBar.resx">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.ja.resx">
+      <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.resx">
       <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.ja.resx">
+      <DependentUpon>FilterTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ManageViewsForm.ja.resx">
+      <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.ja.resx">
+      <DependentUpon>SourceTab.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.ja.resx">
+      <DependentUpon>ViewEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.resx">
       <DependentUpon>ViewEditor.cs</DependentUpon>
@@ -237,8 +258,14 @@
     <EmbeddedResource Include="DataBinding\Controls\Editor\SourceTab.resx">
       <DependentUpon>SourceTab.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\NavBar.ja.resx">
+      <DependentUpon>NavBar.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NavBar.resx">
       <DependentUpon>NavBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.ja.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
