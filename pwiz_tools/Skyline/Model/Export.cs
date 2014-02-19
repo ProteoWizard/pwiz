@@ -719,6 +719,10 @@ namespace pwiz.Skyline.Model
 
     public class ThermoQuantivaMassListExporter : ThermoMassListExporter
     {
+        // Hack to workaround Quantiva limitation
+        protected Dictionary<string, int> CompoundCounts = new Dictionary<string, int>();
+        protected const int MAX_COMPOUND_NAME = 10;
+
         public ThermoQuantivaMassListExporter(SrmDocument document)
             : base(document)
         {
@@ -756,7 +760,18 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+            string compound = Document.Settings.GetModifiedSequence(nodePep);
+            if (!CompoundCounts.ContainsKey(compound))
+            {
+                CompoundCounts[compound] = 0;
+            }
+            else
+            {
+                int compoundStep = (++CompoundCounts[compound]) / MAX_COMPOUND_NAME + 1;
+                if (compoundStep > 1)
+                    compound += compoundStep;
+            }
+            writer.Write(compound);
             writer.Write(FieldSeparator);
             
             // Retention time
