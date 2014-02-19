@@ -36,10 +36,10 @@
 #include "SharedCLI.hpp"
 
 
-// [psi-ms.obo]
+// ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 3.53.0
-//   date: 01:09:2013 09:07
+//   data-version: 3.60.0
+//   date: 18:02:2014 08:37
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.3
 //   import: http://pato.googlecode.com/svn/trunk/quality.obo
@@ -47,8 +47,8 @@
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   remark: namespace: MS
-//   remark: version: 3.53.0
-//   remark: release date: 2013-09-01
+//   remark: version: 3.60.0
+//   remark: release date: 2014-02-18
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -58,14 +58,16 @@
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
+//   remark: This work is licensed under the Creative Commons Attribution 3.0 Unported License.
+//   remark: To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 //   ontology: pato
 //   ontology: uo
 //
-// [unimod.obo]
+// ["unimod.obo"]
 //   format-version: 1.2
-//   date: 2013:05:31 15:58
+//   date: 2013:11:06 11:40
 //
-// [unit.obo]
+// ["unit.obo"]
 //   format-version: 1.2
 //   date: 12:10:2011 11:21
 //   saved-by: George Gkoutos
@@ -95,7 +97,7 @@ public enum class CVID
     MS_sample_number = 1000001,
 
     /// <summary>sample name: A reference string relevant to the sample under study.</summary>
-    MS_sample_name = 1000002,
+    MS_sample_name_OBSOLETE = 1000002,
 
     /// <summary>sample state: The chemical phase of a pure sample, or the state of a mixed sample.</summary>
     MS_sample_state = 1000003,
@@ -119,7 +121,7 @@ public enum class CVID
     MS_ionization_mode_OBSOLETE = 1000009,
 
     /// <summary>analyzer type: The common name of the particular analyzer stage being described. Synonym of mass analyzer, should be obsoleted.</summary>
-    MS_analyzer_type = 1000010,
+    MS_analyzer_type_OBSOLETE = 1000010,
 
     /// <summary>mass resolution: Smallest mass difference between two equal magnitude peaks so that the valley between them is a specified fraction of the peak height.</summary>
     MS_mass_resolution = 1000011,
@@ -158,7 +160,7 @@ public enum class CVID
     MS_TOF_Total_Path_Length = 1000022,
 
     /// <summary>isolation width: The total width (i.e. not half for plus-or-minus) of the gate applied around a selected precursor ion.</summary>
-    MS_isolation_width = 1000023,
+    MS_isolation_width_OBSOLETE = 1000023,
 
     /// <summary>final MS exponent: Final MS level achieved when performing PFF with the ion trap (e.g. MS E10).</summary>
     MS_final_MS_exponent = 1000024,
@@ -203,7 +205,7 @@ public enum class CVID
     MS_scan_mode_OBSOLETE = 1000036,
 
     /// <summary>polarity: Terms to describe the polarity setting of the instrument.</summary>
-    MS_polarity = 1000037,
+    MS_polarity_OBSOLETE = 1000037,
 
     /// <summary>minute: Acquisition time in minutes.</summary>
     MS_minute_OBSOLETE = 1000038,
@@ -247,14 +249,14 @@ public enum class CVID
     /// <summary>emulsion: State if the sample is in emulsion form.</summary>
     MS_emulsion = 1000047,
 
-    /// <summary>gas: State if the sample is in gaseous form.</summary>
-    MS_gas = 1000048,
+    /// <summary>gaseous sample state: State if the sample is in gaseous form.</summary>
+    MS_gaseous_sample_state = 1000048,
 
-    /// <summary>liquid: State if the sample is in liquid form.</summary>
-    MS_liquid = 1000049,
+    /// <summary>liquid sample state: State if the sample is in liquid form.</summary>
+    MS_liquid_sample_state = 1000049,
 
-    /// <summary>solid: State if the sample is in solid form.</summary>
-    MS_solid = 1000050,
+    /// <summary>solid sample state: State if the sample is in solid form.</summary>
+    MS_solid_sample_state = 1000050,
 
     /// <summary>solution: State if the sample is in solution form.</summary>
     MS_solution = 1000051,
@@ -266,7 +268,7 @@ public enum class CVID
     MS_sample_batch = 1000053,
 
     /// <summary>chromatography: Chromatographic conditions used to obtain the sample.</summary>
-    MS_chromatography = 1000054,
+    MS_chromatography_OBSOLETE = 1000054,
 
     /// <summary>continuous flow fast atom bombardment: Fast atom bombardment ionization in which the analyte in solution is entrained in a flowing liquid matrix.</summary>
     MS_continuous_flow_fast_atom_bombardment = 1000055,
@@ -328,10 +330,10 @@ public enum class CVID
     /// <summary>CI: The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.</summary>
     MS_CI = MS_chemical_ionization,
 
-    /// <summary>Electronic Ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. </summary>
+    /// <summary>Electronic Ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended.</summary>
     MS_Electronic_Ionization_OBSOLETE = 1000072,
 
-    /// <summary>EI: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. </summary>
+    /// <summary>EI: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended.</summary>
     MS_EI_OBSOLETE = MS_Electronic_Ionization_OBSOLETE,
 
     /// <summary>electrospray ionization: A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.</summary>
@@ -428,16 +430,16 @@ public enum class CVID
     MS_exponential = 1000094,
 
     /// <summary>linear: The mass scan is done in linear mode.</summary>
-    MS_linear = 1000095,
+    MS_linear_OBSOLETE = 1000095,
 
     /// <summary>quadratic: The mass scan is done in quadratic mode.</summary>
     MS_quadratic = 1000096,
 
     /// <summary>constant neutral mass loss: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.</summary>
-    MS_constant_neutral_mass_loss = 1000097,
+    MS_constant_neutral_mass_loss_OBSOLETE = 1000097,
 
     /// <summary>multiple ion monitoring: Data acquired when monitoring the ion current of a few specific m/z values. Remap to MS:1000205 -Selected Ion Monitoring.</summary>
-    MS_multiple_ion_monitoring = 1000098,
+    MS_multiple_ion_monitoring_OBSOLETE = 1000098,
 
     /// <summary>multiple reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.</summary>
     MS_multiple_reaction_monitoring_OBSOLETE = 1000099,
@@ -446,10 +448,10 @@ public enum class CVID
     MS_MRM_OBSOLETE = MS_multiple_reaction_monitoring_OBSOLETE,
 
     /// <summary>precursor ion scan: The specific scan function or process that will record a precursor ion spectrum.</summary>
-    MS_precursor_ion_scan = 1000100,
+    MS_precursor_ion_scan_OBSOLETE = 1000100,
 
     /// <summary>product ion scan: The specific scan function or process that records product ion spectrum.</summary>
-    MS_product_ion_scan = 1000101,
+    MS_product_ion_scan_OBSOLETE = 1000101,
 
     /// <summary>single ion monitoring: The operation of a mass spectrometer to monitor a single ion rather than scanning entire mass spectrum.</summary>
     MS_single_ion_monitoring_OBSOLETE = 1000102,
@@ -457,7 +459,7 @@ public enum class CVID
     /// <summary>single reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.</summary>
     MS_single_reaction_monitoring_OBSOLETE = 1000103,
 
-    /// <summary>None  ??: None.</summary>
+    /// <summary>None ??: None.</summary>
     MS_None____OBSOLETE = 1000104,
 
     /// <summary>reflectron off: Reflectron is off.</summary>
@@ -662,7 +664,7 @@ public enum class CVID
     MS_DELTAplusXP = 1000154,
 
     /// <summary>ELEMENT2: ThermoFinnigan ELEMENT2 MS.</summary>
-    MS_ELEMENT2 = 1000155,
+    MS_ELEMENT2_OBSOLETE = 1000155,
 
     /// <summary>esquire 4000: Bruker Daltonics' esquire 4000: linear ion trap, ESI, MALDI, Nanospray, APCI, APPI.</summary>
     MS_esquire_4000 = 1000156,
@@ -863,7 +865,7 @@ public enum class CVID
     MS_EA = MS_electron_affinity,
 
     /// <summary>electron energy obsolete: The potential difference through which electrons are accelerated before they are used to bring about electron ionization.</summary>
-    MS_electron_energy_obsolete = 1000214,
+    MS_electron_energy_obsolete_OBSOLETE = 1000214,
 
     /// <summary>exact mass: The calculated mass of an ion or molecule containing a single isotope of each atom.</summary>
     MS_exact_mass = 1000215,
@@ -995,10 +997,10 @@ public enum class CVID
     MS_CRF = MS_charge_remote_fragmentation,
 
     /// <summary>consecutive reaction monitoring: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
-    MS_consecutive_reaction_monitoring = 1000244,
+    MS_consecutive_reaction_monitoring_OBSOLETE_1000244 = 1000244,
 
     /// <summary>CRM: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
-    MS_CRM = MS_consecutive_reaction_monitoring,
+    MS_CRM_OBSOLETE = MS_consecutive_reaction_monitoring_OBSOLETE_1000244,
 
     /// <summary>charge stripping: The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion.</summary>
     MS_charge_stripping = 1000245,
@@ -1274,7 +1276,7 @@ public enum class CVID
     MS_linear_ion_trap = 1000291,
 
     /// <summary>mass spectrograph obsolete: An instrument that separates a beam of ions according to their mass-to-charge ratio in which the ions are directed onto a focal plane detector such as a photographic plate.</summary>
-    MS_mass_spectrograph_obsolete = 1000292,
+    MS_mass_spectrograph_obsolete_OBSOLETE = 1000292,
 
     /// <summary>mass spectrometer: An instrument that measures the mass-to-charge ratio and relative abundances of ions.</summary>
     MS_mass_spectrometer = 1000293,
@@ -1283,10 +1285,10 @@ public enum class CVID
     MS_mass_spectrum = 1000294,
 
     /// <summary>mattauch-herzog geometry: An arrangement for a double-focusing mass spectrometer in which a deflection of ?/(4 ?(2)) radians in a radial electric field is followed by a magnetic deflection of ?/2 radians.</summary>
-    MS_mattauch_herzog_geometry = 1000295,
+    MS_mattauch_herzog_geometry_OBSOLETE = 1000295,
 
     /// <summary>nier-johnson geometry: An arrangement for a double-focusing mass spectrometer in which a deflection of ?/2 radians in a radial electric field analyzer is followed by a magnetic deflection of ?/3 radians.</summary>
-    MS_nier_johnson_geometry = 1000296,
+    MS_nier_johnson_geometry_OBSOLETE = 1000296,
 
     /// <summary>paul ion trap: A device that permits the trapping of ions by means of an alternating current voltage. The ejection of ions with a m/z less than a prescribed value and retention of those with higher mass depends on the application of radio frequency voltages between a ring electrode and two end-cap electrodes to confine the ions in a circular path. The choice of these voltages determines the m/z below which ions are ejected.</summary>
     MS_paul_ion_trap_OBSOLETE = 1000297,
@@ -1295,7 +1297,7 @@ public enum class CVID
     MS_prolate_traochoidal_mass_spectrometer = 1000298,
 
     /// <summary>quistor: An abbreviation of quadrupole ion storage trap. This term is synonymous with Paul Ion Trap. If so then add a synonym to paul and obsolete this term.</summary>
-    MS_quistor = 1000299,
+    MS_quistor_OBSOLETE = 1000299,
 
     /// <summary>reflectron: A time-of-flight mass spectrometer that uses a static electric field to reverse the direction of travel of the ions entering it. A reflectron improves mass resolution by assuring that ions of the same m/z but different kinetic energy arrive at the detector at the same time.</summary>
     MS_reflectron = 1000300,
@@ -1334,10 +1336,10 @@ public enum class CVID
     MS_kinetic_energy_analyzer = 1000311,
 
     /// <summary>mass limit: The m/z value above which ions cannot be detected in a mass spectrometer.</summary>
-    MS_mass_limit = 1000312,
+    MS_mass_limit_OBSOLETE = 1000312,
 
     /// <summary>scan m/z range?: The limit of m/z over which a mass spectrometer can detect ions.</summary>
-    MS_scan_m_z_range_ = 1000313,
+    MS_scan_m_z_range__OBSOLETE = 1000313,
 
     /// <summary>mass selective axial ejection: The use of mass selective instability to eject ions of selected m/z values from an ion trap.</summary>
     MS_mass_selective_axial_ejection = 1000314,
@@ -1367,13 +1369,13 @@ public enum class CVID
     MS_charge_inversion_mass_spectrum = 1000322,
 
     /// <summary>constant neutral loss scan: Spectrum of all precursor ions that undergo a selected m/z decrement.</summary>
-    MS_constant_neutral_loss_scan = 1000323,
+    MS_constant_neutral_loss_scan_OBSOLETE = 1000323,
 
     /// <summary>constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.</summary>
-    MS_constant_neutral_gain_scan = 1000324,
+    MS_constant_neutral_gain_scan_OBSOLETE = 1000324,
 
     /// <summary>Constant Neutral Mass Gain Scan: Spectrum of all precursor ions that undergo a selected m/z increment.</summary>
-    MS_Constant_Neutral_Mass_Gain_Scan = MS_constant_neutral_gain_scan,
+    MS_Constant_Neutral_Mass_Gain_Scan_OBSOLETE = MS_constant_neutral_gain_scan_OBSOLETE,
 
     /// <summary>constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.</summary>
     MS_constant_neutral_gain_spectrum = 1000325,
@@ -1388,7 +1390,7 @@ public enum class CVID
     MS_constant_neutral_mass_loss_spectrum = MS_constant_neutral_loss_spectrum,
 
     /// <summary>consecutive reaction monitoring: A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
-    MS_consecutive_reaction_monitoring_OBSOLETE = 1000327,
+    MS_consecutive_reaction_monitoring_OBSOLETE_1000327 = 1000327,
 
     /// <summary>e/2 mass spectrum: A mass spectrum obtained using a sector mass spectrometer in which the electric sector field E is set to half the value required to transmit the main ion-beam. This spectrum records the signal from doubly charged product ions of charge-stripping reactions.</summary>
     MS_e_2_mass_spectrum = 1000328,
@@ -1421,7 +1423,7 @@ public enum class CVID
     MS_nth_generation_product_ion = 1000337,
 
     /// <summary>nth generation product ion scan: The specific scan functions or processes that record the appropriate generation of product ion or ions of any m/z selected precursor ions.</summary>
-    MS_nth_generation_product_ion_scan = 1000338,
+    MS_nth_generation_product_ion_scan_OBSOLETE = 1000338,
 
     /// <summary>nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.</summary>
     MS_nth_generation_product_ion_spectrum_OBSOLETE = 1000339,
@@ -1466,7 +1468,7 @@ public enum class CVID
     MS_postacceleration_detector = 1000351,
 
     /// <summary>secondary electron: Electrons that are ejected from a sample surface as a result of bombardment by a primary beam of atoms, ions or photons. WAS IN DETECTOR TYPE. Where should it go.</summary>
-    MS_secondary_electron = 1000352,
+    MS_secondary_electron_OBSOLETE = 1000352,
 
     /// <summary>adduct ion: Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules.</summary>
     MS_adduct_ion = 1000353,
@@ -1546,7 +1548,7 @@ public enum class CVID
     /// <summary>stable ion: An ion with internal energy sufficiently low that it does not rearrange or dissociate prior to detection in a mass spectrometer.</summary>
     MS_stable_ion = 1000378,
 
-    /// <summary>unstable ion: An ion with sufficient enerrgy to dissociate within the ion source.</summary>
+    /// <summary>unstable ion: An ion with sufficient energy to dissociate within the ion source.</summary>
     MS_unstable_ion = 1000379,
 
     /// <summary>adiabatic ionization: A process whereby an electron is removed from an atom, ion, or molecule to produce an ion in its lowest energy state.</summary>
@@ -1688,7 +1690,7 @@ public enum class CVID
     MS_hydrogen_deuterium_exchange = 1000424,
 
     /// <summary>ion energy loss spectrum: A plot of the relative abundance of a beam or other collection of ions as a function their loss of translational energy in reactions with neutral species.</summary>
-    MS_ion_energy_loss_spectrum = 1000425,
+    MS_ion_energy_loss_spectrum_OBSOLETE = 1000425,
 
     /// <summary>ionizing collision: The reaction of an ion with a neutral species in which one or more electrons are removed from either the ion or neutral.</summary>
     MS_ionizing_collision = 1000426,
@@ -1790,7 +1792,7 @@ public enum class CVID
     MS_detector = 1000453,
 
     /// <summary>instrument additional description: Additional terms to describe the instrument as outlined in the mass spec doc, Appendix 1, section 1.5.</summary>
-    MS_instrument_additional_description = 1000454,
+    MS_instrument_additional_description_OBSOLETE = 1000454,
 
     /// <summary>ion selection attribute: Ion selection properties that are associated with a value.</summary>
     MS_ion_selection_attribute = 1000455,
@@ -1811,10 +1813,10 @@ public enum class CVID
     MS_spectrum_instrument_description = 1000459,
 
     /// <summary>unit: Terms to describe units.</summary>
-    MS_unit = 1000460,
+    MS_unit_OBSOLETE = 1000460,
 
     /// <summary>additional description: Terms to describe Additional.</summary>
-    MS_additional_description = 1000461,
+    MS_additional_description_OBSOLETE = 1000461,
 
     /// <summary>ion optics: Device used in the construction of a mass spectrometer to focus, contain or otherwise manipulate ions.</summary>
     MS_ion_optics = 1000462,
@@ -2020,8 +2022,8 @@ public enum class CVID
     /// <summary>spectrum representation: Way in which the spectrum is represented, either with regularly spaced data points or with a list of centroided peaks.</summary>
     MS_spectrum_representation = 1000525,
 
-    /// <summary>Waters raw file: Waters data file found in a Waters RAW directory, generated from an MS acquisition.</summary>
-    MS_Waters_raw_file = 1000526,
+    /// <summary>Waters raw format: Waters data file format found in a Waters RAW directory, generated from an MS acquisition.</summary>
+    MS_Waters_raw_format = 1000526,
 
     /// <summary>highest observed m/z: Highest m/z value observed in the m/z array.</summary>
     MS_highest_observed_m_z = 1000527,
@@ -2077,7 +2079,7 @@ public enum class CVID
     /// <summary>data processing action: Data processing attribute used to describe the type of data processing performed on the data file.</summary>
     MS_data_processing_action = 1000543,
 
-    /// <summary>Conversion to mzML: Conversion of a file format to Proteomics Standards Initiative mzData file format.</summary>
+    /// <summary>Conversion to mzML: Conversion of a file format to Proteomics Standards Initiative mzML file format.</summary>
     MS_Conversion_to_mzML = 1000544,
 
     /// <summary>Conversion to mzXML: Conversion of a file format to Institute of Systems Biology mzXML file format.</summary>
@@ -2102,7 +2104,7 @@ public enum class CVID
     MS_Analyst = 1000551,
 
     /// <summary>maldi spot identifier: Maldi Spot Identifier.</summary>
-    MS_maldi_spot_identifier = 1000552,
+    MS_maldi_spot_identifier_OBSOLETE = 1000552,
 
     /// <summary>Trapper: A software program for converting Agilent MassHunter format to mzXML or mzML. Trapper was originally developed at the Institute for Systems Biology.</summary>
     MS_Trapper = 1000553,
@@ -2131,23 +2133,23 @@ public enum class CVID
     /// <summary>data file checksum type: Checksum is a form of redundancy check, a simple way to protect the integrity of data by detecting errors in data.</summary>
     MS_data_file_checksum_type = 1000561,
 
-    /// <summary>ABI WIFF file: Applied Biosystems WIFF file format.</summary>
-    MS_ABI_WIFF_file = 1000562,
+    /// <summary>ABI WIFF format: Applied Biosystems WIFF file format.</summary>
+    MS_ABI_WIFF_format = 1000562,
 
-    /// <summary>Thermo RAW file: Thermo Scientific RAW file format.</summary>
-    MS_Thermo_RAW_file = 1000563,
+    /// <summary>Thermo RAW format: Thermo Scientific RAW file format.</summary>
+    MS_Thermo_RAW_format = 1000563,
 
-    /// <summary>PSI mzData file: Proteomics Standards Inititative mzData file format.</summary>
-    MS_PSI_mzData_file = 1000564,
+    /// <summary>PSI mzData format: Proteomics Standards Inititative mzData file format.</summary>
+    MS_PSI_mzData_format = 1000564,
 
-    /// <summary>Micromass PKL file: Micromass PKL file format.</summary>
-    MS_Micromass_PKL_file = 1000565,
+    /// <summary>Micromass PKL format: Micromass PKL file format.</summary>
+    MS_Micromass_PKL_format = 1000565,
 
-    /// <summary>ISB mzXML file: Institute of Systems Biology mzXML file format.</summary>
-    MS_ISB_mzXML_file = 1000566,
+    /// <summary>ISB mzXML format: Institute of Systems Biology mzXML file format.</summary>
+    MS_ISB_mzXML_format = 1000566,
 
-    /// <summary>Bruker/Agilent YEP file: Bruker/Agilent YEP file format.</summary>
-    MS_Bruker_Agilent_YEP_file = 1000567,
+    /// <summary>Bruker/Agilent YEP format: Bruker/Agilent YEP file format.</summary>
+    MS_Bruker_Agilent_YEP_format = 1000567,
 
     /// <summary>MD5: MD5 (Message-Digest algorithm 5) is a cryptographic hash function with a 128-bit hash value used to check the integrity of files.</summary>
     MS_MD5 = 1000568,
@@ -2200,16 +2202,16 @@ public enum class CVID
     /// <summary>Single-Stage Mass Spectrometry: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.</summary>
     MS_Single_Stage_Mass_Spectrometry = MS_MS1_spectrum,
 
-    /// <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.</summary>
+    /// <summary>MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_MSn_spectrum = 1000580,
 
-    /// <summary>multiple-stage mass spectrometry spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.</summary>
+    /// <summary>multiple-stage mass spectrometry spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_multiple_stage_mass_spectrometry_spectrum = MS_MSn_spectrum,
 
-    /// <summary>nth generation product ion spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.</summary>
+    /// <summary>nth generation product ion spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_nth_generation_product_ion_spectrum = MS_MSn_spectrum,
 
-    /// <summary>product ion spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.</summary>
+    /// <summary>product ion spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n=2. Use the term ms level (MS:1000511) for specifying n.</summary>
     MS_product_ion_spectrum = MS_MSn_spectrum,
 
     /// <summary>CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.</summary>
@@ -2227,20 +2229,20 @@ public enum class CVID
     /// <summary>selected ion monitoring spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).</summary>
     MS_selected_ion_monitoring_spectrum = MS_SIM_spectrum,
 
-    /// <summary>SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+    /// <summary>SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair. Data can be obtained for a single transition pair or multiple transition pairs. Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs. Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
     MS_SRM_spectrum = 1000583,
 
-    /// <summary>MRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+    /// <summary>MRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair. Data can be obtained for a single transition pair or multiple transition pairs. Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs. Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
     MS_MRM_spectrum = MS_SRM_spectrum,
 
-    /// <summary>multiple reaction monitoring spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+    /// <summary>multiple reaction monitoring spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair. Data can be obtained for a single transition pair or multiple transition pairs. Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs. Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
     MS_multiple_reaction_monitoring_spectrum = MS_SRM_spectrum,
 
-    /// <summary>selected reaction monitoring spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
+    /// <summary>selected reaction monitoring spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair. Data can be obtained for a single transition pair or multiple transition pairs. Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs. Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.</summary>
     MS_selected_reaction_monitoring_spectrum = MS_SRM_spectrum,
 
-    /// <summary>mzML file: Proteomics Standards Inititative mzML file format.</summary>
-    MS_mzML_file = 1000584,
+    /// <summary>mzML format: Proteomics Standards Inititative mzML file format.</summary>
+    MS_mzML_format = 1000584,
 
     /// <summary>contact attribute: Details about a person or organization to contact in case of concern or discussion about the file.</summary>
     MS_contact_attribute = 1000585,
@@ -2257,8 +2259,8 @@ public enum class CVID
     /// <summary>contact email: Email address of the contact person or organization.</summary>
     MS_contact_email = 1000589,
 
-    /// <summary>contact organization: Home institution of the contact person.</summary>
-    MS_contact_organization = 1000590,
+    /// <summary>contact affiliation: Home institution of the contact person.</summary>
+    MS_contact_affiliation = 1000590,
 
     /// <summary>MzWiff: A software program for converting Applied Biosystems wiff file format to the mzXML or mzML format. MzWiff is currently maintained at the Institute for Systems Biology. It replaces the slower mzStar program.</summary>
     MS_MzWiff = 1000591,
@@ -2302,8 +2304,8 @@ public enum class CVID
     /// <summary>ProteinLynx Global Server: Waters software for data analysis.</summary>
     MS_ProteinLynx_Global_Server = 1000601,
 
-    /// <summary>Shimadzu Biotech instrument model: Shimadzu Biotech instrument model.</summary>
-    MS_Shimadzu_Biotech_instrument_model = 1000602,
+    /// <summary>Shimadzu MALDI-TOF instrument model: Shimadzu MALDI-TOF instrument model.</summary>
+    MS_Shimadzu_MALDI_TOF_instrument_model = 1000602,
 
     /// <summary>Shimadzu Scientific Instruments instrument model: Shimadzu Scientific Instruments instrument model.</summary>
     MS_Shimadzu_Scientific_Instruments_instrument_model = 1000603,
@@ -2335,11 +2337,11 @@ public enum class CVID
     /// <summary>AXIMA Assurance Linear MALDI-TOF: Shimadzu Biotech AXIMA Assurance Linear MALDI-TOF MS.</summary>
     MS_AXIMA_Assurance_Linear_MALDI_TOF = 1000612,
 
-    /// <summary>DTA file: SEQUEST DTA file format.</summary>
-    MS_DTA_file = 1000613,
+    /// <summary>DTA format: SEQUEST DTA file format.</summary>
+    MS_DTA_format = 1000613,
 
-    /// <summary>ProteinLynx Global Server mass spectrum XML file: Peak list file format used by ProteinLynx Global Server.</summary>
-    MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
+    /// <summary>ProteinLynx Global Server mass spectrum XML format: Peak list file format used by ProteinLynx Global Server.</summary>
+    MS_ProteinLynx_Global_Server_mass_spectrum_XML_format = 1000614,
 
     /// <summary>ProteoWizard software: ProteoWizard software for data processing and analysis. Primarily developed by the labs of P. Malick and D. Tabb.</summary>
     MS_ProteoWizard_software = 1000615,
@@ -2731,8 +2733,8 @@ public enum class CVID
     /// <summary>Conversion to dta: Conversion to dta format.</summary>
     MS_Conversion_to_dta = 1000741,
 
-    /// <summary>Bioworks SRF file: Thermo Finnigan SRF file format.</summary>
-    MS_Bioworks_SRF_file = 1000742,
+    /// <summary>Bioworks SRF format: Thermo Finnigan SRF file format.</summary>
+    MS_Bioworks_SRF_format = 1000742,
 
     /// <summary>TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.</summary>
     MS_TSQ_Quantum_Ultra_AM = 1000743,
@@ -2812,34 +2814,34 @@ public enum class CVID
     /// <summary>nativeID format: Describes how the native spectrum identifiers are formated.</summary>
     MS_nativeID_format = MS_native_spectrum_identifier_format,
 
-    /// <summary>Thermo nativeID format: controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.</summary>
+    /// <summary>Thermo nativeID format: Native format defined by controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.</summary>
     MS_Thermo_nativeID_format = 1000768,
 
-    /// <summary>Waters nativeID format: function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+    /// <summary>Waters nativeID format: Native format defined by function=xsd:positiveInteger process=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
     MS_Waters_nativeID_format = 1000769,
 
-    /// <summary>WIFF nativeID format: sample=xsd:nonNegativeInteger period=xsd:nonNegativeInteger cycle=xsd:nonNegativeInteger experiment=xsd:nonNegativeInteger.</summary>
+    /// <summary>WIFF nativeID format: Native format defined by sample=xsd:nonNegativeInteger period=xsd:nonNegativeInteger cycle=xsd:nonNegativeInteger experiment=xsd:nonNegativeInteger.</summary>
     MS_WIFF_nativeID_format = 1000770,
 
-    /// <summary>Bruker/Agilent YEP nativeID format: scan=xsd:nonNegativeInteger.</summary>
+    /// <summary>Bruker/Agilent YEP nativeID format: Native format defined by scan=xsd:nonNegativeInteger.</summary>
     MS_Bruker_Agilent_YEP_nativeID_format = 1000771,
 
-    /// <summary>Bruker BAF nativeID format: scan=xsd:nonNegativeInteger.</summary>
+    /// <summary>Bruker BAF nativeID format: Native format defined by scan=xsd:nonNegativeInteger.</summary>
     MS_Bruker_BAF_nativeID_format = 1000772,
 
-    /// <summary>Bruker FID nativeID format: file=xsd:IDREF.</summary>
+    /// <summary>Bruker FID nativeID format: Native format defined by file=xsd:IDREF.</summary>
     MS_Bruker_FID_nativeID_format = 1000773,
 
-    /// <summary>multiple peak list nativeID format: index=xsd:nonNegativeInteger.</summary>
+    /// <summary>multiple peak list nativeID format: Native format defined by index=xsd:nonNegativeInteger.</summary>
     MS_multiple_peak_list_nativeID_format = 1000774,
 
-    /// <summary>single peak list nativeID format: file=xsd:IDREF.</summary>
+    /// <summary>single peak list nativeID format: Native format defined by file=xsd:IDREF.</summary>
     MS_single_peak_list_nativeID_format = 1000775,
 
-    /// <summary>scan number only nativeID format: scan=xsd:nonNegativeInteger.</summary>
+    /// <summary>scan number only nativeID format: Native format defined by scan=xsd:nonNegativeInteger.</summary>
     MS_scan_number_only_nativeID_format = 1000776,
 
-    /// <summary>spectrum identifier nativeID format: spectrum=xsd:nonNegativeInteger.</summary>
+    /// <summary>spectrum identifier nativeID format: Native format defined by spectrum=xsd:nonNegativeInteger.</summary>
     MS_spectrum_identifier_nativeID_format = 1000777,
 
     /// <summary>charge state calculation: A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm.</summary>
@@ -2980,11 +2982,11 @@ public enum class CVID
     /// <summary>counts per second: The number of counted events observed per second in one or a group of elements of a detector.</summary>
     MS_counts_per_second = 1000814,
 
-    /// <summary>Bruker BAF file: Bruker BAF raw file format.</summary>
-    MS_Bruker_BAF_file = 1000815,
+    /// <summary>Bruker BAF format: Bruker BAF raw file format.</summary>
+    MS_Bruker_BAF_format = 1000815,
 
-    /// <summary>Bruker U2 file: Bruker HyStar U2 file format.</summary>
-    MS_Bruker_U2_file = 1000816,
+    /// <summary>Bruker U2 format: Bruker HyStar U2 file format.</summary>
+    MS_Bruker_U2_format = 1000816,
 
     /// <summary>HyStar: Bruker software for hyphenated experiments.</summary>
     MS_HyStar = 1000817,
@@ -3004,14 +3006,14 @@ public enum class CVID
     /// <summary>temperature array: A data array of temperature measurements.</summary>
     MS_temperature_array = 1000822,
 
-    /// <summary>Bruker U2 nativeID format: declaration=xsd:nonNegativeInteger collection=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+    /// <summary>Bruker U2 nativeID format: Native format defined by declaration=xsd:nonNegativeInteger collection=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
     MS_Bruker_U2_nativeID_format = 1000823,
 
     /// <summary>no nativeID format: No nativeID format indicates that the file tagged with this term does not contain spectra that can have a nativeID format.</summary>
     MS_no_nativeID_format = 1000824,
 
-    /// <summary>Bruker FID file: Bruker FID file format.</summary>
-    MS_Bruker_FID_file = 1000825,
+    /// <summary>Bruker FID format: Bruker FID file format.</summary>
+    MS_Bruker_FID_format = 1000825,
 
     /// <summary>elution time: The time of elution from all used chromatographic columns (one or more) in the chromatographic separation step, relative to the start of the chromatography.</summary>
     MS_elution_time = 1000826,
@@ -3062,7 +3064,7 @@ public enum class CVID
     MS_laser_type = 1000842,
 
     /// <summary>wavelength: The distance between two peaks of the emitted laser beam.</summary>
-    MS_wavelength = 1000843,
+    MS_wavelength_OBSOLETE = 1000843,
 
     /// <summary>focus diameter x: Describes the diameter of the laser beam in x direction.</summary>
     MS_focus_diameter_x = 1000844,
@@ -3223,16 +3225,16 @@ public enum class CVID
     /// <summary>peptide group label: An arbitrary string label used to mark a set of peptides that belong together in a set, whereby the members are differentiated by different isotopic labels. For example, the heavy and light forms of the same peptide will both be assigned the same peptide group label.</summary>
     MS_peptide_group_label = 1000893,
 
-    /// <summary>retention time: A measure of the interval relative to the beginning of a mass spectrometric run.</summary>
+    /// <summary>retention time: A time interval from the start of chromatography when an analyte exits a chromatographic column.</summary>
     MS_retention_time = 1000894,
 
-    /// <summary>local retention time: A measure of the interval relative to the beginning of a mass spectrometric run when a peptide will exit an unspecified local chromatographic column and instrumental setup.</summary>
+    /// <summary>local retention time: A time interval from the start of chromatography when an analyte exits an unspecified local chromatographic column and instrumental setup.</summary>
     MS_local_retention_time = 1000895,
 
-    /// <summary>normalized retention time: A measure of the interval relative to the beginning of a mass spectrometric run when a peptide will exit a standardized reference chromatographic column and instrumental setup.</summary>
+    /// <summary>normalized retention time: A time interval from the start of chromatography when an analyte exits a standardized reference chromatographic column and instrumental setup.</summary>
     MS_normalized_retention_time = 1000896,
 
-    /// <summary>predicted retention time: A time interval relative to the beginning of a mass spectrometric run when a peptide will exit a chromatographic column as predicted by a referenced software application.</summary>
+    /// <summary>predicted retention time: A time interval from the start of chromatography when an analyte exits a chromatographic column as predicted by a referenced software application.</summary>
     MS_predicted_retention_time = 1000897,
 
     /// <summary>standard: Something, such as a practice or a product, that is widely recognized or employed, especially because of its excellence.</summary>
@@ -3286,8 +3288,8 @@ public enum class CVID
     /// <summary>transition predicted by informatic analysis: The transition has been predicted by informatics software without any direct spectral evidence.</summary>
     MS_transition_predicted_by_informatic_analysis = 1000913,
 
-    /// <summary>tab delimited text file: A file that has two or more columns of tabular data where each column is separated by a TAB character.</summary>
-    MS_tab_delimited_text_file = 1000914,
+    /// <summary>tab delimited text format: A file format that has two or more columns of tabular data where each column is separated by a TAB character.</summary>
+    MS_tab_delimited_text_format = 1000914,
 
     /// <summary>retention time window attribute: An attribute of a window in time about which a peptide might elute from the column.</summary>
     MS_retention_time_window_attribute = 1000915,
@@ -3331,7 +3333,7 @@ public enum class CVID
     /// <summary>calibration spectrum: A spectrum derived from a special calibration source, rather than from the primary injected sample. A calibration spectrum is typically derived from a substance that can be used to correct systematic shift in m/z for spectra of the primary inject sample.</summary>
     MS_calibration_spectrum = 1000928,
 
-    /// <summary>Shimadzu Biotech nativeID format: source=xsd:string start=xsd:nonNegativeInteger end=xsd:nonNegativeInteger.</summary>
+    /// <summary>Shimadzu Biotech nativeID format: Native format defined by source=xsd:string start=xsd:nonNegativeInteger end=xsd:nonNegativeInteger.</summary>
     MS_Shimadzu_Biotech_nativeID_format = 1000929,
 
     /// <summary>Shimadzu Biotech database entity: Shimadzu Biotech format.</summary>
@@ -3382,7 +3384,7 @@ public enum class CVID
     /// <summary>database original uri: URI, from where the search database was originally downloaded.</summary>
     MS_database_original_uri = 1001015,
 
-    /// <summary>database version: OBSOLETE: Use attribute in mzIdentML instead. Version of the search database .</summary>
+    /// <summary>database version: OBSOLETE: Use attribute in mzIdentML instead. Version of the search database.</summary>
     MS_database_version_OBSOLETE = 1001016,
 
     /// <summary>database release date: OBSOLETE: Use attribute in mzIdentML instead. Release date of the search database.</summary>
@@ -3406,8 +3408,8 @@ public enum class CVID
     /// <summary>DB PI filter: Filtering applied specifically by predicted protein isoelectric focussing point (pI), specified as either a range or above/below a threshold value.</summary>
     MS_DB_PI_filter = 1001023,
 
-    /// <summary>translation frame: OSBOLETE: use attribute in mzIdentML instead. The translated open reading frames from a nucleotide database considered in the search (range: 1-6).</summary>
-    MS_translation_frame_OBSOLETE = 1001024,
+    /// <summary>translation frame: The translated open reading frames from a nucleotide database considered in the search (range: 1-6).</summary>
+    MS_translation_frame = 1001024,
 
     /// <summary>translation table: The translation table used to translate the nucleotides to amino acids.</summary>
     MS_translation_table = 1001025,
@@ -3445,7 +3447,7 @@ public enum class CVID
     /// <summary>SEQUEST:Consensus: Specify depth as value of the CVParam.</summary>
     MS_SEQUEST_Consensus = 1001038,
 
-    /// <summary>intermediate analysis format: Type of the source file, the  mzIdentML was created from.</summary>
+    /// <summary>intermediate analysis format: Type of the source file, the mzIdentML was created from.</summary>
     MS_intermediate_analysis_format = 1001040,
 
     /// <summary>SEQUEST:sortCV: SEQUEST View / Sort Input Parameters.</summary>
@@ -3505,8 +3507,8 @@ public enum class CVID
     /// <summary>neutral loss: OBSOLETE: replaced by MS:1000336 (neutral loss): Leave this to PSI-MOD.</summary>
     MS_neutral_loss_OBSOLETE = 1001061,
 
-    /// <summary>Mascot MGF file: Mascot MGF file.</summary>
-    MS_Mascot_MGF_file = 1001062,
+    /// <summary>Mascot MGF format: Mascot MGF file format.</summary>
+    MS_Mascot_MGF_format = 1001062,
 
     /// <summary>TODOscoring model: OBSOLETE: There is Phenyx:ScoringModel for Phenyx! Scoring model (more detailed granularity). TODO: add some child terms.</summary>
     MS_TODOscoring_model_OBSOLETE = 1001065,
@@ -3571,7 +3573,7 @@ public enum class CVID
     /// <summary>NoEnzyme: </summary>
     MS_NoEnzyme_OBSOLETE = 1001091,
 
-    /// <summary>peptide identification confidence metric: Peptide identification confidence metric for a peptide (p-value, Expect value, confidence, local FDR).</summary>
+    /// <summary>peptide identification confidence metric: Identification confidence metric for a peptide.</summary>
     MS_peptide_identification_confidence_metric = 1001092,
 
     /// <summary>sequence coverage: The percent coverage for the protein based upon the matched peptide sequences (can be calculated).</summary>
@@ -3724,7 +3726,7 @@ public enum class CVID
     /// <summary>database IPI_human: International Protein Index database for Homo sapiens sequences.</summary>
     MS_database_IPI_human = 1001142,
 
-    /// <summary>search engine specific score for PSMs: Search engine specific peptide scores.</summary>
+    /// <summary>search engine specific score for PSMs: Search engine specific peptide spectrum match scores.</summary>
     MS_search_engine_specific_score_for_PSMs = 1001143,
 
     /// <summary>SEQUEST:SelectDefault: </summary>
@@ -3865,14 +3867,14 @@ public enum class CVID
     /// <summary>DB composition target+decoy: Decoy database composition: database contains original (target) and decoy entries.</summary>
     MS_DB_composition_target_decoy = 1001197,
 
-    /// <summary>protein identification confidence metric: Protein identification confidence metric (p-value, Expect value, confidence, local FDR).</summary>
+    /// <summary>protein identification confidence metric: Identification confidence metric for a protein.</summary>
     MS_protein_identification_confidence_metric = 1001198,
 
-    /// <summary>Mascot DAT file: Source file for this mzIdentML was a Mascot DAT file.</summary>
-    MS_Mascot_DAT_file = 1001199,
+    /// <summary>Mascot DAT format: Source file for this mzIdentML was in Mascot DAT file format.</summary>
+    MS_Mascot_DAT_format = 1001199,
 
-    /// <summary>SEQUEST out file: Source file for this mzIdentML was ONE SEQUEST out file.</summary>
-    MS_SEQUEST_out_file = 1001200,
+    /// <summary>SEQUEST out file format: Source file for this mzIdentML was in SEQUEST out file format.</summary>
+    MS_SEQUEST_out_file_format = 1001200,
 
     /// <summary>DB MW filter maximum: Maximum value of molecular weight filter.</summary>
     MS_DB_MW_filter_maximum = 1001201,
@@ -3907,8 +3909,8 @@ public enum class CVID
     /// <summary>search result details: OBSOLETE: Scores and global result characteristics.</summary>
     MS_search_result_details_OBSOLETE = 1001213,
 
-    /// <summary>prot:global FDR: Estimation of global false discovery rate of the proteins.</summary>
-    MS_prot_global_FDR = 1001214,
+    /// <summary>protein-level global FDR: Estimation of the global false discovery rate of proteins.</summary>
+    MS_protein_level_global_FDR = 1001214,
 
     /// <summary>SEQUEST:PeptideSp: The SEQUEST result 'Sp' in out file (peptide).</summary>
     MS_SEQUEST_PeptideSp = 1001215,
@@ -4000,14 +4002,14 @@ public enum class CVID
     /// <summary>SEQUEST summary: Source file for this mzIdentML was a SEQUEST summary page (proteins).</summary>
     MS_SEQUEST_summary = 1001243,
 
-    /// <summary>PerSeptive PKS file: PerSeptive peak list file format.</summary>
-    MS_PerSeptive_PKS_file = 1001245,
+    /// <summary>PerSeptive PKS format: PerSeptive peak list file format.</summary>
+    MS_PerSeptive_PKS_format = 1001245,
 
-    /// <summary>Sciex API III file: PE Sciex peak list file format.</summary>
-    MS_Sciex_API_III_file = 1001246,
+    /// <summary>Sciex API III format: PE Sciex peak list file format.</summary>
+    MS_Sciex_API_III_format = 1001246,
 
-    /// <summary>Bruker XML file: Bruker data exchange xml.</summary>
-    MS_Bruker_XML_file = 1001247,
+    /// <summary>Bruker XML format: Bruker data exchange XML format.</summary>
+    MS_Bruker_XML_format = 1001247,
 
     /// <summary>search input details: Details describing the search input.</summary>
     MS_search_input_details = 1001249,
@@ -4219,7 +4221,7 @@ public enum class CVID
     /// <summary>Mascot:ShowDecoyMatches: If true, then the search results are against an automatically generated decoy database and the reported peptide matches and protein hits come from the decoy database. Otherwise peptide matches and protein hits come from the original database.</summary>
     MS_Mascot_ShowDecoyMatches = 1001325,
 
-    /// <summary>add_others: </summary>
+    /// <summary>add_others: OBSOLETE.</summary>
     MS_add_others_OBSOLETE = 1001326,
 
     /// <summary>OMSSA:evalue: OMSSA E-value.</summary>
@@ -4330,8 +4332,8 @@ public enum class CVID
     /// <summary>peptide unique to one protein: </summary>
     MS_peptide_unique_to_one_protein = 1001363,
 
-    /// <summary>pep:global FDR: Estimation of global false discovery rate of the peptides.</summary>
-    MS_pep_global_FDR = 1001364,
+    /// <summary>distinct peptide-level global FDR: Estimation of the global false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_global_FDR = 1001364,
 
     /// <summary>frag: internal yb ion: Fragmentation information, type of product: internal yb ion.</summary>
     MS_frag__internal_yb_ion = 1001365,
@@ -4345,8 +4347,8 @@ public enum class CVID
     /// <summary>frag: z+2 ion: Fragmentation information, type of product: z+2 ion.</summary>
     MS_frag__z_2_ion = 1001368,
 
-    /// <summary>text file: Simple text file of \"m/z [intensity]\" values for a PMF (or single MS-MS) search.</summary>
-    MS_text_file = 1001369,
+    /// <summary>text format: Simple text file format of \"m/z [intensity]\" values for a PMF (or single MS-MS) search.</summary>
+    MS_text_format = 1001369,
 
     /// <summary>Mascot:homology threshold: The Mascot result 'homology threshold'.</summary>
     MS_Mascot_homology_threshold = 1001370,
@@ -4435,14 +4437,14 @@ public enum class CVID
     /// <summary>Phenyx:Modif: The expression of the nature and position(s) of modified residue(s) on a matched peptide sequence in Phenyx.</summary>
     MS_Phenyx_Modif = 1001398,
 
-    /// <summary>OMSSA csv file: Source file for this mzIdentML was an OMSSA csv file.</summary>
-    MS_OMSSA_csv_file = 1001399,
+    /// <summary>OMSSA csv format: Source file for this mzIdentML was in OMSSA csv file format.</summary>
+    MS_OMSSA_csv_format = 1001399,
 
-    /// <summary>OMSSA xml file: Source file for this mzIdentML was an OMSSA xml file.</summary>
-    MS_OMSSA_xml_file = 1001400,
+    /// <summary>OMSSA xml format: Source file for this mzIdentML was in OMSSA xml file format.</summary>
+    MS_OMSSA_xml_format = 1001400,
 
-    /// <summary>X!Tandem xml file: Source file for this mzIdentML was an X!Tandem xml file.</summary>
-    MS_X_Tandem_xml_file = 1001401,
+    /// <summary>X!Tandem xml format: Source file for this mzIdentML was in X!Tandem xml file format.</summary>
+    MS_X_Tandem_xml_format = 1001401,
 
     /// <summary>spectrum identification result details: This subsection describes terms which can describe details of spectrum identification results.</summary>
     MS_spectrum_identification_result_details = 1001405,
@@ -4492,11 +4494,11 @@ public enum class CVID
     /// <summary>SpectraST:delta: SpectraST normalised difference between dot product of top hit and runner-up.</summary>
     MS_SpectraST_delta = 1001420,
 
-    /// <summary>pepXML file: Source file for this mzIdentML was a pepXML file.</summary>
-    MS_pepXML_file = 1001421,
+    /// <summary>pepXML format: Source file for this mzIdentML was in a pepXML file format.</summary>
+    MS_pepXML_format = 1001421,
 
-    /// <summary>protXML file: Source file for this mzIdentML was a protXML file.</summary>
-    MS_protXML_file = 1001422,
+    /// <summary>protXML format: Source file for this mzIdentML was in protXML file format.</summary>
+    MS_protXML_format = 1001422,
 
     /// <summary>translation table description: A URL that describes the translation table used to translate the nucleotides to amino acids.</summary>
     MS_translation_table_description = 1001423,
@@ -4600,7 +4602,7 @@ public enum class CVID
     /// <summary>analysis software: Analysis software.</summary>
     MS_analysis_software = 1001456,
 
-    /// <summary>data processing software: Conversion software.</summary>
+    /// <summary>data processing software: Data processing software.</summary>
     MS_data_processing_software = 1001457,
 
     /// <summary>spectrum generation information: Vocabularies describing the spectrum generation information.</summary>
@@ -4621,11 +4623,11 @@ public enum class CVID
     /// <summary>Phenyx XML format: Phenyx open XML file format.</summary>
     MS_Phenyx_XML_format = 1001463,
 
-    /// <summary>DTASelect file: DTASelect file.</summary>
-    MS_DTASelect_file = 1001464,
+    /// <summary>DTASelect format: DTASelect file format.</summary>
+    MS_DTASelect_format = 1001464,
 
-    /// <summary>MS2 file: MS2 file for MS/MS spectral data.</summary>
-    MS_MS2_file = 1001466,
+    /// <summary>MS2 format: MS2 file format for MS/MS spectral data.</summary>
+    MS_MS2_format = 1001466,
 
     /// <summary>taxonomy: NCBI TaxID: This term is used if a NCBI TaxID is specified, e.g. 9606 for Homo sapiens.</summary>
     MS_taxonomy__NCBI_TaxID = 1001467,
@@ -4675,7 +4677,7 @@ public enum class CVID
     /// <summary>null-terminated ASCII string: Sequence of zero or more non-zero ASCII characters terminated by a single null (0) byte.</summary>
     MS_null_terminated_ASCII_string = 1001479,
 
-    /// <summary>AB SCIEX TOF/TOF nativeID format: jobRun=xsd:nonNegativeInteger spotLabel=xsd:string spectrum=xsd:nonNegativeInteger.</summary>
+    /// <summary>AB SCIEX TOF/TOF nativeID format: Native format defined by jobRun=xsd:nonNegativeInteger spotLabel=xsd:string spectrum=xsd:nonNegativeInteger.</summary>
     MS_AB_SCIEX_TOF_TOF_nativeID_format = 1001480,
 
     /// <summary>AB SCIEX TOF/TOF database: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument database.</summary>
@@ -4759,11 +4761,11 @@ public enum class CVID
     /// <summary>ProteinExtractor:Score: The score calculated by ProteinExtractor.</summary>
     MS_ProteinExtractor_Score = 1001507,
 
-    /// <summary>Agilent MassHunter nativeID format: scanId=xsd:nonNegativeInteger.</summary>
+    /// <summary>Agilent MassHunter nativeID format: Native format defined by scanId=xsd:nonNegativeInteger.</summary>
     MS_Agilent_MassHunter_nativeID_format = 1001508,
 
-    /// <summary>Agilent MassHunter file: A data file found in an Agilent MassHunter directory which contains raw data acquired by an Agilent mass spectrometer.</summary>
-    MS_Agilent_MassHunter_file = 1001509,
+    /// <summary>Agilent MassHunter format: A data file format found in an Agilent MassHunter directory which contains raw data acquired by an Agilent mass spectrometer.</summary>
+    MS_Agilent_MassHunter_format = 1001509,
 
     /// <summary>TSQ Vantage: TSQ Vantage.</summary>
     MS_TSQ_Vantage = 1001510,
@@ -4813,25 +4815,25 @@ public enum class CVID
     /// <summary>precursor neutral loss: This term can describe a neutral loss m/z value that is lost from an ion.</summary>
     MS_precursor_neutral_loss = 1001525,
 
-    /// <summary>spectrum from database integer nativeID format: databasekey=xsd:long.</summary>
+    /// <summary>spectrum from database integer nativeID format: Native format defined by databasekey=xsd:long.</summary>
     MS_spectrum_from_database_integer_nativeID_format = 1001526,
 
     /// <summary>Proteinscape spectra: Spectra from Bruker/Protagen Proteinscape database.</summary>
     MS_Proteinscape_spectra = 1001527,
 
-    /// <summary>Mascot query number: query=xsd:nonNegativeInteger.</summary>
+    /// <summary>Mascot query number: Native format defined by query=xsd:nonNegativeInteger.</summary>
     MS_Mascot_query_number = 1001528,
 
     /// <summary>spectra data details: Child-terms contain information to map the results back to spectra.</summary>
     MS_spectra_data_details = 1001529,
 
-    /// <summary>mzML unique identifier: mzMLid=xsd:IDREF.</summary>
+    /// <summary>mzML unique identifier: Native format defined by mzMLid=xsd:IDREF.</summary>
     MS_mzML_unique_identifier = 1001530,
 
-    /// <summary>spectrum from ProteinScape database nativeID format: databasekey=xsd:long.</summary>
+    /// <summary>spectrum from ProteinScape database nativeID format: Native format defined by databasekey=xsd:long.</summary>
     MS_spectrum_from_ProteinScape_database_nativeID_format = 1001531,
 
-    /// <summary>spectrum from database string nativeID format: databasekey=xsd:string.</summary>
+    /// <summary>spectrum from database string nativeID format: Native format defined by databasekey=xsd:string.</summary>
     MS_spectrum_from_database_string_nativeID_format = 1001532,
 
     /// <summary>Bruker Daltonics esquire series: Bruker Daltonics' esquire series.</summary>
@@ -4900,17 +4902,17 @@ public enum class CVID
     /// <summary>Bruker Daltonics apex series: Bruker Daltonics' apex series.</summary>
     MS_Bruker_Daltonics_apex_series = 1001556,
 
-    /// <summary>Shimadzu Biotech software: Shimadzu Biotech software.</summary>
-    MS_Shimadzu_Biotech_software = 1001557,
+    /// <summary>Shimadzu Corporation software: Shimadzu Corporation software.</summary>
+    MS_Shimadzu_Corporation_software = 1001557,
 
     /// <summary>MALDI Solutions: Shimadzu Biotech software for data acquisition, processing, and analysis.</summary>
     MS_MALDI_Solutions = 1001558,
 
-    /// <summary>AB SCIEX TOF/TOF T2D nativeID format: file=xsd:IDREF.</summary>
+    /// <summary>AB SCIEX TOF/TOF T2D nativeID format: Native format defined by file=xsd:IDREF.</summary>
     MS_AB_SCIEX_TOF_TOF_T2D_nativeID_format = 1001559,
 
-    /// <summary>AB SCIEX TOF/TOF T2D file: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument export format.</summary>
-    MS_AB_SCIEX_TOF_TOF_T2D_file = 1001560,
+    /// <summary>AB SCIEX TOF/TOF T2D format: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument export format.</summary>
+    MS_AB_SCIEX_TOF_TOF_T2D_format = 1001560,
 
     /// <summary>Scaffold: Scaffold analysis software.</summary>
     MS_Scaffold = 1001561,
@@ -4918,17 +4920,17 @@ public enum class CVID
     /// <summary>Scaffold nativeID format: Scaffold native ID format.</summary>
     MS_Scaffold_nativeID_format = 1001562,
 
-    /// <summary>SEQUEST SQT: Source file for this mzIdentML was a SEQUEST SQT.</summary>
-    MS_SEQUEST_SQT = 1001563,
+    /// <summary>SEQUEST SQT format: Source file for this mzIdentML was in SEQUEST SQT format.</summary>
+    MS_SEQUEST_SQT_format = 1001563,
 
-    /// <summary>Discoverer MSF: Source file for this mzIdentML was in Thermo Scientific Discoverer MSF format.</summary>
-    MS_Discoverer_MSF = 1001564,
+    /// <summary>Discoverer MSF format: Source file for this mzIdentML was in Thermo Scientific Discoverer MSF format.</summary>
+    MS_Discoverer_MSF_format = 1001564,
 
-    /// <summary>IdentityE XML: Source file for this mzIdentML was in Waters IdentityE XML format.</summary>
-    MS_IdentityE_XML = 1001565,
+    /// <summary>IdentityE XML format: Source file for this mzIdentML was in Waters IdentityE XML format.</summary>
+    MS_IdentityE_XML_format = 1001565,
 
-    /// <summary>ProteinLynx XML: Source file for this mzIdentML was in Waters ProteinLynx XML format.</summary>
-    MS_ProteinLynx_XML = 1001566,
+    /// <summary>ProteinLynx XML format: Source file for this mzIdentML was in Waters ProteinLynx XML format.</summary>
+    MS_ProteinLynx_XML_format = 1001566,
 
     /// <summary>SpectrumMill directories: Source file for this mzIdentML was in Agilent SpectrumMill directory format.</summary>
     MS_SpectrumMill_directories = 1001567,
@@ -5725,7 +5727,7 @@ public enum class CVID
     /// <summary>mass trace reporting: rectangles: The mass trace of the features of this feature list specifies rectangles. Each mass trace has the syntax (RT_start,MZ_start,RT_end,MZ_end), i.e. opposite corners are given.</summary>
     MS_mass_trace_reporting__rectangles = 1001826,
 
-    /// <summary>mass trace reporting: polygons: The mass trace of the features of this feature list specifies polygons. Each mass trace has the syntax (RT_1,MZ_1,RT_2,MZ_2,...,RT_i,MZ_i,...,RT_n,MZ_n), where the line (RT_n,MZ_n)->(RT_1,MZ_1) is implicite.</summary>
+    /// <summary>mass trace reporting: polygons: The mass trace of the features of this feature list specifies polygons. Each mass trace has the syntax (RT_1, MZ_1, RT_2, MZ_2, ... , RT_i, MZ_i, ... , RT_n, MZ_n), where the line (RT_n, MZ_n)->(RT_1, MZ_1) is implicite.</summary>
     MS_mass_trace_reporting__polygons = 1001827,
 
     /// <summary>feature attribute: Attribute describing a feature.</summary>
@@ -5848,26 +5850,26 @@ public enum class CVID
     /// <summary>Progenesis normalization: Normalization as performed by Progenesis LC-MS.</summary>
     MS_Progenesis_normalization = 1001867,
 
-    /// <summary>q-value for peptides: Peptide identification confidence metric q-value.</summary>
-    MS_q_value_for_peptides = 1001868,
+    /// <summary>distinct peptide-level q-value: Estimation of the q-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_q_value = 1001868,
 
-    /// <summary>q-value for proteins: Protein identification confidence metric q-value.</summary>
-    MS_q_value_for_proteins = 1001869,
+    /// <summary>protein-level q-value: Estimation of the q-value for proteins.</summary>
+    MS_protein_level_q_value = 1001869,
 
-    /// <summary>p-value for peptides: Peptide identification confidence metric p-value.</summary>
-    MS_p_value_for_peptides = 1001870,
+    /// <summary>distinct peptide-level p-value: Estimation of the p-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_p_value = 1001870,
 
-    /// <summary>p-value for proteins: Protein identification confidence metric p-value.</summary>
-    MS_p_value_for_proteins = 1001871,
+    /// <summary>protein-level p-value: Estimation of the p-value for proteins.</summary>
+    MS_protein_level_p_value = 1001871,
 
-    /// <summary>E-value for peptides: Peptide identification confidence metric E-value.</summary>
-    MS_E_value_for_peptides = 1001872,
+    /// <summary>distinct peptide-level e-value: Estimation of the e-value for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_e_value = 1001872,
 
-    /// <summary>E-value for proteins: Protein identification confidence metric E-value.</summary>
-    MS_E_value_for_proteins = 1001873,
+    /// <summary>protein-level e-value: Estimation of the e-value for proteins.</summary>
+    MS_protein_level_e_value = 1001873,
 
     /// <summary>FDRScore: A smoothing of the distribution of q-values calculated for PSMs from individual search engines, such that ordering of result quality is maintained and all FDRScore values are guaranteed to have a value > 0.</summary>
-    MS_FDRScore = 1001874,
+    MS_FDRScore_OBSOLETE = 1001874,
 
     /// <summary>modification motif: The regular expression describing the sequence motif for a modification.</summary>
     MS_modification_motif = 1001875,
@@ -5887,8 +5889,8 @@ public enum class CVID
     /// <summary>in-source collision-induced dissociation: The dissociation of an ion as a result of collisional excitation during ion transfer from an atmospheric pressure ion source and the mass spectrometer vacuum.</summary>
     MS_in_source_collision_induced_dissociation = 1001880,
 
-    /// <summary>mz5 file: mz5 file format, modeled after mzML.</summary>
-    MS_mz5_file = 1001881,
+    /// <summary>mz5 format: mz5 file format, modeled after mzML.</summary>
+    MS_mz5_format = 1001881,
 
     /// <summary>transition validation attribute: Attributes of the quality of a transition that affect its selection as appropriate.</summary>
     MS_transition_validation_attribute = 1001882,
@@ -5926,7 +5928,7 @@ public enum class CVID
     /// <summary>Progenesis:peptide raw abundance: The data type raw abundance for peptide produced by Progenesis LC-MS.</summary>
     MS_Progenesis_peptide_raw_abundance = 1001893,
 
-    /// <summary>Progenesis:confidence score: The data type confidence score  produced by Progenesis LC-MS.</summary>
+    /// <summary>Progenesis:confidence score: The data type confidence score produced by Progenesis LC-MS.</summary>
     MS_Progenesis_confidence_score = 1001894,
 
     /// <summary>Progenesis:peptide count: The data type peptide count produced by Progenesis LC-MS.</summary>
@@ -5941,7 +5943,7 @@ public enum class CVID
     /// <summary>MaxQuant:peptide counts (all): The data type peptide counts (all) produced by MaxQuant.</summary>
     MS_MaxQuant_peptide_counts__all_ = 1001898,
 
-    /// <summary>MaxQuant:peptide counts (razor+unique): The data type peptide counts (razor+unique)  produced by MaxQuant.</summary>
+    /// <summary>MaxQuant:peptide counts (razor+unique): The data type peptide counts (razor+unique) produced by MaxQuant.</summary>
     MS_MaxQuant_peptide_counts__razor_unique_ = 1001899,
 
     /// <summary>MaxQuant:sequence length: The data type sequence length produced by MaxQuant.</summary>
@@ -6496,14 +6498,14 @@ public enum class CVID
     /// <summary>p-value: P-value as result of one of the processing steps described. Specify in the description, which processing step it was.</summary>
     MS_p_value = 1002072,
 
-    /// <summary>mzIdentML: Proteomics Standards Inititative mzIdentML file format. File extension '.mzid'.</summary>
-    MS_mzIdentML = 1002073,
+    /// <summary>mzIdentML format: The mzIdentML format for peptide and protein identification data from the PSI. File extension '.mzid'.</summary>
+    MS_mzIdentML_format = 1002073,
 
     /// <summary>quantification file format: File format containing quantification results.</summary>
     MS_quantification_file_format = 1002074,
 
-    /// <summary>mzQuantML: Proteomics Standards Inititative mzQuantML file format. File extension '.mzq'.</summary>
-    MS_mzQuantML = 1002075,
+    /// <summary>mzQuantML format: The mzQuantML format for quantification data from the PSI. File extension '.mzq'.</summary>
+    MS_mzQuantML_format = 1002075,
 
     /// <summary>PAnalyzer: PAnalyzer software for getting protein evidence categories.</summary>
     MS_PAnalyzer = 1002076,
@@ -6650,7 +6652,7 @@ public enum class CVID
     MS_ProteoSuite = 1002124,
 
     /// <summary>combined FDRScore: FDRScore values specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.</summary>
-    MS_combined_FDRScore = 1002125,
+    MS_combined_FDRScore_OBSOLETE = 1002125,
 
     /// <summary>database UniProtKB: The name of the UniProtKB knowledgebase.</summary>
     MS_database_UniProtKB = 1002126,
@@ -6658,14 +6660,14 @@ public enum class CVID
     /// <summary>identification file attribute: Attribute describing an identification file.</summary>
     MS_identification_file_attribute = 1002127,
 
-    /// <summary>method file format attribute: Attribute describing a method file format.</summary>
-    MS_method_file_format_attribute = 1002128,
+    /// <summary>method file format: Attribute describing a method file format.</summary>
+    MS_method_file_format = 1002128,
 
     /// <summary>ITRAQAnalyzer: Software for iTRAQ workflow. Extracts and normalizes iTRAQ information from an MS experiment.</summary>
     MS_ITRAQAnalyzer = 1002129,
 
-    /// <summary>identification file format attribute: Attribute describing an identification file format.</summary>
-    MS_identification_file_format_attribute = 1002130,
+    /// <summary>identification file format: Attribute describing an identification file format.</summary>
+    MS_identification_file_format = 1002130,
 
     /// <summary>TOPP noise filter: Noise filter component of the TOPP software.</summary>
     MS_TOPP_noise_filter = 1002131,
@@ -7183,8 +7185,8 @@ public enum class CVID
     /// <summary>amaZon Speed: Bruker Daltonics' amaZon ETD: ESI quadrupole ion trap, Nanospray, APCI, APPI, GC-APCI, CaptiveSpray.</summary>
     MS_amaZon_Speed = 1002301,
 
-    /// <summary>Bruker Container file: Bruker Container raw file format.</summary>
-    MS_Bruker_Container_file = 1002302,
+    /// <summary>Bruker Container format: Bruker Container raw file format.</summary>
+    MS_Bruker_Container_format = 1002302,
 
     /// <summary>Bruker Container nativeID format: Native identifier (UUID).</summary>
     MS_Bruker_Container_nativeID_format = 1002303,
@@ -7299,6 +7301,297 @@ public enum class CVID
 
     /// <summary>ProteomeXchange project tag: Tag that can be added to a ProteomeXchange dataset, to enable the grouping of datasets. One tag can be used for indicating that a given dataset is part of a bigger project, like e.g. the Human Proteome Project.</summary>
     MS_ProteomeXchange_project_tag = 1002340,
+
+    /// <summary>second-pass peptide identification: A putative identified peptide found in a second-pass search of protein sequences selected from a first-pass search.</summary>
+    MS_second_pass_peptide_identification = 1002341,
+
+    /// <summary>MZmine: A framework for differential analysis of mass spectrometry data.</summary>
+    MS_MZmine = 1002342,
+
+    /// <summary>ion stability type: Stability type of the ion.</summary>
+    MS_ion_stability_type = 1002343,
+
+    /// <summary>Maltcms: Modular Application Toolkit for Chromatography Mass-Spectrometry is an application framework mainly for developers.</summary>
+    MS_Maltcms = 1002344,
+
+    /// <summary>PSM-level result details: Peptide spectrum match level information.</summary>
+    MS_PSM_level_result_details = 1002345,
+
+    /// <summary>protein group-level result details: Protein group level information.</summary>
+    MS_protein_group_level_result_details = 1002346,
+
+    /// <summary>PSM-level identification confidence metric: Identification confidence metric for a peptide spectrum match.</summary>
+    MS_PSM_level_identification_confidence_metric = 1002347,
+
+    /// <summary>protein group-level identification confidence metric: Identification confidence metric for a protein group.</summary>
+    MS_protein_group_level_identification_confidence_metric = 1002348,
+
+    /// <summary>value greater than zero but less than or equal to one: Positive value range less than or equal to 1.</summary>
+    MS_value_greater_than_zero_but_less_than_or_equal_to_one = 1002349,
+
+    /// <summary>PSM-level global FDR: Estimation of the global false discovery rate of peptide spectrum matches.</summary>
+    MS_PSM_level_global_FDR = 1002350,
+
+    /// <summary>PSM-level local FDR: Estimation of the local false discovery rate of peptide spectrum matches.</summary>
+    MS_PSM_level_local_FDR = 1002351,
+
+    /// <summary>PSM-level p-value: Estimation of the p-value for peptide spectrum matches.</summary>
+    MS_PSM_level_p_value = 1002352,
+
+    /// <summary>PSM-level e-value: Estimation of the e-value for peptide spectrum matches.</summary>
+    MS_PSM_level_e_value = 1002353,
+
+    /// <summary>PSM-level q-value: Estimation of the q-value for peptide spectrum matches.</summary>
+    MS_PSM_level_q_value = 1002354,
+
+    /// <summary>PSM-level FDRScore: FDRScore for peptide spectrum matches.</summary>
+    MS_PSM_level_FDRScore = 1002355,
+
+    /// <summary>PSM-level combined FDRScore: Combined FDRScore for peptide spectrum matches specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.</summary>
+    MS_PSM_level_combined_FDRScore = 1002356,
+
+    /// <summary>PSM-level probability: Probability that the reported peptide ion is truly responsible for some or all of the components of the specified mass spectrum.</summary>
+    MS_PSM_level_probability = 1002357,
+
+    /// <summary>search engine specific score for distinct peptides: Search engine specific distinct peptide score.</summary>
+    MS_search_engine_specific_score_for_distinct_peptides = 1002358,
+
+    /// <summary>distinct peptide-level local FDR: Estimation of the local false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_local_FDR = 1002359,
+
+    /// <summary>distinct peptide-level FDRScore: FDRScore for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_FDRScore = 1002360,
+
+    /// <summary>distinct peptide-level combined FDRScore: Combined FDRScore for peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry) specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given peptide, used for integrating results from these distinct pools.</summary>
+    MS_distinct_peptide_level_combined_FDRScore = 1002361,
+
+    /// <summary>distinct peptide-level probability: Probability that the reported distinct peptide sequence (irrespective of mass modifications) has been correctly identified via the referenced PSMs.</summary>
+    MS_distinct_peptide_level_probability = 1002362,
+
+    /// <summary>search engine specific score for proteins: Search engine specific protein scores.</summary>
+    MS_search_engine_specific_score_for_proteins = 1002363,
+
+    /// <summary>protein-level local FDR: Estimation of the local false discovery rate of proteins.</summary>
+    MS_protein_level_local_FDR = 1002364,
+
+    /// <summary>FDRScore for proteins: FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.</summary>
+    MS_FDRScore_for_proteins = 1002365,
+
+    /// <summary>combined FDRScore for proteins: Combined FDRScore for proteins.</summary>
+    MS_combined_FDRScore_for_proteins = 1002366,
+
+    /// <summary>probability for proteins: Probability that a specific protein sequence has been correctly identified from the PSM and distinct peptide evidence, and based on the available protein sequences presented to the analysis software.</summary>
+    MS_probability_for_proteins = 1002367,
+
+    /// <summary>search engine specific score for protein groups: Search engine specific protein group scores.</summary>
+    MS_search_engine_specific_score_for_protein_groups = 1002368,
+
+    /// <summary>protein group-level global FDR: Estimation of the global false discovery rate of protein groups.</summary>
+    MS_protein_group_level_global_FDR = 1002369,
+
+    /// <summary>protein group-level local FDR: Estimation of the local false discovery rate of protein groups.</summary>
+    MS_protein_group_level_local_FDR = 1002370,
+
+    /// <summary>protein group-level p-value: Estimation of the p-value for protein groups.</summary>
+    MS_protein_group_level_p_value = 1002371,
+
+    /// <summary>protein group-level e-value: Estimation of the e-value for protein groups.</summary>
+    MS_protein_group_level_e_value = 1002372,
+
+    /// <summary>protein group-level q-value: Estimation of the q-value for protein groups.</summary>
+    MS_protein_group_level_q_value = 1002373,
+
+    /// <summary>protein group-level FDRScore: FDRScore for protein groups.</summary>
+    MS_protein_group_level_FDRScore = 1002374,
+
+    /// <summary>protein group-level combined FDRScore: Combined FDRScore for proteins specifically obtained for distinct combinations of single, pairs or triplets of search engines making a given PSM, used for integrating results from these distinct pools.</summary>
+    MS_protein_group_level_combined_FDRScore = 1002375,
+
+    /// <summary>protein group-level probability: Probability that at least one of the members of a group of protein sequences has been correctly identified from the PSM and distinct peptide evidence, and based on the available protein sequences presented to the analysis software.</summary>
+    MS_protein_group_level_probability = 1002376,
+
+    /// <summary>ProteomeDiscoverer:Relaxed Score Threshold: Specifies the threshold value for relaxed scoring.</summary>
+    MS_ProteomeDiscoverer_Relaxed_Score_Threshold = 1002377,
+
+    /// <summary>ProteomeDiscoverer:Strict Score Threshold: Specifies the threshold value for strict scoring.</summary>
+    MS_ProteomeDiscoverer_Strict_Score_Threshold = 1002378,
+
+    /// <summary>ProteomeDiscoverer:Peptide Without Protein Cut Off Score: Cut off score for storing peptides that do not belong to a protein.</summary>
+    MS_ProteomeDiscoverer_Peptide_Without_Protein_Cut_Off_Score = 1002379,
+
+    /// <summary>false localization rate: Estimation of the false localization rate for modification site assignment.</summary>
+    MS_false_localization_rate = 1002380,
+
+    /// <summary>MALDI Solutions LC-MALDI: Software for automated LC-MALDI analysis and reporting.</summary>
+    MS_MALDI_Solutions_LC_MALDI = 1002381,
+
+    /// <summary>Shimadzu MALDI-7090: Shimadzu MALDI-7090: MALDI-TOF-TOF.</summary>
+    MS_Shimadzu_MALDI_7090 = 1002382,
+
+    /// <summary>SCiLS software: SCiLS software for data acquisition and analysis.</summary>
+    MS_SCiLS_software = 1002383,
+
+    /// <summary>SCiLS Lab: SCiLS Lab software.</summary>
+    MS_SCiLS_Lab = 1002384,
+
+    /// <summary>SCiLS Lab format: SCiLS Lab file format.</summary>
+    MS_SCiLS_Lab_format = 1002385,
+
+    /// <summary>preprocessing software: Preprocessing software.</summary>
+    MS_preprocessing_software = 1002386,
+
+    /// <summary>PIA: PIA - Protein Inference Algorithms, a toolbox for protein inference and identification analysis.</summary>
+    MS_PIA = 1002387,
+
+    /// <summary>PIA XML format: A compilation of search engine results in the PIA XML format.</summary>
+    MS_PIA_XML_format = 1002388,
+
+    /// <summary>PIA workflow parameter: A parameter set for a single PIA analysis.</summary>
+    MS_PIA_workflow_parameter = 1002389,
+
+    /// <summary>PIA:FDRScore calculated: Indicates whether the FDR score was calculated for the input file.</summary>
+    MS_PIA_FDRScore_calculated = 1002390,
+
+    /// <summary>PIA:Combined FDRScore calculated: Indicates whether the combined FDR score was calculated for the PIA compilation.</summary>
+    MS_PIA_Combined_FDRScore_calculated = 1002391,
+
+    /// <summary>PIA:PSM sets created: Indicates whether PSM sets were created.</summary>
+    MS_PIA_PSM_sets_created = 1002392,
+
+    /// <summary>PIA:used top identifications for FDR: The number of top identifications per spectrum used for the FDR calculation, 0 means all.</summary>
+    MS_PIA_used_top_identifications_for_FDR = 1002393,
+
+    /// <summary>PIA:protein score: The score given to a protein by any protein inference.</summary>
+    MS_PIA_protein_score = 1002394,
+
+    /// <summary>PIA:protein inference: The used algorithm for the protein inference using PIA.</summary>
+    MS_PIA_protein_inference = 1002395,
+
+    /// <summary>PIA:protein inference filter: A filter used by PIA for the protein inference.</summary>
+    MS_PIA_protein_inference_filter = 1002396,
+
+    /// <summary>PIA:protein inference scoring: The used scoring method for the protein inference using PIA.</summary>
+    MS_PIA_protein_inference_scoring = 1002397,
+
+    /// <summary>PIA:protein inference used score: The used base score for the protein inference using PIA.</summary>
+    MS_PIA_protein_inference_used_score = 1002398,
+
+    /// <summary>PIA:protein inference used PSMs: The method to determine the PSMs used for scoring by the protein inference.</summary>
+    MS_PIA_protein_inference_used_PSMs = 1002399,
+
+    /// <summary>PIA:filter: A filter used for the report generation.</summary>
+    MS_PIA_filter = 1002400,
+
+    /// <summary>leading protein: At least one protein within each group should be annotated as a leading protein to indicate it has the strongest evidence, or approximately equal evidence as other group members.</summary>
+    MS_leading_protein = 1002401,
+
+    /// <summary>non-leading protein: Zero to many proteins within each group should be annotated as non-leading to indicate that other proteins have stronger evidence.</summary>
+    MS_non_leading_protein = 1002402,
+
+    /// <summary>group representative: An arbitrary and optional flag applied to exactly one protein per group to indicate it can serve as the representative of the group, amongst leading proteins, in effect serving as a tiebreaker for approaches that require exactly one group representative.</summary>
+    MS_group_representative = 1002403,
+
+    /// <summary>count of identified proteins: The number of proteins that have been identified, which must match the number of groups that pass the threshold in the file.</summary>
+    MS_count_of_identified_proteins = 1002404,
+
+    /// <summary>protein cluster details: Details describing a protein cluster.</summary>
+    MS_protein_cluster_details = 1002405,
+
+    /// <summary>count of identified clusters: The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file.</summary>
+    MS_count_of_identified_clusters = 1002406,
+
+    /// <summary>cluster identifier: An identifier applied to protein groups to indicate that they are linked by shared peptides.</summary>
+    MS_cluster_identifier = 1002407,
+
+    /// <summary>number of distinct protein sequences: The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file.</summary>
+    MS_number_of_distinct_protein_sequences = 1002408,
+
+    /// <summary>marginally distinguished protein: Assigned to a non-leading protein that has some independent evidence to support its presence relative to the leading protein(s), e.g. the protein may have a unique peptide but not sufficient to be promoted as a leading protein of another group.</summary>
+    MS_marginally_distinguished_protein = 1002409,
+
+    /// <summary>Anubis: Anubis software for selected reaction monitoring data.</summary>
+    MS_Anubis = 1002410,
+
+    /// <summary>TraML format: The TraML format for transitions in SRM from the PSI. File extension '.TraML'.</summary>
+    MS_TraML_format = 1002411,
+
+    /// <summary>total XIC area: Summed area of all the extracted ion chromatogram for the peptide (e.g. of all the transitions in SRM).</summary>
+    MS_total_XIC_area = 1002412,
+
+    /// <summary>product background: The background area for the quantified transition.</summary>
+    MS_product_background = 1002413,
+
+    /// <summary>postprocessing software: Postprocessing software.</summary>
+    MS_postprocessing_software = 1002414,
+
+    /// <summary>protein group passes threshold: A Boolean attribute to determine whether the protein group has passed the threshold indicated in the file.</summary>
+    MS_protein_group_passes_threshold = 1002415,
+
+    /// <summary>Orbitrap Fusion: Thermo Scientific Orbitrap Fusion.</summary>
+    MS_Orbitrap_Fusion = 1002416,
+
+    /// <summary>Orbitrap Fusion ETD: Thermo Scientific Orbitrap Fusion with ETD.</summary>
+    MS_Orbitrap_Fusion_ETD = 1002417,
+
+    /// <summary>TSQ Quantiva: Thermo Scientific TSQ Quantiva MS.</summary>
+    MS_TSQ_Quantiva = 1002418,
+
+    /// <summary>TSQ Endura: Thermo Scientific TSQ Endura MS.</summary>
+    MS_TSQ_Endura = 1002419,
+
+    /// <summary>PASSEL experiment URI: URI that allows access to a PASSEL experiment.</summary>
+    MS_PASSEL_experiment_URI = 1002420,
+
+    /// <summary>Paragon input parameter: Search engine input parameters specific to Paragon.</summary>
+    MS_Paragon_input_parameter = 1002421,
+
+    /// <summary>Paragon: sample type: The Paragon method setting indicating the type of sample at the high level, generally meaning the type of quantitation labeling or lack thereof. 'Identification' is indicated for samples without any labels for quantitation.</summary>
+    MS_Paragon__sample_type = 1002422,
+
+    /// <summary>Paragon: cysteine alkylation: The Paragon method setting indicating the actual cysteine alkylation agent; 'None' is indicated if there was no cysteine alkylation.</summary>
+    MS_Paragon__cysteine_alkylation = 1002423,
+
+    /// <summary>Paragon: instrument setting: The Paragon method setting (translating to a large number of lower level settings) indicating the instrument used or a category of instrument.</summary>
+    MS_Paragon__instrument_setting = 1002424,
+
+    /// <summary>Paragon: search effort: The Paragon method setting that controls the two major modes of search effort of the Paragon algorithm: the Rapid mode uses a conventional database search, while the Thorough mode uses a hybrid search, starting with the same approach as the Rapid mode but then follows it with a separate tag-based approach enabling a more extensive search.</summary>
+    MS_Paragon__search_effort = 1002425,
+
+    /// <summary>Paragon: ID focus: A Paragon method setting that allows the inclusion of large sets of features such as biological modification or substitutions.</summary>
+    MS_Paragon__ID_focus = 1002426,
+
+    /// <summary>Paragon: FDR analysis: The Paragon method setting that controls whether FDR analysis is conducted.</summary>
+    MS_Paragon__FDR_analysis = 1002427,
+
+    /// <summary>Paragon: quantitation: The Paragon method setting that controls whether quantitation analysis is conducted.</summary>
+    MS_Paragon__quantitation = 1002428,
+
+    /// <summary>Paragon: background correction: The Paragon method setting that controls whether the 'Background Correction' analysis is conducted; this processing estimates a correction to the attenuation in extremity ratios that can occur in isobaric quantatitation workflows on complex samples.</summary>
+    MS_Paragon__background_correction = 1002429,
+
+    /// <summary>Paragon: bias correction: The Paragon method setting that controls whether 'Bias Correction' is invoked in quantitation analysis; this correction is a normalization to set the central tendency of protein ratios to unity.</summary>
+    MS_Paragon__bias_correction = 1002430,
+
+    /// <summary>Paragon: channel to use as denominator in ratios: The Paragon method setting that controls which label channel is used as the denominator in calculating relative expression ratios.</summary>
+    MS_Paragon__channel_to_use_as_denominator_in_ratios = 1002431,
+
+    /// <summary>search engine specific input metadata: Search engine specific metadata that are not user-controlled settings.</summary>
+    MS_search_engine_specific_input_metadata = 1002432,
+
+    /// <summary>Paragon: modified data dictionary or parameter translation: This metric detects if any changes have been made to the originally installed key control files for the software; if no changes have been made, then the software version and settings are sufficient to enable exact reproduction; if changes have been made, then the modified ParameterTranslation- and ProteinPilot DataDictionary-XML files much also be provided in order to exactly reproduce a result.</summary>
+    MS_Paragon__modified_data_dictionary_or_parameter_translation = 1002433,
+
+    /// <summary>number of spectra searched: Number of spectra in a search.</summary>
+    MS_number_of_spectra_searched = 1002434,
+
+    /// <summary>data processing start time: The time that a data processing action was started.</summary>
+    MS_data_processing_start_time = 1002435,
+
+    /// <summary>Paragon: digestion: The Paragon method setting indicating the actual digestion agent - unlike other search tools, this setting does not include options that control partial specificity like 'semitrypsin'; if trypsin is used, trypsin is set, and partially conforming peptides are found in the Thorough mode of search; 'None' should be indicated only if there was really no digestion done.</summary>
+    MS_Paragon__digestion = 1002436,
+
+    /// <summary>number of decoy sequences: The number of decoy sequences, if the concatenated target-decoy approach is used.</summary>
+    MS_number_of_decoy_sequences = 1002437,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 100000000,
@@ -10129,9 +10422,6 @@ public enum class CVID
     /// <summary>DNCB_hapten: Chemical reaction with 2,4-dinitro-1-chloro benzene (DNCB).</summary>
     UNIMOD_DNCB_hapten = 100001331,
 
-    /// <summary>Myristoyl+Delta:H(18)C(12)N(6)O(4): Myristic acid analogue.</summary>
-    UNIMOD_Myristoyl_Delta_H_18_C_12_N_6_O_4_ = 100001333,
-
     /// <summary>Biotin:Thermo-21911: Biotin-PEG11-maleimide.</summary>
     UNIMOD_Biotin_Thermo_21911 = 100001340,
 
@@ -10224,6 +10514,36 @@ public enum class CVID
 
     /// <summary>Hydroxamic_acid: Conversion of carboxylic acid to hydroxamic acid.</summary>
     UNIMOD_Hydroxamic_acid = 100001385,
+
+    /// <summary>3-phosphoglyceryl: 3-phosphoglyceryl.</summary>
+    UNIMOD_3_phosphoglyceryl = 100001387,
+
+    /// <summary>HN2_mustard: Modification by hydroxylated mechloroethamine (HN-2).</summary>
+    UNIMOD_HN2_mustard = 100001388,
+
+    /// <summary>HN3_mustard: Modification by hydroxylated tris-(2-chloroethyl)amine (HN-3).</summary>
+    UNIMOD_HN3_mustard = 100001389,
+
+    /// <summary>Oxidation+NEM: N-ethylmaleimide on cysteine sulfenic acid.</summary>
+    UNIMOD_Oxidation_NEM = 100001390,
+
+    /// <summary>NHS-fluorescein: Fluorescein-hexanoate-NHS hydrolysis.</summary>
+    UNIMOD_NHS_fluorescein = 100001391,
+
+    /// <summary>DiART6plex: Representative mass and accurate mass for 114.</summary>
+    UNIMOD_DiART6plex = 100001392,
+
+    /// <summary>DiART6plex115: Accurate mass for DiART6plex 115.</summary>
+    UNIMOD_DiART6plex115 = 100001393,
+
+    /// <summary>DiART6plex116/119: Accurate mass for DiART6plex 116 and 119.</summary>
+    UNIMOD_DiART6plex116_119 = 100001394,
+
+    /// <summary>DiART6plex117: Accurate mass for DiART6plex 117.</summary>
+    UNIMOD_DiART6plex117 = 100001395,
+
+    /// <summary>DiART6plex118: Accurate mass for DiART6plex 118.</summary>
+    UNIMOD_DiART6plex118 = 100001396,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 200000000,

@@ -44,7 +44,7 @@ void initializeTinyMS1(MSData& msd)
 
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->set(MS_scan_number_only_nativeID_format);
-    sourceFile->set(MS_MS2_file);
+    sourceFile->set(MS_MS2_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
@@ -91,7 +91,7 @@ void initializeTinyMS2(MSData& msd)
 
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->set(MS_scan_number_only_nativeID_format);
-    sourceFile->set(MS_MS2_file);
+    sourceFile->set(MS_MS2_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);

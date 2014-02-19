@@ -408,7 +408,7 @@ public:
         sourceFile->location = p.getFILENAME();
         if (p.getFORMAT() == "Mascot generic")
         {
-            sourceFile->fileFormat = MS_Mascot_MGF_file;
+            sourceFile->fileFormat = MS_Mascot_MGF_format;
         }
         mzid.dataCollection.inputs.sourceFile.push_back(sourceFile); 
     }

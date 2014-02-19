@@ -60,7 +60,7 @@ void test(bool indexed)
   
     MSData dummy;
     dummy.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("tiny1.yep")));
-    dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
+    dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_format);
     dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
     dummy.softwarePtrs.push_back(SoftwarePtr(new Software("pwiz")));
     dummy.softwarePtrs.back()->set(MS_ProteoWizard_software);

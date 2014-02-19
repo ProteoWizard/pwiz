@@ -183,19 +183,19 @@ PWIZ_API_DECL CVID identifyFileFormat(const ReaderPtr& reader, const std::string
     {
         string head = read_file_header(filepath, 512);
         string type = reader->identify(filepath, head);
-        if (type == "mzML") return MS_mzML_file;
-        else if (type == "mzXML") return MS_ISB_mzXML_file;
-        else if (type == "MZ5") return MS_mz5_file;
-        else if (type == "Mascot Generic") return MS_Mascot_MGF_file;
-        else if (type == "MSn") return MS_MS2_file;
-        else if (type == "ABSciex WIFF") return MS_ABI_WIFF_file;
-        else if (type == "ABSciex T2D") return MS_AB_SCIEX_TOF_TOF_T2D_file;
-        else if (type == "Agilent MassHunter") return MS_Agilent_MassHunter_file;
-        else if (type == "Thermo RAW") return MS_Thermo_RAW_file;
-        else if (type == "Waters RAW") return MS_Waters_raw_file;
-        else if (type == "Bruker FID") return MS_Bruker_FID_file;
-        else if (type == "Bruker YEP") return MS_Bruker_Agilent_YEP_file;
-        else if (type == "Bruker BAF") return MS_Bruker_BAF_file;
+        if (type == "mzML") return MS_mzML_format;
+        else if (type == "mzXML") return MS_ISB_mzXML_format;
+        else if (type == "MZ5") return MS_mz5_format;
+        else if (type == "Mascot Generic") return MS_Mascot_MGF_format;
+        else if (type == "MSn") return MS_MS2_format;
+        else if (type == "ABSciex WIFF") return MS_ABI_WIFF_format;
+        else if (type == "ABSciex T2D") return MS_AB_SCIEX_TOF_TOF_T2D_format;
+        else if (type == "Agilent MassHunter") return MS_Agilent_MassHunter_format;
+        else if (type == "Thermo RAW") return MS_Thermo_RAW_format;
+        else if (type == "Waters RAW") return MS_Waters_raw_format;
+        else if (type == "Bruker FID") return MS_Bruker_FID_format;
+        else if (type == "Bruker YEP") return MS_Bruker_Agilent_YEP_format;
+        else if (type == "Bruker BAF") return MS_Bruker_BAF_format;
     }
     catch (exception&)
     {

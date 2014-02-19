@@ -510,7 +510,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
-                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_file);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_format);
             }
             break;
 
@@ -522,7 +522,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.yep";
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
-                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_format);
                 msd_.run.defaultSourceFilePtr = msd_.fileDescription.sourceFilePtrs.back();
             }
             break;
@@ -535,7 +535,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.baf";
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
-                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_format);
                 msd_.run.defaultSourceFilePtr = msd_.fileDescription.sourceFilePtrs.back();
             }
             break;
@@ -548,7 +548,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.baf";
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_nativeID_format);
-                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_file);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_BAF_format);
                 msd_.run.defaultSourceFilePtr = msd_.fileDescription.sourceFilePtrs.back();
             }
 
@@ -561,7 +561,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
-                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_format);
             }
             break;
 
@@ -575,7 +575,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
-                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_file);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_format);
                 msd_.run.defaultSourceFilePtr = msd_.fileDescription.sourceFilePtrs.back();
             }
             break;

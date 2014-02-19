@@ -352,7 +352,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
     sd->id = "SD";
     sd->name = "tiny";
     sd->location = "file:///data/is/here/tiny.mzML";
-    sd->fileFormat.cvid = MS_mzML_file;
+    sd->fileFormat.cvid = MS_mzML_format;
     sd->spectrumIDFormat.cvid = MS_Thermo_nativeID_format;
     mzid.dataCollection.inputs.spectraData.push_back(sd);
 
@@ -361,7 +361,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
     /*SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = "SF_1";
     sourceFile->location = "file:///../data/Mascot_mzml_example.dat";
-    sourceFile->fileFormat.set(MS_Mascot_DAT_file);
+    sourceFile->fileFormat.set(MS_Mascot_DAT_format);
     mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);*/
 
     SpectrumIdentificationListPtr sil(new SpectrumIdentificationList("SIL"));

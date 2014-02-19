@@ -126,7 +126,7 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
     sourceFile->name = BFS_STRING(p.leaf());
     sourceFile->location = "file:///" + BFS_COMPLETE(p.branch_path()).string();
     sourceFile->set(MS_Thermo_nativeID_format);
-    sourceFile->set(MS_Thermo_RAW_file);
+    sourceFile->set(MS_Thermo_RAW_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.run.defaultSourceFilePtr = sourceFile;

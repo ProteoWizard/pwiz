@@ -45,7 +45,7 @@ void initializeTinyMGF(MSData& msd)
 
     //SourceFilePtr sourceFile(new SourceFile);
     //sourceFile->set(MS_multiple_peak_list_nativeID_format);
-    // TODO: sourceFile->set(MS_Matrix_Science_MGF_file);
+    // TODO: sourceFile->set(MS_Matrix_Science_MGF_format);
     //msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);

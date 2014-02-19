@@ -311,7 +311,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsABFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_ABI_WIFF_file)); }
+            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_ABI_WIFF_format)); }
         }
 
         public bool IsMzWiffXml
@@ -321,17 +321,17 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsAgilentFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Agilent_MassHunter_file)); }
+            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Agilent_MassHunter_format)); }
         }
 
         public bool IsThermoFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Thermo_RAW_file)); }
+            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Thermo_RAW_format)); }
         }
 
         public bool IsWatersFile
         {
-            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_file)); }
+            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
         }
 
         public bool IsMsx

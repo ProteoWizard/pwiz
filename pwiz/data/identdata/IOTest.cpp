@@ -538,7 +538,7 @@ void testSpectraData()
 
     a.location = "here";
     a.externalFormatDocumentation.push_back("there");
-    a.fileFormat.cvid = MS_mzML_file;
+    a.fileFormat.cvid = MS_mzML_format;
     
     testObject(a);
 }
@@ -570,9 +570,9 @@ void testSourceFile()
     a.id = "id";
 
     a.location = "there";
-    a.fileFormat.cvid = MS_mzML_file;
+    a.fileFormat.cvid = MS_mzML_format;
     a.externalFormatDocumentation.push_back("somewhere else");
-    a.set(MS_Mascot_DAT_file);
+    a.set(MS_Mascot_DAT_format);
     
     testObject(a);
 }

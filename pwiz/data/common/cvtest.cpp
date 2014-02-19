@@ -43,8 +43,8 @@ void test()
         *os_ << "name: " << cvTermInfo(MS_sample_number).name << endl
              << "def: " << cvTermInfo(MS_sample_number).def << "\n\n";
 
-        *os_ << "name: " << cvTermInfo(MS_polarity).name << endl
-             << "def: " << cvTermInfo(MS_polarity).def << endl; 
+        *os_ << "name: " << cvTermInfo(MS_scan_polarity).name << endl
+             << "def: " << cvTermInfo(MS_scan_polarity).def << endl;
     }
 
     // some simple tests

@@ -70,7 +70,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
 {    
     ContactPtr contactPtr(new Contact("JQP"));
     contactPtr->set(MS_contact_name, "John Q. Public");
-    contactPtr->set(MS_contact_organization, "Department of Redundancy Department");
+    contactPtr->set(MS_contact_affiliation, "Department of Redundancy Department");
     contactPtr->set(MS_contact_address, "1600 Pennsylvania Ave.");
     td.contactPtrs.push_back(contactPtr);
 

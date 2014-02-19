@@ -214,11 +214,11 @@ void testIdentifyFileFormat()
     ReaderPtr readers(new ExtendedReaderList);
 
     {ofstream fs("testSpectraDataFile.mzedML"); fs << "<?xml?><mzML>";}
-    unit_assert_operator_equal(MS_mzML_file, identifyFileFormat(readers, "testSpectraDataFile.mzedML"));
+    unit_assert_operator_equal(MS_mzML_format, identifyFileFormat(readers, "testSpectraDataFile.mzedML"));
     bfs::remove("testSpectraDataFile.mzedML");
 
     {ofstream fs("testSpectraDataFile.mzedXML"); fs << "<?xml?><mzXML>";}
-    unit_assert_operator_equal(MS_ISB_mzXML_file, identifyFileFormat(readers, "testSpectraDataFile.mzedXML"));
+    unit_assert_operator_equal(MS_ISB_mzXML_format, identifyFileFormat(readers, "testSpectraDataFile.mzedXML"));
     bfs::remove("testSpectraDataFile.mzedXML");
 
     
@@ -229,25 +229,25 @@ void testIdentifyFileFormat()
         config.format = MSDataFile::Format_MZ5;
 #ifndef WITHOUT_MZ5
         MSDataFile::write(msd, "testSpectraDataFile.Mz5", config);
-        unit_assert_operator_equal(MS_mz5_file, identifyFileFormat(readers, "testSpectraDataFile.Mz5"));
+        unit_assert_operator_equal(MS_mz5_format, identifyFileFormat(readers, "testSpectraDataFile.Mz5"));
 #endif
     }
     bfs::remove("testSpectraDataFile.Mz5");
 
     {ofstream fs("testSpectraDataFile.mGF"); fs << "MGF";}
-    unit_assert_operator_equal(MS_Mascot_MGF_file, identifyFileFormat(readers, "testSpectraDataFile.mGF"));
+    unit_assert_operator_equal(MS_Mascot_MGF_format, identifyFileFormat(readers, "testSpectraDataFile.mGF"));
     bfs::remove("testSpectraDataFile.mGF");
     
     {ofstream fs("testSpectraDataFile.Ms2"); fs << "MS2";}
-    unit_assert_operator_equal(MS_MS2_file, identifyFileFormat(readers, "testSpectraDataFile.Ms2"));
+    unit_assert_operator_equal(MS_MS2_format, identifyFileFormat(readers, "testSpectraDataFile.Ms2"));
     bfs::remove("testSpectraDataFile.Ms2");
     
     {ofstream fs("testSpectraDataFile.wiFF"); fs << "WIFF";}
-    unit_assert_operator_equal(MS_ABI_WIFF_file, identifyFileFormat(readers, "testSpectraDataFile.wiFF"));
+    unit_assert_operator_equal(MS_ABI_WIFF_format, identifyFileFormat(readers, "testSpectraDataFile.wiFF"));
     bfs::remove("testSpectraDataFile.wiFF");
 
     {ofstream fs("_FUNC42.DAT"); fs << "Life, the Universe, and Everything";}
-    unit_assert_operator_equal(MS_Waters_raw_file, identifyFileFormat(readers, "."));
+    unit_assert_operator_equal(MS_Waters_raw_format, identifyFileFormat(readers, "."));
     bfs::remove("_FUNC42.DAT");
 }
 

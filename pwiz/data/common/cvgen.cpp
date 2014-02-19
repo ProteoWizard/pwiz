@@ -142,7 +142,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
-		string filename = bfs::path(obo->filename).filename();
+        string filename = bfs::path(obo->filename).filename().string();
         os << "// [" << filename << "]\n";
         string fileDefine = bal::to_upper_copy(filename);
         transform(fileDefine.begin(), fileDefine.end(), fileDefine.begin(), toAllowableChar);

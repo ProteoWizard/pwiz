@@ -90,7 +90,7 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         sourceFile->name = BFS_STRING(sourcePath.leaf());
         sourceFile->location = "file://" + BFS_COMPLETE(sourcePath.branch_path()).string();
         sourceFile->set(MS_Waters_nativeID_format);
-        sourceFile->set(MS_Waters_raw_file);
+        sourceFile->set(MS_Waters_raw_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 

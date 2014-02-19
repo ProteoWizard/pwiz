@@ -977,38 +977,38 @@ bool fileExtension2Type(const string& file,
                         CVID& spectrumIDFormat)
 {
     // TODO map the following file formats
-    //{MS_Waters_raw_file, MS_mass_spectrometer_file_format},
+    //{MS_Waters_raw_format, MS_mass_spectrometer_file_format},
     //{MS_mass_spectrometer_file_format, MS_file_format},
-    //{MS_Thermo_RAW_file, MS_mass_spectrometer_file_format},
-    //{MS_PSI_mzData_file, MS_mass_spectrometer_file_format},
-    //{MS_Bruker_Agilent_YEP_file, MS_mass_spectrometer_file_format},
-    //{MS_ProteinLynx_Global_Server_mass_spectrum_XML_file, MS_mass_spectrometer_file_format},
-    //{MS_parameter_file, MS_mass_spectrometer_file_format},
-    //{MS_Bruker_U2_file, MS_mass_spectrometer_file_format},
-    //{MS_Sciex_API_III_file, MS_mass_spectrometer_file_format},
-    //{MS_Bruker_XML_file, MS_mass_spectrometer_file_format},
-    //{MS_text_file, MS_mass_spectrometer_file_format},
+    //{MS_Thermo_RAW_format, MS_mass_spectrometer_file_format},
+    //{MS_PSI_mzData_format, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_Agilent_YEP_format, MS_mass_spectrometer_file_format},
+    //{MS_ProteinLynx_Global_Server_mass_spectrum_XML_format, MS_mass_spectrometer_file_format},
+    //{MS_parameter_format, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_U2_format, MS_mass_spectrometer_file_format},
+    //{MS_Sciex_API_III_format, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_XML_format, MS_mass_spectrometer_file_format},
+    //{MS_text_format, MS_mass_spectrometer_file_format},
     //{MS_Phenyx_XML_format, MS_mass_spectrometer_file_format},
     //{MS_AB_SCIEX_TOF_TOF_database, MS_mass_spectrometer_file_format},
-    //{MS_Agilent_MassHunter_file, MS_mass_spectrometer_file_format},
+    //{MS_Agilent_MassHunter_format, MS_mass_spectrometer_file_format},
     //{MS_Proteinscape_spectra, MS_mass_spectrometer_file_format},
-    //{MS_AB_SCIEX_TOF_TOF_T2D_file, MS_mass_spectrometer_file_format},
+    //{MS_AB_SCIEX_TOF_TOF_T2D_format, MS_mass_spectrometer_file_format},
 
     static fileInfo pairs[] = {
-        fileInfo(".mzml", MS_mzML_file, MS_mzML_unique_identifier),
-        fileInfo(".mzxml", MS_ISB_mzXML_file, MS_scan_number_only_nativeID_format),
-        fileInfo(".pkl", MS_Micromass_PKL_file, MS_no_nativeID_format),
-        fileInfo(".pks", MS_PerSeptive_PKS_file, MS_mass_spectrometer_file_format),
-        fileInfo(".dta", MS_DTA_file, MS_mass_spectrometer_file_format),
-        fileInfo(".srf", MS_Bioworks_SRF_file, MS_mass_spectrometer_file_format),
-        fileInfo(".baf", MS_Bruker_BAF_file, MS_mass_spectrometer_file_format),
-        fileInfo(".fid", MS_Bruker_FID_file, MS_mass_spectrometer_file_format),
-        fileInfo(".mgf", MS_Mascot_MGF_file, MS_mass_spectrometer_file_format),
-        fileInfo(".wiff", MS_ABI_WIFF_file, MS_mass_spectrometer_file_format),
+        fileInfo(".mzml", MS_mzML_format, MS_mzML_unique_identifier),
+        fileInfo(".mzxml", MS_ISB_mzXML_format, MS_scan_number_only_nativeID_format),
+        fileInfo(".pkl", MS_Micromass_PKL_format, MS_no_nativeID_format),
+        fileInfo(".pks", MS_PerSeptive_PKS_format, MS_mass_spectrometer_file_format),
+        fileInfo(".dta", MS_DTA_format, MS_mass_spectrometer_file_format),
+        fileInfo(".srf", MS_Bioworks_SRF_format, MS_mass_spectrometer_file_format),
+        fileInfo(".baf", MS_Bruker_BAF_format, MS_mass_spectrometer_file_format),
+        fileInfo(".fid", MS_Bruker_FID_format, MS_mass_spectrometer_file_format),
+        fileInfo(".mgf", MS_Mascot_MGF_format, MS_mass_spectrometer_file_format),
+        fileInfo(".wiff", MS_ABI_WIFF_format, MS_mass_spectrometer_file_format),
         //fileInfo("", CVID_Unknown,CVID_Unknown)
 
         // Need to find a differentiator between thermo & waters
-        //fileInfo(".raw", MS_Thermo_RAW_file, MS_mass_spectrometer_file_format),
+        //fileInfo(".raw", MS_Thermo_RAW_format, MS_mass_spectrometer_file_format),
     };
 
     bool found = false;
@@ -1215,7 +1215,7 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
     SourceFilePtr sourceFile(new SourceFile());
     sourceFile->id = "SF_1";
     sourceFile->location = summary->baseName;
-    sourceFile->fileFormat.set(MS_ISB_mzXML_file);
+    sourceFile->fileFormat.set(MS_ISB_mzXML_format);
 
     result->dataCollection.inputs.sourceFile.push_back(sourceFile);
     */
@@ -1275,11 +1275,11 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
     /*
     if (iends_with(summary->baseName, ".dat") &&
         iequals(summary->searchEngine, "Mascot"))
-        searchDatabase->fileFormat.set(MS_Mascot_DAT_file);
+        searchDatabase->fileFormat.set(MS_Mascot_DAT_format);
     else if (iequals(summary->searchEngine, "Sequest"))
-        searchDatabase->fileFormat.set(MS_SEQUEST_out_file);
+        searchDatabase->fileFormat.set(MS_SEQUEST_out_format);
     else if (iequals(summary->searchEngine, "X_Tandem"))
-        searchDatabase->fileFormat.set(MS_X_Tandem_xml_file);
+        searchDatabase->fileFormat.set(MS_X_Tandem_xml_format);
     */
     
     mzid->dataCollection.inputs.searchDatabase.push_back(searchDatabase);

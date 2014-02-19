@@ -414,15 +414,15 @@ class HandlerScan : public SAXParser::Handler
             } else if (scanType == "crm")
             {
                 spectrum_.set(MS_CRM_spectrum);
-                scan.set(MS_CRM);
+                scan.set(MS_CRM_OBSOLETE);
             } else if (scanType == "q1")
             {
                 spectrum_.set(MS_precursor_ion_spectrum);
-                scan.set(MS_precursor_ion_scan);
+                scan.set(MS_precursor_ion_spectrum);
             } else if (scanType == "q3")
             {
                 spectrum_.set(MS_product_ion_spectrum);
-                scan.set(MS_product_ion_scan);
+                scan.set(MS_product_ion_spectrum);
             }
 
             // TODO: make this more robust

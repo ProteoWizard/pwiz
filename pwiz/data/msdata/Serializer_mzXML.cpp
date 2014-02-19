@@ -129,14 +129,14 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
     switch (sourceFileType)
     {
         // location="file://path/to" name="source.RAW"
-        case MS_Thermo_RAW_file:
+        case MS_Thermo_RAW_format:
             if (nameExtension == ".raw")
                 return bfs::basename(sf.name);
             return "";
 
         // sane: location="file://path/to/source.raw" name="_FUNC001.DAT"
         // insane: location="file://path/to" name="source.raw"
-        case MS_Waters_raw_file:
+        case MS_Waters_raw_format:
             if (nameExtension == ".dat" && locationExtension == ".raw")
                 return bfs::basename(bfs::path(sf.location).leaf());
             else if (nameExtension == ".raw")
@@ -144,19 +144,19 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
             return "";
 
         // location="file://path/to/source.d" name="Analysis.yep"
-        case MS_Bruker_Agilent_YEP_file:
+        case MS_Bruker_Agilent_YEP_format:
             if (nameExtension == ".yep" && locationExtension == ".d")
                 return bfs::basename(bfs::path(sf.location).leaf());
             return "";
             
         // location="file://path/to/source.d" name="Analysis.baf"
-        case MS_Bruker_BAF_file:
+        case MS_Bruker_BAF_format:
             if (nameExtension == ".baf" && locationExtension == ".d")
                 return bfs::basename(bfs::path(sf.location).leaf());
             return "";
 
         // location="file://path/to/source.d/AcqData" name="msprofile.bin"
-        case MS_Agilent_MassHunter_file:
+        case MS_Agilent_MassHunter_format:
             if (nameExtension == ".bin" && bfs::path(sf.location).leaf() == "AcqData")
                 return bfs::basename(bfs::path(sf.location).parent_path().leaf());
             return "";
@@ -164,7 +164,7 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // location="file://path/to" name="source.mzXML"
         // location="file://path/to" name="source.mz.xml"
         // location="file://path/to" name="source.d" (ambiguous)
-        case MS_ISB_mzXML_file:
+        case MS_ISB_mzXML_format:
             if (nameExtension == ".mzxml" || nameExtension == ".d")
                 return bfs::basename(sf.name);
             else if (bal::iends_with(sf.name, ".mz.xml"))
@@ -173,33 +173,33 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
 
         // location="file://path/to" name="source.mzData"
         // location="file://path/to" name="source.mz.data" ???
-        case MS_PSI_mzData_file:
+        case MS_PSI_mzData_format:
             if (nameExtension == ".mzdata")
                 return bfs::basename(sf.name);
             return "";
 
         // location="file://path/to" name="source.mgf"
-        case MS_Mascot_MGF_file:
+        case MS_Mascot_MGF_format:
             if (nameExtension == ".mgf")
                 return bfs::basename(sf.name);
             return "";
 
         // location="file://path/to" name="source.wiff"
-        case MS_ABI_WIFF_file:
+        case MS_ABI_WIFF_format:
             if (nameExtension == ".wiff")
                 return bfs::basename(sf.name);
             return "";
 
         // location="file://path/to/source/maldi-spot/1/1SRef" name="fid"
         // location="file://path/to/source/1/1SRef" name="fid"
-        case MS_Bruker_FID_file:
+        case MS_Bruker_FID_format:
             // need the full list of FIDs to create a run ID (from the common prefix)
             return bfs::path(sf.location).parent_path().parent_path().string();
 
         // location="file://path/to/source" name="spectrum-id.t2d"
         // location="file://path/to/source/MS" name="spectrum-id.t2d"
         // location="file://path/to/source/MSMS" name="spectrum-id.t2d"
-        case MS_AB_SCIEX_TOF_TOF_T2D_file:
+        case MS_AB_SCIEX_TOF_TOF_T2D_format:
             // need the full list of T2Ds to create a run ID (from the common prefix)
             return sf.location;
 
@@ -393,7 +393,8 @@ struct IndexEntry
 string getPolarity(const Spectrum& spectrum)
 {
     string result = "";
-    CVParam paramPolarity = spectrum.cvParamChild(MS_polarity);
+    CVParam paramPolarity = spectrum.cvParamChild(MS_scan_polarity);
+    if (paramPolarity.empty()) paramPolarity = spectrum.cvParamChild(MS_polarity_OBSOLETE);
     if (paramPolarity.cvid == MS_positive_scan) result = "+";
     if (paramPolarity.cvid == MS_negative_scan) result = "-";
     return result;
@@ -825,33 +826,33 @@ CVID translate_parentFilenameToSourceFileType(const string& name)
         // (Mass)Wolf-MRM or other non-compliant Waters converters might
         // conflict with this case, i.e. the extension could be from a Waters .raw directory
         // instead of a Thermo RAW file; these aberrant cases will be fixed globally by fillInMetadata()
-        return MS_Thermo_RAW_file;
+        return MS_Thermo_RAW_format;
     }
-    else if (fileExtension == ".dat")                           return MS_Waters_raw_file;
-    else if (fileExtension == ".wiff")                          return MS_ABI_WIFF_file;
-    else if (fileExtension == ".yep")                           return MS_Bruker_Agilent_YEP_file;
-    else if (fileExtension == ".baf")                           return MS_Bruker_BAF_file;
-    else if (name == "fid")                                     return MS_Bruker_FID_file;
-    else if (bal::iequals(name, "msprofile.bin"))               return MS_Agilent_MassHunter_file;
-    else if (bal::iequals(name, "mspeak.bin"))                  return MS_Agilent_MassHunter_file;
-    else if (bal::iequals(name, "msscan.bin"))                  return MS_Agilent_MassHunter_file;
-    else if (fileExtension == ".t2d")                           return MS_AB_SCIEX_TOF_TOF_T2D_file;
+    else if (fileExtension == ".dat")                           return MS_Waters_raw_format;
+    else if (fileExtension == ".wiff")                          return MS_ABI_WIFF_format;
+    else if (fileExtension == ".yep")                           return MS_Bruker_Agilent_YEP_format;
+    else if (fileExtension == ".baf")                           return MS_Bruker_BAF_format;
+    else if (name == "fid")                                     return MS_Bruker_FID_format;
+    else if (bal::iequals(name, "msprofile.bin"))               return MS_Agilent_MassHunter_format;
+    else if (bal::iequals(name, "mspeak.bin"))                  return MS_Agilent_MassHunter_format;
+    else if (bal::iequals(name, "msscan.bin"))                  return MS_Agilent_MassHunter_format;
+    else if (fileExtension == ".t2d")                           return MS_AB_SCIEX_TOF_TOF_T2D_format;
 
     // check for known open formats
-    else if (fileExtension == ".mzdata")                        return MS_PSI_mzData_file;
-    else if (fileExtension == ".mgf")                           return MS_Mascot_MGF_file;
-    else if (fileExtension == ".dta")                           return MS_DTA_file;
-    else if (fileExtension == ".pkl")                           return MS_Micromass_PKL_file;
-    else if (fileExtension == ".mzxml")                         return MS_ISB_mzXML_file;
-    else if (bal::iends_with(name, ".mz.xml"))                  return MS_ISB_mzXML_file;
-    else if (fileExtension == ".mzml")                          return MS_mzML_file;
+    else if (fileExtension == ".mzdata")                        return MS_PSI_mzData_format;
+    else if (fileExtension == ".mgf")                           return MS_Mascot_MGF_format;
+    else if (fileExtension == ".dta")                           return MS_DTA_format;
+    else if (fileExtension == ".pkl")                           return MS_Micromass_PKL_format;
+    else if (fileExtension == ".mzxml")                         return MS_ISB_mzXML_format;
+    else if (bal::iends_with(name, ".mz.xml"))                  return MS_ISB_mzXML_format;
+    else if (fileExtension == ".mzml")                          return MS_mzML_format;
 
     // This case is nasty for several reasons:
     // 1) a .d suffix almost certainly indicates a directory, not a file (so no SHA-1)
     // 2) the same suffix is used by multiple different formats (Agilent/Bruker YEP, Bruker BAF, Agilent ms*.bin)
     // 3) all the formats use the same nativeID style ("scan=123") so just treat it like an mzXML source
     // Therefore this "file" extension is quite useless.
-    else if (fileExtension == ".d")                             return MS_ISB_mzXML_file;
+    else if (fileExtension == ".d")                             return MS_ISB_mzXML_format;
 
     else                                                        return CVID_Unknown;
 }
@@ -862,21 +863,21 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
     switch (sourceFileType)
     {
         // for these sources we treat the scan number as the nativeID
-        case MS_Thermo_RAW_file:            return MS_Thermo_nativeID_format;
-        case MS_Bruker_Agilent_YEP_file:    return MS_Bruker_Agilent_YEP_nativeID_format;
-        case MS_Bruker_BAF_file:            return MS_Bruker_BAF_nativeID_format;
-        case MS_ISB_mzXML_file:             return MS_scan_number_only_nativeID_format;
-        case MS_PSI_mzData_file:            return MS_spectrum_identifier_nativeID_format;
-        case MS_Mascot_MGF_file:            return MS_multiple_peak_list_nativeID_format;
-        case MS_DTA_file:                   return MS_scan_number_only_nativeID_format;
-        case MS_Agilent_MassHunter_file:    return MS_Agilent_MassHunter_nativeID_format;
+        case MS_Thermo_RAW_format:            return MS_Thermo_nativeID_format;
+        case MS_Bruker_Agilent_YEP_format:    return MS_Bruker_Agilent_YEP_nativeID_format;
+        case MS_Bruker_BAF_format:            return MS_Bruker_BAF_nativeID_format;
+        case MS_ISB_mzXML_format:             return MS_scan_number_only_nativeID_format;
+        case MS_PSI_mzData_format:            return MS_spectrum_identifier_nativeID_format;
+        case MS_Mascot_MGF_format:            return MS_multiple_peak_list_nativeID_format;
+        case MS_DTA_format:                   return MS_scan_number_only_nativeID_format;
+        case MS_Agilent_MassHunter_format:    return MS_Agilent_MassHunter_nativeID_format;
 
         // for these sources we must assume the scan number came from the index
-        case MS_ABI_WIFF_file:
-        case MS_Bruker_FID_file:
-        case MS_AB_SCIEX_TOF_TOF_T2D_file:
-        case MS_Waters_raw_file:
-        case MS_Micromass_PKL_file:
+        case MS_ABI_WIFF_format:
+        case MS_Bruker_FID_format:
+        case MS_AB_SCIEX_TOF_TOF_T2D_format:
+        case MS_Waters_raw_format:
+        case MS_Micromass_PKL_format:
             return MS_scan_number_only_nativeID_format;
 
         // in other cases, assume the source file doesn't contain instrument data
@@ -1049,7 +1050,7 @@ void fillInMetadata(MSData& msd)
         sf->set(sourceFileType);
         sf->set(translateSourceFileTypeToNativeIdFormat(sourceFileType));
 
-        if (sourceFileType == MS_Bruker_FID_file || sourceFileType == MS_AB_SCIEX_TOF_TOF_T2D_file)
+        if (sourceFileType == MS_Bruker_FID_format || sourceFileType == MS_AB_SCIEX_TOF_TOF_T2D_format)
         {       
             // each source file is translated to a run ID and added to a set of potential ids;
             // if they all have a common prefix, that is used as the id, otherwise it stays empty

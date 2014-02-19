@@ -80,7 +80,7 @@ struct AnalysisSoftwareTranslation
 
 const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
 {
-    {MS_pwiz, "ProteoWizard"},
+    {MS_ProteoWizard_software, "ProteoWizard software;ProteoWizard"},
     {MS_SEQUEST, "Sequest"},
     {MS_Mascot, "Mascot"},
     {MS_OMSSA, "OMSSA"},
@@ -259,11 +259,21 @@ struct NativeIdTranslator : public boost::singleton<NativeIdTranslator>
                 continue;
 
             string format = cvTermInfo(cvid).def;
-            bal::replace_all(format, "xsd:nonNegativeInteger", "\\d+");
-            bal::replace_all(format, "xsd:positiveInteger", "\\d+");
-            bal::replace_all(format, "xsd:Long", "\\d+");
-            bal::replace_all(format, "xsd:string", "\\S+");
-            bal::replace_all(format, "xsd:IDREF", "\\S+");
+            if (!bal::icontains(format, "xsd"))
+                continue;
+
+            sregex nativeIdFormatRegex = sregex::compile(".*?(\\S+=\\S+( \\S+=\\S+)*)\\.?");
+            smatch what;
+            if (!regex_match(format, what, nativeIdFormatRegex))
+                continue;
+
+            format = what[1].str();
+            bal::trim_right_if(format, bal::is_any_of("."));
+            bal::ireplace_all(format, "xsd:nonNegativeInteger", "\\d+");
+            bal::ireplace_all(format, "xsd:positiveInteger", "\\d+");
+            bal::ireplace_all(format, "xsd:Long", "\\d+");
+            bal::ireplace_all(format, "xsd:string", "\\S+");
+            bal::ireplace_all(format, "xsd:IDREF", "\\S+");
             nativeIdRegexAndFormats.push_back(make_pair(sregex::compile(format), cvid));
         }
     }
@@ -995,7 +1005,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
             const string* preferredName;
             if (result == CVID_Unknown)
             {
-                result = MS_analysis_software;
+                result = MS_custom_unreleased_software_tool;
                 preferredName = &name;
             }
             else
@@ -1003,8 +1013,8 @@ struct HandlerSearchSummary : public SAXParser::Handler
             software.reset(new AnalysisSoftware("AS_" + *preferredName, *preferredName));
             
             // TODO if MS_analysis_software log warning that search engine could not be translated
-            if (result == MS_analysis_software)
-                software->softwareName.set(MS_analysis_software, *preferredName);
+            if (result == MS_custom_unreleased_software_tool)
+                software->softwareName.set(MS_custom_unreleased_software_tool, *preferredName);
             else
                 software->softwareName.set(result);
 
@@ -1661,7 +1671,7 @@ struct HandlerSearchResults : public SAXParser::Handler
                 }
 
                 sir.reset(new SpectrumIdentificationResult);
-                sir->id = "SIR_" + lexical_cast<string>(_sil->spectrumIdentificationResult.size());
+                sir->id = "SIR_" + lexical_cast<string>(_sil->spectrumIdentificationResult.size()+1);
                 sir->spectrumID = spectrumNativeID;
                 sir->name = spectrumWithoutCharge;
                 sir->spectraDataPtr = _mzid->dataCollection.inputs.spectraData[0];
@@ -1793,7 +1803,7 @@ struct Handler_pepXML : public SAXParser::Handler
             const string* preferredName;
             if (result == CVID_Unknown)
             {
-                result = MS_analysis_software;
+                result = MS_custom_unreleased_software_tool;
                 preferredName = &name;
             }
             else
@@ -1805,8 +1815,8 @@ struct Handler_pepXML : public SAXParser::Handler
             software->name = *preferredName;
 
             // TODO if MS_analysis_software log warning that search engine could not be translated
-            if (result == MS_analysis_software)
-                software->softwareName.set(MS_analysis_software, *preferredName);
+            if (result == MS_custom_unreleased_software_tool)
+                software->softwareName.set(MS_custom_unreleased_software_tool, *preferredName);
             else
                 software->softwareName.set(result);
 

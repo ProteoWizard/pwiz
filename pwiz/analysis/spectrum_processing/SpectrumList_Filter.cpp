@@ -497,7 +497,7 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity::SpectrumList_FilterPredicat
 
 PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_Polarity::accept(const msdata::Spectrum& spectrum) const
 {
-    CVParam param = spectrum.cvParamChild(MS_polarity);
+    CVParam param = spectrum.cvParamChild(MS_scan_polarity);
     if (param.cvid == CVID_Unknown)
         return boost::logic::indeterminate;
     return param.cvid == polarity;

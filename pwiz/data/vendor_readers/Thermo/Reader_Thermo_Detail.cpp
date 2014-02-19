@@ -294,7 +294,7 @@ PWIZ_API_DECL CVID translateAsScanningMethod(ScanType scanType)
         case ScanType_SRM:
             return MS_SRM;
         case ScanType_CRM:
-            return MS_CRM;
+            return MS_CRM_OBSOLETE;
         case ScanType_Unknown:
         default:
             return CVID_Unknown;

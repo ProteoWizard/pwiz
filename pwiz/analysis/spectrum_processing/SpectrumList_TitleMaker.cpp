@@ -73,14 +73,14 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
     switch (sourceFileType)
     {
         // location="file://path/to" name="source.RAW"
-        case MS_Thermo_RAW_file:
+        case MS_Thermo_RAW_format:
             if (nameExtension == ".raw")
                 return sf.name;
             return "";
 
         // sane: location="file://path/to/source.raw" name="_FUNC001.DAT"
         // insane: location="file://path/to" name="source.raw"
-        case MS_Waters_raw_file:
+        case MS_Waters_raw_format:
             if (nameExtension == ".dat" && locationExtension == ".raw")
                 return result=BFS_STRING(bfs::path(sf.location).filename());
             else if (nameExtension == ".raw")
@@ -88,19 +88,19 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
             return "";
 
         // location="file://path/to/source.d" name="Analysis.yep"
-        case MS_Bruker_Agilent_YEP_file:
+        case MS_Bruker_Agilent_YEP_format:
             if (nameExtension == ".yep" && locationExtension == ".d")
                 return result=BFS_STRING(bfs::path(sf.location).filename());
             return "";
             
         // location="file://path/to/source.d" name="Analysis.baf"
-        case MS_Bruker_BAF_file:
+        case MS_Bruker_BAF_format:
             if (nameExtension == ".baf" && locationExtension == ".d")
                 return result=BFS_STRING(bfs::path(sf.location).filename());
             return "";
 
         // location="file://path/to/source.d/AcqData" name="msprofile.bin"
-        case MS_Agilent_MassHunter_file:
+        case MS_Agilent_MassHunter_format:
             if (nameExtension == ".bin" && bfs::path(sf.location).filename() == "AcqData")
                 return result=BFS_STRING(bfs::path(sf.location).parent_path().filename());
             return "";
@@ -108,7 +108,7 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // location="file://path/to" name="source.mzXML"
         // location="file://path/to" name="source.mz.xml"
         // location="file://path/to" name="source.d" (ambiguous)
-        case MS_ISB_mzXML_file:
+        case MS_ISB_mzXML_format:
             if (nameExtension == ".mzxml" || nameExtension == ".d")
                 return sf.name;
             else if (bal::iends_with(sf.name, ".mz.xml"))
@@ -117,32 +117,32 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
 
         // location="file://path/to" name="source.mzData"
         // location="file://path/to" name="source.mz.data" ???
-        case MS_PSI_mzData_file:
+        case MS_PSI_mzData_format:
             if (nameExtension == ".mzdata")
                 return sf.name;
             return "";
 
         // location="file://path/to" name="source.mgf"
-        case MS_Mascot_MGF_file:
+        case MS_Mascot_MGF_format:
             if (nameExtension == ".mgf")
                 return sf.name;
             return "";
 
         // location="file://path/to" name="source.wiff"
-        case MS_ABI_WIFF_file:
+        case MS_ABI_WIFF_format:
             if (nameExtension == ".wiff")
                 return sf.name;
             return "";
 
         // location="file://path/to/source/maldi-spot/1/1SRef" name="fid"
         // location="file://path/to/source/1/1SRef" name="fid"
-        case MS_Bruker_FID_file:
+        case MS_Bruker_FID_format:
             return (bfs::path(sf.location) / sf.name).string().substr(7);
 
         // location="file://path/to/source" name="spectrum-id.t2d"
         // location="file://path/to/source/MS" name="spectrum-id.t2d"
         // location="file://path/to/source/MSMS" name="spectrum-id.t2d"
-        case MS_AB_SCIEX_TOF_TOF_T2D_file:
+        case MS_AB_SCIEX_TOF_TOF_T2D_format:
             return (bfs::path(sf.location) / sf.name).string().substr(7);
 
         default:

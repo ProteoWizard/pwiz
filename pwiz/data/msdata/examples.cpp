@@ -49,7 +49,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     sfp->id = "tiny1.yep";
     sfp->name = "tiny1.yep";
     sfp->location = "file://F:/data/Exp01";
-    sfp->set(MS_Bruker_Agilent_YEP_file);
+    sfp->set(MS_Bruker_Agilent_YEP_format);
     sfp->set(MS_SHA_1,"1234567890123456789012345678901234567890");
     sfp->set(MS_Bruker_Agilent_YEP_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp);
@@ -58,7 +58,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     sfp2->id = "tiny.wiff";
     sfp2->name = "tiny.wiff";
     sfp2->location = "file://F:/data/Exp01";
-    sfp2->set(MS_ABI_WIFF_file);
+    sfp2->set(MS_ABI_WIFF_format);
     sfp2->set(MS_SHA_1,"2345678901234567890123456789012345678901");
     sfp2->set(MS_WIFF_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp2);
@@ -72,7 +72,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     msd.fileDescription.contacts.resize(1);
     Contact& contact = msd.fileDescription.contacts.front();
     contact.set(MS_contact_name, "William Pennington");
-    contact.set(MS_contact_organization, "Higglesworth University");
+	contact.set(MS_contact_affiliation, "Higglesworth University");
     contact.set(MS_contact_address, "12 Higglesworth Avenue, 12045, HI, USA");
 	contact.set(MS_contact_URL, "http://www.higglesworth.edu/");
 	contact.set(MS_contact_email, "wpennington@higglesworth.edu");
@@ -471,14 +471,14 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(MSData& msd)
     // fileDescription
 
     SourceFilePtr sfp_parameters(new SourceFile("sf_parameters", "parameters.par", "file:///C:/example/"));
-    sfp_parameters->set(MS_parameter_file);
+	sfp_parameters->set(MS_parameter_file);
     sfp_parameters->set(MS_SHA_1, "unknown");
     sfp_parameters->set(MS_no_nativeID_format);
     msd.fileDescription.sourceFilePtrs.push_back(sfp_parameters);
 
     Contact contact;
     contact.set(MS_contact_name, "William Pennington");
-    contact.set(MS_contact_organization, "Higglesworth University");
+    contact.set(MS_contact_affiliation, "Higglesworth University");
     contact.set(MS_contact_address, "12 Higglesworth Avenue, 12045, HI, USA");
 	contact.set(MS_contact_URL, "http://www.higglesworth.edu/");
 	contact.set(MS_contact_email, "wpennington@higglesworth.edu");

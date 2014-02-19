@@ -228,7 +228,7 @@ PWIZ_API_DECL void Reader_mzXML::read(const std::string& filename,
         serializer.read(is, result);
         fillInCommonMetadata(filename, result);
         result.fileDescription.sourceFilePtrs.back()->set(MS_scan_number_only_nativeID_format);
-        result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_file);
+        result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_format);
         return;
     }
     catch (SpectrumList_mzXML::index_not_found&)
@@ -242,7 +242,7 @@ PWIZ_API_DECL void Reader_mzXML::read(const std::string& filename,
     serializer.read(is, result);
     fillInCommonMetadata(filename, result);
     result.fileDescription.sourceFilePtrs.back()->set(MS_scan_number_only_nativeID_format);
-    result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_file);
+    result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_format);
     return;
 }
 
@@ -282,7 +282,7 @@ PWIZ_API_DECL void Reader_MGF::read(const string& filename,
     serializer.read(is, result);
     fillInCommonMetadata(filename, result);
     result.fileDescription.sourceFilePtrs.back()->set(MS_multiple_peak_list_nativeID_format);
-    result.fileDescription.sourceFilePtrs.back()->set(MS_Mascot_MGF_file);
+    result.fileDescription.sourceFilePtrs.back()->set(MS_Mascot_MGF_format);
     return;
 }
 
@@ -343,7 +343,7 @@ PWIZ_API_DECL void Reader_MSn::read(const string& filename,
     serializer.read(is, result);
     fillInCommonMetadata(filename, result);
     result.fileDescription.sourceFilePtrs.back()->set(MS_scan_number_only_nativeID_format);
-    result.fileDescription.sourceFilePtrs.back()->set(MS_MS2_file);
+    result.fileDescription.sourceFilePtrs.back()->set(MS_MS2_format);
 }
 
 PWIZ_API_DECL void Reader_MSn::read(const std::string& filename,

@@ -86,7 +86,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     if (location.empty()) location = ".";
     sourceFile->location = "file://" + location;
     sourceFile->set(MS_WIFF_nativeID_format);
-    sourceFile->set(MS_ABI_WIFF_file);
+    sourceFile->set(MS_ABI_WIFF_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.run.defaultSourceFilePtr = sourceFile;
@@ -102,7 +102,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
         if (location.empty()) location = ".";
         sourceFile->location = "file://" + location;
         sourceFile->set(MS_WIFF_nativeID_format);
-        sourceFile->set(MS_ABI_WIFF_file);
+        sourceFile->set(MS_ABI_WIFF_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 

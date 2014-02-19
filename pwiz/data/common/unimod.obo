@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2013:05:31 15:58
+date: 2013:11:06 11:40
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -3982,7 +3982,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:213
 name: ADP-Ribosyl
-def: "ADP Ribose addition." [RESID:AA0231, RESID:AA0168, URL:http\://betelgeuse.u-strasbg.fr/DocPARP/DocPARG/images/Structure-pADPR.jpg, RESID:AA0169, RESID:AA0237, PMID:15842200, RESID:AA0295, FindMod:ADP, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=213]
+def: "ADP Ribose addition." [FindMod:ADP, RESID:AA0169, RESID:AA0237, PMID:15842200, RESID:AA0295, URL:http\://betelgeuse.u-strasbg.fr/DocPARP/DocPARG/images/Structure-pADPR.jpg, RESID:AA0231, RESID:AA0168, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=213]
 xref: record_id "213"
 xref: delta_mono_mass "541.061110"
 xref: delta_avge_mass "541.3005"
@@ -3990,7 +3990,7 @@ xref: delta_composition "H(21) C(15) N(5) O(13) P(2)"
 xref: username_of_poster "ionjockey"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-05-27 20:53:37"
-xref: date_time_modified "2011-10-20 13:50:11"
+xref: date_time_modified "2013-08-02 11:49:42"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -4022,6 +4022,11 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "K"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Other glycosylation"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "D"
+xref: spec_7_position "Anywhere"
+xref: spec_7_classification "Other glycosylation"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -16858,7 +16863,7 @@ id: UNIMOD:1009
 name: Thiazolidine
 def: "Addition of Carbon to cysteine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1009]
 comment: Formaldeyde induced formation of thioproline.
-synonym: "thiazolidine-2-carboxylic acid formaldehyde adduct" []
+synonym: "formaldehyde adduct thiazolidine-2-carboxylic acid" []
 xref: record_id "1009"
 xref: delta_mono_mass "12.000000"
 xref: delta_avge_mass "12.0107"
@@ -16866,23 +16871,13 @@ xref: delta_composition "C"
 xref: username_of_poster "BThomas"
 xref: group_of_poster ""
 xref: date_time_posted "2010-11-04 12:29:10"
-xref: date_time_modified "2013-05-16 11:03:10"
+xref: date_time_modified "2013-08-19 16:44:59"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "C"
 xref: spec_1_position "Any N-term"
 xref: spec_1_classification "Synth. pep. protect. gp."
-xref: spec_2_group "2"
-xref: spec_2_hidden "1"
-xref: spec_2_site "N-term"
-xref: spec_2_position "Any N-term"
-xref: spec_2_classification "Artefact"
-xref: spec_3_group "3"
-xref: spec_3_hidden "1"
-xref: spec_3_site "W"
-xref: spec_3_position "Anywhere"
-xref: spec_3_classification "Artefact"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -23649,29 +23644,6 @@ is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
-id: UNIMOD:1333
-name: Myristoyl+Delta:H(18)C(12)N(6)O(4)
-def: "Myristic acid analogue." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1333]
-comment: Post-translational enzymatic myristoylation of glycine with a synthetic alkynyl-analogue of myristic acid followed by in vitro CuAAC reaction to an azido-enrichment reagent (manuscript ; in preparation).
-xref: record_id "1333"
-xref: delta_mono_mass "520.337319"
-xref: delta_avge_mass "520.6648"
-xref: delta_composition "H(44) C(26) N(6) O(5)"
-xref: username_of_poster "rserwa"
-xref: group_of_poster ""
-xref: date_time_posted "2012-05-29 12:27:50"
-xref: date_time_modified "2012-06-15 10:03:35"
-xref: approved "0"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "G"
-xref: spec_1_position "Any N-term"
-xref: spec_1_classification "Chemical derivative"
-xref: spec_1_misc_notes "post-translational enzymatic myristoylation of glycine with a synthetic alkynyl-analogue of myristic acid followed by in vitro CuAAC reaction to an azido-enrichment reagent"
-is_a: UNIMOD:0 ! unimod root node
-
-
-[Term]
 id: UNIMOD:1340
 name: Biotin:Thermo-21911
 def: "Biotin-PEG11-maleimide." [URL:http\://www.piercenet.com/browse.cfm?fldID=E3862D31-9A5C-4F0A-9879-F600D33BD926, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1340]
@@ -24481,6 +24453,326 @@ xref: spec_1_site "D"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Artefact"
 xref: spec_1_misc_notes "From exposure to hydroxylamine (used with TMT)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1387
+name: 3-phosphoglyceryl
+def: "3-phosphoglyceryl." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/?term=23908237, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1387]
+xref: record_id "1387"
+xref: delta_mono_mass "167.982375"
+xref: delta_avge_mass "168.0420"
+xref: delta_composition "H(5) C(3) O(6) P"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2013-08-05 10:54:22"
+xref: date_time_modified "2013-11-01 16:34:45"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1388
+name: HN2_mustard
+def: "Modification by hydroxylated mechloroethamine (HN-2)." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1388]
+xref: record_id "1388"
+xref: delta_mono_mass "101.084064"
+xref: delta_avge_mass "101.1469"
+xref: delta_composition "H(11) C(5) N O"
+xref: username_of_poster "vthompson"
+xref: group_of_poster ""
+xref: date_time_posted "2013-08-23 18:36:39"
+xref: date_time_modified "2013-09-23 11:42:40"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1389
+name: HN3_mustard
+def: "Modification by hydroxylated tris-(2-chloroethyl)amine (HN-3)." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1389]
+xref: record_id "1389"
+xref: delta_mono_mass "131.094629"
+xref: delta_avge_mass "131.1729"
+xref: delta_composition "H(13) C(6) N O(2)"
+xref: username_of_poster "vthompson"
+xref: group_of_poster ""
+xref: date_time_posted "2013-08-23 19:13:36"
+xref: date_time_modified "2013-09-23 11:42:08"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1390
+name: Oxidation+NEM
+def: "N-ethylmaleimide on cysteine sulfenic acid." [PMID:24103186, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1390]
+xref: record_id "1390"
+xref: delta_mono_mass "141.042593"
+xref: delta_avge_mass "141.1247"
+xref: delta_composition "H(7) C(6) N O(3)"
+xref: username_of_poster "jheld"
+xref: group_of_poster ""
+xref: date_time_posted "2013-10-16 15:31:20"
+xref: date_time_modified "2013-11-01 16:37:00"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1391
+name: NHS-fluorescein
+def: "Fluorescein-hexanoate-NHS hydrolysis." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1391]
+xref: record_id "1391"
+xref: delta_mono_mass "471.131802"
+xref: delta_avge_mass "471.4581"
+xref: delta_composition "H(21) C(27) N O(7)"
+xref: username_of_poster "cgadelha"
+xref: group_of_poster ""
+xref: date_time_posted "2013-10-18 12:14:19"
+xref: date_time_modified "2013-11-01 16:37:42"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1392
+name: DiART6plex
+def: "Representative mass and accurate mass for 114." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1392]
+comment: Different tags have the same nominal mass but slightly different exact masses. Use this modification for all tags for quantitation purposes. Monoisotopic masses of the fragment ions to be quantified are 114.12827, 115.12531, 116.14082, 117.13786, 118.14752, 119.14456.
+synonym: "Isobaric labeling reagent from Omic Biosystems, Inc. AKA DiART6plex114" []
+xref: record_id "1392"
+xref: delta_mono_mass "217.162932"
+xref: delta_avge_mass "217.2527"
+xref: delta_composition "H(20) C(7) 13C(4) N 15N O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2013-11-06 11:18:58"
+xref: date_time_modified "2013-11-06 11:26:11"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "0"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "0"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "0"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "0"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1393
+name: DiART6plex115
+def: "Accurate mass for DiART6plex 115." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1393]
+comment: Different tags have the same nominal mass but slightly different exact masses.
+synonym: "Isobaric labeling reagent from Omic Biosystems, Inc." []
+xref: record_id "1393"
+xref: delta_mono_mass "217.156612"
+xref: delta_avge_mass "217.2535"
+xref: delta_composition "H(20) C(8) 13C(3) 15N(2) O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2013-11-06 11:34:33"
+xref: date_time_modified "2013-11-06 11:34:33"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1394
+name: DiART6plex116/119
+def: "Accurate mass for DiART6plex 116 and 119." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1394]
+comment: Different tags have the same nominal mass but slightly different exact masses.
+synonym: "Isobaric labeling reagent from Omic Biosystems, Inc." []
+xref: record_id "1394"
+xref: delta_mono_mass "217.168776"
+xref: delta_avge_mass "217.2797"
+xref: delta_composition "H(18) 2H(2) C(9) 13C(2) N 15N O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2013-11-06 11:35:52"
+xref: date_time_modified "2013-11-06 11:38:53"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1395
+name: DiART6plex117
+def: "Accurate mass for DiART6plex 117." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1395]
+comment: Different tags have the same nominal mass but slightly different exact masses.
+synonym: "Isobaric labeling reagent from Omic Biosystems, Inc." []
+xref: record_id "1395"
+xref: delta_mono_mass "217.162456"
+xref: delta_avge_mass "217.2805"
+xref: delta_composition "H(18) 2H(2) C(10) 13C 15N(2) O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2013-11-06 11:40:01"
+xref: date_time_modified "2013-11-06 11:40:01"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1396
+name: DiART6plex118
+def: "Accurate mass for DiART6plex 118." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1396]
+comment: Different tags have the same nominal mass but slightly different exact masses.
+synonym: "Isobaric labeling reagent from Omic Biosystems, Inc." []
+xref: record_id "1396"
+xref: delta_mono_mass "217.175096"
+xref: delta_avge_mass "217.2790"
+xref: delta_composition "H(18) 2H(2) C(8) 13C(3) N(2) O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2013-11-06 11:40:58"
+xref: date_time_modified "2013-11-06 11:40:58"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Low abundance"
 is_a: UNIMOD:0 ! unimod root node
 
 
