@@ -349,10 +349,10 @@
   <data name="SkylineWindow_Copy_Failed_setting_data_to_the_clipboard" xml:space="preserve">
     <value>Failed setting data to the clipboard.</value>
   </data>
-    <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+  <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
     <value>Failed getting data from the clipboard.</value>
   </data>
-    <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
     <value>proteins</value>
   </data>
   <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
@@ -3448,7 +3448,7 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
     <value>File</value>
   </data>
-    <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
+  <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
     <value>RT</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
@@ -4472,6 +4472,18 @@ Are you sure you want to continue?</value>
   <data name="ToolMacros__listArguments_Selected_Protein_Name" xml:space="preserve">
     <value>Selected Protein Name</value>
   </data>
+  <data name="ToolMacros__listArguments_Selected_Protein_Accession" xml:space="preserve">
+    <value>Selected Protein Accession</value>
+  </data>
+  <data name="ToolMacros__listArguments_Selected_Protein_PreferredName" xml:space="preserve">
+    <value>Selected Protein PreferredName</value>
+  </data>
+  <data name="ToolMacros__listArguments_Selected_Protein_Gene" xml:space="preserve">
+    <value>Selected Protein Gene</value>
+  </data>
+  <data name="ToolMacros__listArguments_Selected_Protein_Species" xml:space="preserve">
+    <value>Selected Protein Species</value>
+  </data>
   <data name="ToolMacros__listArguments_Selected_Peptide_Sequence" xml:space="preserve">
     <value>Selected Peptide Sequence</value>
   </data>
@@ -5292,10 +5304,10 @@ Are you sure you want to continue?</value>
     <value>Tool Directory</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_is_not_an_istalled_toolso $(ToolDir) cannot be used as a macro. Please edit the tool." xml:space="preserve">
-    <value>This tool is not an istalled tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
+    <value>This tool is not an installed tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_" xml:space="preserve">
-    <value>This tool is not an istalled tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
+    <value>This tool is not an installed tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_" xml:space="preserve">
     <value>This tool does not provide the functionality for the Collected Arguments macro. Please edit the tool.</value>
@@ -5858,7 +5870,7 @@ Are you sure you want to continue?</value>
   <data name="RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_" xml:space="preserve">
     <value>Dot Product To {0}</value>
   </data>
-    <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
     <value>Cannot train model without either decoys or second best peaks included.</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_" xml:space="preserve">
@@ -6144,34 +6156,34 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
     <value>Edit Report</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
     <value>U&amp;RL:</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
     <value>&amp;Query params:</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
     <value>&amp;Command:</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
     <value>A&amp;rguments:</value>
   </data>
-    <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
     <value>The standard peptides for an iRT calculator can only be set in the iRT calculator editor.</value>
   </data>
-    <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
     <value>In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator.</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
     <value>Decoy normal distribution</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
     <value>Second best peaks</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
     <value>Combined normal distribution</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
     <value>Second best peaks normal distribution</value>
   </data>
   <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
@@ -6189,5 +6201,14 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
     <value>Default ({0})</value>
     <comment>Example: Default (English)</comment>
+  </data>
+  <data name="ProteinMetadataManager_LookupProteinMetadata_resolving_protein_metadata" xml:space="preserve">
+    <value>Resolving protein metadata...</value>
+  </data>
+  <data name="BackgroundProteomeManager_LoadBackground_Resolving_protein_metadata_for__0__proteome" xml:space="preserve">
+    <value>Resolving protein metadata for {0} proteome</value>
+  </data>
+  <data name="ProteinMetadata__none_" xml:space="preserve">
+    <value>&lt;none&gt;</value>
   </data>
 </root>
