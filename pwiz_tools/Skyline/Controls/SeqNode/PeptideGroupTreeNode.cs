@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -100,24 +99,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string DisplayText(PeptideGroupDocNode node, DisplaySettings settings)
         {
-            switch (settings.DisplayProteinsBy)
-            {
-                case SequenceTreeFormDisplayProteinsMode.ByAccession:
-                case SequenceTreeFormDisplayProteinsMode.ByPreferredName:
-                    break;
-                default:
-                    return node.Name;  
-            }
-            if (node.ProteinMetadata.NeedsSearch())
-                return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_metadata;
-            switch (settings.DisplayProteinsBy)
-            {
-                case SequenceTreeFormDisplayProteinsMode.ByAccession:
-                    return node.ProteinMetadata.Accession ?? Resources.ProteinMetadata__none_;
-                case SequenceTreeFormDisplayProteinsMode.ByPreferredName:
-                    return node.ProteinMetadata.PreferredName ?? Resources.ProteinMetadata__none_;
-            }
-            return node.Name; // failsafe
+            return node.Name;
         }
 
         #region IChildPicker Members
@@ -260,26 +242,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                 float heightLine = sizeX80.Height;
                 float heightMax = sizeMax.Height;
                 float heightTotal = 0f;
-                var descriptionWithOriginalName = new List<string>(Descriptions); 
+                IEnumerable<string> descriptionWithOriginalName = Descriptions; 
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
                 {
                     IEnumerable<string> originalName = new[] {string.Format(Resources.PeptideGroupTreeNode_RenderTip_Original_name__0__, DocNode.PeptideGroup.Name)};
-                    descriptionWithOriginalName = new List<string>(originalName.Concat(descriptionWithOriginalName));
+                    descriptionWithOriginalName = originalName.Concat(descriptionWithOriginalName);
                 }
-                bool excludeName;
-                switch (SequenceTree.GetShowPeptidesDisplayMode())
-                {
-                    case SequenceTreeFormDisplayProteinsMode.ByAccession:
-                    case SequenceTreeFormDisplayProteinsMode.ByPreferredName:
-                        excludeName = false;
-                        break;
-                    default:
-                        excludeName = true; // Show name in tooltip since its not displayed in control
-                        break;
-                }
-                string metadata = DocNode.ProteinMetadata.DisplayText(excludeName,true); // exclude name and description
-                if (!String.IsNullOrEmpty(metadata))
-                    descriptionWithOriginalName.Insert(0,metadata);
                 foreach (string description in descriptionWithOriginalName)
                 {
                     SizeF sizeDesc = g.MeasureString(description, rt.FontNormal, (int)widthLine);
@@ -354,7 +322,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        private IEnumerable<string> Descriptions  // TODO bpratt other display modes here? accession instead of description etc?
+        private IEnumerable<string> Descriptions
         {
             get
             {
@@ -461,7 +429,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var sb = new StringBuilder();
             sb.Append("<b>").Append(DocNode.Name).Append("</b> "); // Not L10N
             sb.Append("<i>"); // Not L10N
-            if (string.IsNullOrEmpty(DocNode.Description)) // TODO bpratt - a more complete set of data here, maybe - accession etc
+            if (string.IsNullOrEmpty(DocNode.Description))
                 sb.AppendLine("<br/>"); // Not L10N
             else
             {
