@@ -102,8 +102,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             switch (settings.DisplayProteinsBy)
             {
-                case SequenceTreeFormDisplayProteinsByEnum.ByAccession:
-                case SequenceTreeFormDisplayProteinsByEnum.ByPreferredName:
+                case SequenceTreeFormDisplayProteinsMode.ByAccession:
+                case SequenceTreeFormDisplayProteinsMode.ByPreferredName:
                     break;
                 default:
                     return node.Name;  
@@ -112,9 +112,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_metadata;
             switch (settings.DisplayProteinsBy)
             {
-                case SequenceTreeFormDisplayProteinsByEnum.ByAccession:
+                case SequenceTreeFormDisplayProteinsMode.ByAccession:
                     return node.ProteinMetadata.Accession ?? Resources.ProteinMetadata__none_;
-                case SequenceTreeFormDisplayProteinsByEnum.ByPreferredName:
+                case SequenceTreeFormDisplayProteinsMode.ByPreferredName:
                     return node.ProteinMetadata.PreferredName ?? Resources.ProteinMetadata__none_;
             }
             return node.Name; // failsafe
@@ -266,7 +266,18 @@ namespace pwiz.Skyline.Controls.SeqNode
                     IEnumerable<string> originalName = new[] {string.Format(Resources.PeptideGroupTreeNode_RenderTip_Original_name__0__, DocNode.PeptideGroup.Name)};
                     descriptionWithOriginalName = new List<string>(originalName.Concat(descriptionWithOriginalName));
                 }
-                string metadata = DocNode.ProteinMetadata.DisplayText(true); // exclude name and description
+                bool excludeName;
+                switch (SequenceTree.GetShowPeptidesDisplayMode())
+                {
+                    case SequenceTreeFormDisplayProteinsMode.ByAccession:
+                    case SequenceTreeFormDisplayProteinsMode.ByPreferredName:
+                        excludeName = false;
+                        break;
+                    default:
+                        excludeName = true; // Show name in tooltip since its not displayed in control
+                        break;
+                }
+                string metadata = DocNode.ProteinMetadata.DisplayText(excludeName,true); // exclude name and description
                 if (!String.IsNullOrEmpty(metadata))
                     descriptionWithOriginalName.Insert(0,metadata);
                 foreach (string description in descriptionWithOriginalName)
