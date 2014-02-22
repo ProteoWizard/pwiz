@@ -89,7 +89,11 @@ namespace pwiz.SkylineTestUtil
                                 Directory.CreateDirectory(targetFolder);
 
                             WebClient webClient = new WebClient();
-                            webClient.DownloadFile(zipPath, zipFilePath);
+                            using (var fs = new FileSaver(zipFilePath))
+                            {
+                                webClient.DownloadFile(zipPath, fs.SafeName);
+                                fs.Commit();
+                            }
                         }
                         zipPath = zipFilePath;
                     }
