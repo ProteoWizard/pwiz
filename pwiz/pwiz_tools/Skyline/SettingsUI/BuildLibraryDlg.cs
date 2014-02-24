@@ -216,9 +216,20 @@ namespace pwiz.Skyline.SettingsUI
                 if (cbFilter.Checked)
                 {
                     targetPeptidesChosen = new List<string>();
-                    foreach (PeptideDocNode nodePep in _documentUiContainer.Document.Peptides)
+                    var doc = _documentUiContainer.Document;
+                    foreach (PeptideDocNode nodePep in doc.Peptides)
                     {
+                        // Add light modified sequences
                         targetPeptidesChosen.Add(nodePep.ModifiedSequence);
+                        // Add heavy modified sequences
+                        foreach (var nodeGroup in nodePep.TransitionGroups)
+                        {
+                            if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                                continue;
+                            targetPeptidesChosen.Add(doc.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                                                                                      nodeGroup.TransitionGroup.LabelType,
+                                                                                      nodePep.ExplicitMods));
+                        }
                     }
                 }
 

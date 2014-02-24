@@ -354,25 +354,25 @@ namespace BuildBrukerMethod
             for (int j = 0; j < numFields; ++j)
             {
                 bool parseFail = false;
-                if (string.Equals(columnMap[j], "ret time (min)", StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(columnMap[j], "ret time (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
                     double timeMinutes;
                     parseFail = !double.TryParse(csvFields[j], NumberStyles.Float, CultureInfo.InvariantCulture, out timeMinutes);
                     time = (uint) Math.Round(timeMinutes * 60 * 1000);
                 }
-                else if (string.Equals(columnMap[j], "tolerance", StringComparison.CurrentCultureIgnoreCase))
+                else if (string.Equals(columnMap[j], "tolerance", StringComparison.InvariantCultureIgnoreCase))
                 {
                     double toleranceMinutes;
                     parseFail = !double.TryParse(csvFields[j], NumberStyles.Float, CultureInfo.InvariantCulture, out toleranceMinutes);
                     tolerance = (uint) Math.Round(toleranceMinutes * 60 * 1000);
                 }
-                else if (string.Equals(columnMap[j], "precursor ion min", StringComparison.CurrentCultureIgnoreCase))
+                else if (string.Equals(columnMap[j], "precursor ion min", StringComparison.InvariantCultureIgnoreCase))
                 {
                     double mass;
                     parseFail = !double.TryParse(csvFields[j], NumberStyles.Float, CultureInfo.InvariantCulture, out mass);
                     massBegin = mass;
                 }
-                else if (string.Equals(columnMap[j], "precursor ion max", StringComparison.CurrentCultureIgnoreCase))
+                else if (string.Equals(columnMap[j], "precursor ion max", StringComparison.InvariantCultureIgnoreCase))
                 {
                     double mass;
                     parseFail = !double.TryParse(csvFields[j], NumberStyles.Float, CultureInfo.InvariantCulture, out mass);
