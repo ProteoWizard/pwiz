@@ -81,10 +81,17 @@ namespace pwiz.Skyline.Util.Extensions
         {
             if (compressed.Length == sizeUncompressed)
                 return compressed;
-
-            var uncompressed = ZlibStream.UncompressBuffer(compressed);
+            byte[] uncompressed;
+            try
+            {
+                uncompressed = ZlibStream.UncompressBuffer(compressed);
+            }
+            catch (Exception x)
+            {
+                throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data, x);
+            }
             if (checkSizeDifference && (uncompressed.Length != sizeUncompressed))
-                throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);  // Not L10N
+                throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);
             return uncompressed;
         }
 
