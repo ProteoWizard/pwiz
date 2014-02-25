@@ -1168,7 +1168,9 @@ namespace SkylineTester
                     var testName = testLink.ToString();
                     for (int i = 0; i < formsGrid.RowCount; i++)
                     {
-                        formsGrid.Rows[i].Selected = (formsGrid.Rows[i].Cells[1].Value.ToString() == testName);
+                        var thisTest = formsGrid.Rows[i].Cells[1].Value;
+                        if (thisTest != null)
+                            formsGrid.Rows[i].Selected = (thisTest.ToString() == testName);
                     }
                 }
             }

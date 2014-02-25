@@ -275,8 +275,11 @@ namespace pwiz.SkylineTestUtil
                     {
                         formType += "." + multipleViewProvider.ShowingFormView.GetType().Name;
                         var formName = "(" + typeof (TDlg).Name + ")";
-                        if (tForm.Text.EndsWith(formName))
-                            tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
+                        RunUI(() =>
+                        {
+                            if (tForm.Text.EndsWith(formName))
+                                tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
+                        });
                     }
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
                     {
@@ -293,6 +296,19 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
             }
             return null;
+        }
+
+        private void PauseForForm(Type formType)
+        {
+            if (Program.PauseForms == null)
+                return;
+            var viewTypeName = FormSeen.GetViewType(formType);
+            if (viewTypeName != null && Program.PauseForms.Remove(viewTypeName))
+            {
+                var formSeen = new FormSeen();
+                formSeen.Saw(viewTypeName);
+                PauseAndContinueForm.Show(string.Format("Pausing for {0}", viewTypeName));
+            }
         }
 
         public static bool IsFormOpen(Form form)
@@ -466,6 +482,10 @@ namespace pwiz.SkylineTestUtil
                     description = string.Format("page {0} - {1}", pageNum, description);
                 bool showMathingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
                 PauseAndContinueForm.Show(description, LinkPage(pageNum), showMathingPages);
+            }
+            else
+            {
+                PauseForForm(formType);
             }
         }
 

@@ -87,12 +87,19 @@ namespace pwiz.SkylineTestUtil
 
         public void Saw(Type formType)
         {
-            if (formType == null)
-                return;
-            var formName = Implements(formType, "IFormView") && formType.DeclaringType != null
-                ? formType.DeclaringType.Name + "." + formType.Name
-                : formType.Name;
-            Saw(formName);
+            var viewTypeName = GetViewType(formType);
+            if (viewTypeName != null)
+                Saw(viewTypeName);
+        }
+
+        public static string GetViewType(Type formType)
+        {
+            string viewType = null;
+            if (formType != null)
+                viewType = Implements(formType, "IFormView") && formType.DeclaringType != null
+                    ? formType.DeclaringType.Name + "." + formType.Name
+                    : formType.Name;
+            return viewType;
         }
 
         public void Saw(string formName)

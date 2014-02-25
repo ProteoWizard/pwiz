@@ -468,7 +468,10 @@ namespace TestRunner
                 List<string> uncoveredForms;
                 testNames = formLookup.FindTests(LoadList(formArg), out uncoveredForms);
                 if (uncoveredForms.Count > 0)
+                {
                     MessageBox.Show("No tests found to show these Forms: " + string.Join(", ", uncoveredForms), "Warning");
+                    return testList;
+                }
             }
 
             // Maintain order in list of explicitly specified tests
