@@ -924,6 +924,7 @@ namespace SkylineTester
 
         #region Accessors
 
+        public ToolStripMenuItem AccessInternet             { get { return accessInternet; } }
         public TextBox          BranchUrl                   { get { return branchUrl; } }
         public CheckBox         Build32                     { get { return build32; } }
         public CheckBox         Build64                     { get { return build64; } }

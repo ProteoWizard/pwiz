@@ -59,8 +59,8 @@ namespace SkylineTester
             this.TestColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabTutorials = new System.Windows.Forms.TabPage();
-            this.showMatchingPagesTutorial = new System.Windows.Forms.CheckBox();
             this.groupBox21 = new System.Windows.Forms.GroupBox();
+            this.showMatchingPagesTutorial = new System.Windows.Forms.CheckBox();
             this.showFormNamesTutorial = new System.Windows.Forms.CheckBox();
             this.label16 = new System.Windows.Forms.Label();
             this.groupBox14 = new System.Windows.Forms.GroupBox();
@@ -227,6 +227,8 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.accessInternet = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -574,16 +576,6 @@ namespace SkylineTester
             this.tabTutorials.TabIndex = 2;
             this.tabTutorials.Text = "Tutorials";
             // 
-            // showMatchingPagesTutorial
-            // 
-            this.showMatchingPagesTutorial.AutoSize = true;
-            this.showMatchingPagesTutorial.Location = new System.Drawing.Point(8, 45);
-            this.showMatchingPagesTutorial.Name = "showMatchingPagesTutorial";
-            this.showMatchingPagesTutorial.Size = new System.Drawing.Size(160, 17);
-            this.showMatchingPagesTutorial.TabIndex = 6;
-            this.showMatchingPagesTutorial.Text = "Show matching tutorial page";
-            this.showMatchingPagesTutorial.UseVisualStyleBackColor = true;
-            // 
             // groupBox21
             // 
             this.groupBox21.BackColor = System.Drawing.Color.Transparent;
@@ -597,6 +589,16 @@ namespace SkylineTester
             this.groupBox21.TabIndex = 4;
             this.groupBox21.TabStop = false;
             this.groupBox21.Text = "Options";
+            // 
+            // showMatchingPagesTutorial
+            // 
+            this.showMatchingPagesTutorial.AutoSize = true;
+            this.showMatchingPagesTutorial.Location = new System.Drawing.Point(8, 45);
+            this.showMatchingPagesTutorial.Name = "showMatchingPagesTutorial";
+            this.showMatchingPagesTutorial.Size = new System.Drawing.Size(160, 17);
+            this.showMatchingPagesTutorial.TabIndex = 6;
+            this.showMatchingPagesTutorial.Text = "Show matching tutorial page";
+            this.showMatchingPagesTutorial.UseVisualStyleBackColor = true;
             // 
             // showFormNamesTutorial
             // 
@@ -2244,7 +2246,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 116;
+            this.outputSplitContainer.SplitterDistance = 110;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2262,7 +2264,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 116);
+            this.commandShell.Size = new System.Drawing.Size(693, 110);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2279,7 +2281,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 327);
+            this.errorConsole.Size = new System.Drawing.Size(693, 333);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2339,6 +2341,7 @@ namespace SkylineTester
             this.fileToolStripMenuItem,
             this.findToolStripMenuItem,
             this.selectBuildMenuItem,
+            this.optionsToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -2421,7 +2424,7 @@ namespace SkylineTester
             // 
             this.findTestToolStripMenuItem.Name = "findTestToolStripMenuItem";
             this.findTestToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-            this.findTestToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.findTestToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.findTestToolStripMenuItem.Text = "Find...";
             this.findTestToolStripMenuItem.Click += new System.EventHandler(this.findTestToolStripMenuItem_Click);
             // 
@@ -2429,7 +2432,7 @@ namespace SkylineTester
             // 
             this.findNextToolStripMenuItem.Name = "findNextToolStripMenuItem";
             this.findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.findNextToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.findNextToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.findNextToolStripMenuItem.Text = "Find next";
             this.findNextToolStripMenuItem.Click += new System.EventHandler(this.findNextToolStripMenuItem_Click);
             // 
@@ -2594,6 +2597,21 @@ namespace SkylineTester
             this.myTreeView1.Name = "myTreeView1";
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.accessInternet});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // accessInternet
+            // 
+            this.accessInternet.CheckOnClick = true;
+            this.accessInternet.Name = "accessInternet";
+            this.accessInternet.Size = new System.Drawing.Size(154, 22);
+            this.accessInternet.Text = "Access internet";
             // 
             // SkylineTesterWindow
             // 
@@ -2880,6 +2898,8 @@ namespace SkylineTester
         private GroupBox groupBox2;
         private CheckBox runBuildVerificationTests;
         private CheckBox showMatchingPagesTutorial;
+        private ToolStripMenuItem optionsToolStripMenuItem;
+        private ToolStripMenuItem accessInternet;
     }
 }
 

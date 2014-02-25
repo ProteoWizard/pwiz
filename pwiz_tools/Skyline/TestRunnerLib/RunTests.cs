@@ -53,6 +53,7 @@ namespace TestRunnerLib
             bool buildMode,
             bool offscreen,
             bool showStatus,
+            bool accessInternet,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -73,6 +74,7 @@ namespace TestRunnerLib
             Skyline.Set("FunctionalTest", true);
             Skyline.Set("SkylineOffscreen", !demoMode && offscreen);
             Skyline.Set("DemoMode", demoMode);
+            Skyline.Set("AllowInternetAccessForTests", accessInternet);
             Skyline.Set("NoVendorReaders", !useVendorReaders);
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);

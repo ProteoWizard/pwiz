@@ -58,6 +58,7 @@ namespace pwiz.Skyline
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }
+        public static bool AllowInternetAccessForTests { get; set; }
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.

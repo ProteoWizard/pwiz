@@ -56,7 +56,7 @@ namespace TestRunner
             const string commandLineOptions =
                 "?;/?;-?;help;skylinetester;debug;results;" +
                 "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;wait=off;" +
+                "loop=0;repeat=1;pause=0;random=on;offscreen=on;multi=1;wait=off;internet=off;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=on;pass1=on;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
@@ -236,6 +236,7 @@ namespace TestRunner
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
+            bool accessInternet = commandLineArgs.ArgAsBool("internet");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
@@ -253,7 +254,10 @@ namespace TestRunner
                 pauseSeconds = 0;
             }
 
-            var runTests = new RunTests(demoMode, buildMode, offscreen, showStatus, pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, results, log);
+            var runTests = new RunTests(
+                demoMode, buildMode, offscreen, showStatus, accessInternet,
+                pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
+                results, log);
 
             if (commandLineArgs.ArgAsBool("clipboardcheck"))
             {
