@@ -286,6 +286,7 @@ namespace TestRunnerLib
         {
             get
             {
+                MemoryManagement.FlushMemory();
                 _process.Refresh();
                 return _process.PrivateMemorySize64;
             }

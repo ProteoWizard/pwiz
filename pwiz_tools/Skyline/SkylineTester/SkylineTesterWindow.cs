@@ -614,6 +614,7 @@ namespace SkylineTester
                 // Quality
                 qualityPassDefinite,
                 qualityPassCount,
+                qualityPassIndefinite, 
                 pass0,
                 pass1,
                 qualityAllTests,

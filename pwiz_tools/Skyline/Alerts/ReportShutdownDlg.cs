@@ -82,8 +82,12 @@ namespace pwiz.Skyline.Alerts
         public static void SaveExceptionFile(Exception exception, bool forced = false)
         {
             var exceptionInfo = Environment.NewLine + exception + Environment.NewLine;
-            Trace.TraceError(exceptionInfo);
-            Console.WriteLine(exceptionInfo);
+
+            if (!forced)
+            {
+                Trace.TraceError(exceptionInfo);
+                Console.WriteLine(exceptionInfo);
+            }
 
             if (forced || !Program.FunctionalTest)
             {
