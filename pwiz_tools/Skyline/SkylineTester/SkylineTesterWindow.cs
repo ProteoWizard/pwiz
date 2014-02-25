@@ -568,6 +568,7 @@ namespace SkylineTester
             var root = CreateElement(
                 "SkylineTester",
                 tabs,
+                accessInternet,
 
                 // Forms
                 formsLanguage,
@@ -714,9 +715,18 @@ namespace SkylineTester
         {
             foreach (var element in doc.Descendants())
             {
-                var control = Controls.Find(element.Name.ToString(), true).FirstOrDefault();
+                var name = element.Name.ToString();
+                var control = Controls.Find(name, true).FirstOrDefault();
                 if (control == null)
+                {
+                    var menuItems = menuStrip1.Items.Find(name, true);
+                    if (menuItems.Length > 0)
+                    {
+                        ((ToolStripMenuItem)menuItems[0]).Checked = (element.Value == "true");
+                        break;
+                    }
                     continue;
+                }
 
                 var tab = control as TabControl;
                 if (tab != null)
@@ -851,6 +861,13 @@ namespace SkylineTester
                 if (dateTimePicker != null)
                 {
                     element.Add(new XElement(dateTimePicker.Name, dateTimePicker.Value.ToShortTimeString()));
+                    continue;
+                }
+
+                var menuItem = child as ToolStripMenuItem;
+                if (menuItem != null)
+                {
+                    element.Add(new XElement(menuItem.Name, menuItem.Checked));
                     continue;
                 }
 
