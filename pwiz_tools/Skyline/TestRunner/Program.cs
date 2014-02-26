@@ -42,7 +42,9 @@ namespace TestRunner
     internal static class Program
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll" };
-        private const int LeakThreshold = 50000;
+        private const int LeakThreshold = 100000;
+        private const int LeakThresholdLow = 25000;
+        private const int LeakThresholdHigh = 750000;
         private const int CrtLeakThreshold = 1000;
         private const int LeakCheckIterations = 50;
 
@@ -361,7 +363,7 @@ namespace TestRunner
                             slope = CalculateSlope(memoryPoints);
 
                             // Stop early if the leak magnitude is outside any ambiguous range.
-                            if (i >= 8 && (slope < LeakThreshold/2 || slope > LeakThreshold*8))
+                            if (i >= 8 && (slope < LeakThresholdLow || slope > LeakThresholdHigh))
                                 break;
                         }
 

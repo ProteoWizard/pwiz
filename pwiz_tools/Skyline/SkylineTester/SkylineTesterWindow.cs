@@ -721,10 +721,7 @@ namespace SkylineTester
                 {
                     var menuItems = menuStrip1.Items.Find(name, true);
                     if (menuItems.Length > 0)
-                    {
                         ((ToolStripMenuItem)menuItems[0]).Checked = (element.Value == "true");
-                        break;
-                    }
                     continue;
                 }
 
