@@ -28,7 +28,13 @@ namespace TestRunnerLib
 {
     class TestRunnerContext : TestContext
     {
-        private readonly Dictionary<string, string> _dictionary = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _dictionary;
+
+        public TestRunnerContext(bool accessInternet)
+        {
+            _dictionary = new Dictionary<string, string>();
+            _dictionary["AccessInternet"] = accessInternet.ToString();
+        }
 
         public override void WriteLine(string format, params object[] args)
         {

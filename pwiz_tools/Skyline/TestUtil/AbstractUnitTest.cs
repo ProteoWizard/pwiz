@@ -19,6 +19,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,6 +46,16 @@ namespace pwiz.SkylineTestUtil
         public TestContext TestContext { get; set; }
 // ReSharper restore MemberCanBeProtected.Global
 // ReSharper restore UnusedAutoPropertyAccessor.Global
+
+        protected bool AllowInternetAccess
+        {
+            get
+            {
+                var accessInternet = TestContext.Properties["AccessInternet"];
+                return accessInternet != null &&
+                    string.Compare(accessInternet.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
+            }
+        }
 
         private string[] _testFilesZips;
         public string TestFilesZip
