@@ -897,11 +897,14 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        public static readonly Regex REGEX_XML_ERROR = new Regex(@"There is an error in XML document \((\d+), (\d+)\)."); // Not L10N
+        public static readonly Regex REGEX_XML_ERROR = new Regex(@"\((\d+), (\d+)\)"); // Not L10N
 
         public static bool TryGetXmlLineColumn(string message, out int line, out int column)
         {
             line = column = 0;
+
+            if (!message.Contains("XML"))
+                return false;
 
             Match match = REGEX_XML_ERROR.Match(message);
             if (!match.Success)

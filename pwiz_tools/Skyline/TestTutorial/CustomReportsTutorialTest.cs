@@ -739,10 +739,6 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
             {
                 var chooseColumnTab = resultsGridViewEditor.ChooseColumnsTab;
-                foreach (var column in chooseColumnTab.GetSelectedColumns())
-                {
-                    chooseColumnTab.RemoveColumn(column.PropertyPath);
-                }
                 foreach (
                     var column in
                         new[]
@@ -752,10 +748,12 @@ namespace pwiz.SkylineTestTutorial
                             PropertyPath.Parse("TotalAreaRatio")
                         })
                 {
+                    Assert.IsTrue(chooseColumnTab.ColumnNames.Contains(column.Name));
                     Assert.IsTrue(chooseColumnTab.TrySelect(column), "Unable to select {0}", column);
-                    chooseColumnTab.AddSelectedColumn();
+                    chooseColumnTab.RemoveColumn(column);
+                    Assert.IsFalse(chooseColumnTab.ColumnNames.Contains(column.Name));
                 }
-                resultsGridViewEditor.DialogResult = DialogResult.OK;
+                resultsGridViewEditor.OkDialog();
             });
             PauseForScreenShot("Results grid with fewer columns (missing?)");  // No longer in tutorial?
 

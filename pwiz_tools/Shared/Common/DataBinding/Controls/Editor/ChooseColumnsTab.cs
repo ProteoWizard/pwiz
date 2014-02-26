@@ -316,7 +316,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void AddSelectedColumn()
         {
-            availableFieldsTreeColumns.SelectedNode.Checked = true;
+            // Surprisingly, setting Checked = true, even when already checked
+            // caused an automated test to add duplicate columns
+            if (!availableFieldsTreeColumns.SelectedNode.Checked)
+                availableFieldsTreeColumns.SelectedNode.Checked = true;
         }
 
         public int ColumnCount
