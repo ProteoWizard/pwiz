@@ -32,7 +32,7 @@ namespace pwiz.Skyline
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container(); 
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineWindow));
             this.contextMenuTreeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cutContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
