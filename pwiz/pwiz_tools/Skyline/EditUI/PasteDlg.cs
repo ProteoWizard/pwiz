@@ -736,7 +736,6 @@ namespace pwiz.Skyline.EditUI
                     tabControl1.Controls.Add(tab);
                 }
                 tabControl1.SelectedTab = tab;
-                Text = string.Format(Resources.PasteDlg_PasteFormat_Insert__0__,tabControl1.Text);
                 AcceptButton = tabControl1.SelectedTab != tabPageFasta ? btnInsert : null;
             }
         }

@@ -716,9 +716,9 @@
     <value>17</value>
   </data>
   <data name="textMaxTime.ToolTip" xml:space="preserve">
-<value>取得方法に関係なくクロマトグラムで
-許可される最大時間です。これを設定すると、勾配で関与しない部分で使用される可能性のある
-メモリとディスク容量を節約できます。</value>
+<value>取得方法に関係なくクロマトグラムで許可される最大時間です。
+これを設定すると、勾配で関与しない部分で
+使用される可能性のあるメモリとディスク容量を節約できます。</value>
   </data>
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
     <value>textMaxTime</value>
@@ -1233,10 +1233,10 @@ LTQ測定器用にThermo-Scientificが提供する
 <value>最適化値があれば使用(&amp;U)</value>
   </data>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
-<value>チェックマークをオンにすると、測定されたCEまたはDP最適化値を使用して
-メソッドリストと遷移リストでエクスポートされる値を
-選択します。最大総ピーク面積が得られる値が
-選択されます。</value>
+<value>チェックマークをオンにすると、測定されたCEまたは
+DP最適化値を使用してメソッドリストと遷移リストで
+エクスポートされる値を選択します。最大総ピーク面積が
+得られる値が選択されます。</value>
   </data>
   <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
     <value>cbUseOptimized</value>
@@ -1260,9 +1260,9 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>7</value>
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
-<value>質量対電荷比率から各前駆体の
-最適デクラスタリングポテンシャル(DP)を予測するのに使用する一次方程式です。同位体標識ペプチドは、非標識形態に対して
-予測されたDPを使用します。(AB測定器のみ)</value>
+<value>質量対電荷比率から各前駆体の最適デクラスタリングポテンシャル(DP)を
+予測するのに使用する一次方程式です。同位体標識ペプチドは、
+非標識形態に対して予測されたDPを使用します。(AB測定器のみ)</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
@@ -1313,8 +1313,8 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>5</value>
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
-<value>質量対電荷比率から各前駆体の
-最適衝突エネルギー(CE)を予測するのに使用する一次方程式です。同位体標識
+<value>質量対電荷比率から各前駆体の最適衝突エネルギー(CE)を
+予測するのに使用する一次方程式です。同位体標識
 ペプチドは、非標識形態に対して予測されたCEを使用します。</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
@@ -1482,8 +1482,8 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>5</value>
   </data>
   <data name="textIonTypes.ToolTip" xml:space="preserve">
-<value>ポテンシャルプロダクトイオンの計算に使用する
-カンマ区切りのプロダクトイオンタイプ (前駆体のa、b、c、x、y、z、p) のリストです</value>
+<value>ポテンシャルプロダクトイオンの計算に使用するカンマ区切りの
+プロダクトイオンタイプ (前駆体のa、b、c、x、y、z、p) のリストです</value>
   </data>
   <data name="&gt;&gt;textIonTypes.Name" xml:space="preserve">
     <value>textIonTypes</value>
@@ -2201,10 +2201,10 @@ LTQ測定器用にThermo-Scientificが提供する
 <value>フィルタされたイオン電荷とタイプ、フィルタされたプロダクトイオン(&amp;U)</value>
   </data>
   <data name="radioAllAndFiltered.ToolTip" xml:space="preserve">
-<value>[フィルタ] タブでイオン電荷とタイプのみを
-ランク用に選択したMS/MSピークの一致イオンに適用しますが、
-それがライブラリで見つからない場合は、
-フルフィルタに一致するすべてのプロダクトイオンも追加します。</value>
+<value>[フィルタ] タブでイオン電荷とタイプのみをランク用に
+選択したMS/MSピークの一致イオンに適用しますが、
+それがライブラリで見つからない場合は、フルフィルタに
+一致するすべてのプロダクトイオンも追加します。</value>
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
     <value>radioAllAndFiltered</value>

@@ -27,6 +27,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util.Extensions;
@@ -359,7 +360,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.IsNotNull(nodeGroup);
                         var nodeTran = document.FindNode(SkylineWindow.SelectedPath) as TransitionDocNode;
                         Assert.IsNotNull(nodeTran);
-                        var graph = SkylineWindow.GetGraphChrom(MULTI_FILE_REPLICATE_NAME);
+                        var graph = SkylineWindow.GetGraphChrom(Resources.ImportResultsDlg_DefaultNewName_Default_Name);
                         // New peak picking picks correct peak
                         Assert.AreEqual(19.8, graph.BestPeakTime.Value, 0.05);
 //                        TransitionGroupDocNode nodeGroupGraph;
@@ -651,8 +652,6 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.NewDocument);
         }
 
-        private const string MULTI_FILE_REPLICATE_NAME = "Chromatograms"; // Not L10N
-
         private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile)
         {
             var listNamedPathSets = new List<KeyValuePair<string, string[]>>();
@@ -669,7 +668,7 @@ namespace pwiz.SkylineTestTutorial
                 }
             }
             if (multiFile)
-                listNamedPathSets.Add(new KeyValuePair<string, string[]>(MULTI_FILE_REPLICATE_NAME, listPaths.ToArray()));
+                listNamedPathSets.Add(new KeyValuePair<string, string[]>(Resources.ImportResultsDlg_DefaultNewName_Default_Name, listPaths.ToArray()));
 
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {

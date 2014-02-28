@@ -126,10 +126,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
   <data name="btnRescoreAs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>182, 126</value>
+    <value>142, 130</value>
   </data>
   <data name="btnRescoreAs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>139, 32</value>
+    <value>227, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="btnRescoreAs.TabIndex" type="System.Int32, mscorlib">
@@ -157,10 +157,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnRescore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>72, 126</value>
+    <value>12, 130</value>
   </data>
   <data name="btnRescore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>104, 32</value>
+    <value>124, 23</value>
   </data>
   <data name="btnRescore.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -187,7 +187,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>327, 126</value>
+    <value>373, 130</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 32</value>
@@ -216,8 +216,11 @@
   <data name="labelMessage.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 21</value>
   </data>
+  <data name="labelMessage.MaximumSize" type="System.Drawing.Size, System.Drawing">
+    <value>408, 0</value>
+  </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 13</value>
+    <value>52, 13</value>
   </data>
   <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -245,7 +248,7 @@
     <value>-2, 0</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>418, 119</value>
+    <value>464, 119</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -269,7 +272,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>414, 165</value>
+    <value>460, 165</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

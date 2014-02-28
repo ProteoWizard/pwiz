@@ -129,7 +129,7 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>377, 22</value>
+    <value>340, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
@@ -154,7 +154,7 @@
     <value>BottomRight</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>266, 144</value>
+    <value>256, 117</value>
   </data>
   <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -184,7 +184,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>374, 144</value>
+    <value>336, 117</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -223,7 +223,7 @@
     <value>4, 0, 4, 0</value>
   </data>
   <data name="labelPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 17</value>
+    <value>26, 13</value>
   </data>
   <data name="labelPath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -247,7 +247,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnFindPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>442, 100</value>
+    <value>388, 81</value>
   </data>
   <data name="btnFindPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -280,7 +280,7 @@
     <value>48, 26</value>
   </data>
   <data name="labelMessage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>65, 17</value>
+    <value>52, 13</value>
   </data>
   <data name="labelMessage.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -307,7 +307,7 @@
     <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>487, 185</value>
+    <value>421, 150</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

@@ -72,18 +72,21 @@
             // 
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
+            this.helpTip.SetToolTip(this.label4, resources.GetString("label4.ToolTip"));
             // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
+            this.helpTip.SetToolTip(this.btnCancel, resources.GetString("btnCancel.ToolTip"));
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
             resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
+            this.helpTip.SetToolTip(this.btnOk, resources.GetString("btnOk.ToolTip"));
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
@@ -91,6 +94,7 @@
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
+            this.helpTip.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
             // 
             // textSlope
             // 
@@ -102,6 +106,7 @@
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
+            this.helpTip.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
             // 
             // textIntercept
             // 
@@ -121,6 +126,7 @@
             // 
             resources.ApplyResources(this.labelPeptides, "labelPeptides");
             this.labelPeptides.Name = "labelPeptides";
+            this.helpTip.SetToolTip(this.labelPeptides, resources.GetString("labelPeptides.ToolTip"));
             // 
             // labelRValue
             // 
@@ -133,6 +139,7 @@
             // 
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
+            this.helpTip.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
             // 
             // textTimeWindow
             // 
@@ -144,12 +151,13 @@
             // 
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
+            this.helpTip.SetToolTip(this.label5, resources.GetString("label5.ToolTip"));
             // 
             // comboCalculator
             // 
+            resources.ApplyResources(this.comboCalculator, "comboCalculator");
             this.comboCalculator.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboCalculator.FormattingEnabled = true;
-            resources.ApplyResources(this.comboCalculator, "comboCalculator");
             this.comboCalculator.Name = "comboCalculator";
             this.helpTip.SetToolTip(this.comboCalculator, resources.GetString("comboCalculator.ToolTip"));
             this.comboCalculator.SelectedIndexChanged += new System.EventHandler(this.comboCalculator_SelectedIndexChanged);
@@ -158,6 +166,7 @@
             // 
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
+            this.helpTip.SetToolTip(this.label6, resources.GetString("label6.ToolTip"));
             // 
             // btnUseCurrent
             // 
@@ -275,6 +284,7 @@
             this.MinimizeBox = false;
             this.Name = "EditRTDlg";
             this.ShowInTaskbar = false;
+            this.helpTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             ((System.ComponentModel.ISupportInitialize)(this.gridPeptides)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingPeptides)).EndInit();
             this.ResumeLayout(false);

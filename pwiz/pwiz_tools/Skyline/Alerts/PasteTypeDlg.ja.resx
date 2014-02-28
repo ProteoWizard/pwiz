@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -159,7 +159,7 @@
     <value>1</value>
   </data>
   <data name="radioProtein.Text" xml:space="preserve">
-<value>&amp;単一タンパク質シークエンスです。</value>
+<value>&amp;単一タンパク質シークエンス</value>
   </data>
   <data name="&gt;&gt;radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>

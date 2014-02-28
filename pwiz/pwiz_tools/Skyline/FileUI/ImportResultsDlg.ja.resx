@@ -365,9 +365,8 @@
   </data>
   <data name="radioCreateMultiple.ToolTip" xml:space="preserve">
 <value>1 回注入された繰り返し測定を希望する数だけファイルから追加します。
-各ファイルには、1 回注入または
-複数回注入が含まれます (.wiff)。各注入は個別の繰り返し測定として
-追加されます。
+各ファイルには、1 回注入または複数回注入が含まれます (.wiff)。
+各注入は個別の繰り返し測定として追加されます。
 </value>
   </data>
   <data name="&gt;&gt;radioCreateMultiple.Name" xml:space="preserve">

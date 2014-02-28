@@ -61,7 +61,6 @@
             // labelMessage
             // 
             resources.ApplyResources(this.labelMessage, "labelMessage");
-            this.labelMessage.MaximumSize = new System.Drawing.Size(362, 0);
             this.labelMessage.Name = "labelMessage";
             // 
             // panel1

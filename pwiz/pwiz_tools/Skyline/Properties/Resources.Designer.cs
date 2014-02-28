@@ -9944,15 +9944,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Insert {0}.
-        /// </summary>
-        public static string PasteDlg_PasteFormat_Insert__0__ {
-            get {
-                return ResourceManager.GetString("PasteDlg_PasteFormat_Insert__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to No errors.
         /// </summary>
         public static string PasteDlg_ShowNoErrors_No_errors {
