@@ -66,13 +66,14 @@ namespace TestRunnerLib
         public readonly Dictionary<string, int> FailureCounts = new Dictionary<string, int>();
         public InvokeSkyline Skyline { get; private set; }
         public int LastTestDuration { get; private set; }
+        public bool AccessInternet { get; set; }
+        public bool LiveReports { get; set; }
 
         public RunTests(
             bool demoMode,
             bool buildMode,
             bool offscreen,
             bool showStatus,
-            bool accessInternet,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -84,7 +85,7 @@ namespace TestRunnerLib
             _log = log;
             _process = Process.GetCurrentProcess();
             _showStatus = showStatus;
-            TestContext = new TestRunnerContext(accessInternet);
+            TestContext = new TestRunnerContext();
             SetTestDir(TestContext, results);
 
             // Set Skyline state for unit testing.
@@ -100,6 +101,9 @@ namespace TestRunnerLib
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
             Skyline.Get<string>("Name");
             Skyline.Run("Init");
+
+            AccessInternet = true;
+            LiveReports = true;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -163,6 +167,8 @@ namespace TestRunnerLib
             var testObject = Activator.CreateInstance(test.TestClassType);
 
             // Set the TestContext.
+            TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
+            TestContext.Properties["LiveReports"] = LiveReports.ToString();
             if (test.SetTestContext != null)
             {
                 var context = new object[] { TestContext };

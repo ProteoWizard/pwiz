@@ -30,10 +30,9 @@ namespace TestRunnerLib
     {
         private readonly Dictionary<string, string> _dictionary;
 
-        public TestRunnerContext(bool accessInternet)
+        public TestRunnerContext()
         {
             _dictionary = new Dictionary<string, string>();
-            _dictionary["AccessInternet"] = accessInternet.ToString();
         }
 
         public override void WriteLine(string format, params object[] args)

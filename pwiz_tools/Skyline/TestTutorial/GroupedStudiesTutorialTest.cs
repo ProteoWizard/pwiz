@@ -36,9 +36,9 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class GroupedStudiesTutorialTest : AbstractFunctionalTest, IHideFromSkylineTester
+    public class GroupedStudiesTutorialTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoLocalization]
         public void TestGroupedStudiesTutorial()
         {
             // Set true to look at tutorial screenshots.

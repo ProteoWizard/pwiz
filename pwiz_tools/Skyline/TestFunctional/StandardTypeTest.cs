@@ -56,11 +56,6 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\StandardTypeTest.zip";
             RunFunctionalTest();
         }
-        [TestMethod]
-        public void TestStandardTypeWithOldReports()
-        {
-            RunTestWithOldReports(TestStandardType);
-        }
 
         protected override void DoTest()
         {

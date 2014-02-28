@@ -257,7 +257,7 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, showStatus, accessInternet,
+                demoMode, buildMode, offscreen, showStatus,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 
@@ -293,23 +293,31 @@ namespace TestRunner
 
             if (qualityMode)
             {
-                // Pass 0: Test French number format with no vendor readers.
+                // Pass 0: Test an interesting collection of edge cases:
+                //         French number format,
+                //         No vendor readers,
+                //         No internet access,
+                //         Old reports
                 if (pass0)
                 {
                     runTests.Log("\r\n");
-                    runTests.Log("# Pass 0: Run with French number format, vendor readers disabled.\r\n");
+                    runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access, old reports.\r\n");
 
                     runTests.Language = new CultureInfo("fr");
-                    runTests.CheckCrtLeaks = CrtLeakThreshold;
                     runTests.Skyline.Set("NoVendorReaders", true);
+                    runTests.AccessInternet = false;
+                    runTests.LiveReports = false;
+                    runTests.CheckCrtLeaks = CrtLeakThreshold;
                     for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                     {
                         var test = testList[testNumber];
                         if (!runTests.Run(test, 0, testNumber))
                             removeList.Add(test);
                     }
-                    runTests.CheckCrtLeaks = 0;
                     runTests.Skyline.Set("NoVendorReaders", false);
+                    runTests.AccessInternet = true;
+                    runTests.LiveReports = true;
+                    runTests.CheckCrtLeaks = 0;
 
                     foreach (var removeTest in removeList)
                         testList.Remove(removeTest);

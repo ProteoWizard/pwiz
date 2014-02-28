@@ -42,8 +42,17 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public interface IHideFromSkylineTester {}
+    /// <summary>
+    /// Test method attribute which hides the test from SkylineTester.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoLocalizationAttribute : Attribute
+    {
+    }
 
+    /// <summary>
+    /// All Skyline functional tests MUST derive from this base class.
+    /// </summary>
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
@@ -51,7 +60,6 @@ namespace pwiz.SkylineTestUtil
 
         static AbstractFunctionalTest()
         {
-            IsEnableLiveReports = true;
             IsCheckLiveReportsCompatibility = false;
         }
 
@@ -429,22 +437,6 @@ namespace pwiz.SkylineTestUtil
         public static bool IsShowMatchingTutorialPages { get; set; }
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
-
-        public static bool IsEnableLiveReports { get; set; }
-
-        protected void RunTestWithOldReports(Action testMethod)
-        {
-            bool wasEnableLiveReports = IsEnableLiveReports;
-            try
-            {
-                IsEnableLiveReports = false;
-                testMethod();
-            }
-            finally
-            {
-                IsEnableLiveReports = wasEnableLiveReports;
-            }
-        }
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 

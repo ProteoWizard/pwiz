@@ -38,14 +38,14 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class QuasarTutorialTest : AbstractFunctionalTest, IHideFromSkylineTester
+    public class QuasarTutorialTest : AbstractFunctionalTest
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
         const int WM_KEYDOWN	= 0x100;
         private const int WM_KEYUP = 0x101;
 
-        [TestMethod]
+        [TestMethod, NoLocalization]
         public void TestQuasarTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -53,12 +53,6 @@ namespace pwiz.SkylineTestTutorial
 
             TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSARTutorial.zip";
             RunFunctionalTest();
-        }
-
-        // [TestMethod]  As needed.  This test takes a lot of time
-        public void TestQuasarTutorialWithOldReports()
-        {
-            RunTestWithOldReports(TestQuasarTutorial);
         }
 
         private string GetTestPath(string relativePath)

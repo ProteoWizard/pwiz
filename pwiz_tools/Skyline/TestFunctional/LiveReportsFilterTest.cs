@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestRatioFilter();
         }
+
         private void TestRatioFilter()
         {
             const double filterValue = 5.0;

@@ -36,9 +36,9 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class MSstatsTutorialTest : AbstractFunctionalTest, IHideFromSkylineTester
+    public class MSstatsTutorialTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoLocalization]
         public void TestMSstatsTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -46,12 +46,6 @@ namespace pwiz.SkylineTestTutorial
 
             TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MSstatsTutorial.zip"; // Not L10
             RunFunctionalTest();
-        }
-
-        // [TestMethod]  As needed.  This test takes a lot of time
-        public void TestMSstatsTutorialWithOldReports()
-        {
-            RunTestWithOldReports(TestMSstatsTutorial);
         }
 
         private string GetTestPath(string relativePath)

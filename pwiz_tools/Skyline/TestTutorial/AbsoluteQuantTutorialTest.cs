@@ -58,12 +58,6 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        // [TestMethod]  As needed.  This test takes a lot of time
-        public void TestAbsoluteQuantificationTutorialWithOldReports()
-        {
-            RunTestWithOldReports(TestAbsoluteQuantificationTutorial);
-        }
-
         protected override void DoTest()
         {
             var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";

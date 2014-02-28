@@ -68,12 +68,6 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        // [TestMethod]  As needed.  This test takes a lot of time
-        public void TestCustomReportsTutorialWithOldReports()
-        {
-            RunTestWithOldReports(TestCustomReportsTutorial);
-        }
-
         private new TestFilesDir TestFilesDir
         {
             get { return TestFilesDirs[0]; }

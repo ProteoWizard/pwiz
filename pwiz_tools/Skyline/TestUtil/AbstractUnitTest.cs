@@ -49,13 +49,21 @@ namespace pwiz.SkylineTestUtil
 
         protected bool AllowInternetAccess
         {
-            get
-            {
-                var accessInternet = TestContext.Properties["AccessInternet"];
-                return accessInternet != null &&
-                    string.Compare(accessInternet.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
-            }
+            get { return BoolValue("AccessInternet"); }
         }
+
+        protected bool IsEnableLiveReports
+        {
+            get { return BoolValue("LiveReports"); }
+        }
+
+        private bool BoolValue(string property)
+        {
+            var value = TestContext.Properties[property];
+            return value == null ||
+                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
+        }
+
 
         private string[] _testFilesZips;
         public string TestFilesZip
@@ -138,6 +146,7 @@ namespace pwiz.SkylineTestUtil
             log.Info(TestContext.TestName + " started");
 
             Settings.Init();
+            Settings.Default.EnableLiveReports = IsEnableLiveReports;
 
             STOPWATCH.Restart();
             Initialize();

@@ -349,7 +349,7 @@ namespace SkylineTester
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
-                    tutorialTests.AddRange(GetTestInfos(tutorialDll));
+                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute"));
                 var tutorialNodes = new TreeNode[tutorialTests.Count];
                 tutorialTests = tutorialTests.OrderBy(test => test).ToList();
                 RunUI(() =>
@@ -390,7 +390,7 @@ namespace SkylineTester
             return type.GetInterfaces().Any(t => t.Name == interfaceName);
         }
 
-        public IEnumerable<string> GetTestInfos(string testDll)
+        public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null)
         {
             var dllPath = Path.Combine(ExeDir, testDll);
             var assembly = Assembly.LoadFrom(dllPath);
@@ -398,12 +398,13 @@ namespace SkylineTester
 
             foreach (var type in types)
             {
-                if (type.IsClass && HasAttribute(type, "TestClassAttribute") && !Implements(type, "IHideFromSkylineTester"))
+                if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
                     var methods = type.GetMethods();
                     foreach (var method in methods)
                     {
-                        if (HasAttribute(method, "TestMethodAttribute"))
+                        if (HasAttribute(method, "TestMethodAttribute") && 
+                            (filterAttribute == null || !HasAttribute(method, filterAttribute)))
                             yield return method.Name;
                     }
                 }
