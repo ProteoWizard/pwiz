@@ -348,7 +348,13 @@ namespace pwiz.SkylineTestA
             var docList = docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_TRANSITION_LIST),
                 CultureInfo.InvariantCulture, ',', null, out pathTo);
 
-            AssertEx.IsDocumentState(docList, 3, 68, 134, 157, 482);
+            AssertEx.Serializable(docList);
+            AssertEx.IsDocumentState(docList, 3, 68, 134, 157, 481);
+            foreach (var nodeTran in docList.Transitions)
+            {
+                var it = nodeTran.Transition.IonType;
+                Assert.IsTrue(it == IonType.y || it == IonType.b || it == IonType.precursor, "Found unexpected non b, y or precursor ion type.");
+            }
 
             AssertEx.ThrowsException<InvalidDataException>(() => docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_MULTI_LOSS),
                 CultureInfo.InvariantCulture, ',', null, out pathTo));

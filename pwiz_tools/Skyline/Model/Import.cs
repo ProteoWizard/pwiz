@@ -665,6 +665,8 @@ namespace pwiz.Skyline.Model
             protected static int FindProduct(string[] fields, string sequence, IEnumerable<TransitionExp> transitionExps,
                 int iSequence, int iPrecursor, double tolerance, IFormatProvider provider, SrmSettings settings)
             {
+                double maxProductMz = 0;
+                int maxIndex = -1;
                 foreach (var transitionExp in transitionExps)
                 {
                     var mods = transitionExp.Precursor.VariableMods;
@@ -699,12 +701,18 @@ namespace pwiz.Skyline.Model
                                                                       out ordinal,
                                                                       out losses,
                                                                       out massShift);
-                        if (charge > 0)
-                            return i;
+
+                        // Look for the maximum product m/z, or this function may settle for a
+                        // collision energy or retention time that matches a single amino acid
+                        if (charge > 0 && productMz > maxProductMz)
+                        {
+                            maxProductMz = productMz;
+                            maxIndex = i;
+                        }
                     }
                 }
 
-                return -1;
+                return maxIndex;
             }
         }
 
@@ -823,25 +831,7 @@ namespace pwiz.Skyline.Model
 
             private static string RemoveSequenceNotes(string seq)
             {
-                if (seq.IndexOf('[') == -1 && seq.IndexOf('.') == -1) // Not L10N
-                    return seq;
-                StringBuilder seqBuild = new StringBuilder(seq.Length);
-                bool inNote = false;
-                foreach (var c in seq)
-                {
-                    if (!inNote)
-                    {
-                        if (c == '[') // Not L10N
-                            inNote = true;
-                        else
-                            seqBuild.Append(c);
-                    }
-                    else if (c == ']') // Not L10N
-                    {
-                        inNote = false;                        
-                    }
-                }
-                string seqClean = seqBuild.ToString();
+                string seqClean = FastaSequence.StripModifications(seq);
                 int dotIndex = seqClean.IndexOf('.'); // Not L10N
                 if (dotIndex != -1)
                     seqClean = seqClean.Substring(0, dotIndex);
@@ -1689,8 +1679,7 @@ namespace pwiz.Skyline.Model
 
         private void CompleteTransitionGroup()
         {
-            // Just use the first precursor explanation, even if there are multiple
-            var precursorExp = _activePrecursorExps[0];
+            var precursorExp = GetBestPrecursorExp();
             var transitionGroup = new TransitionGroup(_activePeptide,
                                                       precursorExp.PrecursorCharge,
                                                       precursorExp.LabelType,
@@ -1715,6 +1704,44 @@ namespace pwiz.Skyline.Model
             _activePrecursorMz = 0;
             _activePrecursorExps.Clear();
             _activeTransitionInfos.Clear();
+        }
+
+        private PrecursorExp GetBestPrecursorExp()
+        {
+            // If there is only one precursor explanation, return it
+            if (_activePrecursorExps.Count == 1)
+                return _activePrecursorExps[0];
+            // Unless the explanation comes from just one transition, then look for most reasonable given settings
+            int[] fragmentTypeCounts = new int[_activePrecursorExps.Count];
+            var preferredFragments = new List<IonType>();
+            foreach (var ionType in _settings.TransitionSettings.Filter.IonTypes)
+            {
+                if (preferredFragments.Contains(ionType))
+                    continue;
+                preferredFragments.Add(ionType);
+                // Add ion type pairs together, whether they are both in the settings or not
+                switch (ionType)
+                {
+                    case IonType.a: preferredFragments.Add(IonType.x); break;
+                    case IonType.b: preferredFragments.Add(IonType.y); break;
+                    case IonType.c: preferredFragments.Add(IonType.z); break;
+                    case IonType.x: preferredFragments.Add(IonType.a); break;
+                    case IonType.y: preferredFragments.Add(IonType.b); break;
+                    case IonType.z: preferredFragments.Add(IonType.c); break;
+                }
+            }
+            // Count transitions with the preferred types for all possible precursors
+            foreach (var tranExp in _activeTransitionInfos.SelectMany(info => info.TransitionExps))
+            {
+                int i = _activePrecursorExps.IndexOf(tranExp.Precursor);
+                if (i == -1)
+                    continue;
+                if (preferredFragments.Contains(tranExp.Product.IonType))
+                    fragmentTypeCounts[i]++;
+            }
+            // Return the precursor with the most fragments of the preferred type
+            var maxExps = fragmentTypeCounts.Max();
+            return _activePrecursorExps[fragmentTypeCounts.IndexOf(c => c == maxExps)];
         }
 
         /// <summary>
