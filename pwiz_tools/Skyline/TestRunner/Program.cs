@@ -238,7 +238,6 @@ namespace TestRunner
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
-            bool accessInternet = commandLineArgs.ArgAsBool("internet");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
@@ -291,118 +290,115 @@ namespace TestRunner
             var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray();
             var removeList = new List<TestInfo>();
 
-            if (qualityMode)
+            // Pass 0: Test an interesting collection of edge cases:
+            //         French number format,
+            //         No vendor readers,
+            //         No internet access,
+            //         Old reports
+            if (pass0)
             {
-                // Pass 0: Test an interesting collection of edge cases:
-                //         French number format,
-                //         No vendor readers,
-                //         No internet access,
-                //         Old reports
-                if (pass0)
+                runTests.Log("\r\n");
+                runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access, old reports.\r\n");
+
+                runTests.Language = new CultureInfo("fr");
+                runTests.Skyline.Set("NoVendorReaders", true);
+                runTests.AccessInternet = false;
+                runTests.LiveReports = false;
+                runTests.CheckCrtLeaks = CrtLeakThreshold;
+                for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                 {
-                    runTests.Log("\r\n");
-                    runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access, old reports.\r\n");
-
-                    runTests.Language = new CultureInfo("fr");
-                    runTests.Skyline.Set("NoVendorReaders", true);
-                    runTests.AccessInternet = false;
-                    runTests.LiveReports = false;
-                    runTests.CheckCrtLeaks = CrtLeakThreshold;
-                    for (int testNumber = 0; testNumber < testList.Count; testNumber++)
-                    {
-                        var test = testList[testNumber];
-                        if (!runTests.Run(test, 0, testNumber))
-                            removeList.Add(test);
-                    }
-                    runTests.Skyline.Set("NoVendorReaders", false);
-                    runTests.AccessInternet = true;
-                    runTests.LiveReports = true;
-                    runTests.CheckCrtLeaks = 0;
-
-                    foreach (var removeTest in removeList)
-                        testList.Remove(removeTest);
-                    removeList.Clear();
+                    var test = testList[testNumber];
+                    if (!runTests.Run(test, 0, testNumber))
+                        removeList.Add(test);
                 }
+                runTests.Skyline.Set("NoVendorReaders", false);
+                runTests.AccessInternet = true;
+                runTests.LiveReports = true;
+                runTests.CheckCrtLeaks = 0;
 
-                // Pass 1: Look for cumulative leaks when test is run multiple times.
-                if (pass1)
-                {
-                    runTests.Log("\r\n");
-                    runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
-
-                    for (int testNumber = 0; testNumber < testList.Count; testNumber++)
-                    {
-                        var test = testList[testNumber];
-                        bool failed = false;
-
-                        // Warm up memory by running the test in each language.
-                        for (int i = 0; i < qualityLanguages.Length; i++)
-                        {
-                            runTests.Language =  new CultureInfo(qualityLanguages[i]);
-                            if (!runTests.Run(test, 1, testNumber))
-                            {
-                                failed = true;
-                                removeList.Add(test);
-                                break;
-                            }
-                        }
-
-                        if (failed)
-                            continue;
-
-                        // Run test repeatedly until we can confidently assess the leak status.
-                        double slope = 0;
-                        var memoryPoints = new List<double> {runTests.TotalMemoryBytes};
-                        for (int i = 0; i < LeakCheckIterations; i++)
-                        {
-                            // Run the test in the next language.
-                            runTests.Language =
-                                new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
-                            if (!runTests.Run(test, 1, testNumber))
-                            {
-                                failed = true;
-                                removeList.Add(test);
-                                break;
-                            }
-
-                            // Run linear regression on memory size samples.
-                            var memoryBytes = runTests.TotalMemoryBytes;
-                            memoryPoints.Add(memoryBytes);
-                            slope = CalculateSlope(memoryPoints);
-
-                            // Stop early if the leak magnitude is outside any ambiguous range.
-                            if (i >= 8 && (slope < LeakThresholdLow || slope > LeakThresholdHigh))
-                                break;
-                        }
-
-                        if (failed)
-                            continue;
-
-                        if (slope >= LeakThreshold)
-                        {
-                            runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, Math.Floor(slope));
-                            removeList.Add(test);
-                        }
-                    }
-
-                    foreach (var removeTest in removeList)
-                        testList.Remove(removeTest);
-                    removeList.Clear();
-                }
+                foreach (var removeTest in removeList)
+                    testList.Remove(removeTest);
+                removeList.Clear();
             }
+
+            // Pass 1: Look for cumulative leaks when test is run multiple times.
+            if (pass1)
+            {
+                runTests.Log("\r\n");
+                runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
+
+                for (int testNumber = 0; testNumber < testList.Count; testNumber++)
+                {
+                    var test = testList[testNumber];
+                    bool failed = false;
+
+                    // Warm up memory by running the test in each language.
+                    for (int i = 0; i < qualityLanguages.Length; i++)
+                    {
+                        runTests.Language =  new CultureInfo(qualityLanguages[i]);
+                        if (!runTests.Run(test, 1, testNumber))
+                        {
+                            failed = true;
+                            removeList.Add(test);
+                            break;
+                        }
+                    }
+
+                    if (failed)
+                        continue;
+
+                    // Run test repeatedly until we can confidently assess the leak status.
+                    double slope = 0;
+                    var memoryPoints = new List<double> {runTests.TotalMemoryBytes};
+                    for (int i = 0; i < LeakCheckIterations; i++)
+                    {
+                        // Run the test in the next language.
+                        runTests.Language =
+                            new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
+                        if (!runTests.Run(test, 1, testNumber))
+                        {
+                            failed = true;
+                            removeList.Add(test);
+                            break;
+                        }
+
+                        // Run linear regression on memory size samples.
+                        var memoryBytes = runTests.TotalMemoryBytes;
+                        memoryPoints.Add(memoryBytes);
+                        slope = CalculateSlope(memoryPoints);
+
+                        // Stop early if the leak magnitude is outside any ambiguous range.
+                        if (i >= 8 && (slope < LeakThresholdLow || slope > LeakThresholdHigh))
+                            break;
+                    }
+
+                    if (failed)
+                        continue;
+
+                    if (slope >= LeakThreshold)
+                    {
+                        runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, Math.Floor(slope));
+                        removeList.Add(test);
+                    }
+                }
+
+                foreach (var removeTest in removeList)
+                    testList.Remove(removeTest);
+                removeList.Clear();
+            }
+
+            if (qualityMode)
+                languages = qualityLanguages;
 
             // Run all test passes.
             int pass = 1;
             int passEnd = pass + (int) loopCount;
-            if (qualityMode)
+            if (pass0 || pass1)
             {
                 pass++;
                 passEnd++;
-                if (loopCount <= 0)
-                    passEnd = int.MaxValue;
-                languages = qualityLanguages;
             }
-            else if (loopCount == 0)
+            if (loopCount <= 0)
             {
                 passEnd = int.MaxValue;
             }

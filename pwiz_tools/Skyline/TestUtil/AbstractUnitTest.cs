@@ -52,9 +52,11 @@ namespace pwiz.SkylineTestUtil
             get { return BoolValue("AccessInternet"); }
         }
 
+        private bool? _overrideLiveReports;
         protected bool IsEnableLiveReports
         {
-            get { return BoolValue("LiveReports"); }
+            get { return _overrideLiveReports ?? BoolValue("LiveReports"); }
+            set { _overrideLiveReports = value; }
         }
 
         private bool BoolValue(string property)
