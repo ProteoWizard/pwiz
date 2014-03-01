@@ -1824,5 +1824,17 @@ namespace pwiz.Skyline.Properties {
                 this["AllowMultiplePeptideSelection"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DisplayLanguage {
+            get {
+                return ((string)(this["DisplayLanguage"]));
+            }
+            set {
+                this["DisplayLanguage"] = value;
+            }
+        }
     }
 }

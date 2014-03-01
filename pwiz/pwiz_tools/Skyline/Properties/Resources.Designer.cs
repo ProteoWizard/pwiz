@@ -16189,6 +16189,17 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Default ({0}).
+        /// </summary>
+        public static string ToolOptionsUI_ToolOptionsUI_Default___0__
+        {
+            get
+            {
+                return ResourceManager.GetString("ToolOptionsUI_ToolOptionsUI_Default___0__", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Downloading {0}.

@@ -27,7 +27,8 @@ namespace pwiz.Common.SystemUtil
         static LocalizationHelper()
         {
             OriginalCulture = CurrentCulture = Thread.CurrentThread.CurrentCulture;
-//            CurrentCulture = new CultureInfo("ja");
+            OriginalUICulture = CurrentUICulture = Thread.CurrentThread.CurrentUICulture;
+            //            CurrentCulture = new CultureInfo("ja");
         }
 
         public static void InitThread()
@@ -39,7 +40,7 @@ namespace pwiz.Common.SystemUtil
         {
             if (CurrentCulture != null)
                 thread.CurrentCulture = CurrentCulture;
-            thread.CurrentUICulture = thread.CurrentCulture;
+            thread.CurrentUICulture = CurrentUICulture ?? thread.CurrentCulture;
         }
 
         /// <summary>
@@ -48,10 +49,14 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static CultureInfo OriginalCulture { get; private set; }
 
+        public static CultureInfo OriginalUICulture { get; private set; }
+
         /// <summary>
         /// Culture used to initialize all threads.  Set to the culture of the
         /// original thread by default.  Can be set in tests.
         /// </summary>
         public static CultureInfo CurrentCulture { get; set; }
+
+        public static CultureInfo CurrentUICulture { get; set; }
     }
 }

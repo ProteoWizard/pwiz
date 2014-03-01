@@ -36,17 +36,22 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditServers = new System.Windows.Forms.Button();
             this.tabMisc = new System.Windows.Forms.TabPage();
             this.checkBoxLiveReports = new System.Windows.Forms.CheckBox();
+            this.tabLanguage = new System.Windows.Forms.TabPage();
+            this.labelDisplayLanguage = new System.Windows.Forms.Label();
+            this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabMisc.SuspendLayout();
+            this.tabLanguage.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
             // 
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPanorama);
+            this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
@@ -92,6 +97,25 @@ namespace pwiz.Skyline.ToolsUI
             this.checkBoxLiveReports.Name = "checkBoxLiveReports";
             this.checkBoxLiveReports.UseVisualStyleBackColor = true;
             // 
+            // tabLanguage
+            // 
+            this.tabLanguage.Controls.Add(this.labelDisplayLanguage);
+            this.tabLanguage.Controls.Add(this.listBoxLanguages);
+            resources.ApplyResources(this.tabLanguage, "tabLanguage");
+            this.tabLanguage.Name = "tabLanguage";
+            this.tabLanguage.UseVisualStyleBackColor = true;
+            // 
+            // labelDisplayLanguage
+            // 
+            resources.ApplyResources(this.labelDisplayLanguage, "labelDisplayLanguage");
+            this.labelDisplayLanguage.Name = "labelDisplayLanguage";
+            // 
+            // listBoxLanguages
+            // 
+            resources.ApplyResources(this.listBoxLanguages, "listBoxLanguages");
+            this.listBoxLanguages.FormattingEnabled = true;
+            this.listBoxLanguages.Name = "listBoxLanguages";
+            // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
@@ -124,6 +148,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabPanorama.PerformLayout();
             this.tabMisc.ResumeLayout(false);
             this.tabMisc.PerformLayout();
+            this.tabLanguage.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -139,5 +164,8 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.ListBox listboxServers;
         private System.Windows.Forms.TabPage tabMisc;
         private System.Windows.Forms.CheckBox checkBoxLiveReports;
+        private System.Windows.Forms.TabPage tabLanguage;
+        private System.Windows.Forms.ListBox listBoxLanguages;
+        private System.Windows.Forms.Label labelDisplayLanguage;
     }
 }

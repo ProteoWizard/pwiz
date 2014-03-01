@@ -6174,4 +6174,8 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
     <value>Retention time difference squared</value>
   </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
+    <value>Default ({0})</value>
+    <comment>Example: Default (English)</comment>
+  </data>
 </root>

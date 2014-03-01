@@ -1804,6 +1804,7 @@
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
     <Compile Include="Util\DotTraceProfile.cs" />

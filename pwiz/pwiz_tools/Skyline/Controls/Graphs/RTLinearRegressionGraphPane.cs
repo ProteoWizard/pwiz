@@ -344,7 +344,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void RefineData()
         {
             // Called on a new thread
-            Thread.CurrentThread.CurrentUICulture = LocalizationHelper.CurrentCulture;
+            LocalizationHelper.InitThread();
             try
             {
                 if (Refine(() => !IsValidFor(GraphSummary.DocumentUIContainer.Document)))

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -41,6 +42,23 @@ namespace pwiz.Skyline.ToolsUI
 
             // Hide ability to turn off live reports
             //tabControl.TabPages.Remove(tabMisc);
+
+            // Populate the languages list with the languages that Skyline has been localized to
+            string defaultDisplayName = string.Format(Resources.ToolOptionsUI_ToolOptionsUI_Default___0__,
+                CultureUtil.GetDisplayLanguage(CultureInfo.InstalledUICulture).DisplayName);
+            listBoxLanguages.Items.Add(new DisplayLanguageItem(string.Empty, defaultDisplayName));
+            foreach (var culture in CultureUtil.AvailableDisplayLanguages())
+            {
+                listBoxLanguages.Items.Add(new DisplayLanguageItem(culture.Name, culture.DisplayName));
+            }
+            for (int i = 0; i < listBoxLanguages.Items.Count; i++)
+            {
+                var displayLanguageItem = (DisplayLanguageItem) listBoxLanguages.Items[i];
+                if (Equals(displayLanguageItem.Key, Settings.Default.DisplayLanguage))
+                {
+                    listBoxLanguages.SelectedIndex = i;
+                }
+            }
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)
@@ -58,6 +76,11 @@ namespace pwiz.Skyline.ToolsUI
             if (DialogResult == DialogResult.OK)
             {
                 Program.MainWindow.SetEnableLiveReports(checkBoxLiveReports.Checked);
+                var displayLanguageItem = listBoxLanguages.SelectedItem as DisplayLanguageItem;
+                if (null != displayLanguageItem)
+                {
+                    Settings.Default.DisplayLanguage = displayLanguageItem.Key;
+                }
             }
             base.OnClosed(e);
         }
@@ -65,6 +88,21 @@ namespace pwiz.Skyline.ToolsUI
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
+        }
+
+        private class DisplayLanguageItem
+        {
+            public DisplayLanguageItem(string key, string displayName)
+            {
+                Key = key;
+                DisplayName = displayName;
+            }
+            public string DisplayName { get; private set; }
+            public string Key { get; private set; }
+            public override string ToString()
+            {
+                return DisplayName;
+            }
         }
     }
 }

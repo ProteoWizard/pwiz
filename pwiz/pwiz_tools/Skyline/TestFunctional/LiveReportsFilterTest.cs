@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             AddFilter(documentGrid, PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value")
                         .Property(RatioPropertyDescriptor.MakePropertyName(RatioPropertyDescriptor.RATIO_PREFIX, isotopeLabel)), 
                     FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
-                    filterValue.ToString(CultureInfo.CurrentUICulture));
+                    filterValue.ToString(CultureInfo.CurrentCulture));
             RunUI(() =>
             {
                 var colPeptide = documentGrid.FindColumn(PropertyPath.Parse("Peptide"));

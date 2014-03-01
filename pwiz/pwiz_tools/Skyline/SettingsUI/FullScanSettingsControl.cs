@@ -675,20 +675,20 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializeRetentionTimeFilterUI()
         {
             tbxTimeAroundMs2Ids.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_MS2_IDS
-                .ToString(CultureInfo.CurrentUICulture);
+                .ToString(CultureInfo.CurrentCulture);
             tbxTimeAroundMs2Ids.Enabled = false;
             tbxTimeAroundPrediction.Text = TransitionSettingsUI.DEFAULT_TIME_AROUND_PREDICTION
-                .ToString(CultureInfo.CurrentUICulture);
+                .ToString(CultureInfo.CurrentCulture);
             tbxTimeAroundPrediction.Enabled = false;
             if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
             {
                 radioUseSchedulingWindow.Checked = true;
-                tbxTimeAroundPrediction.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
+                tbxTimeAroundPrediction.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentCulture);
             }
             else if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 radioTimeAroundMs2Ids.Checked = true;
-                tbxTimeAroundMs2Ids.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
+                tbxTimeAroundMs2Ids.Text = FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentCulture);
             }
             else
             {
@@ -729,11 +729,11 @@ namespace pwiz.Skyline.SettingsUI
                     break;
                 case RetentionTimeFilterType.scheduling_windows:
                     radioUseSchedulingWindow.Checked = true;
-                    tbxTimeAroundPrediction.Text = length.ToString(CultureInfo.CurrentUICulture);
+                    tbxTimeAroundPrediction.Text = length.ToString(CultureInfo.CurrentCulture);
                     break;
                 case RetentionTimeFilterType.ms2_ids:
                     radioTimeAroundMs2Ids.Checked = true;
-                    tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
+                    tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentCulture);
                     break;
                 default:
                     throw new ArgumentException(Resources.FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType, "retentionTimeFilterType"); // Not L10N
