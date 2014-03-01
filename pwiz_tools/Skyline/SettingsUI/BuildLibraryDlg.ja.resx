@@ -384,8 +384,8 @@
   <data name="textAuthority.ToolTip" xml:space="preserve">
 <value>この値は、このライブラリを一意に識別するLSIDに
 使用されます。これは他の研究室が使用しないもの、
-つまり研究室のウェブサーバーのDNS名などです。または、少なくとも
-たとえば
+つまり研究室のウェブサーバーのDNS名などです。
+または、少なくとも
 
 proteome.gs.washington.edu や
 tabb.vanderbilt.edu などのようなものにします。</value>

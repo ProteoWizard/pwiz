@@ -4019,9 +4019,6 @@ Are you sure you want to continue?</value>
   <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
     <value>Legacy Libraries</value>
   </data>
-  <data name="PasteDlg_PasteFormat_Insert__0__" xml:space="preserve">
-    <value>Insert {0}</value>
-  </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
     <value>Retention time prediction calculator is unable to score.</value>
   </data>

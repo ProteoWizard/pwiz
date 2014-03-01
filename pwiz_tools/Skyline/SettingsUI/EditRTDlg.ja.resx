@@ -699,8 +699,8 @@ SSRCalc - シークエンス固有の保持カルキュレータ。疎水性カ�
 <value>回帰の自動計算(&amp;O)</value>
   </data>
   <data name="cbAutoCalc.ToolTip" xml:space="preserve">
-<value>チェックマークをオンにすると、Skylineが
-インポートされた各ファイルのスコアによる保持時間の各回帰に基づいて
+<value>チェックマークをオンにすると、Skylineがインポートされた
+各ファイルのスコアによる保持時間の各回帰に基づいて
 予測に使用する勾配と切片を計算します</value>
   </data>
   <data name="&gt;&gt;cbAutoCalc.Name" xml:space="preserve">

@@ -4019,9 +4019,6 @@
   <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
 <value>レガシーライブラリ</value>
   </data>
-  <data name="PasteDlg_PasteFormat_Insert__0__" xml:space="preserve">
-<value>{0}を挿入</value>
-  </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
 <value>保持時間予測カルキュレータはスコアできません。</value>
   </data>

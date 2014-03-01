@@ -475,7 +475,7 @@ http://www.zlib.net</value>
     <value>True</value>
   </data>
   <data name="linkLabel1.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
-    <value>246, 15</value>
+    <value>181, 22</value>
   </data>
   <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
     <value>219, 44</value>
@@ -494,9 +494,9 @@ http://www.zlib.net</value>
 
 MacCoss Lab, Department of Genome Sciences, UW
 
-このソフトウェアは、連邦および民間資金源を使用してMacCoss Labにより
-作成されました。詳細については、Skylineウェブサイトを
-ご覧ください。</value>
+このソフトウェアは、連邦および民間資金源を使用して、
+MacCoss Labにより作成されました。詳細については、
+Skylineウェブサイトをご覧ください。</value>
   </data>
   <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
     <value>linkLabel1</value>

@@ -66,7 +66,7 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // ShowRTThresholdDlg
+            // ChromatogramRTThresholdDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
@@ -80,7 +80,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "ShowRTThresholdDlg";
+            this.Name = "ChromatogramRTThresholdDlg";
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();

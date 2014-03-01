@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -238,7 +238,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>注釈は、Skylineドキュメントで要素に関連付けられる追加データです。このダイアログでは、このドキュメントではどの注釈が使用できるかを指定したり、新しい注釈を定義したりすることができます。</value>
+<value>注釈は、Skylineドキュメントにある要素に関連付けられる追加データです。このダイアログでは、このドキュメントでどの注釈が使用できるかを指定したり、新しい注釈を定義したりすることができます。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

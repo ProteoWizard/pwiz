@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Close();
         }
 
-        private static void graphControl_ContextMenuBuilder(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip,
+        private void graphControl_ContextMenuBuilder(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip,
             Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             for (int i = menuStrip.Items.Count - 1; i >= 0; i--)

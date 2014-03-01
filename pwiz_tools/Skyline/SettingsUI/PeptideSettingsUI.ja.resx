@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -415,9 +415,9 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-<value>質量分析計に注入される試料マトリックスに存在可能な
-タンパク質のフルセットを指定する
-処理済みFASTAシークエンス情報です。</value>
+<value>質量分析計に注入される試料マトリックスに
+存在可能なタンパク質のフルセットを
+指定する処理済みFASTAシークエンス情報です。</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -529,8 +529,8 @@
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
 <value>チェックマークをオンにすると、指定したフィルタとライブラリ設定を使って
-タンパク質からペプチドが自動的に選択されます。オンにしない場合は、すべてのペプチドを
-手動ドキュメント編集で選択する必要があります。</value>
+タンパク質からペプチドが自動的に選択されます。オンにしない場合は、
+すべてのペプチドを手動ドキュメント編集で選択する必要があります。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -741,7 +741,7 @@
 <value>構築(&amp;B)...</value>
   </data>
   <data name="btnBuildLibrary.ToolTip" xml:space="preserve">
-<value>さまざまなペプチド検索エンジンからのペプチド検索結果から
+<value>さまざまなペプチド検索エンジンのペプチド検索結果から
 MS/MSスペクトルライブラリを構築します。</value>
   </data>
   <data name="&gt;&gt;btnBuildLibrary.Name" xml:space="preserve">
@@ -767,8 +767,8 @@ MS/MSスペクトルライブラリを構築します。</value>
   </data>
   <data name="comboRank.ToolTip" xml:space="preserve">
 <value>一致するペプチドのランキングに使用できるライブラリ内で
-各スペクトルに関連付ける値を指定します。すべてのライブラリ形式がランキングに同じ値を提供するわけでは
-ありません。</value>
+各スペクトルに関連付ける値を指定します。すべての
+ライブラリ形式がランキングに同じ値を提供するわけではありません。</value>
   </data>
   <data name="&gt;&gt;comboRank.Name" xml:space="preserve">
     <value>comboRank</value>
@@ -830,7 +830,7 @@ MS/MSスペクトルライブラリを構築します。</value>
   <data name="comboMatching.ToolTip" xml:space="preserve">
 <value>ペプチド選択戦略を指定します。
 ライブラリ - ライブラリスペクトルに一致数ペプチドのみを選択します
-フィルタ - ライブラリの内容を無視し、代わりに [フィルタ] タブの設定を選択して使用します。
+フィルタ - ライブラリの内容を無視し、代わりに [フィルタ] タブの設定を選択して使用します
 ライブラリとフィルタ - ライブラリスペクトルとフィルタの両方に一致するペプチドを選択します
 ライブラリまたはフィルタ - ライブラリスペクトルまたはフィルタに一致するペプチドを選択します</value>
   </data>
@@ -914,14 +914,13 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>1</value>
   </data>
   <data name="listLibraries.ToolTip" xml:space="preserve">
-<value>現在のドキュメント内のペプチドと遷移に一致する
-MS/MSスペクトルライブラリのセットです。これらのライブラリを使用すると、
-ドキュメント内でペプチドと遷移の両方をランクしたり選択したりできます。
+<value>現在のドキュメント内のペプチドと遷移に一致するMS/MSスペクトルライブラリの
+セットです。これらのライブラリを使用すると、ドキュメント内でペプチドと
+遷移の両方をランクしたり選択したりできます。
 
 ライブラリスペクトルは、このリストでの表示順で自動的に一致されます。
-まず軽いスペクトルとの一致、続いて同位体
-標識スペクトルが、[修飾] タブでの標識タイプ
-リスト順に一致されます。</value>
+まず軽いスペクトルとの一致、続いて同位体標識スペクトルが、[修飾] タブでの
+標識タイプリスト順に一致されます。</value>
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
