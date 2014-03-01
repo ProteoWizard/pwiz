@@ -129,6 +129,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PeakScoreCompareTest.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PerfMinimizeResultsTest.cs" />

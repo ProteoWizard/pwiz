@@ -94,6 +94,10 @@ namespace pwiz.Common.SystemUtil
         private readonly List<KeyValuePair<string, long>> _perftimersList;
         private readonly List<int> _callstack;
         private readonly string _name;
+        public const string HEADERLINE_TITLE = "Performance stats for "; // Not L10N
+        public const string HEADERLINE_COLUMNS =
+            "method,msecWithoutChildCalls,pctWithoutChildCalls,nCalls,msecAvg,msecMax,msecMin"; // Not L10N
+        public const string CSVLINE_FORMAT = "{0},{1},{2},{3},{4},{5},{6}\r\n"; // not L10N
 
         static private string cleanupName(string name)
         {
@@ -173,7 +177,7 @@ namespace pwiz.Common.SystemUtil
                 }
             }
             // assemble a report for each method 
-            string log = "Performance stats for " + _name + ":\r\nmethod,msecWithoutChildCalls,pctWithoutChildCalls,nCalls,msecAvg,msecMax,msecMin\r\n"; // Not L10N
+            string log = HEADERLINE_TITLE + _name + ":\r\n"+HEADERLINE_COLUMNS+"\r\n"; // Not L10N
             foreach (var t in times)
             {
                 // total the leaf times to determine the unaccounted time
@@ -190,7 +194,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     key = key.Substring(3);
                 }
-                string info = String.Format("{0},{1},{2},{3},{4},{5},{6}\r\n", key,
+                string info = String.Format(CSVLINE_FORMAT, key,
                     (double)(t.Value.Sum() - leaftime) / TimeSpan.TicksPerMillisecond,
                     (t.Value.Sum()!=0) ? 100.0 * (double)(t.Value.Sum() - leaftime) / t.Value.Sum() : 100.0,
                     t.Value.Count(),
@@ -230,5 +234,88 @@ namespace pwiz.Common.SystemUtil
                 return new PerfUtilActual(name);
             }
         }
+
+        /// <summary>
+        /// produce a summary of a log with repeating themes
+        /// </summary>
+        /// <param name="logs">the log</param>
+        /// <param name="splits">used to combine events - for example if splits 
+        /// was ["foo"] then events "bam\foo\bar" and "bam\foo\baz" would combine into
+        /// as single event "bam"</param>
+        /// <returns></returns>
+        public static string SummarizeLogs(IList<String> logs,IList<string> splits)
+        {
+            var perfItems = new Dictionary<string,PerfItem>();
+            const int nameColumn = 0;
+            const int durationColumn = 1;
+            PerfItem curPerfItem = null;
+            foreach (var lines in logs)
+            {
+                foreach (var subline in lines.Split('\n'))
+                {
+                    var line = subline;
+                    if (line.StartsWith(PerfUtilActual.HEADERLINE_TITLE))
+                    {
+                        // if split on bar, combine /foo/bar/baz with foo/bar/buz as foo/bar
+                        foreach (var s in splits)
+                        {
+                            var sline = line.Split(new []{s.Replace('/','\\')}, StringSplitOptions.None)[0];
+                            if (sline != line)
+                                line = sline + s;
+                        }
+                        // and strip the leading boilerplate
+                        line = line.Substring(PerfUtilActual.HEADERLINE_TITLE.Length).Trim();
+                        if (!perfItems.ContainsKey(line))
+                        {
+                            perfItems.Add(line,new PerfItem {ReplicateCount=0, itemStats = new Dictionary<string, List<double>>() });
+                        }
+                        curPerfItem = perfItems[line];
+                        curPerfItem.ReplicateCount++;
+                    }
+                    else if (curPerfItem != null)
+                    {
+                        var columns = line.Split(',');
+                        double duration;
+                        if ((columns.Count() == PerfUtilActual.CSVLINE_FORMAT.Split(',').Count()) && // looks like one of ours
+                            Double.TryParse(columns[durationColumn],out duration))
+                        {
+                            string item = columns[nameColumn]; // function name
+                            if (curPerfItem.itemStats.ContainsKey(item))
+                                curPerfItem.itemStats[item].Add(duration);
+                            else
+                                curPerfItem.itemStats.Add(item,new List<double>{duration});
+                        }
+                    }
+                }
+            }
+            string result = "";
+            if (perfItems.Count>0)
+            {
+                result = "";
+                foreach (var perfItem in perfItems)
+                {
+                    if (result == "")
+                    {
+                        // first one, grab subheadings (yes, this assumes they are all the same throughout)
+                        // and lay them out as columns along with name
+                        result = "\r\nname";
+                        foreach (var pair in perfItem.Value.itemStats)
+                            result += ("," + pair.Key);
+                        result += "\r\n";
+                    }
+                    result += perfItem.Key;
+                    foreach (var pair in perfItem.Value.itemStats)
+                        result += ("," + pair.Value.Sum()/perfItem.Value.ReplicateCount);
+                    result += "\r\n";
+                }
+            }
+            return result;
+        }
+    }
+
+    internal class PerfItem
+    {
+        public int ReplicateCount { get; set; } // not quite the same thing as itemstats length
+        public Dictionary<string, List<double>> itemStats { get; set; }
     }
 }

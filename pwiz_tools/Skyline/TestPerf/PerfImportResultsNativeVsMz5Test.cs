@@ -21,6 +21,7 @@
 using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -35,6 +36,8 @@ namespace TestPerf
     {
         private string _skyFile;
         private string _dataFile;
+        private TestFilesDir _testFilesDir;
+        private int _loopcount;
 
         /// <summary>
         /// compare various raw files and mz5 equivalents.
@@ -87,6 +90,14 @@ namespace TestPerf
                 "BSA_100fmol_SWATH.d");
         }
 
+        public void AgilentDdaVsMz5ChromatogramPerformanceTest()
+        {
+            NativeVsMz5ChromatogramPerformanceTest(
+                "PerfImportResultsAgilentDDaVsMz5.zip",
+                "fullscan_data\\BSA_Agilent_MS1.sky",
+                "fullscan_data\\1-10amol-BSA-r001.d");
+        }
+
         public void BrukerFullScanMS1filteringPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -115,35 +126,46 @@ namespace TestPerf
 //        [TestMethod] // commented out so it doesn't get run in normal use
         public void AllVsMz5ChromatogramPerformanceTests()
         {
+            _loopcount = 3;
+            Log.AddMemoryAppender();
             AbDiaVsMz5ChromatogramPerformanceTest();
             AbIdaVsMz5ChromatogramPerformanceTest();
             AgilentDiaVsMz5ChromatogramPerformanceTest();
+            AgilentDdaVsMz5ChromatogramPerformanceTest();
             //BrukerFullScanMS1filteringPerformanceTest();  Bruker and MSTest don't get along
             //BrukerFullScanMSeDataPerformanceTest();
             //BrukerFullScanSWATHDataPerformanceTest();
             ThermoDdaVsMz5ChromatogramPerformanceTest();
             ThermoDiaVsMz5ChromatogramPerformanceTest();
             WatersVsMz5ChromatogramPerformanceTest();
+            var logs = Log.GetMemoryAppendedLogEvents();
+            var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
+            var log = new Log("Summary");
+            log.Info(stats.Replace(_testFilesDir.PersistentFilesDir, ""));
         }
 
         public void NativeVsMz5ChromatogramPerformanceTest(string zipFile, string skyFile, string rawFile)
         {
-            // compare mz5 and raw import times
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + zipFile;
-            var mz5File = Path.ChangeExtension(rawFile, "mz5");
-            TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-            _skyFile = testFilesDir.GetTestPath(skyFile);
-            string nativeResults = testFilesDir.GetTestPath(rawFile);
-            string mz5Results = Path.ChangeExtension(nativeResults,"mz5");
-
-            MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // turn on performance measurement
-
-            foreach (var resultspath in new[] { mz5Results, nativeResults })  //
+            for (var loop=0;loop<_loopcount+1;loop++) // one extra initial loop for warmup
             {
-                _dataFile = resultspath;
-                RunFunctionalTest();
-                File.Delete(Path.ChangeExtension(_skyFile,"skyd")); // make sure we're clean for next pass
+                // compare mz5 and raw import times
+                TestFilesZip = "https://skyline.gs.washington.edu/perftests/" + zipFile;
+                var mz5File = Path.ChangeExtension(rawFile, "mz5");
+                TestFilesPersistent = new[] { rawFile, mz5File }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
+                _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
+                _skyFile = _testFilesDir.GetTestPath(skyFile);
+                string nativeResults = _testFilesDir.GetTestPath(rawFile);
+                string mz5Results = Path.ChangeExtension(nativeResults,"mz5");
+
+                MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop==0); // turn on performance measurement after warmup loop
+
+                foreach (var resultspath in new[] { mz5Results, nativeResults })  //
+                {
+                    _dataFile = resultspath;
+                    RunFunctionalTest();
+                    File.Delete(Path.ChangeExtension(_skyFile,"skyd")); // make sure we're clean for next pass
+                }
+                
             }
         }
 

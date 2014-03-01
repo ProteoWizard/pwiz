@@ -860,6 +860,29 @@ namespace pwiz.SkylineTestUtil
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
         }
 
+        public void ImportResultsReplicatesCE(string replicatesDirName, int waitForLoadSeconds = 420)
+        {
+
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            {
+                importResultsDlg.RadioAddNewChecked = true;
+                importResultsDlg.OptimizationName = ExportOptimize.CE;
+                importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(replicatesDirName).ToArray();
+                string prefix = ImportResultsDlg.GetCommonPrefix(Array.ConvertAll(importResultsDlg.NamedPathSets, ns => ns.Key));
+                // Rename all the replicates to remove the specified prefix, so that dialog doesn't pop up.
+                for (int i = 0; i < importResultsDlg.NamedPathSets.Length; i++)
+                {
+                    var namedSet = importResultsDlg.NamedPathSets[i];
+                    importResultsDlg.NamedPathSets[i] = new KeyValuePair<string, string[]>(
+                        namedSet.Key.Substring(prefix.Length), namedSet.Value);
+                }
+                importResultsDlg.OkDialog();
+            });
+
+            WaitForCondition(waitForLoadSeconds * 1000,
+                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+        }
+
         public void ImportResultsFiles(IEnumerable<string> fileNames, int waitForLoadSeconds = 420)
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);

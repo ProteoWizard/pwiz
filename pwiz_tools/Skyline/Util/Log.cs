@@ -17,22 +17,27 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using log4net;
+using log4net.Appender;
 using log4net.Core;
+using log4net.Repository.Hierarchy;
 
 namespace pwiz.Skyline.Util
 {
     /// <summary>
     /// Simplifying wrapper for log4net log.
     /// </summary>
-    public class Log : log4net.ILog
+    public class Log : ILog
     {
-        private readonly log4net.ILog _log;
+        private readonly ILog _log;
 
-        public Log(string className) : this(log4net.LogManager.GetLogger(className))
+        public Log(string className) : this(LogManager.GetLogger(className))
         {
         }
 
-        protected Log(log4net.ILog log)
+        protected Log(ILog log)
         {
             _log = log;
         }
@@ -219,11 +224,54 @@ namespace pwiz.Skyline.Util
         public bool IsWarnEnabled { get { return _log.IsWarnEnabled; } }
         public bool IsErrorEnabled { get { return _log.IsErrorEnabled; } }
         public bool IsFatalEnabled { get { return _log.IsFatalEnabled; } }
+
+        /// <summary>
+        /// call this to direct logging to an array in memory - useful in performace tests where we may wish
+        /// to parse the log for timing info
+        /// code fragment from http://dhvik.blogspot.com/2008/08/adding-appender-to-log4net-in-runtime.html
+        /// </summary>
+        static public void AddMemoryAppender()
+        {
+            //First create and configure the appender  
+            MemoryAppender memoryAppender = new MemoryAppender {Name = "MemoryAppender"};
+
+            //Notify the appender on the configuration changes  
+            memoryAppender.ActivateOptions();
+
+            //Get the logger repository hierarchy.  
+            Hierarchy repository = LogManager.GetRepository() as Hierarchy;
+
+            if (repository != null)
+            {
+                //and add the appender to the root level  
+                //of the logging hierarchy  
+                repository.Root.AddAppender(memoryAppender);
+
+                //configure the logging at the root.  
+                repository.Root.Level = Level.All;
+
+                //mark repository as configured and  
+                //notify that is has changed.  
+                repository.Configured = true;
+                repository.RaiseConfigurationChanged(EventArgs.Empty);                              
+            }
+        }
+
+        static public IList<String> GetMemoryAppendedLogEvents()
+        {
+            var result = new List<string>();
+            foreach (var appender in LogManager.GetRepository().GetAppenders().ToList().OfType<MemoryAppender>())
+            {
+                result.AddRange(appender.GetEvents().Select(logEvent => logEvent.RenderedMessage));
+                appender.Clear(); // done with that - make sure it doesn't show up in next test
+            }
+            return result;
+        }
     }
 
     public class Log<T> : Log
     {
-        public Log() : base(log4net.LogManager.GetLogger(typeof (T).Name))
+        public Log() : base(LogManager.GetLogger(typeof (T).Name))
         {
         }
 
@@ -245,4 +293,5 @@ namespace pwiz.Skyline.Util
             new Log("DebugLog").InfoFormat(format, args);   // Not L10N
         }
     }
+
 }
