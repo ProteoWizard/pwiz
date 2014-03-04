@@ -244,7 +244,7 @@ namespace SkylineTester
                 : MainWindow.NightlyBranchUrl.Text;
             TabBuild.CreateBuildCommands(branchUrl, MainWindow.GetNightlyRoot(), architectureList, true, false, true);
 
-            MainWindow.AddTestRunner("offscreen=on quality=on loop=-1");
+            MainWindow.AddTestRunner("offscreen=on quality=on pass0=on pass1=on loop=-1");
             MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();

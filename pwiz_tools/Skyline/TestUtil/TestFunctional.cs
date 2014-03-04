@@ -654,11 +654,16 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Actually throwing an exception can cause an infinite loop in MSTest
+            var openForms = OpenForms.Where(form => !(form is SkylineWindow)).ToList();
             Program.TestExceptions.AddRange(
-                from form in OpenForms
-                where !(form is SkylineWindow)
+                from form in openForms
                 select new AssertFailedException(
                     String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
+            RunUI(() =>
+            {
+                foreach (var form in openForms)
+                    form.Close();   
+            });
 
             _testCompleted = true;
 
