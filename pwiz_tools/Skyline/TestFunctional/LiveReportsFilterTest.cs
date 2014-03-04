@@ -38,13 +38,13 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestLiveReportsFilter()
         {
-            IsEnableLiveReports = true;   // force LiveReports even if test context says no
             TestFilesZip = @"TestFunctional\LiveReportsFilterTest.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            IsEnableLiveReports = true;   // force LiveReports even if test context says no
             TestRatioFilter();
         }
 

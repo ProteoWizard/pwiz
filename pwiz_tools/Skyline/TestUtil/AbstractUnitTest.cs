@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -49,23 +50,15 @@ namespace pwiz.SkylineTestUtil
 
         protected bool AllowInternetAccess
         {
-            get { return BoolValue("AccessInternet"); }
+            get { return GetBoolValue("AccessInternet"); }
         }
 
-        private bool? _overrideLiveReports;
-        protected bool IsEnableLiveReports
-        {
-            get { return _overrideLiveReports ?? BoolValue("LiveReports"); }
-            set { _overrideLiveReports = value; }
-        }
-
-        private bool BoolValue(string property)
+        protected bool GetBoolValue(string property)
         {
             var value = TestContext.Properties[property];
             return value == null ||
                 string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
         }
-
 
         private string[] _testFilesZips;
         public string TestFilesZip
@@ -148,7 +141,6 @@ namespace pwiz.SkylineTestUtil
             log.Info(TestContext.TestName + " started");
 
             Settings.Init();
-            Settings.Default.EnableLiveReports = IsEnableLiveReports;
 
             STOPWATCH.Restart();
             Initialize();

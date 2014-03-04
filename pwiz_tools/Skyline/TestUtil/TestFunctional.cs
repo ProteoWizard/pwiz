@@ -63,10 +63,15 @@ namespace pwiz.SkylineTestUtil
             IsCheckLiveReportsCompatibility = false;
         }
 
-
         private bool _testCompleted;
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
+
+        protected bool IsEnableLiveReports
+        {
+            get { return Settings.Default.EnableLiveReports; }
+            set { RunUI(() => SkylineWindow.SetEnableLiveReports(value)); }
+        }
 
         protected static TDlg ShowDialog<TDlg>(Action act) where TDlg : Form
         {
@@ -605,6 +610,8 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
+
+            IsEnableLiveReports = GetBoolValue("LiveReports");
 
             DoTest();
 

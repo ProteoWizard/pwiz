@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return null;
             }
             double value;
-            if (double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            if (double.TryParse(str, NumberStyles.Float, CultureInfo.CurrentCulture, out value))
             {
                 return value;
             }

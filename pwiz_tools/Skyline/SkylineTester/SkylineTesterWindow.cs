@@ -323,8 +323,7 @@ namespace SkylineTester
 
             try
             {
-                var skylineNode = new TreeNode[1];
-                skylineNode[0] = new TreeNode("Skyline tests");
+                var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
                 foreach (var testDll in TEST_DLLS)
@@ -338,13 +337,19 @@ namespace SkylineTester
                     var childNodes = new TreeNode[tests.Length];
                     for (int i = 0; i < childNodes.Length; i++)
                         childNodes[i] = new TreeNode(tests[i]);
-                    skylineNode[0].Nodes.Add(new TreeNode(dllName, childNodes));
+                    skylineNode.Nodes.Add(new TreeNode(dllName, childNodes));
                 }
 
                 RunUI(() =>
                 {
-                    testsTree.Nodes.Add(skylineNode[0]);
-                    skylineNode[0].Expand();
+                    testsTree.Nodes.Add(skylineNode);
+                    skylineNode.Expand();
+
+//                    var focusNode = new TreeNode("Focus tests");
+//                    focusNode.Nodes.Add(new TreeNode("Mzml speed", new []{new TreeNode("x")}));
+//                    focusNode.Nodes.Add(new TreeNode("Gene name", new []{new TreeNode("y")}));
+//                    testsTree.Nodes.Add(focusNode);
+//                    focusNode.Expand();
                 });
 
                 var tutorialTests = new List<string>();

@@ -104,7 +104,7 @@ namespace TestRunner
                 FileShare.ReadWrite);
             var log = new StreamWriter(logStream);
 
-            bool allTestsPassed = true;
+            bool allTestsPassed = false;
 
             try
             {
@@ -144,39 +144,43 @@ namespace TestRunner
                 if (testList.Count == 0)
                 {
                     Console.WriteLine("No tests found");
-                    return 1;
                 }
-
-                var passes = commandLineArgs.ArgAsLong("loop");
-                var repeat = commandLineArgs.ArgAsLong("repeat");
-                if (commandLineArgs.ArgAsBool("buildcheck"))
+                else
                 {
-                    passes = 1;
-                    repeat = 1;
-                }
-
-                // Prevent system sleep.
-                using (new SystemSleep())
-                {
-                    // Pause before first test for profiling.
-                    bool profiling = commandLineArgs.ArgAsBool("profile");
-                    if (profiling)
+                    var passes = commandLineArgs.ArgAsLong("loop");
+                    var repeat = commandLineArgs.ArgAsLong("repeat");
+                    if (commandLineArgs.ArgAsBool("buildcheck"))
                     {
-                        Console.WriteLine("\nRunning each test once to warm up memory...\n");
-                        allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1, true);
-                        Console.WriteLine("\nTaking memory snapshot...\n");
-                        MemoryProfiler.Snapshot();
-                        if (passes == 0)
-                            passes = 1;
+                        passes = 1;
+                        repeat = 1;
                     }
 
-                    allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat, profiling) && allTestsPassed;
-
-                    // Pause for profiling
-                    if (profiling)
+                    // Prevent system sleep.
+                    using (new SystemSleep())
                     {
-                        Console.WriteLine("\nTaking second memory snapshot...\n");
-                        MemoryProfiler.Snapshot();
+                        // Pause before first test for profiling.
+                        bool profiling = commandLineArgs.ArgAsBool("profile");
+                        if (profiling)
+                        {
+                            Console.WriteLine("\nRunning each test once to warm up memory...\n");
+                            allTestsPassed = RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, 1, 1,
+                                true);
+                            Console.WriteLine("\nTaking memory snapshot...\n");
+                            MemoryProfiler.Snapshot();
+                            if (passes == 0)
+                                passes = 1;
+                        }
+
+                        allTestsPassed =
+                            RunTestPasses(testList, unfilteredTestList, commandLineArgs, log, passes, repeat, profiling) &&
+                            allTestsPassed;
+
+                        // Pause for profiling
+                        if (profiling)
+                        {
+                            Console.WriteLine("\nTaking second memory snapshot...\n");
+                            MemoryProfiler.Snapshot();
+                        }
                     }
                 }
             }
