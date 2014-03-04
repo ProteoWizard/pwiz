@@ -104,7 +104,7 @@ namespace TestRunner
                 FileShare.ReadWrite);
             var log = new StreamWriter(logStream);
 
-            bool allTestsPassed = false;
+            bool allTestsPassed = true;
 
             try
             {
@@ -144,6 +144,7 @@ namespace TestRunner
                 if (testList.Count == 0)
                 {
                     Console.WriteLine("No tests found");
+                    allTestsPassed = false;
                 }
                 else
                 {
