@@ -178,7 +178,7 @@ namespace TestRunnerLib
             // Switch to selected culture.
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
-            LocalizationHelper.CurrentCulture = Language;
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
             LocalizationHelper.InitThread();
 
             long crtLeakedBytes = 0;

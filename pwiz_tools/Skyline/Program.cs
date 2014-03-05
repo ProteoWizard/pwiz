@@ -127,8 +127,15 @@ namespace pwiz.Skyline
                 Init();
                 if (!string.IsNullOrEmpty(Settings.Default.DisplayLanguage))
                 {
-                    LocalizationHelper.CurrentCulture = CultureInfo.GetCultureInfo(Settings.Default.DisplayLanguage);
-                }
+                    try
+                    {
+                        LocalizationHelper.CurrentUICulture =
+                            CultureInfo.GetCultureInfo(Settings.Default.DisplayLanguage);
+                    }
+                    catch (CultureNotFoundException)
+                    {
+                    }
+                }                
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
                 int licenseVersion = Settings.Default.LicenseVersionAccepted;
