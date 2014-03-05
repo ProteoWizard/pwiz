@@ -785,6 +785,13 @@ namespace pwiz.SkylineTestUtil
             return SkylineWindow.Document;
         }
 
+        public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompleted()
+        {
+            // in a functional test we expect the protein metadata search to at least pretend to have gone to the web
+            WaitForConditionUI(() => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document));
+            return SkylineWindow.Document;
+        }
+
         public static void WaitForBackgroundProteomeLoaderCompleted()
         {
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 

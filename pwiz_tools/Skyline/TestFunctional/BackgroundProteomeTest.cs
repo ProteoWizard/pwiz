@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
                 var backgroundProteome = peptideSettings.BackgroundProteome;
                 return backgroundProteome.HasDigestion(peptideSettings);
             });
-            WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            WaitForProteinMetadataBackgroundLoaderCompleted();
 
             RunUI(() =>
                 {
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
 // ReSharper restore LocalizableElement
                     sequenceTree.CommitEditBox(false);
                 });
-            WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            WaitForProteinMetadataBackgroundLoaderCompleted();
             RunUI(() =>
                 {
                     SequenceTree sequenceTree = SkylineWindow.SequenceTree;
@@ -97,6 +97,7 @@ namespace pwiz.SkylineTestFunctional
                     sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK";    // Not L10N
 // ReSharper restore LocalizableElement
                 });
+            WaitForProteinMetadataBackgroundLoaderCompleted();
             // TODO: bspratt Add protein metadata statement completion test
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);
@@ -108,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
                     sequenceTree.StatementCompletionEditBox.OnSelectionMade(
                         (StatementCompletionItem) statementCompletionForm.ListView.Items[0].Tag);
                 });
-            WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            WaitForProteinMetadataBackgroundLoaderCompleted();
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual(2, peptideGroups.Count);
             Assert.AreEqual("Y18D10A.20", peptideGroups[0].Name);
