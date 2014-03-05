@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly SrmDocument _document;
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
         private readonly List<List<PeptideChromDataPeakList>> _listListPeakSets = new List<List<PeptideChromDataPeakList>>();
+        private double? _predictedRetentionTime;
         private double[] _retentionTimes;
         private bool _isAlignedTimes;
         private readonly bool _isProcessedScans;
@@ -64,6 +65,8 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileInfo FileInfo { get; private set; }
 
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
+
+        public double? PredictedRetentionTime { set { _predictedRetentionTime = value; }}
 
         public double[] RetentionTimes { set { _retentionTimes = value; } }
 
@@ -140,7 +143,9 @@ namespace pwiz.Skyline.Model.Results
                 // Score the peaks under the legacy model score
                 foreach (var peakSet in listPeakSets.Where(peakSet => peakSet != null))
                 {
-                    peakSet.ScorePeptideSets(detailedCalcs, _document);
+                    var context = new PeakScoringContext(_document);
+                    context.AddInfo(new RetentionTimePrediction(_predictedRetentionTime));
+                    peakSet.ScorePeptideSets(context, detailedCalcs);
                 }
 
                 SortAndLimitPeaks(listPeakSets);
@@ -801,12 +806,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public void ScorePeptideSets(IList<IPeakFeatureCalculator> detailFeatureCalculators, SrmDocument document)
+        public void ScorePeptideSets(PeakScoringContext context, IList<IPeakFeatureCalculator> detailFeatureCalculators)
         {
             var modelCalcs = ScoringModel.PeakFeatureCalculators;
             var detailFeatures = new float [detailFeatureCalculators.Count];
             var modelFeatures = new double [modelCalcs.Count];
-            var context = new PeakScoringContext(document);
             // Here we score both the detailFeatureCalculators (for storage) 
             // and the peak calculators of the legacy model (for import-stage peak scoring)
             var allFeatureCalculators = detailFeatureCalculators.Union(modelCalcs);

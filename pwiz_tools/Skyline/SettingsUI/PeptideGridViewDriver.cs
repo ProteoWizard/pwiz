@@ -113,8 +113,7 @@ namespace pwiz.Skyline.SettingsUI
 
             string seq = columns[COLUMN_SEQUENCE] as string;
             string time = columns[COLUMN_TIME] as string;
-            double dTime;
-            string message;
+            string message = null;
             if (string.IsNullOrWhiteSpace(seq))
             {
                 message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
@@ -123,21 +122,37 @@ namespace pwiz.Skyline.SettingsUI
             {
                 message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
             }
-            else if (string.IsNullOrWhiteSpace(time))
-            {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
-            }
-            else if (!double.TryParse(time, out dTime))
-            {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
-            }
-            else if (postiveTime && dTime <= 0)
-            {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
-            }
             else
             {
-                return true;
+                try
+                {
+                    columns[COLUMN_SEQUENCE] = SequenceMassCalc.NormalizeModifiedSequence(seq);
+                }
+                catch (Exception x)
+                {
+                    message = x.Message;
+                }
+
+                if (message == null)
+                {
+                    double dTime;
+                    if (string.IsNullOrWhiteSpace(time))
+                    {
+                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
+                    }
+                    else if (!double.TryParse(time, out dTime))
+                    {
+                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, time, lineNumber);
+                    }
+                    else if (postiveTime && dTime <= 0)
+                    {
+                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_, time, lineNumber);
+                    }
+                    else
+                    {
+                        return true;
+                    }                    
+                }
             }
 
             MessageDlg.Show(parent, message);

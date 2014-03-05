@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using Remotion.Linq.Utilities;
 
 namespace pwiz.Skyline.Model
 {
@@ -571,20 +572,23 @@ namespace pwiz.Skyline.Model
                 int ichCloseBracket = rawModifiedSequence.IndexOf(']', ichOpenBracket);
                 if (ichCloseBracket < 0)
                 {
-                    continue;
+                    throw new ArgumentException(string.Format(Resources.SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_, rawModifiedSequence.Substring(ichOpenBracket)));
                 }
                 string strMassDiff = rawModifiedSequence.Substring(ichOpenBracket + 1, ichCloseBracket - ichOpenBracket - 1);
                 double massDiff;
                 if (!double.TryParse(strMassDiff, out massDiff))
                 {
-                    continue;
+                    throw new ArgumentException(string.Format(Resources.SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_, strMassDiff));
                 }
                 normalizedSeq.Append(rawModifiedSequence.Substring(ichLast, ichOpenBracket - ichLast));
                 normalizedSeq.Append(GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff));
                 ichLast = ichCloseBracket + 1;
             }
             normalizedSeq.Append(rawModifiedSequence.Substring(ichLast));
-            return normalizedSeq.ToString();
+            string result = normalizedSeq.ToString();
+            // Keep original string, if not changed
+            Helpers.AssignIfEquals(ref result, rawModifiedSequence);
+            return result;
         }
 
         public double GetAAModMass(char aa, int seqIndex, int seqLength)

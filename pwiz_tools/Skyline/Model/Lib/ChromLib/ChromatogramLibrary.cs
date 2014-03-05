@@ -222,7 +222,17 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         var modifiedSequence = (string) row[1];
                         int charge = (int) row[2];
                         double totalArea = Convert.ToDouble(row[3]);
-                        var libKey = new LibKey(SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence), charge);
+                        string modSeqNormal;
+                        try
+                        {
+                            modSeqNormal = SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence);
+                        }
+                        catch (ArgumentException)
+                        {
+                            continue;
+                        }
+
+                        var libKey = new LibKey(modSeqNormal, charge);
                         IList<SpectrumPeaksInfo.MI> transitionAreas;
                         allTransitionAreas.TryGetValue(id, out transitionAreas);
                         spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, totalArea, transitionAreas));

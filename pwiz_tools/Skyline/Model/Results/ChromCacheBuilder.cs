@@ -25,6 +25,7 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -59,6 +60,7 @@ namespace pwiz.Skyline.Model.Results
         private Exception _writeException;
 
         // Accessed only on the write thread
+        private readonly RetentionTimePredictor _retentionTimePredictor;
         private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
@@ -72,6 +74,9 @@ namespace pwiz.Skyline.Model.Results
 
             // Reserve an array for caching retention time alignment information, if needed
             FileAlignmentIndices = new RetentionTimeAlignmentIndices[msDataFilePaths.Count];
+
+            // Initialize retention time prediction
+            _retentionTimePredictor = new RetentionTimePredictor(document.Settings.PeptideSettings.Prediction.RetentionTime);
 
             // Get peak scoring calculators
             IEnumerable<IPeakFeatureCalculator> calcEnum;
@@ -425,8 +430,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             listChromData.AddRange(dictPeptideChromData.Values);
-            listChromData.Sort((p1, p2) =>
-                Comparer.Default.Compare(p1.DataSets[0].PrecursorMz, p2.DataSets[0].PrecursorMz));
+            listChromData.Sort(ComparePeptideChromDataSets);
 
             // Avoid holding onto chromatogram data sets for entire read
             dictPeptideChromData.Clear();
@@ -444,6 +448,26 @@ namespace pwiz.Skyline.Model.Results
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
             PostChromDataSet(null, true);
+        }
+
+        private int ComparePeptideChromDataSets(PeptideChromDataSets p1, PeptideChromDataSets p2)
+        {
+            if (p1.NodePep != null && p2.NodePep != null)
+            {
+                bool s1 = string.Equals(p1.NodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
+                bool s2 = string.Equals(p2.NodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
+                // Import iRT standards before everything else
+                if (s1 != s2)
+                {
+                    return s1 ? -1 : 1;
+                }
+            }
+            else if (p1.NodePep == null)
+                return 1;
+            else if (p2.NodePep == null)
+                return -1;
+            // Otherwise, import in precursor m/z order
+            return Comparer.Default.Compare(p1.DataSets[0].PrecursorMz, p2.DataSets[0].PrecursorMz);
         }
 
         private sealed class PeptidePrecursorMz
@@ -539,6 +563,8 @@ namespace pwiz.Skyline.Model.Results
             if (nodePep == null)
                 return;
 
+            peptideChromDataSets.PredictedRetentionTime = _retentionTimePredictor.GetPredictedRetentionTime(nodePep);
+
             string filePath = SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]);
             double[] retentionTimes = _document.Settings.GetRetentionTimes(filePath,
                                                                            nodePep.Peptide.Sequence,
@@ -561,6 +587,106 @@ namespace pwiz.Skyline.Model.Results
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
+        }
+
+        /// <summary>
+        /// Stores the best chromatogram peak for only iRT peptides in the retention time predictor
+        /// </summary>
+        private void StorePeptideRetentionTime(PeptideChromDataSets peptideChromDataSets)
+        {
+            var nodePep = peptideChromDataSets.NodePep;
+            if (nodePep == null || !string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
+                return;
+
+            var dataSet = peptideChromDataSets.DataSets.FirstOrDefault();
+            if (dataSet != null && dataSet.MaxPeakIndex >= 0)
+            {
+                var bestPeak = dataSet.BestChromatogram.Peaks[dataSet.MaxPeakIndex];
+                _retentionTimePredictor.AddPeptideTime(nodePep, bestPeak.RetentionTime);
+            }
+        }
+
+        /// <summary>
+        /// Used for retentiont time prediction during import
+        /// </summary>
+        private class RetentionTimePredictor
+        {
+            private readonly RetentionScoreCalculatorSpec _calculator;
+            private RegressionLineElement _conversion;
+            private Dictionary<string, double> _dictSeqToTime;
+
+            public RetentionTimePredictor(RetentionTimeRegression rtSettings)
+            {
+                if (rtSettings != null)
+                {
+                    _calculator = rtSettings.Calculator;
+                    if (!rtSettings.IsAutoCalculated)
+                        _conversion = rtSettings.Conversion;
+                    else
+                        _dictSeqToTime = new Dictionary<string, double>();
+                }
+            }
+
+            /// <summary>
+            /// If the predictor uses an iRT calculator, then this will store the
+            /// measured retention times for the iRT standard peptides.
+            /// </summary>
+            /// <param name="nodePep">Any peptide</param>
+            /// <param name="time">The measured time of its best peak</param>
+            public void AddPeptideTime(PeptideDocNode nodePep, double time)
+            {
+                if (_conversion == null && _dictSeqToTime != null)
+                    _dictSeqToTime.Add(nodePep.ModifiedSequence, time);
+            }
+
+            /// <summary>
+            /// Attempts to get a retention time prediction for a given peptide
+            /// </summary>
+            public double? GetPredictedRetentionTime(PeptideDocNode nodePep)
+            {
+                if (_calculator == null)
+                    return null;
+
+                if (_conversion != null)
+                {
+                    double? score = _calculator.ScoreSequence(nodePep.ModifiedSequence);
+                    if (!score.HasValue)
+                        return null;
+                    return _conversion.GetY(score.Value);
+                }
+
+                if (string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
+                    return null;
+
+                if (_dictSeqToTime == null)
+                    return null;
+
+                // Calculate the conversion, ensuring that this is only done once, even if
+                // something below throws unexpectedly.
+                var dictSeqToTime = _dictSeqToTime;
+                _dictSeqToTime = null;
+
+                try
+                {
+                    var listTimes = new List<double>();
+                    var listScores = new List<double>();
+                    foreach (string sequence in _calculator.GetStandardPeptides(dictSeqToTime.Keys))
+                    {
+                        listTimes.Add(dictSeqToTime[sequence]);
+                        listScores.Add(_calculator.ScoreSequence(sequence).Value);
+                    }
+                    var statTime = new Statistics(listTimes);
+                    var statScore = new Statistics(listScores);
+
+                    _conversion = new RegressionLineElement(new RegressionLine(statTime.Slope(statScore), statTime.Intercept(statScore)));
+                }
+                catch (IncompleteStandardException)
+                {
+                    return null;
+                }
+
+                return GetPredictedRetentionTime(nodePep);
+            }
         }
 
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
@@ -921,8 +1047,8 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     GetPeptideRetentionTimes(chromDataSetNext);
-
                     chromDataSetNext.PickChromatogramPeaks();
+                    StorePeptideRetentionTime(chromDataSetNext);
 
                     var dictScoresToIndex = new Dictionary<IList<float>, int>();
                     foreach (var chromDataSet in chromDataSetNext.DataSets)

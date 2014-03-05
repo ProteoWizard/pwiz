@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int MaxPeakIndex
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.MaxPeakIndex : 0; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.MaxPeakIndex : -1; }
         }
 
         public float[] Times

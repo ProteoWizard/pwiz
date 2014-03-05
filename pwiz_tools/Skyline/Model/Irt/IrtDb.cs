@@ -226,7 +226,17 @@ namespace pwiz.Skyline.Model.Irt
             foreach (var pep in peptides)
             {
                 var dict = pep.Standard ? dictStandards : dictLibrary;
-                dict.Add(pep.PeptideModSeq, pep.Irt);
+                try
+                {
+                    // Unnormalized modified sequences will not match anything.  The user interface
+                    // attempts to enforce only normalized modified sequences, but this extra protection
+                    // handles irtdb files created before normalization was implemented, or edited outside
+                    // Skyline.
+                    dict.Add(SequenceMassCalc.NormalizeModifiedSequence(pep.PeptideModSeq), pep.Irt);
+                }
+                catch (ArgumentException)
+                {
+                }
             }
 
             DictStandards = dictStandards;

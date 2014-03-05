@@ -28,6 +28,16 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
+    sealed class RetentionTimePrediction
+    {
+        public RetentionTimePrediction(double? time)
+        {
+            Time = time;
+        }
+
+        public double? Time { get; private set; }
+    }
+
     abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
     {
         protected AbstractMQuestRetentionTimePredictionCalc(string headerName) : base(headerName) {}
@@ -55,9 +65,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (!measuredRT.HasValue)
                 return float.NaN;
 
-            var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
-            string seqModified = summaryPeakData.NodePep.ModifiedSequence;
-            double? predictedRT = predictor.GetRetentionTime(seqModified, fileId);
+            double? predictedRT;
+            RetentionTimePrediction prediction;
+            if (context.TryGetInfo(out prediction))
+                predictedRT = prediction.Time;
+            else
+            {
+                var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
+                string seqModified = summaryPeakData.NodePep.ModifiedSequence;
+                predictedRT = predictor.GetRetentionTime(seqModified, fileId);
+            }
             if (!predictedRT.HasValue)
                 return float.NaN;
             return (float) RtScoreFunction(measuredRT.Value - predictedRT.Value);
