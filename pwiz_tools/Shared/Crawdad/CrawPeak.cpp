@@ -225,7 +225,7 @@ void CrawPeak::calc_baseline_stats( )  {
   }
    std::string SlimCrawPeak::as_string() const {
        char tmpstr[256];
-       sprintf(tmpstr,"%d\t%d\t%d\t%d\t%d\t%2.2f",mz_idx,start_rt_idx,peak_rt_idx,stop_rt_idx,fwhm);
+       sprintf(tmpstr,"%d\t%d\t%d\t%d\t%2.2f",mz_idx,start_rt_idx,peak_rt_idx,stop_rt_idx,fwhm);
        return std::string(tmpstr);
    }
    std::string SlimCrawPeak::as_string_long() const {

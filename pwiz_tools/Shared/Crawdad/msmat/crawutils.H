@@ -438,21 +438,6 @@ std::vector<data_type> fyates_shuffle( const std::vector<data_type> & v ) {
     
 }
 
-std::vector< std::pair<int,int> > fyates_shuffle_commands( int series_size );
-  template<typename data_type>
-  std::vector< data_type> apply_fyates_shuffle (const std::vector<data_type> & v, std::vector< std::pair<int, int> > & cmds ) {
-    data_type swap;
-    std::vector<data_type> out_v(v.begin(), v.end());
-    for ( int i = 0 ; i < cmds.size() ; i++ ) {
-      swap = out_v[ cmds[i].first ];
-      out_v[ cmds[i].first ] = out_v[ cmds[i].second ];
-      out_v[ cmds[i].second ] = out_v[cmds[i].first ];
-    }
-    return out_v;
-  }
-
-
-
   void init_rand();
   double get_rand();
   
@@ -463,7 +448,7 @@ std::vector< std::pair<int,int> > fyates_shuffle_commands( int series_size );
 
     data_type swap;
     for ( int i = 0 ; i < v.size() ; i++ ) {
-      int j = (int)floor((get_rand() * i+1));
+      int j = (int)floor(get_rand() * i+1);
       swap = v[i];
       v[i] = v[j];
       v[j] = swap;
