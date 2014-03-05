@@ -22,6 +22,7 @@ using System.IO;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -31,7 +32,15 @@ namespace pwiz.Skyline.Model.Proteome
 {
     public sealed class BackgroundProteomeManager : BackgroundLoader
     {
+
         private readonly object _lockLoadBackgroundProteome = new object();
+        
+        private WebEnabledFastaImporter _fastaImporter = new WebEnabledFastaImporter(); // Default is to actually go to the web
+        public WebEnabledFastaImporter FastaImporter
+        { 
+            get { return _fastaImporter; }
+            set { _fastaImporter = value; }  // Tests may override with an object that simulates web access
+        }
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
@@ -50,12 +59,45 @@ namespace pwiz.Skyline.Model.Proteome
             return false;
         }
 
+        /// <summary>
+        /// returns true if the background proteome is loaded -
+        /// this means either that the doc does not have one, or
+        /// the one it has exists and has the digest completed 
+        /// and that the proteins in the db have
+        /// had their protein metadata (accession, gene etc) resolved.
+        /// </summary>
+        /// <param name="document">the document whose background proteome we're checking</param>
+        /// <returns>true if doc has no background proteome, or if the one 
+        /// it does have is loaded and digested with all proten metadata ready to go</returns>
         protected override bool IsLoaded(SrmDocument document)
         {
-            return IsLoaded(document, GetBackgroundProteome(document));
+            return IsLoaded(document, GetBackgroundProteome(document), true);
         }
 
-        private static bool IsLoaded(SrmDocument document, BackgroundProteome backgroundProteome)
+        private static bool IsLoaded(SrmDocument document, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
+        {
+            return DocumentHasLoadedBackgroundProteomeOrNone(document, backgroundProteome, requireResolvedProteinMetadata);
+        }
+
+        /// <summary>
+        /// returns true if the background proteome is loaded -
+        /// this means either that the doc does not have one, or
+        /// the one it has exists and has the digest completed -
+        /// and optionally that the proteins in the db have
+        /// had their protein metadata (accession, gene etc) resolved.
+        /// </summary>
+        /// <param name="document">the document whose background proteome we're checking</param>
+        /// <param name="requireResolvedProteinMetadata">if true, require that any proteins
+        /// in the db have their metadata (accession, gene etc) resolved</param>
+        /// <returns>true if doc has no background proteome, or if the one 
+        /// it does have is loaded and digested (and optionally with all 
+        /// proten metadata ready to go</returns>
+        public static bool DocumentHasLoadedBackgroundProteomeOrNone(SrmDocument document, bool requireResolvedProteinMetadata)
+        {
+            return DocumentHasLoadedBackgroundProteomeOrNone(document, GetBackgroundProteome(document), requireResolvedProteinMetadata);
+        }
+
+        private static bool DocumentHasLoadedBackgroundProteomeOrNone(SrmDocument document, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
         {
             if (backgroundProteome.IsNone)
             {
@@ -70,9 +112,14 @@ namespace pwiz.Skyline.Model.Proteome
                 return true;
             }
             var peptideSettings = document.Settings.PeptideSettings;
-            return backgroundProteome.HasDigestion(peptideSettings);
+
+            if (!backgroundProteome.HasDigestion(peptideSettings))
+                return false;
+
+            return !requireResolvedProteinMetadata || (!backgroundProteome.NeedsProteinMetadataSearch);
         }
-        
+
+
         private static BackgroundProteome GetBackgroundProteome(SrmDocument document)
         {
             return document.Settings.PeptideSettings.BackgroundProteome;
@@ -104,29 +151,39 @@ namespace pwiz.Skyline.Model.Proteome
             // Only allow one background proteome to load at a time.  This can
             // get tricky, if the user performs an undo and then a redo across
             // a change in background proteome.
+            // Our first priority is doing the digestions, the second is accessing web
+            // services to add missing protein metadata.
             lock (_lockLoadBackgroundProteome)
             {
                 BackgroundProteome originalBackgroundProteome = GetBackgroundProteome(docCurrent);
                 // Check to see whether the Digestion already exists but has not been queried yet.
                 BackgroundProteome backgroundProteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
-                if (IsLoaded(docCurrent, backgroundProteomeWithDigestions))
+                if (IsLoaded(docCurrent, backgroundProteomeWithDigestions, true))
                 {
+                    // digest is ready, and protein metdata is resolved
                     CompleteProcessing(container, backgroundProteomeWithDigestions);
                     return true;
                 }
+                // are we here to do the digest, or to resolve the protein metadata?
+                bool getMetadata = IsLoaded(docCurrent, backgroundProteomeWithDigestions, false) &&
+                    backgroundProteomeWithDigestions.NeedsProteinMetadataSearch; 
 
                 string name = originalBackgroundProteome.Name;
                 ProgressStatus progressStatus =
-                    new ProgressStatus(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Digesting__0__proteome, name));
+                    new ProgressStatus(string.Format(getMetadata?Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome:Resources.BackgroundProteomeManager_LoadBackground_Digesting__0__proteome, name));
                 try
                 {
                     using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                     {
                         File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
                         var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
-                        var digestion = digestHelper.Digest(ref progressStatus);
+                        bool success;
+                        if (getMetadata)
+                            success = digestHelper.LookupProteinMetadata(ref progressStatus);
+                        else
+                            success = (digestHelper.Digest(ref progressStatus) != null);
 
-                        if (digestion == null)
+                        if (!success)
                         {
                             // Processing was canceled
                             EndProcessing(docCurrent);
@@ -210,6 +267,20 @@ namespace pwiz.Skyline.Model.Proteome
                     progressStatus = _progressStatus;
 
                     return digestion;
+                }
+            }
+
+            // ReSharper disable RedundantAssignment
+            public bool LookupProteinMetadata(ref ProgressStatus progressStatus)
+            // ReSharper restore RedundantAssignment
+            {
+                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome))
+                {
+                    _progressStatus = new ProgressStatus(
+                        string.Format(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome,_nameProteome));
+                    var result = proteomeDb.LookupProteinMetadata(Progress,_manager.FastaImporter,true); // true means be polite, don't try to resolve all in one go
+                    progressStatus = _progressStatus;
+                    return result;
                 }
             }
 

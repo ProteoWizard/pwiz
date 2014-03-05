@@ -32,7 +32,8 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForCondition(() => SkylineWindow.SequenceTree.Nodes.Count > 4);
 
-            var docOrig = SkylineWindow.Document;
+            var docOrig = WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            Assert.AreNotEqual(FIRST_RENAMED_PROTEIN, docOrig.PeptideGroups.ToArray()[1].Name);
             RunUI(() =>
                       {
                           SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[1];
@@ -112,14 +113,25 @@ namespace pwiz.SkylineTestFunctional
 
             // Use FASTA File
             {
+                Assert.AreNotSame(docOrig, SkylineWindow.Document);
                 RunUI(() =>
                           {
                               SkylineWindow.Undo(); // Rename
                               SkylineWindow.Undo(); // Add nonFASTA protein
                               SkylineWindow.Undo(); // Direct edit
                           });
-                WaitForCondition(() => SkylineWindow.SequenceTree.Nodes.Count > 4);
+                WaitForCondition(() => !Equals(SkylineWindow.Document.PeptideGroups.ToArray()[1].Name, FIRST_RENAMED_PROTEIN));
+                WaitForProteinMetadataBackgroundLoaderCompletedUI();
                 Assert.AreSame(docOrig, SkylineWindow.Document);
+                Assert.AreNotEqual(FIRST_RENAMED_PROTEIN, docOrig.PeptideGroups.ToArray()[1].Name);
+                WaitForCondition(() => !Equals(SkylineWindow.SequenceTree.Nodes[2].Text, SECOND_RENAMED_PROTEIN));
+                WaitForProteinMetadataBackgroundLoaderCompletedUI();
+                RunUI(() =>
+                {
+                    SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[2];
+                    Assert.IsTrue(!Equals(SkylineWindow.SequenceTree.SelectedNode.Text, SECOND_RENAMED_PROTEIN)); 
+                });
+
 
                 // Use FASTA file where only two names differ
                 RunDlg<RenameProteinsDlg>(SkylineWindow.ShowRenameProteinsDlg,

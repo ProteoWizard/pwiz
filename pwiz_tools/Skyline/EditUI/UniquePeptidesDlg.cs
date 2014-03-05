@@ -68,18 +68,21 @@ namespace pwiz.Skyline.EditUI
             String peptideSequence = peptideDocNode.Peptide.Sequence;
             String proteinSequence;
             var proteinColumn = dataGridView1.Columns[dataGridView1.CurrentCell.ColumnIndex].Tag as ProteinColumn;
+            ProteinMetadata metadata;
             if (proteinColumn == null)
             {
-                tbxProteinName.Text = PeptideGroupDocNode.Name;
-                tbxProteinDescription.Text = PeptideGroupDocNode.Description;
+                metadata = PeptideGroupDocNode.ProteinMetadata;
                 proteinSequence = PeptideGroupDocNode.PeptideGroup.Sequence;
             }
             else
             {
-                tbxProteinName.Text = proteinColumn.Protein.Name;
-                tbxProteinDescription.Text = proteinColumn.Protein.Description;
+                metadata = proteinColumn.Protein.ProteinMetadata;
                 proteinSequence = proteinColumn.Protein.Sequence;
             }
+            tbxProteinName.Text = metadata.Name;
+            tbxProteinDescription.Text = metadata.Description;
+            tbxProteinDetails.Text = metadata.DisplayTextWithoutNameOrDescription(); // Don't show name or description
+
             if (!string.IsNullOrEmpty(proteinSequence))
             {
                 var regex = new Regex(peptideSequence);
@@ -180,9 +183,9 @@ namespace pwiz.Skyline.EditUI
                 DataGridViewCheckBoxColumn column = new DataGridViewCheckBoxColumn
                 {
                     Name = proteinColumn.Name,
-                    HeaderText = protein.Name,
+                    HeaderText = ((protein.Gene != null) ? String.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_, protein.Name, protein.Gene) : protein.Name), // Not L10N
                     ReadOnly = true,
-                    ToolTipText = protein.Description,
+                    ToolTipText = protein.ProteinMetadata.DisplayTextWithoutName(), 
                     SortMode = DataGridViewColumnSortMode.Automatic,
                     Tag = proteinColumn,
                 };
@@ -326,11 +329,11 @@ namespace pwiz.Skyline.EditUI
                 }
                 children.Add(child);
             }
+
             return new PeptideGroupDocNode(
                 peptideGroupDocNode.PeptideGroup, 
                 peptideGroupDocNode.Annotations, 
-                peptideGroupDocNode.Name, 
-                peptideGroupDocNode.Description, 
+                peptideGroupDocNode.ProteinMetadata, 
                 children.ToArray(),
                 false);
         }

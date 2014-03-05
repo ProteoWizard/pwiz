@@ -265,6 +265,65 @@ namespace pwiz.Skyline.EditUI
             public string NewName { get; set; }
         }
 
+        // CONSIDER bspratt - wouldn't a button for restoring the original name be useful too?
+
+        private void UseAccessionOrPreferredNameorGene(ProteinDisplayMode mode)
+        {
+            var dictNodeToNewName = new Dictionary<string, string>();
+            foreach (var nodePepGroup in _document.PeptideGroups)
+            {
+                string newname;
+                if (!dictNodeToNewName.TryGetValue(nodePepGroup.Name, out newname))
+                {
+                    string text = null;
+                    switch (mode)
+                    {
+                        case ProteinDisplayMode.ByAccession:
+                            text = nodePepGroup.ProteinMetadata.Accession;
+                            break;
+                        case ProteinDisplayMode.ByPreferredName:
+                            text = nodePepGroup.ProteinMetadata.PreferredName;
+                            break;
+                        case ProteinDisplayMode.ByGene:
+                            text = nodePepGroup.ProteinMetadata.Gene;
+                            break;
+                    }
+                    text = text ?? nodePepGroup.Name;
+                    dictNodeToNewName.Add(nodePepGroup.Name, text);
+                }
+            }
+
+
+            _gridViewDriver.Populate(_document.PeptideGroups
+                .Where(nodePepGroup => dictNodeToNewName.ContainsKey(nodePepGroup.Name))
+                .Select(nodePepGroup => new RenameProteins
+                {
+                    CurrentName = nodePepGroup.Name,
+                    NewName = dictNodeToNewName[nodePepGroup.Name]
+                }));
+            if (NameCount == 0)
+            {
+                MessageDlg.Show(this, string.Format("No protein metadata available"));
+            }
+            
+        }
+
+        private void Accession_Click(object sender, EventArgs e)
+        {
+            UseAccessionOrPreferredNameorGene(ProteinDisplayMode.ByAccession);
+        }
+
+        private void PreferredName_Click(object sender, EventArgs e)
+        {
+            UseAccessionOrPreferredNameorGene(ProteinDisplayMode.ByPreferredName);
+        }
+
+        private void Gene_Click(object sender, EventArgs e)
+        {
+            UseAccessionOrPreferredNameorGene(ProteinDisplayMode.ByGene);
+        }
+
+
         #region Functional test support
 
         public void Clear()
@@ -278,5 +337,6 @@ namespace pwiz.Skyline.EditUI
         }
 
         #endregion
+
     }
 }

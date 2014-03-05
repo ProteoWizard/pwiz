@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(4, listGraphChroms.Count);
             var dictGraphPositions = new Dictionary<Point, GraphChromatogram>();
             var dictChromPositions = new Dictionary<Point, int>();
-            var docLoading = SkylineWindow.Document;
+            var docLoading = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             foreach (var graphChrom in listGraphChroms)
             {
                 // Graphs should all be showing in panes
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             }
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
 
-            var docOrig = SkylineWindow.Document;   // 70, 73, 75, 78
+            var docOrig = WaitForProteinMetadataBackgroundLoaderCompletedUI();   // 70, 73, 75, 78
 
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
                 {
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
 
             CheckResultsEquivalent(docOrig, false);
 
-            var docMove1 = SkylineWindow.Document;  // 73, 75, 70, 78
+            var docMove1 = WaitForProteinMetadataBackgroundLoaderCompletedUI();  // 73, 75, 70, 78
 
             // Make sure the moved chromatogram set ended up in the right place.
             Assert.AreSame(docOrig.Settings.MeasuredResults.Chromatograms[0],
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
 
             CheckResultsEquivalent(docMove1, false);
 
-            var docMove2 = SkylineWindow.Document;  // 75, 78, 73, 70
+            var docMove2 = WaitForProteinMetadataBackgroundLoaderCompletedUI();  // 75, 78, 73, 70
 
             // Make sure the moved chromatogram sets ended up in the right place.
             Assert.AreSame(docMove1.Settings.MeasuredResults.Chromatograms[1],
@@ -139,7 +139,7 @@ namespace pwiz.SkylineTestFunctional
             CheckResultsEquivalent(docMove2, true);
 
             // Make sure the desired rename happened
-            var docRename = SkylineWindow.Document; // 75, Test this name, 78, 70
+            var docRename = WaitForProteinMetadataBackgroundLoaderCompletedUI(); // 75, Test this name, 78, 70
             Assert.AreEqual(newName, docRename.Settings.MeasuredResults.Chromatograms[1].Name);
             Assert.AreEqual(docMove2.Settings.MeasuredResults.Chromatograms[2].Id.GlobalIndex,
                 docRename.Settings.MeasuredResults.Chromatograms[1].Id.GlobalIndex);
@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(docReimport.Settings.MeasuredResults.IsLoaded);
 
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
-            docReimport = SkylineWindow.Document;
+            docReimport = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             Assert.AreNotSame(docRename.Settings.MeasuredResults, docReimport.Settings.MeasuredResults);
             Assert.IsFalse(ArrayUtil.ReferencesEqual(docRename.Settings.MeasuredResults.Chromatograms,
                 docReimport.Settings.MeasuredResults.Chromatograms));
@@ -235,7 +235,7 @@ namespace pwiz.SkylineTestFunctional
 
             CheckResultsEquivalent(docReimport, false);
 
-            var docRemoved = SkylineWindow.Document;
+            var docRemoved = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             Assert.AreEqual(2, docRemoved.Settings.MeasuredResults.Chromatograms.Count);
 
             // First two graphs should not have moved
@@ -271,11 +271,11 @@ namespace pwiz.SkylineTestFunctional
                       });
 
             // Now rescore the remaining replicate.
-            docRemoved = SkylineWindow.Document;
+            docRemoved = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var manageResultsDlg3 = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunDlg<RescoreResultsDlg>(manageResultsDlg3.Rescore, dlg => dlg.Rescore(false));
             WaitForDocumentLoaded();
-            var docRescore = SkylineWindow.Document;
+            var docRescore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             // Roundtrip to get rid of different revision indexes
             AssertEx.DocumentCloned(AssertEx.RoundTrip(docRemoved), AssertEx.RoundTrip(docRescore));
             if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestFunctional
             // Wait for the document to be different from what it was before
             WaitForDocumentChange(docRescore);
 
-            var docClear = SkylineWindow.Document;
+            var docClear = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
             Assert.IsFalse(docClear.Settings.HasResults);
         }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -29,11 +30,15 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideGroupDocNode : DocNodeParent
     {
-        private string _name;
-        private string _description;
+        private ProteinMetadata _proteinMetadata;  // name, description, accession, gene, etc
 
         public PeptideGroupDocNode(PeptideGroup id, string name, string description, PeptideDocNode[] children)
             : this(id, Annotations.EMPTY, name, description, children)
+        {
+        }
+
+        public PeptideGroupDocNode(PeptideGroup id, ProteinMetadata proteinMetadata, PeptideDocNode[] children)
+            : this(id, Annotations.EMPTY, proteinMetadata, children, true)
         {
         }
 
@@ -44,11 +49,16 @@ namespace pwiz.Skyline.Model
         }
 
         public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, String name, String description,
-                                   PeptideDocNode[] children, bool autoManageChildren)
-            : base (id, annotations, children, autoManageChildren)
+            PeptideDocNode[] children, bool autoManageChildren)
+            : this(id, annotations, new ProteinMetadata(name, description), children, autoManageChildren)
         {
-            _name = name;
-            _description = description;
+        }
+
+        public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, ProteinMetadata proteinMetadata,
+            PeptideDocNode[] children, bool autoManageChildren)
+            : base(id, annotations, children, autoManageChildren)
+        {
+            _proteinMetadata = proteinMetadata;
         }
 
         public PeptideGroup PeptideGroup { get { return (PeptideGroup)Id; } }
@@ -61,8 +71,14 @@ namespace pwiz.Skyline.Model
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 
-        public string Name { get { return _name ?? PeptideGroup.Name; } }
-        public string Description { get { return PeptideGroup.Description ?? _description; } }
+        public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name; } } // prefer ours over peptidgroup, if set
+        public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidgroup, if set
+        public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(new ProteinMetadata(PeptideGroup.Name, PeptideGroup.Description)); } } // prefer our name and description over peptidegroup
+
+        /// <summary>
+        /// returns our actual metadata, not merged with that of the ID object
+        /// </summary>
+        public ProteinMetadata ProteinMetadataOverrides { get { return _proteinMetadata; } } 
 
         /// <summary>
         /// Node level depths below this node
@@ -79,14 +95,24 @@ namespace pwiz.Skyline.Model
 
         public PeptideGroupDocNode ChangeName(string name)
         {
-            return ChangeProp(ImClone(this), (im, v) => im._name = v, name);
+            var newMetadata = _proteinMetadata.ChangeName(name);
+            return ChangeProteinMetadata(newMetadata);
         }
 
         public PeptideGroupDocNode ChangeDescription(string desc)
         {
-            // Only allow set, if the id object has no description
-            Assume.IsNull(PeptideGroup.Description);
-            return ChangeProp(ImClone(this), (im, v) => im._description = v, desc);
+            var newMetadata = _proteinMetadata.ChangeDescription(desc);
+            return ChangeProteinMetadata(newMetadata);
+        }
+
+        public PeptideGroupDocNode ChangeProteinMetadata(ProteinMetadata proteinMetadata)
+        {
+            var newMetadata = proteinMetadata;
+            if (Equals(PeptideGroup.Name, newMetadata.Name))
+                newMetadata = newMetadata.ChangeName(null); // no actual override
+            if (Equals(PeptideGroup.Description, newMetadata.Description))
+                newMetadata = newMetadata.ChangeDescription(null); // no actual override
+            return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
 
         public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
@@ -207,7 +233,7 @@ namespace pwiz.Skyline.Model
                     childrenNew[i] = childrenNew[i].Merge(nodePep);
                 else
                     childrenNew.Add(nodePep);
-                    
+
             }
             // If it is a FASTA sequence, make sure new peptides are sorted into place
             if (PeptideGroup is FastaSequence && childrenNew.Count > Children.Count)
@@ -248,7 +274,7 @@ namespace pwiz.Skyline.Model
             }
             return true;
         }
-    
+
 
         public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, bool useFilter)
         {
@@ -259,16 +285,16 @@ namespace pwiz.Skyline.Model
                 foreach (PeptideDocNode nodePep in fastaSeq.CreatePeptideDocNodes(settings, useFilter, null))
                     yield return nodePep;
             }
-                // Peptide lists without variable modifications just return their existing children.
+            // Peptide lists without variable modifications just return their existing children.
             else if (!settings.PeptideSettings.Modifications.HasVariableModifications)
             {
                 foreach (PeptideDocNode nodePep in Children)
                 {
                     if (!nodePep.HasVariableMods)
-                        yield return nodePep;                    
+                        yield return nodePep;
                 }
             }
-                // If there are variable modifications, fill out the available list.
+            // If there are variable modifications, fill out the available list.
             else
             {
                 var setNonExplicit = new HashSet<Peptide>();
@@ -296,7 +322,7 @@ namespace pwiz.Skyline.Model
                             yield return nodePep;
                         setNonExplicit.Add(nodePep.Peptide);
                     }
-                }                
+                }
             }
         }
 
@@ -321,12 +347,27 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            return PeptideGroupTreeNode.DisplayText(this, settings);
+            return PeptideGroupTreeNode.ProteinModalDisplayText(this);
         }
 
         public static int CompareNames(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
         {
             return string.Compare(p1.Name, p2.Name, StringComparison.CurrentCulture);
+        }
+
+        public static int ComparePreferredNames(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
+        {
+            return string.Compare(p1.ProteinMetadata.PreferredName ?? String.Empty, p2.ProteinMetadata.PreferredName ?? String.Empty, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public static int CompareAccessions(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
+        {
+            return string.Compare(p1.ProteinMetadata.Accession ?? String.Empty, p2.ProteinMetadata.Accession ?? String.Empty, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public static int CompareGenes(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
+        {
+            return string.Compare(p1.ProteinMetadata.Gene ?? String.Empty, p2.ProteinMetadata.Gene ?? String.Empty, StringComparison.InvariantCultureIgnoreCase);
         }
 
         #region object overrides
@@ -335,7 +376,7 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj._name, _name) && Equals(obj._description, _description);
+            return base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata); 
         }
 
         public override bool Equals(object obj)
@@ -350,8 +391,7 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ (_name != null ? _name.GetHashCode() : 0);
-                result = (result*397) ^ (_description != null ? _description.GetHashCode() : 0);
+                result = (result * 397) ^ _proteinMetadata.GetHashCode();
                 return result;
             }
         }

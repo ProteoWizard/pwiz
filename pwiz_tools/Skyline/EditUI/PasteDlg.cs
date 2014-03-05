@@ -39,6 +39,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
+    // CONSIDER bspratt: Checkbox for hiding and showing new protein columns
     public partial class PasteDlg : FormEx, IMultipleViewProvider
     {
         private readonly StatementCompletionTextBox _statementCompletionEditBox;
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (tabControl1.SelectedTab == tabPageProteinList)
             {
-                _statementCompletionEditBox.TextBox.Text = statementCompletionItem.ProteinName;
+                _statementCompletionEditBox.TextBox.Text = statementCompletionItem.ProteinInfo.Name;
                 gridViewProteins.EndEdit();
             }
             else if (tabControl1.SelectedTab == tabPagePeptideList)
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.EditUI
                 if (gridViewPeptides.CurrentRow != null)
                 {
                     gridViewPeptides.CurrentRow.Cells[colPeptideProtein.Index].Value 
-                        = statementCompletionItem.ProteinName;
+                        = statementCompletionItem.ProteinInfo.Name;
                 }
                 gridViewPeptides.EndEdit();    
             }
@@ -90,7 +91,7 @@ namespace pwiz.Skyline.EditUI
                 if (gridViewTransitionList.CurrentRow != null)
                 {
                     gridViewTransitionList.CurrentRow.Cells[colTransitionProteinName.Index].Value =
-                        statementCompletionItem.ProteinName;
+                        statementCompletionItem.ProteinInfo.Name;
                 }
                 gridViewTransitionList.EndEdit();
             }
@@ -320,10 +321,14 @@ namespace pwiz.Skyline.EditUI
                     }
                     else
                     {
-                        PeptideGroup peptideGroup = backgroundProteome.IsNone ? new PeptideGroup() 
-                            : (backgroundProteome.GetFastaSequence(proteinName) ??
+                        ProteinMetadata metadata = null;
+                        PeptideGroup peptideGroup = backgroundProteome.IsNone ? new PeptideGroup()
+                            : (backgroundProteome.GetFastaSequence(proteinName, out metadata) ??
                                                     new PeptideGroup());
-                        peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName,
+                        if (metadata != null)
+                            peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, metadata, new PeptideDocNode[0]);
+                        else
+                            peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName,
                                                                       peptideGroup.Description, new PeptideDocNode[0]);
                     }
                     // Add to the end, if no insert node
@@ -425,6 +430,13 @@ namespace pwiz.Skyline.EditUI
             return peptideGroupDocNode != null && peptideGroupDocNode.IsPeptideList;
         }
 
+        private static string NullForEmpty(string str)
+        {
+            if (str == null)
+                return null;
+            return (str.Length == 0) ? null : str;
+        }
+
         private SrmDocument AddProteins(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageProteinList)
@@ -439,28 +451,35 @@ namespace pwiz.Skyline.EditUI
                 {
                     continue;
                 }
+                var pastedMetadata = new ProteinMetadata(proteinName,
+                    Convert.ToString(row.Cells[colProteinDescription.Index].Value),
+                    NullForEmpty(Convert.ToString(row.Cells[colProteinPreferredName.Index].Value)),
+                    NullForEmpty(Convert.ToString(row.Cells[colProteinAccession.Index].Value)),
+                    NullForEmpty(Convert.ToString(row.Cells[colProteinGene.Index].Value)),
+                    NullForEmpty(Convert.ToString(row.Cells[colProteinSpecies.Index].Value)));
                 FastaSequence fastaSequence = null;
                 if (!backgroundProteome.IsNone)
                 {
-                    fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+                    ProteinMetadata protdbMetadata;
+                    fastaSequence = backgroundProteome.GetFastaSequence(proteinName, out protdbMetadata);
+                    // Fill in any gaps in pasted metadata with that in protdb
+                    pastedMetadata = pastedMetadata.Merge(protdbMetadata);
                 }
                 var fastaSequenceString = Convert.ToString(row.Cells[colProteinSequence.Index].Value);
                 if (!string.IsNullOrEmpty(fastaSequenceString))
                 {
                         try
                         {
-                            if (fastaSequence == null)
+                            if (fastaSequence == null) // Didn't match anything in protdb
                             {
-                                fastaSequence = new FastaSequence(proteinName,
-                                                                  Convert.ToString(
-                                                                      row.Cells[colProteinDescription.Index].Value),
-                                                                  new AlternativeProtein[0], fastaSequenceString);
+                                fastaSequence = new FastaSequence(pastedMetadata.Name, pastedMetadata.Description,
+                                                                  new ProteinMetadata[0], fastaSequenceString);
                             }
                             else
                             {
                                 if (fastaSequence.Sequence != fastaSequenceString)
                                 {
-                                    fastaSequence = new FastaSequence(fastaSequence.Name, fastaSequence.Description,
+                                    fastaSequence = new FastaSequence(pastedMetadata.Name, pastedMetadata.Description,
                                                                       fastaSequence.Alternatives, fastaSequenceString);
                                 }
                             }
@@ -488,7 +507,7 @@ namespace pwiz.Skyline.EditUI
                         });
                     return null;
                 }
-                var description = Convert.ToString(row.Cells[colProteinDescription.Index].Value);
+                var description = pastedMetadata.Description;
                 if (!string.IsNullOrEmpty(description) && description != fastaSequence.Description)
                 {
                     fastaSequence = new FastaSequence(fastaSequence.Name, description, fastaSequence.Alternatives, fastaSequence.Sequence);
@@ -821,20 +840,28 @@ namespace pwiz.Skyline.EditUI
                 gridViewProteins.Rows.Remove(row);
             }
 
-            FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
+            ProteinMetadata metadata;
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName, out metadata);
             if (fastaSequence == null)
             {
                 row.Cells[colProteinDescription.Index].Value = null;
                 row.Cells[colProteinSequence.Index].Value = null;
+                row.Cells[colProteinPreferredName.Index].Value = null;
+                row.Cells[colProteinAccession.Index].Value = null;
+                row.Cells[colProteinGene.Index].Value = null;
+                row.Cells[colProteinSpecies.Index].Value = null;
             }
             else
             {
                 row.Cells[colProteinDescription.Index].Value = fastaSequence.Description;
                 row.Cells[colProteinSequence.Index].Value = fastaSequence.Sequence;
+                row.Cells[colProteinPreferredName.Index].Value = (metadata == null) ? null : metadata.PreferredName;
+                row.Cells[colProteinAccession.Index].Value = (metadata == null) ? null : metadata.Accession;
+                row.Cells[colProteinGene.Index].Value = (metadata == null) ? null : metadata.Gene;
+                row.Cells[colProteinSpecies.Index].Value = (metadata == null) ? null : metadata.Species;
             }
         }
-
-        private void gridViewPeptides_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+       private void gridViewPeptides_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
             {
@@ -847,7 +874,8 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-            FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
+            ProteinMetadata metadata;
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName, out metadata);
             row.Cells[colPeptideProteinDescription.Index].Value = fastaSequence == null ? null : fastaSequence.Description;
         }
 
@@ -967,20 +995,23 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
-            FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
+            ProteinMetadata metadata;
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName, out metadata);
             if (fastaSequence != null)
             {
                 row.Cells[colTransitionProteinDescription.Index].Value = fastaSequence.Description;
+                // CONSIDER (bspratt) show other parts of protein metadata here as well - gene, accession etc
             }
         }
 
-        private FastaSequence GetFastaSequence(DataGridViewRow row, string proteinName)
+        private FastaSequence GetFastaSequence(DataGridViewRow row, string proteinName, out ProteinMetadata metadata)
         {
+            metadata = null;
             var backgroundProteome = GetBackgroundProteome(DocumentUiContainer.DocumentUI);
             if (backgroundProteome.IsNone)
                 return null;
 
-            var fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+            var fastaSequence = backgroundProteome.GetFastaSequence(proteinName, out metadata);
             if (fastaSequence == null)
             {
                 // Sometimes the protein name in the background proteome will have an extra "|" on the end.
@@ -1052,7 +1083,7 @@ namespace pwiz.Skyline.EditUI
         private void gridViewProteins_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
             _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colProteinName.Index
-                ? (ProteinMatchType.name | ProteinMatchType.description) : 0;
+                ? (ProteinMatchType.all & ~ProteinMatchType.sequence) : 0;  // name, description, accession, etc
         }
 
         private void gridViewTransitionList_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)

@@ -58,6 +58,7 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
+  <!-- ReSharper disable NotOverridenInSpecificCulture -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -124,4 +125,36 @@
     <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>Saving changes</value>
   </data>
+  <data name="SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_" xml:space="preserve">
+    <value>Proteome file {0} has a format which is newer than the current software.  Please update to the latest software version and try again.</value>
+  </data>
+  <data name="ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details" xml:space="preserve">
+    <value>Looking for unresolved protein details</value>
+  </data>
+  <data name="ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins" xml:space="preserve">
+    <value>Accessing web services to retrieve details for {0} proteins</value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Name___0__" xml:space="preserve">
+    <value>Name: {0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Accession___0__" xml:space="preserve">
+    <value>Accession: {0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Preferred_Name___0__" xml:space="preserve">
+    <value>Preferred Name: {0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Gene___0__" xml:space="preserve">
+    <value>Gene: {0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Species___0__" xml:space="preserve">
+    <value>Species: {0} </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_Searched__" xml:space="preserve">
+    <value>Searched: </value>
+  </data>
+  <data name="ProteinMetadata_DisplayText_" xml:space="preserve">
+    <value>
+Description: {0}</value>
+  </data>
 </root>
+<!-- ReSharper restore NotOverridenInSpecificCulture -->

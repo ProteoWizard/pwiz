@@ -59,6 +59,7 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
+  <!-- ReSharper disable NotOverridenInSpecificCulture -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -299,6 +300,30 @@
   </metadata>
   <data name="colProteinDescription.HeaderText" xml:space="preserve">
     <value>Description</value>
+  </data>
+  <metadata name="colProteinAccession.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinAccession.HeaderText" xml:space="preserve">
+    <value>Accession</value>
+  </data>
+  <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinPreferredName.HeaderText" xml:space="preserve">
+    <value>Preferred Name</value>
+  </data>
+  <metadata name="colProteinGene.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinGene.HeaderText" xml:space="preserve">
+    <value>Gene</value>
+  </data>
+  <metadata name="colProteinSpecies.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinSpecies.HeaderText" xml:space="preserve">
+    <value>Species</value>
   </data>
   <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -636,6 +661,30 @@
   <data name="&gt;&gt;colProteinDescription.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;colProteinAccession.Name" xml:space="preserve">
+    <value>colProteinAccession</value>
+  </data>
+  <data name="&gt;&gt;colProteinAccession.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinPreferredName.Name" xml:space="preserve">
+    <value>colProteinPreferredName</value>
+  </data>
+  <data name="&gt;&gt;colProteinPreferredName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinGene.Name" xml:space="preserve">
+    <value>colProteinGene</value>
+  </data>
+  <data name="&gt;&gt;colProteinGene.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinSpecies.Name" xml:space="preserve">
+    <value>colProteinSpecies</value>
+  </data>
+  <data name="&gt;&gt;colProteinSpecies.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;colProteinSequence.Name" xml:space="preserve">
     <value>colProteinSequence</value>
   </data>
@@ -697,3 +746,4 @@
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
+<!-- ReSharper restore NotOverridenInSpecificCulture -->

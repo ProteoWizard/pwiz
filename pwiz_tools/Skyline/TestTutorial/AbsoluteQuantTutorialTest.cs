@@ -112,6 +112,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(pasteDlg.PastePeptides);
+                WaitForProteinMetadataBackgroundLoaderCompletedUI();
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List", 6);
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);

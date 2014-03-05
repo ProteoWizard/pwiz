@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Remove the last replicate from the document.
             // Share the minimal document
-            var doc = SkylineWindow.Document;
+            var doc = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             {
                 var doc1 = doc;
                 RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults,
@@ -315,7 +315,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void DeleteLastProtein()
         {
-            var docCurrent = SkylineWindow.Document;
+            var docCurrent = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             SelectNode(SrmDocument.Level.PeptideGroups, docCurrent.PeptideGroupCount - 1);
             RunUI(SkylineWindow.EditDelete);
             WaitForDocumentChange(docCurrent);
@@ -323,7 +323,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void DeleteLastPeptide()
         {
-            var docCurrent = SkylineWindow.Document;
+            var docCurrent = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             SelectNode(SrmDocument.Level.Peptides, docCurrent.PeptideCount - 1);
             RunUI(SkylineWindow.EditDelete);
             WaitForDocumentChange(docCurrent);
@@ -362,7 +362,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void DisableMS1Filtering()
         {
-            var doc = SkylineWindow.Document;
+            var doc = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docNew = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null)));
             Assert.IsTrue(SkylineWindow.SetDocument(docNew, doc));

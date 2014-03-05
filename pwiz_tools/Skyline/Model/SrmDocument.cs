@@ -19,6 +19,30 @@
 //TODO transitions and transition group
 // Move stuff to refinement
 
+// Note to those extending the document model:
+// All objects participating in the document model must be immutable.
+// An immutable document has many advantages, primary among those are 
+// simplifying synchronization in a multi-threaded system, allowing
+// eventual consistency, and maintaining a history of entire documents
+// at a cost of only the depth of the change in the document tree, with
+// many documents sharing the majority of their in memory objects.  This
+// allows undo/redo that simply points to a document in the history.
+//
+// Simple immutable objects may have only a constructor and property
+// getters with private setters.  More complex objects should derive
+// from the class Immutable.  The should still have only property getters
+// and private setters, and should only change at 3 times:
+//     1. In a constructor
+//     2. During deserialization (immediately after construction)
+//     3. In a Change<property>() method, using ImClone()
+// Directly modifying an existing object in memory after it has been
+// fully constructed, will break undo/redo, since the object may be
+// referenced by many documents in the history.
+//
+// More complex objects should also consider implementing IValidating
+// to ensure that the class remains valid in all three of the cases
+// described above.
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,6 +55,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -205,7 +230,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_3 = 1.3;
         public const double FORMAT_VERSION_1_4 = 1.4;
         public const double FORMAT_VERSION_1_5 = 1.5;
-        public const double FORMAT_VERSION = FORMAT_VERSION_1_5;
+        public const double FORMAT_VERSION_1_6 = 1.6;   // adds richer protein metadata
+        public const double FORMAT_VERSION = FORMAT_VERSION_1_6;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
@@ -1205,8 +1231,13 @@ namespace pwiz.Skyline.Model
             public const string name = "name";
             public const string category = "category";
             public const string description = "description";
-            public const string label_name = "label_name";
-            public const string label_description = "label_description";
+            public const string label_name = "label_name";  
+            public const string label_description = "label_description";  
+            public const string accession = "accession";
+            public const string gene = "gene";
+            public const string species = "species";
+            public const string websearch_status = "websearch_status";
+            public const string preferred_name = "preferred_name";
             public const string peptide_list = "peptide_list";
             public const string start = "start";
             public const string end = "end";
@@ -1229,7 +1260,7 @@ namespace pwiz.Skyline.Model
             public const string calc_neutral_mass = "calc_neutral_mass";
             public const string precursor_mz = "precursor_mz";
             public const string charge = "charge";
-            public const string precursor_charge = "precursor_charge";   // backware compatibility with v0.1
+            public const string precursor_charge = "precursor_charge";   // backward compatibility with v0.1
             public const string product_charge = "product_charge";
             public const string rank = "rank";
             public const string intensity = "intensity";
@@ -1384,6 +1415,19 @@ namespace pwiz.Skyline.Model
             return list.ToArray();
         }
 
+        private static ProteinMetadata ReadProteinMetadataXML(XmlReader reader, bool labelNameAndDescription)
+        {
+            var labelPrefix = labelNameAndDescription ? "label_" : string.Empty; // Not L10N
+            return new ProteinMetadata(
+                reader.GetAttribute(labelPrefix+ATTR.name),
+                reader.GetAttribute(labelPrefix + ATTR.description),
+                reader.GetAttribute(ATTR.preferred_name),
+                reader.GetAttribute(ATTR.accession),
+                reader.GetAttribute(ATTR.gene),
+                reader.GetAttribute(ATTR.species),
+                reader.GetAttribute(ATTR.websearch_status));
+        }
+
         /// <summary>
         /// Deserializes a single <see cref="PeptideGroupDocNode"/> from a
         /// <see cref="XmlReader"/> positioned at a &lt;protein&gt; tag.
@@ -1396,18 +1440,18 @@ namespace pwiz.Skyline.Model
         private PeptideGroupDocNode ReadProteinXml(XmlReader reader)
         {
             string name = reader.GetAttribute(ATTR.name);
-            string description = reader.GetAttribute(ATTR.description) ?? "";
+            string description = reader.GetAttribute(ATTR.description);
             bool peptideList = reader.GetBoolAttribute(ATTR.peptide_list);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
-            string label = reader.GetAttribute(ATTR.label_name);
-            string labelDescription = reader.GetAttribute(ATTR.label_description);
+            var labelProteinMetadata = ReadProteinMetadataXML(reader, true);  // read label_name, label_description, and species, gene etc if any
+
             reader.ReadStartElement();
 
             var annotations = ReadAnnotations(reader);
 
-            AlternativeProtein[] alternatives;
+            ProteinMetadata[] alternatives;
             if (!reader.IsStartElement(EL.alternatives) || reader.IsEmptyElement)
-                alternatives = new AlternativeProtein[0];
+                alternatives = new ProteinMetadata[0];
             else
             {
                 reader.ReadStartElement();
@@ -1427,13 +1471,13 @@ namespace pwiz.Skyline.Model
             // All v0.1 peptide lists should have a settable label
             if (peptideList)
             {
-                label = name ?? string.Empty;
-                labelDescription = description;
+                labelProteinMetadata = labelProteinMetadata.ChangeName(name ?? string.Empty);
+                labelProteinMetadata = labelProteinMetadata.ChangeDescription(description);
             }
             // Or any protein without a name attribute
             else if (name != null)
             {
-                labelDescription = null;
+                labelProteinMetadata = labelProteinMetadata.ChangeDescription(null);
             }
 
             PeptideGroup group;
@@ -1460,25 +1504,24 @@ namespace pwiz.Skyline.Model
 
             reader.ReadEndElement();
 
-            return new PeptideGroupDocNode(group, annotations, label, labelDescription,
+            return new PeptideGroupDocNode(group, annotations, labelProteinMetadata,
                 children ?? new PeptideDocNode[0], autoManageChildren);
         }
 
         /// <summary>
-        /// Deserializes an array of <see cref="AlternativeProtein"/> objects from
+        /// Deserializes an array of <see cref="ProteinMetadata"/> objects from
         /// a <see cref="XmlReader"/> positioned at the first element in the list.
         /// </summary>
         /// <param name="reader">The reader positioned at the first element</param>
-        /// <returns>A new array of <see cref="AlternativeProtein"/></returns>
-        private static AlternativeProtein[] ReadAltProteinListXml(XmlReader reader)
+        /// <returns>A new array of <see cref="ProteinMetadata"/></returns>
+        private static ProteinMetadata[] ReadAltProteinListXml(XmlReader reader)
         {
-            var list = new List<AlternativeProtein>();
+            var list = new List<ProteinMetadata>();
             while (reader.IsStartElement(EL.alternative_protein))
             {
-                string name = reader.GetAttribute(ATTR.name);
-                string description = reader.GetAttribute(ATTR.description);
+                var proteinMetaData = ReadProteinMetadataXML(reader, false);
                 reader.Read();
-                list.Add(new AlternativeProtein(name, description));
+                list.Add(proteinMetaData);
             }
             return list.ToArray();
         }
@@ -1509,8 +1552,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
         private PeptideGroupDocNode ReadPeptideGroupXml(XmlReader reader)
         {
-            string name = reader.GetAttribute(ATTR.label_name) ?? "";
-            string description = reader.GetAttribute(ATTR.label_description) ?? "";
+            ProteinMetadata proteinMetadata = ReadProteinMetadataXML(reader, true); // read label_name and label_description
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
 
@@ -1540,7 +1582,7 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();    // peptide_list
             }
 
-            return new PeptideGroupDocNode(group, annotations, name, description,
+            return new PeptideGroupDocNode(group, annotations, proteinMetadata,
                 children ?? new PeptideDocNode[0], autoManageChildren);
         }
 
@@ -2286,6 +2328,22 @@ namespace pwiz.Skyline.Model
             }
         }
 
+
+        private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N
+        {
+            if (!skipNameAndDescription)
+            {
+                writer.WriteAttributeIfString(ATTR.name, proteinMetadata.Name); 
+                writer.WriteAttributeIfString(ATTR.description, proteinMetadata.Description); 
+            }
+            writer.WriteAttributeIfString(ATTR.accession, proteinMetadata.Accession);
+            writer.WriteAttributeIfString(ATTR.gene, proteinMetadata.Gene);
+            writer.WriteAttributeIfString(ATTR.species, proteinMetadata.Species);
+            writer.WriteAttributeIfString(ATTR.preferred_name, proteinMetadata.PreferredName);
+            writer.WriteAttributeIfString(ATTR.websearch_status, proteinMetadata.WebSearchInfo.ToString());
+        }
+
+
         /// <summary>
         /// Serializes the contents of a single <see cref="PeptideGroupDocNode"/>
         /// to XML.
@@ -2294,19 +2352,27 @@ namespace pwiz.Skyline.Model
         /// <param name="node">The peptide group document node</param>
         private void WritePeptideGroupXml(XmlWriter writer, PeptideGroupDocNode node)
         {
-            // If the FASTA sequence has a name, then save it
+            // save the identity info
             if (node.PeptideGroup.Name != null)
             {
-                writer.WriteAttributeString(ATTR.name, node.PeptideGroup.Name);
-                if (node.PeptideGroup.Name != node.Name)
-                    writer.WriteAttributeString(ATTR.label_name, node.Name);
-                writer.WriteAttributeIfString(ATTR.description, node.PeptideGroup.Description);
+                writer.WriteAttributeString(ATTR.name, node.PeptideGroup.Name); 
             }
-            // Otherwise, save the label set by the user
-            else
+            if (node.PeptideGroup.Description != null)
             {
-                writer.WriteAttributeString(ATTR.label_name, node.Name);
-                writer.WriteAttributeIfString(ATTR.label_description, node.Description);                
+                writer.WriteAttributeString(ATTR.description, node.PeptideGroup.Description); 
+            }
+            // save any overrides
+            if ((node.ProteinMetadataOverrides.Name != null) && !Equals(node.ProteinMetadataOverrides.Name, node.PeptideGroup.Name))
+            {
+                writer.WriteAttributeString(ATTR.label_name, node.ProteinMetadataOverrides.Name); 
+            }
+            if ((node.ProteinMetadataOverrides.Description != null) && !Equals(node.ProteinMetadataOverrides.Description, node.PeptideGroup.Description))
+            {
+                writer.WriteAttributeString(ATTR.label_description, node.ProteinMetadataOverrides.Description); 
+            }
+            if (node.PeptideGroup is FastaSequence)
+            {
+                WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
@@ -2320,11 +2386,10 @@ namespace pwiz.Skyline.Model
                 if (seq.Alternatives.Count > 0)
                 {
                     writer.WriteStartElement(EL.alternatives);
-                    foreach (AlternativeProtein alt in seq.Alternatives)
+                    foreach (ProteinMetadata alt in seq.Alternatives)
                     {
                         writer.WriteStartElement(EL.alternative_protein);
-                        writer.WriteAttributeString(ATTR.name, alt.Name);
-                        writer.WriteAttributeString(ATTR.description, alt.Description);
+                        WriteProteinMetadataXML(writer, alt, false); // don't skip name and description
                         writer.WriteEndElement();
                     }
                     writer.WriteEndElement();

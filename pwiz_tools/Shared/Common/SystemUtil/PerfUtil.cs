@@ -85,7 +85,6 @@ namespace pwiz.Common.SystemUtil
         /// **always** employ using() for these - the timer stops when the object is disposed.
         /// </summary>
         /// <param name="name"></param>
-        /// <returns></returns>
         public IPerfUtilTimer CreateTimer(string name)
         {
             return new Timer(name, this);

@@ -24,6 +24,11 @@
     </id>
     <property name="Name" />
     <property name="Description" length="100000" />
+    <property name="PreferredName"/>
+    <property name="Accession"/>
+    <property name="Gene"/>
+    <property name="Species"/>
+    <!-- <property name="WebSearchStatus"/>  We don't want this to appear in the Document Grid -->
     <property name="Sequence" length="100000" />
     <property name="Note" length="100000" />
   </class>

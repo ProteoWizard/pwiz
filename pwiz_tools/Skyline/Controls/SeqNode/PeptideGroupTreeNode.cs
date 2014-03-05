@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -79,7 +80,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int typeImageIndex = TypeImageIndex;
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
-            string label = DisplayText((PeptideGroupDocNode) Model, SequenceTree.GetDisplaySettings(null));
+            string label = ProteinModalDisplayText((PeptideGroupDocNode) Model);
             if (!string.Equals(label, Text))
                 Text = label;
 
@@ -97,9 +98,44 @@ namespace pwiz.Skyline.Controls.SeqNode
             UpdateNodes(SequenceTree, Nodes, DocNode.Children, materialize, PeptideTreeNode.CreateInstance);
         }
 
-        public static string DisplayText(PeptideGroupDocNode node, DisplaySettings settings)
+        public static ProteinDisplayMode ProteinsDisplayMode(string displayProteinsMode)
         {
-            return node.Name;
+            return Helpers.ParseEnum(displayProteinsMode, ProteinDisplayMode.ByName); 
+        }
+
+        public static string ProteinModalDisplayText(ProteinMetadata metadata, string displayProteinsMode)
+        {
+            return ProteinModalDisplayText(metadata, ProteinsDisplayMode(displayProteinsMode));
+        }
+
+        public static string ProteinModalDisplayText(PeptideGroupDocNode node)
+        {
+            return ProteinModalDisplayText(node.ProteinMetadata, Settings.Default.ShowPeptidesDisplayMode);
+        }
+
+        public static string ProteinModalDisplayText(ProteinMetadata metadata, ProteinDisplayMode displayProteinsMode)
+        {
+            switch (displayProteinsMode)
+            {
+                case ProteinDisplayMode.ByAccession:
+                case ProteinDisplayMode.ByPreferredName:
+                case ProteinDisplayMode.ByGene:
+                    break;
+                default:
+                    return metadata.Name;  
+            }
+            if (metadata.NeedsSearch())
+                return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
+            switch (displayProteinsMode)
+            {
+                case ProteinDisplayMode.ByAccession:
+                    return metadata.Accession ?? Resources.ProteinMetadata__none_;
+                case ProteinDisplayMode.ByPreferredName:
+                    return metadata.PreferredName ?? Resources.ProteinMetadata__none_;
+                case ProteinDisplayMode.ByGene:
+                    return metadata.Gene ?? Resources.ProteinMetadata__none_;
+            }
+            return metadata.Name; // failsafe
         }
 
         #region IChildPicker Members
@@ -235,37 +271,37 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (fastaSeq == null)
                 return sizeInitial;
 
+            var tableDetails = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
                 SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
                 float widthLine = sizeX80.Width;
                 float heightLine = sizeX80.Height;
                 float heightMax = sizeMax.Height;
-                float heightTotal = 0f;
-                IEnumerable<string> descriptionWithOriginalName = Descriptions; 
+                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
+                // If current name isn't the original, show that.
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.PeptideGroup.Name, rt);
+                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Accession))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Accession, DocNode.ProteinMetadata.Accession, rt);
+                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.PreferredName))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name, DocNode.ProteinMetadata.PreferredName, rt);
+                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Gene))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Gene, DocNode.ProteinMetadata.Gene, rt);
+                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.DisplaySearchHistory()))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Searched, DocNode.ProteinMetadata.DisplaySearchHistory(), rt);
+                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Description))
+                    tableDetails.AddDetailRowLineWrap(g,Resources.PeptideGroupTreeNode_RenderTip_Description, DocNode.ProteinMetadata.Description, rt);
+                if (DocNode.PeptideGroup.Description != null && !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description, DocNode.PeptideGroup.Description, rt);
+                SizeF sizeDetails = tableDetails.CalcDimensions(g);
+                sizeDetails.Height += TableDesc.TABLE_SPACING;    // Spacing between details and fragments
+                float heightTotal = sizeDetails.Height;
+                widthLine = Math.Max(widthLine, sizeDetails.Width);
+
+                if (draw)
                 {
-                    IEnumerable<string> originalName = new[] {string.Format(Resources.PeptideGroupTreeNode_RenderTip_Original_name__0__, DocNode.PeptideGroup.Name)};
-                    descriptionWithOriginalName = originalName.Concat(descriptionWithOriginalName);
-                }
-                foreach (string description in descriptionWithOriginalName)
-                {
-                    SizeF sizeDesc = g.MeasureString(description, rt.FontNormal, (int)widthLine);
-                    int heightDesc = (int)(sizeDesc.Height + heightLine / 2);
-                    // If not enough room for this description, and one line of the
-                    // sequence, just end with an elipsis.
-                    if (heightTotal + heightDesc + heightLine > heightMax)
-                    {
-                        if (draw)
-                            g.DrawString("...", rt.FontNormal, rt.BrushNormal, 0, heightTotal); // Not L10N
-                        return TipSize(widthLine, heightTotal + heightLine);
-                    }
-                    if (draw)
-                    {
-                        g.DrawString(description, rt.FontNormal, rt.BrushNormal,
-                                     new RectangleF(0, heightTotal, widthLine, heightMax - heightTotal));
-                    }
-                    heightTotal += heightDesc;
+                    tableDetails.Draw(g);
                 }
 
                 IList<DocNode> peptidesChoices = GetChoices(true).ToArray();
@@ -322,7 +358,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        private IEnumerable<string> Descriptions
+        private IEnumerable<string> Descriptions  
         {
             get
             {
@@ -429,7 +465,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var sb = new StringBuilder();
             sb.Append("<b>").Append(DocNode.Name).Append("</b> "); // Not L10N
             sb.Append("<i>"); // Not L10N
-            if (string.IsNullOrEmpty(DocNode.Description))
+            if (string.IsNullOrEmpty(DocNode.Description)) // CONSIDER bspratt - a more complete set of data here, maybe - accession etc
                 sb.AppendLine("<br/>"); // Not L10N
             else
             {

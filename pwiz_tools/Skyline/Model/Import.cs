@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1445,16 +1446,16 @@ namespace pwiz.Skyline.Model
                 BaseName = Name = line.Substring(start, split - start);
                 string[] descriptions = line.Substring(split + 1).Split((char)1);
                 Description = descriptions[0];
-                var listAlternatives = new List<AlternativeProtein>();
+                var listAlternatives = new List<ProteinMetadata>();
                 for (int i = 1; i < descriptions.Length; i++)
                 {
                     string alternative = descriptions[i];
                     split = IndexEndId(alternative);
                     if (split == -1)
-                        listAlternatives.Add(new AlternativeProtein(alternative, null));
+                        listAlternatives.Add(new ProteinMetadata(alternative, null));
                     else
                     {
-                        listAlternatives.Add(new AlternativeProtein(alternative.Substring(0, split),
+                        listAlternatives.Add(new ProteinMetadata(alternative.Substring(0, split),
                             alternative.Substring(split + 1)));
                     }
                 }
@@ -1482,7 +1483,7 @@ namespace pwiz.Skyline.Model
 
         public string Name { get; private set; }
         public string Description { get; private set; }
-        public AlternativeProtein[] Alternatives { get; private set; }
+        public ProteinMetadata[] Alternatives { get; private set; }
         public string AA
         {
             get
@@ -1770,13 +1771,13 @@ namespace pwiz.Skyline.Model
                 nodePepGroup = new PeptideGroupDocNode(_activeFastaSeq ?? new PeptideGroup(_peptides.Any(p => p.IsDecoy)),
                     Name, Description, _peptides.ToArray());
             }
-            else if (_customName)
+            else if (_customName) // name travels in the PeptideGroupDocNode instead of the FastaSequence
             {
                 nodePepGroup = new PeptideGroupDocNode(
                     new FastaSequence(null, null, Alternatives, _sequence.ToString()),
                     Name, Description, new PeptideDocNode[0]);
             }
-            else
+            else  // name travels with the FastaSequence
             {
                 nodePepGroup = new PeptideGroupDocNode(
                     new FastaSequence(Name, Description, Alternatives, _sequence.ToString()),

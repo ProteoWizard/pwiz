@@ -407,7 +407,7 @@ namespace pwiz.Skyline.SettingsUI
                         if (peptideMatch.Proteins != null)
                         {
                             indexProtein =
-                                peptideMatch.Proteins.IndexOf(protein => Equals(protein.Name, proteinName));
+                                peptideMatch.Proteins.IndexOf(protein => Equals(protein.ProteinMetadata.Name, proteinName));
                             // If the user has opted to filter duplicate peptides, remove this peptide from the list to
                             // add and continue.
                             if(FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates && peptideMatch.Proteins.Count > 1)
@@ -553,7 +553,7 @@ namespace pwiz.Skyline.SettingsUI
                 foreach (ProteinInfo protein in pepMatch.Proteins)
                 {
                     // Look for the protein in the document.
-                    string name = protein.Name;
+                    string name = protein.ProteinMetadata.Name;
                     var peptideGroupDocNode = FindPeptideGroupDocNode(document, name);
                     bool foundInDoc = peptideGroupDocNode != null;
                     bool foundInList = false;
@@ -566,9 +566,9 @@ namespace pwiz.Skyline.SettingsUI
                         // If not, create a new PeptideGroupDocNode.
                         else
                         {
-                            List<AlternativeProtein> alternativeProteins = new List<AlternativeProtein>(protein.Alternatives);
+                            List<ProteinMetadata> alternativeProteins = new List<ProteinMetadata>(protein.Alternatives);
                             peptideGroupDocNode = new PeptideGroupDocNode(
-                                    new FastaSequence(name, protein.Description, alternativeProteins, protein.Sequence),
+                                    new FastaSequence(name, protein.ProteinMetadata.Description, alternativeProteins, protein.Sequence),
                                     null, null, new PeptideDocNode[0]);
                         }
                     }
@@ -709,7 +709,7 @@ namespace pwiz.Skyline.SettingsUI
             }  
             else
             {
-                nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(),
+                nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), 
                                                           Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides,
                                                           "", listPeptides.ToArray());
                 if (hasVariable)
@@ -753,16 +753,13 @@ namespace pwiz.Skyline.SettingsUI
         {
             public ProteinInfo(Protein protein)
             {
-                Name = protein.Name;
-                Description = protein.Description;
+                ProteinMetadata = protein.ProteinMetadata;
                 Sequence = protein.Sequence;
-                Alternatives = ImmutableList.ValueOf(protein.AlternativeNames.Select(
-                        alternative => new AlternativeProtein(alternative.Name, alternative.Description)));
+                Alternatives = ImmutableList.ValueOf(protein.AlternativeNames);
             }
-            public string Name { get; private set; }
-            public string Description { get; private set; }
             public string Sequence { get; private set; }
-            public IList<AlternativeProtein> Alternatives { get; private set; }
+            public ProteinMetadata ProteinMetadata { get; private set; }
+            public IList<ProteinMetadata> Alternatives { get; private set; }
         }
 
 

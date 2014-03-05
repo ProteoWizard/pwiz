@@ -47,6 +47,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.richTextBoxSequence = new System.Windows.Forms.RichTextBox();
+            this.tbxProteinDetails = new System.Windows.Forms.TextBox();
+            this.labelProteinDetails = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -166,6 +168,17 @@
             this.richTextBoxSequence.Name = "richTextBoxSequence";
             this.richTextBoxSequence.ReadOnly = true;
             // 
+            // tbxProteinDetails
+            // 
+            resources.ApplyResources(this.tbxProteinDetails, "tbxProteinDetails");
+            this.tbxProteinDetails.Name = "tbxProteinDetails";
+            this.tbxProteinDetails.ReadOnly = true;
+            // 
+            // labelProteinDetails
+            // 
+            resources.ApplyResources(this.labelProteinDetails, "labelProteinDetails");
+            this.labelProteinDetails.Name = "labelProteinDetails";
+            // 
             // UniquePeptidesDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -173,6 +186,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ContextMenuStrip = this.contextMenuStrip1;
+            this.Controls.Add(this.tbxProteinDetails);
+            this.Controls.Add(this.labelProteinDetails);
             this.Controls.Add(this.richTextBoxSequence);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.tbxProteinDescription);
@@ -209,5 +224,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.RichTextBox richTextBoxSequence;
+        private System.Windows.Forms.TextBox tbxProteinDetails;
+        private System.Windows.Forms.Label labelProteinDetails;
     }
 }

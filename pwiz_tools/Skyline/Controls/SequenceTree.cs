@@ -36,6 +36,18 @@ namespace pwiz.Skyline.Controls
     public enum ReplicateDisplay { all, single, best }
 
     /// <summary>
+    /// helpful for the many places where user might prefer to think of a protein
+    /// in terms of something other than its name
+    /// </summary>
+    public enum ProteinDisplayMode
+    {
+        ByName,
+        ByAccession,
+        ByPreferredName,
+        ByGene
+    };
+
+    /// <summary>
     /// Displays a <see cref="SrmDocument"/> as a tree of nodes.
     /// <para>
     /// Enhanced node label editing from:
@@ -1182,9 +1194,14 @@ namespace pwiz.Skyline.Controls
             get { return Focused || ToolTipOwner != null; }
         }
 
+        static public ProteinDisplayMode ProteinsDisplayMode
+        {
+            get { return Helpers.ParseEnum(Settings.Default.ShowPeptidesDisplayMode, ProteinDisplayMode.ByName); }
+        }
+
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
         {
-            return new DisplaySettings(nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); 
+            return new DisplaySettings(nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); //, PeptidesDisplayMode); 
         }
 
         public Rectangle RectToScreen(Rectangle r)
@@ -1196,6 +1213,11 @@ namespace pwiz.Skyline.Controls
         {
             base.OnTextZoomChanged();
             ModFonts = new ModFontHolder(this);   
+        }
+
+        public void OnShowPeptidesDisplayModeChanged()
+        {
+            UpdateNodeStates();
         }
 
         private Control _toolTipOwner;

@@ -673,6 +673,7 @@
     <Compile Include="Model\AbstractModificationMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
+    <Compile Include="Model\Proteome\ProteinMetadataManager.cs" />
     <Compile Include="Model\RefinementSettings.cs" />
     <Compile Include="EditUI\ChromatogramRTThresholdDlg.cs">
       <SubType>Form</SubType>
@@ -1256,6 +1257,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.ja.resx">
       <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.ja.resx">
       <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
@@ -1289,6 +1291,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RenameProteinsDlg.ja.resx">
       <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RTChartPropertyDlg.ja.resx">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
@@ -1382,12 +1385,14 @@
     </Content>
     <EmbeddedResource Include="Controls\Databinding\DocumentGridForm.resx">
       <DependentUpon>DocumentGridForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ExportLiveReportDlg.resx">
       <DependentUpon>ExportLiveReportDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\LiveResultsGrid.resx">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.resx">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
@@ -1535,6 +1540,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTreeForm.resx">
       <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ReintegrateDlg.resx">
       <DependentUpon>ReintegrateDlg.cs</DependentUpon>
@@ -1685,6 +1691,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <Content Include="..\Shared\BiblioSpec\binaries\modifications.xml">
       <Link>modifications.xml</Link>

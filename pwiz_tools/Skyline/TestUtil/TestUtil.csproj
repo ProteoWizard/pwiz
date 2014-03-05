@@ -149,6 +149,10 @@
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
+      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
+      <Name>ProteomeDb</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
@@ -179,6 +183,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CheckReportCompatibility.skyr" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_1.6.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

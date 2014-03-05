@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Paste(TEXT_FASTA_YEAST_39));
 
             // Check and save original document information
-            var docOrig = SkylineWindow.Document;
+            var docOrig = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Peptides, docOrig.PeptideCount - 3);
             var peptideOrig = (PeptideDocNode) docOrig.FindNode(pathPeptide);
             Assert.AreEqual(2, peptideOrig.Children.Count);
@@ -234,6 +234,8 @@ namespace pwiz.SkylineTestFunctional
 
             Directory.CreateDirectory(TestContext.TestDir);
             string saveFilePath = TestContext.GetTestPath("TestExplicitVariable.sky");
+            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // make sure doc is complete before save
+
             RunUI(() =>
                 {
                     Assert.IsTrue(SkylineWindow.SaveDocument(saveFilePath));
@@ -241,6 +243,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsTrue(SkylineWindow.OpenFile(saveFilePath));
                 });
 
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docRestored = SkylineWindow.Document;
             var pathPeptideFirstNew = docRestored.GetPathTo((int) SrmDocument.Level.Peptides, 0);
             var peptideExplicitVarModNew = docRestored.FindNode(pathPeptideFirstNew);

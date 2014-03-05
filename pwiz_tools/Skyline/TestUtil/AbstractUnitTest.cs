@@ -23,7 +23,6 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -50,15 +49,16 @@ namespace pwiz.SkylineTestUtil
 
         protected bool AllowInternetAccess
         {
-            get { return GetBoolValue("AccessInternet"); }
+            get { return GetBoolValue("AccessInternet", false); }  // Return false if unspecified
         }
 
-        protected bool GetBoolValue(string property)
+        protected bool GetBoolValue(string property, bool defaultValue)
         {
             var value = TestContext.Properties[property];
-            return value == null ||
+            return (value == null) ? defaultValue :
                 string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
         }
+
 
         private string[] _testFilesZips;
         public string TestFilesZip

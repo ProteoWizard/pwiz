@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Paste a protein list
-            var document = SkylineWindow.Document;
+            var document = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             RunUI(() =>
                       {
                           SetClipboardText(PROTEINLIST_CLIPBOARD_TEXT);
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
                                        SkylineWindow.Paste();
                                    },
                                    msgDlg => msgDlg.OkDialog());
-            Assert.AreSame(docPaste, SkylineWindow.Document);
+            Assert.AreSame(docPaste, WaitForProteinMetadataBackgroundLoaderCompletedUI());
         }
 
         // Check that actual clipboard text and HTML match the expected clipboard text and HTML.

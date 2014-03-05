@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Paste(TRANSITIONLIST_CSV_MODLOSS_CLIPBOARD_TEXT));
 
             var docPaste1 = WaitForDocumentChange(document);
-            AssertEx.IsDocumentState(docPaste1, 2, 3, 4, 12);
+            AssertEx.IsDocumentState(docPaste1, null, 3, 4, 12); // revision # is hard to predict with background loaders running
             Assert.AreEqual(4, GetVariableModCount(docPaste1));
             Assert.AreEqual(6, GetLossCount(docPaste1, 1));
 
@@ -72,6 +72,7 @@ namespace pwiz.SkylineTestFunctional
                     insertTransDlg.PasteTransitions();
                     insertTransDlg.OkDialog();
                 });
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
             // Nothing should have changed
             RunUI(() => Assert.AreSame(docPaste1, SkylineWindow.DocumentUI));
@@ -88,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var docInsert1 = WaitForDocumentChange(document);
-            AssertEx.IsDocumentState(docInsert1, 4, 3, 4, 12);
+            AssertEx.IsDocumentState(docInsert1, null, 3, 4, 12); // revision # is hard to predict with background loaders running
             Assert.AreEqual(4, GetVariableModCount(docInsert1));
             Assert.AreEqual(6, GetLossCount(docInsert1, 1));
 
@@ -119,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var docInsert2 = WaitForDocumentChange(docInsert1);
-            AssertEx.IsDocumentState(docInsert2, 5, 4, 7, 21);
+            AssertEx.IsDocumentState(docInsert2, null, 4, 7, 21); // revision # is hard to predict with background loaders running
             Assert.AreEqual(7, GetVariableModCount(docInsert2));
             Assert.AreEqual(11, GetLossCount(docInsert2, 1));
         }

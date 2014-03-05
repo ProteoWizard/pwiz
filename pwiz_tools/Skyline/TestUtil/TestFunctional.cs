@@ -30,12 +30,14 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -355,12 +357,14 @@ namespace pwiz.SkylineTestUtil
             // Make sure the document changes on the UI thread, since tests are mostly
             // interested in interacting with the document on the UI thread.
             Assert.IsTrue(WaitForConditionUI(() => !ReferenceEquals(docCurrent, SkylineWindow.DocumentUI)));
+            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let background PeptideGroupDocNode protein metdata loader complete
             return SkylineWindow.Document;
         }
 
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
             WaitForConditionUI(millis, () => SkylineWindow.DocumentUI.IsLoaded);
+            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let background PeptideGroupDocNode protein metdata loader complete
             return SkylineWindow.Document;
         }
 
@@ -599,6 +603,16 @@ namespace pwiz.SkylineTestUtil
             // Clean-up before running the test
             RunUI(() => SkylineWindow.UseKeysOverride = true);
 
+            // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
+            bool allowInternetAccess = AllowInternetAccess; // Local copy for easy change in debugger when needed
+            if (!allowInternetAccess)
+            {
+                var protdbLoader = SkylineWindow.BackgroundProteomeManager;
+                protdbLoader.FastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+                var treeLoader = SkylineWindow.ProteinMetadataManager;
+                treeLoader.FastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+            }
+
             // Use internal clipboard for testing so that we don't collide with other processes
             // using the clipboard during a test run.
             ClipboardEx.UseInternalClipboard();
@@ -611,7 +625,7 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
 
-            IsEnableLiveReports = GetBoolValue("LiveReports");
+            IsEnableLiveReports = GetBoolValue("LiveReports", true); // Return true if unspecified
 
             DoTest();
 
@@ -762,6 +776,18 @@ namespace pwiz.SkylineTestUtil
                                      docStart.PeptideCount - 1,
                                      docStart.TransitionGroupCount - nodePeptide.TransitionGroupCount,
                                      docStart.TransitionCount - nodePeptide.TransitionCount);
+        }
+
+        public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI()
+        {
+            // in a functional test we expect the protein metadata search to at least pretend to have gone to the web
+            WaitForConditionUI(() => ((SkylineWindow.DocumentUI == null) || ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI)));
+            return SkylineWindow.Document;
+        }
+
+        public static void WaitForBackgroundProteomeLoaderCompleted()
+        {
+            WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
         #region Modification helpers

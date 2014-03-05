@@ -46,6 +46,10 @@ namespace pwiz.Skyline.EditUI
             this.gridViewProteins = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinAccession = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinPreferredName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinGene = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinSpecies = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPagePeptideList = new System.Windows.Forms.TabPage();
             this.gridViewPeptides = new pwiz.Skyline.Controls.DataGridViewEx();
@@ -149,7 +153,11 @@ namespace pwiz.Skyline.EditUI
             this.gridViewProteins.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colProteinName,
             this.colProteinDescription,
-            this.colProteinSequence});
+            this.colProteinSequence,
+            this.colProteinAccession,
+            this.colProteinPreferredName,
+            this.colProteinGene,
+            this.colProteinSpecies});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -175,6 +183,26 @@ namespace pwiz.Skyline.EditUI
             // 
             resources.ApplyResources(this.colProteinDescription, "colProteinDescription");
             this.colProteinDescription.Name = "colProteinDescription";
+            // 
+            // colProteinAccession
+            // 
+            resources.ApplyResources(this.colProteinAccession, "colProteinAccession");
+            this.colProteinAccession.Name = "colProteinAccession";
+            // 
+            // colProteinPreferredName
+            // 
+            resources.ApplyResources(this.colProteinPreferredName, "colProteinPreferredName");
+            this.colProteinPreferredName.Name = "colProteinPreferredName";
+            // 
+            // colProteinGene
+            // 
+            resources.ApplyResources(this.colProteinGene, "colProteinGene");
+            this.colProteinGene.Name = "colProteinGene";
+            // 
+            // colProteinSpecies
+            // 
+            resources.ApplyResources(this.colProteinSpecies, "colProteinSpecies");
+            this.colProteinSpecies.Name = "colProteinSpecies";
             // 
             // colProteinSequence
             // 
@@ -359,13 +387,17 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideProteinDescription;
         private System.Windows.Forms.TabPage tabPageTransitionList;
         private DataGridViewEx gridViewTransitionList;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionPrecursorMz;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProductMz;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProteinName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProteinDescription;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinAccession;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinPreferredName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinGene;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSpecies;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
     }
 }

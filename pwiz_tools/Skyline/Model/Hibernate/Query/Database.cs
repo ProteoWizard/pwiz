@@ -220,10 +220,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 foreach (PeptideGroupDocNode nodeGroup in srmDocument.PeptideGroups)
                 {
                     PeptideGroup peptideGroup = nodeGroup.PeptideGroup;
-                    DbProtein dbProtein = new DbProtein
+                    DbProtein dbProtein = new DbProtein(nodeGroup.ProteinMetadata)
                     {
-                        Name = nodeGroup.Name,
-                        Description = nodeGroup.Description,
                         Sequence = peptideGroup.Sequence,
                         Note = nodeGroup.Note
                     };

@@ -32,6 +32,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -125,6 +126,7 @@ namespace pwiz.SkylineTestTutorial
                 () =>
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0
                 && SkylineWindow.Document.Settings.HasBackgroundProteome
+                && BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document,true) // wait for protein metadata
                 && SkylineWindow.IsGraphSpectrumVisible);
             WaitForDocumentLoaded();
 

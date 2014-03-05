@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Model.Proteome
             new BackgroundProteome(BackgroundProteomeList.GetDefault());
 
         private HashSet<string> DigestionNames { get; set; }
+        public bool NeedsProteinMetadataSearch { get; private set; }
         public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) : this(backgroundProteomeSpec, false)
         {
         }
@@ -48,24 +49,24 @@ namespace pwiz.Skyline.Model.Proteome
             : base(backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath)
         {
             DigestionNames = new HashSet<string>();
-            if (queryDigestions)
+            if (!IsNone)
             {
-                if (!IsNone)
+                try
                 {
-                    try
+                    using (var proteomeDb = OpenProteomeDb())
                     {
-                        using (var proteomeDb = OpenProteomeDb())
-                        {
-                            DigestionNames.UnionWith(proteomeDb.ListDigestions().Select(digestion=>digestion.Name));
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        DatabaseInvalid = true;
+                        if (queryDigestions)
+                            DigestionNames.UnionWith(proteomeDb.ListDigestions().Select(digestion => digestion.Name));
+                        NeedsProteinMetadataSearch = proteomeDb.HasProteinNamesWithUnresolvedMetadata();
                     }
                 }
-                DatabaseValidated = true;
+                catch (Exception)
+                {
+                    DatabaseInvalid = true;
+                }
             }
+            if (queryDigestions)
+                DatabaseValidated = true;
         }
 
         private BackgroundProteome()

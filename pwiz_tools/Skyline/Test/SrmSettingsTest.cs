@@ -23,12 +23,14 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using SequenceTerminus = pwiz.Skyline.Model.SequenceTerminus;
 
 namespace pwiz.SkylineTest
 {        
@@ -358,7 +360,7 @@ namespace pwiz.SkylineTest
 
         private static void DigestsTo(string sequence, Enzyme enzyme, params string[] pepSeqs)
         {
-            var fastaSeq = new FastaSequence("p", "d", new AlternativeProtein[0], sequence);
+            var fastaSeq = new FastaSequence("p", "d", new ProteinMetadata[0], sequence);
             var digestSettings = new DigestSettings(0, false);
             var pepSeqEnum = pepSeqs.GetEnumerator();
             foreach (var peptide in enzyme.Digest(fastaSeq, digestSettings))

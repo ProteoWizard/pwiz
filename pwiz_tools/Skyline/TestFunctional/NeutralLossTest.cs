@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, GetLossCount(SkylineWindow.Document, 1));
 
             // Show losses in the pick list
-            var docFasta = SkylineWindow.Document;
+            var docFasta = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
             RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
             {

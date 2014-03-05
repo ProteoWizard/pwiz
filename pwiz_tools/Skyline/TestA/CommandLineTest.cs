@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
@@ -446,6 +447,10 @@ namespace pwiz.SkylineTestA
 
                 //check for success
                 success = output.Contains("successfully.");
+
+                // Relax a bit if things aren't going well.
+                if (!success)
+                    Thread.Sleep(5000);
             }
 
             if (!success)
@@ -1230,6 +1235,7 @@ namespace pwiz.SkylineTestA
             const string arguments = "$(DocumentDir) Other";
             const string initialDirectory = @"C:\";
 
+            Settings.Default.ToolList.Clear(); // in case any previous run had trouble
 
             // Test adding a tool.
             RunCommand("--tool-add=" + title,

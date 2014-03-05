@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestA
         public void TestFindNode()
         {
             SrmDocument doc = CreateStudy7Doc();
-            var displaySettings = new DisplaySettings(null, false, 0, 0);
+            var displaySettings = new DisplaySettings(null, false, 0, 0); //, ProteinDisplayMode.ByName);
             // Find every other transition, searching down.
             List<TransitionDocNode> listTransitions = doc.Transitions.ToList();
             var pathFound = doc.GetPathTo(0, 0);

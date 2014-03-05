@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestTutorial
             // Adding Library Peptides to the Document p. 11
 
             // Adding AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY
-            var docInitial = SkylineWindow.Document;
+            var docInitial = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             const string peptideSequence1 = "AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY"; // Not L10N
             RunUI(() =>
             {
@@ -379,6 +379,8 @@ namespace pwiz.SkylineTestTutorial
                 return (backgroundProteome.HasDigestion(peptideSettings));
             }));
 
+            WaitForBackgroundProteomeLoaderCompleted(); // wait for protDB to populate protein metadata
+
             RunUI(() =>
             {
                 viewLibraryDlg1.FilterString = string.Empty;
@@ -391,7 +393,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg1.AssociateMatchingProteins = true;
             });
 
-            docInitial = SkylineWindow.Document;
+            docInitial = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
             // Add everything in the library to the document.
             var filterMatchedPeptidesDlg = 

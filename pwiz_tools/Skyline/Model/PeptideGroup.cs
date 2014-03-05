@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.Model
 
             // Sort desc by rank ID value
             listRanks.Sort((p1, p2) => Comparer.Default.Compare(p2.Value, p1.Value));
-            
+
             int rank = 1;
             for (int i = 0; i < listRanks.Count; i++)
             {
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model
                     break;
                 peptidesNew.Add(listRanks[i].Key);
             }
-            
+
             // Re-sort by order in FASTA sequence
             peptidesNew.Sort(FastaSequence.ComparePeptides);
 
@@ -163,19 +164,19 @@ namespace pwiz.Skyline.Model
         private readonly string _sequence;
         private readonly bool _isDecoy;
 
-        public FastaSequence(string name, string description, IList<AlternativeProtein> alternatives, string sequence)
+        public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence) 
             : this(name, description, alternatives, sequence, false)
         {
         }
 
 
-        public FastaSequence(string name, string description, IList<AlternativeProtein> alternatives, string sequence, bool isDecoy)
+        public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence, bool isDecoy)
         {
             // Null name means it is editable by the user.
             _name = (string.IsNullOrEmpty(name) ? null : name);
 
             _description = description;
-            Alternatives = new ReadOnlyCollection<AlternativeProtein>(alternatives ?? new AlternativeProtein[0]);
+            Alternatives = new ReadOnlyCollection<ProteinMetadata>(alternatives ?? new ProteinMetadata[0]);
             _sequence = sequence;
             _isDecoy = isDecoy;
 
@@ -186,10 +187,10 @@ namespace pwiz.Skyline.Model
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }
-        public IList<AlternativeProtein> Alternatives { get; private set; }
+        public IList<ProteinMetadata> Alternatives { get; private set; }
         public IEnumerable<string> AlternativesText
         {
-            get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name, alt.Description)); }
+            get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name ?? String.Empty, alt.Description ?? String.Empty)); }  // CONSIDER (bspratt) - include accession, preferredName etc?
         }
 
         public string FastaFileText
@@ -199,7 +200,7 @@ namespace pwiz.Skyline.Model
                 StringBuilder sb = new StringBuilder();
                 sb.Append(">").Append(Name).Append(" ").Append(Description); // Not L10N
                 foreach (var alt in Alternatives)
-                    sb.Append((char)1).Append(alt.Name).Append(" ").Append(alt.Description); // Not L10N
+                    sb.Append((char)1).Append(alt.Name ?? String.Empty).Append(" ").Append(alt.Description ?? String.Empty); // Not L10N
 
                 for (int i = 0; i < Sequence.Length; i++)
                 {
@@ -277,7 +278,7 @@ namespace pwiz.Skyline.Model
                 char c = seq[i];
                 if (!AminoAcid.IsExAA(c) && c != '*' && c != '-') // Not L10N
                     throw new InvalidDataException(string.Format(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__, seq[i], i));
-            }            
+            }
         }
 
         private void Validate()
@@ -340,46 +341,6 @@ namespace pwiz.Skyline.Model
 
             return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);
         }
-    }
-
-    public class AlternativeProtein
-    {
-        public AlternativeProtein(string name, string description)
-        {
-            Name = name;
-            Description = description;
-        }
-
-        public string Name { get; set; }
-
-        public string Description { get; set; }
-
-        #region object overrides
-
-        public bool Equals(AlternativeProtein obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Name, Name) && Equals(obj.Description, Description);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (AlternativeProtein)) return false;
-            return Equals((AlternativeProtein) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (Name.GetHashCode()*397) ^ (Description != null ? Description.GetHashCode() : 0);
-            }
-        }
-
-        #endregion
     }
 
 // ReSharper disable InconsistentNaming

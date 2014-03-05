@@ -61,6 +61,7 @@ namespace pwiz.SkylineTestFunctional
                 var backgroundProteome = peptideSettings.BackgroundProteome;
                 return backgroundProteome.HasDigestion(peptideSettings);
             });
+            WaitForBackgroundProteomeLoaderCompleted(); // Allow protDB file to populate protein metadata first
 
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);
             var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);

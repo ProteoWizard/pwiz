@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Controls
         public SequenceTreeForm(IDocumentUIContainer documentContainer, bool restoringState)
         {
             InitializeComponent();
-
+            _defaultTabText = TabText;
             sequenceTree.LockDefaultExpansion = restoringState;
             sequenceTree.InitializeTree(documentContainer);
             sequenceTree.LockDefaultExpansion = false;
@@ -70,6 +70,30 @@ namespace pwiz.Skyline.Controls
                 if (_sequenceTreeForm != null && !_sequenceTreeForm.IsDisposed)
                     _sequenceTreeForm.EndUpdateDoc();
             }
+        }
+
+        private readonly string _defaultTabText;
+
+        public void UpdateTitle()
+        {
+            // update the form's title bar to indicate display mode
+            string newTitle = null;
+            switch (SequenceTree.ProteinsDisplayMode)
+            {
+                case ProteinDisplayMode.ByName:
+                    newTitle = _defaultTabText;
+                    break;
+                case ProteinDisplayMode.ByAccession:
+                    newTitle = "Targets by Accession";
+                    break;
+                case ProteinDisplayMode.ByPreferredName:
+                    newTitle = "Targets by Preferred Name";
+                    break;
+                case ProteinDisplayMode.ByGene:
+                    newTitle = "Targets by Gene";
+                    break;
+            }
+            TabText = newTitle ?? _defaultTabText;
         }
 
         private int _updateLockCountDoc;

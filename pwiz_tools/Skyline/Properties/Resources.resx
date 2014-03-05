@@ -59,6 +59,7 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
+  <!-- ReSharper disable NotOverridenInSpecificCulture -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4559,9 +4560,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ShowRenameProteinsDlg_Rename_proteins" xml:space="preserve">
     <value>Rename proteins</value>
   </data>
-  <data name="PeptideGroupTreeNode_RenderTip_Original_name__0__" xml:space="preserve">
-    <value>Original name: {0}</value>
-  </data>
   <data name="RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences" xml:space="preserve">
     <value>The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences.</value>
   </data>
@@ -5289,7 +5287,7 @@ Are you sure you want to continue?</value>
     <value>Tool Directory</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_" xml:space="preserve">
-    <value>This tool is not an istalled tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
+    <value>This tool is not an installed tool so $(ToolDir) cannot be used as a macro. Please edit the tool.</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_" xml:space="preserve">
     <value>This tool does not provide the functionality for the Collected Arguments macro. Please edit the tool.</value>
@@ -6184,10 +6182,51 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Default ({0})</value>
     <comment>Example: Default (English)</comment>
   </data>
-  <data name="SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_" xml:space="preserve">
-    <value>Modification definition {0} missing close bracket.</value>
+  <data name="ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details" xml:space="preserve">
+    <value>Resolving protein details</value>
   </data>
-  <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
-    <value>The modification {0} is not valid.  Expected a numeric delta mass.</value>
+  <data name="BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome" xml:space="preserve">
+    <value>Resolving protein details for {0} proteome</value>
+  </data>
+  <data name="ProteinMetadata__none_" xml:space="preserve">
+    <value>&lt;none&gt;</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession" xml:space="preserve">
+    <value>Sort proteins by accession</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name" xml:space="preserve">
+    <value>Sort proteins by preferred name</value>
+  </data>
+  <data name="SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene" xml:space="preserve">
+    <value>Sort proteins by gene</value>
+  </data>
+  <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_" xml:space="preserve">
+    <value>{0}
+(gene: {1})</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Original_Name" xml:space="preserve">
+    <value>Original Name</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Accession" xml:space="preserve">
+    <value>Accession</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Preferred_Name" xml:space="preserve">
+    <value>Preferred Name</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Gene" xml:space="preserve">
+    <value>Gene</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Searched" xml:space="preserve">
+    <value>Searched</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Original_Description" xml:space="preserve">
+    <value>Original Description</value>
   </data>
 </root>
+<!-- ReSharper restore NotOverridenInSpecificCulture -->

@@ -29,7 +29,6 @@ using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteomeDatabase.Properties;
 using pwiz.ProteomeDatabase.Util;
-
 namespace pwiz.ProteomeDatabase.API
 {
     /// <summary>
@@ -40,12 +39,101 @@ namespace pwiz.ProteomeDatabase.API
         public const string EXT_PROTDB = ".protdb";
 
         internal static readonly Type TYPE_DB = typeof(DbDigestion);
+        public const int SCHEMA_VERSION_MAJOR_0 = 0;
+        public const int SCHEMA_VERSION_MINOR_0 = 0;
+        public const int SCHEMA_VERSION_MINOR_1 = 1;
+        public const int SCHEMA_VERSION_MAJOR_CURRENT = SCHEMA_VERSION_MAJOR_0; // v0.0 protdb files are just subsets of v0.1 files
+        public const int SCHEMA_VERSION_MINOR_CURRENT = SCHEMA_VERSION_MINOR_1; // v0.1 adds protein metadata, and schema versioning
+        private int _schemaVersionMajor;
+        private int _schemaVersionMinor;
+        private int _schemaVersionMajorAsRead;
+        private int _schemaVersionMinorAsRead;
         public const int MIN_SEQUENCE_LENGTH = 4;
         public const int MAX_SEQUENCE_LENGTH = 7;
         private DatabaseResource _databaseResource;
         private ProteomeDb(String path)
         {
+            _schemaVersionMajor = -1; // unknown
+            _schemaVersionMinor = -1; // unknown
+            _schemaVersionMajorAsRead = -1; // unknown
+            _schemaVersionMinorAsRead = -1; // unknown
             _databaseResource = DatabaseResource.GetDbResource(path);
+
+            // do we need to update the db to current version?
+            using (var session = OpenSession())
+            {
+                using (IDbCommand cmd = session.Connection.CreateCommand())
+                {
+                    // do we even have a version? 0th-gen protdb doesn't have this.
+                    cmd.CommandText =
+                        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbSchemaVersion'"; // Not L10N
+                    var obj = cmd.ExecuteScalar();
+                    if (Convert.ToInt32(obj) == 0)
+                    {
+                        _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0; // an ancient, unversioned file
+                        _schemaVersionMinor = SCHEMA_VERSION_MINOR_0; // an ancient, unversioned file
+                    }
+                    else
+                    {
+                        using (IDbCommand cmd2 = session.Connection.CreateCommand())
+                        {
+                            cmd2.CommandText = "SELECT SchemaVersionMajor FROM ProteomeDbSchemaVersion"; // Not L10N
+                            var obj2 = cmd2.ExecuteScalar();
+                            _schemaVersionMajor = Convert.ToInt32(obj2);
+                        }
+                        using (IDbCommand cmd3 = session.Connection.CreateCommand())
+                        {
+                            cmd3.CommandText = "SELECT SchemaVersionMinor FROM ProteomeDbSchemaVersion"; // Not L10N
+                            var obj3 = cmd3.ExecuteScalar();
+                            _schemaVersionMinor = Convert.ToInt32(obj3);
+                        }
+                    }
+                    _schemaVersionMajorAsRead = _schemaVersionMajor;
+                    _schemaVersionMinorAsRead = _schemaVersionMinor;
+                }
+            }
+            if (_schemaVersionMajor != SCHEMA_VERSION_MAJOR_CURRENT)
+            {
+                throw new FileLoadException(
+                    String.Format(Resources.SessionFactoryFactory_EnsureVersion_Background_proteome_file__0__has_a_format_which_is_newer_than_the_current_software___Please_update_to_the_latest_software_version_and_try_again_,
+                        Path));
+            }
+            else if (_schemaVersionMinor < SCHEMA_VERSION_MINOR_CURRENT)
+            {
+                using (var session = OpenWriteSession())
+                {
+                    UpdateSchema(session);
+                }                
+            }
+        }
+
+        private void UpdateSchema(ISession session)
+        {
+            if ((_schemaVersionMajor == SCHEMA_VERSION_MAJOR_0) &&
+                (_schemaVersionMinor < SCHEMA_VERSION_MINOR_1))
+            {
+                using (var transaction = session.BeginTransaction())
+                using (IDbCommand command = session.Connection.CreateCommand())
+                {
+                    foreach (
+                        var col in
+                            new[] {"PreferredName", "Accession", "Gene", "Species", "WebSearchStatus"})
+                        // new protein metadata for v2  // Not L10N
+                    {
+                        command.CommandText =
+                            String.Format("ALTER TABLE ProteomeDbProteinName ADD COLUMN {0} TEXT", col); // Not L10N
+                        command.ExecuteNonQuery();
+                    }
+                    command.CommandText =
+                        "CREATE TABLE ProteomeDbSchemaVersion (Id integer primary key autoincrement, SchemaVersionMajor INT, SchemaVersionMinor INT )"; // Not L10N
+                    command.ExecuteNonQuery();
+                    _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0;
+                    _schemaVersionMinor = SCHEMA_VERSION_MINOR_1;
+                    session.Save(new DbVersionInfo { SchemaVersionMajor = _schemaVersionMajor , SchemaVersionMinor = _schemaVersionMinor });
+                    transaction.Commit();
+                }
+            }
+            // else unhandled schema version update - let downstream process issue detailed exceptions about missing fields etc
         }
 
         public void Dispose()
@@ -57,15 +145,21 @@ namespace pwiz.ProteomeDatabase.API
             }
         }
 
+
         public ISession OpenSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
+            var session = new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
+            return session;
         }
 
         public ISession OpenWriteSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);        
+            var session = new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
+            _schemaVersionMajorAsRead = _schemaVersionMajor; // now it's natively current version
+            _schemaVersionMinorAsRead = _schemaVersionMinor; // now it's natively current version
+            return session;
         }
+        
         public ReaderWriterLock DatabaseLock { get { return _databaseResource.DatabaseLock; } }
         public String Path { get { return _databaseResource.Path; } }
         public ProteomeDbPath ProteomeDbPath {get { return new ProteomeDbPath(Path);}}
@@ -96,16 +190,22 @@ namespace pwiz.ProteomeDatabase.API
                 using (IDbCommand insertProtein = session.Connection.CreateCommand())
                 using (IDbCommand insertName = session.Connection.CreateCommand())
                 {
-                    FastaImporter fastaImporter = new FastaImporter();
+                    WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.DelayedWebSearchProvider()); // just parse, no search for now
                     insertProtein.CommandText =
                         "INSERT INTO ProteomeDbProtein (Version, Sequence) Values (1,?);select last_insert_rowid();"; // Not L10N
                     insertProtein.Parameters.Add(new SQLiteParameter());
                     insertName.CommandText =
-                        "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description) Values(1,?,?,?,?)"; // Not L10N
-                    insertName.Parameters.Add(new SQLiteParameter());
-                    insertName.Parameters.Add(new SQLiteParameter());
-                    insertName.Parameters.Add(new SQLiteParameter());
-                    insertName.Parameters.Add(new SQLiteParameter());
+                        "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description, PreferredName, Accession, Gene, Species, WebSearchStatus) Values(1,?,?,?,?,?,?,?,?,?)"; // Not L10N
+                    insertName.Parameters.Add(new SQLiteParameter()); // Id
+                    insertName.Parameters.Add(new SQLiteParameter()); // IsPrimary
+                    insertName.Parameters.Add(new SQLiteParameter()); // Name
+                    insertName.Parameters.Add(new SQLiteParameter()); // Description
+                    insertName.Parameters.Add(new SQLiteParameter()); // PreferredName
+                    insertName.Parameters.Add(new SQLiteParameter()); // Accession
+                    insertName.Parameters.Add(new SQLiteParameter()); // Gene
+                    insertName.Parameters.Add(new SQLiteParameter()); // Species
+                    insertName.Parameters.Add(new SQLiteParameter()); // WebSearchInfo
+
 
                     foreach (DbProtein protein in fastaImporter.Import(reader))
                     {
@@ -139,6 +239,11 @@ namespace pwiz.ProteomeDatabase.API
                                 ((SQLiteParameter)insertName.Parameters[1]).Value = proteinName.IsPrimary && !existingProtein;
                                 ((SQLiteParameter)insertName.Parameters[2]).Value = proteinName.Name;
                                 ((SQLiteParameter)insertName.Parameters[3]).Value = proteinName.Description;
+                                ((SQLiteParameter)insertName.Parameters[4]).Value = proteinName.PreferredName;
+                                ((SQLiteParameter)insertName.Parameters[5]).Value = proteinName.Accession;
+                                ((SQLiteParameter)insertName.Parameters[6]).Value = proteinName.Gene;
+                                ((SQLiteParameter)insertName.Parameters[7]).Value = proteinName.Species;
+                                ((SQLiteParameter)insertName.Parameters[8]).Value = proteinName.WebSearchStatus; // represent as a string for ease of serialization
                                 insertName.ExecuteNonQuery();
                             }
                             catch (Exception exception)
@@ -172,16 +277,26 @@ namespace pwiz.ProteomeDatabase.API
             }
         }
 
+        public int GetSchemaVersionMajor()
+        {
+            return _schemaVersionMajorAsRead;
+        }
+
+        public int GetSchemaVersionMinor()
+        {
+            return _schemaVersionMinorAsRead;
+        }
+
         public int GetProteinCount()
         {
             using (var session = OpenSession())
             {
                 return
                     Convert.ToInt32(
-                        session.CreateQuery("SELECT Count(P.Id) From " + typeof (DbProtein) + " P").UniqueResult()); // Not L10N
+                        session.CreateQuery("SELECT Count(P.Id) From " + typeof(DbProtein) + " P").UniqueResult()); // Not L10N
             }
         }
-        public void AttachDatabase(IDbConnection connection)
+        public void AttachDatabase(IDbConnection connection)  // TODO - versioning issues?
         {
             using(IDbCommand command = connection.CreateCommand())
             {
@@ -197,9 +312,16 @@ namespace pwiz.ProteomeDatabase.API
 
         public static ProteomeDb CreateProteomeDb(String path)
         {
-            using (SessionFactoryFactory.CreateSessionFactory(path, TYPE_DB, true))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, TYPE_DB, true))
             {
+                using (var session = new SessionWithLock(sessionFactory.OpenSession(), new ReaderWriterLock(), true))
+                using (var transaction = session.BeginTransaction())
+                {
+                    session.Save(new DbVersionInfo { SchemaVersionMajor = SCHEMA_VERSION_MAJOR_CURRENT, SchemaVersionMinor = SCHEMA_VERSION_MINOR_CURRENT });
+                    transaction.Commit();
+                }
             }
+
             return OpenProteomeDb(path);
         }
 
@@ -213,6 +335,20 @@ namespace pwiz.ProteomeDatabase.API
                     digestions.Add(new Digestion(this, dbDigestion));
                 }
                 return digestions;
+            }
+        }
+
+        public bool HasProteinNamesWithUnresolvedMetadata()
+        {
+            // get a list of proteins with unresolved metadata websearches
+            using (ISession session = OpenSession())
+            {
+                var dbProteinNames = session.CreateCriteria(typeof (DbProteinName)).List<DbProteinName>();
+                // proteins with unresolved searches
+                if (dbProteinNames.Any(proteinName => (proteinName.GetProteinMetadata().GetPendingSearchTerm().Length > 0)))
+                    return true;
+                // proteins which have never been considered for metadata search
+                return dbProteinNames.Any(proteinName => proteinName.WebSearchInfo.IsEmpty());
             }
         }
 
@@ -265,13 +401,16 @@ namespace pwiz.ProteomeDatabase.API
                 return result;
             }
         }
+
+        /// <summary>
+        /// Return protein matching given string - as a name, or failing that as an accession ID or PreferredName
+        /// </summary>
+        /// <param name="name">name or accession value</param>
         public Protein GetProteinByName(String name)
         {
             using (ISession session = OpenSession())
             {
-                ICriteria criteria = session.CreateCriteria(typeof(DbProteinName))
-                    .Add(Restrictions.Eq("Name", name)); // Not L10N
-                DbProteinName proteinName = (DbProteinName)criteria.UniqueResult();
+                var proteinName = GetProteinName(session, name, "Name", "Accession", "Gene", "PreferredName"); // Not L10N
                 if (proteinName == null)
                 {
                     return null;
@@ -279,6 +418,20 @@ namespace pwiz.ProteomeDatabase.API
                 return new Protein(ProteomeDbPath, proteinName.Protein, proteinName);
             }
         }
+
+        private static DbProteinName GetProteinName(ISession session, string searchName, params string[] names)
+        {
+            foreach (var name in names)
+            {
+                ICriteria criteria = session.CreateCriteria(typeof(DbProteinName))
+                    .Add(Restrictions.Eq(name, searchName));
+                DbProteinName proteinName = (DbProteinName)criteria.UniqueResult();
+                if (proteinName != null)
+                    return proteinName;
+            }
+            return null;
+        }
+
         public Digestion Digest(IProtease protease, ProgressMonitor progressMonitor)
         {
             using (ISession session = OpenWriteSession())
@@ -392,6 +545,116 @@ namespace pwiz.ProteomeDatabase.API
                 }
                 return new Digestion(this, dbDigestion);
             }
+        }
+
+        /// <summary>
+        /// Access the web to resolve protein metadata not directly found in fasta file.
+        /// The fasta text importer will have left search hints in ProteinMetadata.
+        /// </summary>
+        /// <param name="progressMonitor"></param>
+        /// <param name="fastaImporter">object that accesses the web, or pretends to if in a test</param>
+        /// <param name="polite">if true, don't try to resolve everything in one go, assume we can come back later</param>
+        /// <returns>true on success</returns>
+        public bool LookupProteinMetadata(ProgressMonitor progressMonitor, WebEnabledFastaImporter fastaImporter, bool polite = false)
+        {
+            List<DbProteinName> unsearchedProteins;
+            List<DbProteinName> untaggedProteins;
+            using (ISession session = OpenSession())
+            {
+                if (!progressMonitor.Invoke(Resources.ProteomeDb_LookupProteinMetadata_looking_for_unresolved_protein_details, 0))
+                {
+                    return false;
+                }
+
+                // get a list of proteins with unresolved metadata websearches
+                var proteinNames = session.CreateCriteria(typeof (DbProteinName)).List<DbProteinName>();
+                unsearchedProteins =
+                    proteinNames.Where(proteinName => (proteinName.GetProteinMetadata().GetPendingSearchTerm().Length > 0))
+                        .ToList();
+                // and a list of proteins which have never been considered for metadata search
+                untaggedProteins =
+                    proteinNames.Where(proteinName => proteinName.WebSearchInfo.IsEmpty()).ToList();
+            }
+
+            foreach (var untaggedProtein in untaggedProteins)
+            {
+                untaggedProtein.SetWebSearchCompleted(); // by default take this out of consideration for next time
+                var metadata = untaggedProtein.GetProteinMetadata();
+                if (metadata.HasMissingMetadata())
+                {
+                    var search = fastaImporter.ParseProteinMetaData(metadata);
+                    if (search!=null)
+                    {
+                        metadata = untaggedProtein.ChangeProteinMetadata(metadata.Merge(search)); // don't stomp name by accident
+                        metadata = untaggedProtein.ChangeProteinMetadata(metadata.ChangeWebSearchInfo(search.WebSearchInfo));
+                    }
+                }
+                if (metadata.NeedsSearch())
+                    unsearchedProteins.Add(untaggedProtein); // add to the list of things to commit back to the db
+            }
+
+            if (untaggedProteins.Any(untagged => !untagged.GetProteinMetadata().NeedsSearch())) // did any get set as unsearchable?
+            {
+                // Write back the ones that were formerly without search terms, but which now indicate no search is possible
+                using (ISession session = OpenWriteSession())
+                {
+                    using (var transaction = session.BeginTransaction())
+                    {
+                        foreach (var untagged in untaggedProteins.Where(untagged => !untagged.GetProteinMetadata().NeedsSearch()))
+                            session.SaveOrUpdate(untagged); // update the metadata
+                        transaction.Commit();
+                    }
+                }
+            }
+
+            if (unsearchedProteins.Any())
+            {
+                int resultsCount = 0;
+                int unsearchedCount = unsearchedProteins.Count;
+                for (bool success = true; success;)
+                {
+                    success = false; // Until we see at least one succeed this round
+                    var results = new List<DbProteinName>();
+
+                    // The "true" arg means "do just one batch then return"
+                    foreach (var result in fastaImporter.DoWebserviceLookup(unsearchedProteins, true))
+                    {
+                        if (result != null)
+                        {
+                            if (
+                            !progressMonitor.Invoke(
+                                string.Format(
+                                    Resources.ProteomeDb_LookupProteinMetadata_Retrieving_details_for__0__proteins,
+                                    unsearchedProteins.Count), 100 * resultsCount++ / unsearchedCount))
+                            {
+                                return false;
+                            }
+                            success = true;
+                            results.Add(result);
+                        }
+                    }
+                    if (results.Any()) // save this batch
+                    {
+                        using (var session = OpenWriteSession())
+                        {
+                            using (var transaction = session.BeginTransaction())
+                            {
+                                foreach (var result in results)
+                                    session.SaveOrUpdate(result); 
+                                transaction.Commit();
+                                session.Close();
+                            }
+                        }
+                    }
+                    // Edit this list rather than rederive with database access
+                    var hits = unsearchedProteins.Where(p => !p.GetProteinMetadata().NeedsSearch()).ToList();
+                    foreach (var hit in hits)
+                    {
+                        unsearchedProteins.Remove(hit);
+                    }
+                }
+            }
+            return true;
         }
     }
 }

@@ -455,7 +455,7 @@ namespace pwiz.SkylineTestTutorial
 //            CheckAnnotations(TIB_L, pepIndex, atest++);
 //            CheckAnnotations(TIP3, pepIndex, EXPECTED_ANNOTATIONS[atest]);
 
-            var docAfter = SkylineWindow.Document;
+            var docAfter = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
             // Minimizing a chromatogram cache file.
             RunUI(SkylineWindow.CollapsePeptides);
@@ -471,7 +471,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Eliminate extraneous chromatogram data.
-            doc = SkylineWindow.Document;
+            doc = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var minimizedFile = GetTestPath("Ms1FilteringTutorial-2min.sky"); // Not L10N
             var cacheFile = Path.ChangeExtension(minimizedFile, ChromatogramCache.EXT);
             {

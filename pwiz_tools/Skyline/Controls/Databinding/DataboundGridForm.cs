@@ -24,8 +24,13 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Util;
 
+// This code is associated with the DocumentGrid.
+
 namespace pwiz.Skyline.Controls.Databinding
 {
+
+    // TODO nicksh will add a means of having this update in response to the View|Targets|By * menu
+
     public class DataboundGridForm : DockableFormEx
     {
         protected override void OnClosed(EventArgs e)

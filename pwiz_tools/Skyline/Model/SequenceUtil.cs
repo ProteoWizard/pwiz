@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using Remotion.Linq.Utilities;
 
 namespace pwiz.Skyline.Model
 {

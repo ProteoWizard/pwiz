@@ -86,6 +86,10 @@ namespace pwiz.Skyline
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
+        private readonly BackgroundProteomeManager _backgroundProteomeManager;
+        private readonly ProteinMetadataManager _proteinMetadataManager;
+        private readonly IrtDbManager _irtDbManager;
+        private readonly RetentionTimeManager _retentionTimeManager;
         private readonly LibraryManager _libraryManager;
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
@@ -129,18 +133,23 @@ namespace pwiz.Skyline
             _libraryManager.ProgressUpdateEvent += UpdateProgress;
             _libraryManager.Register(this);
             _libraryBuildNotificationHandler = new LibraryBuildNotificationHandler(this);
-            BackgroundProteomeManager backgroundProteomeManager = new BackgroundProteomeManager();
-            backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
-            backgroundProteomeManager.Register(this);
+
+            _backgroundProteomeManager = new BackgroundProteomeManager();
+            _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
+            _backgroundProteomeManager.Register(this);
             _chromatogramManager = new ChromatogramManager { SupportAllGraphs = SHOW_LOADING_CHROMATOGRAMS };
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
-            IrtDbManager irtDbManager = new IrtDbManager();
-            irtDbManager.ProgressUpdateEvent += UpdateProgress;
-            irtDbManager.Register(this);
-            RetentionTimeManager retentionTimeManager = new RetentionTimeManager();
-            retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
-            retentionTimeManager.Register(this);
+            _irtDbManager = new IrtDbManager();
+            _irtDbManager.ProgressUpdateEvent += UpdateProgress;
+            _irtDbManager.Register(this);
+            _retentionTimeManager = new RetentionTimeManager();
+            _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
+            _retentionTimeManager.Register(this);
+            _proteinMetadataManager = new ProteinMetadataManager();
+            _proteinMetadataManager.ProgressUpdateEvent += UpdateProgress;
+            _proteinMetadataManager.Register(this);
+
 
             // Begin ToolStore check for updates to currently installed tools
             ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()));
@@ -300,6 +309,26 @@ namespace pwiz.Skyline
         /// The currently saved location of the document
         /// </summary>
         public string DocumentFilePath { get; set; }
+
+        public BackgroundProteomeManager BackgroundProteomeManager
+        {
+            get { return _backgroundProteomeManager; }
+        }
+
+        public ProteinMetadataManager ProteinMetadataManager
+        {
+            get { return _proteinMetadataManager; }
+        }
+
+        public IrtDbManager IrtDbManager
+        {
+            get { return _irtDbManager; }
+        }
+
+        public RetentionTimeManager RetentionTimeManager
+        {
+            get { return _retentionTimeManager; }
+        }
 
         private bool _useKeysOverride;
 
@@ -1879,16 +1908,6 @@ namespace pwiz.Skyline
             ModifyDocument(Resources.SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides, refinementSettings.Refine);
         }
 
-        private void sortProteinsMenuItem_Click(object sender, EventArgs e)
-        {
-            ModifyDocument(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, doc =>
-                {
-                    var listProteins = new List<PeptideGroupDocNode>(doc.PeptideGroups);
-                    listProteins.Sort(PeptideGroupDocNode.CompareNames);
-                    return (SrmDocument) doc.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
-                });
-        }
-
         private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowRenameProteinsDlg();
@@ -2743,22 +2762,22 @@ namespace pwiz.Skyline
 
         #region SequenceTree events
 
-        private void peptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowSequenceTreeForm(Settings.Default.ShowPeptides = true);            
-        }
-
-        public void ShowSequenceTreeForm(bool show)
+        public void ShowSequenceTreeForm(bool show, bool forceUpdate = false)
         {
             if (show)
             {
                 if (_sequenceTreeForm != null)
-        {
+                {
+                    if (forceUpdate)
+                    {
+                        _sequenceTreeForm.UpdateTitle();
+                        _sequenceTreeForm.SequenceTree.OnShowPeptidesDisplayModeChanged();
+                    }
                     _sequenceTreeForm.Activate();
                     _sequenceTreeForm.Focus();
-        }
+                }
                 else
-        {
+                {
                     _sequenceTreeForm = CreateSequenceTreeForm(null);
                     _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
@@ -2803,6 +2822,7 @@ namespace pwiz.Skyline
             _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
             if (expansionAndSelection != null)
                 _sequenceTreeForm.SequenceTree.RestoreExpansionAndSelection(expansionAndSelection);
+            _sequenceTreeForm.UpdateTitle();
             return _sequenceTreeForm;
         }
 
@@ -3644,6 +3664,7 @@ namespace pwiz.Skyline
         }
 
         private Control _activeClipboardControl;
+
         public void ClipboardControlGotFocus(Control clipboardControl)
         {
             _activeClipboardControl = clipboardControl;
@@ -3831,6 +3852,75 @@ namespace pwiz.Skyline
                 documentGridMenuItem.Visible = false;
             }
 
+        }
+
+        private void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
+        {
+            Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
+            Settings.Default.ShowPeptides = true;
+            ShowSequenceTreeForm(true, true);
+        }
+
+        private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+             UpdateTargetsDisplayMode(ProteinDisplayMode.ByName);
+        }
+
+        private void showTargetsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+             UpdateTargetsDisplayMode(ProteinDisplayMode.ByAccession);
+        }
+
+        private void showTargetsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+             UpdateTargetsDisplayMode(ProteinDisplayMode.ByPreferredName);
+        }
+
+        private void showTargetsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+             UpdateTargetsDisplayMode(ProteinDisplayMode.ByGene);
+        }
+
+        private void peptidesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            showTargetsByNameToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByName.ToString());
+            showTargetsByAccessionToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByAccession.ToString());
+            showTargetsByPreferredNameToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByPreferredName.ToString());
+            showTargetsByGeneToolStripMenuItem.Checked =
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByGene.ToString());
+        }
+
+        private void PerformSort(string title, Comparison<PeptideGroupDocNode> comparison)
+        {
+            ModifyDocument(title, doc =>
+            {
+                var listProteins = new List<PeptideGroupDocNode>(doc.PeptideGroups);
+                listProteins.Sort(comparison);
+                return (SrmDocument)doc.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
+            });
+        }
+
+        private void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, PeptideGroupDocNode.CompareNames);
+        }
+
+        private void sortProteinsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession, PeptideGroupDocNode.CompareAccessions);
+        }
+
+        private void sortProteinsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name, PeptideGroupDocNode.ComparePreferredNames);
+        }
+
+        private void sortProteinsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PerformSort(Resources.SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene, PeptideGroupDocNode.CompareGenes);
         }
     }
 }

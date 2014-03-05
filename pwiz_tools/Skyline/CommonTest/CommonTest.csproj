@@ -83,6 +83,7 @@
     <Compile Include="DataBinding\SampleData\AminoAcid.cs" />
     <Compile Include="DataBinding\SampleData\Peptide.cs" />
     <Compile Include="DataBinding\SampleData\TestViewContext.cs" />
+    <Compile Include="FastaImporterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewSpecTest.cs" />
   </ItemGroup>
@@ -94,6 +95,10 @@
     <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
+      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
+      <Name>ProteomeDb</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>

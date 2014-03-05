@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenSharedFile(documentFile));
 
-            var document = SkylineWindow.Document;
+            var document = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(document, null, 37, 82, 153, 459);
 
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);

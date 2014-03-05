@@ -21,9 +21,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -187,6 +189,66 @@ namespace pwiz.SkylineTestUtil
             Serializable(doc, DocumentCloned);
         }
 
+        private static void ValidationCallBack(object sender, ValidationEventArgs args)
+        {
+            throw ( new Exception(String.Format("XML Validation error using Skyline_{0}.xsd:", SrmDocument.FORMAT_VERSION) + args.Message ) );
+        }  
+
+        public static void ValidatesAgaintsSchema(SrmDocument doc)
+        {
+            // Also check for validity against current schema
+            var sb = new StringBuilder();
+            using (var sw = new StringWriter(sb))
+            {
+                using (var writer = new XmlTextWriter(sw))
+                {
+                    writer.Formatting = Formatting.Indented;
+                    try
+                    {
+                        var ser = new XmlSerializer(typeof(SrmDocument));
+                        ser.Serialize(writer, doc);
+                        var xmlText = sb.ToString();
+                        var assembly = Assembly.GetAssembly(typeof(AssertEx));
+                        var schemaFile = assembly.GetManifestResourceStream(
+                            typeof(AssertEx).Namespace + String.Format(".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION));   // Not L10N
+                        Assert.IsNotNull(schemaFile);
+                        using (var schemaReader = new XmlTextReader(schemaFile))
+                        {
+                            var schema = XmlSchema.Read(schemaReader, ValidationCallBack);
+                            var readerSettings = new XmlReaderSettings
+                            {
+                                ValidationType = ValidationType.Schema
+                            };
+                            readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ProcessInlineSchema;
+                            readerSettings.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
+                            readerSettings.ValidationEventHandler += ValidationCallBack;
+                            readerSettings.Schemas.Add(schema);
+
+                            using (var reader = XmlReader.Create(new StringReader(xmlText), readerSettings))
+                            {
+                                try
+                                {
+                                    while (reader.Read())
+                                    {
+                                    }
+                                    reader.Close();
+                                }
+                                catch (Exception e)
+                                {
+                                    var msg = e.Message + "  XML text:\r\n" + xmlText;
+                                    throw new Exception(msg);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Assert.Fail(e.ToString());
+                    }
+                }
+            }
+        }
+
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate)
             where TObj : class
         {
@@ -199,6 +261,8 @@ namespace pwiz.SkylineTestUtil
             string expected = null;
             for (int i = 0; i < roundTrips; i++)
                 validate(target, RoundTrip(target, ref expected));
+            if (null != (target as SrmDocument)) // Check that it's valid with the current schema
+                ValidatesAgaintsSchema(target as SrmDocument);
         }
 
         public static TObj RoundTrip<TObj>(TObj target)

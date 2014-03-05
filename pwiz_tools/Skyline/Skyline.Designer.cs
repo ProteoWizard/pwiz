@@ -277,6 +277,10 @@ namespace pwiz.Skyline
             this.toolStripSeparator45 = new System.Windows.Forms.ToolStripSeparator();
             this.renameProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sortProteinsByNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sortProteinsByAccessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sortProteinsByPreferredNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sortProteinsByGeneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator43 = new System.Windows.Forms.ToolStripSeparator();
             this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateDecoysMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -304,6 +308,10 @@ namespace pwiz.Skyline
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showTargetsByNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showTargetsByAccessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showTargetsByPreferredNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showTargetsByGeneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.textZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.largeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2162,9 +2170,37 @@ namespace pwiz.Skyline
             // 
             // sortProteinsMenuItem
             // 
+            this.sortProteinsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.sortProteinsByNameToolStripMenuItem,
+            this.sortProteinsByAccessionToolStripMenuItem,
+            this.sortProteinsByPreferredNameToolStripMenuItem,
+            this.sortProteinsByGeneToolStripMenuItem});
             this.sortProteinsMenuItem.Name = "sortProteinsMenuItem";
             resources.ApplyResources(this.sortProteinsMenuItem, "sortProteinsMenuItem");
-            this.sortProteinsMenuItem.Click += new System.EventHandler(this.sortProteinsMenuItem_Click);
+            // 
+            // sortProteinsByNameToolStripMenuItem
+            // 
+            this.sortProteinsByNameToolStripMenuItem.Name = "sortProteinsByNameToolStripMenuItem";
+            resources.ApplyResources(this.sortProteinsByNameToolStripMenuItem, "sortProteinsByNameToolStripMenuItem");
+            this.sortProteinsByNameToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByNameToolStripMenuItem_Click);
+            // 
+            // sortProteinsByAccessionToolStripMenuItem
+            // 
+            this.sortProteinsByAccessionToolStripMenuItem.Name = "sortProteinsByAccessionToolStripMenuItem";
+            resources.ApplyResources(this.sortProteinsByAccessionToolStripMenuItem, "sortProteinsByAccessionToolStripMenuItem");
+            this.sortProteinsByAccessionToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByAccessionToolStripMenuItem_Click);
+            // 
+            // sortProteinsByPreferredNameToolStripMenuItem
+            // 
+            this.sortProteinsByPreferredNameToolStripMenuItem.Name = "sortProteinsByPreferredNameToolStripMenuItem";
+            resources.ApplyResources(this.sortProteinsByPreferredNameToolStripMenuItem, "sortProteinsByPreferredNameToolStripMenuItem");
+            this.sortProteinsByPreferredNameToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByPreferredNameToolStripMenuItem_Click);
+            // 
+            // sortProteinsByGeneToolStripMenuItem
+            // 
+            this.sortProteinsByGeneToolStripMenuItem.Name = "sortProteinsByGeneToolStripMenuItem";
+            resources.ApplyResources(this.sortProteinsByGeneToolStripMenuItem, "sortProteinsByGeneToolStripMenuItem");
+            this.sortProteinsByGeneToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByGeneToolStripMenuItem_Click);
             // 
             // toolStripSeparator43
             // 
@@ -2356,9 +2392,40 @@ namespace pwiz.Skyline
             // 
             // peptidesMenuItem
             // 
+            this.peptidesMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.showTargetsByNameToolStripMenuItem,
+            this.showTargetsByAccessionToolStripMenuItem,
+            this.showTargetsByPreferredNameToolStripMenuItem,
+            this.showTargetsByGeneToolStripMenuItem});
             this.peptidesMenuItem.Name = "peptidesMenuItem";
             resources.ApplyResources(this.peptidesMenuItem, "peptidesMenuItem");
-            this.peptidesMenuItem.Click += new System.EventHandler(this.peptidesMenuItem_Click);
+            this.peptidesMenuItem.DropDownOpening += new System.EventHandler(this.peptidesMenuItem_DropDownOpening);
+            // 
+            // showTargetsByNameToolStripMenuItem
+            // 
+            this.showTargetsByNameToolStripMenuItem.Checked = true;
+            this.showTargetsByNameToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.showTargetsByNameToolStripMenuItem.Name = "showTargetsByNameToolStripMenuItem";
+            resources.ApplyResources(this.showTargetsByNameToolStripMenuItem, "showTargetsByNameToolStripMenuItem");
+            this.showTargetsByNameToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByNameToolStripMenuItem_Click);
+            // 
+            // showTargetsByAccessionToolStripMenuItem
+            // 
+            this.showTargetsByAccessionToolStripMenuItem.Name = "showTargetsByAccessionToolStripMenuItem";
+            resources.ApplyResources(this.showTargetsByAccessionToolStripMenuItem, "showTargetsByAccessionToolStripMenuItem");
+            this.showTargetsByAccessionToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByAccessionToolStripMenuItem_Click);
+            // 
+            // showTargetsByPreferredNameToolStripMenuItem
+            // 
+            this.showTargetsByPreferredNameToolStripMenuItem.Name = "showTargetsByPreferredNameToolStripMenuItem";
+            resources.ApplyResources(this.showTargetsByPreferredNameToolStripMenuItem, "showTargetsByPreferredNameToolStripMenuItem");
+            this.showTargetsByPreferredNameToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByPreferredNameToolStripMenuItem_Click);
+            // 
+            // showTargetsByGeneToolStripMenuItem
+            // 
+            this.showTargetsByGeneToolStripMenuItem.Name = "showTargetsByGeneToolStripMenuItem";
+            resources.ApplyResources(this.showTargetsByGeneToolStripMenuItem, "showTargetsByGeneToolStripMenuItem");
+            this.showTargetsByGeneToolStripMenuItem.Click += new System.EventHandler(this.showTargetsByGeneToolStripMenuItem_Click);
             // 
             // textZoomToolStripMenuItem
             // 
@@ -3464,6 +3531,14 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem irtStandardMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolStoreMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorTools;
+        private System.Windows.Forms.ToolStripMenuItem showTargetsByNameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showTargetsByAccessionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showTargetsByPreferredNameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showTargetsByGeneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sortProteinsByNameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sortProteinsByAccessionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sortProteinsByPreferredNameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sortProteinsByGeneToolStripMenuItem;
     }
 }
 

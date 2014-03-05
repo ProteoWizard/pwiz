@@ -108,6 +108,13 @@ namespace pwiz.Skyline.Model.Proteome
 
         public FastaSequence GetFastaSequence(String proteinName)
         {
+            ProteinMetadata metadata;
+            return GetFastaSequence(proteinName, out metadata);
+        }
+
+        public FastaSequence GetFastaSequence(String proteinName, out ProteinMetadata foundMetadata)
+        {
+            foundMetadata = null;
             if (IsNone)
                 return null;
 
@@ -118,12 +125,13 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     return null;
                 }
-                List<AlternativeProtein> alternativeProteins = new List<AlternativeProtein>();
+                List<ProteinMetadata> alternativeProteins = new List<ProteinMetadata>();
                 foreach (var alternativeName in protein.AlternativeNames)
                 {
-                    alternativeProteins.Add(new AlternativeProtein(alternativeName.Name, alternativeName.Description));
+                    alternativeProteins.Add(alternativeName);
                 }
-                return new FastaSequence(protein.Name, protein.Description, alternativeProteins, protein.Sequence);
+                foundMetadata = protein.ProteinMetadata;
+                return new FastaSequence(protein.ProteinMetadata.Name, protein.ProteinMetadata.Description, alternativeProteins, protein.Sequence);
             }
         }
 
@@ -169,7 +177,7 @@ namespace pwiz.Skyline.Model.Proteome
             FastaSequence fastaSequence;
             try
             {
-                fastaSequence = new FastaSequence("name", "description", new List<AlternativeProtein>(), protein.Sequence); // Not L10N
+                fastaSequence = new FastaSequence("name", "description", new List<ProteinMetadata>(), protein.Sequence); // Not L10N
             }
             catch (InvalidDataException)
             {

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -50,9 +52,9 @@ namespace pwiz.SkylineTestA
             var docCurrentPath = testFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
 
             // Test schema validation.
-            var assembly = Assembly.GetAssembly(GetType());
+            var assembly = Assembly.GetAssembly(typeof(AssertEx));
             var stream = assembly.GetManifestResourceStream(
-                GetType().Namespace + ".Schemas.Skyline_1.5.xsd");
+               typeof(AssertEx).Namespace + String.Format(".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION));   // Not L10N
             TestSchemaValidation(stream, doc08Path, docCurrentPath);
 
             // Check explicit and implicit modifications in the current format.

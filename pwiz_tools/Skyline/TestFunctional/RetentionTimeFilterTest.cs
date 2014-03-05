@@ -55,10 +55,9 @@ namespace pwiz.SkylineTestFunctional
         protected void TestUsePredictedTime()
         {
             const double FILTER_LENGTH = 2.7;
-            RunUI(() => {
-                            SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RetentionTimeFilterTest.sky"));
-                            SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("TestUsePredictedTime.sky"));
-            });
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RetentionTimeFilterTest.sky")));
+            WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("TestUsePredictedTime.sky")));
             SetUiDocument(ChangeFullScanSettings(SkylineWindow.Document, SkylineWindow.Document.Settings.TransitionSettings.FullScan
                 .ChangeRetentionTimeFilter(RetentionTimeFilterType.scheduling_windows, FILTER_LENGTH)));
             Assert.IsNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
@@ -90,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             }
             WaitForResultsImport();
             {
-                var document = SkylineWindow.Document;
+                var document = WaitForDocumentLoaded();
                 foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
                 {
                     foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
@@ -126,7 +125,7 @@ namespace pwiz.SkylineTestFunctional
             }
             WaitForResultsImport();
             {
-                var document = SkylineWindow.Document;
+                var document = WaitForDocumentLoaded();
                 var chromatogramSet = document.Settings.MeasuredResults.Chromatograms.First(cs => cs.Name == "40fmol");
                 foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                 {
@@ -185,7 +184,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
                 WaitForResultsImport();
-                var document = SkylineWindow.Document;
+                var document = WaitForDocumentLoaded();
                 var chromatogramSet = document.Settings.MeasuredResults.Chromatograms.First(cs => cs.Name == "8fmol");
                 
                 // Verify that the only ChromatogramSet that was use for retention time filtering was the one we said to use.

@@ -74,19 +74,53 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Name
         {
             get { return DocNode.Name; }
-            set { ChangeDocNode(DocNode.ChangeName(value)); }
+            set { ChangeDocNode(DocNode.ChangeName(value)); } // the user can ovveride this label
         }
+
         [DisplayName("ProteinDescription")]
         public string Description
         {
             get { return DocNode.Description; }
-            set { ChangeDocNode(DocNode.ChangeDescription(value)); }
+            set { ChangeDocNode(DocNode.ChangeDescription(value)); } // the user can ovveride this label
         }
+
+        [DisplayName("ProteinAccession")]
+        public string Accession
+        {
+            get { return DocNode.ProteinMetadata.Accession; }
+        }
+
+        [DisplayName("ProteinPreferredName")]
+        public string PreferredName
+        {
+            get { return DocNode.ProteinMetadata.PreferredName; }
+        }
+
+        [DisplayName("ProteinGene")]
+        public string Gene
+        {
+            get { return DocNode.ProteinMetadata.Gene; }
+        }
+
+        [DisplayName("ProteinSpecies")]
+        public string Species
+        {
+            get { return DocNode.ProteinMetadata.Species; }
+        }
+
+        // We don't want this to appear in the Document Grid
+        // [DisplayName("ProteinWebSearchStatus")]
+        // public string WebSearchStatus
+        // {
+        //    get { return DocNode.ProteinMetadata.WebSearchInfo.ToString(); }
+        // }
+
         [DisplayName("ProteinSequence")]
         public string Sequence 
         {
             get { return DocNode.PeptideGroup.Sequence; }
         }
+
         [DisplayName("ProteinNote")]
         public string Note
         {
@@ -95,7 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         public override string ToString()
         {
-            return Name;
+            return Name; // TODO nicksh this needs to agree with Targets view in Document Grid (By Name, By Accession etc)
         }
     }
 }

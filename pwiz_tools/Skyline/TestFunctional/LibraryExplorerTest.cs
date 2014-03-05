@@ -403,6 +403,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());
             // Add single peptide to the document.
             RunUI(_viewLibUI.AddPeptide);
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var nodePepAdded = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
             // Because document settings match the library, no duplicates should be found.
             AddAllPeptides(0);
@@ -453,6 +454,7 @@ namespace pwiz.SkylineTestFunctional
                 var backgroundProteome = peptideSettings.BackgroundProteome;
                 return backgroundProteome.HasDigestion(peptideSettings);
             });
+            WaitForDocumentLoaded(); // Give background loader a chance to get the protein metadata too
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
@@ -793,7 +795,7 @@ namespace pwiz.SkylineTestFunctional
         private void AddAllPeptides(int? expectedUnmatched = null, int? explicitMods = null, int? variableMods = null)
         {
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(_viewLibUI.AddAllPeptides);
-            var docBefore = SkylineWindow.Document;
+            var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
             {
                 if(expectedUnmatched != null)

@@ -74,7 +74,8 @@ namespace pwiz.Topograph.ui.Forms
         {
             try
             {
-                var fastaImporter = new FastaImporter();
+                // just do the basic name+description parsing, no regex or web access - we don't use extended metadata here
+                var fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider()); 
                 var proteins = new Dictionary<string, ProteinData>();
                 foreach (var path in FastaFilePaths)
                 {

@@ -72,6 +72,7 @@ namespace pwiz.SkylineTestTutorial
             // iRT Retention Time Prediction
             string standardDocumentFile = GetTestPath("iRT-C18 Standard.sky"); // Not L10N
             RunUI(() => SkylineWindow.OpenFile(standardDocumentFile));
+            WaitForDocumentLoaded(); // might have some updating to do for protein metadata
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("iRT-C18 Calibrate.sky"))); // Not L10N
 
             // Load raw files for iRT calculator calibration p. 2 
@@ -80,7 +81,7 @@ namespace pwiz.SkylineTestTutorial
             const string unschedHuman2Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35"; // Not L10N
             string unschedHuman2Name = unschedHuman2Fileroot.Substring(41);
             ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, 41, false);
-            var docCalibrate = SkylineWindow.Document;
+            var docCalibrate = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             const int pepCount = 11, tranCount = 33;
             AssertEx.IsDocumentState(docCalibrate, null, 1, pepCount, pepCount, tranCount);
             AssertResult.IsDocumentResultsState(docCalibrate, unschedHuman1Name, pepCount, pepCount, 0, tranCount, 0);
@@ -231,12 +232,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Create a document containing human and standard peptides, p. 9
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath("iRT Human.sky")));
+            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let peptide metadata background loader do its work
             RunUI(() =>
                       {
-                          SkylineWindow.OpenFile(GetTestPath("iRT Human.sky")); // Not L10N
                           SkylineWindow.SelectedPath = new IdentityPath(SequenceTree.NODE_INSERT_ID);
                           SkylineWindow.ImportFiles(standardDocumentFile);
                       });
+            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let peptide metadata background loader do its work
 
             RestoreViewOnScreen(09);
             PauseForScreenShot("Targets tree clipped out of main winodw", 9);   // Target tree

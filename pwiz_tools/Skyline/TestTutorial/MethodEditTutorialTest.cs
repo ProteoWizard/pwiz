@@ -128,6 +128,10 @@ namespace pwiz.SkylineTestTutorial
                 return (backgroundProteome.HasDigestion(peptideSettings));
             }));
 
+            // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
+            int millis = (AllowInternetAccess ? 300 : 60) * 1000; 
+            WaitForCondition(millis, () => !Program.ActiveDocument.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch); 
+
             // Pasting FASTA Sequences, p. 5
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
 
@@ -137,7 +141,7 @@ namespace pwiz.SkylineTestTutorial
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
-                WaitForCondition(() => SkylineWindow.SequenceTree.Nodes.Count > 4);
+                WaitForCondition(millis, () => SkylineWindow.SequenceTree.Nodes.Count > 4);
             }
 
             RunUI(() =>
@@ -441,6 +445,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void TestAutoComplete(string text, int index)
         {
+            var doc = WaitForDocumentLoaded();
             RunUI(() =>
             {
                 var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
@@ -452,6 +457,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(statementCompletionForm);
             RunUI(() => SkylineWindow.SequenceTree.StatementCompletionEditBox.OnSelectionMade(
                             (StatementCompletionItem)statementCompletionForm.ListView.Items[index].Tag));
+            WaitForDocumentChangeLoaded(doc);
         }
 
         private static void CheckTransitionCount(string peptideSequence, int count)

@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Controls
             dxAvailable = Math.Min(dxAvailable, MaxWidth);
             int dxTitle = 0;
             int dxDescMax = TextRenderer.MeasureText(X80, ListView.Font).Width;
-            using (var titleFont = CreateListViewTitleFont())
+            using (var titleFont = CreateListViewWorstCaseWidthFont())
             {
                 foreach (ListViewItem item in ListView.Items)
                 {
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Controls
             columnName.Width = Size.Width - 2 - columnDelta;
         }
 
-        private Font CreateListViewTitleFont()
+        private Font CreateListViewWorstCaseWidthFont()
         {
             return new Font(ListView.Font, FontStyle.Bold);
         }
@@ -142,23 +142,20 @@ namespace pwiz.Skyline.Controls
             }
 
             var titleBounds = new Rectangle(textBounds.Left, textBounds.Top, TitleWidth, textBounds.Height);
-            using (var titleFont = CreateListViewTitleFont())
-            {
-                TextRenderer.DrawText(graphics, item.Text, titleFont, titleBounds,
-                    textColor, backColor, TextFormatFlags.SingleLine);
-            }
+            DrawWithHighlighting(item.Text, GetHighlightedText(item) ?? string.Empty,
+                    graphics, titleBounds, textColor, backColor);
             String description = GetDescription(item);
             if (description != null)
             {
                 var descriptionBounds = new Rectangle(
                     titleBounds.Right, textBounds.Top,
                     textBounds.Right - titleBounds.Right, textBounds.Height);
-                DrawDescription(description, GetHighlightedText(item) ?? string.Empty,
+                DrawWithHighlighting(description, GetHighlightedText(item) ?? string.Empty,
                     graphics, descriptionBounds, textColor, backColor);
             }
         }
 
-        private void DrawDescription(String description, String textToHighlight, Graphics graphics,
+        private void DrawWithHighlighting(String description, String textToHighlight, Graphics graphics,
             Rectangle descriptionBounds, Color textColor, Color backColor)
         {
             var findMatch = new FindMatch(description);
@@ -166,6 +163,10 @@ namespace pwiz.Skyline.Controls
             if (ichHighlightBegin >= 0)
             {
                 findMatch = findMatch.ChangeRange(ichHighlightBegin, ichHighlightBegin + textToHighlight.Length);
+            }
+            else
+            {
+                findMatch = findMatch.ChangeRange(0,0); // No highlighting
             }
             var textRendererHelper = new TextRendererHelper
             {
@@ -252,6 +253,11 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public static String GetHighlightedText(ListViewItem listViewItem)
         {
+            var completionItem = listViewItem.Tag as StatementCompletionItem;
+            if (completionItem != null)
+            {
+                return completionItem.SearchText;
+            }
             if (listViewItem.SubItems.Count < 2)
             {
                 return null;
