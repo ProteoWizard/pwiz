@@ -500,15 +500,25 @@ namespace pwiz.SkylineTestUtil
             IsDocumentState(document, revision, groups, peptides, peptides, transitions);
         }
 
+        static void DocumentStateAssertAreEqual(string itemName, object expected, object actual)
+        {
+            if (!Equals(expected, actual))
+            {
+                Assert.Fail(itemName + " mismatch: expected {0}, actual {1}", expected, actual);
+            }
+        }
+
         public static void IsDocumentState(SrmDocument document, int? revision, int groups, int peptides,
                                            int tranGroups, int transitions)
         {
             if (revision != null)
-                Assert.AreEqual(revision, document.RevisionIndex);
-            Assert.AreEqual(groups, document.PeptideGroupCount);
-            Assert.AreEqual(peptides, document.PeptideCount);
-            Assert.AreEqual(tranGroups, document.TransitionGroupCount);
-            Assert.AreEqual(transitions, document.TransitionCount);
+            {
+                DocumentStateAssertAreEqual("RevisionIndex", revision, document.RevisionIndex);
+            }
+            DocumentStateAssertAreEqual("PeptideGroupCount", groups, document.PeptideGroupCount);
+            DocumentStateAssertAreEqual("PeptideCount", peptides, document.PeptideCount);
+            DocumentStateAssertAreEqual("TransitionGroupCount", tranGroups, document.TransitionGroupCount);
+            DocumentStateAssertAreEqual("TransitionCount", transitions, document.TransitionCount);
 
             // Verify that no two nodes in the document tree have the same global index
             var setIndexes = new HashSet<int>();
