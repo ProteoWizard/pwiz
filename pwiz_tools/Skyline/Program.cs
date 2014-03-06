@@ -281,11 +281,8 @@ namespace pwiz.Skyline
                 _initialized = true;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                if (!StressTest)
-                {
-                    Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                    Application.ThreadException += ThreadExceptionEventHandler;
-                }
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += ThreadExceptionEventHandler;
 
                 // Add handler for non-UI thread exceptions. 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

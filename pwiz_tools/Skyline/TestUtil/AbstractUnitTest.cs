@@ -137,8 +137,8 @@ namespace pwiz.SkylineTestUtil
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
-            var log = new Log<AbstractUnitTest>();
-            log.Info(TestContext.TestName + " started");
+//            var log = new Log<AbstractUnitTest>();
+//            log.Info(TestContext.TestName + " started");
 
             Settings.Init();
 
@@ -160,10 +160,10 @@ namespace pwiz.SkylineTestUtil
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();
 
-            var log = new Log<AbstractUnitTest>();
-            log.Info(
-                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
-                STOPWATCH.ElapsedMilliseconds / 1000.0));
+//            var log = new Log<AbstractUnitTest>();
+//            log.Info(
+//                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
+//                STOPWATCH.ElapsedMilliseconds / 1000.0));
         }
 
         protected virtual void Initialize() {}

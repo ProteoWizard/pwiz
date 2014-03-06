@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Util
             if (Program.FunctionalTest && Program.PauseSeconds == 0)
             {
                 bool timeout = false;
-                var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000, Enabled = true };
+                var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000 };
                 timeoutTimer.Tick += (sender, args) =>
                 {
                     timeoutTimer.Stop();
@@ -48,6 +48,8 @@ namespace pwiz.Skyline.Util
                         Close();
                     }
                 };
+                timeoutTimer.Start();
+
                 var result = ShowDialog(parent);
                 timeoutTimer.Stop();
                 if (timeout)

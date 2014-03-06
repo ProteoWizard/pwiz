@@ -281,6 +281,8 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles();
             for (int i = 0; i < waitCycles; i++)
             {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+
                 TDlg tForm = FindOpenForm<TDlg>();
                 if (tForm != null)
                 {
@@ -343,6 +345,8 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles();
             for (int i = 0; i < waitCycles; i++)
             {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+
                 bool isOpen = true;
                 Program.MainWindow.Invoke(new Action(() => isOpen = IsFormOpen(formClose)));
                 if (!isOpen)
@@ -384,6 +388,8 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -403,6 +409,8 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+
                 bool isCondition = false;
                 Program.MainWindow.Invoke(new Action(() => isCondition = func()));
                 if (isCondition)
@@ -561,14 +569,19 @@ namespace pwiz.SkylineTestUtil
 
             if (Program.TestExceptions.Count > 0)
             {
-                Log<AbstractFunctionalTest>.Exception("Functional test exception", Program.TestExceptions[0]); // Not L10N
-                Assert.Fail(Program.TestExceptions[0].ToString());
+                //Log<AbstractFunctionalTest>.Exception("Functional test exception", Program.TestExceptions[0]); // Not L10N
+                const string errorSeparator = "------------------------------------------------------";
+                Assert.Fail("{0}{1}{2}{3}",
+                    Environment.NewLine + Environment.NewLine,
+                    errorSeparator + Environment.NewLine,
+                    Program.TestExceptions[0],
+                    Environment.NewLine + errorSeparator + Environment.NewLine);
             }
 
             if (!_testCompleted)
             {
-                Log<AbstractFunctionalTest>.Fail("Functional test did not complete"); // Not L10N
-                Assert.IsTrue(_testCompleted);
+                //Log<AbstractFunctionalTest>.Fail("Functional test did not complete"); // Not L10N
+                Assert.Fail("Functional test did not complete");
             }
         }
 
@@ -683,7 +696,16 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 foreach (var form in openForms)
-                    form.Close();   
+                {
+                    try
+                    {
+                        form.Close();
+                    }
+// ReSharper disable once EmptyGeneralCatchClause
+                    catch
+                    {
+                    }
+                }
             });
 
             _testCompleted = true;

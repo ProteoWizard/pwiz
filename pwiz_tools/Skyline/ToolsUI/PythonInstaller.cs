@@ -154,15 +154,11 @@ namespace pwiz.Skyline.ToolsUI
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed_);
                 return true;
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException is ToolExecutionException)
-                {
-                    MessageDlg.Show(this, ex.Message);
-                    return false;
-                }
-                throw;
+                MessageDlg.Show(this, (ex.InnerException ?? ex).Message);
             }
+            return false;
         }
 
         private string DownloadPath { get; set; }
