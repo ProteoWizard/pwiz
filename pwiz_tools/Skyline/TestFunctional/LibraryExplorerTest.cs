@@ -475,7 +475,7 @@ namespace pwiz.SkylineTestFunctional
             // Add the library to the document.
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(addLibraryDlg.Btn0Click);
             RunUI(() => filterMatchedPeptidesDlg.AddUnmatched = false);
-            using (new CheckDocumentState(4, 10, 13, 39))
+            using (new CheckDocumentState(4, 10, 13, 39, 1, true))
             {
                 RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, messageDlg => messageDlg.Btn1Click());
             }
@@ -487,7 +487,7 @@ namespace pwiz.SkylineTestFunctional
                           SkylineWindow.Undo();
                           _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR+");
                       });
-            using (new CheckDocumentState(2, 2, 2, 6))
+            using (new CheckDocumentState(2, 2, 2, 6, 1, true))
             {
                 RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                     filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
@@ -495,7 +495,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test adding a second charge state for that peptide.
             RunUI(() => _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR++"));
-            using (new CheckDocumentState(2, 2, 4, 12))
+            using (new CheckDocumentState(2, 2, 4, 12, 1, true))
             {
                 RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                     filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
@@ -505,14 +505,14 @@ namespace pwiz.SkylineTestFunctional
 
             // Test adding a second charge state - No Duplicates.
             RunUI(() => SkylineWindow.Undo());
-            var docPrev = SkylineWindow.Document;
+            var docPrev = WaitForDocumentLoaded();
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                       filterMatchedPeptideDlg =>
             {
                 filterMatchedPeptideDlg.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.NoDuplicates;
                 filterMatchedPeptideDlg.OkDialog();
             });
-            Assert.AreEqual(docPrev, SkylineWindow.Document);
+            Assert.AreEqual(docPrev, WaitForDocumentLoaded());
 
             // Test adding a second charge state - First Only.
             using (new CheckDocumentState(2, 2, 3, 9))
