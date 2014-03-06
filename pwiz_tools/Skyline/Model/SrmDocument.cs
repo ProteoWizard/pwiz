@@ -2473,7 +2473,7 @@ namespace pwiz.Skyline.Model
                 scoreCalc = rtPredictor.Calculator.ScoreSequence(modSeq);
                 if (scoreCalc.HasValue)
                 {
-                    writer.WriteAttribute(ATTR.rt_calculator_score, scoreCalc);
+                    writer.WriteAttributeNullable(ATTR.rt_calculator_score, scoreCalc);
                     writer.WriteAttributeNullable(ATTR.predicted_retention_time,
                         rtPredictor.GetRetentionTime(scoreCalc.Value));
                 } 
