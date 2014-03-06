@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Util
 
         public DialogResult ShowWithTimeout(IWin32Window parent, string message)
         {
-            if (Program.FunctionalTest && Program.PauseSeconds == 0)
+            if (Program.FunctionalTest && Program.PauseSeconds == 0 && !Debugger.IsAttached)
             {
                 bool timeout = false;
                 var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000 };

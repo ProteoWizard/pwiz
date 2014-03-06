@@ -35,7 +35,6 @@ namespace SkylineTester
 
         public override void Enter()
         {
-            MainWindow.InitLanguages(MainWindow.FormsLanguage);
             MainWindow.DefaultButton = MainWindow.RunForms;
             UpdateForms();
         }

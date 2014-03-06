@@ -25,11 +25,6 @@ namespace SkylineTester
 {
     public class TabTutorials : TabBase
     {
-        public TabTutorials()
-        {
-            MainWindow.InitLanguages(MainWindow.TutorialsLanguage);
-        }
-
         public override void Enter()
         {
             MainWindow.DefaultButton = MainWindow.RunTutorials;

@@ -150,7 +150,8 @@ namespace SkylineTester
         {
             //MemoryChartWindow.Start("TestRunnerMemory.log");
             TestsRun = 0;
-            Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
+            if (Directory.Exists(_resultsDir))
+                Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
 
             var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
             _testRunnerIndex = commandShell.Add(

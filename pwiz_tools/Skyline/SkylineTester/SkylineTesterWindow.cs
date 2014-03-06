@@ -177,6 +177,9 @@ namespace SkylineTester
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
 
+            InitLanguages(formsLanguage);
+            InitLanguages(tutorialsLanguage);
+
             if (args.Length > 0)
                 _openFile = args[0];
             else if (!string.IsNullOrEmpty(Settings.Default.SavedSettings))
@@ -581,9 +584,9 @@ namespace SkylineTester
                 showFormNames,
 
                 // Tutorials
+                pauseTutorialsScreenShots,
                 pauseTutorialsDelay,
                 pauseTutorialsSeconds,
-                pauseTutorialsScreenShots,
                 tutorialsDemoMode,
                 tutorialsLanguage,
                 showFormNamesTutorial,
@@ -591,10 +594,10 @@ namespace SkylineTester
                 tutorialsTree,
 
                 // Tests
-                offscreen,
                 runLoops,
                 runLoopsCount,
                 runIndefinitely,
+                offscreen,
                 testsEnglish,
                 testsChinese,
                 testsFrench,
@@ -612,11 +615,11 @@ namespace SkylineTester
                 buildRoot,
                 build32,
                 build64,
+                runBuildVerificationTests,
+                startSln,
                 nukeBuild,
                 updateBuild,
                 incrementalBuild,
-                runBuildVerificationTests,
-                startSln,
 
                 // Quality
                 qualityPassDefinite,
@@ -763,7 +766,7 @@ namespace SkylineTester
                 var comboBox = control as ComboBox;
                 if (comboBox != null)
                 {
-                    comboBox.SelectedItem = element.Value;
+                    comboBox.SelectedIndex = comboBox.Items.IndexOf(element.Value);
                     continue;
                 }
 
