@@ -22,6 +22,20 @@ using pwiz.Skyline.Model;
 
 namespace pwiz.SkylineTestUtil
 {
+
+    /// <summary>
+    /// Helper class to check document state with proper synchronization (wait for document change).
+    /// Use this when the document is likely to have its nodes updated by the protein metadata background updater,
+    /// or its parent CheckDocumentState if you don't necessarily need to wait for document stability.
+    /// </summary>
+    public class CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate : CheckDocumentState
+    {
+        public CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(int groups, int peptides, int tranGroups, int transitions)
+            : base(groups, peptides, tranGroups, transitions, null, true)
+        {
+        }
+    }
+
     /// <summary>
     /// Helper class to check document state with proper synchronization (wait for document change).
     /// </summary>

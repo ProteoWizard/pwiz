@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test adding peptides offers to add library if not already in settings.
             // Test add single peptide.
-            using (new CheckDocumentState(1, 1, 1, 3))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 1, 1, 3))
             {
                 RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddPeptide, msgDlg => msgDlg.Btn0Click());
             }
@@ -475,7 +475,7 @@ namespace pwiz.SkylineTestFunctional
             // Add the library to the document.
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(addLibraryDlg.Btn0Click);
             RunUI(() => filterMatchedPeptidesDlg.AddUnmatched = false);
-            using (new CheckDocumentState(4, 10, 13, 39, 1, true))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(4, 10, 13, 39))
             {
                 RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, messageDlg => messageDlg.Btn1Click());
             }
@@ -487,7 +487,7 @@ namespace pwiz.SkylineTestFunctional
                           SkylineWindow.Undo();
                           _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR+");
                       });
-            using (new CheckDocumentState(2, 2, 2, 6, 1, true))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(2, 2, 2, 6))
             {
                 RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                     filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
@@ -495,7 +495,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test adding a second charge state for that peptide.
             RunUI(() => _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR++"));
-            using (new CheckDocumentState(2, 2, 4, 12, 1, true))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(2, 2, 4, 12))
             {
                 RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                     filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
@@ -515,7 +515,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(docPrev, WaitForDocumentLoaded());
 
             // Test adding a second charge state - First Only.
-            using (new CheckDocumentState(2, 2, 3, 9))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(2, 2, 3, 9))
             {
                 RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide, filterMatchedPeptideDlg =>
                 {
@@ -542,7 +542,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => _viewLibUI.ChangeSelectedPeptide("ADTGIAVEGATDAAR+"));
             // Test adding peptide associated with the background proteome does not affect any matching peptides that are 
             // in peptide lists.
-            using (new CheckDocumentState(2, 2, 3, 9))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(2, 2, 3, 9))
             {
                 RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                     filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog()); // First only
@@ -567,7 +567,7 @@ namespace pwiz.SkylineTestFunctional
             TestForDuplicatePeptides();
 
             // Test peptides are added to "Library Peptides" peptide list if this peptide group already exists.
-            using (new CheckDocumentState(1, 2, 3, 9))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 2, 3, 9))
             {
                 RunUI(() =>
                     {
@@ -609,7 +609,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test doesn't find variable match if implicit match exists in doc
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
-            using (new CheckDocumentState(1, 4, 4, 12))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 4, 4, 12))
             {
                 RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
             }
@@ -628,7 +628,7 @@ namespace pwiz.SkylineTestFunctional
 
             RelaunchLibExplorer(false, PHOSPHO_LIB);
 
-            using (new CheckDocumentState(1, 4, 4, 12))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 4, 4, 12))
             {
                 RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
             }
@@ -647,7 +647,7 @@ namespace pwiz.SkylineTestFunctional
        
             var fmpDlg0 = ShowDialog<FilterMatchedPeptidesDlg>(() => _viewLibUI.AddAllPeptides());
             RunUI(() => fmpDlg0.AddFiltered = true);
-            using (new CheckDocumentState(1, 82, 96, 282))
+            using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 82, 96, 282))
             {
                 RunDlg<MultiButtonMsgDlg>(fmpDlg0.OkDialog, msgDlg => msgDlg.Btn1Click());
             }
