@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Proteome
     {
 
         private readonly object _lockLoadBackgroundProteome = new object();
-        
+
         private WebEnabledFastaImporter _fastaImporter = new WebEnabledFastaImporter(); // Default is to actually go to the web
         public WebEnabledFastaImporter FastaImporter
         { 
@@ -190,15 +190,27 @@ namespace pwiz.Skyline.Model.Proteome
                             UpdateProgress(progressStatus.Cancel());
                             return false;
                         }
-                        // Consider(nicksh): We could use the ProteomeDb.DatabaseLock to ensure that no one is reading from the database file at the
-                        // time that we try to do this FileSaver commit.
-                        if (!fs.Commit())
+                        using (var proteomeDb = ProteomeDb.OpenProteomeDb(originalBackgroundProteome.DatabasePath))
                         {
-                            EndProcessing(docCurrent);
-                            throw new IOException(
-                                string.Format(Resources.BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
-                                              fs.RealName));
+                            proteomeDb.DatabaseLock.AcquireWriterLock(int.MaxValue);
+                            try
+                            {
+                                if (!fs.Commit())
+                                {
+                                    EndProcessing(docCurrent);
+                                    throw new IOException(
+                                        string.Format(
+                                            Resources
+                                                .BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
+                                            fs.RealName));
+                                }
+                            }
+                            finally
+                            {
+                                proteomeDb.DatabaseLock.ReleaseWriterLock();
+                            }
                         }
+
 
                         CompleteProcessing(container, new BackgroundProteome(originalBackgroundProteome, true));
                         UpdateProgress(progressStatus.Complete());

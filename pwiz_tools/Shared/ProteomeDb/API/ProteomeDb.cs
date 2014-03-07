@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.Dialect.Function;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteomeDatabase.Properties;
@@ -59,38 +60,10 @@ namespace pwiz.ProteomeDatabase.API
             _schemaVersionMinorAsRead = -1; // unknown
             _databaseResource = DatabaseResource.GetDbResource(path);
 
-            // do we need to update the db to current version?
+            // Do we need to update the db to current version?
             using (var session = OpenSession())
             {
-                using (IDbCommand cmd = session.Connection.CreateCommand())
-                {
-                    // do we even have a version? 0th-gen protdb doesn't have this.
-                    cmd.CommandText =
-                        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbSchemaVersion'"; // Not L10N
-                    var obj = cmd.ExecuteScalar();
-                    if (Convert.ToInt32(obj) == 0)
-                    {
-                        _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0; // an ancient, unversioned file
-                        _schemaVersionMinor = SCHEMA_VERSION_MINOR_0; // an ancient, unversioned file
-                    }
-                    else
-                    {
-                        using (IDbCommand cmd2 = session.Connection.CreateCommand())
-                        {
-                            cmd2.CommandText = "SELECT SchemaVersionMajor FROM ProteomeDbSchemaVersion"; // Not L10N
-                            var obj2 = cmd2.ExecuteScalar();
-                            _schemaVersionMajor = Convert.ToInt32(obj2);
-                        }
-                        using (IDbCommand cmd3 = session.Connection.CreateCommand())
-                        {
-                            cmd3.CommandText = "SELECT SchemaVersionMinor FROM ProteomeDbSchemaVersion"; // Not L10N
-                            var obj3 = cmd3.ExecuteScalar();
-                            _schemaVersionMinor = Convert.ToInt32(obj3);
-                        }
-                    }
-                    _schemaVersionMajorAsRead = _schemaVersionMajor;
-                    _schemaVersionMinorAsRead = _schemaVersionMinor;
-                }
+                ReadVersion(session);
             }
             if (_schemaVersionMajor != SCHEMA_VERSION_MAJOR_CURRENT)
             {
@@ -103,12 +76,46 @@ namespace pwiz.ProteomeDatabase.API
                 using (var session = OpenWriteSession())
                 {
                     UpdateSchema(session);
-                }                
+                }
+            }
+        }
+
+        private void ReadVersion(ISession session)
+        {
+            using (IDbCommand cmd = session.Connection.CreateCommand())
+            {
+                // do we even have a version? 0th-gen protdb doesn't have this.
+                cmd.CommandText =
+                    "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ProteomeDbSchemaVersion'"; // Not L10N
+                var obj = cmd.ExecuteScalar();
+                if (Convert.ToInt32(obj) == 0)
+                {
+                    _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0; // an ancient, unversioned file
+                    _schemaVersionMinor = SCHEMA_VERSION_MINOR_0; // an ancient, unversioned file
+                }
+                else
+                {
+                    using (IDbCommand cmd2 = session.Connection.CreateCommand())
+                    {
+                        cmd2.CommandText = "SELECT SchemaVersionMajor FROM ProteomeDbSchemaVersion"; // Not L10N
+                        var obj2 = cmd2.ExecuteScalar();
+                        _schemaVersionMajor = Convert.ToInt32(obj2);
+                    }
+                    using (IDbCommand cmd3 = session.Connection.CreateCommand())
+                    {
+                        cmd3.CommandText = "SELECT SchemaVersionMinor FROM ProteomeDbSchemaVersion"; // Not L10N
+                        var obj3 = cmd3.ExecuteScalar();
+                        _schemaVersionMinor = Convert.ToInt32(obj3);
+                    }
+                }
+                _schemaVersionMajorAsRead = _schemaVersionMajor;
+                _schemaVersionMinorAsRead = _schemaVersionMinor;
             }
         }
 
         private void UpdateSchema(ISession session)
         {
+            ReadVersion(session);  // Recheck version, in case another thread got here before us
             if ((_schemaVersionMajor == SCHEMA_VERSION_MAJOR_0) &&
                 (_schemaVersionMinor < SCHEMA_VERSION_MINOR_1))
             {
