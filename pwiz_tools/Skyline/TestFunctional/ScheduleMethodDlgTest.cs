@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
                 doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(predict =>
                     predict.ChangeCollisionEnergy(Settings.Default.GetCollisionEnergyByName("Waters Xevo"))))));
 
-            var document = SkylineWindow.Document;
+            var document = WaitForDocumentLoaded();
             int replicateCount0 = document.Settings.MeasuredResults.Chromatograms.Count;
             
             // Go to export method, using scheduled option           

@@ -575,7 +575,9 @@ namespace pwiz.Skyline.Model
                 }
                 string strMassDiff = rawModifiedSequence.Substring(ichOpenBracket + 1, ichCloseBracket - ichOpenBracket - 1);
                 double massDiff;
-                if (!double.TryParse(strMassDiff, out massDiff))
+                // Try parsing with both invariant culture and current number format
+                if (!double.TryParse(strMassDiff, NumberStyles.Number, CultureInfo.InvariantCulture, out massDiff) &&
+                    !double.TryParse(strMassDiff, out massDiff))
                 {
                     throw new ArgumentException(string.Format(Resources.SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_, strMassDiff));
                 }

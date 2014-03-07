@@ -213,12 +213,19 @@ namespace SkylineTester
             var file = text.Substring(fileStart, lineNumberStart - fileLinePattern.Length - fileStart);
             var lineNumberText = text.Substring(lineNumberStart, lineEnd - lineNumberStart);
 
-            // Open in Visual Studio and go to the indicated line number.
-            dte.ExecuteCommand("File.OpenFile", file);
-            dte.ExecuteCommand("Edit.GoTo", lineNumberText);
+            try
+            {
+                // Open in Visual Studio and go to the indicated line number.
+                dte.ExecuteCommand("File.OpenFile", file);
+                dte.ExecuteCommand("Edit.GoTo", lineNumberText);
 
-            // Bring Visual Studio to the foreground.
-            SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
+                // Bring Visual Studio to the foreground.
+                SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
+            }
+            catch (COMException)
+            {
+                MessageBox.Show(MainWindow, "Failure attempting to communicate with Visual Studio.");
+            }
 
             Marshal.ReleaseComObject(dte);
         }
