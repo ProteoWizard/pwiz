@@ -79,8 +79,7 @@ namespace BiblioSpec
         void initFileNameMap();
         void removeFromFileMap(PSM* psm);
         string fileIdToName(int fileId);
-        map<int, PSM_SCORE_TYPE> getMainScores();
-        set<int> getPassingPSMs();
+        bool hasQValues();
         map< int, vector<SeqMod> > getMods();
         map<int, int> getFileIds();
 
