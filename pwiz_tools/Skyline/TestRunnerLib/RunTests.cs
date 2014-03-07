@@ -73,6 +73,7 @@ namespace TestRunnerLib
             bool demoMode,
             bool buildMode,
             bool offscreen,
+            bool internet,
             bool showStatus,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
@@ -102,7 +103,7 @@ namespace TestRunnerLib
             Skyline.Get<string>("Name");
             Skyline.Run("Init");
 
-            AccessInternet = true;
+            AccessInternet = internet;
             LiveReports = true;
 
             // Disable logging.

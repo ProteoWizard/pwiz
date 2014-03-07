@@ -236,6 +236,7 @@ namespace TestRunner
             bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
+            bool internet = commandLineArgs.ArgAsBool("internet");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
@@ -261,7 +262,7 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, showStatus,
+                demoMode, buildMode, offscreen, internet, showStatus,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 
@@ -317,7 +318,7 @@ namespace TestRunner
                         removeList.Add(test);
                 }
                 runTests.Skyline.Set("NoVendorReaders", false);
-                runTests.AccessInternet = true;
+                runTests.AccessInternet = internet;
                 runTests.LiveReports = true;
                 runTests.CheckCrtLeaks = 0;
 

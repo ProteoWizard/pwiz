@@ -2850,18 +2850,19 @@ namespace pwiz.Skyline
 
         private void sequenceTreeForm_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
-            }
+            if (_sequenceTreeForm != null)
+                Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
+        }
 
         private void sequenceTreeForm_FormClosed(object sender, FormClosedEventArgs e)
-            {
+        {
             // Update settings and menu check
             Settings.Default.ShowPeptides = false;
             _sequenceTreeForm = null;
-            }
+        }
 
         private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
-            {
+        {
             if (e.Node is EmptyNode)
                 e.Node.Text = string.Empty;
             else
