@@ -54,7 +54,8 @@
     RTCONFIG_VARIABLE( double,   Gamma,                      5      ) \
     RTCONFIG_VARIABLE( double,   Nu,                         0.5    ) \
     RTCONFIG_VARIABLE( int,      PolynomialDegree,           3      ) \
-    RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 off myrimatch:mvh; 1 off xcorr; 1 off sequest:xcorr; 1 off sequest:deltacn; 1 off mascot:score; -1 off x!tandem:expect; 1 off x!tandem:hyperscore; -1 off ms-gf:specevalue; -1 off evalue" ) \
+    RTCONFIG_VARIABLE( int,      MaxPermutations,            200    ) \
+    RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 linear myrimatch:mvh; 1 linear xcorr; 1 linear sequest:xcorr; 1 linear sequest:deltacn; 1 linear mascot:score; -1 linear x!tandem:expect; 1 linear x!tandem:hyperscore; -1 linear ms-gf:specevalue; -1 linear evalue; -1 linear expect; 1 linear sequest:spscore; 1 linear spscore; 1 linear deltacn" ) \
     RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "MonteCarlo" ) \
     RTCONFIG_VARIABLE( Qonverter::SVMType, SVMType, "CSVC" ) \
     RTCONFIG_VARIABLE( Qonverter::Kernel, Kernel, "Linear" ) \
@@ -123,6 +124,7 @@ public:
         settings.degree = PolynomialDegree;
         settings.maxFDR = MaxFDR;
         settings.minPartitionSize = MinPartitionSize;
+        settings.maxPermutations = MaxPermutations;
         return settings;
     }
 

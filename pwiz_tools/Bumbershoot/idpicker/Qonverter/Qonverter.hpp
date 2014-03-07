@@ -192,6 +192,9 @@ struct Qonverter
         double maxFDR;
         int minPartitionSize;
 
+        /// for MonteCarlo qonversion, what maximum number of permutations should be run before returning the best answer sampled so far?
+        int maxPermutations;
+
         /// what score names are expected and how should they be weighted and normalized?
         map<string, ScoreInfo> scoreInfoByName;
 
@@ -213,6 +216,7 @@ struct Qonverter
             degree = 3;
             maxFDR = 0.02;
             minPartitionSize = 10;
+            maxPermutations = 200;
         }
     };
 
@@ -376,7 +380,7 @@ struct MinMaxPair
 
 
 /// normalizes PSM scores within each partition (according to qonverterSettings)
-void normalize(const Qonverter::Settings& settings, PSMList& psmRows);
+void normalize(const Qonverter::Settings& settings, const map<string, string>& actualScoreIdByName, PSMList& psmRows);
 
 
 /// calculate new ranks, Q-values and FDRScores based on the presorted PSMIteratorRange (by descending discriminant score)

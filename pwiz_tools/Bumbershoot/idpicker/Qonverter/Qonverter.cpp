@@ -460,7 +460,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
             return;
 
         // normalize scores (according to qonverterSettings)
-        normalize(qonverterSettings, psmRowReader.psmRows);
+        normalize(qonverterSettings, actualScoreIdByName, psmRowReader.psmRows);
 
         /*cout << qonverterSettings.qonverterMethod << endl
              << qonverterSettings.decoyPrefix << endl;
@@ -719,7 +719,7 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, PSMList&
 }
 
 
-void normalize(const Qonverter::Settings& settings, PSMList& psmRows)
+void normalize(const Qonverter::Settings& settings, const map<string, string>& actualScoreIdByName, PSMList& psmRows)
 {
     try
     {
@@ -729,6 +729,9 @@ void normalize(const Qonverter::Settings& settings, PSMList& psmRows)
         int scoreIndex = -1;
         BOOST_FOREACH_FIELD((const string& scoreName)(const Qonverter::Settings::ScoreInfo& scoreInfo), settings.scoreInfoByName)
         {
+            if (actualScoreIdByName.find(scoreName) == actualScoreIdByName.end())
+                continue;
+
             ++scoreIndex;
             if (scoreInfo.normalizationMethod == Qonverter::Settings::NormalizationMethod::Off)
                 continue;

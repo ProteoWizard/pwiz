@@ -42,28 +42,29 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
 
     if (scoreWeights.size() > 1)
     {
-        // figure out all the permutations of the score weights.
-        vector<size_t> scoreWeightRanges(scoreWeights.size(), 10);
+        // create a coordinate vector with scoreWeights.size() dimensions and iterate through all the coordinates;
+        // on the iterations that sum to coordinateRange, use it as a scoreWeight permutation
+        const size_t coordinateRange = 10;
+        vector<size_t> scoreWeightRanges(scoreWeights.size(), coordinateRange+1);
         GCoordVectorIterator scorePermutations(scoreWeightRanges);
         scorePermutations.reset();
-        while(scorePermutations.advance())
+        vector<double> currentPermutNormalized(scoreWeights.size());
+        while (scorePermutations.advanceSampling())
         {
-            vector<double> currentPermut(scoreWeights.size(), 0);
-            scorePermutations.currentNormalized(&currentPermut[0]);
-            double totalWeight = 0.0;
+            vector<size_t> currentPermut(scorePermutations.current(), scorePermutations.current() + scoreWeights.size());
+            size_t totalWeight = std::accumulate(currentPermut.begin(), currentPermut.end(), 0);
 
-            // compute the total score weight and also change the direction of the scores
-            for(size_t scoreIndex = 0; scoreIndex < scoreWeights.size(); ++scoreIndex)
+            // only keep permutations that add up to the total axis length
+            if (totalWeight == coordinateRange)
             {
-                totalWeight += currentPermut[scoreIndex];
-                currentPermut[scoreIndex] *= scoreWeights[scoreIndex];
+                // compute the total score weight and also change the direction of the scores
+                for(size_t scoreIndex = 0; scoreIndex < scoreWeights.size(); ++scoreIndex)
+                    currentPermutNormalized[scoreIndex] = currentPermut[scoreIndex] * scoreWeights[scoreIndex] / totalWeight;
+                validScorePermutations.push_back(currentPermutNormalized);
+                if (validScorePermutations.size() > settings.maxPermutations)
+                    break;
             }
-
-            // only take permuations that add up to 1.0
-            if(totalWeight == 1.0)
-                validScorePermutations.push_back(currentPermut);
         }
-
         if(validScorePermutations.empty())
             throw runtime_error("insufficient number of score permutations in Monte Carlo optimization");
     }

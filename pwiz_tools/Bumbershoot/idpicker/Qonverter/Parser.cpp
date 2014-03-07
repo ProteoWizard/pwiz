@@ -296,37 +296,44 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
     {
         ITERATION_UPDATE(ilr, iterationIndex++, inputFilepaths.size(), "finding distinct analyses");
 
-        // ignore SequenceCollection and AnalysisData
-        IdentDataFile mzid(filepath, 0, 0, true);
-
-        AnalysisPtr analysis(new Analysis);
-        parseAnalysis(mzid, *analysis);
-
-        vector<AnalysisPtr>& sameNameAnalyses = sameNameAnalysesByName[analysis->name];
-        AnalysisPtr sameAnalysis;
-
-        // take the set difference of the current analysis' parameters with every same name analysis;
-        // if the set difference is empty, the analysis is not distinct
-        BOOST_FOREACH(AnalysisPtr& otherAnalysis, sameNameAnalyses)
+        try
         {
-            map_diff(analysis->parameters, otherAnalysis->parameters, a_b, b_a);
+            // ignore SequenceCollection and AnalysisData
+            IdentDataFile mzid(filepath, 0, 0, true);
 
-            if (a_b.empty() && b_a.empty())
+            AnalysisPtr analysis(new Analysis);
+            parseAnalysis(mzid, *analysis);
+
+            vector<AnalysisPtr>& sameNameAnalyses = sameNameAnalysesByName[analysis->name];
+            AnalysisPtr sameAnalysis;
+
+            // take the set difference of the current analysis' parameters with every same name analysis;
+            // if the set difference is empty, the analysis is not distinct
+            BOOST_FOREACH(AnalysisPtr& otherAnalysis, sameNameAnalyses)
             {
-                sameAnalysis = otherAnalysis;
-                break;
+                map_diff(analysis->parameters, otherAnalysis->parameters, a_b, b_a);
+
+                if (a_b.empty() && b_a.empty())
+                {
+                    sameAnalysis = otherAnalysis;
+                    break;
+                }
+
+                BOOST_FOREACH_FIELD((string& key)(string& value), a_b) differingParameters.insert(key);
+                BOOST_FOREACH_FIELD((string& key)(string& value), b_a) differingParameters.insert(key);
             }
 
-            BOOST_FOREACH_FIELD((string& key)(string& value), a_b) differingParameters.insert(key);
-            BOOST_FOREACH_FIELD((string& key)(string& value), b_a) differingParameters.insert(key);
+            if (!sameAnalysis.get())
+            {
+                sameNameAnalyses.push_back(analysis);
+                sameAnalysis = sameNameAnalyses.back();
+            }
+            sameAnalysis->filepaths.push_back(filepath);
         }
-
-        if (!sameAnalysis.get())
+        catch (exception &e)
         {
-            sameNameAnalyses.push_back(analysis);
-            sameAnalysis = sameNameAnalyses.back();
+            throw runtime_error("parsing \"" + filepath + "\": " + e.what());
         }
-        sameAnalysis->filepaths.push_back(filepath);
     }
 
     typedef pair<string, vector<AnalysisPtr> > SameNameAnalysesPair;

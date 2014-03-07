@@ -66,6 +66,48 @@ namespace Test
         #endregion
 
         [TestMethod]
+        public void TestContainsOrContainedBy()
+        {
+            FilterString filterString;
+            string[] input, output;
+            
+            filterString = new FilterString("ABC");
+            input = new string[] {"ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC"};
+            output = new string[] { "ABCD", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+
+            filterString = new FilterString("ABC;EFG;abc");
+            input = new string[] { "ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            output = new string[] { "ABCD", "EFG", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+
+            filterString = new FilterString("A B C;23;A;CB");
+            input = new string[] { "ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            output = new string[] { "ABCD", "CBA", "A B C", " ABC ", "1ABC[23]", "A", "B", "C", "AB" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+
+            filterString = new FilterString("'A'");
+            input = new string[] { "ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            output = new string[] { "A" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+
+            filterString = new FilterString("'23';\"BC\";HI");
+            input = new string[] { "ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            output = new string[] { "HIJK", "BC" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+
+            filterString = new FilterString("'1ABC[23]';'[AB]'");
+            input = new string[] { "ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            output = new string[] { "1ABC[23]" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+
+            filterString = new FilterString("[BC];\\d\\S+\\[\\d+\\]");
+            input = new string[] { "ABCD", "EFG", "HIJK", "CBA", "A B C", "abc", " ABC ", "1ABC[23]", "A", "B", "C", "AB", "BC" };
+            output = new string[] { "ABCD", "CBA", "A B C", " ABC ", "1ABC[23]", "B", "C", "AB", "BC" };
+            CollectionAssert.AreEqual(output, input.Where(o => o.ContainsOrIsContainedBy(filterString)).ToArray());
+        }
+
+        [TestMethod]
         public void TestGetCommonFilename ()
         {
             string[] input;

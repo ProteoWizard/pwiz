@@ -24,6 +24,7 @@
 
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Data;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -36,9 +37,25 @@ namespace IDPicker
 {
     public class FilterString
     {
-        public string[] Keywords { get; set; }
+        public struct Keyword
+        {
+            public string String { get; set; }
+            public bool IsRegex { get; set; }
+            public bool IsQuoted { get; set; }
+        }
 
-        public FilterString(string text) { Keywords = text.Split(';'); }
+        public Keyword[] Keywords { get; set; }
+
+        public FilterString(string text)
+        {
+            var keywords = text.Split(';');
+            Keywords = keywords.Select(o => new Keyword()
+            {
+                String = o.IsQuoted() ? o.Substring(1, o.Length - 2) : o,
+                IsRegex = o.IsQuoted() ? false : o.IndexOfAny("\\.*?+[]".ToCharArray()) >= 0,
+                IsQuoted = o.IsQuoted()
+            }).ToArray();
+        }
     }
 
     public static class SystemExtensionMethods
@@ -50,24 +67,30 @@ namespace IDPicker
 
             foreach (var otherString in filterString.Keywords)
             {
-                if (otherString.First() == '"' && otherString.Last() == '"')
+                if (otherString.IsQuoted)
                 {
-                    if (str == otherString.Substring(1, otherString.Length - 2))
+                    if (str == otherString.String)
                         return true;
                     else
                         continue;
                 }
 
-                int compare = str.Length.CompareTo(otherString.Length);
-                if (compare == 0 && str == otherString ||
-                    compare < 0 && otherString.Contains(str) /*||
-                    str.Contains(otherString)*/)
+                if (otherString.IsRegex && Regex.IsMatch(str, otherString.String, RegexOptions.ExplicitCapture))
                     return true;
 
-                if (Regex.IsMatch(str, otherString, RegexOptions.ExplicitCapture))
+                int compare = str.Length.CompareTo(otherString.String.Length);
+                if (compare == 0 && str == otherString.String ||
+                    compare < 0 && otherString.String.Contains(str) ||
+                    str.Contains(otherString.String))
                     return true;
             }
             return false;
+        }
+
+        public static bool IsQuoted(this string str)
+        {
+            return str.StartsWith("\"") && str.EndsWith("\"") ||
+                   str.StartsWith("'") && str.EndsWith("'");
         }
     }
 
