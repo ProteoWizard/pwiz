@@ -20,8 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Alerts;
@@ -517,8 +519,20 @@ namespace pwiz.Skyline
             {
                 string name = GraphChromatogram.GetTabText(persistentString);
                 var settings = DocumentUI.Settings;
-                if (settings.HasResults && settings.MeasuredResults.ContainsChromatogram(name))
-                    return GetGraphChrom(name) ?? CreateGraphChrom(name);
+                if (settings.HasResults)
+                {
+                    bool hasName = settings.MeasuredResults.ContainsChromatogram(name);
+                    // For tests with persisted layouts containing the default chromatogram name
+                    // check for the default name in the current language
+                    if (!hasName && Equals(name, Resources.ResourceManager.GetString(
+                        "ImportResultsDlg_DefaultNewName_Default_Name", CultureInfo.InvariantCulture))) // Not L10N
+                    {
+                        name = Resources.ImportResultsDlg_DefaultNewName_Default_Name;
+                        hasName = settings.MeasuredResults.ContainsChromatogram(name);
+                    }
+                    if (hasName)
+                        return GetGraphChrom(name) ?? CreateGraphChrom(name);
+                }
             }
             return null;
         }
