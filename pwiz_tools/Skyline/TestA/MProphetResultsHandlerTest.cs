@@ -117,10 +117,7 @@ namespace pwiz.SkylineTestA
             var docNewQAll = resultsHandlerRepeat.ChangePeaks(1.0);
             var peakBoundaryImporter = new PeakBoundaryImporter(docNewQAll);
             long lineCount = Helpers.CountLinesInFile(mProphetActual);
-            using (var reader = new StreamReader(mProphetActual))
-            {
-                peakBoundaryImporter.Import(reader, null, lineCount);
-            }
+            peakBoundaryImporter.Import(mProphetActual, null, lineCount);
             var docImport = peakBoundaryImporter.Document;
             Assert.AreSame(docNewQAll, docImport);
 

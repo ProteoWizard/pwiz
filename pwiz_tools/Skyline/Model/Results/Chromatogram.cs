@@ -656,6 +656,8 @@ namespace pwiz.Skyline.Model.Results
         public string FilePath { get; private set; }
         public DateTime? FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public double MaxRetentionTime { get; private set; }
+        public double MaxIntensity { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -685,6 +687,8 @@ namespace pwiz.Skyline.Model.Results
                                                      im.FileWriteTime = fileInfo.FileWriteTime;
                                                      im.RunStartTime = fileInfo.RunStartTime;
                                                      im.InstrumentInfoList = fileInfo.InstrumentInfoList.ToArray();
+                                                     im.MaxRetentionTime = fileInfo.MaxRetentionTime;
+                                                     im.MaxIntensity = fileInfo.MaxIntensity;
                                                  });
         }
 

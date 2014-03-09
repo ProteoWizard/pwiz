@@ -1054,10 +1054,7 @@ namespace pwiz.Skyline
             try
             {
                 long lineCount = Helpers.CountLinesInFile(peakBoundariesFile);
-                using (var readerPeakBoundaries = new StreamReader(peakBoundariesFile))
-                {
-                    ImportPeakBoundaries(readerPeakBoundaries, lineCount, Resources.SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries);
-                }
+                ImportPeakBoundaries(peakBoundariesFile, lineCount, Resources.SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries);
             }
             catch (Exception x)
             {
@@ -1068,7 +1065,7 @@ namespace pwiz.Skyline
             }         
         }
 
-        private void ImportPeakBoundaries(TextReader reader, long lineCount, string description)
+        private void ImportPeakBoundaries(string fileName, long lineCount, string description)
         {
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
@@ -1076,7 +1073,7 @@ namespace pwiz.Skyline
             {
                 var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                           docNew = peakBoundaryImporter.Import(reader, longWaitBroker, lineCount));
+                           docNew = peakBoundaryImporter.Import(fileName, longWaitBroker, lineCount));
 
 
                 if (docNew == null)

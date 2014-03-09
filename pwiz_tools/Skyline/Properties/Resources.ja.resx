@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -5078,9 +5078,6 @@
   <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
 <value>ファイルの先頭行を読み取れませんでした</value>
   </data>
-  <data name="PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space" xml:space="preserve">
-<value>先頭行に使用可能な分離記号{0}、タブ、空白文字がいずれもありません</value>
-  </data>
   <data name="PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line" xml:space="preserve">
 <value>先頭行に必要なヘッダー{0}が見つかりませんでした</value>
   </data>
@@ -5104,12 +5101,6 @@
   </data>
   <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
 <value>{1} 行目にあるペプチドシークエンス{0}は、ドキュメント内のどのペプチドにも一致しません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
-<value>カンマ</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
-<value>セミコロン</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
 <value>OverlapDemultiplexer:InitializeFile が多重化ファイルに重複して不適切に形成されています</value>

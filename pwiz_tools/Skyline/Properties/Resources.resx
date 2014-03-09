@@ -5079,9 +5079,6 @@ Are you sure you want to continue?</value>
   <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
     <value>Failed to read the first line of the file</value>
   </data>
-  <data name="PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space" xml:space="preserve">
-    <value>The first line does not contain any of the possible separators {0}, tab or space</value>
-  </data>
   <data name="PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line" xml:space="preserve">
     <value>Failed to find the necessary headers {0} in the first line</value>
   </data>
@@ -5105,12 +5102,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
     <value>The peptide sequence {0} on line {1} does not match any of the peptides in the document.</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
-    <value>comma</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
-    <value>semicolon</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
@@ -6228,5 +6219,11 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeptideGroupTreeNode_RenderTip_Original_Description" xml:space="preserve">
     <value>Original Description</value>
   </data>
+  <data name="PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_" xml:space="preserve">
+    <value>The first line does not contain any of the possible separators comma, tab or space.</value>
+  </data>
+  <data name="PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_" xml:space="preserve">
+    <value>The first line does not contain any of the possible separators semicolon, tab or space.</value>
+  </data>
 </root>
-<!-- ReSharper restore NotOverridenInSpecificCulture -->
+

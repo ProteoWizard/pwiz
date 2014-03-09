@@ -317,9 +317,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap add_pro32 {
             get {
                 object obj = ResourceManager.GetObject("add_pro32", resourceCulture);
@@ -658,9 +655,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap AllIonsStatusButton {
             get {
                 object obj = ResourceManager.GetObject("AllIonsStatusButton", resourceCulture);
@@ -1275,9 +1269,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Blank {
             get {
                 object obj = ResourceManager.GetObject("Blank", resourceCulture);
@@ -1861,9 +1852,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Calculator {
             get {
                 object obj = ResourceManager.GetObject("Calculator", resourceCulture);
@@ -2337,9 +2325,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap ChromLib {
             get {
                 object obj = ResourceManager.GetObject("ChromLib", resourceCulture);
@@ -2366,9 +2351,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Collapse {
             get {
                 object obj = ResourceManager.GetObject("Collapse", resourceCulture);
@@ -2495,9 +2477,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Comment {
             get {
                 object obj = ResourceManager.GetObject("Comment", resourceCulture);
@@ -3174,9 +3153,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Copy {
             get {
                 object obj = ResourceManager.GetObject("Copy", resourceCulture);
@@ -3184,9 +3160,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Copy_Bitmap {
             get {
                 object obj = ResourceManager.GetObject("Copy_Bitmap", resourceCulture);
@@ -3266,9 +3239,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Cut {
             get {
                 object obj = ResourceManager.GetObject("Cut", resourceCulture);
@@ -3276,9 +3246,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Dash {
             get {
                 object obj = ResourceManager.GetObject("Dash", resourceCulture);
@@ -3325,9 +3292,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap DataProcessing {
             get {
                 object obj = ResourceManager.GetObject("DataProcessing", resourceCulture);
@@ -3428,9 +3392,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Delete {
             get {
                 object obj = ResourceManager.GetObject("Delete", resourceCulture);
@@ -3540,9 +3501,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
             get {
                 object obj = ResourceManager.GetObject("down_pro32", resourceCulture);
@@ -3550,9 +3508,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap DropImage {
             get {
                 object obj = ResourceManager.GetObject("DropImage", resourceCulture);
@@ -3569,9 +3524,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
@@ -3579,9 +3531,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Edit_Undo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
@@ -4991,9 +4940,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Expand {
             get {
                 object obj = ResourceManager.GetObject("Expand", resourceCulture);
@@ -5908,9 +5854,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap ExternalTool {
             get {
                 object obj = ResourceManager.GetObject("ExternalTool", resourceCulture);
@@ -6012,9 +5955,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap File {
             get {
                 object obj = ResourceManager.GetObject("File", resourceCulture);
@@ -6167,9 +6107,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Filter {
             get {
                 object obj = ResourceManager.GetObject("Filter", resourceCulture);
@@ -6267,9 +6204,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Find {
             get {
                 object obj = ResourceManager.GetObject("Find", resourceCulture);
@@ -6277,9 +6211,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap FindNext {
             get {
                 object obj = ResourceManager.GetObject("FindNext", resourceCulture);
@@ -6368,9 +6299,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Folder {
             get {
                 object obj = ResourceManager.GetObject("Folder", resourceCulture);
@@ -6378,9 +6306,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Fragment {
             get {
                 object obj = ResourceManager.GetObject("Fragment", resourceCulture);
@@ -6388,9 +6313,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap FragmentDecoy {
             get {
                 object obj = ResourceManager.GetObject("FragmentDecoy", resourceCulture);
@@ -6398,9 +6320,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap FragmentLib {
             get {
                 object obj = ResourceManager.GetObject("FragmentLib", resourceCulture);
@@ -6408,9 +6327,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap FragmentLibDecoy {
             get {
                 object obj = ResourceManager.GetObject("FragmentLibDecoy", resourceCulture);
@@ -6559,9 +6475,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap GenerateDecoys {
             get {
                 object obj = ResourceManager.GetObject("GenerateDecoys", resourceCulture);
@@ -6751,9 +6664,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap GreenCheck {
             get {
                 object obj = ResourceManager.GetObject("GreenCheck", resourceCulture);
@@ -7443,9 +7353,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_1 {
             get {
                 object obj = ResourceManager.GetObject("Ions_1", resourceCulture);
@@ -7453,9 +7360,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_2 {
             get {
                 object obj = ResourceManager.GetObject("Ions_2", resourceCulture);
@@ -7463,9 +7367,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_A {
             get {
                 object obj = ResourceManager.GetObject("Ions_A", resourceCulture);
@@ -7473,9 +7374,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_B {
             get {
                 object obj = ResourceManager.GetObject("Ions_B", resourceCulture);
@@ -7483,9 +7381,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_C {
             get {
                 object obj = ResourceManager.GetObject("Ions_C", resourceCulture);
@@ -7493,9 +7388,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_X {
             get {
                 object obj = ResourceManager.GetObject("Ions_X", resourceCulture);
@@ -7503,9 +7395,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_Y {
             get {
                 object obj = ResourceManager.GetObject("Ions_Y", resourceCulture);
@@ -7513,9 +7402,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Ions_Z {
             get {
                 object obj = ResourceManager.GetObject("Ions_Z", resourceCulture);
@@ -7871,9 +7757,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Keep {
             get {
                 object obj = ResourceManager.GetObject("Keep", resourceCulture);
@@ -7917,9 +7800,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap LabKey {
             get {
                 object obj = ResourceManager.GetObject("LabKey", resourceCulture);
@@ -9262,9 +9142,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap NewDocument {
             get {
                 object obj = ResourceManager.GetObject("NewDocument", resourceCulture);
@@ -9465,9 +9342,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap NoPeak {
             get {
                 object obj = ResourceManager.GetObject("NoPeak", resourceCulture);
@@ -9484,9 +9358,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Note {
             get {
                 object obj = ResourceManager.GetObject("Note", resourceCulture);
@@ -9539,9 +9410,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Open {
             get {
                 object obj = ResourceManager.GetObject("Open", resourceCulture);
@@ -9730,9 +9598,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap OpenFolder {
             get {
                 object obj = ResourceManager.GetObject("OpenFolder", resourceCulture);
@@ -9858,9 +9723,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Panorama {
             get {
                 object obj = ResourceManager.GetObject("Panorama", resourceCulture);
@@ -9868,9 +9730,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PanoramaPublish {
             get {
                 object obj = ResourceManager.GetObject("PanoramaPublish", resourceCulture);
@@ -9878,9 +9737,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Paste {
             get {
                 object obj = ResourceManager.GetObject("Paste", resourceCulture);
@@ -10126,9 +9982,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Peak {
             get {
                 object obj = ResourceManager.GetObject("Peak", resourceCulture);
@@ -10136,9 +9989,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeakBlank {
             get {
                 object obj = ResourceManager.GetObject("PeakBlank", resourceCulture);
@@ -10147,11 +9997,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to comma.
+        ///   Looks up a localized string similar to The first line does not contain any of the possible separators comma, tab or space..
         /// </summary>
-        public static string PeakBoundaryImporter_Import_comma {
+        public static string PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_ {
             get {
-                return ResourceManager.GetString("PeakBoundaryImporter_Import_comma", resourceCulture);
+                return ResourceManager.GetString("PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_an" +
+                        "y_of_the_possible_separators_comma__tab_or_space_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The first line does not contain any of the possible separators semicolon, tab or space..
+        /// </summary>
+        public static string PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_an" +
+                        "y_of_the_possible_separators_semicolon__tab_or_space_", resourceCulture);
             }
         }
         
@@ -10222,15 +10083,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to semicolon.
-        /// </summary>
-        public static string PeakBoundaryImporter_Import_semicolon {
-            get {
-                return ResourceManager.GetString("PeakBoundaryImporter_Import_semicolon", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The decoy value {0} on line {1} is invalid: must be 0 or 1..
         /// </summary>
         public static string PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_ {
@@ -10247,16 +10099,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_t" +
                         "his_document_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The first line does not contain any of the possible separators {0}, tab or space.
-        /// </summary>
-        public static string PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space {
-            get {
-                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_s" +
-                        "eparators__0___tab_or_space", resourceCulture);
             }
         }
         
@@ -10365,9 +10207,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Peptide {
             get {
                 object obj = ResourceManager.GetObject("Peptide", resourceCulture);
@@ -10450,9 +10289,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideDecoy {
             get {
                 object obj = ResourceManager.GetObject("PeptideDecoy", resourceCulture);
@@ -10460,9 +10296,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideDecoyLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideDecoyLib", resourceCulture);
@@ -10872,9 +10705,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideIrtLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideIrtLib", resourceCulture);
@@ -10882,9 +10712,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideLib", resourceCulture);
@@ -11017,9 +10844,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideQc {
             get {
                 object obj = ResourceManager.GetObject("PeptideQc", resourceCulture);
@@ -11027,9 +10851,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideQcLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideQcLib", resourceCulture);
@@ -11124,9 +10945,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideStandard {
             get {
                 object obj = ResourceManager.GetObject("PeptideStandard", resourceCulture);
@@ -11134,9 +10952,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PeptideStandardLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideStandardLib", resourceCulture);
@@ -11289,9 +11104,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap PopupBtn {
             get {
                 object obj = ResourceManager.GetObject("PopupBtn", resourceCulture);
@@ -11326,9 +11138,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Print {
             get {
                 object obj = ResourceManager.GetObject("Print", resourceCulture);
@@ -11382,9 +11191,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Protein {
             get {
                 object obj = ResourceManager.GetObject("Protein", resourceCulture);
@@ -11392,9 +11198,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap ProteinDecoy {
             get {
                 object obj = ResourceManager.GetObject("ProteinDecoy", resourceCulture);
@@ -11863,9 +11666,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap RedX {
             get {
                 object obj = ResourceManager.GetObject("RedX", resourceCulture);
@@ -11873,9 +11673,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap RedXTransparentBackground {
             get {
                 object obj = ResourceManager.GetObject("RedXTransparentBackground", resourceCulture);
@@ -13295,9 +13092,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Save {
             get {
                 object obj = ResourceManager.GetObject("Save", resourceCulture);
@@ -13640,9 +13434,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
         public static System.Drawing.Icon Skyline {
             get {
                 object obj = ResourceManager.GetObject("Skyline", resourceCulture);
@@ -13650,9 +13441,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
         public static System.Drawing.Icon Skyline_Daily {
             get {
                 object obj = ResourceManager.GetObject("Skyline_Daily", resourceCulture);
@@ -13678,9 +13466,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
         public static System.Drawing.Icon SkylineData {
             get {
                 object obj = ResourceManager.GetObject("SkylineData", resourceCulture);
@@ -13688,9 +13473,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
         public static System.Drawing.Icon SkylineDoc {
             get {
                 object obj = ResourceManager.GetObject("SkylineDoc", resourceCulture);
@@ -13698,9 +13480,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap SkylineImg {
             get {
                 object obj = ResourceManager.GetObject("SkylineImg", resourceCulture);
@@ -16652,9 +16431,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap ToolUpdateAvailable {
             get {
                 object obj = ResourceManager.GetObject("ToolUpdateAvailable", resourceCulture);
@@ -17266,9 +17042,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap TransitionGroup {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroup", resourceCulture);
@@ -17315,9 +17088,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap TransitionGroupDecoy {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroupDecoy", resourceCulture);
@@ -17362,9 +17132,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap TransitionGroupLib {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroupLib", resourceCulture);
@@ -17372,9 +17139,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap TransitionGroupLibDecoy {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroupLibDecoy", resourceCulture);
@@ -18137,9 +17901,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap up_pro32 {
             get {
                 object obj = ResourceManager.GetObject("up_pro32", resourceCulture);
@@ -18673,9 +18434,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap Wand {
             get {
                 object obj = ResourceManager.GetObject("Wand", resourceCulture);
@@ -18683,9 +18441,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         public static System.Drawing.Bitmap WandProhibit {
             get {
                 object obj = ResourceManager.GetObject("WandProhibit", resourceCulture);

@@ -155,16 +155,16 @@ namespace pwiz.SkylineTestA
 
             // 2. No separator in first line
             ImportThrowsException(docResults, "No-valid-separators",
-                Resources.PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space);
+                "The first line does not contain any of the possible separators {0}, tab or space");
             
             // 3. Missing field names
             string csvSep = TextUtil.CsvSeparator.ToString(cultI);
             string spaceSep = TextUtil.SEPARATOR_SPACE.ToString(cultI);
-            ImportThrowsException(docResults, string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(3).ToArray()),
+            ImportThrowsException(docResults, string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(3).ToArray()),
                 Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line);
 
-            string headerRow = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(6));
-            string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.FIELD_NAMES.Take(6));
+            string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
+            string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
             string[] values =
             {
                 "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
@@ -245,13 +245,13 @@ namespace pwiz.SkylineTestA
             {
                 "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
             };
-            string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES);
+            string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES);
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
                 Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);
 
             // 13. Decoys, charge state, and sample missing ok
             var valuesFourFields = valuesSample.Take(4);
-            string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(4));
+            string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
             ImportNoException(docResults, TextUtil.LineSeparate(headerFourFields, string.Join(csvSep, valuesFourFields)));
 
             // 14. Valid (charge state, fileName, peptide) combo that is not in document leads to error
@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestA
                 _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
 
             // 15. Decminal import format ok
-            var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.FIELD_NAMES.Take(4));
+            var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
             var valuesUnimod =  new []
             {
                 "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
@@ -333,35 +333,32 @@ namespace pwiz.SkylineTestA
 
         }
 
-        private void ImportThrowsException(SrmDocument docResults, string importText, string message)
+        private static void ImportThrowsException(SrmDocument docResults, string importText, string message, bool isMinutes = true)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
             using (var readerPeakBoundaries = new StringReader(importText))
             {
                 long lineCount = Helpers.CountLinesInString(importText);
-                AssertEx.ThrowsException<IOException>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount), message);
+                AssertEx.ThrowsException<IOException>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes), message);
             }
         }
 
-        private void ImportNoException(SrmDocument docResults, string importText)
+        private static void ImportNoException(SrmDocument docResults, string importText, bool isMinutes = true)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
             using (var readerPeakBoundaries = new StringReader(importText))
             {
                 long lineCount = Helpers.CountLinesInString(importText);
-                AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount));
+                AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes));
             }
         }
 
-        private SrmDocument ImportFileToDoc(SrmDocument docOld, string importFile)
+        private static SrmDocument ImportFileToDoc(SrmDocument docOld, string importFile)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docOld);
-            using (var readerPeakBoundaries = new StreamReader(importFile))
-            {
-                long lineCount = Helpers.CountLinesInFile(importFile);
-                SrmDocument docNew = peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount);
-                return docNew;
-            }
+            long lineCount = Helpers.CountLinesInFile(importFile);
+            SrmDocument docNew = peakBoundaryImporter.Import(importFile, null, lineCount);
+            return docNew;
         }
 
         public void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)
