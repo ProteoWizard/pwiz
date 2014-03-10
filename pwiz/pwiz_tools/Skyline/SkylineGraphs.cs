@@ -2945,8 +2945,7 @@ namespace pwiz.Skyline
                     {
                         continue;
                     }
-                    string fileItemName = Path.GetFileNameWithoutExtension(chromFileInfo.FilePath);
-                    // TODO(nicksh): localize this
+                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
                     var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
                     var alignToFileItem = new ToolStripMenuItem(menuItemText);
                     if (ReferenceEquals(chromFileInfoId, AlignToFile))
