@@ -187,6 +187,12 @@ namespace pwiz.SkylineTest
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
                               ExportMethodType.Scheduled);
             Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
+                              ExportMethodType.Standard);
+            Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
+                              ExportMethodType.Scheduled);
+            Assert.AreEqual(1, count);
         }
 
         private static int EqualCsvs(string xml, int countFields, CreateExporters exporters,
@@ -329,6 +335,17 @@ namespace pwiz.SkylineTest
                                                          out AbstractMassListExporter exporterActual)
         {
             exporterActual = new ThermoQuantivaMassListExporter(actual)
+                {
+                    MethodType = methodType,
+                    Strategy = strategy,
+                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : (double?)null
+                };
+        }
+
+        private static void CreateShimadzuExporter(SrmDocument actual, ExportMethodType methodType, ExportStrategy strategy,
+                                                   out AbstractMassListExporter exporterActual)
+        {
+            exporterActual = new ShimadzuMassListExporter(actual)
                 {
                     MethodType = methodType,
                     Strategy = strategy,

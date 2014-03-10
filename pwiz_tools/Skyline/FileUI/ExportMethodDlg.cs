@@ -212,6 +212,7 @@ namespace pwiz.Skyline.FileUI
         private static bool IsSingleDwellInstrumentType(string type)
         {
             return Equals(type, ExportInstrumentType.AGILENT_TOF) ||
+                   Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
                    Equals(type, ExportInstrumentType.THERMO_TSQ) ||
@@ -234,7 +235,8 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 var type = InstrumentType;
-                return Equals(type, ExportInstrumentType.THERMO_TSQ) ||
+                return Equals(type, ExportInstrumentType.SHIMADZU) ||
+                       Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                        Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO) ||

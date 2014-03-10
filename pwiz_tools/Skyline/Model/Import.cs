@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Model
             {
                 string seqClean = FastaSequence.StripModifications(seq);
                 int dotIndex = seqClean.IndexOf('.'); // Not L10N
-                if (dotIndex != -1)
+                if (dotIndex != -1 || (dotIndex = seqClean.IndexOf('_')) != -1)
                     seqClean = seqClean.Substring(0, dotIndex);
                 return seqClean;
             }
