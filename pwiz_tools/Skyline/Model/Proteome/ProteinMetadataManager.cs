@@ -84,11 +84,11 @@ namespace pwiz.Skyline.Model.Proteome
             // For our purposes, a better name for this would be "IsInterrupted": if the
             // doc changes out from under us, we just preserve the searches done so far 
             // then get out, and use them in the OnDocumentChange which must be coming.
-            if (ReferenceEquals(container.Document, tag))
+            if (ReferenceEquals(container.Document, tag)) // "tag" is the doc we started working on
                 return false; // We are still working on the same doc
 
             // If the doc changed, then our work so far may be useless now
-            CleanupProcessedNodesDict(tag as SrmDocument);
+            CleanupProcessedNodesDict(container.Document); // Does any of our completed search work apply to the current document?
 
             return true;
         }
@@ -107,7 +107,11 @@ namespace pwiz.Skyline.Model.Proteome
                     EndProcessing(docOrig);
                     return false;
                 }
+
             } while (!CompleteProcessing(container, docNew, docOrig));
+
+            CleanupProcessedNodesDict(docNew);  // Drop any completed work, we're done with it
+
             return true;
         }
 
@@ -119,7 +123,7 @@ namespace pwiz.Skyline.Model.Proteome
                 int nResolved = 0;
                 int nUnresolved = docOrig.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
 
-                CleanupProcessedNodesDict(docOrig);
+                CleanupProcessedNodesDict(docOrig); // Drop any completed work that no longer applies to this doc
 
                 if ((nUnresolved > 0) && !docOrig.Settings.PeptideSettings.BackgroundProteome.IsNone)
                 {
@@ -154,7 +158,10 @@ namespace pwiz.Skyline.Model.Proteome
                                         }
                                     }
                                     if (progressMonitor.IsCanceled)
+                                    {
+                                        progressMonitor.UpdateProgress(progressStatus.Cancel());
                                         return null;
+                                    }
                                 }
                             }
                         }
@@ -197,7 +204,10 @@ namespace pwiz.Skyline.Model.Proteome
                             }
                         }
                         if (progressMonitor.IsCanceled)
+                        {
+                            progressMonitor.UpdateProgress(progressStatus.Cancel());
                             return null;
+                        }
                         progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved / nUnresolved));
 
                         // Now we actually hit the internet
@@ -240,7 +250,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         private void CleanupProcessedNodesDict(SrmDocument doc)
         {
-            // Clean out any old results we can't use with the current doc
+            // Clean out any old results we can't use with this doc
             lock (_processedNodes)
             {
                 if (_processedNodes.Any())
@@ -252,7 +262,7 @@ namespace pwiz.Skyline.Model.Proteome
                         ProteinMetadata metadata;
                         if (oldProcessedNodesDict.TryGetValue(nodePepGroup.Id.GlobalIndex, out metadata) &&
                             nodePepGroup.ProteinMetadata.NeedsSearch())
-                            _processedNodes.Add(nodePepGroup.Id.GlobalIndex, metadata);
+                            _processedNodes.Add(nodePepGroup.Id.GlobalIndex, metadata); // That node's Id is still in doc, and we have its metadata
                     }
                 }
             }
