@@ -606,6 +606,11 @@ namespace pwiz.Skyline.Model.Results
             foreach (var replicate in results)
             {
                 var chromInfoList = new List<TItem>();
+                if (replicate == null)
+                {
+                    elements.Add(null);
+                    continue;
+                }
                 foreach (var chromInfo in replicate)
                 {
                     if (!ReferenceEquals(chromInfo.FileId, id))
