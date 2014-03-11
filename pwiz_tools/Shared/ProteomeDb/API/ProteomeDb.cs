@@ -25,7 +25,6 @@ using System.Linq;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
-using NHibernate.Dialect.Function;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteomeDatabase.Properties;
@@ -52,12 +51,14 @@ namespace pwiz.ProteomeDatabase.API
         public const int MIN_SEQUENCE_LENGTH = 4;
         public const int MAX_SEQUENCE_LENGTH = 7;
         private DatabaseResource _databaseResource;
-        private ProteomeDb(String path)
+        private bool _isTmp; // We won't hang onto the global session factory if we know we're temporary
+        private ProteomeDb(String path, bool isTmp)
         {
             _schemaVersionMajor = -1; // unknown
             _schemaVersionMinor = -1; // unknown
             _schemaVersionMajorAsRead = -1; // unknown
             _schemaVersionMinorAsRead = -1; // unknown
+            _isTmp = isTmp;
             _databaseResource = DatabaseResource.GetDbResource(path);
 
             // Do we need to update the db to current version?
@@ -148,7 +149,7 @@ namespace pwiz.ProteomeDatabase.API
             DatabaseResource databaseResource = Interlocked.Exchange(ref _databaseResource, null);
             if (null != databaseResource)
             {
-                databaseResource.Release();
+                databaseResource.Release(_isTmp);
             }
         }
 
@@ -312,9 +313,9 @@ namespace pwiz.ProteomeDatabase.API
             }
         }
         private ISessionFactory SessionFactory { get { return _databaseResource.SessionFactory; } }
-        public static ProteomeDb OpenProteomeDb(String path)
+        public static ProteomeDb OpenProteomeDb(String path, bool isTemporary=false)
         {
-            return new ProteomeDb(path);
+            return new ProteomeDb(path, isTemporary);
         }
 
         public static ProteomeDb CreateProteomeDb(String path)
@@ -423,6 +424,23 @@ namespace pwiz.ProteomeDatabase.API
                     return null;
                 }
                 return new Protein(ProteomeDbPath, proteinName.Protein, proteinName);
+            }
+        }
+
+        /// <summary>
+        /// Return metadata for protein matching given string - as a name, or failing that as an accession ID or PreferredName
+        /// </summary>
+        /// <param name="name">name or accession value</param>
+        public ProteinMetadata GetProteinMetadataByName(String name)
+        {
+            using (ISession session = OpenSession())
+            {
+                var proteinName = GetProteinName(session, name, "Name", "Accession", "Gene", "PreferredName"); // Not L10N
+                if (proteinName == null)
+                {
+                    return null;
+                }
+                return proteinName.GetProteinMetadata();
             }
         }
 
@@ -624,7 +642,7 @@ namespace pwiz.ProteomeDatabase.API
                     var results = new List<DbProteinName>();
 
                     // The "true" arg means "do just one batch then return"
-                    foreach (var result in fastaImporter.DoWebserviceLookup(unsearchedProteins, true))
+                    foreach (var result in fastaImporter.DoWebserviceLookup(unsearchedProteins, null, true))
                     {
                         if (result != null)
                         {

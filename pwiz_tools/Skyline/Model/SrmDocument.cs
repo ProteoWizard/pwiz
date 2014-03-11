@@ -251,6 +251,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex + 1;
             Settings = settings;
+            CheckIsProteinMetadataComplete();
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { 
@@ -369,6 +370,11 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// True when any PeptideGroupDocNodes lack complete protein metadata
+        /// </summary>
+        public bool IsProteinMetadataPending { get; private set; }
+
+        /// <summary>
         /// True if the parts of a Skyline document affected by a Save As command are loaded
         /// </summary>
         public bool IsSavable
@@ -452,6 +458,12 @@ namespace pwiz.Skyline.Model
                         : PeptidePrediction.SchedulingStrategy.all_variable_window);
         }
 
+        private void CheckIsProteinMetadataComplete()
+        {
+            var unsearched = (from pg in PeptideGroups where pg.ProteinMetadata.NeedsSearch() select pg).ToArray();
+            IsProteinMetadataPending = unsearched.Any();
+        }
+
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
         /// for <see cref="RevisionIndex"/>.
@@ -464,6 +476,9 @@ namespace pwiz.Skyline.Model
 
             // Make sure peptide standards lists are up to date
             docClone.Settings = Settings.CachePeptideStandards(Children, docClone.Children);
+
+            // Note protein metadata readiness
+            docClone.CheckIsProteinMetadataComplete();
 
             // If this document has associated results, update the results
             // for any peptides that have changed.

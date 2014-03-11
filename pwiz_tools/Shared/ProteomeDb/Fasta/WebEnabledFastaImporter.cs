@@ -30,6 +30,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
 
@@ -506,9 +507,10 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         /// <param name="proteinsToSearch">the proteins to populate - we use DbProteinName as a convenient 
         /// container for the immutable ProteinMetadata</param>
+        /// <param name="progressMonitor">For checking operation cancellation</param>
         /// <param name="singleBatch">if true, just do one batch and plan to come back later for more</param>
         /// <returns>IEnumerable of the proteins it actually populated (some don't need it, some have to wait for a decent web connection)</returns>
-        public IEnumerable<DbProteinName> DoWebserviceLookup(IEnumerable<DbProteinName> proteinsToSearch, bool singleBatch)
+        public IEnumerable<DbProteinName> DoWebserviceLookup(IEnumerable<DbProteinName> proteinsToSearch, IProgressMonitor progressMonitor, bool singleBatch)
         {
             const int ENTREZ_BATCHSIZE = 100; // they'd like 500, but it's really boggy at that size
             const int UNIPROTKB_BATCHSIZE = 50; 
@@ -578,10 +580,14 @@ namespace pwiz.ProteomeDatabase.Fasta
             }
 
             // CONSIDER(bspratt): Could this be simplified?
+            bool cancelled = false;
             var politeStopwatch = new Stopwatch();
             politeStopwatch.Start();
             foreach (var searchType in searchOrder)
             {
+                cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                if (cancelled)
+                    break;
                 int politenessIntervalMsec = ratelimit[searchType];
                 int idealBatchsize = batchSize[searchType];
                 int batchsize = idealBatchsize;           // in case of ambiguous results, reduce batchsize until ambiguity goes away
@@ -591,6 +597,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                 bool completedSearchType = false;
                 while (!completedSearchType)
                 {
+                    cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                    if (cancelled)
+                        break;
                     char type = searchType;
                     var searchlist =
                         proteins.Where(s => (s.GetProteinMetadata().NeedsSearch() &&
@@ -598,6 +607,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                     completedSearchType = !searchlist.Any();
                     for (int searchListIndex = 0; !completedSearchType && (searchListIndex < searchlist.Count); )
                     {
+                        cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                        if (cancelled)
+                            break;
                         // try to batch up requests - reduce batch size if responses are ambiguous
                         int nextSearch = searchListIndex;
                         var searches = new List<DbProteinName>();
@@ -612,7 +624,10 @@ namespace pwiz.ProteomeDatabase.Fasta
                             if (snoozeMs > 0)
                                 Thread.Sleep((int)snoozeMs);
                             politeStopwatch.Restart();
-                            if (DoWebserviceLookup(searches, searchType)) // Returns true on web access error
+                            cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
+                            if (cancelled)
+                                break;
+                            if (DoWebserviceLookup(searches, searchType, progressMonitor)) // Returns true on web access error
                             {
                                 // Some error, we should just try again later so don't retry now
                                 completedSearchType = true; // Done with this search type
@@ -708,10 +723,11 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         /// <param name="proteins">items to search - we use DbProteinName as a convenient 
         /// container for the immutable ProteinMetadata</param>
-        /// <param name="searchType">uniprot or entrez</param>
+        /// <param name="searchType">Uniprot or Entrez</param>
+        /// <param name="progressMonitor">For detecting operation cancellation</param>
         /// <returns>true if we need to try again later</returns>
         /// 
-        private bool DoWebserviceLookup(IList<DbProteinName> proteins, char searchType)
+        private bool DoWebserviceLookup(IList<DbProteinName> proteins, char searchType, IProgressMonitor progressMonitor)
         {
 
             var searchterms = _webSearchProvider.ListSearchTerms(proteins);
@@ -721,6 +737,9 @@ namespace pwiz.ProteomeDatabase.Fasta
             var responses = new List<DbProteinName>();
             for (var retries = _webSearchProvider.WebRetryCount();retries-->0;)  // be patient with the web
             {
+                if ((progressMonitor != null) && progressMonitor.IsCanceled)
+                    break;
+
                 try
                 {
                     string urlString; // left at outer scope for exception debugging ease
@@ -1166,9 +1185,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                     proteins[0].SetWebSearchCompleted(); // no response for a single protein - we aren't going to get an answer
                 }
 
-                break; // ne need for retry
+                break; // No need for retry
             }
-            return false; // no problems encountered
+            return false; // No problems encountered
         }
     }
 }

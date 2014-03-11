@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.Proteome
                     using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                     {
                         File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
-                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
+                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName, true);
                         bool success;
                         if (getMetadata)
                             success = digestHelper.LookupProteinMetadata(ref progressStatus);
@@ -249,6 +249,7 @@ namespace pwiz.Skyline.Model.Proteome
             private readonly SrmDocument _document;
             private readonly string _nameProteome;
             private readonly string _pathProteome;
+            private readonly bool _isTemporary;  // Are we doing this work on a temporary copy of the DB?
 
             private ProgressStatus _progressStatus;
 
@@ -256,20 +257,22 @@ namespace pwiz.Skyline.Model.Proteome
                                 IDocumentContainer container,
                                 SrmDocument document,
                                 string nameProteome,
-                                string pathProteome)
+                                string pathProteome,
+                                bool isTemporary)
             {
                 _manager = manager;
                 _container = container;
                 _document = document;
                 _nameProteome = nameProteome;
                 _pathProteome = pathProteome;
+                _isTemporary = isTemporary;
             }
 
 // ReSharper disable RedundantAssignment
             public Digestion Digest(ref ProgressStatus progressStatus)
 // ReSharper restore RedundantAssignment
             {
-                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome))
+                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome,_isTemporary))
                 {
                     var enzyme = _document.Settings.PeptideSettings.Enzyme;
 
@@ -286,7 +289,7 @@ namespace pwiz.Skyline.Model.Proteome
             public bool LookupProteinMetadata(ref ProgressStatus progressStatus)
             // ReSharper restore RedundantAssignment
             {
-                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome))
+                using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome, _isTemporary))
                 {
                     _progressStatus = new ProgressStatus(
                         string.Format(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome,_nameProteome));

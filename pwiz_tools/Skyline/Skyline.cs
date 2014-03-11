@@ -35,6 +35,7 @@ using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using log4net;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -773,6 +774,8 @@ namespace pwiz.Skyline
             _timerProgress.Dispose();
 
             ToolReportCache.Instance.Register(null);
+
+            DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
             if (!Program.FunctionalTest)
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
@@ -3855,7 +3858,7 @@ namespace pwiz.Skyline
 
         }
 
-        private void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
+        public void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
         {
             Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
             Settings.Default.ShowPeptides = true;
@@ -3904,22 +3907,22 @@ namespace pwiz.Skyline
             });
         }
 
-        private void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
+        public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PerformSort(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, PeptideGroupDocNode.CompareNames);
         }
 
-        private void sortProteinsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
+        public void sortProteinsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PerformSort(Resources.SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession, PeptideGroupDocNode.CompareAccessions);
         }
 
-        private void sortProteinsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
+        public void sortProteinsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PerformSort(Resources.SkylineWindow_sortProteinsByPreferredNameToolStripMenuItem_Click_Sort_proteins_by_preferred_name, PeptideGroupDocNode.ComparePreferredNames);
         }
 
-        private void sortProteinsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
+        public void sortProteinsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PerformSort(Resources.SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene, PeptideGroupDocNode.CompareGenes);
         }

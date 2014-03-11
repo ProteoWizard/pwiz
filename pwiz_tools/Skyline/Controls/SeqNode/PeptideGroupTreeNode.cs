@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
                 // If current name isn't the original, show that.
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.PeptideGroup.Name, rt);
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
                 if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Accession))
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Accession, DocNode.ProteinMetadata.Accession, rt);
                 if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.PreferredName))
@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Description))
                     tableDetails.AddDetailRowLineWrap(g,Resources.PeptideGroupTreeNode_RenderTip_Description, DocNode.ProteinMetadata.Description, rt);
                 if (DocNode.PeptideGroup.Description != null && !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description, DocNode.PeptideGroup.Description, rt);
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description, DocNode.OriginalDescription, rt);
                 SizeF sizeDetails = tableDetails.CalcDimensions(g);
                 sizeDetails.Height += TableDesc.TABLE_SPACING;    // Spacing between details and fragments
                 float heightTotal = sizeDetails.Height;

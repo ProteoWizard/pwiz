@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using NHibernate;
 using pwiz.ProteomeDatabase.API;
@@ -30,6 +31,7 @@ namespace pwiz.ProteomeDatabase.Util
     internal class DatabaseResource
     {
         private static IDictionary<string, DatabaseResource> _dbResources;
+        private static bool _doDisposeAll;
         private static readonly object DatabaseResourcesLock = typeof (DatabaseResource);
 
         public static DatabaseResource GetDbResource(string path)
@@ -64,20 +66,57 @@ namespace pwiz.ProteomeDatabase.Util
         public ISessionFactory SessionFactory { get; private set; }
         public ReaderWriterLock DatabaseLock { get; private set; }
 
-        public void Release()
+        // Formerly we released the SessionFactory here, but these are large, expensive-to-construct
+        // objects that leak a great deal of string space, so we'll hang onto them even if it risks 
+        // carrying a bit of useless memory* until we call ReleaseAll at OnClosed.
+        // This has a dramatic effect on memory consumption when the background proteinmetadata loader
+        // has to repeatedly reestablish a connection to protDB as other higher priority threads
+        // interrupt it.
+        // *In practice this actually reduces memory consumption, especially in test runs where there 
+        // are many short lived protDB instances - protDB creation etc, that are not part of the 
+        // document and don't hang around a long time, but which then get added to the doc and 
+        // could use the same session factory from their creation
+        public void Release(bool isTemporary)
         {
-            int refCount = Interlocked.Decrement(ref _refCount);
-            if (0 != refCount)
+            var refcount = Interlocked.Decrement(ref _refCount);
+            if (refcount == 0)
             {
-                return;
+                lock (DatabaseResourcesLock)
+                {
+                    if (isTemporary || // We're certain we won't want this later
+                        _doDisposeAll) // Our thread was still working when ReleaseAll() was called
+                    {
+                        SessionFactory.Dispose();
+                        if ((_dbResources != null) && _dbResources.ContainsKey(Path))
+                        {
+                            _dbResources.Remove(Path);
+                            if (_dbResources.Count == 0)
+                                _dbResources = null;
+                        }
+                    }
+                }
             }
-            SessionFactory.Dispose();
+        }
+
+        public static void ReleaseAll() 
+        {
             lock (DatabaseResourcesLock)
             {
-                _dbResources.Remove(Path);
-                if (_dbResources.Count == 0)
+                _doDisposeAll = true; // Stragglers on other threads should actually Dispose
+                if (_dbResources != null)
                 {
-                    _dbResources = null;
+                    var paths = _dbResources.Keys.ToArray();
+                    foreach (var path in paths)
+                    {
+                        var dbResource = _dbResources[path];
+                        if (0 == dbResource._refCount)
+                        {
+                            dbResource.SessionFactory.Dispose();
+                            _dbResources.Remove(path);
+                        }
+                    }
+                    if (_dbResources.Count == 0)
+                        _dbResources = null;
                 }
             }
         }
@@ -85,6 +124,14 @@ namespace pwiz.ProteomeDatabase.Util
         private void AddRef()
         {
             Interlocked.Increment(ref _refCount);
+        }
+    }
+
+    public static class DatabaseResources
+    {
+        public static void ReleaseAll() 
+        {
+            DatabaseResource.ReleaseAll();
         }
     }
 }

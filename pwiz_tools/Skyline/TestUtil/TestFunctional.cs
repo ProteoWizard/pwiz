@@ -358,17 +358,18 @@ namespace pwiz.SkylineTestUtil
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
         {
+            WaitForProteinMetadataBackgroundLoaderCompleted(); // make sure document is stable
+
             // Make sure the document changes on the UI thread, since tests are mostly
             // interested in interacting with the document on the UI thread.
             Assert.IsTrue(WaitForConditionUI(() => !ReferenceEquals(docCurrent, SkylineWindow.DocumentUI)));
-            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let background PeptideGroupDocNode protein metdata loader complete
             return SkylineWindow.Document;
         }
 
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
+            WaitForProteinMetadataBackgroundLoaderCompleted(millis);  // make sure document is stable
             WaitForConditionUI(millis, () => SkylineWindow.DocumentUI.IsLoaded);
-            WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let background PeptideGroupDocNode protein metdata loader complete
             return SkylineWindow.Document;
         }
 
@@ -800,17 +801,18 @@ namespace pwiz.SkylineTestUtil
                                      docStart.TransitionCount - nodePeptide.TransitionCount);
         }
 
-        public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI()
+        public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)
         {
-            // in a functional test we expect the protein metadata search to at least pretend to have gone to the web
-            WaitForConditionUI(() => ((SkylineWindow.DocumentUI == null) || ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI)));
+            // In a functional test we expect the protein metadata search to at least pretend to have gone to the web
+            WaitForCondition(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document)); // Make sure doc is stable
+            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI)); // Then make sure UI ref is current
             return SkylineWindow.Document;
         }
 
-        public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompleted()
+        public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompleted(int millis = WAIT_TIME)
         {
-            // in a functional test we expect the protein metadata search to at least pretend to have gone to the web
-            WaitForConditionUI(() => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document));
+            // In a functional test we expect the protein metadata search to at least pretend to have gone to the web
+            WaitForCondition(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document));
             return SkylineWindow.Document;
         }
 

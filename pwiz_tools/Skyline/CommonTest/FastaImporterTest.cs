@@ -523,29 +523,20 @@ namespace CommonTest
 
         }
 
+        const string EATDEADEELS = "EATDEADEELS";
+        
         /// <summary>
         /// Test the basic parsing, no attempt at protein metadata resolution
         /// </summary>
         [TestMethod]
         public void TestBasicFastaImport()
         {
-            var fastaLines = new StringBuilder();
-            int testnum = 0;
-            const string deadeels = "EATDEADEELS";
-            var tests = GetTests();
-            foreach (var t in tests)
-            {
-                fastaLines.Append(t.Header);
-                fastaLines.Append("\n");
-                for (int mm = testnum++; mm >= 0; mm--)
-                    fastaLines.Append(deadeels + "\n");
-            }
-
+            List<FastaHeaderParserTest> tests = GetTests();
             var dbProteins = new List<DbProtein>();
             var dbProteinNames = new List<DbProteinName>();
             WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
             int fakeID = 0;
-            foreach (var dbProtein in fastaImporter.Import(new StringReader(fastaLines.ToString())))
+            foreach (var dbProtein in fastaImporter.Import(new StringReader(FastaText())))
             {
                 dbProtein.Id = fakeID++;
                 foreach (var name in dbProtein.Names)
@@ -557,7 +548,7 @@ namespace CommonTest
             }
             foreach (var dbProtein in dbProteins)
             {
-                testnum = (dbProtein.Sequence.Length / deadeels.Length) - 1;
+                int testnum = (dbProtein.Sequence.Length / EATDEADEELS.Length) - 1;
                 Assert.AreEqual(dbProtein.Names.Count, tests[testnum].ExpectedResults.Length);
                 int n = 0;
                 foreach (var name in dbProtein.Names)
@@ -577,6 +568,21 @@ namespace CommonTest
                     }
                 }
             }
+        }
+
+        public static string FastaText()
+        {
+            var fastaLines = new StringBuilder();
+            int testnum = 0;
+            var tests = GetTests();
+            foreach (var t in tests)
+            {
+                fastaLines.Append(t.Header);
+                fastaLines.Append("\n");
+                for (int mm = testnum++; mm >= 0; mm--)
+                    fastaLines.Append(EATDEADEELS + "\n");
+            }
+            return fastaLines.ToString();
         }
 
 
@@ -634,7 +640,7 @@ namespace CommonTest
                     fastaImporter = new WebEnabledFastaImporter(new DoomedWebSearchProvider()); // intentionally messes up the URLs
                 else  // then test web search code - either live in a perf test, or using playback object
                     fastaImporter = new WebEnabledFastaImporter(useActualWebAcess? new WebEnabledFastaImporter.WebSearchProvider() : new PlaybackProvider());
-                var results = fastaImporter.DoWebserviceLookup(dbProteinNames, false).ToList(); // don't be polite, get it all at once
+                var results = fastaImporter.DoWebserviceLookup(dbProteinNames, null, false).ToList(); // No progress moniotr, and don't be polite get it all at once
                 foreach (var result in results)
                 {
                     if (result != null)

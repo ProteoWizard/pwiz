@@ -34,25 +34,25 @@ namespace pwiz.Skyline.Model.Proteome
     /// <summary>
     /// Crawls the Skyline doc looking for unresolved protein metdata, and
     /// accesses background proteome db and web services as needed.
-    /// If background proteome is under construction, or having its own
-    /// protein metadata resolved, politely waits for that to complete.
+    /// Will use the background proteome db's protein info by preference,
+    /// but will use web services if that's not available.  This way the user
+    /// gets a quick answer for accession numbers etc without waiting for the
+    /// entire background proteome to update its own protein metadata.
     /// </summary>
     public sealed class ProteinMetadataManager : BackgroundLoader
     {
-        private WebEnabledFastaImporter _fastaImporter = new WebEnabledFastaImporter(); // Default is to actually go to the web
+        private readonly Dictionary<int, ProteinMetadata> _processedNodes = new Dictionary<int, ProteinMetadata>(); // Preserves our efforts if we're interrupted
+        private WebEnabledFastaImporter _fastaImporter = new WebEnabledFastaImporter(); // Tests may swap this out for other fake interfaces
         public WebEnabledFastaImporter FastaImporter
         {
             get { return _fastaImporter; }
-            set { _fastaImporter = value; }  // Tests may override with an object that simulates web access
+            set { _fastaImporter = value; }  // Tests may override with an object that simulates web access, bad web access, etc
         }
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            // The only way this manager can go from loaded to not loaded is if the peptide groups change,
-            // or the background proteome has finished loading and has protein metadata for us
-            return  (previous == null) || !ReferenceEquals(document.Children, previous.Children) ||
-                !ReferenceEquals(document.Settings.PeptideSettings.BackgroundProteome,
-                    previous.Settings.PeptideSettings.BackgroundProteome);
+            // We're interested if the document has unresolved protein metadata.
+            return document.IsProteinMetadataPending;
         }
 
         /// <summary>
@@ -64,31 +64,14 @@ namespace pwiz.Skyline.Model.Proteome
         public static bool IsLoadedDocument(SrmDocument document)
         {
             if (document == null)
-                return false;
-            // Any PeptideGroupDocNodes having PeptideGroup IDs that need the rest of their protein metadata updated?
-            foreach (PeptideGroupDocNode nodePepGroup in document.PeptideGroups)
-            {
-                if (nodePepGroup.ProteinMetadata.NeedsSearch())
-                    return false; // not loaded - we need to do a web search
-            }
-            return true;
+                return false;  // This is called from functional tests 
+            return !document.IsProteinMetadataPending;
         }
       
 
         protected override bool IsLoaded(SrmDocument document)
         {
-            if (document == null)
-                return true; // no work needed
-
-            if (IsLoadedDocument(document))
-                return true; // no work needed
-
-            // We don't want to proceed if the background proteome (if any) isn't complete,
-            // with its protein metadata resolved, since we prefer to pull our protein metadata from there
-            if (!BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(document,true))
-                return true; // no work at this moment, thanks - we'll wait for background proteome
-
-            return false; // there is work to do
+            return IsLoadedDocument(document);
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -98,7 +81,16 @@ namespace pwiz.Skyline.Model.Proteome
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
-            return !ReferenceEquals(container.Document, tag);
+            // For our purposes, a better name for this would be "IsInterrupted": if the
+            // doc changes out from under us, we just preserve the searches done so far 
+            // then get out, and use them in the OnDocumentChange which must be coming.
+            if (ReferenceEquals(container.Document, tag))
+                return false; // We are still working on the same doc
+
+            // If the doc changed, then our work so far may be useless now
+            CleanupProcessedNodesDict(tag as SrmDocument);
+
+            return true;
         }
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document,
@@ -119,128 +111,151 @@ namespace pwiz.Skyline.Model.Proteome
             return true;
         }
 
-        private SrmDocument LookupProteinMetadata(SrmDocument documentIn, IProgressMonitor progressMonitor)
+        private SrmDocument LookupProteinMetadata(SrmDocument docOrig, IProgressMonitor progressMonitor)
         {
-
-            var progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
-            int nResolved = 0;
-            int nUnresolved = documentIn.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
-
-            var docNew = documentIn;
-            if ((nUnresolved>0) && !documentIn.Settings.PeptideSettings.BackgroundProteome.IsNone)
+            lock (_processedNodes)
             {
-                // Do a quick check to see if background proteome already has the info
-                if (documentIn.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch)
+                var progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
+                int nResolved = 0;
+                int nUnresolved = docOrig.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
+
+                CleanupProcessedNodesDict(docOrig);
+
+                if ((nUnresolved > 0) && !docOrig.Settings.PeptideSettings.BackgroundProteome.IsNone)
                 {
-                    // Background proteome loader needs to catch up - get out of the way
-                    progressMonitor.UpdateProgress(progressStatus.Complete());
-                    return docNew;
-                }
-                try
-                {
-                    using (var proteomeDb = documentIn.Settings.PeptideSettings.BackgroundProteome.OpenProteomeDb())
+                    // Do a quick check to see if background proteome already has the info
+                    if (!docOrig.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch)
                     {
-                        foreach (PeptideGroupDocNode nodePepGroup in documentIn.PeptideGroups)
+                        try
                         {
-                            bool needsSearch = nodePepGroup.ProteinMetadata.NeedsSearch();
-                            ProteinMetadata p = null;
-                            if (needsSearch)
+                            using (var proteomeDb = docOrig.Settings.PeptideSettings.BackgroundProteome.OpenProteomeDb())
                             {
-                                var dbProtein = proteomeDb.GetProteinByName(nodePepGroup.Name);
-                                if ((dbProtein == null) && !String.IsNullOrEmpty(nodePepGroup.ProteinMetadata.Accession))
-                                    // possibly renamed, parsed accession might hit
-                                    dbProtein = proteomeDb.GetProteinByName(nodePepGroup.ProteinMetadata.Accession);
-                                if (dbProtein != null)
-                                    p = dbProtein.ProteinMetadata;
-                            }
-                            if (p != null)
-                            {
-                                if (!p.NeedsSearch())
+                                foreach (PeptideGroupDocNode nodePepGroup in docOrig.PeptideGroups)
                                 {
-                                    // Background proteome has already resolved this
-                                    docNew = (SrmDocument) docNew.ReplaceChild(nodePepGroup.ChangeProteinMetadata(p));
-                                    progressMonitor.UpdateProgress(
-                                        progressStatus =
-                                            progressStatus.ChangePercentComplete(100*nResolved++/nUnresolved));
-                                }
-                                else
-                                {
-                                    // Background proteome loader needs to catch up - get out of the way
-                                    progressMonitor.UpdateProgress(progressStatus.Complete());
-                                    return docNew;
+                                    if (_processedNodes.ContainsKey(nodePepGroup.Id.GlobalIndex))
+                                    {
+                                        // We did this before we were interrupted
+                                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
+                                    }
+                                    else if (nodePepGroup.ProteinMetadata.NeedsSearch())
+                                    {
+                                        var proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.Name);
+                                        if ((proteinMetadata == null) && !Equals(nodePepGroup.Name, nodePepGroup.OriginalName))
+                                            proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.OriginalName); // Original name might hit
+                                        if ((proteinMetadata == null) && !String.IsNullOrEmpty(nodePepGroup.ProteinMetadata.Accession))
+                                            proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.ProteinMetadata.Accession); // Parsed accession might hit
+                                        if ((proteinMetadata != null) && !proteinMetadata.NeedsSearch())
+                                        {
+                                            // Background proteome has already resolved this
+                                            _processedNodes.Add(nodePepGroup.Id.GlobalIndex, proteinMetadata);
+                                            progressMonitor.UpdateProgress(
+                                                progressStatus =
+                                                    progressStatus.ChangePercentComplete(100*nResolved++/nUnresolved));
+                                        }
+                                    }
+                                    if (progressMonitor.IsCanceled)
+                                        return null;
                                 }
                             }
                         }
+                        // ReSharper disable once EmptyGeneralCatchClause
+                        catch
+                        {
+                            // The protDB file is busy, or some other issue - just go directly to web
+                        }
                     }
                 }
-                catch (Exception)
+                if (nResolved != nUnresolved)
                 {
-                    // DB file is busy, just try again later
-                    progressMonitor.UpdateProgress(progressStatus.Complete());
-                    return docNew;
-                }
-            }
+                    try
+                    {
+                        // Now go to the web for more protein metadata (or pretend to, depending on WebEnabledFastaImporter.DefaultWebAccessMode)
+                        var docNodesWithUnresolvedProteinMetadata = new Dictionary<DbProteinName,PeptideGroupDocNode>(); 
+                        var proteinsToSearch = new List<DbProteinName>(); // DbProteinName is a convenient container for immutable ProteinMetadata objects
+                        foreach (PeptideGroupDocNode node in docOrig.PeptideGroups)
+                        {
+                            if (node.ProteinMetadata.NeedsSearch() && !_processedNodes.ContainsKey(node.Id.GlobalIndex)) // Did we already process this?
+                            {
+                                var proteinMetadata = node.ProteinMetadata;
+                                if (proteinMetadata.WebSearchInfo.IsEmpty()) // Never even been hit with regex
+                                {
+                                    // Use Regexes to get some metadata, and a search term
+                                    var parsedProteinMetaData = FastaImporter.ParseProteinMetaData(proteinMetadata);
+                                    if (parsedProteinMetaData == null)
+                                    {
+                                        // That didn't parse well enough to make a search term, just set it as searched so we don't keep trying
+                                        _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.SetWebSearchCompleted());
+                                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
+                                    }
+                                    proteinMetadata = parsedProteinMetaData;
+                                }
+                                if (proteinMetadata != null)
+                                {
+                                    proteinsToSearch.Add(new DbProteinName(null, proteinMetadata)); // DbProteinName is just a convenient container for metadata
+                                    docNodesWithUnresolvedProteinMetadata.Add(proteinsToSearch.Last(), node);
+                                }
+                            }
+                        }
+                        if (progressMonitor.IsCanceled)
+                            return null;
+                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved / nUnresolved));
 
-            if (nResolved == nUnresolved)
-            {
+                        // Now we actually hit the internet
+                        if (proteinsToSearch.Any())
+                        {
+                            foreach (var result in FastaImporter.DoWebserviceLookup(proteinsToSearch, progressMonitor, false)) // Resolve them all, now
+                            {
+                                Debug.Assert(!result.GetProteinMetadata().NeedsSearch());
+                                _processedNodes.Add(docNodesWithUnresolvedProteinMetadata[result].Id.GlobalIndex, result.GetProteinMetadata());
+                                progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
+                            }
+                        }                        
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        progressMonitor.UpdateProgress(progressStatus.Cancel());
+                        return null;
+                    }
+
+                }
+
+                // And finally write back to the document
+                var listProteins = new List<PeptideGroupDocNode>();
+                foreach (PeptideGroupDocNode node in docOrig.PeptideGroups)
+                {
+                    if (_processedNodes.ContainsKey(node.Id.GlobalIndex))
+                    {
+                        listProteins.Add(node.ChangeProteinMetadata(_processedNodes[node.Id.GlobalIndex]));
+                    }
+                    else
+                    {
+                        listProteins.Add(node);
+                    }
+                }
+                var docNew = docOrig.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
                 progressMonitor.UpdateProgress(progressStatus.Complete());
-                return docNew; // Nothing more to do 
+                return (SrmDocument)docNew;
             }
+        }
 
-            try
+        private void CleanupProcessedNodesDict(SrmDocument doc)
+        {
+            // Clean out any old results we can't use with the current doc
+            lock (_processedNodes)
             {
-                // Now go to the web for missing metadata
-                // Does everybody have a search term yet?
-                bool foundUnparsedProteins = false; 
-                foreach (PeptideGroupDocNode node in docNew.PeptideGroups)
+                if (_processedNodes.Any())
                 {
-                    if (node.ProteinMetadata.WebSearchInfo.IsEmpty()) // Never even been hit with regex
+                    var oldProcessedNodesDict = new Dictionary<int, ProteinMetadata>(_processedNodes);
+                    _processedNodes.Clear();
+                    foreach (PeptideGroupDocNode nodePepGroup in doc.PeptideGroups)
                     {
-                        var parsedProteinMetaData = FastaImporter.ParseProteinMetaData(node.ProteinMetadata); // Use Regexes to get some metadata, and a search term
-                        if (parsedProteinMetaData == null) // Didn't match anything
-                        {
-                            parsedProteinMetaData = node.ProteinMetadata;
-                            parsedProteinMetaData = parsedProteinMetaData.SetWebSearchCompleted(); // At a minimum take this out of consideration for next time
-                        }
-                        progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
-                        docNew = (SrmDocument)docNew.ReplaceChild(node.ChangeProteinMetadata(parsedProteinMetaData));
-                        foundUnparsedProteins = true;
+                        ProteinMetadata metadata;
+                        if (oldProcessedNodesDict.TryGetValue(nodePepGroup.Id.GlobalIndex, out metadata) &&
+                            nodePepGroup.ProteinMetadata.NeedsSearch())
+                            _processedNodes.Add(nodePepGroup.Id.GlobalIndex, metadata);
                     }
                 }
-                if (foundUnparsedProteins)
-                {
-                    progressMonitor.UpdateProgress(progressStatus.Complete());
-                    return docNew; // An excellent intermediate step - we added some intelligence inexpensively
-                }
-
-                // Now go to the web for more protein metadata (or pretend to, depending on WebEnabledFastaImporter.DefaultWebAccessMode)
-                var docNodesWithUnresolvedProteinMetadata = new Dictionary<DbProteinName,PeptideGroupDocNode>(); 
-                var results = new List<DbProteinName>(); // DbProteinName is a convenient container for immutable ProteinMetadata objects
-                foreach (PeptideGroupDocNode node in docNew.PeptideGroups)
-                {
-                    if (node.ProteinMetadata.NeedsSearch())
-                    {
-                        results.Add(new DbProteinName(null, node.ProteinMetadata)); // Make a copy of the node's protein metadata
-                        docNodesWithUnresolvedProteinMetadata.Add(results.Last(), node);
-                    }
-                }
-                progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved / nUnresolved));
-                foreach (var result in FastaImporter.DoWebserviceLookup(results, true)) // Just do one batch, come back later for more
-                {
-                    Debug.Assert(!result.GetProteinMetadata().NeedsSearch());
-                    docNew = (SrmDocument)docNew.ReplaceChild(docNodesWithUnresolvedProteinMetadata[result].ChangeProteinMetadata(result.GetProteinMetadata()));
-                    progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
-                }
             }
-            catch (OperationCanceledException)
-            {
-                progressMonitor.UpdateProgress(progressStatus.Cancel());
-                return null;
-            }
-
-            progressMonitor.UpdateProgress(progressStatus.Complete());
-            return docNew;
         }
     }
-
 }

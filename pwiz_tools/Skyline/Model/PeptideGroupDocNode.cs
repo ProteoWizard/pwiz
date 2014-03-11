@@ -72,7 +72,9 @@ namespace pwiz.Skyline.Model
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 
         public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name; } } // prefer ours over peptidgroup, if set
+        public string OriginalName { get { return PeptideGroup.Name; } }
         public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidgroup, if set
+        public string OriginalDescription { get { return PeptideGroup.Description; } } 
         public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(new ProteinMetadata(PeptideGroup.Name, PeptideGroup.Description)); } } // prefer our name and description over peptidegroup
 
         /// <summary>
