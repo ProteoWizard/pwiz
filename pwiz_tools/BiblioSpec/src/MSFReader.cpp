@@ -235,64 +235,50 @@ namespace BiblioSpec
      */
     void MSFReader::collectPsms()
     {
-        int psmCount = getRowCount("Peptides");
-        Verbosity::status("Parsing %d PSMs.", psmCount);
-        ProgressIndicator progress(psmCount);
+        sqlite3_stmt* statement;
+        int resultCount;
 
-        map<int, PSM_SCORE_TYPE> scoreIds = getMainScores();
-
-        if (scoreIds.empty())
+        bool qValues = hasQValues();
+        if (!qValues)
         {
-            throw BlibException(false, "No main score types in ProcessingNodeScores.");
+            // no q-value fields in this database, error unless user wants everything
+            if (getScoreThreshold(SQT) < 1)
+                throw BlibException(false, "This file does not contain q-values. You can set "
+                                    "a cut-off score of 0 in order to build a library from it, "
+                                    "but this may cause your library to include a lot "
+                                    "of false-positives.");
+            resultCount = getRowCount("Peptides");
+            statement = getStmt("SELECT PeptideID, SpectrumID, Sequence FROM Peptides");
         }
-
-        string scoreConditions;
-        for (map<int, PSM_SCORE_TYPE>::iterator scoreIter = scoreIds.begin();
-             scoreIter != scoreIds.end();
-             ++scoreIter)
+        else
         {
-            if (scoreConditions.empty())
-            {
-                scoreConditions = "WHERE ScoreID = " + lexical_cast<string>(scoreIter->first);
-            }
-            else
-            {
-                scoreConditions += " OR ScoreID = " + lexical_cast<string>(scoreIter->first);
-            }
+            // get peptides with q-value <= threshold
+            statement = getStmt(
+                "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
+                "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
+                "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
+                "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+            resultCount = getRowCount(
+                "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
+                "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
+                "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
         }
+        Verbosity::status("Parsing %d PSMs.", resultCount);
+        ProgressIndicator progress(resultCount);
 
         initFileNameMap();
-        set<int> passing = getPassingPSMs();
         map<int, PSM*> processedSpectra;
         map<int, double> ambiguousSpectra;
         map< int, vector<SeqMod> > modMap = getMods();
         map<int, int> fileIdMap = getFileIds();
 
-        string query =
-            "SELECT Peptides.PeptideID, SpectrumID, Sequence, ScoreValue, ScoreID "
-            "FROM Peptides "
-            "JOIN PeptideScores ON Peptides.PeptideID = PeptideScores.PeptideID "
-            + scoreConditions;
-
-        sqlite3_stmt* statement = getStmt(query);
-
         // turn each row of returned table into a psm
-        int psmsAccepted = 0;
-        int psmsSkipped = 0;
         while (hasNext(statement))
         {
             int peptideId = sqlite3_column_int(statement, 0);
             int specId = sqlite3_column_int(statement, 1);
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
-            double score = sqlite3_column_double(statement, 3);
-
-            // skip psm if it didn't pass threshold
-            set<int>::iterator passCheck = passing.find(peptideId);
-            if (passCheck == passing.end())
-            {
-                ++psmsSkipped;
-                continue;
-            }
+            double score = qValues ? sqlite3_column_double(statement, 3) : 0.0;
 
             // check if we already processed a peptide that references this spectrum
             map<int, PSM*>::iterator processedSpectraSearch = processedSpectra.find(specId);
@@ -309,7 +295,6 @@ namespace BiblioSpec
                         Verbosity::debug("Peptide %d (%s) had a worse score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring this peptide).",
                                          peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
-                        ++psmsSkipped;
                         continue;
                     }
                     // equal, discard other and skip this
@@ -318,15 +303,11 @@ namespace BiblioSpec
                         if (sequence == other->unmodSeq)
                         {
                             // same score, but also same sequence, ignore the new one
-                            ++psmsSkipped;
                             continue;
                         }
                         Verbosity::debug("Peptide %d (%s) had the same score as another peptide (%s) "
                                          "referencing spectrum %d (ignoring both peptides).",
                                          peptideId, sequence.c_str(), other->unmodSeq.c_str(), specId);
-
-                        psmsSkipped += 2;
-                        --psmsAccepted;
 
                         removeFromFileMap(other);
                         delete other;
@@ -358,7 +339,6 @@ namespace BiblioSpec
                     }
                     else
                     {
-                        ++psmsSkipped;
                         continue;
                     }
                 }
@@ -369,8 +349,6 @@ namespace BiblioSpec
                 curPSM_ = new PSM();
                 processedSpectra[specId] = curPSM_;
             }
-
-            ++psmsAccepted;
 
             curPSM_->charge = spectraChargeStates_[specId];
             curPSM_->unmodSeq = sequence;
@@ -401,8 +379,7 @@ namespace BiblioSpec
             }
 
             // score
-            int scoreId = sqlite3_column_int(statement, 4);
-            PSM_SCORE_TYPE scoreType = scoreIds[scoreId];
+            PSM_SCORE_TYPE scoreType = PERCOLATOR_QVALUE;
             map< PSM_SCORE_TYPE, vector<PSM*> >& scoreMap = fileMapAccess->second;
             map< PSM_SCORE_TYPE, vector<PSM*> >::iterator scoreMapAccess = scoreMap.find(scoreType);
             if (scoreMapAccess == scoreMap.end())
@@ -418,9 +395,6 @@ namespace BiblioSpec
 
             progress.increment();
         }
-
-        Verbosity::debug("%d psms found (%d accepted, %d not accepted).",
-                         psmsAccepted + psmsSkipped, psmsAccepted, psmsSkipped);
     }
 
     /**
@@ -481,85 +455,21 @@ namespace BiblioSpec
     }
 
     /**
-     * Gets the main score types in the MSF database.
-     * Also sets the threshold_ variable, if known.
+     * Return whether the MSF file has q-values or not.
      */
-    map<int, PSM_SCORE_TYPE> MSFReader::getMainScores()
+    bool MSFReader::hasQValues()
     {
-        sqlite3_stmt* statement;
-
-        // get the main score types
-        statement = getStmt(
-            "SELECT ScoreID, ScoreName "
-            "FROM ProcessingNodeScores "
-            "WHERE IsMainScore = 1");
-
-        map<int, PSM_SCORE_TYPE> scoreIds;
-        while (hasNext(statement))
-        {
-            int scoreId = sqlite3_column_int(statement, 0);
-            string scoreName = lexical_cast<string>(sqlite3_column_text(statement, 1));
-
-            if (scoreName == "XCorr")
-            {
-                scoreIds[scoreId] = SEQUEST_XCORR;
-            }
-            else if (scoreName == "IonScore")
-            {
-                scoreIds[scoreId] = MASCOT_IONS_SCORE;
-            }
-            else
-            {
-                Verbosity::warn("Unrecognized score type '%s'.", scoreName.c_str());
-                scoreIds[scoreId] = UNKNOWN_SCORE_TYPE;
-            }
-        }
-
-        return scoreIds;
-    }
-
-    /**
-     * Return a map containing all PeptideIDs of passing PSMs.
-     * Returns NULL if no q-value.
-     */
-    set<int> MSFReader::getPassingPSMs()
-    {
-        sqlite3_stmt* statement;
-
-        // check if peptides have q-values
-        statement = getStmt(
+        sqlite3_stmt* statement = getStmt(
             "SELECT FieldID "
             "FROM CustomDataFields "
             "WHERE DisplayName = 'q-Value' "
             "LIMIT 1");
         if (!hasNext(statement))
         {
-            // no q-value fields in this database, error unless user wants everything
-            if (getScoreThreshold(SQT) < 1)
-                throw BlibException(false, "This file does not contain q-values. You cannot "
-                                    "use a cut-off score in building a library for it.");
-            statement = getStmt("SELECT PeptideID FROM Peptides");
+            return false;
         }
-        else
-        {
-            sqlite3_finalize(statement);
-            // get peptides with q-value <= threshold
-            statement = getStmt(
-                "SELECT DISTINCT PeptideID "
-                "FROM CustomDataPeptides "
-                "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value')" 
-                "   AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-        }
-
-        // add IDs to set
-        set<int> passing;
-        while (hasNext(statement))
-        {
-            int peptideId = sqlite3_column_int(statement, 0);
-            passing.insert(peptideId);
-        }
-
-        return passing;
+        sqlite3_finalize(statement);
+        return true;
     }
 
     /**

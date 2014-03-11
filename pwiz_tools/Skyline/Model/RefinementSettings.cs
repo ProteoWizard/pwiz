@@ -805,6 +805,10 @@ namespace pwiz.Skyline.Model
         private static IList<ExplicitMod> GetRearrangedMods(IEnumerable<ExplicitMod> mods, int lenSeq,
                                                             Func<int, int> getNewIndex)
         {
+            if (null == mods)
+            {
+                return null;
+            }
             var arrayMods = mods.ToArray();
             for (int i = 0; i < arrayMods.Length; i++)
             {
