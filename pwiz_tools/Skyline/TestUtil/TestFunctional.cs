@@ -236,7 +236,6 @@ namespace pwiz.SkylineTestUtil
         {
             foreach (var form in OpenForms)
             {
-Console.WriteLine(form.GetType());
                 var tForm = form as TDlg;
                 if (tForm != null && tForm.Created)
                 {
