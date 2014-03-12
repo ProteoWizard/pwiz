@@ -42,10 +42,11 @@ namespace pwiz.Skyline.Util
 
         public static bool Is64Bit
         {
+            // CONSIDER: a better way to determine whether this is a 64-bit build
             get
             {
-                var myAssemblyName = AssemblyName.GetAssemblyName(Assembly.GetExecutingAssembly().FullName.Split(',')[0] + ".exe");
-                return ProcessorArchitecture.MSIL == myAssemblyName.ProcessorArchitecture;
+                var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                return File.Exists(Path.Combine(exeDir ?? "", "fileio_x64.dll")); // Not L10N
             }
         }
 
