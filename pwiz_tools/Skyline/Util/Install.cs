@@ -19,6 +19,7 @@
 using System;
 using System.Deployment.Application;
 using System.IO;
+using System.Reflection;
 
 namespace pwiz.Skyline.Util
 {
@@ -42,7 +43,11 @@ namespace pwiz.Skyline.Util
         public static bool Is64Bit
         {
             // CONSIDER: a better way to determine whether this is a 64-bit build
-            get { return File.Exists("fileio_x64.dll"); } // Not L10N
+            get
+            {
+                var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                return File.Exists(Path.Combine(exeDir ?? "", "fileio_x64.dll")); // Not L10N
+            }
         }
 
         public static int MajorVersion
