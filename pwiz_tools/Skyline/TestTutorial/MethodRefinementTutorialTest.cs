@@ -78,8 +78,9 @@ namespace pwiz.SkylineTestTutorial
             var folderMethodRefine = ExtensionTestContext.CanImportThermoRaw ? "MethodRefine" : "MethodRefineMzml"; // Not L10N
 
             // Results Data, p. 2
+            var doc = SkylineWindow.Document;
             RunUI(() => SkylineWindow.OpenFile(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\WormUnrefined.sky"))); // Not L10N
-            WaitForDocumentChangeLoaded(SkylineWindow.Document);
+            WaitForDocumentChangeLoaded(doc);
             RunUI(() =>
             {
                 // Adjust font sizes for better screen shots
