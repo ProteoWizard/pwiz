@@ -119,11 +119,14 @@ namespace pwiz.Skyline.Model.Proteome
         {
             lock (_processedNodes)
             {
+                // Check to make sure this operation was not canceled while this thread was
+                // waiting to acquire the lock.  This also cleans up pending work.
+                if (progressMonitor.IsCanceled)
+                    return null;
+
                 var progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
                 int nResolved = 0;
                 int nUnresolved = docOrig.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
-
-                CleanupProcessedNodesDict(docOrig); // Drop any completed work that no longer applies to this doc
 
                 if ((nUnresolved > 0) && !docOrig.Settings.PeptideSettings.BackgroundProteome.IsNone)
                 {
