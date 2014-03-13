@@ -413,10 +413,11 @@ namespace SkylineTester
         {
             get
             {
+                GetBuildPrerequisites();
+
                 if (Subversion == null)
                 {
-                    MessageBox.Show(
-                        "Subversion is required to build Skyline.  You can install it from http://sourceforge.net/projects/win32svn/");
+                    MessageBox.Show("Subversion is required to build Skyline.  You can install it from http://sourceforge.net/projects/win32svn/");
                     return false;
                 }
 
@@ -428,6 +429,20 @@ namespace SkylineTester
 
                 return true;
             }
+        }
+
+        public void GetBuildPrerequisites()
+        {
+            // Try to find where subversion is available.
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            Subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
+            if (!File.Exists(Subversion))
+                Subversion = null;
+
+            // Find Visual Studio, if available.
+            Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe");
+            if (!File.Exists(Devenv))
+                Devenv = null;
         }
 
         public void RunUI(Action action, int delayMsec = 0)
