@@ -408,7 +408,6 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(toolUpdatesDlg.DeselectAll);
             toolUpdatesDlg.TestingDownloadOnly = testingDownloadOnly;
             Assert.IsNotNull(toolUpdatesDlg.AcceptButton);
-            Assert.IsNotNull(toolUpdatesDlg.AcceptButton.PerformClick);
             return toolUpdatesDlg;
         }
 
