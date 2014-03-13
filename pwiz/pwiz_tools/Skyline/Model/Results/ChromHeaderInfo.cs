@@ -620,15 +620,17 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 // CONSIDER: Could just mask and cast
-                bool source1 = (Flags & FlagValues.source1) != 0;
-                bool source2 = (Flags & FlagValues.source2) != 0;
-                if (!source1 && !source2)
-                    return ChromSource.unknown;
-                if (!source2)
-                    return ChromSource.fragment;
-                if (!source1)
-                    return ChromSource.ms1;
-                return ChromSource.sim;
+                switch (Flags & (FlagValues.source1 | FlagValues.source2))
+                {
+                    case 0:
+                        return ChromSource.unknown;
+                    case FlagValues.source2:
+                        return ChromSource.fragment;
+                    case FlagValues.source1:
+                        return ChromSource.ms1;
+                    default:
+                        return ChromSource.sim;
+                }
             }
             set
             {

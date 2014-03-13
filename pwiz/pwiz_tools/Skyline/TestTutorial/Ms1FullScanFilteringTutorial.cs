@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -73,23 +72,23 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_ANNOTATIONS =
             {
-                "35.7;-23 ppm|36.6;0 ppm|32.4;-6 ppm|33.2;0 ppm|34.1;+6.8 ppm|37.5;-1.7 ppm|38.5;-1.6 ppm|39.1;+3.4 ppm", // Not L10N
-                "39.0;-13.1 ppm;(idotp 0.90)|34.1;-0.5 ppm|34.6;-19.7 ppm|35.7;-47.9 ppm|36.1;-36.4 ppm;(idotp 0.97)|37.8;-11.6 ppm|37.8;0 ppm|36.5;-41.4 ppm|40.9;0 ppm", // Not L10N
-                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.9 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.5 ppm|32.4;0 ppm|35.2;0 ppm|35.3;0 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm", // Not L10N
-                "37.0;-6.9 ppm|35.3;0 ppm|36.6;-10.6 ppm|37.5;-3.9 ppm|40.5;-37.8 ppm|40.7;-28 ppm|42.0;+3.8 ppm|33.1;+5.4 ppm|32.2;0 ppm|34.6;-46.3 ppm", // Not L10N
-                "37.4;-1.5 ppm|40.8;-20.7 ppm|33.2;+25.8 ppm|34.9;-41 ppm", // Not L10N
-                "37.5;0 ppm|32.8;-13.6 ppm|34.1;-8.5 ppm|35.5;0 ppm|36.0;+9.6 ppm|36.9;-2.6 ppm|38.8;0 ppm|39.6;0 ppm|42.0;-5.4 ppm", // Not L10N
-                "34.1;-3.9 ppm|36.1;+11.2 ppm|40.6;-7.9 ppm;(idotp 0.91)|38.2;+19.9 ppm;(idotp 0.83)", // Not L10N
-                "37.7;-4.1 ppm|34.1;-3.9 ppm|36.1;+11.2 ppm|40.8;+4.5 ppm", // Not L10N
-                "34.5;+2.9 ppm|35.3;0 ppm|35.3;+5.6 ppm|37.5;0 ppm|38.9;-28.1 ppm;(idotp 0.80)|36.5;0 ppm|36.6;0 ppm;(idotp 0.89)|39.4;0 ppm|40.9;-2.4 ppm", // Not L10N
-                "35.7;+2.4 ppm|39.3;-14.3 ppm", // Not L10N
-                "35.3;0 ppm|35.3;+5.6 ppm;(idotp 0.78)|38.9;-31.2 ppm;(idotp 0.65)|34.5;0 ppm|36.8;0 ppm|36.8;0 ppm|37.3;0 ppm;(idotp 0.71)|39.4;0 ppm|41.1;-12.7 ppm", // Not L10N
-                "35.7;+2.4 ppm;(idotp 0.67)|38.4;+10.6 ppm;(idotp 0.54)", // Not L10N
-                "36.1;-5.2 ppm|37.3;-20.8 ppm|38.2;0 ppm|38.5;0 ppm|39.1;0 ppm|39.9;-0.5 ppm|32.2;-0.5 ppm|34.3;0 ppm|34.8;0 ppm", // Not L10N
-                "41.9;0 ppm|37.5;-11.9 ppm|34.7;0 ppm|32.5;0 ppm|42.4;-16.1 ppm", // Not L10N
-                "35.9;-16.3 ppm|33.0;-47.7 ppm|39.5;-53.6 ppm", // Not L10N
+                "35.7;-34.3 ppm|36.6;-2.7 ppm|32.4;-9.7 ppm|33.2;-1.7 ppm|34.1;+17.2 ppm|37.5;+22.3 ppm|38.5;+5.7 ppm|39.1;+7.3 ppm", // Not L10N
+                "39.0;-33 ppm;(idotp 0.90)|34.1;-24.8 ppm|34.6;-21.3 ppm|35.7;-47.9 ppm|36.1;-42.7 ppm;(idotp 0.97)|37.8;-20.2 ppm|37.8;-27.1 ppm|36.5;-49.8 ppm|40.9;+59.7 ppm", // Not L10N
+                "37.0;-10.6 ppm|32.4;-12 ppm|35.2;+4.8 ppm|35.3;+18.6 ppm|36.6;-10.3 ppm|37.5;-6 ppm|40.5;-38.1 ppm|40.7;-38 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
+                "37.0;-10.6 ppm|32.4;-12 ppm|35.2;+4.8 ppm|35.3;+18.6 ppm|36.6;-10.3 ppm|37.5;-6 ppm|40.5;-38.1 ppm|40.7;-38 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
+                "37.0;-9.2 ppm|32.4;-12 ppm|35.2;+4.8 ppm|35.3;+18.6 ppm|40.5;-38.1 ppm|40.7;-38 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm", // Not L10N
+                "37.0;-10.6 ppm|35.3;+18.6 ppm|36.6;-10.3 ppm|37.5;-6 ppm|40.5;-38.1 ppm|40.7;-38 ppm|42.0;+11.2 ppm|33.1;+39.9 ppm|32.2;+17.4 ppm|34.6;-46.7 ppm", // Not L10N
+                "37.4;+2.6 ppm|40.8;-20.7 ppm|33.2;+48 ppm|34.9;-40.9 ppm", // Not L10N
+                "37.5;-33.5 ppm|32.8;-6.7 ppm|34.1;-8.1 ppm|35.5;-20.4 ppm|36.0;+27.5 ppm|36.9;+2.5 ppm|38.8;+3.5 ppm|39.6;+59.8 ppm|42.0;-4.4 ppm", // Not L10N
+                "34.1;-9.7 ppm|36.1;+20.7 ppm|40.6;-22.1 ppm;(idotp 0.91)|38.2;+22.2 ppm;(idotp 0.83)", // Not L10N
+                "37.7;-9.5 ppm|34.1;-9.7 ppm|36.1;+20.7 ppm|40.8;+3.7 ppm", // Not L10N
+                "34.5;+11.1 ppm|35.3;+3 ppm|35.3;+7.3 ppm|37.5;-9.3 ppm|38.9;-36.4 ppm;(idotp 0.80)|36.5;+6.5 ppm|36.6;+2.3 ppm;(idotp 0.89)|39.4;-60.8 ppm|40.9;-22.5 ppm", // Not L10N
+                "35.7;+19.8 ppm|39.3;-17.7 ppm", // Not L10N
+                "35.3;+3 ppm|35.3;+7.3 ppm;(idotp 0.78)|38.9;-37.2 ppm;(idotp 0.65)|34.5;+24.3 ppm|36.8;+13.8 ppm|36.8;+8.1 ppm|37.3;+5 ppm;(idotp 0.71)|39.4;-23.3 ppm|41.1;-7.4 ppm", // Not L10N
+                "35.7;+19.8 ppm;(idotp 0.67)|38.4;+10.2 ppm;(idotp 0.54)", // Not L10N
+                "36.1;-6.2 ppm|37.3;-29.2 ppm|38.2;-19 ppm|38.5;-19 ppm|39.1;-1.7 ppm|39.9;-3.4 ppm|32.2;-10.9 ppm|34.3;-9.1 ppm|34.8;0 ppm", // Not L10N
+                "41.9;+13.1 ppm|37.5;-12.6 ppm|34.7;+21.7 ppm|32.5;+0.1 ppm|42.4;-6.5 ppm", // Not L10N
+                "35.9;-19.3 ppm|33.0;-55.7 ppm|39.5;-53.9 ppm", // Not L10N
                 "","","","","","","","","","","" // room to grow Not L10N
             };
 
@@ -343,13 +342,13 @@ namespace pwiz.SkylineTestTutorial
 
             // current TIB_L peak should have idotp .87 and ppm -6.9
             Assert.AreEqual(0.87, GetTransitionGroupChromInfo(TIB_L, pepIndex).IsotopeDotProduct ?? -1, .005);
-            Assert.AreEqual(-6.9, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
+            Assert.AreEqual(-10.6, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
 
             ChangePeakBounds(TIB_L,pepIndex,36.5,38.0);
 
             // now current TIB_L peak should have idotp .9 and ppm -6.5
             Assert.AreEqual(0.9, GetTransitionGroupChromInfo(TIB_L, pepIndex).IsotopeDotProduct ?? -1, .005);
-            Assert.AreEqual(-6.5, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
+            Assert.AreEqual(-9.2, GetTransitionChromInfo(TIB_L, pepIndex, 0).MassError ?? -1, .05);
             CheckAnnotations(TIB_L, pepIndex, atest++);
 
             var undoIndex = SkylineWindow.Document.RevisionIndex; // preserve for simulating ctrl-z
