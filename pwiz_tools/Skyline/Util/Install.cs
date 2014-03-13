@@ -18,7 +18,6 @@
  */
 using System;
 using System.Deployment.Application;
-using System.IO;
 using System.Reflection;
 
 namespace pwiz.Skyline.Util

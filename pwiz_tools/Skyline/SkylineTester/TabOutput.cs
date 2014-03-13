@@ -203,9 +203,6 @@ namespace SkylineTester
             var testFileLinePattern = text.Substring(lineNumberStart - fileLinePattern.Length, fileLinePattern.Length);
             if (testFileLinePattern != fileLinePattern)
                 return;
-            var dte = GetDTE();
-            if (dte == null)
-                return;
             var fileStart = text.LastIndexOf(" in ", lineNumberStart, StringComparison.CurrentCulture);
             if (fileStart < 0)
                 return;
@@ -213,11 +210,15 @@ namespace SkylineTester
             var file = text.Substring(fileStart, lineNumberStart - fileLinePattern.Length - fileStart);
             var lineNumberText = text.Substring(lineNumberStart, lineEnd - lineNumberStart);
 
+            var dte = GetDTE(file, lineNumberText);
+            if (dte == null)
+                return;
             try
             {
                 // Open in Visual Studio and go to the indicated line number.
                 dte.ExecuteCommand("File.OpenFile", file);
                 dte.ExecuteCommand("Edit.GoTo", lineNumberText);
+                ((TextSelection)dte.ActiveDocument.Selection).SelectLine();
 
                 // Bring Visual Studio to the foreground.
                 SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
@@ -237,10 +238,34 @@ namespace SkylineTester
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
         // from http://blogs.msdn.com/b/kirillosenkov/archive/2011/08/10/how-to-get-dte-from-visual-studio-process-id.aspx
-        public static DTE GetDTE()
+        public static DTE GetDTE(string file, string lineNumberText)
+        {
+            var dte = FindDTE(file);
+            if (dte != null)
+                return dte;
+
+            // Couldn't find an instance of Visual Studio with a solution containing this file.
+            // Try finding a Skyline solution we can use and open that one.
+            var parentDirectory = Path.GetDirectoryName(file);
+            while (parentDirectory != null)
+            {
+                var skylineSln = Path.Combine(parentDirectory, "Skyline.sln");
+                if (File.Exists(skylineSln))
+                {
+                    System.Diagnostics.Process.Start(
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe"),
+                        @"{0} {1} /command ""Edit.Goto {2}""".With(skylineSln, file, lineNumberText));
+                    return null;
+                }
+                parentDirectory = Path.GetDirectoryName(parentDirectory);
+            }
+
+            return null;
+        }
+
+        private static DTE FindDTE(string file)
         {
             const string id = "!VisualStudio.DTE.";
-            object runningObject = null;
 
             IBindCtx bindCtx = null;
             IRunningObjectTable rot = null;
@@ -272,8 +297,14 @@ namespace SkylineTester
 
                     if (!string.IsNullOrEmpty(name) && name.StartsWith(id, StringComparison.Ordinal))
                     {
+                        object runningObject;
                         Marshal.ThrowExceptionForHR(rot.GetObject(runningObjectMoniker, out runningObject));
-                        break;
+                        var dte = runningObject as DTE;
+                        if (dte != null && dte.Solution.FindProjectItem(file) != null)
+                        {
+                            Console.WriteLine(dte.Solution.FindProjectItem(file).Name);
+                            return dte;
+                        }
                     }
                 }
             }
@@ -287,7 +318,7 @@ namespace SkylineTester
                     Marshal.ReleaseComObject(bindCtx);
             }
 
-            return (DTE)runningObject;
+            return null;
         }
 
         public void ErrorSelectionChanged()
