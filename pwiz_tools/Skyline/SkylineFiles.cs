@@ -413,6 +413,10 @@ namespace pwiz.Skyline
             if (documentPath == null)
                 return null;
 
+            // Is the saved path correct?  Then just use that.
+            if (File.Exists(backgroundProteomeSpec.DatabasePath))
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath);
+
             string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
             // First look for the file name in the document directory
             string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
