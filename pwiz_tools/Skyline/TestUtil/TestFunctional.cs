@@ -368,8 +368,8 @@ namespace pwiz.SkylineTestUtil
 
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
-            WaitForProteinMetadataBackgroundLoaderCompleted(millis);  // make sure document is stable
             WaitForConditionUI(millis, () => SkylineWindow.DocumentUI.IsLoaded);
+            WaitForProteinMetadataBackgroundLoaderCompleted(millis);  // make sure document is stable
             return SkylineWindow.Document;
         }
 
