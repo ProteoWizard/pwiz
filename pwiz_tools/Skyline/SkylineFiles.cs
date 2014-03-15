@@ -1244,48 +1244,130 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                    try
-                    {
-                        using (new LongOp(this))
-                        {
-                            IFormatProvider provider;
-                            char sep;
-
-                            using (var readerLine = new StreamReader(dlg.FileName))
-                            {
-                                Type[] columnTypes;
-                                string line = readerLine.ReadLine();
-                                if (!MassListImporter.IsColumnar(line, out provider, out sep, out columnTypes))
-                                    throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
-                            }
-
-                            using (var readerList = new StreamReader(dlg.FileName))
-                            {
-                                ImportMassList(readerList, provider, sep, Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list);
-                            }
-                        }
-                    }
-                    catch (Exception x)
-                    {
-                        MessageBox.Show(string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__, dlg.FileName, x.Message));
-                    }
+                    ImportMassList(dlg.FileName);
                 }
+            }
+        }
+
+        public void ImportMassList(string fileName)
+        {
+            try
+            {
+                char sep;
+                IFormatProvider provider;
+                using (var readerLine = new StreamReader(fileName))
+                {
+                    Type[] columnTypes;
+                    string line = readerLine.ReadLine();
+                    if (!MassListImporter.IsColumnar(line, out provider, out sep, out columnTypes))
+                        throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                }
+
+                using (var readerList = new StreamReader(fileName))
+                {
+                    ImportMassList(readerList, provider, sep, Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list);
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__, fileName, x.Message));
             }
         }
 
         private void ImportMassList(TextReader reader, IFormatProvider provider, char separator, string description)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
-
-            IdentityPath selectPath = null;
-
-            // TODO: Support long wait dialog
-            ModifyDocument(description, doc => doc.ImportMassList(reader, null, -1, provider, separator,
-                nodePaste != null ? nodePaste.Path : null, out selectPath));
-
+            IdentityPath selectPath;
+            List<KeyValuePair<string, double>> irtPeptides;
+            bool irtsImported = false;
+            var docCurrent = DocumentUI;
+            var retentionTimeRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
+            bool calculatorMissing = retentionTimeRegression == null || retentionTimeRegression.Calculator as RCalcIrt == null;
+            var docNew = docCurrent.ImportMassList(reader, null, -1, provider, separator,
+                    nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides);
+            var dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, false, TimeSource.scan)).ToList();
+            var dbIrtPeptidesFilter = new List<DbIrtPeptide>();
+            // Filter out peptides that have the same sequence and iRT as those in the database
+            foreach (var dbIrtPeptide in dbIrtPeptides)
+            {
+                double? oldScore = calculatorMissing ? null : retentionTimeRegression.Calculator.ScoreSequence(dbIrtPeptide.PeptideModSeq);
+                if (oldScore == null || Math.Abs(oldScore.Value - dbIrtPeptide.Irt) > DbIrtPeptide.IRT_MIN_DIFF)
+                {
+                    dbIrtPeptidesFilter.Add(dbIrtPeptide);
+                }
+            }
+            // If there are no iRT peptides or none with different values than the database, don't import any iRT's
+            if (dbIrtPeptidesFilter.Any())
+            {
+                // Ask whether or not to include iRT peptides in the paste
+                string useIrtMessage = calculatorMissing
+                                        ? Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_
+                                        : Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_;
+                var useIrtResult = MultiButtonMsgDlg.Show(this, useIrtMessage,
+                                                          Resources.SkylineWindow_ImportMassList__Create___, Resources.SkylineWindow_ImportMassList__Skip, true);
+                if (useIrtResult == DialogResult.Cancel)
+                {
+                    return;
+                }
+                if (useIrtResult == DialogResult.Yes)
+                {
+                    if (calculatorMissing)
+                    {
+                        // If there is no iRT calculator, ask the user to create one
+                        using (CreateIrtCalculatorDlg dlg = new CreateIrtCalculatorDlg(docNew, Settings.Default.RTScoreCalculatorList))
+                        {
+                            if (dlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                docNew = dlg.Document;
+                                retentionTimeRegression = docNew.Settings.PeptideSettings.Prediction.RetentionTime;
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+                    }
+                    var calculator = retentionTimeRegression.Calculator as RCalcIrt;
+                    // ReSharper disable once PossibleNullReferenceException
+                    string dbPath = calculator.DatabasePath;
+                    IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+                    var oldPeptides = db.GetPeptides().ToList();
+                    IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
+                    DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, out conflicts);
+                    bool overwriteExisting = false;
+                    // Ask whether to keep or overwrite peptides that are present in the import and already in the database
+                    if (conflicts.Any())
+                    {
+                        string messageOverwrite = string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_,
+                                                                conflicts.Count);
+                        var overwriteResult = MultiButtonMsgDlg.Show(this,
+                            TextUtil.LineSeparate(messageOverwrite, conflicts.Count == 1
+                                ? Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_
+                                : Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_),
+                            Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite, true);
+                        if (overwriteResult == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                        overwriteExisting = overwriteResult == DialogResult.No;
+                    }
+                    docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, overwriteExisting);
+                    irtsImported = true;
+                }
+            }
+            ModifyDocument(description, doc =>
+            {
+                if (!ReferenceEquals(doc, docCurrent))
+                    throw new InvalidDataException(Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
+                return docNew;
+            });
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
+            if (irtsImported)
+            {
+                Settings.Default.RetentionTimeList.Add(Document.Settings.PeptideSettings.Prediction.RetentionTime);
+                Settings.Default.RTScoreCalculatorList.Add(Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
+            }
         }
 
         private void importDocumentMenuItem_Click(object sender, EventArgs e)

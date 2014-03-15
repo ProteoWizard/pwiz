@@ -2499,9 +2499,6 @@
   <data name="EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database" xml:space="preserve">
 <value>iRTデータベースを開く</value>
   </data>
-  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file" xml:space="preserve">
-<value>ファイル{0}がありません。[作成] ボタンをクリックして新しいデータベースを作成するか、[開く] ボタンをクリックして欠如しているファイルを検索します。</value>
-  </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator" xml:space="preserve">
 <value>iRTカルキュレータの名前を入力してください。</value>
   </data>

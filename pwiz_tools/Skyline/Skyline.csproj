@@ -480,6 +480,12 @@
     <Compile Include="FileUI\ExportChromatogramDlg.Designer.cs">
       <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\CreateIrtCalculatorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\CreateIrtCalculatorDlg.Designer.cs">
+      <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ManageResultsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1308,6 +1314,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.ja.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.resx">
+      <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChromatogramDlg.ja.resx">
       <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>

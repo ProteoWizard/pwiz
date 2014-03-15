@@ -2500,9 +2500,6 @@ Are you sure you want to continue?</value>
   <data name="EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database" xml:space="preserve">
     <value>Open iRT Database</value>
   </data>
-  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file" xml:space="preserve">
-    <value>The file {0} does not exist. Click the Create button to create a new database or the Open button to find the missing file.</value>
-  </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator" xml:space="preserve">
     <value>Please enter a name for the iRT calculator.</value>
   </data>
@@ -6225,5 +6222,85 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_" xml:space="preserve">
     <value>The first line does not contain any of the possible separators semicolon, tab or space.</value>
   </data>
+  <data name="SequenceMassCalc_NormalizeModifiedSequence_Modification_definition__0__missing_close_bracket_" xml:space="preserve">
+    <value>Modification definition {0} missing close bracket.</value>
+  </data>
+  <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
+    <value>The modification {0} is not valid.  Expected a numeric delta mass.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_" xml:space="preserve">
+    <value>Failed reading the file.  Peptide {0} matches an existing iRT standard peptide.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_BrowseDb_The_specified_file_is_not_a_valid_iRT_database_" xml:space="preserve">
+    <value>The specified file is not a valid iRT database.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_" xml:space="preserve">
+    <value>Cannot read the database file {0}.</value>
+  </data>
+  <data name="SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_" xml:space="preserve">
+    <value>Imported peptide {0} with iRT library value is already being used as an iRT standard.</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
+    <value>Two transitions of the same peptide, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list.</value>
+  </data>
+  <data name="SkylineWindow_Paste_Could_not_perform_transition_list_paste___0_" xml:space="preserve">
+    <value>Could not perform transition list paste: {0}</value>
+  </data>
+  <data name="MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_" xml:space="preserve">
+    <value>Invalid iRT value in column {0} on line {1}</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_" xml:space="preserve">
+    <value>Import Transition List (iRT standards)</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Failed_to_open_the_database_file___0_" xml:space="preserve">
+    <value>Failed to open the database file: {0}</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_" xml:space="preserve">
+    <value>Error reading iRT standards transition list: {0}</value>
+  </data>
+  <data name="SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides" xml:space="preserve">
+    <value>Must have an active iRT calculator to add iRT peptides.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Calculator_name_cannot_be_empty" xml:space="preserve">
+    <value>Calculator name cannot be empty.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
+    <value>iRT database field must contain a path to a valid file.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_" xml:space="preserve">
+    <value>iRT database field must not be empty.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
+    <value>Transition list field must contain a path to a valid file.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_A_calculator_with_that_name_already_exists___Do_you_want_to_replace_it_" xml:space="preserve">
+    <value>A calculator with that name already exists.  Do you want to replace it?</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_" xml:space="preserve">
+    <value>The transition list appears to contain iRT values, but the document does not have an iRT calculator.  Create a new calculator and add these iRT values?</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_" xml:space="preserve">
+    <value>The transition list appears to contain iRT library values.  Add these iRT values to the iRT calculator?</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_" xml:space="preserve">
+    <value>The iRT calculator already contains {0} of the imported peptides.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_" xml:space="preserve">
+    <value>Keep the existing iRT value or overwrite with the imported value?</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_" xml:space="preserve">
+    <value>Keep the existing iRT values or overwrite with imported values?</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Keep" xml:space="preserve">
+    <value>&amp;Keep</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Overwrite" xml:space="preserve">
+    <value>&amp;Overwrite</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Create___" xml:space="preserve">
+    <value>&amp;Create...</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
+    <value>&amp;Skip</value>
+  </data>
 </root>
-

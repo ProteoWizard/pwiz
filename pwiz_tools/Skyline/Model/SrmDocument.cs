@@ -793,16 +793,51 @@ namespace pwiz.Skyline.Model
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,
             IdentityPath to, out IdentityPath firstAdded)
         {
-            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded);
+            List<KeyValuePair<string, double>> irtPeptides;
+            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides);
         }
 
         public SrmDocument ImportMassList(TextReader reader, ILongWaitBroker longWaitBroker, long lines,
-            IFormatProvider provider, char separator, IdentityPath to, out IdentityPath firstAdded)
+            IFormatProvider provider, char separator, IdentityPath to, out IdentityPath firstAdded, out List<KeyValuePair<string, double>> irtPeptides)
         {
             MassListImporter importer = new MassListImporter(this, provider, separator);
             IdentityPath nextAdd;
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), false,
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines, out irtPeptides), false,
                 to, out firstAdded, out nextAdd);
+        }
+
+        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting)
+        {
+            var retentionTimeRegression = Settings.PeptideSettings.Prediction.RetentionTime;
+            if (retentionTimeRegression == null || retentionTimeRegression.Calculator as RCalcIrt == null)
+            {
+                throw new InvalidDataException(Resources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
+            }
+            var calculator = retentionTimeRegression.Calculator as RCalcIrt;
+            string dbPath = calculator.DatabasePath;
+            IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+            var oldPeptides = db.GetPeptides().Select(p => new DbIrtPeptide(p)).ToList();
+            IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
+            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, out conflicts);
+            foreach (var conflict in conflicts)
+            {
+                // If old and new peptides are a library entry and a standards entry, throw an error
+                // The same peptide must not appear in both places
+                if (conflict.Item1.Standard ^ conflict.Item2.Standard)
+                {
+                    throw new InvalidDataException(string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
+                                                    conflict.Item1.PeptideModSeq));
+                }
+            }
+            // Peptides that were already present in the database can be either kept or overwritten 
+            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.Item1  : conflict.Item2));
+            db = db.UpdatePeptides(peptidesCombined, oldPeptides);
+            calculator = calculator.ChangeDatabase(db);
+            retentionTimeRegression = retentionTimeRegression.ChangeCalculator(calculator);
+            var srmSettings = Settings.ChangePeptidePrediction(pred => pred.ChangeRetentionTime(retentionTimeRegression));
+            if (ReferenceEquals(srmSettings, Settings))
+                return this;
+            return ChangeSettings(srmSettings);
         }
 
         public SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew,

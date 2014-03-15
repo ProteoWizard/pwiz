@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 
@@ -77,6 +78,36 @@ namespace pwiz.Skyline.Model.Irt
             Standard = standard;
             TimeSource = timeSource;
         }
+
+        public static List<DbIrtPeptide> FindNonConflicts(IList<DbIrtPeptide> oldPeptides, IList<DbIrtPeptide> newPeptides, out IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts)
+        {
+            var peptidesNoConflict = new List<DbIrtPeptide>();
+            conflicts = new List<Tuple<DbIrtPeptide, DbIrtPeptide>>();
+            var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
+            var dictNew = newPeptides.ToDictionary(pep => pep.PeptideModSeq);
+            foreach (var newPeptide in newPeptides)
+            {
+                DbIrtPeptide oldPeptide;
+                // A conflict occurs only when there is another peptide of the same sequence, and different iRT
+                if (!dictOld.TryGetValue(newPeptide.PeptideModSeq, out oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
+                {
+                    peptidesNoConflict.Add(newPeptide);
+                }
+                else
+                {
+                    conflicts.Add(new Tuple<DbIrtPeptide, DbIrtPeptide>(newPeptide, oldPeptide));
+                }
+            }
+            foreach (var oldPeptide in oldPeptides)
+            {
+                DbIrtPeptide newPeptide;
+                if (!dictNew.TryGetValue(oldPeptide.PeptideModSeq, out newPeptide))
+                    peptidesNoConflict.Add(oldPeptide);
+            }
+            return peptidesNoConflict;
+        }
+
+        public const double IRT_MIN_DIFF = 0.001;
 
         #region object overrides
 
