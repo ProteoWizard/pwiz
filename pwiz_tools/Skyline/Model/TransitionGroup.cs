@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -156,7 +157,10 @@ namespace pwiz.Skyline.Model
             if (!useFilter)
             {
                 pick = TransitionLibraryPick.all;
-                charges = Transition.ALL_CHARGES;
+                var listAll = Transition.ALL_CHARGES.ToList();
+                listAll.AddRange(charges.Where(c => !Transition.ALL_CHARGES.Contains(c)));
+                listAll.Sort();
+                charges = listAll.ToArray();
                 types = Transition.ALL_TYPES;
             }
             // If there are no libraries or no library information, then
