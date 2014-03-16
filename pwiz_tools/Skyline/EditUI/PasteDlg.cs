@@ -512,8 +512,8 @@ namespace pwiz.Skyline.EditUI
                 {
                     fastaSequence = new FastaSequence(fastaSequence.Name, description, fastaSequence.Alternatives, fastaSequence.Sequence);
                 }
-                var nodeGroupPep = new PeptideGroupDocNode(fastaSequence, fastaSequence.Name,
-                    fastaSequence.Description, new PeptideDocNode[0]);
+                pastedMetadata = pastedMetadata.ChangeName(fastaSequence.Name).ChangeDescription(fastaSequence.Description);  // Make sure these agree
+                var nodeGroupPep = new PeptideGroupDocNode(fastaSequence, pastedMetadata, new PeptideDocNode[0]);
                 nodeGroupPep = nodeGroupPep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
                 var to = selectedPath;
                 if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
@@ -853,6 +853,7 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
+                row.Cells[colProteinName.Index].Value = fastaSequence.Name; // Possibly the search was actually on accession, gene etc
                 row.Cells[colProteinDescription.Index].Value = fastaSequence.Description;
                 row.Cells[colProteinSequence.Index].Value = fastaSequence.Sequence;
                 row.Cells[colProteinPreferredName.Index].Value = (metadata == null) ? null : metadata.PreferredName;
@@ -1102,6 +1103,11 @@ namespace pwiz.Skyline.EditUI
                     e.Handled = true;
                 }
             }
+        }
+
+        public void PasteFasta()  // For functional test use
+        {
+            tbxFasta.Text = ClipboardEx.GetText();
         }
 
         public void PasteProteins()

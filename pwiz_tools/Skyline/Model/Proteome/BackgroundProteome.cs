@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model.Proteome
             DigestionNames = new HashSet<string>();
             if (!IsNone)
             {
+                NeedsProteinMetadataSearch = true; // Until proven otherwise
                 try
                 {
                     using (var proteomeDb = OpenProteomeDb())

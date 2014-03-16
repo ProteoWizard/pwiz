@@ -53,30 +53,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var buildBackgroundProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(
-                peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
-            string protdbPath = TestFilesDir.GetTestPath(_backgroundProteomeName + ProteomeDb.EXT_PROTDB);
-            RunUI(() =>
-                {
-                    buildBackgroundProteomeDlg.BuildNew = true;
-                    buildBackgroundProteomeDlg.BackgroundProteomeName = _backgroundProteomeName;
-                    buildBackgroundProteomeDlg.BackgroundProteomePath = protdbPath;
-                    buildBackgroundProteomeDlg.AddFastaFile(TestFilesDir.GetTestPath("celegans_mini.fasta"));
-                });
-            OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
-            RunUI(() =>
-                {
-                    peptideSettingsUI.MissedCleavages = 3;
-                });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            // Wait until proteome digestion is done
-            WaitForCondition(100*1000, () =>
-            {
-                var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
-                var backgroundProteome = peptideSettings.BackgroundProteome;
-                return backgroundProteome.HasDigestion(peptideSettings);
-            });
+            var protdbPath = TestFilesDir.GetTestPath(_backgroundProteomeName + ProteomeDb.EXT_PROTDB);
+            CreateBackgroundProteome(protdbPath, _backgroundProteomeName, TestFilesDir.GetTestPath("celegans_mini.fasta"));
             WaitForProteinMetadataBackgroundLoaderCompleted();
 
             RunUI(() =>
@@ -97,8 +75,6 @@ namespace pwiz.SkylineTestFunctional
                     sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK";    // Not L10N
 // ReSharper restore LocalizableElement
                 });
-            WaitForProteinMetadataBackgroundLoaderCompleted();
-            // TODO: bspratt Add protein metadata statement completion test
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);
 
@@ -134,6 +110,31 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
                 dlg => dlg.CancelDialog());
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+        }
+
+        public static void CreateBackgroundProteome(string protdbPath, string basename, string fastaFilePath)
+        {
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var buildBackgroundProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(
+                peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
+            RunUI(() =>
+            {
+                buildBackgroundProteomeDlg.BuildNew = true;
+                buildBackgroundProteomeDlg.BackgroundProteomeName = basename;
+                buildBackgroundProteomeDlg.BackgroundProteomePath = protdbPath;
+                buildBackgroundProteomeDlg.AddFastaFile(fastaFilePath);
+            });
+            OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
+            RunUI(() => { peptideSettingsUI.MissedCleavages = 3; });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            // Wait until proteome digestion is done
+            WaitForCondition(100*1000, () =>
+            {
+                var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
+                var backgroundProteome = peptideSettings.BackgroundProteome;
+                return backgroundProteome.HasDigestion(peptideSettings) &&
+                    !backgroundProteome.NeedsProteinMetadataSearch;
+            });
         }
     }
 }

@@ -162,7 +162,11 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Converts columnar data into FASTA format
+        /// Converts columnar data into FASTA format.  
+        /// Assumes either:
+        ///   Name multicolumnDescription Sequence
+        /// or:
+        ///   Name Description Sequence otherColumns
         /// </summary>
         /// <param name="text">Text string containing columnar data</param>
         /// <param name="separator">Column separator</param>
@@ -179,14 +183,20 @@ namespace pwiz.Skyline.Model
                 string[] columns = line.Split(separator);
                 if (columns.Length < 2)
                     throw new LineColNumberedIoException(Resources.FastaImporter_ToFasta_Too_few_columns_found, lineNum, -1);
-                int lastCol = columns.Length - 1;
-                string seq = columns[lastCol].Trim();
+                int fastaCol = columns.Length - 1;  // Start with assumption of Name Description Sequence
+                string seq = columns[fastaCol].Trim();
+                if ((fastaCol > 2) && (!FastaSequence.IsExSequence(seq)))
+                {
+                    // Possibly from PasteDlg, form of Name Description Sequence Accession PreferredName Gene Species
+                    fastaCol = 2;  
+                    seq = columns[fastaCol].Trim();
+                }
                 if (!FastaSequence.IsExSequence(seq))
                     throw new LineColNumberedIoException(
                         Resources.FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence, lineNum,
-                        lastCol);
+                        fastaCol);
                 sb.Append(">").Append(columns[0].Trim().Replace(" ", "_")); // ID // Not L10N
-                for (int i = 1; i < lastCol; i++)
+                for (int i = 1; i < fastaCol; i++)
                     sb.Append(" ").Append(columns[i].Trim()); // Description // Not L10N                    
                 sb.AppendLine();
                 sb.AppendLine(seq); // Sequence

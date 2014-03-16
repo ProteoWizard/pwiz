@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -125,6 +126,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             var docPaste = WaitForDocumentChange(document);
             Assert.AreEqual(document.PeptideGroupCount + 3, docPaste.PeptideGroupCount);
+            Assert.AreEqual("P23978", docPaste.PeptideGroups.Last().ProteinMetadata.Accession);  // Did builtin IPI conversion work?
 
             // Paste an invalid protein list
             RunDlg<MessageDlg>(() =>

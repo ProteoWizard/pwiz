@@ -83,9 +83,9 @@ namespace pwiz.ProteomeDatabase.API
             return new ProteinMetadata(this){Species = species};
         }
 
-        public ProteinMetadata ChangeWebSearchInfo(WebSearchInfo WebSearchinfo)
+        public ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
         {
-            return new ProteinMetadata(this) { WebSearchInfo = WebSearchinfo };
+            return new ProteinMetadata(this) { WebSearchInfo = webSearchInfo };
         }
 
         public ProteinMetadata ClearWebSearchInfo()

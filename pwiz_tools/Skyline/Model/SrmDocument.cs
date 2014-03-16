@@ -460,7 +460,7 @@ namespace pwiz.Skyline.Model
 
         private void CheckIsProteinMetadataComplete()
         {
-            var unsearched = (from pg in PeptideGroups where pg.ProteinMetadata.NeedsSearch() select pg).ToArray();
+            var unsearched = (from pg in PeptideGroups where pg.ProteinMetadata.NeedsSearch() select pg);
             IsProteinMetadataPending = unsearched.Any();
         }
 

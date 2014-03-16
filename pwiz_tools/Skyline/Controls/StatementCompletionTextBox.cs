@@ -415,9 +415,16 @@ namespace pwiz.Skyline.Controls
             protein,
             peptide,
         }
+
+        /// <summary>
+        /// Create the ordered list of dropdown items, with a rational sort order:
+        ///   First present any sequence matches, sorted by sequence
+        ///   Then present any name, accession, gene, preferredname, or species metadata matches, sorted by the matched metadata field
+        ///   Then present any matches against the description field, sorted by the description text starting at the match location
+        /// </summary>
         public static IList<ListViewItem> CreateListViewItems(IList<ProteinMatch> matches, String searchText, ProteinMatchType matchTypes, int maxCount)
         {
-            var listItems = new List<ListViewItem>();
+            var listItems = new SortedList<string,ListViewItem>();
             var listUsedMatches = new List<string>();
 
             // First check for matching by sequence
@@ -438,28 +445,31 @@ namespace pwiz.Skyline.Controls
                                                          },
                                            };
                         StatementCompletionForm.AddDescription(listItem,
-                                                               match.Protein.ProteinMetadata.MatchTypeValue(matchTypes), 
+                                                               match.Protein.ProteinMetadata.TextForMatchTypes(matchTypes), 
                                                                null);
                         listUsedMatches.Add(match.Protein.Name);
                         listItem.ImageIndex = (int) ImageId.peptide;
                         var tooltip = new StringBuilder();
                         tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
-                               .Append(match.Protein.ProteinMetadata.MatchTypeValue(matchTypes));
+                               .Append(match.Protein.ProteinMetadata.TextForMatchTypes(matchTypes));
                         foreach (var name in match.Protein.AlternativeNames)
                         {
-                            tooltip.AppendLine().Append(name.MatchTypeValue(matchTypes));
+                            tooltip.AppendLine().Append(name.TextForMatchTypes(matchTypes));
                         }
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
-                        listItems.Add(listItem);
+                        // Note the leading space in this sort key - we'd like to list sequence matches first
+                        var key = TextUtil.SpaceSeparate(" ", listItem.Text, listItem.ToolTipText); // Not L10N
+                        if (!listItems.ContainsKey(key))
+                            listItems.Add(key, listItem);
                     }
                 }
             }
             if (listItems.Count >= maxCount)
             {
-                return listItems;  // We used to exit here if we had any matches - but that's frustrating when you're not actually trying to match by sequence
+                return new List<ListViewItem>(listItems.Values);  // We used to exit here if we had any matches - but that's frustrating when you're not actually trying to match by sequence
             }
 
-            // decide which fields to display on righthand side, based on what's already showing on the left due to View|Targets|By* menu
+            // Decide which field not to display on righthand side, based on what's already showing on the left due to View|Targets|By* menu
             ProteinMatchType displayMatchType = ProteinMatchType.all;
             switch (SequenceTree.ProteinsDisplayMode)
             {
@@ -495,37 +505,39 @@ namespace pwiz.Skyline.Controls
                             listItem.Text = PeptideGroupTreeNode.ProteinModalDisplayText(match.AlternativeName, Settings.Default.ShowPeptidesDisplayMode);
                             listItem.Tag = new StatementCompletionItem {ProteinInfo = match.AlternativeName, SearchText = searchText};
                             StatementCompletionForm.AddDescription(listItem,
-                                match.AlternativeName.MatchTypeValue(displayMatchType & ~ProteinMatchType.name), null);
+                                match.AlternativeName.TextForMatchTypes(displayMatchType & ~ProteinMatchType.name), searchText);
                         }
                         else
                         {
                             listItem.Text = PeptideGroupTreeNode.ProteinModalDisplayText(match.Protein.ProteinMetadata, Settings.Default.ShowPeptidesDisplayMode);
                             listItem.Tag = new StatementCompletionItem { ProteinInfo = match.Protein.ProteinMetadata, SearchText = searchText };
                             StatementCompletionForm.AddDescription(listItem,
-                                match.Protein.ProteinMetadata.MatchTypeValue(displayMatchType),
-                                searchText);
+                                match.Protein.ProteinMetadata.TextForMatchTypes(displayMatchType), searchText);
                         }
                         listUsedMatches.Add(match.Protein.Name);
                         listItem.ImageIndex = (int) ImageId.protein;
                         var tooltip = new StringBuilder();
                         tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
-                            .Append(match.Protein.ProteinMetadata.MatchTypeValue(displayMatchType));
+                            .Append(match.Protein.ProteinMetadata.TextForMatchTypes(displayMatchType));
                         foreach (var altName in match.Protein.AlternativeNames)
                         {
-                            tooltip.AppendLine().Append(altName.MatchTypeValue(displayMatchType));
+                            tooltip.AppendLine().Append(altName.TextForMatchTypes(displayMatchType));
                         }
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
-                        listItems.Add(listItem);
+                        // We want the sort to be on the particular bit of metadata that we matched
+                        var key = TextUtil.SpaceSeparate(match.Protein.ProteinMetadata.TextForMatchTypes(tryType), listItem.Text, listItem.ToolTipText);
+                        if (!listItems.ContainsKey(key))
+                            listItems.Add(key, listItem);
                         break;  
                     }
                 }
             }
             if (listItems.Count >= maxCount)
             {
-                return listItems; // We used to exit here if we had any matches - but that may not tell the whole story
+                return new List<ListViewItem>(listItems.Values);  // We used to exit here if we had any matches - but that's frustrating when you're not actually trying to match by sequence
             }
 
-            // any matches by description?
+            // Any matches by description?
             foreach (var match in matches)
             {
                 if ((0 != (match.MatchType & ProteinMatchType.description)) &&
@@ -533,7 +545,7 @@ namespace pwiz.Skyline.Controls
                 {
                     ProteinMetadata mainName = match.AlternativeDescription;
                     string matchName = match.Protein.Name;
-                    var proteinInfo = match.Protein.ProteinMetadata; // has match name,description,accession etc
+                    var proteinInfo = match.Protein.ProteinMetadata;
                     if (matchName.Length > MAX_NAME_LENGTH)
                         proteinInfo = proteinInfo.ChangeName(matchName.Substring(0, MAX_NAME_LENGTH) + "..."); // Not L10N
                     var alternativeNames = new List<ProteinMetadata>();
@@ -552,7 +564,7 @@ namespace pwiz.Skyline.Controls
                                            Tag = new StatementCompletionItem { ProteinInfo = proteinInfo, SearchText = searchText }
                                        };
 
-                    StatementCompletionForm.AddDescription(listItem, mainName.MatchTypeValue(displayMatchType), searchText);
+                    StatementCompletionForm.AddDescription(listItem, mainName.TextForMatchTypes(displayMatchType), searchText);
                     if (match.Protein.AlternativeNames.Count > 0)
                     {
                         alternativeNames.AddRange(match.Protein.AlternativeNames);
@@ -564,15 +576,22 @@ namespace pwiz.Skyline.Controls
                                 continue;
                             }
 
-                            tooltip.AppendLine().Append(altName.MatchTypeValue(displayMatchType | ProteinMatchType.name));
+                            tooltip.AppendLine().Append(altName.TextForMatchTypes(displayMatchType | ProteinMatchType.name));
                         }
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
                     }
-                    listItems.Add(listItem);
+                    // We want the sort to be on what we matched in the description, and what follows.
+                    var remains = match.Protein.ProteinMetadata.Description;
+                    int pos = remains.ToLower().IndexOf(searchText.ToLower(), StringComparison.Ordinal);
+                    if (pos > 0)
+                        remains = remains.Substring(pos);
+                    var key = TextUtil.SpaceSeparate(remains, listItem.Text, listItem.ToolTipText);
+                    if (!listItems.ContainsKey(key))
+                        listItems.Add(key, listItem);
                 }
 
             }
-            return listItems;
+            return new List<ListViewItem>(listItems.Values);
         }
         public static IList<ProteinMatch> RefineMatches(IEnumerable<ProteinMatch> matches, ProteinMatchSettings settings)
         {

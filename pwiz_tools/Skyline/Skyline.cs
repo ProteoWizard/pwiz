@@ -1135,7 +1135,7 @@ namespace pwiz.Skyline
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
                     ImportMassList(new StringReader(text), provider, separator, Resources.SkylineWindow_Paste_Paste_transition_list);
-                else if (columnTypes.Length > 0 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence))
+                else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)) // Name, Description, Sequence
                 {
                     var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
                                                         Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
@@ -1811,6 +1811,11 @@ namespace pwiz.Skyline
         }
 
         private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPasteFastaDlg();
+        }
+
+        public void ShowPasteFastaDlg()  // Expose for test access
         {
             using (var pasteDlg = new PasteDlg(this)
             {

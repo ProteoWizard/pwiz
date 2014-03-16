@@ -1383,6 +1383,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ShareListDlg.ja.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
@@ -1460,6 +1461,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditListDlg.ja.resx">
       <DependentUpon>EditListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.ja.resx">
       <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>

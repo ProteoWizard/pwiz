@@ -6176,9 +6176,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome" xml:space="preserve">
     <value>Resolving protein details for {0} proteome</value>
   </data>
-  <data name="ProteinMetadata__none_" xml:space="preserve">
-    <value>&lt;none&gt;</value>
-  </data>
   <data name="SkylineWindow_sortProteinsByAccessionToolStripMenuItem_Click_Sort_proteins_by_accession" xml:space="preserve">
     <value>Sort proteins by accession</value>
   </data>
@@ -6302,5 +6299,8 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
     <value>&amp;Skip</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ProteinModalDisplayText__name___0__" xml:space="preserve">
+    <value>&lt;name: {0}&gt;</value>
   </data>
 </root>

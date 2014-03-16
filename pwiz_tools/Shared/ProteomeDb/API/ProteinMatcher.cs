@@ -120,6 +120,8 @@ namespace pwiz.ProteomeDatabase.API
         }
 
         public int MaxResults { get; private set; }
+        public const int MIN_FREE_SEARCH_LENGTH = 3; // below this search text length we only match metadata beginnings, and not species or description at all
+
 //        public Action<ProteinMatchQuery> Callback { get; private set; }
         public void BeginExecute(Action<ProteinMatchQuery> callback)
         {
@@ -290,38 +292,33 @@ namespace pwiz.ProteomeDatabase.API
                             .SetParameter("end", NextString(truncatedSearchText)); // Not L10N
                         AddProteinMatches(query);
                     }
-                    if (_matches != null)
-                    {
-                        return;
-                    }
 
-                    // scan through name, accession etc - do sequence and description elsewhere
-                    for (int bit = 1; bit < (int) ProteinMatchType.all; bit = bit << 1)
+                    if ((_matches == null) || (_matches.Count < MaxResults))
                     {
-                        ProteinMatchType matchType = (ProteinMatchType) bit;
-                        if ((0==(matchType & (ProteinMatchType.description|ProteinMatchType.sequence))) &&
-                            (0 != (Settings.MatchTypes & matchType)))
+                        string pattern =  "%" + Settings.SearchText + "%"; // Not L10N
+                        ProteinMatchType unwantedMatchTypes = ProteinMatchType.sequence; // Don't search on sequence again
+                        if (Settings.SearchText.Length < MIN_FREE_SEARCH_LENGTH)
                         {
-                            String hql = "SELECT distinct pn.Protein FROM " + typeof(DbProteinName) + " pn " // Not L10N
-                                         + String.Format("\nWHERE pn.{0} >= :start AND pn.{0} < :end",ProteinMatchTypeDbFieldName(matchType)) // Not L10N
-                                         + "\nORDER BY pn.IsPrimary DESC, pn.Name"; // Not L10N
-                            IQuery query = _session.CreateQuery(hql)
-                                .SetParameter("start", Settings.SearchText) // Not L10N
-                                .SetParameter("end", NextString(Settings.SearchText)); // Not L10N
-                            AddProteinMatches(query);
+                            // That could cast a pretty wide net - only match to beginning of keywords, and not to description or species
+                            pattern = Settings.SearchText + "%"; // Not L10N
+                            unwantedMatchTypes |= (ProteinMatchType.description | ProteinMatchType.species);
                         }
-                    }
-                    if (_matches != null)
-                    {
-                        return;
-                    }
-                    if (0 != (Settings.MatchTypes & ProteinMatchType.description) && Settings.SearchText.Length >= 3) // TODO bspratt match accession, etc
-                    {
+
+                        var exprLike = new List<string>();
+                        for (int bit = 1; bit < (int)ProteinMatchType.all; bit = bit << 1)
+                        {
+                            ProteinMatchType matchType = (ProteinMatchType)bit;
+                            if ((0 == (matchType & unwantedMatchTypes)) &&
+                                (0 != (Settings.MatchTypes & matchType)))
+                            {
+                                exprLike.Add(String.Format("pn.{0} LIKE :expr", ProteinMatchTypeDbFieldName(matchType)));  // Not L10N
+                            }
+                        }
+
                         String hql = "SELECT distinct pn.Protein FROM " + typeof(DbProteinName) + " pn " // Not L10N
-                                     + "\nWHERE pn.Name LIKE :expr OR pn.Description LIKE :expr" // Not L10N
-                                     + "\nORDER by pn.IsPrimary DESC, pn.Name"; // Not L10N
-                        IQuery query = _session.CreateQuery(hql)
-                            .SetParameter("expr", "%" + Settings.SearchText + "%"); // Not L10N
+                                        + String.Format("\nWHERE {0}", String.Join(" OR ", exprLike)) // Not L10N
+                                        + "\nORDER BY pn.IsPrimary DESC, pn.Name"; // Not L10N
+                        IQuery query = _session.CreateQuery(hql).SetParameter("expr", pattern); // Not L10N
                         AddProteinMatches(query);
                     }
                 }
@@ -343,13 +340,14 @@ namespace pwiz.ProteomeDatabase.API
         {
             Settings = proteinMatchSettings;
             Protein = protein;
-            for (int bit=1; bit < (int)ProteinMatchType.all; bit <<= 1) // name, accession, gene, etc
+            String ltext = proteinMatchSettings.SearchText.ToLower();
+            for (int bit = 1; bit < (int)ProteinMatchType.all; bit <<= 1) // name, accession, gene, etc - case insenstive
             {
                 ProteinMatchType matchType = (ProteinMatchType) bit;
                 if ((0 != (proteinMatchSettings.MatchTypes & matchType)) && 
                     (0==(matchType &(ProteinMatchType.sequence|ProteinMatchType.description)))) // handle sequence and description below
                 {
-                    if (protein.ProteinMetadata.MatchTypeValue(matchType).StartsWith(proteinMatchSettings.SearchText))
+                    if (protein.ProteinMetadata.TextForMatchTypes(matchType).ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
                     {
                         MatchType |= matchType;
                     }
@@ -357,7 +355,7 @@ namespace pwiz.ProteomeDatabase.API
                     {
                         foreach (ProteinMetadata alternative in Protein.AlternativeNames)
                         {
-                            if (alternative.MatchTypeValue(matchType).StartsWith(proteinMatchSettings.SearchText))
+                            if (alternative.TextForMatchTypes(matchType).ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
                             {
                                 MatchType |= matchType;
                                 AlternativeName = alternative;
@@ -366,22 +364,21 @@ namespace pwiz.ProteomeDatabase.API
                         }
                     }
                 }
-                
             }
-            if (0 != (proteinMatchSettings.MatchTypes & ProteinMatchType.description)) 
+            if ((MatchType == 0) && // Don't bother declaring a description match if we already have a more specific one (name, accession etc)
+                (0 != (proteinMatchSettings.MatchTypes & ProteinMatchType.description))) 
             {
-                String ltext = proteinMatchSettings.SearchText.ToLower();
                 if (protein.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
                     protein.Name.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
                 {
-                    MatchType |= ProteinMatchType.description;
+                       MatchType |= ProteinMatchType.description;
                 }
                 else
                 {
                     foreach (ProteinMetadata alternative in Protein.AlternativeNames)
                     {
-                        if (alternative.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
-                            alternative.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)  // TODO bspratt ask Nick why twice?
+                        if (alternative.Name.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
+                            alternative.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
                         {
                             MatchType |= ProteinMatchType.description;
                             AlternativeDescription = alternative;
@@ -427,7 +424,7 @@ namespace pwiz.ProteomeDatabase.API
 
     public static class ProteinMatchTypeExtension
     {
-        public static string MatchTypeValue(this ProteinMetadata p, ProteinMatchType type)
+        public static string TextForMatchTypes(this ProteinMetadata p, ProteinMatchType type)
         {
             if (type == ProteinMatchType.sequence)
                 return null;

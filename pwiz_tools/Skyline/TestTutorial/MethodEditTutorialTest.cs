@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Protein Description Auto-Completion
             PauseForScreenShot("(fig. 2): For screenshot, click at bottom of document tree, type 'eft2' and see the autocomplete text, then down-arrow twice. Make sure to undo this new entry before proceeding.", 20); // Not L10N
-            TestAutoComplete("eft2", 1); // Not L10N
+            TestAutoComplete("eft2", 0); // Sorting logic puts this at the 0th entry in the list - Not L10N
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 

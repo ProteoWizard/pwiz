@@ -51,7 +51,7 @@ namespace pwiz.ProteomeDatabase.API
         public const int MIN_SEQUENCE_LENGTH = 4;
         public const int MAX_SEQUENCE_LENGTH = 7;
         private DatabaseResource _databaseResource;
-        private bool _isTmp; // We won't hang onto the global session factory if we know we're temporary
+        private readonly bool _isTmp; // We won't hang onto the global session factory if we know we're temporary
         private ProteomeDb(String path, bool isTmp)
         {
             _schemaVersionMajor = -1; // unknown

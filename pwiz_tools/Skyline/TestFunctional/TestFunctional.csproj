@@ -171,7 +171,8 @@
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
-    <Compile Include="ProteinMetadataTest.cs" />
+    <Compile Include="ProteinMetadataFunctionalTest.cs" />
+    <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
@@ -225,6 +226,10 @@
       <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
       <Name>ZedGraph</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CommonTest\CommonTest.csproj">
+      <Project>{3F077244-13E5-4815-BA55-31F030042E06}</Project>
+      <Name>CommonTest</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
@@ -256,7 +261,8 @@
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="PrecursorTest.zip" />
-    <None Include="ProteinMetadataTest.zip" />
+    <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
+    <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />

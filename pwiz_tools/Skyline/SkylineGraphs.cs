@@ -972,7 +972,8 @@ namespace pwiz.Skyline
 
         private void graphSpectrum_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowSpectra = _graphSpectrum.Visible;
+            if (_graphSpectrum != null)
+                Settings.Default.ShowSpectra = _graphSpectrum.Visible;
         }
 
         private void graphSpectrum_FormClosed(object sender, FormClosedEventArgs e)

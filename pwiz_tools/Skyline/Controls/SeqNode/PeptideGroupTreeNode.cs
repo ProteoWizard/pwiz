@@ -124,18 +124,23 @@ namespace pwiz.Skyline.Controls.SeqNode
                 default:
                     return metadata.Name;  
             }
+
+            // If the desired field is not populated because it's not yet searched, say so
             if (metadata.NeedsSearch())
                 return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
+
+            // If the desired field is not populated, return something like "<name: YAL01234>"
+            var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, metadata.Name);
             switch (displayProteinsMode)
             {
                 case ProteinDisplayMode.ByAccession:
-                    return metadata.Accession ?? Resources.ProteinMetadata__none_;
+                    return metadata.Accession ?? failsafe;
                 case ProteinDisplayMode.ByPreferredName:
-                    return metadata.PreferredName ?? Resources.ProteinMetadata__none_;
+                    return metadata.PreferredName ?? failsafe;
                 case ProteinDisplayMode.ByGene:
-                    return metadata.Gene ?? Resources.ProteinMetadata__none_;
+                    return metadata.Gene ?? failsafe;
             }
-            return metadata.Name; // failsafe
+            return failsafe;
         }
 
         #region IChildPicker Members

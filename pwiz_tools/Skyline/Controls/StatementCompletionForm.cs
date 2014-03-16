@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -49,9 +50,6 @@ namespace pwiz.Skyline.Controls
         public int MaxDisplayItems { get; set; }
         public int TitleWidth { get; set; }
 
-        private const string X80 =
-            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Not L10N
-
         /// <summary>
         /// Resizes the form so that it is just wide enough to show the list items.
         /// </summary>
@@ -62,10 +60,8 @@ namespace pwiz.Skyline.Controls
             int dxRequired = 0;
             const int dxIcon = 32;
             int dxAvailable = screenRect.Width;
-            dxAvailable = Math.Min(dxAvailable, MaxWidth);
             int dxTitle = 0;
-            int dxDescMax = TextRenderer.MeasureText(X80, ListView.Font).Width;
-            using (var titleFont = CreateListViewWorstCaseWidthFont())
+            using (var titleFont = CreateListViewFont())
             {
                 foreach (ListViewItem item in ListView.Items)
                 {
@@ -75,7 +71,7 @@ namespace pwiz.Skyline.Controls
                     dxTitle = Math.Max(dxTitle, dxItem);
                     dxItem += dxIcon;
                     var description = GetDescription(item) ?? string.Empty;
-                    dxItem += Math.Min(dxDescMax, TextRenderer.MeasureText(description, ListView.Font).Width);
+                    dxItem += TextRenderer.MeasureText(description, ListView.Font).Width;
                     dxRequired = Math.Max(dxRequired, dxItem);
                 }
             }
@@ -108,9 +104,9 @@ namespace pwiz.Skyline.Controls
             columnName.Width = Size.Width - 2 - columnDelta;
         }
 
-        private Font CreateListViewWorstCaseWidthFont()
+        private Font CreateListViewFont()
         {
-            return new Font(ListView.Font, FontStyle.Bold);
+            return new Font(ListView.Font, FontStyle.Regular);
         }
 
         /// <summary>
@@ -150,7 +146,7 @@ namespace pwiz.Skyline.Controls
                 var descriptionBounds = new Rectangle(
                     titleBounds.Right, textBounds.Top,
                     textBounds.Right - titleBounds.Right, textBounds.Height);
-                DrawWithHighlighting(description, GetHighlightedText(item) ?? string.Empty,
+                DrawWithHighlighting(description, GetDescriptionHighlightedText(item) ?? string.Empty,
                     graphics, descriptionBounds, textColor, backColor);
             }
         }
@@ -160,6 +156,14 @@ namespace pwiz.Skyline.Controls
         {
             var findMatch = new FindMatch(description);
             int ichHighlightBegin = description.ToLower().IndexOf(textToHighlight.ToLower(), StringComparison.Ordinal);
+            // A very short search only matches at the front of a word
+            if ((textToHighlight.Length < ProteinMatchQuery.MIN_FREE_SEARCH_LENGTH) && (ichHighlightBegin > 0))
+            {
+                // Insist on a leading space for match
+                ichHighlightBegin = description.ToLower().IndexOf(" "+textToHighlight.ToLower(), StringComparison.Ordinal); // Not L10N
+                if (ichHighlightBegin > 0)
+                    ichHighlightBegin++; // Don't really want to highlight the space
+            }
             if (ichHighlightBegin >= 0)
             {
                 findMatch = findMatch.ChangeRange(ichHighlightBegin, ichHighlightBegin + textToHighlight.Length);
@@ -248,8 +252,8 @@ namespace pwiz.Skyline.Controls
             return listViewItem.SubItems[1].Text;
         }
         /// <summary>
-        /// Returns the portion of the description text which should be underlined
-        /// in the ListViewItem.  This is stored on the "Tag" property of the ListViewSubItem.
+        /// Returns the portion of the completion item text which should be bolded
+        /// in the ListViewItem.  This is stored on the SearchView property of the ListViewItem.
         /// </summary>
         public static String GetHighlightedText(ListViewItem listViewItem)
         {
@@ -258,6 +262,14 @@ namespace pwiz.Skyline.Controls
             {
                 return completionItem.SearchText;
             }
+            return null;
+        }
+        /// <summary>
+        /// Returns the portion of the description text which should be bolded
+        /// in the ListViewItem.  This is stored on the "Tag" property of the ListViewSubItem.
+        /// </summary>
+        public static String GetDescriptionHighlightedText(ListViewItem listViewItem)
+        {
             if (listViewItem.SubItems.Count < 2)
             {
                 return null;

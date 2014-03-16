@@ -10727,6 +10727,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;name: {0}&gt;.
+        /// </summary>
+        public static string PeptideGroupTreeNode_ProteinModalDisplayText__name___0__ {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_ProteinModalDisplayText__name___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accession.
         /// </summary>
         public static string PeptideGroupTreeNode_RenderTip_Accession {
@@ -11302,15 +11311,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("ProteinDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;none&gt;.
-        /// </summary>
-        public static string ProteinMetadata__none_ {
-            get {
-                return ResourceManager.GetString("ProteinMetadata__none_", resourceCulture);
             }
         }
         

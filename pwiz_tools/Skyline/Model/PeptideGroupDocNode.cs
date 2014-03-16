@@ -58,6 +58,10 @@ namespace pwiz.Skyline.Model
             PeptideDocNode[] children, bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
+            if (Equals(id.Name, proteinMetadata.Name))
+                proteinMetadata = proteinMetadata.ChangeName(null);  // Make it clear that the name hasn't been altered
+            if (Equals(id.Description, proteinMetadata.Description))
+                proteinMetadata = proteinMetadata.ChangeDescription(null);  // Make it clear that the description hasn't been altered
             _proteinMetadata = proteinMetadata;
         }
 

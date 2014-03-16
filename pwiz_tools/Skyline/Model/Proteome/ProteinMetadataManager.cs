@@ -191,13 +191,17 @@ namespace pwiz.Skyline.Model.Proteome
                                 {
                                     // Use Regexes to get some metadata, and a search term
                                     var parsedProteinMetaData = FastaImporter.ParseProteinMetaData(proteinMetadata);
-                                    if (parsedProteinMetaData == null)
+                                    if ((parsedProteinMetaData == null) || Equals(parsedProteinMetaData.Merge(proteinMetadata),proteinMetadata.SetWebSearchCompleted()))
                                     {
-                                        // That didn't parse well enough to make a search term, just set it as searched so we don't keep trying
+                                        // That didn't parse well enough to make a search term, or didn't add any new info - just set it as searched so we don't keep trying
                                         _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.SetWebSearchCompleted());
                                         progressMonitor.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(100 * nResolved++ / nUnresolved));
+                                        proteinMetadata = null;  // No search to be done
                                     }
-                                    proteinMetadata = parsedProteinMetaData;
+                                    else
+                                    {
+                                        proteinMetadata = proteinMetadata.Merge(parsedProteinMetaData);  // Fill in any gaps with parsed info
+                                    }
                                 }
                                 if (proteinMetadata != null)
                                 {

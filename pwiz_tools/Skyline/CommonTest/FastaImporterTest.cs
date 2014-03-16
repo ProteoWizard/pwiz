@@ -353,7 +353,7 @@ namespace CommonTest
         /// <summary>
         /// for testing without requiring web access - returns the expected web responses for the tests herein.
         /// </summary>
-        private class PlaybackProvider : WebEnabledFastaImporter.WebSearchProvider
+        public class PlaybackProvider : WebEnabledFastaImporter.WebSearchProvider
         {
             public override XmlTextReader GetXmlTextReader(string url)
             {
@@ -536,7 +536,7 @@ namespace CommonTest
             var dbProteinNames = new List<DbProteinName>();
             WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
             int fakeID = 0;
-            foreach (var dbProtein in fastaImporter.Import(new StringReader(FastaText())))
+            foreach (var dbProtein in fastaImporter.Import(new StringReader(GetFastaTestText())))
             {
                 dbProtein.Id = fakeID++;
                 foreach (var name in dbProtein.Names)
@@ -570,7 +570,7 @@ namespace CommonTest
             }
         }
 
-        public static string FastaText()
+        public static string GetFastaTestText(int maxEntries = -1)
         {
             var fastaLines = new StringBuilder();
             int testnum = 0;
@@ -581,6 +581,8 @@ namespace CommonTest
                 fastaLines.Append("\n");
                 for (int mm = testnum++; mm >= 0; mm--)
                     fastaLines.Append(EATDEADEELS + "\n");
+                if ((maxEntries >= 0) && (testnum >= maxEntries))
+                    break;
             }
             return fastaLines.ToString();
         }
