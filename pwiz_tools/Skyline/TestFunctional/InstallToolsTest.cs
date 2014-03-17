@@ -603,7 +603,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleId));
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
                                       dlg => dlg.Btn0Click());
-            RunDlg<MultiButtonMsgDlg>(() => FindOpenForm<MultiButtonMsgDlg>(), messageDlg => messageDlg.Btn0Click());
+            {
+                var messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                OkDialog(messageDlg, messageDlg.Btn0Click);
+            }
             // overwrite existing annotations
             Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleIdTransition));
 

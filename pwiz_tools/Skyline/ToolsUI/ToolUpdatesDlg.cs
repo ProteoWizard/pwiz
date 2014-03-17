@@ -75,6 +75,11 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnUpdate_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
             if (checkedListBoxTools.CheckedIndices.Count == 0)
             {
                 MessageDlg.Show(this, Resources.ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_);

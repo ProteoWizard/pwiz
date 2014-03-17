@@ -87,10 +87,10 @@ namespace pwiz.SkylineTestFunctional
         {
             Settings.Default.ToolList.Add(SAMPLE_TOOL);
             var toolUpdatesDlg = FormatToolUpdatesDlg(false, FormatUpdateHelper(FormatToolStoreClient(false)), false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
             Assert.AreEqual(Resources.ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_, messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
-            OkDialog(toolUpdatesDlg, toolUpdatesDlg.CancelButton.PerformClick);
+            OkDialog(toolUpdatesDlg, toolUpdatesDlg.CancelDialog);
             Settings.Default.ToolList.Clear();
         }
 
@@ -107,13 +107,14 @@ namespace pwiz.SkylineTestFunctional
         {
             Settings.Default.ToolList.Add(SAMPLE_TOOL);
             var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(false)) , true);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
                     Resources
                         .ToolUpdatesDlg_DisplayDownloadSummary_Failed_to_download_updates_for_the_following_packages,
                     string.Empty, SAMPLE_TOOL.PackageName), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -124,7 +125,7 @@ namespace pwiz.SkylineTestFunctional
         {
             Settings.Default.ToolList.Add(SAMPLE_TOOL);
             var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(true)), true);
-            OkDialog(toolUpdatesDlg, toolUpdatesDlg.AcceptButton.PerformClick);
+            OkDialog(toolUpdatesDlg, toolUpdatesDlg.OkDialog);
             Settings.Default.ToolList.Clear();
         }
 
@@ -153,7 +154,7 @@ namespace pwiz.SkylineTestFunctional
                                                       FormatUpdateHelper(FormatToolStoreClient(true),
                                                                          CreateTestInstallFunction(new IOException(EXCEPTION_MESSAGE), false)),
                                                       false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
                     Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
@@ -163,6 +164,7 @@ namespace pwiz.SkylineTestFunctional
                                 .ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_,
                             string.Empty), EXCEPTION_MESSAGE))), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -176,12 +178,13 @@ namespace pwiz.SkylineTestFunctional
                                                       FormatUpdateHelper(FormatToolStoreClient(true),
                                                                          CreateTestInstallFunction(new ToolExecutionException(EXCEPTION_MESSAGE), false)),
                                                       false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
                     Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
                     ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, EXCEPTION_MESSAGE)), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -195,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
                                                       FormatUpdateHelper(FormatToolStoreClient(true),
                                                                          CreateTestInstallFunction(null, true)),
                                                       false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
                     Resources.ToolUpdatesDlg_DisplayInstallSummary_Failed_to_update_the_following_tool, string.Empty,
@@ -204,6 +207,7 @@ namespace pwiz.SkylineTestFunctional
                                                             .ToolUpdatesDlg_InstallUpdates_User_cancelled_installation)),
                 messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -217,12 +221,13 @@ namespace pwiz.SkylineTestFunctional
                                                       FormatUpdateHelper(FormatToolStoreClient(true),
                                                                          CreateTestInstallFunction(null, false)),
                                                       false);
-            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var messageDlg = ShowDialog<MessageDlg>(toolUpdatesDlg.OkDialog);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
                     Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tool,
                     string.Empty, SAMPLE_TOOL.PackageName), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -250,7 +255,7 @@ namespace pwiz.SkylineTestFunctional
         {
             Settings.Default.ToolList.Add(SAMPLE_TOOL);
             var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(true, TestFilesDir.FullPath)), false);
-            var multiBtnMsgDlg = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var multiBtnMsgDlg = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
             var messageDlg = ShowDialog<MessageDlg>(multiBtnMsgDlg.Btn0Click);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
@@ -261,6 +266,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(tool.UpdateAvailable);
             }
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -272,7 +278,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.ToolList.AddRange(new [] {NESTED_TOOL_A, NESTED_TOOL_B});
             var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(true, TestFilesDir.FullPath)), false);
             Assert.AreEqual(1, toolUpdatesDlg.ItemCount);
-            var multiBtnMsgDlg = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var multiBtnMsgDlg = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
             var messageDlg = ShowDialog<MessageDlg>(multiBtnMsgDlg.Btn0Click);
             Assert.AreEqual(
                 TextUtil.LineSeparate(
@@ -283,6 +289,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(tool.UpdateAvailable);
             }
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(toolUpdatesDlg);
             Settings.Default.ToolList.Clear();
         }
 
@@ -300,6 +307,7 @@ namespace pwiz.SkylineTestFunctional
                         ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation))),
                 messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm <ToolUpdatesDlg>();
             AssertUpdateAvailability(Settings.Default.ToolList, true, true);
             Settings.Default.ToolList.Clear();
         }
@@ -318,6 +326,7 @@ namespace pwiz.SkylineTestFunctional
                     ToolUpdatesDlg.FormatFailureMessage(NESTED_TOOL_A.PackageName,
                                                         Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation)), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm<ToolUpdatesDlg>();
             AssertUpdateAvailability(Settings.Default.ToolList, false, true);
             Settings.Default.ToolList.Clear();
         }
@@ -333,6 +342,7 @@ namespace pwiz.SkylineTestFunctional
                     Resources.ToolUpdatesDlg_DisplayInstallSummary_Successfully_updated_the_following_tools,
                     string.Empty, TextUtil.LineSeparate(NESTED_TOOL_A.PackageName, SAMPLE_TOOL.PackageName)), messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm<ToolUpdatesDlg>();
             AssertUpdateAvailability(Settings.Default.ToolList, false, false);
             Settings.Default.ToolList.Clear();
         }
@@ -350,7 +360,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.ToolList.AddRange(new[] { NESTED_TOOL_A, NESTED_TOOL_B, SAMPLE_TOOL });
             var toolUpdatesDlg = FormatToolUpdatesDlg(true, FormatUpdateHelper(FormatToolStoreClient(true, TestFilesDir.GetTestPath("TestOneSuccessOneFailure"))), false); // Not L10N
             Assert.AreEqual(2, toolUpdatesDlg.ItemCount);
-            var multiBtnMsgDlgNested = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.AcceptButton.PerformClick);
+            var multiBtnMsgDlgNested = ShowDialog<MultiButtonMsgDlg>(toolUpdatesDlg.OkDialog);
             Assert.IsTrue(multiBtnMsgDlgNested.Message.Contains(NESTED_TOOL_A.PackageName));
             if (nestedSuccess)
             {
@@ -407,7 +417,6 @@ namespace pwiz.SkylineTestFunctional
             else
                 RunUI(toolUpdatesDlg.DeselectAll);
             toolUpdatesDlg.TestingDownloadOnly = testingDownloadOnly;
-            Assert.IsNotNull(toolUpdatesDlg.AcceptButton);
             return toolUpdatesDlg;
         }
 

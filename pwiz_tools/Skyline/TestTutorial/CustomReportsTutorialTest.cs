@@ -702,7 +702,9 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(26);
             PauseForScreenShot("Main window layout", 26);
 
-            var resultsGridForm = ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
+            var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
+            //FindOpenForm<LiveResultsGrid>() ??
+              //  ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
             RunUI(() =>
             {
