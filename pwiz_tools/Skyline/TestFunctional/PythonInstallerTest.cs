@@ -133,6 +133,7 @@ namespace pwiz.SkylineTestFunctional
             var messageDlg = ShowDialog<MessageDlg>(pythonInstaller.OkDialog);
             RunUI(() => Assert.AreEqual(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(pythonInstaller);
         }
 
         // Test Python download failure

@@ -48,6 +48,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            IsEnableLiveReports = true;   // force LiveReports, because we are testing the document grid
+
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ProteinMetadataFunctionalTests.sky")));
 
             var doc = WaitForDocumentLoaded();

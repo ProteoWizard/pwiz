@@ -694,6 +694,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view", 24);
         }
+
         protected void DoResultsGridView()
         {
             // Results Grid View
@@ -702,9 +703,11 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(26);
             PauseForScreenShot("Main window layout", 26);
 
-            var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
-            //FindOpenForm<LiveResultsGrid>() ??
-              //  ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
+            // Not understood: WaitForOpenForm occasionally hangs in nightly test runs. Fixed it by calling
+            // ShowDialog when LiveResultsGrid cannot be found.
+            //var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
+            var resultsGridForm = FindOpenForm<LiveResultsGrid>() ??
+                ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
             RunUI(() =>
             {
