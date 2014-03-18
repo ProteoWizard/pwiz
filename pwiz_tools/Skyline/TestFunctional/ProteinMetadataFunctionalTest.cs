@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify DocumentGrid's use of protein metadata - last line should agree with var pasteProteinText
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
-            DocumentGridForm documentGrid = FindOpenForm<DocumentGridForm>();
+            DocumentGridForm documentGrid = WaitForOpenForm<DocumentGridForm>();
             RunUI(() => documentGrid.ChooseView("Proteins"));
             WaitForCondition(() => (documentGrid.RowCount > 0));  // Let it initialize
             foreach (var colName in new[]
