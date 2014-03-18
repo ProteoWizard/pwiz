@@ -462,16 +462,21 @@ namespace pwiz.Skyline.FileUI
         public void MinimizeResults()
         {
             var dlg = new MinimizeResultsDlg(DocumentUIContainer);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            try
             {
-                // If the MinimizeResultsDlg did work then cancel out of this dialog
-                DialogResult = DialogResult.Cancel;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // If the MinimizeResultsDlg did work then cancel out of this dialog
+                    DialogResult = DialogResult.Cancel;
+                }
             }
-
-            // NOTE: We do a manual Dispose rather than "using", because something in the constructor
-            // is occasionally throwing an exception.  Unfortunately, that exception gets masked when
-            // "using" calls Dispose during exception processing, and Dispose throws an exception.
-            dlg.Dispose();
+            finally
+            {
+                // NOTE: We do a manual Dispose rather than "using", because something in the constructor
+                // is occasionally throwing an exception.  Unfortunately, that exception gets masked when
+                // "using" calls Dispose during exception processing, and Dispose throws an exception.
+                dlg.Dispose();
+            }
         }
 
         private string[] FindMissingFiles(IEnumerable<ChromatogramSet> chromatogramSets)
