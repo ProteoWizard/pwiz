@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override bool HasTip
         {
-            get { return base.HasTip || (!ShowAnnotationTipOnly && DocNode.Id is FastaSequence); }
+            get { return base.HasTip || (!ShowAnnotationTipOnly); }
         }
 
         public override Size RenderTip(Graphics g, Size sizeMax, bool draw)
@@ -273,8 +273,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return sizeInitial;
             g.TranslateTransform(0, sizeInitial.Height);
             FastaSequence fastaSeq = DocNode.Id as FastaSequence;
-            if (fastaSeq == null)
-                return sizeInitial;
 
             var tableDetails = new TableDesc();
             using (RenderTools rt = new RenderTools())
@@ -309,56 +307,58 @@ namespace pwiz.Skyline.Controls.SeqNode
                     tableDetails.Draw(g);
                 }
 
-                IList<DocNode> peptidesChoices = GetChoices(true).ToArray();
-                HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
-
-                // Make sure all chosen peptides get listed
-                HashSet<DocNode> setChoices = new HashSet<DocNode>(peptidesChoices);
-                setChoices.UnionWith(peptidesChosen);
-                var arrayChoices = setChoices.ToArray();
-                Array.Sort(arrayChoices, (choice1, choice2) =>
-                                         PeptideFromChoice(choice1).Order - PeptideFromChoice(choice2).Order);
-                peptidesChoices = arrayChoices;
-
-                // Get the selected peptide, if there is one
-                PeptideTreeNode nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-                Peptide peptideSelected = (nodePepTree != null ? nodePepTree.DocNode.Peptide : null);
-
-                int i = 0;
-                string aa = fastaSeq.Sequence;
-                const bool peptideList = false;
-                while (i < aa.Length)
+                if (fastaSeq != null)
                 {
-                    // If this is not the last possible line, just render it.
-                    if (heightTotal + heightLine * 2 <= heightMax)
+                    IList<DocNode> peptidesChoices = GetChoices(true).ToArray();
+                    HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
+
+                    // Make sure all chosen peptides get listed
+                    HashSet<DocNode> setChoices = new HashSet<DocNode>(peptidesChoices);
+                    setChoices.UnionWith(peptidesChosen);
+                    var arrayChoices = setChoices.ToArray();
+                    Array.Sort(arrayChoices, (choice1, choice2) =>
+                        PeptideFromChoice(choice1).Order - PeptideFromChoice(choice2).Order);
+                    peptidesChoices = arrayChoices;
+
+                    // Get the selected peptide, if there is one
+                    PeptideTreeNode nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+                    Peptide peptideSelected = (nodePepTree != null ? nodePepTree.DocNode.Peptide : null);
+
+                    int i = 0;
+                    string aa = fastaSeq.Sequence;
+                    const bool peptideList = false;
+                    while (i < aa.Length)
                     {
-                        i = RenderAALine(aa, peptideList, i, false, draw,
-                                         peptidesChoices, peptidesChosen, peptideSelected,
-                                         g, rt, heightTotal, widthLine);
-                        heightTotal += heightLine;
-                    }
-                        // If not drawing, then this is the last possible line, and
-                        // it will have content.
-                    else if (!draw)
-                    {
-                        heightTotal += heightLine;
-                        break;
-                    }
-                        // Otherwise, measure first, and then re-render, with an elipsis
-                        // if the full sequence cannot be shown.
-                    else
-                    {
-                        RenderAALine(aa, peptideList, i, false, false,
-                                     peptidesChoices, peptidesChosen, peptideSelected,
-                                     g, rt, heightTotal, widthLine);
-                        RenderAALine(aa, peptideList, i, i < aa.Length, true,
-                                     peptidesChoices, peptidesChosen, peptideSelected,
-                                     g, rt, heightTotal, widthLine);
-                        heightTotal += heightLine;
-                        break;
+                        // If this is not the last possible line, just render it.
+                        if (heightTotal + heightLine * 2 <= heightMax)
+                        {
+                            i = RenderAALine(aa, peptideList, i, false, draw,
+                                peptidesChoices, peptidesChosen, peptideSelected,
+                                g, rt, heightTotal, widthLine);
+                            heightTotal += heightLine;
+                        }
+                            // If not drawing, then this is the last possible line, and
+                            // it will have content.
+                        else if (!draw)
+                        {
+                            heightTotal += heightLine;
+                            break;
+                        }
+                            // Otherwise, measure first, and then re-render, with an elipsis
+                            // if the full sequence cannot be shown.
+                        else
+                        {
+                            RenderAALine(aa, peptideList, i, false, false,
+                                peptidesChoices, peptidesChosen, peptideSelected,
+                                g, rt, heightTotal, widthLine);
+                            RenderAALine(aa, peptideList, i, i < aa.Length, true,
+                                peptidesChoices, peptidesChosen, peptideSelected,
+                                g, rt, heightTotal, widthLine);
+                            heightTotal += heightLine;
+                            break;
+                        }
                     }
                 }
-
                 return TipSize(Math.Max(widthLine, sizeInitial.Width), heightTotal + sizeInitial.Height);
             }
         }
