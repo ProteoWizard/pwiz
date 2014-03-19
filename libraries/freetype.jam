@@ -20,7 +20,15 @@ rule init ( version ? : location : options * )
     {
         .initialized = true ;
 
-        tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Freetype source tree not found at $(location)" ;
+        }
 
         version ?= default ;
         local requirements =

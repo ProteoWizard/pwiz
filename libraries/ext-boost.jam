@@ -148,7 +148,7 @@ rule init ( version : location : options * )
         local version-tokens = [ regex.split $(version) \\. ] ;
         local boost-basename = "boost_$(version-tokens:J=_)" ;
 
-        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ]
+        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
         {
             # extract boost tarball
             tar.extract
@@ -173,10 +173,7 @@ rule init ( version : location : options * )
         local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
         zlib-src-location ?= $(location)/../zlib-1.2.3 ;
         path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
-        if [ path.exists $(ZLIB_SOURCE) ]
-        {
-            using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
-        }
+        using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
         .boost-src-location = $(location) ;
         .boost-version = $(version) ;

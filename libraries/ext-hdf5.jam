@@ -43,7 +43,15 @@ rule init ( version ? : location : options * )
         .usage-requirements = <include>$(location)/src <use>H5pubconf.h/<extension>hdf5 ;
         .requirements = $(.usage-requirements) <warnings>off ;
 
-        tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Freetype source tree not found at $(location)" ;
+        }
 
         local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
         zlib-src-location ?= $(location)/../zlib-1.2.3 ;

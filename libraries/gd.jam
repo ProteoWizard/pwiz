@@ -84,7 +84,15 @@ rule init ( version ? : location : options * )
         path-constant FREETYPE_SOURCE : $(freetype-src-location[1]) ;
         using freetype : 2.4.7 : $(FREETYPE_SOURCE) : $(options) ;
 
-        tar.extract $(location).tar.bz2 : *.c *.cxx *.h : : : check-last-file-only ;
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.cxx *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Freetype source tree not found at $(location)" ;
+        }
 
         local sources = $(location)/src/$(sources) ;
         if ! $(sources) { errors.error "No sources found for LibGD at \"$(location)\". Check that you're passing a valid location." ; }

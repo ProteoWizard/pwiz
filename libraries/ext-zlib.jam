@@ -27,13 +27,21 @@ rule init ( version ? : location : options * )
     {
         .initialized = true ;
 
-        tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Zlib source tree not found at $(location)" ;
+        }
 
-				if ! [ MATCH "(.+)" : [ modules.peek : ZLIB_SOURCE ] ]
-				{
-		        modules.poke : ZLIB_SOURCE : $(location) ;
-						using zlib : $(version) : <source>$(location) $(options) : : is-default ;
-						alias z : /zlib//zlib ;
-				}
+        if ! [ MATCH "(.+)" : [ modules.peek : ZLIB_SOURCE ] ]
+        {
+            modules.poke : ZLIB_SOURCE : $(location) ;
+            using zlib : $(version) : <source>$(location) $(options) : : is-default ;
+            alias z : /zlib//zlib ;
+        }
     }
 }
