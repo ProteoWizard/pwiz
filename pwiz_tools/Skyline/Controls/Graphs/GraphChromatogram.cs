@@ -560,8 +560,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // If the selected file is changing, then all of the chromatogram data
             // on display will change, and the graph should be auto-zoomed, if
             // any auto-zooming is turned on.
-// ReSharper disable once RedundantArgumentDefaultValue
-            UpdateUI(true);
+            UpdateUI();
         }
 
         private void GraphChromatogram_VisibleChanged(object sender, EventArgs e)
@@ -584,31 +583,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateUI(bool selectionChanged = true)
         {
-            UpdateUI(selectionChanged, false);
-        }
-
-        private bool _inUpdateUI;
-        private void UpdateUI(bool selectionChanged, bool forceZoom)
-        {
-            // Avoid reentrancy caused by changing comboBox SelectedIndex.
-            if (_inUpdateUI)
-                return;
-            try
-            {
-                _inUpdateUI = true;
-                UpdateUINoReenter(selectionChanged, forceZoom);
-            }
-            finally
-            {
-                _inUpdateUI = false;
-            }
-        }
-
-        private void UpdateUINoReenter(bool selectionChanged, bool forceZoom)
-        {
-            // Must be called by UpdateUI, which sets the reentrancy flag.
-            Assume.IsTrue(_inUpdateUI, "Update UI re-entrancy");
-
             IsCacheInvalidated = false;
 
             // Only worry about updates, if the graph is visible
@@ -927,7 +901,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else 
             {
-                _graphHelper.FinishedAddingChromatograms(bestStartTime, bestEndTime, forceZoom);
+                _graphHelper.FinishedAddingChromatograms(bestStartTime, bestEndTime, false);
             }
 
             foreach (var graphPane in GraphPanes)
