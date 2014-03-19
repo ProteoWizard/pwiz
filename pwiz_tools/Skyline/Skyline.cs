@@ -3559,8 +3559,16 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    // TODO: Get topmost window
-                    MessageDlg.Show(this, message);
+                    // Try to show the error message, but the SkylineWindow may be disposed by the test thread, so ignore the exception.
+                    try
+                    {
+                        // TODO: Get topmost window
+                        MessageDlg.Show(this, message);
+                    }
+                    catch (Exception)
+                    {
+                        return;
+                    }
                 }
 
                 // Update the progress UI immediately
