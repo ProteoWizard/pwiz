@@ -314,7 +314,7 @@ namespace pwiz.SkylineTestUtil
 
                 Thread.Sleep(SLEEP_INTERVAL);
                 if (i == waitCycles - 1)
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForOpenForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
             }
             return null;
         }
@@ -364,7 +364,13 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
+
+            Assert.Fail("Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
+        }
+
+        private static string GetOpenFormsString()
+        {
+            return string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, form.Text)));
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
@@ -713,8 +719,9 @@ namespace pwiz.SkylineTestUtil
                     {
                         form.Close();
                     }
-// ReSharper disable once EmptyGeneralCatchClause
+// ReSharper disable EmptyGeneralCatchClause
                     catch
+// ReSharper restore EmptyGeneralCatchClause
                     {
                     }
                 }
