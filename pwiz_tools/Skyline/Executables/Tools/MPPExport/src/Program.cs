@@ -13,9 +13,9 @@ namespace MPP_Export
     {
         private static void Main(string[] args)
         {
-            Console.WriteLine(args.Length);
             foreach (var arg in args)
             {
+                // There should only be one argument from skyline which is the file path to the report file.
                 Console.WriteLine("CSV file path: {0}", arg);
                 if (arg != null & args.Length == 1)
                 {
@@ -32,43 +32,64 @@ namespace MPP_Export
         {
             string csvFilePathName = filepath;
             string[] lines = File.ReadAllLines(csvFilePathName);
-            string[] Fields = GetFields(lines[0], ',');
+            string[] Fields = GetFields(lines[0], ','); // Not L10N
             int colCount = Fields.Length;
 
             var dt = new DataTable();
-            //first row colnames
             for (int i = 0; i < colCount; i++)
-                dt.Columns.Add(Fields[i].ToLower(), typeof(string));
+            {         
+                    dt.Columns.Add(Fields[i], typeof(string));               
+            }
+                
 
             var dtOut = new DataTable();
-            const int nonPivotCols = 5; // number of rows before replicate rows begin
-            int numOfReplicates = dt.Columns.Count - nonPivotCols;
+            const int nonPivotCols = 10; // Number of columns before replicate columns begin.
+            const int newCols = 5; // Number of columns before accession column in export csv.
+            int rowCount = 1; // Row counter used for RT and Mass values.
+            int numOfReplicates = dt.Columns .Count - nonPivotCols;
+            dtOut.Columns.Add("RT"); // Not L10N
+            dtOut.Columns.Add("Mass"); // Not L10N
+            dtOut.Columns.Add("Compound Name"); // Not L10N
+            dtOut.Columns.Add("Formula"); // Not L10N
+            dtOut.Columns.Add("CAS ID"); // Not L10N
+            dtOut.Columns.Add("Swiss Prot ID"); // Not L10N
 
-            dtOut.Columns.Add("Protein Name");
+            // Column headers for replicate area columns generated here.
             for (int i = 0; i < numOfReplicates; i++)
-                dtOut.Columns.Add(Fields[i + nonPivotCols].ToLower(), typeof(string));
-
-
+            {
+                if (Fields[i + nonPivotCols].Contains(" Area")) // Not L10N
+                {
+                    dtOut.Columns.Add(Fields[i + nonPivotCols].Replace(" Area", ""), typeof(string)); // Not L10N
+                }
+                else
+                {
+                    dtOut.Columns.Add(Fields[i + nonPivotCols], typeof(string));
+                }
+            }
+                
             for (int i = 1; i < lines.Length; i++)
             {
                 Fields = GetFields(lines[i], ',');
                 var row = dt.NewRow();
                 for (int f = 0; f < colCount; f++)
-                    row[f] = Fields[f];
+                {                  
+                        row[f] = Fields[f];
+                }
                 dt.Rows.Add(row);
             }
 
-            var proteinNames = dt.AsEnumerable()
-                .Select(dr => dr.Field<string>("ProteinName"))
+            var proteinAccessions = dt.AsEnumerable()
+                .Select(dr => dr.Field<string>("ProteinAccession")) // Not L10N
                 .Distinct().ToArray();
 
-            Console.WriteLine("Unique  Replicates:");
-            foreach (var proteinName in proteinNames)
+            Console.WriteLine("Unique  Accessions:");
+            foreach (var proteinAccession in proteinAccessions)
             {
-                Console.WriteLine("# " + proteinName);                
-                var dataRows = dt.Select(string.Format("ProteinName = '{0}'", proteinName));
+                Console.WriteLine("# " + proteinAccession);   // Not L10N              
+                var dataRows = dt.Select(string.Format("ProteinAccession = '{0}'", proteinAccession)); // Not L10N
 
                 var replicateRowValues = new double[numOfReplicates];
+                var replicateRowDescription = ""; // Not L10N
                 foreach (var row in dataRows)
                 {
                     for (int a = 0; a < numOfReplicates; a++)
@@ -76,36 +97,43 @@ namespace MPP_Export
                         double cellValue;
                         if (!double.TryParse(row[a + nonPivotCols].ToString(), out cellValue))
                             cellValue = 0;
+
                         replicateRowValues[a] += cellValue;
                     }
+                    replicateRowDescription = row[1].ToString();
                 }
 
                 var newRow = dtOut.NewRow();
                
-                newRow[0] = proteinName;  
+                newRow[newCols] = proteinAccession;
+                newRow[0] = rowCount;
+                newRow[1] = rowCount;
+                newRow[2] = replicateRowDescription;
+                rowCount = rowCount + 1;
+            
                 for (int r = 0; r < replicateRowValues.Length; r++ )
                 {
-                    newRow[r+1] = replicateRowValues[r];  
+                    newRow[r+newCols+1] = replicateRowValues[r];  
                 }
                 dtOut.Rows.Add(newRow);
             }
 
-            //prints output data table
+            // Prints output data table in skyline console window.
             Console.WriteLine("----------Output File----------");
 
             DataRow[] outputRows = dtOut.Select(null, null, DataViewRowState.CurrentRows);
 
             foreach (DataColumn column in dtOut.Columns)
-                Console.Write("\t{0}", column.ColumnName);
+                Console.Write("\t{0}", column.ColumnName); // Not L10N
 
-            Console.WriteLine("\tRowState");
+            Console.WriteLine("\tRowState"); // Not L10N
 
             foreach (DataRow row in outputRows)
             {
                 foreach (DataColumn column in dtOut.Columns)
-                    Console.Write("\t{0}", row[column]);
+                    Console.Write("\t{0}", row[column]); // Not L10N
 
-                Console.WriteLine("\t" + row.RowState);
+                Console.WriteLine("\t" + row.RowState); // Not L10N
             }
 
             var sb = new StringBuilder();
@@ -121,33 +149,42 @@ namespace MPP_Export
                                                 ToArray();
                 sb.AppendLine(SetFields(fields));
             }
-
-            File.WriteAllText("final.csv", sb.ToString());
-            Console.WriteLine("File saved successfully.");
-            Console.WriteLine("Finished.");
+            try
+            {
+                var currentDirectory = Directory.GetCurrentDirectory();
+                File.WriteAllText("MPPReport.csv", sb.ToString());
+                Console.WriteLine("Location: {0}\\MPPReport.csv",currentDirectory);
+                Console.WriteLine("File saved successfully.");
+                Console.WriteLine("Finished.");
+            } // If file MPPReport.csv can't be accessed program will throw IOException.
+            catch (System.IO.IOException ex)
+            {
+                Console.WriteLine("System IO Exception, cannot access final.csv.");
+                Console.WriteLine("Double check that final.csv is not open in another program.");
+                Console.WriteLine("Finished. (Run Failed)"); 
+            }
         }
-
+        // CSV Parsing to deal with commas.
         private static string[] GetFields(string line, char separator)
         {
-            // TODO: Use CSV parsing code to deal with possible quoted values that contain commas
             var listFields = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
-            char chLast = '\0';  // Not L10N
+            char chLast = '\0'; // Not L10N 
             foreach (char ch in line)
             {
                 if (inQuotes)
                 {
-                    if (ch == '"')
+                    if (ch == '"') // Not L10N
                         inQuotes = false;
                     else
                         sbField.Append(ch);
                 }
-                else if (ch == '"')  // Not L10N
+                else if (ch == '"') // Not L10N
                 {
                     inQuotes = true;
-                    // Add quote character, for "" inside quotes
-                    if (chLast == '"')  // Not L10N
+                    // Add quote character, for "" inside quotes.
+                    if (chLast == '"') // Not L10N
                         sbField.Append(ch);
                 }
                 else if (ch == separator)
@@ -167,15 +204,7 @@ namespace MPP_Export
 
         private static string SetFields(string[] row)
         {
-//            // TODO: Use CSV parsing code to deal with possible quoted values that contain commas
-//            for (int cell = 0; cell < row.Length; cell++)
-//            {
-//                var requiresComma = row[cell].ToLowerInvariant().Contains(',');
-//                var requiresQuote = row[cell].Contains('"');
-//                if(requiresComma)
-//                    row[cell] = "\"" + row[cell].Replace("\"","\"\"") + "\"";
-//            }
-            String csvLine = String.Join(",", row.Select(field=>ToDsvField(field, ',')));
+            String csvLine = String.Join(",", row.Select(field=>ToDsvField(field, ','))); // Not L10N
             return csvLine;
         }
 

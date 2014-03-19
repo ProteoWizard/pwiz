@@ -6,6 +6,7 @@
     <table name="T2">DbTransitionResult</table>
     <select>
       <column name="T1">Precursor.Peptide.Protein.Name</column>
+	  <column name="T1">Precursor.Peptide.Protein.Description</column>
       <column name="T1">Precursor.Peptide.Protein.PreferredName</column>
       <column name="T1">Precursor.Peptide.Protein.Accession</column>
       <column name="T1">Precursor.Peptide.Protein.Gene</column>
