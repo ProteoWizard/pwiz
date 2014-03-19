@@ -196,7 +196,7 @@ rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-
     }
 
     # default filepath is "Properties/AssemblyInfo" in the current directory
-    filepath ?= Properties\\AssemblyInfo.$(extension) ;
+    filepath ?= Properties/AssemblyInfo.$(extension) ;
 
     if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
 
@@ -274,7 +274,7 @@ rule generate-rc ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? 
                    Title Description Company Product : Icons * )
 {
     # default filepath is "Properties/Resources.rc" in the current directory
-    filepath ?= Properties\\Resources.rc ;
+    filepath ?= Properties/Resources.rc ;
 
     if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
 
@@ -363,11 +363,11 @@ END
 
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 
-generate-AssemblyInfo.cs Util\\Properties\\AssemblyInfo.cs : [ path.glob-tree Util : *.jam *.?pp *.h *.cs ] app.config : : : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
-generate-AssemblyInfo.cs Model\\Properties\\AssemblyInfo.cs : [ path.glob-tree Model : *.jam *.?pp *.h *.cs ] : : : "IDPicker.DataModel" "IDPicker data model." $(COMPANY_AND_PRODUCT) ;
-generate-AssemblyInfo.cs Controls\\Properties\\AssemblyInfo.cs : [ path.glob-tree Controls : *.jam *.?pp *.h *.cs ] : : : "IDPicker.Controls" "IDPicker custom controls." $(COMPANY_AND_PRODUCT) ;
+generate-AssemblyInfo.cs Util/Properties/AssemblyInfo.cs : [ path.glob-tree Util : *.jam *.?pp *.h *.cs ] App.config : : : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
+generate-AssemblyInfo.cs Model/Properties/AssemblyInfo.cs : [ path.glob-tree Model : *.jam *.?pp *.h *.cs ] : : : "IDPicker.DataModel" "IDPicker data model." $(COMPANY_AND_PRODUCT) ;
+generate-AssemblyInfo.cs Controls/Properties/AssemblyInfo.cs : [ path.glob-tree Controls : *.jam *.?pp *.h *.cs ] : : : "IDPicker.Controls" "IDPicker custom controls." $(COMPANY_AND_PRODUCT) ;
     
-generate-rc Resources\\Resources.rc :
+generate-rc Resources/Resources.rc :
         [ path.glob-tree . : *.jam
                              *.?pp *.h
                              *.cs
@@ -381,7 +381,7 @@ generate-rc Resources\\Resources.rc :
       BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
 
 # generate IDPicker version header
-local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
+local revision-info = [ generate-AssemblyInfo.cs Properties/AssemblyInfo.cs :
         [ path.glob-tree . : *.jam
                              *.?pp *.h
                              *.cs
