@@ -67,7 +67,8 @@ rule boost-tag ( name : type ? : property-set )
 rule secure-scl-throws ( properties * )
 {
     if <toolset>msvc in $(properties) &&
-       ! ( <toolset-msvc:version>11.0 in $(properties) )
+       ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>12.0 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -155,6 +156,7 @@ rule init ( version : location : options * )
                     $(boost-basename).tar.bz2
                 : # include patterns
                     $(boost-basename)/boost*.?pp
+                    $(boost-basename)/boost*.h
                     $(boost-basename)/libs*.?pp
                     $(boost-basename)/libs/*timeconv.inl
                 : # requirements
@@ -173,7 +175,7 @@ rule init ( version : location : options * )
         path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
         if [ path.exists $(ZLIB_SOURCE) ]
         {
-            using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+            using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
         }
 
         .boost-src-location = $(location) ;
@@ -186,6 +188,7 @@ rule init ( version : location : options * )
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
             <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
             <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <warnings>off
@@ -325,9 +328,11 @@ rule init ( version : location : options * )
                 #<threading>multi
                 <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             :
             :   <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             ;
 
         lib wserialization
@@ -338,9 +343,11 @@ rule init ( version : location : options * )
                 #<threading>multi
                 <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             :
             :   <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
             ;
 
         local thread_sources ;

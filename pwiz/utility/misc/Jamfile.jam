@@ -72,6 +72,8 @@ lib pwiz_utility_misc
     ;
 
 
+using gd : 2.1.0 : $(GD_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) <png-src-location>$(PNG_SOURCE) <freetype-src-location>$(FREETYPE_SOURCE) ;
+
 lib pwiz_utility_image
     : # sources
         Image.cpp

@@ -185,6 +185,8 @@ rule init (
         }
         local target ;
         if $(sources) {
+            make $(source-path)/pnglibconf.h : $(source-path)/scripts/pnglibconf.h.prebuilt : common.copy ;
+
             target = [ targets.create-typed-target LIB : $(.project)
               : $(build-name).$(library-id)
               : $(sources)
@@ -194,6 +196,7 @@ rule init (
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
                 <link>shared:<define>ZLIB_DLL
+                <dependency>$(source-path)/pnglibconf.h
               :
               : <include>$(source-path) ] ;
         }

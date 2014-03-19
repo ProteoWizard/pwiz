@@ -77,7 +77,7 @@ rule init ( version ? : location : options * )
         local png-src-location = [ feature.get-values <png-src-location> : $(options) ] ;
         png-src-location ?= $(location)/../libpng-1.5.6 ;
         path-constant PNG_SOURCE : $(png-src-location[1]) ;
-        using png : 1.5.6 : $(PNG_SOURCE) : $(options) ;
+        using ext-png : 1.5.6 : $(PNG_SOURCE) ;
 
         local freetype-src-location = [ feature.get-values <freetype-src-location> : $(options) ] ;
         freetype-src-location ?= $(location)/../freetype-2.4.7 ;
