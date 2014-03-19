@@ -250,6 +250,16 @@ namespace CommonTest
                                 "pep:known chromosome:GRCm38:14:52427928:52428874:1 gene:ENSMUSG00000076758 transcript:ENSMUST00000103567 gene_biotype:TR_V_gene transcript_biotype:TR_V_gene",
                             species: "Mus musculus (Mouse)", gene: "TRAV1")
                     }),
+
+                new FastaHeaderParserTest(">AARS.IPI00027442 IPI:IPI00027442.4|SWISS-PROT:P49588|ENSEMBL:ENSP00000261772|REFSEQ:NP_001596|H-INV:HIT000035254|VEGA:OTTHUMP00000080084 Tax_Id=9606 Gene_Symbol=AARS Alanyl-tRNA synthetase, cytoplasmic",
+                    new[]
+                    {
+                        new FastaHeaderReaderResult(accession: "P49588", name: "AARS.IPI00027442",
+                            preferredname: "SYAC_HUMAN",
+                            description: "IPI:IPI00027442.4|SWISS-PROT:P49588|ENSEMBL:ENSP00000261772|REFSEQ:NP_001596|H-INV:HIT000035254|VEGA:OTTHUMP00000080084 Tax_Id=9606 Gene_Symbol=AARS Alanyl-tRNA synthetase, cytoplasmic", 
+                            species: "Homo sapiens (Human)", gene: "AARS")
+                    }),
+
                 new FastaHeaderParserTest(
                     // they may not show in the IDE but there are SOH (ASCII 0x001) characters in here
                     @">gi|15834432|30S_ribosomal_sub| gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]gi|16132024|ref|NP_418623.1| 30S ribosomal subunit protein S18 [Escherichia coli K12]gi|16763210|ref|NP_458827.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]gi|24115555|ref|NP_710065.1| 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]gi|26251099|ref|NP_757139.1| 30S ribosomal protein S18 [Escherichia coli CFT073]gi|29144689|ref|NP_808031.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]gi|30065573|ref|NP_839744.1| 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T]gi|133836|sp|P02374|RS18_ECOLI 30S ribosomal protein S18gi|2144767|pir||R3EC18 ribosomal protein S18 [validated] - Escherichia coli (strain K-12)gi|25294828|pir||AI1052 30s ribosomal chain protein S18 [imported] - Salmonella enterica subsp. enterica serovar Typhi (strain CT18)gi|25294838|pir||B91276 30S ribosomal subunit protein S18 [imported] - Escherichia coli (strain O157:H7, substrain RIMD 0509952)gi|42847|emb|CAA27654.1| unnamed protein product [Escherichia coli]gi|537043|gb|AAA97098.1| 30S ribosomal subunit protein S18 [Escherichia coli]gi|1790646|gb|AAC77159.1| 30S ribosomal subunit protein S18 [Escherichia coli K12]gi|13364655|dbj|BAB38601.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]gi|16505518|emb|CAD06870.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]gi|24054886|gb|AAN45772.1|AE015442_2 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]gi|26111531|gb|AAN83713.1|AE016771_224 30S ribosomal protein S18 [Escherichia coli CFT073]gi|29140328|gb|AAO71891.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]gi|30043837|gb|AAP19556.1| 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T] [MASS=8986]",

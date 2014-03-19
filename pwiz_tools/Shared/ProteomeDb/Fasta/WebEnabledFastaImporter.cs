@@ -494,6 +494,11 @@ namespace pwiz.ProteomeDatabase.Fasta
                     @"^(?<name>(((((?<typecode>UniRef)[0-9]+_(?<accession>((?<strippedAccession>[^\.\s]+)[^\s]*)))))[\s]*))\s(?<description>(?<preferredname>(.*([^=]\s)+))((.*(\sTax=(?<species>.*)?\sRepID=.*))))", // Not L10N
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + "${strippedAccession}"), // will attempt to lookup on Uniprot Not L10N
 
+                new FastaRegExSearchtermPair(
+                    @"matches form '>AARS.IPI00027442 IPI:IPI00027442.4|SWISS-PROT:P49588|ENSEMBL:ENSP00000261772|REFSEQ:NP_001596|H-INV:HIT000035254|VEGA:OTTHUMP00000080084 Tax_Id=9606 Gene_Symbol=AARS Alanyl-tRNA synthetase, cytoplasmic'", // Not L10N
+                    @"^(?<name>([^\s]*(?<ipi>(IPI0[0-9]+))[^\s]*))\s(?<description>.*)", // Not L10N
+                    STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + "${ipi}"), // will attempt to lookup on Uniprot after passing through our translation layer Not L10N
+
                 new FastaRegExSearchtermPair(@" and a fallback for everything else, like  '>name description'", // Not L10N
                     @"^(?<name>[^\s]+)"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+"?",  // Not L10N
                     STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + "${name}") // will attempt to lookup on Uniprot Not L10N
