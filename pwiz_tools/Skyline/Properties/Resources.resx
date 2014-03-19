@@ -6303,4 +6303,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeptideGroupTreeNode_ProteinModalDisplayText__name___0__" xml:space="preserve">
     <value>&lt;name: {0}&gt;</value>
   </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Species" xml:space="preserve">
+    <value>Species</value>
+  </data>
 </root>

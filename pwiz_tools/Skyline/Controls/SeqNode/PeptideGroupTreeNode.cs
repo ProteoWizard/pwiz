@@ -291,6 +291,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name, DocNode.ProteinMetadata.PreferredName, rt);
                 if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Gene))
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Gene, DocNode.ProteinMetadata.Gene, rt);
+                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Species))
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Species, DocNode.ProteinMetadata.Species, rt);
                 if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.DisplaySearchHistory()))
                     tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Searched, DocNode.ProteinMetadata.DisplaySearchHistory(), rt);
                 if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Description))

@@ -10806,6 +10806,14 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("PeptideGroupTreeNode_RenderTip_Searched", resourceCulture);
             }
         }
+        /// <summary>
+        ///   Looks up a localized string similar to Species.
+        /// </summary>
+        public static string PeptideGroupTreeNode_RenderTip_Species {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_RenderTip_Species", resourceCulture);
+            }
+        }
         
         public static System.Drawing.Bitmap PeptideIrt {
             get {
