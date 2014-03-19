@@ -19,7 +19,7 @@
 
 lib shell32 : : <name>shell32 ; # for SHGetFolderPath
 
-using png : 1.5.6 : $(PNG_SOURCE) ;
+using ext-png : 1.5.6 : $(PNG_SOURCE) ;
 
 lib waffles
     : # sources
