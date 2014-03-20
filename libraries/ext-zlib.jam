@@ -40,7 +40,7 @@ rule init ( version ? : location : options * )
         if ! [ MATCH "(.+)" : [ modules.peek : ZLIB_SOURCE ] ]
         {
             modules.poke : ZLIB_SOURCE : $(location) ;
-            using zlib : $(version) : <source>$(location) $(options) : : is-default ;
+            using zlib : $(version) : <source>$(location) $(options) : [ extension.static-with-fpic ] : is-default ;
             alias z : /zlib//zlib ;
         }
     }

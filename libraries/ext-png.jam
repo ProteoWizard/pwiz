@@ -44,7 +44,7 @@ rule init ( version ? : location : options * )
             errors.user-error "LibPNG source tree not found at $(location)" ;
         }
 
-        using png : $(version) : <source>$(location) $(options) : <library>/zlib//zlib : is-default ;
+        using png : $(version) : <source>$(location) $(options) : [ extension.static-with-fpic ] <library>/zlib//zlib : is-default ;
         alias png : /libpng//libpng ;
     }
 }

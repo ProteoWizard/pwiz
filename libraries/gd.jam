@@ -30,7 +30,7 @@ rule init ( version ? : location : options * )
         .initialized = true ;
 
         version ?= default ;
-        local requirements = [ extension.define gd $(version) : $(location) : $(options) ] ;
+        local requirements = [ extension.define gd $(version) : $(location) : $(options) ] [ extension.static-with-fpic ] ;
 
         local sources =
             gd.c

@@ -180,6 +180,7 @@ rule init ( version : location : options * )
 
         local requirements =
             [ extension.refine boost $(version) : <tag>@boost-tag $(options) ]
+            [ extension.static-with-fpic ]
             $(options)
             <toolset>msvc:<define>WIN32
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE

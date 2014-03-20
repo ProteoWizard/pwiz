@@ -37,6 +37,7 @@ rule init ( version ? : location : options * )
             <freetype-location>$(location)
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
             <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+            [ extension.static-with-fpic ]
             ;
         local common-requirements =
             <include>$(location)/include

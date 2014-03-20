@@ -89,7 +89,7 @@ rule init ( version ? : location : options * )
      tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
      
     version ?= default ;
-    local requirements = [ extension.define expat $(version) : $(location) : $(options) ] ;
+    local requirements = [ extension.define expat $(version) : $(location) : $(options) ] [ extension.static-with-fpic ] ;
     
     make expat_config.h : : @config_h
         :   <expat-version>$(version)

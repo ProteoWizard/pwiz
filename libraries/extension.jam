@@ -278,3 +278,10 @@ actions make-text
 {
     @($(STDOUT):E=$(TEXT)) > "$(<)"
 }
+
+# any GCC executable that uses shared libraries must have all its code built with -fPIC
+rule static-with-fpic
+{
+    return <toolset>gcc,<link>static:<cflags>-fPIC <toolset>gcc,<link>static:<cxxflags>-fPIC <toolset>gcc,<link>static:<linkflags>-fPIC
+           <toolset>darwin,<link>static:<cflags>-fPIC <toolset>darwin,<link>static:<cxxflags>-fPIC <toolset>darwin,<link>static:<linkflags>-fPIC ;
+}
