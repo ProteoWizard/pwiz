@@ -114,7 +114,7 @@ void test()
 
         SourceFilePtr sfp(new SourceFile);
         sfp->id = "testEmbedder.raw";
-        sfp->set(MS_Thermo_RAW_file);
+        sfp->set(MS_Thermo_RAW_format);
         sfp->set(MS_Thermo_nativeID_format);
         msd.fileDescription.sourceFilePtrs.push_back(sfp);
 
