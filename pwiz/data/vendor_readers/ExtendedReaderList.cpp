@@ -28,6 +28,7 @@
 #include "ABI/T2D/Reader_ABI_T2D.hpp"
 #include "Agilent/Reader_Agilent.hpp"
 #include "Bruker/Reader_Bruker.hpp"
+#include "Shimadzu/Reader_Shimadzu.hpp"
 #include "Thermo/Reader_Thermo.hpp"
 #include "Waters/Reader_Waters.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -43,6 +44,7 @@ PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
     push_back(ReaderPtr(new Reader_ABI_T2D));
     push_back(ReaderPtr(new Reader_Agilent));
     push_back(ReaderPtr(new Reader_Bruker));
+    push_back(ReaderPtr(new Reader_Shimadzu));
     push_back(ReaderPtr(new Reader_Thermo));
     push_back(ReaderPtr(new Reader_Waters));
 }

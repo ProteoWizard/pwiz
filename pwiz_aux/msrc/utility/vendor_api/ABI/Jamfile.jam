@@ -55,7 +55,9 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/Clearcore2.StructuredStorage.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Utility.dll ;
         if <toolset-msvc:version>10.0 in $(properties) ||
-           <toolset-msvc:version>10.0express in $(properties)
+           <toolset-msvc:version>10.0express in $(properties) ||
+           <toolset-msvc:version>11.0 in $(properties) ||
+           <toolset-msvc:version>12.0 in $(properties)
         {
             result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
             result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
@@ -119,7 +121,9 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)/Clearcore2.StructuredStorage.dll ;
         result += <source>$(dll_location)/Clearcore2.Utility.dll ;
         if <toolset-msvc:version>10.0 in $(properties) ||
-           <toolset-msvc:version>10.0express in $(properties)
+           <toolset-msvc:version>10.0express in $(properties) ||
+           <toolset-msvc:version>11.0 in $(properties) ||
+           <toolset-msvc:version>12.0 in $(properties)
         {
             result += <source>$(dll_location)/Clearcore2.Muni.dll ;
             result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;

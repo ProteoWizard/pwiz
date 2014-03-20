@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Util
         // Not L10N
         public const string EXT_THERMO_RAW = ".raw";
         public const string EXT_WIFF = ".wiff";
+        public const string EXT_SHIMADZU_RAW = ".lcd";
         public const string EXT_MZXML =  ".mzxml";
         public const string EXT_MZDATA = ".mzdata";
         public const string EXT_MZML = ".mzml";
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_WIFF = "ABSciex WIFF";
         public const string TYPE_AGILENT = "Agilent Data";
         public const string TYPE_BRUKER = "Bruker Data";
+        public const string TYPE_SHIMADZU = "Shimadzu Data";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
         public const string TYPE_WATERS_RAW = "Waters RAW";
         public const string TYPE_MZML = "mzML";
@@ -101,6 +103,7 @@ namespace pwiz.Skyline.Util
             {
                 case EXT_THERMO_RAW: return TYPE_THERMO_RAW;
                 case EXT_WIFF: return TYPE_WIFF;
+                case EXT_SHIMADZU_RAW: return TYPE_SHIMADZU;
                 //case ".mgf": return "Mascot Generic";
                 //case ".dta": return "Sequest DTA";
                 //case ".yep": return "Bruker YEP";

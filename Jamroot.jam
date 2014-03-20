@@ -573,6 +573,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
     }
@@ -809,6 +810,29 @@ rule bruker-dll-location ( api-path : properties * )
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        $(result) &&
        [ path.exists $(result)\\CompassXtractMS.dll ]            
+    {
+        return $(result) ;
+    }
+}
+
+rule shimadzu-dll-location ( api-path : properties * )
+{
+    local result ;
+    if <toolset-msvc:version>10.0 in $(properties) ||
+       <toolset-msvc:version>10.0express in $(properties)
+    {
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result = $(api-path)\\x64 ;
+        }
+        else
+        {
+            result = $(api-path)\\x86 ;
+        }
+    }
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       $(result) &&
+       [ path.exists $(result)\\DataReader.dll ]
     {
         return $(result) ;
     }

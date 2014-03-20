@@ -77,6 +77,19 @@ void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<nativ
 }
 
 
+template<typename managed_value_type, typename native_value_type>
+void ToStdVector(System::Collections::Generic::IList<managed_value_type>^ managedList, std::vector<native_value_type>& stdVector)
+{
+    stdVector.clear();
+    if (managedList->Count > 0)
+    {
+        stdVector.reserve(managedList->Count);
+        for (size_t i = 0, end = managedList->Count; i < end; ++i)
+            stdVector.push_back((native_value_type) managedList[i]);
+    }
+}
+
+
 /// wraps a managed array in an automation_vector to enable direct access from unmanaged code
 template<typename managed_value_type, typename native_value_type>
 void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation_vector<native_value_type>& automationArray)

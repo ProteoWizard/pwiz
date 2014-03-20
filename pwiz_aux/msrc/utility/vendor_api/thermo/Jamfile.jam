@@ -42,7 +42,7 @@ if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
     # ignore vendor DLLs even if they're available
     local destination = [ path.native $(API_PATH) ] ;
     SHELL "mkdir \"$(destination)\\$(PLATFORM)\" >nul 2>&1" ;
-    SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.dummy\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
+    SHELL "copy /Y \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.dummy\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
     RESCAN ;
 }
 else

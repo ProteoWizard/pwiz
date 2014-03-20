@@ -49,6 +49,7 @@ namespace pwiz.Skyline.FileUI
                 DataSourceUtil.TYPE_WIFF,
                 DataSourceUtil.TYPE_AGILENT,
                 DataSourceUtil.TYPE_BRUKER,
+                DataSourceUtil.TYPE_SHIMADZU,
                 DataSourceUtil.TYPE_THERMO_RAW,
                 DataSourceUtil.TYPE_WATERS_RAW,
                 DataSourceUtil.TYPE_MZML,
