@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestUtil
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
                 if (i == waitCycles - 1)
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForCondition", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForCondition. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
             }
             return false;
         }
@@ -435,7 +435,7 @@ namespace pwiz.SkylineTestUtil
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
                 if (i == waitCycles - 1)
-                    Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
+                    Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString()); // Not L10N
             }
             return false;
         }
