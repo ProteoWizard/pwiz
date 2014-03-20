@@ -266,15 +266,6 @@ namespace pwiz.Skyline.Util
                 Add(item);
         }
 
-        #region INamer<TValue> Members
-
-        public TKey GetKey(TValue item)
-        {
-            return item.GetKey();
-        }
-
-        #endregion
-
         #region Collection<TValue> Overrides
 
         protected override void ClearItems()

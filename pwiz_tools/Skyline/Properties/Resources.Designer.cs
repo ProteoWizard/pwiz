@@ -6890,15 +6890,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hello.
-        /// </summary>
-        public static string Hello {
-            get {
-                return ResourceManager.GetString("Hello", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Nullable was expected to have a value..
         /// </summary>
         public static string Helpers_AssumeValue_Nullable_was_expected_to_have_a_value {
@@ -11874,15 +11865,6 @@ namespace pwiz.Skyline.Properties {
         public static string RefineListDlg_OkDialog_The_peptide___0___is_not_in_the_document {
             get {
                 return ResourceManager.GetString("RefineListDlg_OkDialog_The_peptide___0___is_not_in_the_document", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The peptide &apos;{2}&apos; is not in the document..
-        /// </summary>
-        public static string RefineListDlg_OkDialog_The_peptide___2___is_not_in_the_document {
-            get {
-                return ResourceManager.GetString("RefineListDlg_OkDialog_The_peptide___2___is_not_in_the_document", resourceCulture);
             }
         }
         

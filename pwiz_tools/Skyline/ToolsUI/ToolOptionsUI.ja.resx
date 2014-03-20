@@ -129,7 +129,7 @@
     <value>9, 22</value>
   </data>
   <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>278, 199</value>
+    <value>264, 199</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
   <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
@@ -178,10 +178,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>290, 22</value>
+    <value>279, 22</value>
   </data>
   <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 23</value>
+    <value>100, 23</value>
   </data>
   <data name="btnEditServers.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -227,6 +227,84 @@
   </data>
   <data name="&gt;&gt;tabPanorama.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="labelDisplayLanguage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="labelDisplayLanguage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>377, 39</value>
+  </data>
+  <data name="labelDisplayLanguage.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelDisplayLanguage.Text" xml:space="preserve">
+<value>表示言語を選択 (Skylineを再起動したときに有効になる)</value>
+  </data>
+  <data name="&gt;&gt;labelDisplayLanguage.Name" xml:space="preserve">
+    <value>labelDisplayLanguage</value>
+  </data>
+  <data name="&gt;&gt;labelDisplayLanguage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDisplayLanguage.Parent" xml:space="preserve">
+    <value>tabLanguage</value>
+  </data>
+  <data name="&gt;&gt;labelDisplayLanguage.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="listBoxLanguages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listBoxLanguages.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 45</value>
+  </data>
+  <data name="listBoxLanguages.Size" type="System.Drawing.Size, System.Drawing">
+    <value>377, 199</value>
+  </data>
+  <data name="listBoxLanguages.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;listBoxLanguages.Name" xml:space="preserve">
+    <value>listBoxLanguages</value>
+  </data>
+  <data name="&gt;&gt;listBoxLanguages.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listBoxLanguages.Parent" xml:space="preserve">
+    <value>tabLanguage</value>
+  </data>
+  <data name="&gt;&gt;listBoxLanguages.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabLanguage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabLanguage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabLanguage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabLanguage.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabLanguage.Text" xml:space="preserve">
+<value>言語</value>
+  </data>
+  <data name="&gt;&gt;tabLanguage.Name" xml:space="preserve">
+    <value>tabLanguage</value>
+  </data>
+  <data name="&gt;&gt;tabLanguage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabLanguage.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -280,13 +358,13 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
   </data>
   <data name="tabControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>397, 274</value>
+    <value>408, 274</value>
   </data>
   <data name="tabControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -307,7 +385,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>334, 292</value>
+    <value>342, 292</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -334,7 +412,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>253, 292</value>
+    <value>261, 292</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -364,7 +442,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>421, 320</value>
+    <value>432, 320</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
