@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Model.Results
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
 
-            return new SpectraChromDataProvider(dataFile, fileInfo, _document, _status, startPercent, EndPercent, _loader);
+            return new SpectraChromDataProvider(dataFile, fileInfo, _document, CachePath, _status, startPercent, EndPercent, _loader);
         }
 
         private const int MAX_CHROM_READ_AHEAD = 20;
