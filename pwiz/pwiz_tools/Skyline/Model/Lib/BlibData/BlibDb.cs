@@ -258,7 +258,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             else
                             {
                                 // get all the spectra, including the redundant ones if this library has any
-                                var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant);
+                                var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant).ToArray();
+                                // Avoid saving to the RefSpectra table for isotope label types that have no spectra
+                                if (spectra.Length == 0)
+                                    continue;
 
                                 DbRefSpectra refSpectra = new DbRefSpectra
                                                               {
