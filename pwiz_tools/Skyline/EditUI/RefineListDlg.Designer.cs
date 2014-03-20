@@ -34,6 +34,7 @@
             this.textPeptides = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cbRemoveProteins = new System.Windows.Forms.CheckBox();
+            this.cbMatchModified = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -54,6 +55,8 @@
             // 
             resources.ApplyResources(this.textPeptides, "textPeptides");
             this.textPeptides.Name = "textPeptides";
+            this.textPeptides.Enter += new System.EventHandler(this.textPeptides_Enter);
+            this.textPeptides.Leave += new System.EventHandler(this.textPeptides_Leave);
             // 
             // label1
             // 
@@ -66,12 +69,19 @@
             this.cbRemoveProteins.Name = "cbRemoveProteins";
             this.cbRemoveProteins.UseVisualStyleBackColor = true;
             // 
+            // cbMatchModified
+            // 
+            resources.ApplyResources(this.cbMatchModified, "cbMatchModified");
+            this.cbMatchModified.Name = "cbMatchModified";
+            this.cbMatchModified.UseVisualStyleBackColor = true;
+            // 
             // RefineListDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbMatchModified);
             this.Controls.Add(this.cbRemoveProteins);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textPeptides);
@@ -94,5 +104,6 @@
         private System.Windows.Forms.TextBox textPeptides;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbRemoveProteins;
+        private System.Windows.Forms.CheckBox cbMatchModified;
     }
 }

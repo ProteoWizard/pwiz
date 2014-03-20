@@ -1168,7 +1168,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
-        public override int RevisionIndexCurrent { get { return 5; } }
+        public override int RevisionIndexCurrent { get { return 6; } }
 
         public static CollisionEnergyRegression GetDefault()
         {
@@ -1297,7 +1297,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(3, 0.036, -1.328)
                                 }),
                         };
-                default:    // v2.5
+                case 5:    // v2.5
                     return new[]
                         {
                             GetDefault(), 
@@ -1327,6 +1327,16 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(3, 0.036, -1.328)
                                 }),
                         };
+                default:    // v2.5.1 - add Shimadzu
+                    {
+                        var list5 = GetDefaults(5).ToList();
+                        list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[]
+                        {
+                            new ChargeRegressionLine(2, 0.033, 3.1104),
+                            new ChargeRegressionLine(3, 0.037, -0.8368), 
+                        }));
+                        return list5.ToArray();
+                    }
             }
         }
 

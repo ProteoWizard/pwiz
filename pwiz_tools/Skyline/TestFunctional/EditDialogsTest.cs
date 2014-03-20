@@ -104,7 +104,6 @@ namespace pwiz.SkylineTestFunctional
 
         private void RunOtherDialogs()
         {
-            RunDlg<RefineListDlg>(SkylineWindow.AcceptPeptides);
             RunDlg<ChromatogramRTThresholdDlg>(SkylineWindow.ShowChromatogramRTThresholdDlg);
 
             var rtReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);

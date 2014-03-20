@@ -170,6 +170,16 @@ namespace pwiz.Skyline.Model
                 : string.Format("{0} +{1}", LocalizationHelper.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
         }
 
+        public static int? GetChargeFromIndicator(string text, int min, int max)
+        {
+            for (int i = max; i >= min; i--)
+            {
+                if (text.EndsWith(GetChargeIndicator(i)))
+                    return i;
+            }
+            return null;
+        }
+
         public static string GetMassIndexText(int massIndex)
         {
             if (massIndex == 0)

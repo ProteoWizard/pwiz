@@ -70,7 +70,20 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IEnumerable<string> AcceptedPeptides { get; set; }
+        public struct PeptideCharge
+        {
+            public PeptideCharge(string sequence, int? charge) : this()
+            {
+                Sequence = sequence;
+                Charge = charge;
+            }
+
+            public string Sequence { get; private set; }
+            public int? Charge { get; private set; }
+        }
+
+        public IEnumerable<PeptideCharge> AcceptedPeptides { get; set; }
+        public bool AcceptModified { get; set; }
         public bool RemoveRepeatedPeptides { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
         public IsotopeLabelType RefineLabelType { get; set; }
@@ -109,8 +122,27 @@ namespace pwiz.Skyline.Model
 
             HashSet<string> includedPeptides = (RemoveRepeatedPeptides ? new HashSet<string>() : null);
             HashSet<string> repeatedPeptides = (RemoveDuplicatePeptides ? new HashSet<string>() : null);
-            HashSet<string> acceptedPeptides = (AcceptedPeptides != null ?
-                new HashSet<string>(AcceptedPeptides) : null);
+            Dictionary<string, List<int>> acceptedPeptides = null;
+            if (AcceptedPeptides != null)
+            {
+                acceptedPeptides = new Dictionary<string, List<int>>();
+                foreach (var peptideCharge in AcceptedPeptides)
+                {
+                    List<int> charges;
+                    if (!acceptedPeptides.TryGetValue(peptideCharge.Sequence, out charges))
+                    {
+                        charges = (peptideCharge.Charge.HasValue ? new List<int> {peptideCharge.Charge.Value} : null);
+                        acceptedPeptides.Add(peptideCharge.Sequence, charges);
+                    }
+                    else if (charges != null)
+                    {
+                        if (peptideCharge.Charge.HasValue)
+                            charges.Add(peptideCharge.Charge.Value);
+                        else
+                            acceptedPeptides[peptideCharge.Sequence] = null;
+                    }
+                }
+            }
 
             var listPepGroups = new List<PeptideGroupDocNode>();
             // Excluding proteins with too few peptides, since they can impact results
@@ -176,7 +208,7 @@ namespace pwiz.Skyline.Model
                                            ICollection<int> outlierIds,
                                            ICollection<string> includedPeptides,
                                            ICollection<string> repeatedPeptides,
-                                           ICollection<string> acceptedPeptides)
+                                           Dictionary<string, List<int>> acceptedPeptides)
         {
             var listPeptides = new List<PeptideDocNode>();
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
@@ -186,9 +218,9 @@ namespace pwiz.Skyline.Model
 
                 // If there is a set of accepted peptides, and this is not one of them
                 // then skip it.
+                List<int> acceptedCharges = null;
                 if (acceptedPeptides != null &&
-                    !acceptedPeptides.Contains(nodePep.Peptide.Sequence) &&
-                    !acceptedPeptides.Contains(nodePep.ModifiedSequenceDisplay))
+                    !acceptedPeptides.TryGetValue(AcceptModified ? nodePep.ModifiedSequence : nodePep.Peptide.Sequence, out acceptedCharges))
                 {
                     continue;
                 }
@@ -225,7 +257,7 @@ namespace pwiz.Skyline.Model
                         new SrmSettingsDiff(false, false, true, false, AutoPickTransitionsAll, false));
                 }
 
-                nodePepRefined = Refine(nodePepRefined, document, bestResultIndex);
+                nodePepRefined = Refine(nodePepRefined, document, bestResultIndex, acceptedCharges);
                 // Always remove peptides if all precursors have been removed by refinement
                 if (!ReferenceEquals(nodePep, nodePepRefined) && nodePepRefined.Children.Count == 0)
                     continue;
@@ -294,7 +326,10 @@ namespace pwiz.Skyline.Model
             return (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(childrenNew, updateAutoManage);
         }
 
-        private PeptideDocNode Refine(PeptideDocNode nodePep, SrmDocument document, int bestResultIndex)
+        private PeptideDocNode Refine(PeptideDocNode nodePep,
+                                      SrmDocument document,
+                                      int bestResultIndex,
+                                      List<int> acceptedCharges)
         {
             int minTrans = MinTransitionsPepPrecursor ?? 0;
 
@@ -302,6 +337,9 @@ namespace pwiz.Skyline.Model
             var listGroups = new List<TransitionGroupDocNode>();
             foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
             {
+                if (acceptedCharges != null && !acceptedCharges.Contains(nodeGroup.TransitionGroup.PrecursorCharge))
+                    continue;
+
                 if (!AddLabelType && RefineLabelType != null && Equals(RefineLabelType, nodeGroup.TransitionGroup.LabelType))
                     continue;
 

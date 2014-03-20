@@ -836,7 +836,42 @@ namespace pwiz.Skyline.Model
     public class ShimadzuMassListExporter : AbstractMassListExporter
     {
         public double? RunLength { get; set; }
-        private readonly List<PeptideDocNode> _peptidesSeen = new List<PeptideDocNode>();
+        private readonly Dictionary<GroupStepKey, int> _peptidesSeen = new Dictionary<GroupStepKey, int>();
+
+        private struct GroupStepKey
+        {
+            private readonly int _groupGlobalIndex;
+            private readonly int _step;
+
+            public GroupStepKey(int groupGlobalIndex, int step)
+            {
+                _groupGlobalIndex = groupGlobalIndex;
+                _step = step;
+            }
+
+            #region object overrides
+
+            public bool Equals(GroupStepKey other)
+            {
+                return _groupGlobalIndex == other._groupGlobalIndex && _step == other._step;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is GroupStepKey && Equals((GroupStepKey) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (_groupGlobalIndex*397) ^ _step;
+                }
+            }
+
+            #endregion
+        }
 
         public ShimadzuMassListExporter(SrmDocument document)
             : base(document, null)
@@ -879,13 +914,19 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(Document.Settings.GetModifiedSequence(nodePep) + "_" + nodeTranGroup.TransitionGroup.LabelType.ToString().Replace(' ', '_'));
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep) +
+                "_" + nodeTranGroup.TransitionGroup.LabelType.ToString().Replace(' ', '_'));
+            if (step != 0)
+                writer.Write("_" + step);
             writer.Write(FieldSeparator);
-            if (_peptidesSeen.Count == 0 || ReferenceEquals(nodePep, _peptidesSeen.Last()))
+            int id;
+            var key = new GroupStepKey(nodeTranGroup.Id.GlobalIndex, step);
+            if (!_peptidesSeen.TryGetValue(key, out id))
             {
-                _peptidesSeen.Add(nodePep);
+                id = _peptidesSeen.Count + 1;
+                _peptidesSeen.Add(key, id);
             }
-            writer.Write(_peptidesSeen.Count);
+            writer.Write(id);
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)
@@ -894,7 +935,10 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            // Shimadzu cannot handle product mass shifting, so the product m/z step is always 0
+            // The collision energy will be changed, however, and ProteoWizard has access to that
+            // which allows us to sort identical precursor, product m/z pairs correctly
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), 0).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             // Retention time and window

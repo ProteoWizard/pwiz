@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -38,15 +39,32 @@ namespace pwiz.Skyline.EditUI
             _document = document;
         }
 
-        public string[] AcceptedPeptides { get; private set; }
-        public bool RemoveEmptyProteins { get; private set; }
+        public RefinementSettings.PeptideCharge[] AcceptedPeptides { get; private set; }
+
+        public bool RemoveEmptyProteins
+        {
+            get { return cbRemoveProteins.Checked; }
+            set { cbRemoveProteins.Checked = value; }            
+        }
+
+        public bool MatchModified
+        {
+            get { return cbMatchModified.Checked; }
+            set { cbMatchModified.Checked = value; }
+        }
+
+        public string PeptidesText
+        {
+            get { return textPeptides.Text; }
+            set { textPeptides.Text = value; }
+        }
 
         public void OkDialog()
         {
-            var reader = new StringReader(textPeptides.Text);
+            var reader = new StringReader(PeptidesText);
             var invalidLines = new List<string>();
             var notFoundLines = new List<string>();
-            var acceptedPeptides = new List<string>();
+            var acceptedPeptides = new List<RefinementSettings.PeptideCharge>();
             var peptideSequences = GetPeptideSequences();
 
             string line;
@@ -55,25 +73,47 @@ namespace pwiz.Skyline.EditUI
                 line = line.Trim();
                 if (string.IsNullOrEmpty(line))
                     continue;
+                int? charge = null;
+                int chargeIndex = line.IndexOf('+');
+                if (chargeIndex != -1)
+                {
+                    charge = Transition.GetChargeFromIndicator(line,
+                        TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                    if (charge.HasValue)
+                        line = line.Substring(0, line.Length - Transition.GetChargeIndicator(charge.Value).Length);
+                }
                 if (!FastaSequence.IsExSequence(line))
+                {
                     invalidLines.Add(line);
-                else if (!peptideSequences.Contains(line))
+                    continue;
+                }
+                try
+                {
+                    line = SequenceMassCalc.NormalizeModifiedSequence(line);
+                }
+                catch (Exception)
+                {
+                    invalidLines.Add(line);
+                    continue;
+                }
+
+                if (!peptideSequences.Contains(line))
                     notFoundLines.Add(line);
                 else
-                    acceptedPeptides.Add(line);
+                    acceptedPeptides.Add(new RefinementSettings.PeptideCharge(line, charge));
             }
 
             if (invalidLines.Count > 0)
             {
                 if (invalidLines.Count == 1)
-                    MessageBox.Show(this, string.Format(Resources.RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide, invalidLines[0]), Program.Name);
+                    MessageDlg.Show(this, string.Format(Resources.RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide, invalidLines[0]));
                 else
-                    MessageBox.Show(this, TextUtil.LineSeparate(Resources.RefineListDlg_OkDialog_The_following_sequences_are_not_valid_peptides,string.Empty, TextUtil.LineSeparate(invalidLines)), Program.Name);
+                    MessageDlg.Show(this, TextUtil.LineSeparate(Resources.RefineListDlg_OkDialog_The_following_sequences_are_not_valid_peptides,string.Empty, TextUtil.LineSeparate(invalidLines)));
                 return;
             }
             if (acceptedPeptides.Count == 0)
             {
-                MessageBox.Show(this, Resources.RefineListDlg_OkDialog_None_of_the_specified_peptides_are_in_the_document, Program.Name);
+                MessageDlg.Show(this, Resources.RefineListDlg_OkDialog_None_of_the_specified_peptides_are_in_the_document);
                 return;
             }
             if (notFoundLines.Count > 0)
@@ -94,12 +134,11 @@ namespace pwiz.Skyline.EditUI
                     message = string.Format(Resources.RefineListDlg_OkDialog_Of_the_specified__0__peptides__1__are_not_in_the_document_Do_you_want_to_continue,
                                             notFoundLines.Count + acceptedPeptides.Count, notFoundLines.Count);
                 }
-                if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                if (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK) != DialogResult.OK)
                     return;
             }
 
             AcceptedPeptides = acceptedPeptides.ToArray();
-            RemoveEmptyProteins = cbRemoveProteins.Checked;
             DialogResult = DialogResult.OK;
         }
 
@@ -112,8 +151,20 @@ namespace pwiz.Skyline.EditUI
         {
             var peptideSequences = new HashSet<string>();
             foreach (var nodePep in _document.Peptides)
-                peptideSequences.Add(nodePep.Peptide.Sequence);
+            {
+                peptideSequences.Add(MatchModified ? nodePep.ModifiedSequence : nodePep.Peptide.Sequence);
+            }
             return peptideSequences;
+        }
+
+        private void textPeptides_Enter(object sender, EventArgs e)
+        {
+            AcceptButton = null;
+        }
+
+        private void textPeptides_Leave(object sender, EventArgs e)
+        {
+            AcceptButton = btnOk;
         }
     }
 }

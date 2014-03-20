@@ -307,7 +307,7 @@ namespace pwiz.SkylineTestFunctional
                         ToolUpdatesDlg.FormatFailureMessage(SAMPLE_TOOL.PackageName, Resources.ToolUpdatesDlg_InstallUpdates_User_cancelled_installation))),
                 messageDlg.Message);
             OkDialog(messageDlg, messageDlg.OkDialog);
-            WaitForClosedForm <ToolUpdatesDlg>();
+            WaitForClosedForm<ToolUpdatesDlg>();
             AssertUpdateAvailability(Settings.Default.ToolList, true, true);
             Settings.Default.ToolList.Clear();
         }

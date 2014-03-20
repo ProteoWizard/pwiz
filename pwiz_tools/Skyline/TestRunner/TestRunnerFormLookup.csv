@@ -22,6 +22,7 @@ ChromatogramRTThresholdDlg,TestEditDialogs
 ChromChartPropertyDlg,TestPeakPickingTutorial
 ColumnChooser,TestStandardTypeWithOldReports
 ConfigureToolsDlg,TestQuasarTutorial
+CreateIrtCalculatorDlg,TestAssayLibraryImport
 DefineAnnotationDlg,TestAnnotations
 DocumentGridForm,TestReportSummary
 EditCEDlg,TestOptimization
@@ -101,7 +102,7 @@ PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
 RecalibrateIrtDlg,IrtFunctionalTest
 RefineDlg,TestMethodEditTutorial
-RefineListDlg,TestEditDialogs
+RefineListDlg,TestRefineListDlg
 RegressionRTThresholdDlg,TestIrtTutorial
 ReintegrateDlg,TestReintegrateDlg
 RenameProteinsDlg,TestRenameProteins

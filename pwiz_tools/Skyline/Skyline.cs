@@ -1954,7 +1954,11 @@ namespace pwiz.Skyline
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var refinementSettings = new RefinementSettings {AcceptedPeptides = dlg.AcceptedPeptides};
+                    var refinementSettings = new RefinementSettings
+                    {
+                        AcceptedPeptides = dlg.AcceptedPeptides,
+                        AcceptModified = dlg.MatchModified
+                    };
                     if (dlg.RemoveEmptyProteins)
                         refinementSettings.MinPeptidesPerProtein = 1;
 
