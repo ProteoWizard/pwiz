@@ -152,8 +152,8 @@ namespace MPP_Export
             try
             {
                 var currentDirectory = Directory.GetCurrentDirectory();
-                File.WriteAllText("MPPReport.csv", sb.ToString());
-                Console.WriteLine("Location: {0}\\MPPReport.csv",currentDirectory);
+                File.WriteAllText("MPPReport.txt", sb.ToString());
+                Console.WriteLine("Location: {0}\\MPPReport.txt",currentDirectory);
                 Console.WriteLine("File saved successfully.");
                 Console.WriteLine("Finished.");
             } // If file MPPReport.csv can't be accessed program will throw IOException.
@@ -204,7 +204,7 @@ namespace MPP_Export
 
         private static string SetFields(string[] row)
         {
-            String csvLine = String.Join(",", row.Select(field=>ToDsvField(field, ','))); // Not L10N
+            String csvLine = String.Join("\t", row.Select(field => ToDsvField(field, ','))); // Not L10N
             return csvLine;
         }
 
