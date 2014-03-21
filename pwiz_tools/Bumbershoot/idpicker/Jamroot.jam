@@ -220,7 +220,7 @@ rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-
         {
             local rm = [ common.rm-command ] ;
             rm = $(rm:J=" ") ;
-            SHELL "$(rm) $(filepath)" ;
+            SHELL "$(rm) \"$(filepath)\"" ;
         }
 
         local AssemblyCopyright = "Copyright © $(AssemblyCompany) $(revision-info[2])" ;
@@ -298,7 +298,7 @@ rule generate-rc ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? 
         {
             local rm = [ common.rm-command ] ;
             rm = $(rm:J=" ") ;
-            SHELL "$(rm) $(filepath)" ;
+            SHELL "$(rm) \"$(filepath)\"" ;
         }
 
         local copyright = "Copyright © $(Company) $(revision-info[2])" ;
@@ -366,7 +366,8 @@ constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 generate-AssemblyInfo.cs Util/Properties/AssemblyInfo.cs : [ path.glob-tree Util : *.jam *.?pp *.h *.cs ] App.config : : : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
 generate-AssemblyInfo.cs Model/Properties/AssemblyInfo.cs : [ path.glob-tree Model : *.jam *.?pp *.h *.cs ] : : : "IDPicker.DataModel" "IDPicker data model." $(COMPANY_AND_PRODUCT) ;
 generate-AssemblyInfo.cs Controls/Properties/AssemblyInfo.cs : [ path.glob-tree Controls : *.jam *.?pp *.h *.cs ] : : : "IDPicker.Controls" "IDPicker custom controls." $(COMPANY_AND_PRODUCT) ;
-    
+generate-AssemblyInfo.cs CustomDataSourceDialog/Properties/AssemblyInfo.cs : [ path.glob-tree CustomDataSourceDialog : *.jam *.?pp *.h *.cs ] : : : "IDPicker.CustomDataSourceDialog" "IDPicker custom open file dialog." $(COMPANY_AND_PRODUCT) ;
+
 generate-rc Resources/Resources.rc :
         [ path.glob-tree . : *.jam
                              *.?pp *.h
