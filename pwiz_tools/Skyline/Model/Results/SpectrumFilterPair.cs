@@ -169,8 +169,11 @@ namespace pwiz.Skyline.Model.Results
                     // mass error of the most intense peak for base peak.
                     if (highAcc && (Extractor == ChromExtractor.summed || meanError == 0))
                     {
-                        double deltaPeak = mz - target;
-                        meanError += (deltaPeak - meanError)*intensity/totalIntensity;
+                        if (totalIntensity > 0.0)
+                        {
+                            double deltaPeak = mz - target;
+                            meanError += (deltaPeak - meanError) * intensity / totalIntensity;
+                        }
                     }
                 }
                 extractedIntensities[i] = (float) totalIntensity;

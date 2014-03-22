@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Model.Results
         public SpectraChromDataProvider(MsDataFileImpl dataFile,
                                         ChromFileInfo fileInfo,
                                         SrmDocument document,
+                                        string cachePath, // We'll write tempfiles in this directory
                                         ProgressStatus status,
                                         int startPercent,
                                         int endPercent,
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Model.Results
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
             // Create allocator used by all ChromCollectors to store transition times and intensities.
-            _allocator = new ChromCollector.Allocator(dataFile.FilePath);
+            _allocator = new ChromCollector.Allocator(cachePath);
 
             using (dataFile)
             {
