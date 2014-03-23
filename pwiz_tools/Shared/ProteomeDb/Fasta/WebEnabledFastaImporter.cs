@@ -54,6 +54,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         private StringBuilder _curSequence;
         private readonly WebSearchProvider _webSearchProvider;
         private readonly List<RegexPair> _regexFasta;
+        private IpiToUniprotMap _ipiMapper;
 
 
         /// <summary>
@@ -546,7 +547,6 @@ namespace pwiz.ProteomeDatabase.Fasta
                 {UNIPROTKB_TAG, UNIPROTKB_RATELIMIT}
             };
 
-            IpiToUniprotMap mapper = null; // fairly expensive object, delay construction
             // sort out the various webservices so we can batch up
             var proteins = proteinsToSearch.ToArray();
             foreach (var prot in proteins)
@@ -555,8 +555,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                 var search = prot.GetProteinMetadata().GetPendingSearchTerm().ToUpperInvariant();
                 if (search.StartsWith("IPI")) // not L10N
                 {
-                    mapper = mapper ?? new IpiToUniprotMap();
-                    string mapped = mapper.MapToUniprot(search);
+                    if (_ipiMapper == null)
+                        _ipiMapper = new IpiToUniprotMap();
+                    string mapped = _ipiMapper.MapToUniprot(search);
                     if (mapped == search) // no mapping from that IPI
                     {
                         prot.SetWebSearchCompleted(); // no resolution for that IPI value
@@ -583,6 +584,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                     yield return prot;  // doesn't need search, just pass it back unchanged
                 }
             }
+            _ipiMapper = null;  // Done with this now
 
             // CONSIDER(bspratt): Could this be simplified?
             bool cancelled = false;

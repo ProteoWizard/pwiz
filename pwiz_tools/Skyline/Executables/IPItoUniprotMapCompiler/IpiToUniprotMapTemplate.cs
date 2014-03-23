@@ -18,7 +18,10 @@
  */
 
 using System;
-
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using Ionic.Zip;
 
 namespace pwiz.ProteomeDatabase.Fasta
 {
@@ -42,24 +45,21 @@ namespace pwiz.ProteomeDatabase.Fasta
         // Parallel arrays for best packing efficiency in 64 bit, per nicksh
         //
         // You might think a dictionary is the way to go, but with nearly 100,000
-        // entries it takes quite a while to construct.  Using a presorted array
-        // and binary search gives much better overall performance.
+        // entries it takes quite a while to construct, plus at that size it can
+        // cause issues with memory use (ends up on the Large Object Heap).  
+        // Using a presorted array and binary search gives much better overall performance.
         //
         // A simple index instead of this lookup scheme would require a table of 
         // 1,028,485 ints (the largest IPI number) for only  98,650 unique values.
+        //
+        // But even at 98,650 values we end up in the Large Object Heap if we don't
+        // subdivide (we don't want to be in the LOH because it doesn't garbage 
+        // collect as readily as we'd like).
 
-        private readonly int[] _ipi;
-        private readonly string[] _accession;
-        private int _nAdded;
-
-        // Certainly a static initialization would be better here, but in practice the
-        // compiler tips over with this many entries.  So, a dynamic initialization instead.  
-        // The cryptic "a()" instead of "add" or somesuch is just to keep filesize down.
-        private void a(int ipi, string accession) 
-        {
-            _ipi[_nAdded] = ipi;
-            _accession[_nAdded++] = accession;
-        }
+        // DECLARE_IPI_COUNT - this gets replaced with table size and chunksize declaration
+        private readonly List<int[]> _ipi;
+        private readonly List<int> _chunkStarts;
+        private readonly List<string[]> _accession;
 
         /// <summary>
         /// Map an IPI string to a Uniprot accession id, based on the table taken from
@@ -69,33 +69,74 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// <returns>a string with uniprot mapping, or the input string if no mapping exists</returns>
         public string MapToUniprot(string strIPI)
         {
-            if (strIPI.ToUpperInvariant().StartsWith("IPI")) // ipi, IPI, IPI:IPI, iPi_ etc
+            if (strIPI.ToUpperInvariant().StartsWith("IPI")) // ipi, IPI, IPI:IPI, iPi_ etc // Not L10N
             {
-                strIPI = strIPI.Split('.')[0]; // drop the version number if any
-                for (int len = 3; len < strIPI.Length;)
+                strIPI = strIPI.Split('.')[0]; // Drop the version number if any
+                for (int len = 3; len < strIPI.Length; )
                 {
                     int code;
                     if (int.TryParse(strIPI.Substring(len++), out code))
                     {
-                        int index = Array.BinarySearch(_ipi,code);
-                        if (index >= 0)
-                            return _accession[index];
-                        break; // it's a number, but not in the table
+                        // Which chunk is it in, if it exists?
+                        int chunk = _chunkStarts.BinarySearch(code);
+                        if (chunk < 0)
+                            chunk = (~chunk - 1);
+                        if ((chunk >= 0) && (chunk < SEGMENT_COUNT))
+                        {
+                            int index = Array.BinarySearch(_ipi[chunk], code);
+                            if (index >= 0)  // We do expect an exact match
+                                return _accession[chunk][index];
+                        }
+                        break; // It's a number, but not in the table
                     }
                 }
             }
-            return strIPI; // no mapping
+            return strIPI; // No mapping
         }
+
 
         public IpiToUniprotMap()
         {
-            // DECLARE_IPI_COUNT - this gets replaced with table size declaration
-            _nAdded = 0;
-            _accession = new String[ipiCount];
-            _ipi = new int[ipiCount];
-            // Add the mappings.  See notes above for why this is done dynamically,
-            // and why we use an unhelpful method name like a().
-            // ADD MAP. - this gets replaced with the generated map.
+            int added = 0;
+            _ipi = new List<int[]>(SEGMENT_COUNT);
+            _accession = new List<String[]>(SEGMENT_COUNT);
+            _chunkStarts = new List<int>(SEGMENT_COUNT + 1);
+            for (var iseg = SEGMENT_COUNT; iseg-- > 0; )
+            {
+                _ipi.Add(new int[SEGMENT_SIZE]);
+                _accession.Add(new String[SEGMENT_SIZE]);
+            }
+
+            // Add the mappings from an embedded resouce file.  See notes above for why this is done dynamically.
+            var streamInfo = Assembly.GetExecutingAssembly().GetManifestResourceStream("pwiz.ProteomeDatabase.Fasta.IpiToUniprotMap.zip"); // Not L10N
+            using (var zip = ZipFile.Read(streamInfo))
+            {
+                var entry = zip["MapUniprotIPI.txt"]; // Not L10N
+                using (var zstream = entry.OpenReader())
+                {
+                    using (var stream = new StreamReader(zstream))
+                    {
+                        string line = stream.ReadLine();
+                        while (line != null)
+                        {
+                            var pair = line.Split(' ');
+                            _ipi[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = Convert.ToInt32(pair[0]);
+                            _accession[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = pair[1];
+                            added++;
+                            line = stream.ReadLine();
+                        }
+                    }
+                }
+            }
+            while (added < SEGMENT_SIZE * SEGMENT_COUNT)
+            {
+                _ipi[added / SEGMENT_SIZE][added % SEGMENT_SIZE] = int.MaxValue; // Fill out the last chunk so binary search works properly
+                added++;
+            }
+
+            for (int chunk = 0; chunk < SEGMENT_COUNT; chunk++)
+                _chunkStarts.Add(_ipi[chunk][0]);
+            _chunkStarts.Add(int.MaxValue);
         }
     }
 }

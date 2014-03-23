@@ -73,6 +73,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\NHibernate\bin\net-2.0\Iesi.Collections.dll</HintPath>
     </Reference>
+    <Reference Include="Ionic.Zip">
+      <HintPath>..\Lib\DotNetZip\Release\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
@@ -153,6 +156,9 @@
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fasta\IpiToUniprotMap.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
