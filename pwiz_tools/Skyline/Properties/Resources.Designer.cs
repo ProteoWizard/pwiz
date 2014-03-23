@@ -9188,6 +9188,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading {0}.
+        /// </summary>
+        public static string MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_ {
+            get {
+                return ResourceManager.GetString("MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download canceled..
         /// </summary>
         public static string MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_ {
@@ -15995,6 +16004,15 @@ namespace pwiz.Skyline.Properties {
         public static string TestNamedPipeProcessRunner_RunProcess_Error_running_process {
             get {
                 return ResourceManager.GetString("TestNamedPipeProcessRunner_RunProcess_Error_running_process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The operation was canceled by the user..
+        /// </summary>
+        public static string TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_ {
+            get {
+                return ResourceManager.GetString("TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_", resourceCulture);
             }
         }
         

@@ -6300,4 +6300,10 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeptideGroupTreeNode_RenderTip_Species" xml:space="preserve">
     <value>Species</value>
   </data>
+    <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+    <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
+    <value>The operation was canceled by the user.</value>
+  </data>
 </root>

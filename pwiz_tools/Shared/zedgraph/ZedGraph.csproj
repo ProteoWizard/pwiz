@@ -246,7 +246,7 @@
     <EmbeddedResource Include="ZedGraph\ZedGraphLocale.tw.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ZedGraph\ZedGraphLocale.zh-cn.resx">
+    <EmbeddedResource Include="ZedGraph\ZedGraphLocale.zh-CHS.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ZedGraph\ZedGraphLocale.zh-tw.resx">
