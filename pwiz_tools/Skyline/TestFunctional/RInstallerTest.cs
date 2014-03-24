@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var rInstaller = FormatPackageInstaller(okAdminPrivledges: false);
             var messageDlg = ShowDialog<MessageDlg>(rInstaller.OkDialog);
-            RunUI(() => Assert.AreEqual("The operation was canceled by the user", messageDlg.Message));
+            RunUI(() => Assert.AreEqual(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_, messageDlg.Message));
             OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForClosedForm(rInstaller);
         }
