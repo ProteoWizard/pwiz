@@ -64,6 +64,13 @@ namespace pwiz.Skyline.Model.Results
         {
             _isoMapper = new OverlapIsolationWindowMapper();
         }
+        protected override void InitializeSolver()
+        {
+            int maxOverlapComponents = _isoMapper.MaxDeconvInIsoWindow();
+            var maxTransInSpectrum = _spectrumProcessor.MaxTransitions(maxOverlapComponents * IsoWindowsPerScan);
+            _deconvHandler = new MsxDeconvSolverHandler(NumDeconvRegions, NumScansBlock, maxTransInSpectrum);
+            _solver = new NonNegLsSolver(NumDeconvRegions, NumScansBlock, maxTransInSpectrum, true);
+        }
     }
 
     public class MsxIsolationWindowMapper : AbstractIsoWindowMapper
