@@ -36,37 +36,38 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor)]
     public class Precursor : SkylineDocNode<TransitionGroupDocNode>
     {
+        private readonly Lazy<Peptide> _peptide;
+        private readonly Lazy<Transitions> _transitions;
+        private readonly CachedValue<IDictionary<ResultKey, PrecursorResult>> _results;
         public Precursor(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
+            _peptide = new Lazy<Peptide>(() => new Peptide(DataSchema, IdentityPath.Parent));
+            _transitions = new Lazy<Transitions>(() => new Transitions(this));
+            _results = CachedValue.Create(DataSchema, MakeResults);
         }
 
-        private Peptide _peptide;
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Peptide Peptide
         {
-            get { return _peptide = _peptide ?? new Peptide(DataSchema, IdentityPath.Parent); }
+            get { return _peptide.Value; }
         }
-
-        private Transitions _transitions;
 
         [OneToMany(ForeignKey = "Precursor")]
         public Transitions Transitions
         {
-            get { return _transitions = _transitions ?? new Transitions(this); }
+            get { return _transitions.Value; }
         }
 
-        private IDictionary<ResultKey, PrecursorResult> _results;
         [DisplayName("PrecursorResults")]
         [OneToMany(ForeignKey = "Precursor", ItemDisplayName = "PrecursorResult")]
         public IDictionary<ResultKey, PrecursorResult> Results
         {
-            get { return _results = _results ?? MakeChromInfoResultsMap(DocNode.Results, file => new PrecursorResult(this, file)); }
+            get { return _results.Value; }
         }
 
-        protected override void OnDocumentChanged()
+        private IDictionary<ResultKey, PrecursorResult> MakeResults()
         {
-            _results = null;
-            base.OnDocumentChanged();
+            return MakeChromInfoResultsMap(DocNode.Results, file => new PrecursorResult(this, file));
         }
 
         protected override TransitionGroupDocNode CreateEmptyNode()

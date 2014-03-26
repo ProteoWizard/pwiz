@@ -138,6 +138,7 @@
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
     <Compile Include="ConfigureToolsDlgTest.cs" />
+    <Compile Include="DocumentGridTest.cs" />
     <Compile Include="EditDialogsTest.cs" />
     <Compile Include="EditSettingsTypesTest.cs" />
     <Compile Include="EmptyFunctionalTest.cs" />
@@ -245,6 +246,7 @@
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="DocumentGridTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
     <None Include="FullScanIdTest.zip" />

@@ -31,27 +31,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor_result)]
     public class PrecursorResult : Result
     {
+        private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
-            ChromInfo = GetResultFile().FindChromInfo(precursor.DocNode.Results);
+            _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
         }
-        protected override void OnDocumentChanged()
-        {
-            base.OnDocumentChanged();
-            var newChromInfo = GetResultFile().FindChromInfo(Precursor.DocNode.Results);
-            if (null != newChromInfo && !Equals(newChromInfo, ChromInfo))
-            {
-                ChromInfo = newChromInfo;
-                FirePropertyChanged(null);
-            }
-        }
-
 
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         [Advanced]
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
-        public TransitionGroupChromInfo ChromInfo { get; private set; }
+        public TransitionGroupChromInfo ChromInfo { get { return _chromInfo.Value; } }
         public void ChangeChromInfo(TransitionGroupChromInfo newChromInfo)
         {
             var newDocNode = Precursor.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Precursor.DocNode.Results, newChromInfo));

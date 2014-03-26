@@ -19,15 +19,12 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using pwiz.Common.DataBinding.RowSources;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public class SkylineObject : PropertyChangedSupport
+    public class SkylineObject
     {
-        private IDocumentChangeListener _documentChangeListener;
         public SkylineObject(SkylineDataSchema dataSchema)
         {
             DataSchema = dataSchema;
@@ -39,37 +36,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected SrmDocument SrmDocument
         {
             get { return DataSchema.Document; }
-        }
-
-        protected override void BeforeFirstListenerAdded()
-        {
-            base.BeforeFirstListenerAdded();
-            Debug.Assert(null == _documentChangeListener);
-            DataSchema.Listen(_documentChangeListener = new DocumentChangeListener(this));
-        }
-
-        protected override void AfterLastListenerRemoved()
-        {
-            Debug.Assert(null != _documentChangeListener);
-            DataSchema.Unlisten(_documentChangeListener);
-            _documentChangeListener = null;
-            base.AfterLastListenerRemoved();
-        }
-
-        private void DocumentOnChanged(object sender, DocumentChangedEventArgs e)
-        {
-            try
-            {
-                OnDocumentChanged();
-            }
-            catch (Exception exception)
-            {
-                Trace.TraceError("Exception in DocumentOnChanged {0}.  ", exception);
-            }
-        }
-
-        protected virtual void OnDocumentChanged()
-        {
         }
 
         public virtual object GetAnnotation(AnnotationDef annotationDef)
@@ -87,20 +53,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 throw new InvalidOperationException();
             }
             skylineWindow.ModifyDocument("Edit", action);
-        }
-
-        private class DocumentChangeListener : IDocumentChangeListener
-        {
-            private readonly SkylineObject _skylineObject;
-            public DocumentChangeListener(SkylineObject skylineObject)
-            {
-                _skylineObject = skylineObject;
-            }
-
-            public void DocumentOnChanged(object sender, DocumentChangedEventArgs args)
-            {
-                _skylineObject.DocumentOnChanged(sender, args);
-            }
         }
     }
 }

@@ -31,9 +31,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.peptide)]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
+        private readonly CachedValue<IDictionary<ResultKey, PeptideResult>> _results;
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
             : base(dataSchema, identityPath)
         {
+            _results = CachedValue.Create(dataSchema, MakeResults);
         }
 
         private Precursors _precursors;
@@ -43,21 +45,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return _precursors = _precursors ?? new Precursors(this); }
         }
 
-        private IDictionary<ResultKey, PeptideResult> _results;
         [DisplayName("PeptideResults")]
         [OneToMany(ForeignKey = "Peptide", ItemDisplayName = "PeptideResult")]
         public IDictionary<ResultKey, PeptideResult> Results
         {
             get
             {
-                return _results = _results ?? MakeChromInfoResultsMap(DocNode.Results, file => new PeptideResult(this, file));
+                return _results.Value;
             }
         }
 
-        protected override void OnDocumentChanged()
+        private IDictionary<ResultKey, PeptideResult> MakeResults()
         {
-            _results = null;
-            base.OnDocumentChanged();
+            return MakeChromInfoResultsMap(DocNode.Results, file => new PeptideResult(this, file));
         }
 
         protected override PeptideDocNode CreateEmptyNode()

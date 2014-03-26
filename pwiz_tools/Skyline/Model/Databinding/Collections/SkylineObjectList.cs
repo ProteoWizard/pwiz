@@ -66,7 +66,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         protected void OnDocumentChanged()
         {
-            bool listChanged = false;
             var newKeys = ListKeys();
             var newList = new List<TItem>();
             var newKeyIndexes = new Dictionary<TKey, int>();
@@ -88,7 +87,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             }
             if (!newList.SequenceEqual(this))
             {
-                listChanged = true;
                 Clear();
                 foreach (var item in newList)
                 {
@@ -96,10 +94,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 }
                 _keyIndexes = newKeyIndexes;
             }
-            if (listChanged)
-            {
-                OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
-            }
+            OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
         protected abstract IList<TKey> ListKeys();        

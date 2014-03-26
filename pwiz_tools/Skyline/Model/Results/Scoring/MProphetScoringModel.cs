@@ -372,7 +372,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             writer.WriteAttribute(ATTR.colinear_warning, ColinearWarning);
             writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys, true);
             writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
-            writer.WriteAttribute(ATTR.bias, Parameters.Bias);
+            if (null != Parameters)
+            {
+                writer.WriteAttribute(ATTR.bias, Parameters.Bias);
+            }
 
             // Write calculators
             var calculators = new List<FeatureCalculator>(PeakFeatureCalculators.Count);

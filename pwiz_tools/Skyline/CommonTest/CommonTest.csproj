@@ -73,7 +73,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataBinding\AttributeTest.cs" />
-    <Compile Include="DataBinding\BoundListTest.cs" />
     <Compile Include="DataBinding\CollectionInfoTest.cs" />
     <Compile Include="DataBinding\Controls\AvailableFieldsTreeTest.cs" />
     <Compile Include="DataBinding\Controls\BoundDataGridViewTest.cs" />

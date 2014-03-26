@@ -28,18 +28,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class ResultFile : SkylineObject, IComparable
     {
+        private readonly CachedValue<ChromFileInfo> _chromFileInfo;
         public ResultFile(Replicate replicate, ChromFileInfoId chromFileInfoId, int optStep) : base(replicate.DataSchema)
         {
             Replicate = replicate;
             ChromFileInfoId = chromFileInfoId;
-            ChromFileInfo = Replicate.ChromatogramSet.GetFileInfo(chromFileInfoId);
+            _chromFileInfo = CachedValue.Create(DataSchema, () => Replicate.ChromatogramSet.GetFileInfo(ChromFileInfoId));
             OptimizationStep = optStep;
         }
 
         [Browsable(false)]
         public ChromFileInfoId ChromFileInfoId { get; private set; }
         [Browsable(false)]
-        public ChromFileInfo ChromFileInfo { get; private set; }
+        public ChromFileInfo ChromFileInfo { get { return _chromFileInfo.Value; } }
         [Browsable(false)]
         public int OptimizationStep { get; private set; }
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
@@ -58,31 +59,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         public DateTime? ModifiedTime { get { return ChromFileInfo.FileWriteTime; } }
         public DateTime? AcquiredTime { get { return ChromFileInfo.RunStartTime; } }
-        protected override void OnDocumentChanged()
-        {
-            base.OnDocumentChanged();
-            var results = SrmDocument.Settings.MeasuredResults;
-            if (results == null || results.Chromatograms.Count <= Replicate.ReplicateIndex)
-            {
-                return;
-            }
-            var newChromatogramSet = results.Chromatograms[Replicate.ReplicateIndex];
-            if (newChromatogramSet == null)
-            {
-                return;
-            }
-            var newChromFileInfo = newChromatogramSet.GetFileInfo(ChromFileInfoId);
-            if (null == newChromFileInfo)
-            {
-                return;
-            }
-            if (Equals(newChromFileInfo, ChromFileInfo))
-            {
-                return;
-            }
-            ChromFileInfo = newChromFileInfo;
-            FirePropertyChanged(new PropertyChangedEventArgs(null));
-        }
 
         public TChromInfo FindChromInfo<TChromInfo>(Results<TChromInfo> chromInfos) where TChromInfo : ChromInfo
         {

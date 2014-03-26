@@ -97,7 +97,7 @@ namespace pwiz.Common.DataBinding.Internal
                 return new[] {rowItem};
             }
             var sublistColumn = SublistColumns[sublistColumnIndex];
-            object parentValue = sublistColumn.Parent.GetPropertyValue(rowItem, null, false);
+            object parentValue = sublistColumn.Parent.GetPropertyValue(rowItem, null);
             if (null == parentValue)
             {
                 return new[] {rowItem};
@@ -138,7 +138,7 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 foreach (var pivotKey in pivotKeys)
                 {
-                    var parentValue = pivotColumn.Parent.GetPropertyValue(rowItem, pivotKey, false);
+                    var parentValue = pivotColumn.Parent.GetPropertyValue(rowItem, pivotKey);
                     if (null != parentValue)
                     {
                         var keys = pivotColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToArray();
@@ -221,7 +221,7 @@ namespace pwiz.Common.DataBinding.Internal
                     if (null == pivotColumn)
                     {
                         groupKey.Add(new Tuple<PropertyPath, PivotKey, object>(column.PropertyPath, null,
-                            column.GetPropertyValue(rowItem, null, false)));
+                            column.GetPropertyValue(rowItem, null)));
                     }
                     else
                     {
@@ -231,7 +231,7 @@ namespace pwiz.Common.DataBinding.Internal
                             {
                                 continue;
                             }
-                            groupKey.Add(new Tuple<PropertyPath, PivotKey, object>(column.PropertyPath, pivotKey, column.GetPropertyValue(rowItem, pivotKey, false)));
+                            groupKey.Add(new Tuple<PropertyPath, PivotKey, object>(column.PropertyPath, pivotKey, column.GetPropertyValue(rowItem, pivotKey)));
                         }
                     }
                 }
@@ -243,7 +243,7 @@ namespace pwiz.Common.DataBinding.Internal
                     if (null == pivotColumn)
                     {
                         pivotOnKeyValues.Add(new KeyValuePair<PropertyPath, object>(column.PropertyPath,
-                            column.GetPropertyValue(rowItem, null, false)));
+                            column.GetPropertyValue(rowItem, null)));
                     }
                     else
                     {

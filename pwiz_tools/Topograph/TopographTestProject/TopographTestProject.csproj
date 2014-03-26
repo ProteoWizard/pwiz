@@ -103,7 +103,6 @@
     <Compile Include="ChromatogramGeneratorTest.cs" />
     <Compile Include="SerializationTest.cs" />
     <Compile Include="Util\ImmutableSortedListTest.cs" />
-    <Compile Include="Util\RedBlackTreeTest.cs" />
     <Compile Include="ViewSpecTest.cs" />
   </ItemGroup>
   <ItemGroup>

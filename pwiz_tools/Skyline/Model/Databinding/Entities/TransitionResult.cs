@@ -29,23 +29,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition_result)]
     public class TransitionResult : Result
     {
+        private readonly CachedValue<TransitionChromInfo> _chromInfo;
         public TransitionResult(Transition transition, ResultFile resultFile) : base(transition, resultFile)
         {
-            ChromInfo = GetResultFile().FindChromInfo(transition.DocNode.Results);
-        }
-        protected override void OnDocumentChanged()
-        {
-            base.OnDocumentChanged();
-            var newChromInfo = GetResultFile().FindChromInfo(Transition.DocNode.Results);
-            if (null != newChromInfo && !Equals(newChromInfo, ChromInfo))
-            {
-                ChromInfo = newChromInfo;
-                FirePropertyChanged(null);
-            }
+            _chromInfo = CachedValue.Create(DataSchema, () => GetResultFile().FindChromInfo(transition.DocNode.Results));
         }
 
         [Browsable(false)]
-        public TransitionChromInfo ChromInfo { get; private set; }
+        public TransitionChromInfo ChromInfo { get { return _chromInfo.Value; } }
 
         public void ChangeChromInfo(TransitionChromInfo newChromInfo)
         {

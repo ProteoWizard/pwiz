@@ -108,11 +108,6 @@ namespace pwiz.Common.DataBinding
 
         protected virtual object GetValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)
         {
-            var columnPropertyDescriptor = propertyDescriptor as ColumnPropertyDescriptor;
-            if (null != columnPropertyDescriptor)
-            {
-                return columnPropertyDescriptor.GetValueNoNotifyFutureChanges(rowItem);
-            }
             return propertyDescriptor.GetValue(rowItem);
         }
 

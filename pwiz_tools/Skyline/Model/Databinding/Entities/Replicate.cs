@@ -32,17 +32,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.replicate)]
     public class Replicate : SkylineObject, ILinkValue, IComparable
     {
+        private readonly CachedValue<ChromatogramSet> _chromatogramSet;
         public Replicate(SkylineDataSchema dataSchema, int replicateIndex) : base(dataSchema)
         {
             ReplicateIndex = replicateIndex;
-            ChromatogramSet = SrmDocument.Settings.MeasuredResults.Chromatograms[replicateIndex];
+            _chromatogramSet = CachedValue.Create(DataSchema, FindChromatogramSet);
         }
 
         [Browsable(false)]
         public int ReplicateIndex { get; private set; }
 
         [Browsable(false)]
-        public ChromatogramSet ChromatogramSet { get; private set; }
+        public ChromatogramSet ChromatogramSet { get { return _chromatogramSet.Value; } }
         public void ChangeChromatogramSet(ChromatogramSet chromatogramSet)
         {
             ModifyDocument(document =>
@@ -67,21 +68,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return Name;
         }
 
-        protected override void OnDocumentChanged()
+        private ChromatogramSet FindChromatogramSet()
         {
-            base.OnDocumentChanged();
             var results = SrmDocument.Settings.MeasuredResults;
             if (results == null || results.Chromatograms.Count <= ReplicateIndex)
             {
-                return;
+                return null;
             }
-            var newChromatogramSet = results.Chromatograms[ReplicateIndex];
-            if (Equals(newChromatogramSet, ChromatogramSet))
-            {
-                return;
-            }
-            ChromatogramSet = newChromatogramSet;
-            FirePropertyChanged(new PropertyChangedEventArgs(null));
+            return results.Chromatograms[ReplicateIndex];
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

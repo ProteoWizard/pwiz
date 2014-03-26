@@ -108,13 +108,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
     public abstract class SkylineDocNode<TDocNode> : SkylineDocNode where TDocNode : DocNode
     {
-        private SrmDocument _document;
-        private TDocNode _docNode;
-
+        private readonly CachedValue<TDocNode> _docNode;
         protected SkylineDocNode(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
-            GetDocNode();
-            _docNode = _docNode ?? CreateEmptyNode();
+            _docNode = CachedValue.Create(dataSchema, FindDocNode);
+            _docNode.GetValue();
         }
         [Browsable(false)]
         public TDocNode DocNode
@@ -124,24 +122,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public TDocNode GetDocNode()
         {
-            var newDocument = DataSchema.Document;
-            if (ReferenceEquals(_document, newDocument))
-            {
-                return _docNode;
-            }
-            var docNodeNew = (TDocNode)newDocument.FindNode(IdentityPath);
-            _document = newDocument;
-            if (null == docNodeNew)
-            {
-                return _docNode ?? CreateEmptyNode();
-            }
-            bool changed = null != _docNode && !Equals(docNodeNew, _docNode);
-            _docNode = docNodeNew;
-            if (changed)
-            {
-                FirePropertyChanged(new PropertyChangedEventArgs(null));
-            }
-            return _docNode;
+            return _docNode.Value;
+        }
+
+        private TDocNode FindDocNode()
+        {
+            return (TDocNode) DataSchema.Document.FindNode(IdentityPath) ?? CreateEmptyNode();
         }
 
         /// <summary>
@@ -152,12 +138,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public void ChangeDocNode(DocNode newDocNode)
         {
             ModifyDocument(document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode));
-        }
-
-        protected override void OnDocumentChanged()
-        {
-            base.OnDocumentChanged();
-            GetDocNode();
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

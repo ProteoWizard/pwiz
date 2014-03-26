@@ -175,15 +175,12 @@
     <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\GroupedRow.cs" />
     <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
-    <Compile Include="DataBinding\Internal\LongDecimal.cs" />
     <Compile Include="DataBinding\Internal\PivotedRows.cs" />
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
     <Compile Include="DataBinding\Internal\RowFilter.cs" />
-    <Compile Include="DataBinding\Internal\RowItemList.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrappers.cs" />
-    <Compile Include="DataBinding\Internal\TreeList.cs" />
     <Compile Include="DataBinding\IViewTransformer.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />

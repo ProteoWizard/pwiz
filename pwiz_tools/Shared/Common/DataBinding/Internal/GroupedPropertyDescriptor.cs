@@ -79,7 +79,7 @@ namespace pwiz.Common.DataBinding.Internal
             var values = new List<object>();
             foreach (var innerRow in innerRows)
             {
-                var value = DisplayColumn.GetValue(innerRow, InnerPivotKey, false);
+                var value = DisplayColumn.GetValue(innerRow, InnerPivotKey);
                 if (null != value)
                 {
                     values.Add(value);

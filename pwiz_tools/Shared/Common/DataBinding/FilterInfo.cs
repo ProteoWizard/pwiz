@@ -47,7 +47,7 @@ namespace pwiz.Common.DataBinding
             var predicate = Predicate;
             if (CollectionColumn.PropertyPath.IsRoot || rowItem.RowKey.Contains(CollectionColumn.PropertyPath))
             {
-                if (predicate(ColumnDescriptor.GetPropertyValue(rowItem, null, false)))
+                if (predicate(ColumnDescriptor.GetPropertyValue(rowItem, null)))
                 {
                     return rowItem;
                 }
@@ -67,7 +67,7 @@ namespace pwiz.Common.DataBinding
                 }
                 else
                 {
-                    object value = ColumnDescriptor.GetPropertyValue(rowItem, pivotKey, false);
+                    object value = ColumnDescriptor.GetPropertyValue(rowItem, pivotKey);
                     if (predicate(value)) 
                     {
                         newPivotKeys.Add(pivotKey);

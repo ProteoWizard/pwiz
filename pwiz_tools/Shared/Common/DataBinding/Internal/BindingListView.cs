@@ -55,7 +55,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
         }
         
-        public BindingListView(TaskScheduler eventTaskScheduler, CancellationToken cancellationToken) : base(new RowItemList())
+        public BindingListView(TaskScheduler eventTaskScheduler, CancellationToken cancellationToken) : base(new List<RowItem>())
         {
             EventTaskScheduler = eventTaskScheduler;
             CancellationToken = cancellationToken;
@@ -110,8 +110,27 @@ namespace pwiz.Common.DataBinding.Internal
             }
             set
             {
+                if (ReferenceEquals(RowSource, value))
+                {
+                    return;
+                }
+                var bindingList = RowSource as IBindingList;
+                if (bindingList != null)
+                {
+                    bindingList.ListChanged -= RowSourceListChanged;
+                }
                 _queryRequestor.RowSource = value;
+                bindingList = RowSource as IBindingList;
+                if (bindingList != null)
+                {
+                    bindingList.ListChanged += RowSourceListChanged;
+                }
             }
+        }
+
+        private void RowSourceListChanged(object sender, ListChangedEventArgs args)
+        {
+            OnAllRowsChanged();
         }
 
         public void ApplySort(ListSortDescriptionCollection sorts)
@@ -227,11 +246,11 @@ namespace pwiz.Common.DataBinding.Internal
             return new PropertyDescriptorCollection(ViewInfo.DataSchema.GetPropertyDescriptors(propertyDescriptor.PropertyType).ToArray());
         }
 
-        public RowItemList RowItemList
+        private List<RowItem> RowItemList
         {
             get
             {
-                return ((RowItemList) Items);
+                return ((List<RowItem>) Items);
             }
         }
 
@@ -246,7 +265,9 @@ namespace pwiz.Common.DataBinding.Internal
                 return;
             }
             _queryResults = _queryRequestor.QueryResults;
-            RowItemList.Reset(QueryResults.ResultRows);
+            bool rowCountChanged = Count != QueryResults.ResultRows.Count;
+            RowItemList.Clear();
+            RowItemList.AddRange(QueryResults.ResultRows);
             bool propsChanged = false;
             if (_itemProperties == null)
             {
@@ -264,8 +285,16 @@ namespace pwiz.Common.DataBinding.Internal
             if (propsChanged)
             {
                 OnListChanged(new ListChangedEventArgs(ListChangedType.PropertyDescriptorChanged, 0));
+                ResetBindings();
             }
-            ResetBindings();
+            else if (rowCountChanged)
+            {
+                ResetBindings();
+            }
+            else
+            {
+                OnAllRowsChanged();
+            }
         }
         public string Filter
         {
@@ -302,7 +331,9 @@ namespace pwiz.Common.DataBinding.Internal
         /// Indicates that this IBindingList will send ListItemChange events 
         /// when properties on items in this list change.
         /// 
-        /// If a BindingSource does not think 
+        /// If a BindingSource does not think that the elements in the list raises
+        /// item change events, the BindingSource will call PropertyDescriptor.AddValueChanged 
+        /// for all items in the list, which we do not want it to do.
         /// </summary>
         bool IRaiseItemChangedEvents.RaisesItemChangedEvents
         {
@@ -318,10 +349,6 @@ namespace pwiz.Common.DataBinding.Internal
                 lock (_listChangedEventHandlers)
                 {
                     _listChangedEventHandlers.Add(value);
-                    if (_listChangedEventHandlers.Count > 0)
-                    {
-                        RowItemList.ListChanged = RowItemListChanged;
-                    }
                 }
             }
             remove
@@ -329,10 +356,6 @@ namespace pwiz.Common.DataBinding.Internal
                 lock(_listChangedEventHandlers)
                 {
                     _listChangedEventHandlers.Remove(value);
-                    if (_listChangedEventHandlers.Count == 0)
-                    {
-                        RowItemList.ListChanged = null;
-                    }
                 }
             }
 
@@ -351,9 +374,12 @@ namespace pwiz.Common.DataBinding.Internal
             }
         }
 
-        private void RowItemListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
+        protected void OnAllRowsChanged()
         {
-            OnListChanged(listChangedEventArgs);
+            for (int i = 0; i < Count; i++)
+            {
+                OnListChanged(new ListChangedEventArgs(ListChangedType.ItemChanged, i));
+            }
         }
 
         public int IndexOf(object value)
@@ -363,9 +389,9 @@ namespace pwiz.Common.DataBinding.Internal
 
         public void Dispose()
         {
+            RowSource = null;
             _queryRequestor.Dispose();
             _queryResults = null;
-            RowItemList.Dispose();
         }
 
         public event EventHandler<BindingManagerDataErrorEventArgs> UnhandledExceptionEvent;

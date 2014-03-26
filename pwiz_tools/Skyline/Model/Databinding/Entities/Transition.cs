@@ -34,35 +34,36 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition)]
     public class Transition : SkylineDocNode<TransitionDocNode>
     {
+        private readonly Lazy<Precursor> _precursor;
+        private readonly CachedValue<IDictionary<ResultKey, TransitionResult>> _results;
         public Transition(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
+            _precursor = new Lazy<Precursor>(() => new Precursor(DataSchema, IdentityPath.Parent));
+            _results = CachedValue.Create(DataSchema, MakeResults);
         }
 
-        private Precursor _precursor;
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public Precursor Precursor
         {
             get
             {
-                return _precursor = _precursor ?? new Precursor(DataSchema, IdentityPath.Parent);
+                return _precursor.Value;
             }
         }
 
-        private IDictionary<ResultKey, TransitionResult> _results;
         [DisplayName("TransitionResults")]
         [OneToMany(ForeignKey = "Transition", ItemDisplayName = "TransitionResult")]
         public IDictionary<ResultKey, TransitionResult> Results
         {
             get
             {
-                return _results = _results ?? MakeChromInfoResultsMap(DocNode.Results, file => new TransitionResult(this, file));
+                return _results.Value;
             }
         }
 
-        protected override void OnDocumentChanged()
+        private IDictionary<ResultKey, TransitionResult> MakeResults()
         {
-            _results = null;
-            base.OnDocumentChanged();
+            return MakeChromInfoResultsMap(DocNode.Results, file => new TransitionResult(this, file));
         }
 
         protected override TransitionDocNode CreateEmptyNode()

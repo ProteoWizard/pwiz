@@ -59,7 +59,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public abstract object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges);
+        public abstract object GetPropertyValue(RowItem rowItem, PivotKey pivotKey);
 
         public virtual bool IsReadOnly
         {
@@ -199,7 +199,7 @@ namespace pwiz.Common.DataBinding
                 get { return _propertyType; }
             }
 
-            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
                 if (null != pivotKey)
                 {
@@ -247,16 +247,12 @@ namespace pwiz.Common.DataBinding
                 get { return _propertyDescriptor.PropertyType; }
             }
 
-            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
-                object parentValue = Parent.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
+                object parentValue = Parent.GetPropertyValue(rowItem, pivotKey);
                 if (null == parentValue)
                 {
                     return null;
-                }
-                if (notifyFutureChanges)
-                {
-                    rowItem.HookPropertyChange(parentValue, _propertyDescriptor);
                 }
                 try
                 {
@@ -275,7 +271,7 @@ namespace pwiz.Common.DataBinding
 
             public override void SetValue(RowItem rowItem, PivotKey pivotKey, object value)
             {
-                var parentComponent = Parent.GetPropertyValue(rowItem, pivotKey, true);
+                var parentComponent = Parent.GetPropertyValue(rowItem, pivotKey);
                 if (parentComponent == null)
                 {
                     return;
@@ -329,9 +325,9 @@ namespace pwiz.Common.DataBinding
                 get { return _collectionInfo.ElementType; }
             }
 
-            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey, bool notifyFutureChanges)
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
-                var collection = Parent.GetPropertyValue(rowItem, pivotKey, notifyFutureChanges);
+                var collection = Parent.GetPropertyValue(rowItem, pivotKey);
                 if (null == collection)
                 {
                     return null;

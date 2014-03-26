@@ -51,12 +51,7 @@ namespace pwiz.Common.DataBinding
 
         public override object GetValue(object component)
         {
-            return DisplayColumn.GetValue(component as RowItem, PivotKey, true);
-        }
-
-        public object GetValueNoNotifyFutureChanges(RowItem rowItem)
-        {
-            return DisplayColumn.GetValue(rowItem, PivotKey, false);
+            return DisplayColumn.GetValue(component as RowItem, PivotKey);
         }
 
         public override void ResetValue(object component)

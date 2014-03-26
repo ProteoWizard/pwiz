@@ -563,6 +563,7 @@
     <Compile Include="Model\Databinding\AnnotationPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
     <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
+    <Compile Include="Model\Databinding\CachedValue.cs" />
     <Compile Include="Model\Databinding\Collections\MultiResultList.cs" />
     <Compile Include="Model\Databinding\Collections\NodeList.cs" />
     <Compile Include="Model\Databinding\Collections\Peptides.cs" />

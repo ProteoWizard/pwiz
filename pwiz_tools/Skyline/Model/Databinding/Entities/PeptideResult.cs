@@ -28,27 +28,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     public class PeptideResult : Result
     {
+        private readonly CachedValue<PeptideChromInfo> _chromInfo;
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
         {
-            ChromInfo = file.FindChromInfo(peptide.DocNode.Results);
+            _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
         }
 
-        protected override void OnDocumentChanged()
-        {
-            base.OnDocumentChanged();
-            var newChromInfo = ResultFile.FindChromInfo(Peptide.DocNode.Results);
-            if (null != newChromInfo && !Equals(newChromInfo, ChromInfo))
-            {
-                ChromInfo = newChromInfo;
-                FirePropertyChanged(null);
-            }
-        }
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         [Advanced]
         public Peptide Peptide { get { return SkylineDocNode as Peptide; } }
 
         [Browsable(false)]
-        public PeptideChromInfo ChromInfo { get; private set; }
+        public PeptideChromInfo ChromInfo { get { return _chromInfo.Value; } }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double PeptidePeakFoundRatio { get { return ChromInfo.PeakCountRatio; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
