@@ -73,6 +73,7 @@ namespace IDPicker.Forms
             this.MaximumSize = new System.Drawing.Size(2000, 60);
             this.MinimumSize = new System.Drawing.Size(60, 60);
             this.Name = "ExportForm";
+            this.ShowIcon = false;
             this.Text = "Progress";
             this.ResumeLayout(false);
 

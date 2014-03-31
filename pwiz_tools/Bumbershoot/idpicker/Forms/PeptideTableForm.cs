@@ -1184,10 +1184,12 @@ namespace IDPicker.Forms
             // filter text is one or more keywords that ContainsOrIsContainedBy will check
             var filterString = new FilterString(text);
 
+            // for each row, for each keyword, check each column of interest against the keyword
+            // the trick is to create a generic enumerator class which sucks out arbitrary objects from the rows to be compared against
             if (rows.First() is DistinctMatchRow)
                 rows = rows.OfType<DistinctMatchRow>()
-                           .Where(o => o.DistinctMatch.ToString().ContainsOrIsContainedBy(filterString) ||
-                                       o.Peptide.Sequence.ContainsOrIsContainedBy(filterString) ||
+                           .Where(o => o.Peptide.Sequence.ContainsOrIsContainedBy(filterString) ||
+                                       o.DistinctMatch.ToString().ContainsOrIsContainedBy(filterString) ||
                                        (proteinAccessionsColumn.Visible && o.ProteinAccessions.ContainsOrIsContainedBy(filterString)))
                            .Select(o => o as Row).ToList();
             else if (rows.First() is DistinctPeptideRow)

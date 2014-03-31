@@ -23,6 +23,7 @@
 //
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -38,7 +39,7 @@ using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
-    public partial class AnalysisTableForm : DockableForm, IPersistentForm
+    public partial class AnalysisTableForm : DockableForm, IPersistentForm, TableExporter.ITable
     {
         #region Wrapper classes for encapsulating query results
 
@@ -554,6 +555,91 @@ namespace IDPicker.Forms
             return result;
         }
 
+        private class ExportedTableRow : TableExporter.ITableRow
+        {
+            public virtual IList<string> Headers { get; set; }
+            public virtual IList<string> Cells { get; set; }
+        }
+
+        private bool exportSelectedCellsOnly = false;
+
+        public IEnumerator<TableExporter.ITableRow> GetEnumerator()
+        {
+            IEnumerable exportedRows;
+            IList<int> exportedColumns;
+
+            if (exportSelectedCellsOnly &&
+                treeDataGridView.SelectedCells.Count > 0 &&
+                !treeDataGridView.AreAllCellsSelected(false))
+            {
+                var selectedRows = new Set<DataGridViewRow>();
+                var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
+
+                foreach (DataGridViewCell cell in treeDataGridView.SelectedCells)
+                {
+                    selectedRows.Add(cell.OwningRow);
+                    selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
+                }
+
+                exportedRows = selectedRows;
+                exportedColumns = selectedColumns.Values;
+            }
+            else
+            {
+                exportedRows = treeDataGridView.Rows;
+                exportedColumns = treeDataGridView.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
+            }
+
+            // add column headers
+            var Headers = new List<string>();
+            foreach (var columnIndex in exportedColumns)
+                Headers.Add(treeDataGridView.Columns[columnIndex].HeaderText);
+
+            foreach (DataGridViewRow row in exportedRows)
+            {
+                var exportedRow = new ExportedTableRow();
+                exportedRow.Headers = Headers;
+
+                /* TODO: how to handle non-root rows?
+                var row = rows[rowIndex];
+
+                // skip non-root rows or filtered rows
+                if (rowIndexHierarchy.Count > 1 || getRowFilterState(row) == RowFilterState.Out)
+                    continue;*/
+
+                if (rows.Count > row.Index)
+                {
+                    Row row2 = rows[row.Index];
+                    if (getRowFilterState(row2) == RowFilterState.Out)
+                        continue;
+                }
+
+                var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(row.Index);
+
+                exportedRow.Cells = new List<string>();
+                foreach (var columnIndex in exportedColumns)
+                {
+                    // empty cells are exported as blank except for pivot columns which are exported as zeros
+                    object value = row.Cells[columnIndex].Value ?? (treeDataGridView.Columns[columnIndex].Name.StartsWith("pivot") ? "0" : String.Empty);
+                    var sb = new StringBuilder(value.ToString());
+
+                    if (columnIndex == 0 && rowIndexHierarchy.Count > 1)
+                    {
+                        int indent = (rowIndexHierarchy.Count - 1) * 2;
+                        sb.Insert(0, new string(' ', indent));
+                    }
+                    exportedRow.Cells.Add(sb.ToString());
+                }
+
+                yield return exportedRow;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (IEnumerator)GetEnumerator();
+        }
+
         public virtual List<List<string>> GetFormTable (bool selected)
         {
             var exportTable = new List<List<string>>();
@@ -616,16 +702,12 @@ namespace IDPicker.Forms
 
         protected void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == copyToClipboardSelectedToolStripMenuItem);
-
-            TableExporter.CopyToClipboard(table);
+            TableExporter.CopyToClipboard(this);
         }
 
         protected void fileToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == exportSelectedCellsToFileToolStripMenuItem);
-
-            TableExporter.ExportToFile(table);
+            TableExporter.ExportToFile(this);
         }
 
         protected void exportButton_Click (object sender, EventArgs e)
@@ -635,10 +717,7 @@ namespace IDPicker.Forms
 
         protected void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == showInExcelSelectToolStripMenuItem);
-
-            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
-
+            var exportWrapper = new Dictionary<string, TableExporter.ITable> { { Name, this } };
             TableExporter.ShowInExcel(exportWrapper, false);
         }
 

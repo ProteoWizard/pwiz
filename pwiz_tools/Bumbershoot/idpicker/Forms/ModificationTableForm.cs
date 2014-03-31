@@ -44,8 +44,9 @@ using proteome = pwiz.CLI.proteome;
 namespace IDPicker.Forms
 {
     using DataFilter = DataModel.DataFilter;
+    using System.Collections;
 
-    public partial class ModificationTableForm : DockableForm
+    public partial class ModificationTableForm : DockableForm, TableExporter.ITable
     {
         public DataGridView DataGridView { get { return dataGridView; } }
 
@@ -915,6 +916,73 @@ namespace IDPicker.Forms
         }
 
         #region Export methods
+
+        private class ExportedTableRow : TableExporter.ITableRow
+        {
+            public virtual IList<string> Headers { get; set; }
+            public virtual IList<string> Cells { get; set; }
+        }
+
+        private bool exportSelectedCellsOnly = false;
+
+        public IEnumerator<TableExporter.ITableRow> GetEnumerator()
+        {
+            IEnumerable exportedRows;
+            IList<int> exportedColumns;
+            var currentTable = TablePanel.Visible ? detailDataGridView : dataGridView;
+
+            if (exportSelectedCellsOnly &&
+                currentTable.SelectedCells.Count > 0 &&
+                !currentTable.AreAllCellsSelected(false))
+            {
+                var selectedRows = new Set<int>();
+                var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
+
+                foreach (DataGridViewCell cell in currentTable.SelectedCells)
+                {
+                    selectedRows.Add(cell.RowIndex);
+                    selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
+                }
+
+                exportedRows = selectedRows.ToList();
+                exportedColumns = selectedColumns.Values;
+            }
+            else
+            {
+                exportedRows = currentTable.Rows.Cast<DataGridViewRow>().Select(o => o.Index).ToList();
+                exportedColumns = currentTable.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
+            }
+
+            // add column headers
+            var headers = new List<string>();
+            if (currentTable.RowHeadersVisible)
+                headers.Add(deltaMassColumnName.Replace("Δ", "Delta "));
+            foreach (var columnIndex in exportedColumns)
+                headers.Add(currentTable.Columns[columnIndex].HeaderText);
+
+            foreach (int rowIndex in exportedRows)
+            {
+                var exportedRow = new ExportedTableRow();
+                exportedRow.Headers = headers;
+                exportedRow.Cells = new List<string>();
+
+                if (currentTable.Rows[rowIndex].HeaderCell.Value != null)
+                    exportedRow.Cells.Add(currentTable.Rows[rowIndex].HeaderCell.Value.ToString().Replace("\n", " ; "));
+                foreach (var columnIndex in exportedColumns)
+                {
+                    object value = currentTable[columnIndex, rowIndex].Value ?? String.Empty;
+                    exportedRow.Cells.Add(value.ToString());
+                }
+
+                yield return exportedRow;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (IEnumerator) GetEnumerator();
+        }
+
         public virtual List<List<string>> GetFormTable (bool selected, bool detail)
         {
             var exportTable = new List<List<string>>();
@@ -965,15 +1033,18 @@ namespace IDPicker.Forms
             return exportTable;
         }
 
-        internal List<TreeNode> getModificationTree (string reportName)
+        internal List<TableExporter.TableTreeNode> getModificationTree()
         {
-            var groupNodes = new List<TreeNode>();
+            var groupNodes = new List<TableExporter.TableTreeNode>();
 
             var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum) " +
                                                 dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                                   DataFilter.PeptideSpectrumMatchToPeptideModification) +
                                                 "GROUP BY pm.Site, ROUND(pm.Modification.MonoMassDelta) " +
                                                 "ORDER BY ROUND(pm.Modification.MonoMassDelta)");
+
+            var firstLevelHeaders = new List<string> { "'Modified Site'", "'Mass'", "'Peptides'", "'Spectra'" };
+            var secondLevelHeaders = new List<string> { "'Sequence'", "'Cluster'", "'Spectra'" };
 
             foreach (var tuple in query.List<object[]>())
             {
@@ -998,29 +1069,31 @@ namespace IDPicker.Forms
                 if (!peptideList.Any()) continue;
 
 
-                var newNode = new TreeNode
+                var newNode = new TableExporter.TableTreeNode
                 {
                     Text = site + mod.AvgMassDelta.ToString(),
-                    Tag = new[]
-                                                    {
-                                                        "'" +site + "'", mod.AvgMassDelta.ToString(),
-                                                        peptideList.Count().ToString(),
-                                                        specCount.ToString()
-                                                    }
+                    Headers = firstLevelHeaders,
+                    Cells = new List<string>
+                            {
+                                "'" +site + "'",
+                                mod.AvgMassDelta.ToString(),
+                                peptideList.Count().ToString(),
+                                specCount.ToString()
+                            }
                 };
                 foreach (var peptide in peptideList)
                 {
                     var cluster = peptide.PeptideSpectrumMatch.Peptide.Instances.First().Protein.Cluster;
-                    var subNode = new TreeNode
+                    var subNode = new TableExporter.TableTreeNode
                     {
                         Text = peptide.DistinctMatch.ToString(),
-                        Tag = new[]
-                                                        {
-                                                            "'" + peptide.Peptide.Sequence + "'",
-                                                            string.Format("'<a href = \"{0}-cluster{1}.html\">{1}</a>'",
-                                                                          reportName,cluster),
-                                                            peptide.Spectra.ToString(),
-                                                        }
+                        Headers = secondLevelHeaders,
+                        Cells = new List<string>
+                                {
+                                    "'" + peptide.Peptide.Sequence + "'",
+                                    String.Format("'<a href = \"cluster{0}.html\">{0}</a>'", cluster),
+                                    peptide.Spectra.ToString(),
+                                }
                     };
                     newNode.Nodes.Add(subNode);
                 }
@@ -1031,24 +1104,13 @@ namespace IDPicker.Forms
         }
 
 
-        private List<List<string>> tempTable;
         protected void ExportTable(object sender, EventArgs e)
         {
-            var selected = sender == copySelectedCellsToClipboardToolStripMenuItem ||
-                           sender == exportSelectedCellsToFileToolStripMenuItem ||
-                           sender == showSelectedCellsInExcelToolStripMenuItem ||
-                           sender == copySelectedCellsToClipboardDetailToolStripMenuItem ||
-                           sender == exportSelectedCellsToFileDetailToolStripMenuItem ||
-                           sender == showSelectedCellsInExcelDetailToolStripMenuItem;
+            exportSelectedCellsOnly = sender == copySelectedCellsToClipboardToolStripMenuItem ||
+                                      sender == exportSelectedCellsToFileToolStripMenuItem ||
+                                      sender == showSelectedCellsInExcelToolStripMenuItem;
 
-            var detail = sender == copyToClipboardDetailToolStripMenuItem ||
-                         sender == exportToFileDetailToolStripMenuItem ||
-                         sender == showInExcelDetailToolStripMenuItem ||
-                         sender == copySelectedCellsToClipboardDetailToolStripMenuItem ||
-                         sender == exportSelectedCellsToFileDetailToolStripMenuItem ||
-                         sender == showSelectedCellsInExcelDetailToolStripMenuItem;
-
-            var progressWindow = new Form
+            /*var progressWindow = new Form
             {
                 Size = new Size(300, 60),
                 Text = "Exporting...",
@@ -1092,7 +1154,7 @@ namespace IDPicker.Forms
             {
                 tempTable = GetFormTable(selected, detail);
             };
-            bg.RunWorkerAsync();
+            bg.RunWorkerAsync();*/
         }
         #endregion
 

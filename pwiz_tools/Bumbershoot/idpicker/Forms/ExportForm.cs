@@ -34,8 +34,10 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using IDPicker.DataModel;
 using NHibernate;
+using NHibernate.Linq;
 
 using pwiz.CLI.analysis;
+using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
@@ -46,7 +48,7 @@ namespace IDPicker.Forms
             InitializeComponent();
         }
 
-        internal void toExcel(bool selected, ModificationTableForm modificationTableForm, ProteinTableForm proteinTableForm, PeptideTableForm peptideTableForm, SpectrumTableForm spectrumTableForm, AnalysisTableForm analysisTableForm, DataFilter viewFilter, DataFilter basicFilter)
+        internal void toExcel(bool selected, IDictionary<string, TableExporter.ITable> tables, DataFilter viewFilter, DataFilter basicFilter)
         {
             Text = "Generating Excel Report pages (1 of 6)";
 
@@ -74,71 +76,39 @@ namespace IDPicker.Forms
                         break;
                 }
             };
+
             bg.RunWorkerCompleted += (x, y) =>
             {
                 if (y.Error != null) Program.HandleException(y.Error);
                 Close();
             };
+
             bg.DoWork += (x, y) =>
             {
-                var reportDictionary = new Dictionary<string, List<List<string>>>();
+                var reportDictionary = new Dictionary<string, object>();
 
-                if (modificationTableForm != null)
+                int progress = 0;
+                foreach(var nameTablePair in tables)
                 {
-                    var table = modificationTableForm.GetFormTable(selected, false);
-                    if (table.Count > 1)
-                        reportDictionary.Add("Modification Table", table);
+                    reportDictionary.Add(nameTablePair.Key, nameTablePair.Value);
+                    bg.ReportProgress(++progress);
                 }
-                bg.ReportProgress(1);
-                if (proteinTableForm != null)
-                {
-                    var table = proteinTableForm.GetFormTable(selected);
-                    if (table.Count > 1)
-                        reportDictionary.Add("Protein Table", table);
-                }
-                bg.ReportProgress(2);
-                if (peptideTableForm != null)
-                {
-                    var table = peptideTableForm.GetFormTable(selected);
-                    if (table.Count > 1)
-                        reportDictionary.Add("Peptide Table", table);
-                }
-                bg.ReportProgress(3);
-                if (spectrumTableForm != null)
-                {
-                    var table = spectrumTableForm.GetFormTable(selected);
-                    if (table.Count > 1)
-                        reportDictionary.Add("Spectrum Table", table);
-                }
-                bg.ReportProgress(4);
-                if (analysisTableForm != null)
-                {
-                    var table = analysisTableForm.GetFormTable(selected);
-                    if (table.Count > 1)
-                        reportDictionary.Add("Analysis Settings", table);
-                }
-                bg.ReportProgress(5);
-                var summaryList = getSummaryList(modificationTableForm, proteinTableForm, peptideTableForm,
-                                                 spectrumTableForm, analysisTableForm, viewFilter, basicFilter);
-                if (summaryList.Count > 0)
-                    reportDictionary.Add("Summary", summaryList);
 
+                reportDictionary.Add("Summary", getSummaryList(viewFilter, basicFilter));
 
-                if (reportDictionary.Count > 0)
-                    TableExporter.ShowInExcel(reportDictionary, false);
-                else
-                    MessageBox.Show("Could not gather report information");
+                TableExporter.ShowInExcel(tables, false);
             };
 
             bg.RunWorkerAsync();
         }
 
-        internal void toHTML(bool selected, ModificationTableForm modificationTableForm,
-                              ProteinTableForm proteinTableForm, PeptideTableForm peptideTableForm,
-                              SpectrumTableForm spectrumTableForm, AnalysisTableForm analysisTableForm,
-                              DataFilter viewFilter, DataFilter basicFilter, ISession session)
+        internal void toHTML(bool selected,
+                             IDictionary<string, TableExporter.ITable> enumerableTables,
+                             IDictionary<string, List<TableExporter.TableTreeNode>> treeTables,
+                             DataFilter viewFilter, DataFilter basicFilter, ISession session)
         {
-            Text = "Generating HTML Report";
+            string progressTitle = "Generating HTML Report";
+            Text = progressTitle;
 
             if (session == null)
             {
@@ -148,129 +118,92 @@ namespace IDPicker.Forms
 
             string outFolder;
             var fbd = new FolderBrowserDialog() { Description = "Select destination folder" };
-            if (fbd.ShowDialog() == DialogResult.OK)
-                outFolder = fbd.SelectedPath;
-            else return;
-            var textDialog = new TextInputPrompt("Report folder name", false, Path.GetFileNameWithoutExtension(Text));
-            while (true)
+            if (fbd.ShowDialog() != DialogResult.OK)
             {
-                if (textDialog.ShowDialog() == DialogResult.OK)
-                {
-                    var result = textDialog.GetText();
-                    if (Directory.Exists(Path.Combine(outFolder, result)))
-                    {
-                        var response = MessageBox.Show("Report folder path already exists, overwrite?",
-                                                       "Overwrite path?", MessageBoxButtons.YesNoCancel);
-                        if (response == DialogResult.Yes)
-                        {
-                            outFolder = Path.Combine(outFolder, result);
-                            var di = new DirectoryInfo(outFolder);
-                            try
-                            {
-                                foreach (var file in di.GetFiles())
-                                    File.Delete(file.FullName);
-                            }
-                            catch
-                            {
-                                MessageBox.Show("Could not overwrite. Please enter a new name" +
-                                                " or make sure the report is closed and try again.");
-                                continue;
-                            }
-
-                            break;
-                        }
-                        if (response == DialogResult.Cancel) return;
-                    }
-                    else
-                    {
-                        outFolder = Path.Combine(outFolder, result);
-                        break;
-                    }
-
-                }
-                else return;
+                Close();
+                return;
             }
 
+            outFolder = fbd.SelectedPath;
+
+            var textDialog = new TextInputPrompt("Report folder name", false, Path.GetFileNameWithoutExtension(session.Connection.GetDataSource()));
+            while (true)
+            {
+                if (textDialog.ShowDialog() != DialogResult.OK)
+                {
+                    Close();
+                    return;
+                }
+
+                var result = textDialog.GetText();
+                if (Directory.Exists(Path.Combine(outFolder, result)))
+                {
+                    var response = MessageBox.Show("Report folder path already exists, overwrite?",
+                                                    "Overwrite path?", MessageBoxButtons.YesNoCancel);
+                    if (response == DialogResult.Yes)
+                    {
+                        outFolder = Path.Combine(outFolder, result);
+                        var di = new DirectoryInfo(outFolder);
+                        try
+                        {
+                            foreach (var file in di.GetFiles())
+                                File.Delete(file.FullName);
+                        }
+                        catch
+                        {
+                            MessageBox.Show("Could not overwrite. Please enter a new name" +
+                                            " or make sure the report is closed and try again.");
+                            continue;
+                        }
+
+                        break;
+                    }
+                    if (response == DialogResult.Cancel) return;
+                }
+                else
+                {
+                    outFolder = Path.Combine(outFolder, result);
+                    break;
+                }
+            }
 
             var bg = new BackgroundWorker { WorkerReportsProgress = true };
-            bg.DoWork +=
-                delegate
-                    {
-                        CreateHtmlReport(bg, outFolder, modificationTableForm, proteinTableForm, peptideTableForm,
-                                         spectrumTableForm, analysisTableForm, viewFilter, basicFilter, session);
-                    };
-            bg.ProgressChanged += delegate { Close(); };
+            bg.DoWork += delegate
+            {
+                var textTables = new Dictionary<string, List<List<string>>> { { "Summary", getSummaryList(viewFilter, basicFilter) } };
+                CreateHtmlReport(bg, outFolder, enumerableTables, textTables, treeTables, viewFilter, basicFilter, session);
+            };
+
+            bg.ProgressChanged += (x, y) =>
+            {
+                if (y.ProgressPercentage == 100)
+                    Close();
+                else
+                {
+                    progressBar.Value = y.ProgressPercentage;
+                    string message = y.UserState as string;
+                    if (message != null)
+                        Text = progressTitle + " - " + message;
+                }
+            };
+
             bg.RunWorkerCompleted += (x, y) => { if (y.Error != null) Program.HandleException(y.Error); };
             bg.RunWorkerAsync();
         }
 
-        private List<List<string>> getSummaryList(ModificationTableForm modificationTableForm, ProteinTableForm proteinTableForm, PeptideTableForm peptideTableForm, SpectrumTableForm spectrumTableForm, AnalysisTableForm analysisTableForm, DataFilter viewFilter, DataFilter basicFilter)
+        private List<List<string>> getSummaryList(DataFilter viewFilter, DataFilter basicFilter)
         {
             var summaryList = new List<List<string>>();
 
-            if (modificationTableForm != null)
-            {
-                var modMatches = Regex.Matches(modificationTableForm.Text.ToLower(), @"\d* mod");
-                if (modMatches.Count > 0)
-                {
-                    var modNumber = modMatches[0].ToString().TrimEnd(" mod".ToCharArray());
-                    summaryList.Add(new List<string> { "Modifications", modNumber });
-                }
-            }
-            if (proteinTableForm != null)
-            {
-                var proMatches = Regex.Matches(proteinTableForm.Text.ToLower(), @"\d* protein groups");
-                if (proMatches.Count > 0)
-                {
-                    var proGroupNumber = proMatches[0].ToString().TrimEnd(" protein groups".ToCharArray());
-                    summaryList.Add(new List<string> { "Protein Groups", proGroupNumber });
-                }
-                proMatches = Regex.Matches(proteinTableForm.Text.ToLower(), @"\d* proteins");
-                if (proMatches.Count > 0)
-                {
-                    var proNumber = proMatches[0].ToString().TrimEnd(" proteins".ToCharArray());
-                    summaryList.Add(new List<string> { "Proteins", proNumber });
-                }
-            }
-            if (peptideTableForm != null)
-            {
-                var pepMatches = Regex.Matches(peptideTableForm.Text.ToLower(), @"\d* distinct peptides");
-                if (pepMatches.Count > 0)
-                {
-                    var pepNumber = pepMatches[0].ToString().TrimEnd(" distinct peptides".ToCharArray());
-                    summaryList.Add(new List<string> { "Distinct Peptides", pepNumber });
-                }
-                pepMatches = Regex.Matches(peptideTableForm.Text.ToLower(), @"\d* distinct matches");
-                if (pepMatches.Count > 0)
-                {
-                    var matchNumber = pepMatches[0].ToString().TrimEnd(" distinct matches".ToCharArray());
-                    summaryList.Add(new List<string> { "Distinct Peptide Matches", matchNumber });
-                }
-            }
-            if (spectrumTableForm != null)
-            {
-                var matches = Regex.Matches(spectrumTableForm.Text.ToLower(), @"\d* spectra");
-                if (matches.Count > 0)
-                {
-                    var matchNumber = matches[0].ToString().TrimEnd(" spectra".ToCharArray());
-                    summaryList.Add(new List<string> { "Spectra", matchNumber });
-                }
-                matches = Regex.Matches(spectrumTableForm.Text.ToLower(), @"\d* sources");
-                if (matches.Count > 0)
-                {
-                    var matchNumber = matches[0].ToString().TrimEnd(" sources".ToCharArray());
-                    summaryList.Add(new List<string> { "Sources", matchNumber });
-                }
-                matches = Regex.Matches(spectrumTableForm.Text.ToLower(), @"\d* groups");
-                if (matches.Count > 0)
-                {
-                    var pepNumber = matches[0].ToString().TrimEnd(" groups".ToCharArray());
-                    summaryList.Add(new List<string> { "Groups", pepNumber });
-                }
-            }
-
-            //Summary page
-            summaryList.Reverse();
+            var totalCounts = viewFilter.TotalCounts;
+            // TODO: add this - summaryList.Add(new List<string> { "Modifications", totalCounts.Modifications.ToString() });
+            summaryList.Add(new List<string> { "Protein Groups", totalCounts.ProteinGroups.ToString() });
+            summaryList.Add(new List<string> { "Proteins", totalCounts.Proteins.ToString() });
+            summaryList.Add(new List<string> { "Distinct Peptides", totalCounts.DistinctPeptides.ToString() });
+            summaryList.Add(new List<string> { "Distinct Peptide Matches", totalCounts.DistinctMatches.ToString() });
+            summaryList.Add(new List<string> { "Spectra", totalCounts.FilteredSpectra.ToString() });
+            // TODO: add this - summaryList.Add(new List<string> { "Sources", totalCounts.SpectrumSources.ToString() });
+            // TODO: add this - summaryList.Add(new List<string> { "Groups", totalCounts.SpectrumSourceGroups.ToString() });
 
             //Summary Filters
             var filterInfo = new List<List<string>>();
@@ -469,7 +402,239 @@ namespace IDPicker.Forms
             return summaryList;
         }
 
-        private void CreateHtmlReport(BackgroundWorker bg, string outFolder, ModificationTableForm modificationTableForm, ProteinTableForm proteinTableForm, PeptideTableForm peptideTableForm, SpectrumTableForm spectrumTableForm, AnalysisTableForm analysisTableForm, DataFilter viewFilter, DataFilter basicFilter, ISession session)
+        private Dictionary<string, List<TableExporter.TableTreeNode>> getSourceContentsForHTML(DataFilter viewFilter, DataFilter dataFilter, ISession session)
+        {
+            const int decimalPlaces = 4;
+            var allContents = new Dictionary<string, List<TableExporter.TableTreeNode>>();
+
+            //get score info
+            //score gathering is one of the most time-intensive processes in item retreaval
+            //loading everything to memory if possible should speed things up significantly
+            //low speed system should stay in place in case memory cant handle the load
+            var rawScoreList = session.CreateSQLQuery("select name, id from PeptideSpectrumMatchScoreName").List<object[]>();
+            var scoreList = new List<string>();
+            var scoreNameToId = new Dictionary<string, string>();
+            foreach (var item in rawScoreList)
+            {
+                scoreList.Add(item[0].ToString());
+                if (!scoreNameToId.ContainsKey(item[0].ToString()))
+                    scoreNameToId.Add(item[0].ToString(), item[1].ToString());
+            }
+            var scoresCaptured = true;
+            var scoreCache = new Dictionary<string, Dictionary<string, string>>();
+            try
+            {
+                var allScores = session.CreateSQLQuery("Select PsmID, ScoreNameId, CAST(Value AS TEXT) from PeptideSpectrumMatchScore").List();
+                foreach (var row in allScores)
+                {
+                    var rowContents = (object[])row;
+                    if (!scoreCache.ContainsKey(rowContents[0].ToString()))
+                        scoreCache.Add(rowContents[0].ToString(), new Dictionary<string, string>());
+                    if (!scoreCache[rowContents[0].ToString()].ContainsKey(rowContents[1].ToString()))
+                        scoreCache[rowContents[0].ToString()].Add(rowContents[1].ToString(), rowContents[2].ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                scoresCaptured = false;
+                var errorMessage =
+                        "[SpectrumTableForm] Error when precaching data. " +
+                        "Results may be processed slower than expected - " +
+                        Environment.NewLine + e.Message;
+                if (InvokeRequired)
+                    Invoke(new Action(() => MessageBox.Show(errorMessage)));
+                else
+                    MessageBox.Show(errorMessage);
+            }
+
+            var sourceTreeHeaders = new List<string>
+                                           {
+                                               "'Spectrum'",
+                                               "'Distinct Peptides'",
+                                               "'Distinct Analyses'",
+                                               "'Distinct Charges'",
+                                               "'Precursor M/Z'"
+                                           };
+
+            var psmHeaders = new List<string>()
+                                  {
+                                      "'Rank'",
+                                      "'Charge'",
+                                      "'Observed Mass'",
+                                      "'Monoisotopic Mass'",
+                                      "'Mass Error'",
+                                      "'Q Value'",
+                                      "'Sequence'"
+                                  };
+
+            psmHeaders.AddRange(scoreList.Select(item => string.Format("'{0}'", item)));
+
+            //get source info
+            var sources = session.QueryOver<SpectrumSource>().List();
+            foreach (var source in sources)
+            {
+                var exportTable = new List<TableExporter.TableTreeNode>();
+                var sourceFilter = new DataFilter(dataFilter) { SpectrumSource = new List<SpectrumSource> { source } };
+                var grouping = new List<Grouping<GroupBy>> { new Grouping<GroupBy>(true) { Mode = GroupBy.Spectrum } };
+                var spectraRows = SpectrumTableForm.getSpectrumRows(session, grouping, sourceFilter);
+
+                foreach (SpectrumTableForm.SpectrumRow spectra in spectraRows)
+                {
+                    var key = spectra.Spectrum.NativeID;
+                    try
+                    {
+                        key = pwiz.CLI.msdata.id.abbreviate(key);
+                    }
+                    catch
+                    {
+                    }
+                    var newBranch = new TableExporter.TableTreeNode
+                    {
+                        Text = key,
+                        Headers = sourceTreeHeaders,
+                        Cells = new List<string>
+                                {
+                                    "'" + key + "'",
+                                    spectra.DistinctPeptides.ToString(),
+                                    spectra.DistinctAnalyses.ToString(),
+                                    spectra.DistinctCharges.ToString(),
+                                    Math.Round(spectra.Spectrum.PrecursorMZ,decimalPlaces).ToString()
+                                }
+                    };
+                    foreach (var match in spectra.Spectrum.Matches)
+                    {
+                        var observedMass = match.Spectrum.PrecursorMZ * match.Charge -
+                                           match.Charge * pwiz.CLI.chemistry.Proton.Mass;
+                        var matchNode = new TableExporter.TableTreeNode { Text = match.Rank.ToString(), Headers = psmHeaders };
+                        var cells = new List<string>
+                                      {
+                                          "'" + match.Rank + "'",
+                                          match.Charge.ToString(),
+                                          Math.Round(observedMass,decimalPlaces).ToString(),
+                                          Math.Round(match.ObservedNeutralMass,decimalPlaces).ToString(),
+                                          Math.Round(match.MonoisotopicMassError,decimalPlaces).ToString(),
+                                          Math.Round(match.QValue,decimalPlaces).ToString(),
+                                          "'" + match.Peptide.Sequence + "'"
+                                      };
+                        foreach (var score in scoreList)
+                        {
+                            if (scoresCaptured)
+                            {
+                                var scoreValue = scoreCache[match.Id.ToString()][scoreNameToId[score]];
+                                cells.Add(Math.Round(double.Parse(scoreValue), decimalPlaces).ToString());
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    cells.Add(Math.Round(match.Scores[score.Trim("'".ToCharArray())], decimalPlaces).ToString());
+                                }
+                                catch
+                                {
+                                    cells.Add(string.Empty);
+                                }
+                            }
+                        }
+                        matchNode.Cells = cells;
+                        newBranch.Nodes.Add(matchNode);
+                    }
+                    exportTable.Add(newBranch);
+                }
+                allContents.Add(source.Name, exportTable);
+            }
+            return allContents;
+        }
+
+        private List<TableExporter.TableTreeNode> getSpectrumSourceGroupTree(DataFilter viewFilter, DataFilter dataFilter, ISession session)
+        {
+            var groupTreeHeaders = new List<string>
+                                           {
+                                               "'Group'",
+                                               "'Filtered Spectra'",
+                                               "'Distinct Peptides'",
+                                               "'Distinct Matches'",
+                                               "'Distinct Analyses'",
+                                               "'Distinct Charges'"
+                                           };
+
+            var sourceTreeHeaders = new List<string>
+                                           {
+                                               "'Source'",
+                                               "'Filtered Spectra'",
+                                               "'Distinct Peptides'",
+                                               "'Distinct Matches'",
+                                               "'Distinct Analyses'",
+                                               "'Distinct Charges'"
+                                           };
+
+            var groupNodes = new List<TableExporter.TableTreeNode>();
+            var groups = session.CreateQuery(SpectrumTableForm.AggregateRow.Selection + ", ssgl " +
+                                             dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                               DataFilter.PeptideSpectrumMatchToProtein,
+                                                                               DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                                             "GROUP BY ssgl.Group.id")
+                                .List<object[]>()
+                                .Select(o => new SpectrumTableForm.SpectrumSourceGroupRow(o, viewFilter));
+            foreach (var group in groups)
+            {
+                var newNode = new TableExporter.TableTreeNode
+                {
+                    Text = group.SpectrumSourceGroup.Name,
+                    Headers = groupTreeHeaders,
+                    Cells = new List<string>
+                            {
+                                "'" + group.SpectrumSourceGroup.Name + "'",
+                                group.Spectra.ToString(),
+                                group.DistinctPeptides.ToString(),
+                                group.DistinctMatches.ToString(),
+                                group.DistinctAnalyses.ToString(),
+                                group.DistinctCharges.ToString()
+                            }
+                };
+                var groupFilter = new DataFilter(viewFilter)
+                {
+                    SpectrumSourceGroup = new List<SpectrumSourceGroup> { group.SpectrumSourceGroup }
+                };
+
+                var sources = session.CreateQuery(SpectrumTableForm.AggregateRow.Selection + ", s.Source " +
+                                                      groupFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                         DataFilter.PeptideSpectrumMatchToProtein,
+                                                                                         DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                                                      "GROUP BY s.Source.id")
+                        .List<object[]>()
+                        .Select(o => new SpectrumTableForm.SpectrumSourceRow(o, groupFilter));
+                SpectrumTableForm.SpectrumSourceGroupRow ssgr = group;
+                sources = from SpectrumTableForm.SpectrumSourceRow s in sources
+                          where s.SpectrumSource.Group == ssgr.SpectrumSourceGroup
+                          select s;
+                foreach (var source in sources)
+                {
+                    var newSubNode = new TableExporter.TableTreeNode
+                    {
+                        Text = "source" + source.SpectrumSource.Id ?? string.Empty + ".html",
+                        Headers = sourceTreeHeaders,
+                        Cells = new List<string>
+                                {
+                                    String.Format("'<a href=\"{0}.html\">{0}</a>'", source.SpectrumSource.Name),
+                                    source.Spectra.ToString(),
+                                    source.DistinctPeptides.ToString(),
+                                    source.DistinctMatches.ToString(),
+                                    source.DistinctAnalyses.ToString(),
+                                    source.DistinctCharges.ToString()
+                                }
+                    };
+                    newNode.Nodes.Add(newSubNode);
+                }
+                groupNodes.Add(newNode);
+            }
+            return groupNodes;
+        }
+
+        private void CreateHtmlReport(BackgroundWorker bg, string outFolder,
+                                      IDictionary<string, TableExporter.ITable> enumerableTables,
+                                      IDictionary<string, List<List<string>>> textTables,
+                                      IDictionary<string, List<TableExporter.TableTreeNode>> treeTables,
+                                      DataFilter viewFilter, DataFilter basicFilter, ISession session)
         {
             if (!Directory.Exists(outFolder))
                 Directory.CreateDirectory(outFolder);
@@ -479,52 +644,52 @@ namespace IDPicker.Forms
             var css = Properties.Resources.idpicker_style;
             var jsFunctions = Properties.Resources.idpicker_scripts;
             var cssStream = new StreamWriter(Path.Combine(outFolder, "idpicker-style.css"));
-            var jsSream = new StreamWriter(Path.Combine(outFolder, "idpicker-scripts.js"));
+            var jsStream = new StreamWriter(Path.Combine(outFolder, "idpicker-scripts.js"));
             cssStream.Write(css);
             cssStream.Flush();
             cssStream.Close();
-            jsSream.Write(jsFunctions);
-            jsSream.Flush();
-            jsSream.Close();
+            jsStream.Write(jsFunctions);
+            jsStream.Flush();
+            jsStream.Close();
+            
+            double progress = 5.0;
+            bg.ReportProgress((int) Math.Round(progress), "creating tables");
 
-            //generate html Files););
-            if (proteinTableForm != null)
-            {
-                var alltables = new List<List<List<string>>> { proteinTableForm.GetFormTable(false) };
-                ;
-                if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
-                    TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-protein.html"), reportName + "- Proteins",
-                                                      true, false, false);
-            }
-            if (peptideTableForm != null)
-            {
-                var alltables = new List<List<List<string>>> { peptideTableForm.GetFormTable(false) };
-                if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
-                    TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-peptide.html"), reportName + "- Peptides",
-                                                      true, false, false);
-            }
-            if (modificationTableForm != null)
-            {
-                var alltables = new List<List<List<string>>> { modificationTableForm.GetFormTable(false, false) };
-                if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
-                    TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-modificationTable.html"),
-                                                      reportName + "- Modification Summary Table",
-                                                      true, false, false);
+            int totalTables = enumerableTables.Count + textTables.Count + treeTables.Count;
+            double progressPerTable = 35.0 / totalTables;
 
-                var modTree = modificationTableForm.getModificationTree(reportName);
-                TableExporter.CreateHTMLTreePage(modTree, Path.Combine(outFolder, reportName + "-modificationList.html"),
-                                                 reportName + "- Modification List",
-                                                 new List<string> { "'Modified Site'", "'Mass'", "'Peptides'", "'Spectra'" },
-                                                 new List<string> { "'Sequence'", "'Cluster'", "'Spectra'" });
-            }
-            if (analysisTableForm != null)
+            //generate html files
+            foreach(var nameTablePair in enumerableTables)
             {
-                var alltables = new List<List<List<string>>> { analysisTableForm.GetFormTable(false) };
-                if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
-                    TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-analyses.html"),
-                                                      reportName + "- Analyses",
-                                                      true, false, false);
+                var tableList = new List<TableExporter.ITable> { nameTablePair.Value };
+                TableExporter.CreateHTMLTablePage(tableList,
+                                                  Path.Combine(outFolder, String.Format("{0} {1}.html", reportName, nameTablePair.Key)),
+                                                  String.Format("{0} - {1}", reportName, nameTablePair.Key),
+                                                  true, false, false);
+                progress += progressPerTable;
+                bg.ReportProgress((int) Math.Round(progress), "creating tables");
             }
+
+            foreach(var nameTablePair in textTables)
+            {
+                var tableList = new List<List<List<string>>> { nameTablePair.Value };
+                TableExporter.CreateHTMLTablePage(tableList,
+                                                  Path.Combine(outFolder, String.Format("{0} {1}.html", reportName, nameTablePair.Key)),
+                                                  String.Format("{0} - {1}", reportName, nameTablePair.Key),
+                                                  true, false, false);
+                progress += progressPerTable;
+                bg.ReportProgress((int) Math.Round(progress), "creating tables");
+            }
+
+            foreach (var nameTablePair in treeTables)
+            {
+                var tableList = new List<List<TableExporter.TableTreeNode>> { nameTablePair.Value };
+                TableExporter.CreateHTMLTreePage(nameTablePair.Value, Path.Combine(outFolder, String.Format("{0} {1}.html", reportName, nameTablePair.Key)),
+                                                 String.Format("{0} - {1}", reportName, nameTablePair.Key));
+                progress += progressPerTable;
+                bg.ReportProgress((int )Math.Round(progress), "creating tree tables");
+            }
+
             var clusterList = new List<string[]>();
             if (session != null)
             {
@@ -536,6 +701,12 @@ namespace IDPicker.Forms
                 var clusterToProteinList = new Dictionary<int, List<ProteinTableForm.ProteinGroupRow>>();
                 var proteinAccessionToPeptideList = new Dictionary<string, HashSet<int>>();
                 List<PeptideTableForm.DistinctPeptideRow> peptideList;
+
+                progress = 50;
+                bg.ReportProgress((int) Math.Round(progress), "precaching cluster data");
+
+                double progressPerCluster = 25.0 / clusterIDList.Count;
+
                 try
                 {
                     //seperating proteinList namespace in order to try to conserve memory
@@ -578,6 +749,9 @@ namespace IDPicker.Forms
                         MessageBox.Show(errorMessage);
                 }
 
+                progress = 60;
+                bg.ReportProgress((int) Math.Round(progress), "creating clusters");
+
                 foreach (var clusterID in clusterIDList)
                 {
                     ClusterInfo cluster;
@@ -588,90 +762,43 @@ namespace IDPicker.Forms
                                                  proteinAccessionToPeptideList, peptideList);
                     if (cluster.proteinGroupCount > 0)
                         TableExporter.CreateHTMLTablePage(cluster.clusterTables,
-                                                          Path.Combine(outFolder,
-                                                                       reportName + "-cluster" + cluster.clusterID + ".html"),
+                                                          Path.Combine(outFolder, "cluster" + cluster.clusterID + ".html"),
                                                           reportName + "- Cluster" + cluster.clusterID,
                                                           true, false, true);
                     clusterList.Add(new[]
                                         {
                                             cluster.clusterID.ToString(),
-                                            "'<a href=\"" + reportName + "-cluster" +
-                                            cluster.clusterID + ".html\" target=\"mainFrame\">"
-                                            + cluster.clusterID + "</a>'",
+                                            String.Format("'<a href=\"cluster{0}.html\" target=\"mainFrame\">{0}</a>'", cluster.clusterID),
                                             cluster.proteinGroupCount.ToString(),
                                             cluster.peptideCount.ToString(),
                                             cluster.spectraCount.ToString()
                                         });
+
+                    progress += progressPerCluster;
+                    bg.ReportProgress((int) Math.Round(progress), "creating clusters");
                 }
             }
 
-            //generate Tree HTML Files
-            if (spectrumTableForm != null)
-            {
-                var sources = spectrumTableForm.getSourceContentsForHTML();
-                var groups = spectrumTableForm.getSpectrumSourceGroupTree();
-                var firstRowHeaders = new List<string>
-                                          {
-                                              "'Name'",
-                                              "'Distinct Peptides'",
-                                              "'Distinct Analyses'",
-                                              "'Distinct Charges'",
-                                              "'Precursor m/z'"
-                                          };
+            bg.ReportProgress(85, "creating source tree tables");
+            var sources = getSourceContentsForHTML(viewFilter, basicFilter, session);
+            foreach (var source in sources)
+                TableExporter.CreateHTMLTreePage(source.Value, Path.Combine(outFolder, source.Key + ".html"), source.Key);
 
-                foreach (var kvp in sources)
-                {
-                    var name = kvp.Key[0];
-                    var fileName = kvp.Key[1];
-                    var secondHeaders = kvp.Key[2].Split('|').ToList();
-                    if (kvp.Value.Any())
-                        TableExporter.CreateHTMLTreePage(kvp.Value, Path.Combine(outFolder, fileName),
-                                                         name, firstRowHeaders, secondHeaders);
-                }
-                var groupTreeHeaders = new List<string>
-                                           {
-                                               "'Name'",
-                                               "'Filtered Spectra'",
-                                               "'Distinct Peptides'",
-                                               "'Distinct Matches'",
-                                               "'Distinct Analyses'",
-                                               "'Distinct Charges'"
-                                           };
-                if (groups.Any())
-                    TableExporter.CreateHTMLTreePage(groups, Path.Combine(outFolder, reportName + "-groups.html"),
-                                                    reportName + "- SpectrumSourceGroups", groupTreeHeaders, groupTreeHeaders);
-            }
+            bg.ReportProgress(90, "creating source group tree table");
+            var groups = getSpectrumSourceGroupTree(viewFilter, basicFilter, session);
+            TableExporter.CreateHTMLTreePage(groups, Path.Combine(outFolder, reportName + " Source Groups.html"), reportName + " - Source Groups");
 
-            //generate Sumamry Page
-            var fullSummaryList = getSummaryList(modificationTableForm, proteinTableForm, peptideTableForm,
-                                                 spectrumTableForm, analysisTableForm, viewFilter, basicFilter); ;
-            var summaryList = new List<List<string>>();
-            var summaryList2 = new List<List<string>>();
-            var filtersFound = false;
-            foreach (var row in fullSummaryList)
-            {
-                if (filtersFound)
-                    summaryList2.Add(row);
-                else
-                {
-                    if (row[0] == " --- Filters --- ")
-                    {
-                        filtersFound = true;
-                        summaryList2.Add(row);
-                    }
-                    else if (row[0] != string.Empty)
-                        summaryList.Add(row);
-                }
-            }
-            if (summaryList.Count + summaryList2.Count > 0)
-                TableExporter.CreateHTMLTablePage(new List<List<List<string>>> { summaryList, summaryList2 },
-                                                  Path.Combine(outFolder, reportName + "-summary.html"),
-                                                  reportName + "- Summary", false, true, false);
-
+            bg.ReportProgress(95, "finishing up");
             //generate navigation page
-            TableExporter.CreateNavigationPage(clusterList, outFolder, reportName);
+            var tableNames = new List<string>();
+            tableNames.Add("Source Groups");
+            tableNames.AddRange(textTables.Keys);
+            tableNames.AddRange(enumerableTables.Keys);
+            tableNames.AddRange(treeTables.Keys);
+
+            TableExporter.CreateNavigationPage(clusterList, outFolder, reportName, tableNames);
             TableExporter.CreateIndexPage(outFolder, reportName);
-            bg.ReportProgress(0);
+            bg.ReportProgress(100);
             if (File.Exists(Path.Combine(outFolder, "index.html")))
                 System.Diagnostics.Process.Start(Path.Combine(outFolder, "index.html"));
         }

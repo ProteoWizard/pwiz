@@ -345,7 +345,7 @@ namespace IDPicker.Forms
                            sender == exportSelectedCellsToFileToolStripMenuItem ||
                            sender == showInExcelSelectToolStripMenuItem;
 
-            var progressWindow = new Form
+            /*var progressWindow = new Form
             {
                 Size = new Size(300, 60),
                 Text = "Exporting...",
@@ -383,7 +383,7 @@ namespace IDPicker.Forms
                     TableExporter.ShowInExcel(exportWrapper, false);
                 }
             };
-            bg.RunWorkerAsync();
+            bg.RunWorkerAsync();*/
         }
 
         protected void exportButton_Click(object sender, EventArgs e)

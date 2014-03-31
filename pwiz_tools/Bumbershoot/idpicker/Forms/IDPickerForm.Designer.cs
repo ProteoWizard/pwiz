@@ -63,6 +63,7 @@ namespace IDPicker
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newSessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAllViewsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -94,7 +95,7 @@ namespace IDPicker
             this.developerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
-            this.newSessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.garbageCollectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -199,6 +200,13 @@ namespace IDPicker
             this.openToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.openToolStripMenuItem.Text = "Open idpDB...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // newSessionToolStripMenuItem
+            // 
+            this.newSessionToolStripMenuItem.Name = "newSessionToolStripMenuItem";
+            this.newSessionToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.newSessionToolStripMenuItem.Text = "New Session";
+            this.newSessionToolStripMenuItem.Click += new System.EventHandler(this.newSessionToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
@@ -411,7 +419,8 @@ namespace IDPicker
             // developerToolStripMenuItem
             // 
             this.developerToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showLogToolStripMenuItem});
+            this.showLogToolStripMenuItem,
+            this.garbageCollectToolStripMenuItem});
             this.developerToolStripMenuItem.Name = "developerToolStripMenuItem";
             this.developerToolStripMenuItem.Size = new System.Drawing.Size(72, 20);
             this.developerToolStripMenuItem.Text = "Developer";
@@ -419,7 +428,7 @@ namespace IDPicker
             // showLogToolStripMenuItem
             // 
             this.showLogToolStripMenuItem.Name = "showLogToolStripMenuItem";
-            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.showLogToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.showLogToolStripMenuItem.Text = "Show Log";
             this.showLogToolStripMenuItem.Click += new System.EventHandler(this.showLogToolStripMenuItem_Click);
             // 
@@ -437,12 +446,12 @@ namespace IDPicker
             this.dockPanel.Size = new System.Drawing.Size(584, 404);
             this.dockPanel.TabIndex = 0;
             // 
-            // newSessionToolStripMenuItem
+            // garbageCollectToolStripMenuItem
             // 
-            this.newSessionToolStripMenuItem.Name = "newSessionToolStripMenuItem";
-            this.newSessionToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.newSessionToolStripMenuItem.Text = "New Session";
-            this.newSessionToolStripMenuItem.Click += new System.EventHandler(this.newSessionToolStripMenuItem_Click);
+            this.garbageCollectToolStripMenuItem.Name = "garbageCollectToolStripMenuItem";
+            this.garbageCollectToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            this.garbageCollectToolStripMenuItem.Text = "Garbage Collect";
+            this.garbageCollectToolStripMenuItem.Click += new System.EventHandler(this.garbageCollectToolStripMenuItem_Click);
             // 
             // IDPickerForm
             // 
@@ -515,6 +524,7 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem spectralLibraryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadGeneMetadataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newSessionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem garbageCollectToolStripMenuItem;
 
     }
 }

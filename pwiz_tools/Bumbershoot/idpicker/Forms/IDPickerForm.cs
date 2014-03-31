@@ -1660,7 +1660,15 @@ namespace IDPicker
             var exporter = new ExportForm();
             exporter.Show();
 
-            exporter.toExcel(selected, modificationTableForm, proteinTableForm,peptideTableForm,spectrumTableForm,analysisTableForm,viewFilter, basicFilter);
+            var tables = new Dictionary<string, TableExporter.ITable>
+            {
+                { "Protein View", proteinTableForm },
+                { "Peptide View", peptideTableForm },
+                { "Spectrum View", spectrumTableForm },
+                { "Modification View", modificationTableForm },
+                { "Analysis View", analysisTableForm }
+            };
+            exporter.toExcel(selected, tables, viewFilter, basicFilter);
         }
 
         private void toHTMLToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1675,7 +1683,19 @@ namespace IDPicker
             var exporter = new ExportForm();
             exporter.Show();
 
-            exporter.toHTML(selected, modificationTableForm, proteinTableForm, peptideTableForm, spectrumTableForm, analysisTableForm, viewFilter, basicFilter,session);
+            var tables = new Dictionary<string, TableExporter.ITable>
+            {
+                { "Protein View", proteinTableForm },
+                { "Peptide View", peptideTableForm },
+                { "Analysis View", analysisTableForm }
+            };
+
+            var treeTables = new Dictionary<string, List<TableExporter.TableTreeNode>>
+            {
+                { "Modification View", modificationTableForm.getModificationTree() }
+            };
+
+            exporter.toHTML(selected, tables, treeTables, viewFilter, basicFilter, session);
         }
 
 
@@ -2019,6 +2039,11 @@ namespace IDPicker
         private void newSessionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start(Application.ExecutablePath);
+        }
+
+        private void garbageCollectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GC.Collect();
         }
     }
 

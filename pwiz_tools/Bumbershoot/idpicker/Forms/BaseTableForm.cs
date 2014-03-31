@@ -41,7 +41,7 @@ using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
-    public partial class BaseTableForm : DockableForm, IPersistentForm
+    public partial class BaseTableForm : DockableForm, IPersistentForm, TableExporter.ITable
     {
         public BaseTableForm()
         {
@@ -562,6 +562,93 @@ namespace IDPicker.Forms
             return result;
         }
 
+        //public virtual IList<string> Headers { get; protected set; }
+
+        private class ExportedTableRow : TableExporter.ITableRow
+        {
+            public virtual IList<string> Headers { get; set; }
+            public virtual IList<string> Cells { get; set; }
+        }
+
+        private bool exportSelectedCellsOnly = false;
+
+        public IEnumerator<TableExporter.ITableRow> GetEnumerator()
+        {
+            IEnumerable exportedRows;
+            IList<int> exportedColumns;
+
+            if (exportSelectedCellsOnly &&
+                treeDataGridView.SelectedCells.Count > 0 &&
+                !treeDataGridView.AreAllCellsSelected(false))
+            {
+                var selectedRows = new Set<DataGridViewRow>();
+                var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
+
+                foreach (DataGridViewCell cell in treeDataGridView.SelectedCells)
+                {
+                    selectedRows.Add(cell.OwningRow);
+                    selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
+                }
+
+                exportedRows = selectedRows;
+                exportedColumns = selectedColumns.Values;
+            }
+            else
+            {
+                exportedRows = treeDataGridView.Rows;
+                exportedColumns = treeDataGridView.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
+            }
+
+            // add column headers
+            var Headers = new List<string>();
+            foreach (var columnIndex in exportedColumns)
+                Headers.Add(treeDataGridView.Columns[columnIndex].HeaderText);
+
+            foreach (DataGridViewRow row in exportedRows)
+            {
+                var exportedRow = new ExportedTableRow();
+                exportedRow.Headers = Headers;
+
+                /* TODO: how to handle non-root rows?
+                var row = rows[rowIndex];
+
+                // skip non-root rows or filtered rows
+                if (rowIndexHierarchy.Count > 1 || getRowFilterState(row) == RowFilterState.Out)
+                    continue;*/
+
+                if (rows.Count > row.Index)
+                {
+                    Row row2 = rows[row.Index];
+                    if (getRowFilterState(row2) == RowFilterState.Out)
+                        continue;
+                }
+
+                var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(row.Index);
+
+                exportedRow.Cells = new List<string>();
+                foreach (var columnIndex in exportedColumns)
+                {
+                    // empty cells are exported as blank except for pivot columns which are exported as zeros
+                    object value = row.Cells[columnIndex].Value ?? (treeDataGridView.Columns[columnIndex].Name.StartsWith("pivot") ? "0" : String.Empty);
+                    var sb = new StringBuilder(value.ToString());
+
+                    if (columnIndex == 0 && rowIndexHierarchy.Count > 1)
+                    {
+                        int indent = (rowIndexHierarchy.Count - 1) * 2;
+                        sb.Insert(0, new string(' ', indent));
+                    }
+                    exportedRow.Cells.Add(sb.ToString());
+                }
+
+                yield return exportedRow;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (IEnumerator) GetEnumerator();
+        }
+
         public virtual List<List<string>> GetFormTable (bool selected)
         {
             var exportTable = new List<List<string>>();
@@ -632,11 +719,11 @@ namespace IDPicker.Forms
 
         protected void ExportTable(object sender, EventArgs e)
         {
-            var selected = sender == copyToClipboardSelectedToolStripMenuItem ||
-                           sender == exportSelectedCellsToFileToolStripMenuItem ||
-                           sender == showInExcelSelectToolStripMenuItem;
+            exportSelectedCellsOnly = sender == copyToClipboardSelectedToolStripMenuItem ||
+                                      sender == exportSelectedCellsToFileToolStripMenuItem ||
+                                      sender == showInExcelSelectToolStripMenuItem;
 
-            var progressWindow = new Form
+            /*var progressWindow = new Form
             {
                 Size = new Size(300, 60),
                 Text = "Exporting...",
@@ -649,33 +736,20 @@ namespace IDPicker.Forms
                 Style = ProgressBarStyle.Marquee
             };
             progressWindow.Controls.Add(progressBar);
-            progressWindow.Show();
+            progressWindow.Show();*/
 
-            var bg = new BackgroundWorker();
-            bg.DoWork += (x, y) =>
+            if (sender == clipboardToolStripMenuItem ||
+                sender == copyToClipboardSelectedToolStripMenuItem)
+                TableExporter.CopyToClipboard(this);
+            else if (sender == fileToolStripMenuItem ||
+                     sender == exportSelectedCellsToFileToolStripMenuItem)
+                TableExporter.ExportToFile(this);
+            else if (sender == showInExcelToolStripMenuItem ||
+                     sender == showInExcelSelectToolStripMenuItem)
             {
-                y.Result = GetFormTable(selected);
-            };
-            bg.RunWorkerCompleted += (x, y) =>
-                                         {
-                                             if (y.Error != null) Program.HandleException(y.Error);
-                                             progressWindow.Close();
-                                             var tempTable = y.Result as List<List<string>>;
-                                             if (sender == clipboardToolStripMenuItem ||
-                                                 sender == copyToClipboardSelectedToolStripMenuItem)
-                                                 TableExporter.CopyToClipboard(tempTable);
-                                             else if (sender == fileToolStripMenuItem ||
-                                                      sender == exportSelectedCellsToFileToolStripMenuItem)
-                                                 TableExporter.ExportToFile(tempTable);
-                                             else if (sender == showInExcelToolStripMenuItem ||
-                                                      sender == showInExcelSelectToolStripMenuItem)
-                                             {
-                                                 var exportWrapper = new Dictionary<string, List<List<string>>>
-                                                                         {{Name, tempTable}};
-                                                 TableExporter.ShowInExcel(exportWrapper, false);
-                                             }
-                                         };
-            bg.RunWorkerAsync();
+                var exportWrapper = new Dictionary<string, TableExporter.ITable> { { Name, this } };
+                TableExporter.ShowInExcel(exportWrapper, false);
+            }
         }
 
         protected void clipboardToolStripMenuItem_Click (object sender, EventArgs e)

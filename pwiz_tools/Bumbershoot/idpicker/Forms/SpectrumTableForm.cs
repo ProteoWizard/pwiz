@@ -39,6 +39,7 @@ using BrightIdeasSoftware;
 using PopupControl;
 using IDPicker.DataModel;
 using IDPicker.Controls;
+using NHibernate;
 
 namespace IDPicker.Forms
 {
@@ -544,7 +545,7 @@ namespace IDPicker.Forms
                           .ToList();
         }
 
-        IList<Row> getSpectrumRows (DataFilter parentFilter)
+        public static IList<Row> getSpectrumRows (ISession session, IList<Grouping<GroupBy>> checkedGroupings, DataFilter parentFilter)
         {
             lock (session)
             {
@@ -562,6 +563,11 @@ namespace IDPicker.Forms
                               .Select(o => new SpectrumRow(o, parentFilter, checkedGroupings, singleSource) as Row)
                               .ToList();
             }
+        }
+
+        IList<Row> getSpectrumRows(DataFilter parentFilter)
+        {
+            return getSpectrumRows(session, checkedGroupings, parentFilter);
         }
 
         IList<Row> getPeptideSpectrumMatchRows (DataFilter parentFilter)
@@ -1531,208 +1537,6 @@ namespace IDPicker.Forms
             unfilteredRows = null;
             setColumnVisibility();
             base.OnGroupingChanged(sender, e);
-        }
-
-        internal Dictionary<string[], List<TreeNode>> getSourceContentsForHTML()
-        {
-            const int decimalPlaces = 4;
-            var allContents = new Dictionary<string[], List<TreeNode>>();
-
-            //get score info
-            //score gathering is one of the most time-intensive processes in item retreaval
-            //loading everything to memory if possible should speed things up significantly
-            //low speed system should stay in place in case memory cant handle the load
-            var rawScoreList = session.CreateSQLQuery("select name, id from PeptideSpectrumMatchScoreName").List<object[]>();
-            var scoreList = new List<string>();
-            var scoreNameToId = new Dictionary<string, string>();
-            foreach (var item in rawScoreList)
-            {
-                scoreList.Add(item[0].ToString());
-                if (!scoreNameToId.ContainsKey(item[0].ToString()))
-                    scoreNameToId.Add(item[0].ToString(), item[1].ToString());
-            }
-            var scoresCaptured = true;
-            var scoreCache = new Dictionary<string, Dictionary<string, string>>();
-            try
-            {
-                var allScores = session.CreateSQLQuery("Select PsmID, ScoreNameId, CAST(Value AS TEXT) from PeptideSpectrumMatchScore").List();
-                foreach (var row in allScores)
-                {
-                    var rowContents = (object[]) row;
-                    if (!scoreCache.ContainsKey(rowContents[0].ToString()))
-                        scoreCache.Add(rowContents[0].ToString(), new Dictionary<string, string>());
-                    if (!scoreCache[rowContents[0].ToString()].ContainsKey(rowContents[1].ToString()))
-                        scoreCache[rowContents[0].ToString()].Add(rowContents[1].ToString(), rowContents[2].ToString());
-                }
-            }
-            catch (Exception e)
-            {
-                scoresCaptured = false;
-                var errorMessage =
-                        "[SpectrumTableForm] Error when precaching data. " +
-                        "Results may be processed slower than expected - " +
-                        Environment.NewLine + e.Message;
-                if (InvokeRequired)
-                    Invoke(new Action(() => MessageBox.Show(errorMessage)));
-                else
-                    MessageBox.Show(errorMessage);
-            }
-
-
-            //get source info
-            var sources = session.QueryOver<SpectrumSource>().List();
-            foreach (var source in sources)
-            {
-                var exportTable = new List<TreeNode>();
-                var sourceFilter = new DataFilter(dataFilter) { SpectrumSource = new List<SpectrumSource> { source } };
-                var spectraRows = getSpectrumRows(sourceFilter);
-
-                foreach (SpectrumRow spectra in spectraRows)
-                {
-                    var key = spectra.Spectrum.NativeID;
-                    try
-                    {
-                        key = pwiz.CLI.msdata.id.abbreviate(key);
-                    }
-                    catch
-                    {
-                    }
-                    var newBranch = new TreeNode
-                    {
-                        Text = key,
-                        Tag = new[]
-                                                      {
-                                                          "'" + key + "'", spectra.DistinctPeptides.ToString(),
-                                                          spectra.DistinctAnalyses.ToString(),
-                                                          spectra.DistinctCharges.ToString(),
-                                                          Math.Round(spectra.Spectrum.PrecursorMZ,decimalPlaces).ToString()
-                                                      }
-                    };
-                    foreach (var match in spectra.Spectrum.Matches)
-                    {
-                        var observedMass = match.Spectrum.PrecursorMZ * match.Charge -
-                                           match.Charge * pwiz.CLI.chemistry.Proton.Mass;
-                        var matchNode = new TreeNode { Text = match.Rank.ToString() };
-                        var tag = new List<string>
-                                      {
-                                          "'" + match.Rank + "'",
-                                          match.Charge.ToString(),
-                                          Math.Round(observedMass,decimalPlaces).ToString(),
-                                          Math.Round(match.ObservedNeutralMass,decimalPlaces).ToString(),
-                                          Math.Round(match.MonoisotopicMassError,decimalPlaces).ToString(),
-                                          Math.Round(match.QValue,decimalPlaces).ToString(),
-                                          "'" + match.Peptide.Sequence + "'"
-                                      };
-                        foreach (var score in scoreList)
-                        {
-                            if (scoresCaptured)
-                            {
-                                var scoreValue = scoreCache[match.Id.ToString()][scoreNameToId[score]];
-                                tag.Add(Math.Round(double.Parse(scoreValue), decimalPlaces).ToString());
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    tag.Add(Math.Round(match.Scores[score.Trim("'".ToCharArray())], decimalPlaces).ToString());
-                                }
-                                catch
-                                {
-                                    tag.Add(string.Empty);
-                                }
-                            }
-                        }
-                        matchNode.Tag = tag.ToArray();
-                        newBranch.Nodes.Add(matchNode);
-                    }
-                    exportTable.Add(newBranch);
-                }
-                var headers = new List<string>()
-                                  {
-                                      "'Rank'",
-                                      "'Charge'",
-                                      "'Observed Mass'",
-                                      "'Monoisotopic Mass'",
-                                      "'Mass Error'",
-                                      "'Q Value'",
-                                      "'Sequence'"
-                                  };
-                headers.AddRange(scoreList.Select(item => string.Format("'{0}'", item)));
-                allContents.Add(
-                    new[]
-                        {
-                            source.Name, "source" + (source.Id == null
-                                                         ? string.Empty
-                                                         : source.Id.ToString())
-                                         + ".html",
-                            string.Join("|", headers.ToArray())
-                        }, exportTable);
-            }
-            return allContents;
-        }
-
-        internal List<TreeNode> getSpectrumSourceGroupTree()
-        {
-            var groupNodes = new List<TreeNode>();
-            var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
-                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                         DataFilter.PeptideSpectrumMatchToProtein,
-                                                                                         DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
-                                                     "GROUP BY ssgl.Group.id")
-                        .List<object[]>()
-                        .Select(o => new SpectrumSourceGroupRow(o, viewFilter));
-            foreach (var group in groups)
-            {
-                var newNode = new TreeNode
-                {
-                    Text = group.SpectrumSourceGroup.Name,
-                    Tag =
-                        new[]
-                                              {
-                                                  "'" + group.SpectrumSourceGroup.Name + "'", group.Spectra.ToString(),
-                                                  group.DistinctPeptides.ToString(), group.DistinctMatches.ToString(),
-                                                  group.DistinctAnalyses.ToString(), group.DistinctCharges.ToString()
-                                              }
-                };
-                var groupFilter = new DataFilter(viewFilter)
-                {
-                    SpectrumSourceGroup =
-                        new List<SpectrumSourceGroup> { group.SpectrumSourceGroup }
-                };
-                var sources = session.CreateQuery(AggregateRow.Selection + ", s.Source " +
-                                                      groupFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                         DataFilter.PeptideSpectrumMatchToProtein,
-                                                                                         DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
-                                                      "GROUP BY s.Source.id")
-                        .List<object[]>()
-                        .Select(o => new SpectrumSourceRow(o, groupFilter));
-                SpectrumSourceGroupRow ssgr = group;
-                sources = from SpectrumSourceRow s in sources
-                          where s.SpectrumSource.Group == ssgr.SpectrumSourceGroup
-                          select s;
-                foreach (var source in sources)
-                {
-                    var newSubNode = new TreeNode
-                    {
-                        Text = "source" + source.SpectrumSource.Id ?? string.Empty + ".html",
-                        Tag = new[]
-                                                       {
-                                                           "'<a href =\"source" + (source.SpectrumSource.Id != null
-                                                                                       ? source.SpectrumSource.Id.ToString()
-                                                                                       : string.Empty) + ".html\">" +
-                                                           source.SpectrumSource.Name + "</a>'",
-                                                           source.Spectra.ToString(),
-                                                           source.DistinctPeptides.ToString(),
-                                                           source.DistinctMatches.ToString(),
-                                                           source.DistinctAnalyses.ToString(),
-                                                           source.DistinctCharges.ToString()
-                                                       }
-                    };
-                    newNode.Nodes.Add(newSubNode);
-                }
-                groupNodes.Add(newNode);
-            }
-            return groupNodes;
         }
 
         protected override bool filterRowsOnText(string text)
