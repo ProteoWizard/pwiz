@@ -211,8 +211,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedNode = selectedNode;
                 pasteProteinsDlgA.SelectedPath = SkylineWindow.SequenceTree.SelectedPath;
                 pasteProteinsDlgA.PasteProteins();
-                pasteProteinsDlgA.OkDialog();
             });
+            OkDialog(pasteProteinsDlgA, pasteProteinsDlgA.OkDialog);
             WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(uniRef100A5Di11, pg.Name)));
             doc = WaitForDocumentChange(doc);
             nodeProt = doc.PeptideGroups.First(pg => Equals(uniRef100A5Di11, pg.Name));
@@ -236,8 +236,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedNode = selectedNode;
                 pasteProteinsDlg.SelectedPath = SkylineWindow.SequenceTree.SelectedPath;
                 pasteProteinsDlg.PasteProteins();
-                pasteProteinsDlg.OkDialog();
             });
+            OkDialog(pasteProteinsDlg, pasteProteinsDlg.OkDialog);
             WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(pasteProteinName, pg.Name)));
             doc = WaitForDocumentChange(doc);
             nodeProt = doc.PeptideGroups.First(pg => Equals(pasteProteinName, pg.Name));

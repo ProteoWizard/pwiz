@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestFunctional
                               textStandard,
                               string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
                                             "GTFIIDPGGVIR"))));
-            messageDlgStandard.OkDialog();
+            OkDialog(messageDlgStandard, messageDlgStandard.OkDialog);
             Assert.AreSame(docOldStandard, SkylineWindow.Document);
 
             // 7. Mass list contains different iRT times on same peptide
