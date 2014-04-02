@@ -606,6 +606,7 @@ namespace ZedGraph
 							x = _rect.Left + halfGap / 2.0F +
 								( iEntry % _hStack ) * _legendItemWidth;
 							y = _rect.Top + (int)( iEntry / _hStack ) * _legendItemHeight;
+                            y += 2; // Give 2-pixel margin to top of legend
 
 							// Draw the legend label for the current curve
 							FontSpec tmpFont = ( curve._label._fontSpec != null ) ?
@@ -931,6 +932,7 @@ namespace ZedGraph
 				_legendItemHeight = _tmpSize;
 			float totLegHeight = (float)Math.Ceiling( (double)nCurve / (double)_hStack )
 				* _legendItemHeight;
+            totLegHeight += 4;  // Give 2-pixel margin to top and bottom of legend
 
 			RectangleF newRect = new RectangleF();
 
