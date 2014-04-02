@@ -80,7 +80,15 @@ namespace SkylineTester
             if (!File.Exists(SummaryFile))
                 return;
 
-            var summary = XElement.Load(SummaryFile);
+            XElement summary;
+            try
+            {
+                summary = XElement.Load(SummaryFile);   
+            }
+            catch (Exception)
+            {
+                return;
+            }
             foreach (var runElement in summary.Descendants("Run"))
             {
                 var run = new Run();
