@@ -587,6 +587,13 @@ rule init ( version : location : options * )
                 <link>static:<define>BOOST_SYSTEM_STATIC_LINK=1
             ;
 
+        lib atomic
+            :   $(location)/libs/atomic/src/lockpool.cpp
+            :   $(requirements)
+                <location-prefix>atomic-$(version-tokens:J=_)
+                <use>boost
+            ;
+
         local PRG_EXEC_MON_SOURCES =
             execution_monitor
             debug
