@@ -24,7 +24,7 @@
 
 #include "stdafx.h"
 #include "myrimatch.h"
-#include "boost/lockfree/fifo.hpp"
+#include "boost/lockfree/queue.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
@@ -36,7 +36,7 @@ namespace freicore
 namespace myrimatch
 {
 	proteinStore					proteins;
-    boost::lockfree::fifo<size_t>   proteinTasks;
+    boost::lockfree::queue<size_t>   proteinTasks;
     SearchStatistics                searchStatistics;
 
 	SpectraList						spectra;
@@ -579,7 +579,7 @@ namespace myrimatch
             size_t proteinTask;
 		    while( true )
 		    {
-                if (!proteinTasks.dequeue(&proteinTask))
+                if (!proteinTasks.pop(proteinTask))
 				    break;
 
 			    ++ searchStatistics.numProteinsDigested;
@@ -668,7 +668,7 @@ namespace myrimatch
         boost::uint32_t numProteins = (boost::uint32_t) proteins.size();
 
 		for (size_t i=0; i < numProteins; ++i)
-			proteinTasks.enqueue(i);
+			proteinTasks.push(i);
 
         bpt::ptime start = bpt::microsec_clock::local_time();
 

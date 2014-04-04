@@ -56,7 +56,7 @@
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
-constant BOOST_VERSION : 1 43 0 ;
+constant BOOST_VERSION : 1 54 0 ;
 
 local default_libraries_path = "./freicore/libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
@@ -92,7 +92,7 @@ import mpi ;
 import path ;
 
 
-project bumbershoot
+project myrimatch
 	: requirements
 	    <include>freicore/pwiz_src
 	    <include>freicore/libraries/boost_aux
@@ -132,7 +132,10 @@ project bumbershoot
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
         # warning: '__cur' might be used uninitialized in this function 
-        <toolset>gcc:<cxxflags>-Wno-uninitialized   
+        <toolset>gcc:<cxxflags>-Wno-uninitialized
+
+        # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
+        <toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
 
         # special Cygwin gcc-3.4.4 hack
         # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
@@ -169,7 +172,7 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 local application-name = "MyriMatch" ;
 
 constant MAJOR : 2 ;
-constant MINOR : 1 ;
+constant MINOR : 2 ;
 
 
 # set version info (used for tarball filenames)
@@ -215,7 +218,7 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ path.make $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ] ;
     if <link>shared in $(properties) { location = $(location)-shared ; }
     if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
 
@@ -238,16 +241,12 @@ rule install-vendor-api-dependencies ( properties * )
     local dependencies ;
     if <toolset>msvc in $(properties)
     {
-        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
-        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
-
-        if ! <address-model>64 in $(properties)
-        {
-            if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
-            if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
-        }
     }
     return $(dependencies) ;
 }
@@ -279,6 +278,7 @@ exe $(application-name:L)
   : # requirements
       <conditional>@with-mpi
       <library>freicore
+      <library>/ext/boost//atomic
   ;
 
 install install
