@@ -349,7 +349,7 @@ namespace myrimatch
 		int numMatches = 0;
 		int numLoci = 0;
 
-		string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
+		string filenameAsScanName = path(dataFilename).filename().string();
 
 		BOOST_FOREACH(Spectrum* s, spectra)
 		{
