@@ -63,6 +63,40 @@ void hackInMemoryMSData(MSData& msd)
     if (cl) cl->setDataProcessingPtr(DataProcessingPtr());
 }
 
+void validateMmgfMzxmlRoundTrip()
+{
+    string filename1 = filenameBase_ + ".mgf";
+    string filename2 = filenameBase_ + ".mzXML";
+
+    ofstream ofs(filename1.c_str());
+    string mgf = "CHARGE=2+ and 3+\nBEGIN IONS\nPEPMASS=952.924194 145032.0000\nCHARGE=2+\nRTINSECONDS=301.48\n271.0874 2\n298.1747 4\nEND IONS\nBEGIN IONS\nPEPMASS=503.800000 67522.2000\nCHARGE=2+\nRTINSECONDS=302.51\n147.1840 3\n154.3668 3\n162.2118 2\n162.9007 1\n167.3297 1\n175.2387 2\n184.9460 3\nEND IONS\n";
+    ofs.write(mgf.c_str(), mgf.length());
+    ofs.close();
+
+    // make sure that round trip doesn't systematically increase converted scan numbers
+    for (int loop = 3; loop--; )
+    {
+        MSDataFile msd1(filename1); // read back the MGF
+        const SpectrumList& sl = *msd1.run.spectrumListPtr;
+        SpectrumPtr spectrum = sl.spectrum(0);
+        unit_assert(spectrum->id == "index=0");
+        MSDataFile::WriteConfig writeConfig;
+        writeConfig.format = MSDataFile::Format_mzXML;
+        MSDataFile::write(msd1, filename2, writeConfig); // write as mzXML
+        MSDataFile msd2(filename2); // read back the mzXML
+        const SpectrumList& sl2= *msd2.run.spectrumListPtr;
+        SpectrumPtr spectrum2 = sl2.spectrum(0);
+        unit_assert(spectrum2->id == "index=1"); // mzXML is 1-based
+        MSDataFile::WriteConfig writeConfig2;
+        writeConfig2.format = MSDataFile::Format_MGF;
+        MSDataFile::write(msd2, filename1, writeConfig2); // write as mgf
+    }
+
+    // remove temp files
+    boost::filesystem::remove(filename1);
+    boost::filesystem::remove(filename2);
+}
+
 
 void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
                        const DiffConfig diffConfig)
@@ -162,6 +196,8 @@ void test()
 {
     MSDataFile::WriteConfig writeConfig;
     DiffConfig diffConfig;
+
+    validateMmgfMzxmlRoundTrip();
 
     // mzML 64-bit, full diff
     validateWriteRead(writeConfig, diffConfig);

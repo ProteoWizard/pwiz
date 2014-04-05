@@ -567,12 +567,18 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     result.offset = xmlWriter.positionNext();
 
     // mzXML scanNumber takes a different form depending on the source's nativeID format
-    string scanNumberStr = id::translateNativeIDToScanNumber(nativeIdFormat, spectrum.id);
-    if (scanNumberStr.empty())
-        result.scanNumber = spectrum.index+1; // scanNumber is a 1-based index for some nativeID formats
+    if (MS_multiple_peak_list_nativeID_format == nativeIdFormat)  // 0-based
+    {
+        result.scanNumber = spectrum.index+1;  // mzXML is 1-based
+    }
     else
-        result.scanNumber = lexical_cast<int>(scanNumberStr);
-
+    {
+        string scanNumberStr = id::translateNativeIDToScanNumber(nativeIdFormat, spectrum.id);
+        if (scanNumberStr.empty())
+            result.scanNumber = spectrum.index+1; // scanNumber is a 1-based index for some nativeID formats
+        else
+            result.scanNumber = lexical_cast<int>(scanNumberStr);
+    }
     // get info
 
     Scan dummy;
