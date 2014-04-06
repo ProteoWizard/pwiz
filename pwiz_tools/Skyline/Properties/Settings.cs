@@ -1338,7 +1338,7 @@ namespace pwiz.Skyline.Properties
                         var list5 = GetDefaults(5).ToList();
                         list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[]
                         {
-                            new ChargeRegressionLine(2, 0.033, 3.1104),
+                            new ChargeRegressionLine(2, 0.04, -0.5082),
                             new ChargeRegressionLine(3, 0.037, -0.8368), 
                         }));
                         return list5.ToArray();
