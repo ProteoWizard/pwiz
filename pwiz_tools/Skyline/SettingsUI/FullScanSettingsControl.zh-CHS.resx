@@ -142,7 +142,7 @@
     <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>仅使用在经预测的数分钟</value>
+    <value>仅使用</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -199,7 +199,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>保留时间内进行的扫描</value>
+    <value>分钟之内进行的经预测的RT扫描</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -289,7 +289,7 @@
     <value>3</value>
   </data>
   <data name="labelTimeAroundMs2Ids1.Text" xml:space="preserve">
-    <value>仅使用在经预测的数分钟</value>
+    <value>仅使用</value>
   </data>
   <data name=">>labelTimeAroundMs2Ids1.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids1</value>
@@ -346,7 +346,7 @@
     <value>4</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Text" xml:space="preserve">
-    <value>进行的扫描</value>
+    <value>分钟之内进行的MS/MS ID扫描</value>
   </data>
   <data name=">>labelTimeAroundMs2Ids2.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids2</value>

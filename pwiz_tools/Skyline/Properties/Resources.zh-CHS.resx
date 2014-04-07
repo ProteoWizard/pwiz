@@ -319,9 +319,6 @@
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Hello" xml:space="preserve">
-    <value>您好</value>
-  </data>
   <data name="FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found" xml:space="preserve">
     <value>文本“{0}”无法找到。</value>
   </data>
@@ -862,7 +859,7 @@
     <value>最大并行母离子(&amp;X)：</value>
   </data>
   <data name="ExportMethodDlg_RUN_DURATION_TXT" xml:space="preserve">
-    <value>运行时间(&amp;D)（最小）：</value>
+    <value>运行时间(&amp;D)（分钟）：</value>
   </data>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
     <value>驻留时间(&amp;D)（毫秒）：</value>
@@ -1997,7 +1994,7 @@
     <value>意外的无效峰列表</value>
   </data>
   <data name="VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__" xml:space="preserve">
-    <value>针对{0}的本地复制</value>
+    <value>针对{0}的本地复制应急措施</value>
   </data>
   <data name="VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzXML_work_around_for__0__" xml:space="preserve">
     <value>针对{0}转换成 mzXML 替代方法</value>
@@ -2651,7 +2648,7 @@
     <comment>Letters restricted to English alphabet</comment>
   </data>
   <data name="BuildLibraryDlg_OkWizardPage_Finish" xml:space="preserve">
-    <value>结束</value>
+    <value>完成</value>
   </data>
   <data name="BuildLibraryDlg_btnAddFile_Click_Add_Input_Files" xml:space="preserve">
     <value>添加输入文件</value>
@@ -2804,7 +2801,7 @@
     <value>肽比率结果</value>
   </data>
   <data name="ReportSpecList_GetDefaults_Peptide_RT_Results" xml:space="preserve">
-    <value>肽比率结果</value>
+    <value>肽RT结果</value>
   </data>
   <data name="ReportSpecList_GetDefaults_Transition_Results" xml:space="preserve">
     <value>离子对结果</value>
@@ -3437,7 +3434,7 @@
     <value>否</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Peptides__0__through__1__of__2__total" xml:space="preserve">
-    <value>肽{0}通过总计为{2}的{1}</value>
+    <value>通过{1}（总计为{2}）的{0}个肽</value>
   </data>
   <data name="ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__" xml:space="preserve">
     <value>第{0}页，共{1}页</value>
@@ -3491,7 +3488,7 @@
     <value>{0}现有的</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides__0__unmatched" xml:space="preserve">
-    <value>{0}未匹配的</value>
+    <value>{0}个未匹配的</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_entries" xml:space="preserve">
     <value>条目</value>
@@ -3518,7 +3515,7 @@
     <value>{0}{1}，电荷{2}</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides__0__proteins" xml:space="preserve">
-    <value>{0}蛋白质，</value>
+    <value>{0}个蛋白质，</value>
   </data>
   <data name="ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present" xml:space="preserve">
     <value>跳过{0}已经存在</value>
@@ -3942,7 +3939,7 @@
     <value>BiblioSpec 库</value>
   </data>
   <data name="BuildLibraryDlg_btnPrevious_Click__Next__" xml:space="preserve">
-    <value>下一个(&amp;N )&gt;</value>
+    <value>下一个(&amp;N) &gt;</value>
   </data>
   <data name="MultiButtonMsgDlg_BUTTON_OK_OK" xml:space="preserve">
     <value>确定</value>
@@ -4015,9 +4012,6 @@
   </data>
   <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
     <value>遗留库</value>
-  </data>
-  <data name="PasteDlg_PasteFormat_Insert__0__" xml:space="preserve">
-    <value>插入{0}</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
     <value>保留时间预测计算器无法评分。</value>
@@ -4656,7 +4650,7 @@
     <value>您必须在导入肽搜索前保存此文档。</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
-    <value>下一个(&amp;N )&gt;</value>
+    <value>下一个(&amp;N) &gt;</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
     <value>特定于文件的谱图库没有有效的保留时间。</value>
@@ -4665,7 +4659,7 @@
     <value>请查看您的肽搜索管道或联络 Skyline 支持，以确保保留时间出现在您的谱图库中。</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
-    <value>结束(&amp;F)</value>
+    <value>完成(&amp;F)</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>尝试导入{0}库时出现错误。</value>
@@ -5013,7 +5007,7 @@
     <value>加入色谱图……</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus__0__of__1__files" xml:space="preserve">
-    <value>{1}文件的{0}</value>
+    <value>{1}个文件中的{0}个</value>
   </data>
   <data name="AllChromatogramsGraph_btnCancel_Click_Cancel_import" xml:space="preserve">
     <value>取消导入</value>
@@ -6173,5 +6167,9 @@
   </data>
   <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
     <value>保留时间差异求平方</value>
+  </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
+    <value>默认（{0}）</value>
+    <comment>Example: Default (English)</comment>
   </data>
 </root>

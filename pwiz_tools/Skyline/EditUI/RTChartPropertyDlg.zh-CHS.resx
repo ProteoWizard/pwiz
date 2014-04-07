@@ -235,7 +235,7 @@
     <value>5</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>最少</value>
+    <value>分钟</value>
   </data>
   <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -262,7 +262,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>最少</value>
+    <value>分钟</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>

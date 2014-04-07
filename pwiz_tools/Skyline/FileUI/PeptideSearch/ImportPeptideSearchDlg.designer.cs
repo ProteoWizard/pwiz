@@ -349,7 +349,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsTitlePanel.PerformLayout();
             this.importFastaPage.ResumeLayout(false);
             this.importFASTATitlePanel.ResumeLayout(false);
-            this.importFASTATitlePanel.PerformLayout();
             this.ResumeLayout(false);
 
         }

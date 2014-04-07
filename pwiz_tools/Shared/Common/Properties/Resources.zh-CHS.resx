@@ -189,7 +189,7 @@
     <value>&lt;&lt; 隐藏高级(&amp;A)</value>
   </data>
   <data name="CustomizeViewForm_AdvancedShowing_Show__Advanced___" xml:space="preserve">
-    <value>显示高级(&amp;A)&gt;&gt;</value>
+    <value>显示高级(&amp;A) &gt;&gt;</value>
   </data>
   <data name="CustomizeViewForm_SetFilterInfo_This_column_does_not_exist" xml:space="preserve">
     <value>本列不存在</value>

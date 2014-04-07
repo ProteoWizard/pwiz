@@ -181,7 +181,7 @@
     <value>12, 25</value>
   </data>
   <data name="listboxReports.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>221, 225</value>
+    <value>204, 225</value>
   </data>
   <data name="listboxReports.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -226,10 +226,10 @@
     <value>4</value>
   </data>
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>240, 70</value>
+    <value>223, 70</value>
   </data>
   <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnEdit.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -253,10 +253,10 @@
     <value>False</value>
   </data>
   <data name="btnPreview.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>240, 25</value>
+    <value>223, 25</value>
   </data>
   <data name="btnPreview.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnPreview.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -277,10 +277,10 @@
     <value>2</value>
   </data>
   <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>240, 99</value>
+    <value>223, 99</value>
   </data>
   <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnShare.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -301,10 +301,10 @@
     <value>1</value>
   </data>
   <data name="btnImport.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>240, 128</value>
+    <value>223, 128</value>
   </data>
   <data name="btnImport.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnImport.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>

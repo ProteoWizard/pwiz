@@ -612,7 +612,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             var size = base.RenderTip(g, sizeMax, draw);
             if(ShowAnnotationTipOnly)
                 return size;
-            g.TranslateTransform(0, size.Height);
+            if (draw)
+                g.TranslateTransform(0, size.Height);
             Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
             var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
             var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
@@ -661,11 +662,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     var nodeGroup = (TransitionGroupDocNode)nodePep.Children[0];
                     if (size.Height > 0)
                         size.Height += TableDesc.TABLE_SPACING;
-                    g.TranslateTransform(0, size.Height);
+                    if (draw)
+                        g.TranslateTransform(0, size.Height);
                     Size sizeMaxGroup = new Size(sizeMax.Width, sizeMax.Height - (int)size.Height);
                     SizeF sizeGroup = TransitionGroupTreeNode.RenderTip(nodePep, nodeGroup,
                         nodeTranSelected, settings, g, sizeMaxGroup, draw);
-                    g.TranslateTransform(0, -size.Height);
+                    if (draw)
+                        g.TranslateTransform(0, -size.Height);
 
                     size.Width = Math.Max(size.Width, sizeGroup.Width);
                     size.Height += sizeGroup.Height;

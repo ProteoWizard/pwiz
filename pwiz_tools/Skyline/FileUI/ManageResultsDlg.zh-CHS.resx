@@ -181,10 +181,10 @@
     <value>False</value>
   </data>
   <data name="btnDown.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 115</value>
+    <value>267, 115</value>
   </data>
   <data name="btnDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnDown.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -211,10 +211,10 @@
     <value>False</value>
   </data>
   <data name="btnUp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 86</value>
+    <value>267, 86</value>
   </data>
   <data name="btnUp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnUp.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -241,10 +241,10 @@
     <value>False</value>
   </data>
   <data name="btnRemove.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 11</value>
+    <value>267, 11</value>
   </data>
   <data name="btnRemove.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnRemove.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -271,10 +271,10 @@
     <value>False</value>
   </data>
   <data name="btnRemoveAll.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 40</value>
+    <value>267, 40</value>
   </data>
   <data name="btnRemoveAll.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnRemoveAll.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -301,10 +301,10 @@
     <value>False</value>
   </data>
   <data name="btnRename.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 164</value>
+    <value>267, 164</value>
   </data>
   <data name="btnRename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnRename.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -331,7 +331,7 @@
     <value>9, 11</value>
   </data>
   <data name="listResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>261, 264</value>
+    <value>244, 264</value>
   </data>
   <data name="listResults.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -352,10 +352,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnReimport.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 193</value>
+    <value>267, 193</value>
   </data>
   <data name="btnReimport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnReimport.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -379,10 +379,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnMinimize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 251</value>
+    <value>267, 251</value>
   </data>
   <data name="btnMinimize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnMinimize.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -409,10 +409,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnRescore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 222</value>
+    <value>267, 222</value>
   </data>
   <data name="btnRescore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnRescore.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -535,10 +535,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnRemoveLibRun.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 11</value>
+    <value>267, 11</value>
   </data>
   <data name="btnRemoveLibRun.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnRemoveLibRun.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -568,10 +568,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnRemoveAllLibs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 40</value>
+    <value>267, 40</value>
   </data>
   <data name="btnRemoveAllLibs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnRemoveAllLibs.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -598,7 +598,7 @@
     <value>9, 11</value>
   </data>
   <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>261, 264</value>
+    <value>244, 264</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

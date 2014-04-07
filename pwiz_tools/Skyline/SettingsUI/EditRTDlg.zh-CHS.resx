@@ -555,7 +555,7 @@ SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin
     <value>8</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>最小</value>
+    <value>分钟</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>

@@ -365,7 +365,7 @@
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
     <value>在考虑到蛋白质消化时于肽中允许的
-漏切位点最大数目。</value>
+最大丢失剪切数量。</value>
   </data>
   <data name=">>cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -389,8 +389,8 @@
     <value>1</value>
   </data>
   <data name="comboEnzyme.ToolTip" xml:space="preserve">
-    <value>在注射入质谱仪之前用于
-将蛋白质消化成肽的蛋白酶
+    <value>在注入质谱仪前用于将蛋白质
+消化成肽的蛋白酶
 </value>
   </data>
   <data name=">>comboEnzyme.Name" xml:space="preserve">
@@ -415,8 +415,8 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>指定可能存在于样品基质中的
-全套蛋白质集已处理的 FASTA 序列信息，
+    <value>指定全套蛋白质的经处理的 FASTA 序列信息，
+这些蛋白质可能存在于用来注入质谱仪的
 这些样品基质可注射入质谱仪。</value>
   </data>
   <data name=">>comboBackgroundProteome.Name" xml:space="preserve">
@@ -604,7 +604,7 @@
     <value>211, 176</value>
   </data>
   <data name="btnEditExlusions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnEditExlusions.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -702,10 +702,10 @@
     <value>10</value>
   </data>
   <data name="btnExplore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 96</value>
+    <value>255, 96</value>
   </data>
   <data name="btnExplore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnExplore.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -729,10 +729,10 @@
     <value>0</value>
   </data>
   <data name="btnBuildLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 66</value>
+    <value>255, 66</value>
   </data>
   <data name="btnBuildLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnBuildLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -878,10 +878,10 @@
     <value>5</value>
   </data>
   <data name="editLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>272, 36</value>
+    <value>255, 36</value>
   </data>
   <data name="editLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="editLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -908,7 +908,7 @@
     <value>28, 36</value>
   </data>
   <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 94</value>
+    <value>219, 94</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1108,7 +1108,7 @@
     <value>6</value>
   </data>
   <data name="label14.Text" xml:space="preserve">
-    <value>最少</value>
+    <value>分钟</value>
   </data>
   <data name=">>label14.Name" xml:space="preserve">
     <value>label14</value>
@@ -1600,7 +1600,7 @@
     <value>211, 269</value>
   </data>
   <data name="btnEditHeavyMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnEditHeavyMods.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -1651,7 +1651,7 @@
     <value>211, 36</value>
   </data>
   <data name="btnEditStaticMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnEditStaticMods.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>

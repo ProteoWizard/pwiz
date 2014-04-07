@@ -611,7 +611,7 @@
     <value>18</value>
   </data>
   <data name="label30.Text" xml:space="preserve">
-    <value>最少</value>
+    <value>分钟</value>
   </data>
   <data name=">>label30.Name" xml:space="preserve">
     <value>label30</value>
@@ -638,7 +638,7 @@
     <value>14</value>
   </data>
   <data name="label31.Text" xml:space="preserve">
-    <value>最少</value>
+    <value>分钟</value>
   </data>
   <data name=">>label31.Name" xml:space="preserve">
     <value>label31</value>
@@ -1784,13 +1784,13 @@
     <value>209, 103</value>
   </data>
   <data name="btnEditSpecialTransitions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>92, 23</value>
   </data>
   <data name="btnEditSpecialTransitions.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="btnEditSpecialTransitions.Text" xml:space="preserve">
-    <value>编辑列表（&amp;E）……</value>
+    <value>编辑列表(&amp;E)……</value>
   </data>
   <data name="btnEditSpecialTransitions.ToolTip" xml:space="preserve">
     <value>编辑可用的特殊子离子列表</value>

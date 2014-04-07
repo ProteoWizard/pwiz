@@ -159,7 +159,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大 iRT 值(&amp;M)：</value>
+    <value>最大 iRT 值(&amp;X)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>

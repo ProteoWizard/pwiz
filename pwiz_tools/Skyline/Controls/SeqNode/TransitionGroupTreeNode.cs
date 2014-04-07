@@ -400,7 +400,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             var size = base.RenderTip(g, sizeMax, draw);
             if(ShowAnnotationTipOnly)
                 return size;
-            g.TranslateTransform(0, size.Height);
+            if (draw)
+                g.TranslateTransform(0, size.Height);
             Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
             var nodePep = (Parent != null ? ((PeptideTreeNode) Parent).DocNode : null);
             var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();

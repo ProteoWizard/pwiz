@@ -298,14 +298,25 @@ namespace pwiz.Skyline.Controls.SeqNode
                     lastMultiLine = table.AddDetailRowLineWrap(g, annotationName, annotationValue, rt);
                 }
                 SizeF size = table.CalcDimensions(g);
-                if (draw)
-                    table.Draw(g);
-                // If not showing annotations only, separate any annotations from
-                // the rest of the tip by some space.
-                if (size.Height > 0 && !ShowAnnotationTipOnly)
+                // Add an extra pixel, because Chinese touches the border otherwise
+                if (size.Height > 0)
                 {
-                    size.Height += TableDesc.TABLE_SPACING;
+                    if (draw)
+                    {
+                        // Extra pixel above for Chinese characters
+                        g.TranslateTransform(0, 1);
+                        table.Draw(g);
+                    }
+                    // If not showing annotations only, separate any annotations from
+                    // the rest of the tip by some space.
+                    if (!ShowAnnotationTipOnly)
+                    {
+                        size.Height += TableDesc.TABLE_SPACING;
+                    }
                 }
+                // Extra pixel above for Chinese characters
+                size.Height++;
+
                 var width = Math.Min(sizeMax.Width, size.Width);
                 var height = Math.Min(sizeMax.Height, size.Height);
                 // Add 2 pixels extra padding in the annotations-only case.

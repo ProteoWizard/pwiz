@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>公共(&amp;C)前缀：</value>
+    <value>公共前缀(&amp;C)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
