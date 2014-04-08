@@ -35,7 +35,7 @@ namespace IDPicker.Forms
 {
     public sealed partial class TextInputPrompt : Form
     {
-        private readonly Regex _inputFormat;
+        public Regex InputFormat { get; set; }
 
         public TextInputPrompt(string title, bool checkboxShown, string initialText)
         {
@@ -45,18 +45,25 @@ namespace IDPicker.Forms
             if (!checkboxShown)
                 inputCheckBox.Visible = false;
             inputTextBox.Text = initialText;
-            _inputFormat = new Regex(@"[a-zA-Z0-9 `~!@#$%&_=\-\+\.\^\*\(\)\[\]\{\}\|<>,;':/\\]");
+
+            InputFormat = new Regex(@"[a-zA-Z0-9 `~!@#$%&_=\-\+\.\^\*\(\)\[\]\{\}\|<>,;':/\\]");
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            inputTextBox.Focus();
         }
 
         private void inputTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!_inputFormat.IsMatch(e.KeyChar.ToString()) &&  !Char.IsControl(e.KeyChar))
+            if (InputFormat != null && !InputFormat.IsMatch(e.KeyChar.ToString()) && !Char.IsControl(e.KeyChar))
                 e.Handled = true;
         }
 
         private void TextInputBox_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (string.IsNullOrEmpty(inputTextBox.Text) && okButton.Focused)
+            if (String.IsNullOrEmpty(inputTextBox.Text) && okButton.Focused)
                 e.Cancel = true;
         }
 
@@ -68,6 +75,20 @@ namespace IDPicker.Forms
         public bool GetCheckState()
         {
             return inputCheckBox.Checked;
+        }
+
+        private void inputTextBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                DialogResult = DialogResult.Cancel;
+                Close();
+            }
         }
     }
 }

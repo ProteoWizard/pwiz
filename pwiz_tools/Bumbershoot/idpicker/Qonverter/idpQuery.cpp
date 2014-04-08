@@ -88,10 +88,10 @@ BOOST_ENUM_VALUES(ProteinColumn, SqlColumn,
     (GeneFamily)(make_pair("pmd.GeneFamily", SQLITE_TEXT))
     (Chromosome)(make_pair("pmd.Chromosome", SQLITE_TEXT))
     (GeneDescription)(make_pair("pmd.GeneDescription", SQLITE_TEXT))
-    (iTRAQ4plex)(make_pair("proq.iTRAQ_ReporterIonIntensities", SQLITE_BLOB))
-    (iTRAQ8plex)(make_pair("proq.iTRAQ_ReporterIonIntensities", SQLITE_BLOB))
-    (TMT2plex)(make_pair("proq.TMT_ReporterIonIntensities", SQLITE_BLOB))
-    (TMT6plex)(make_pair("proq.TMT_ReporterIonIntensities", SQLITE_BLOB))
+    (iTRAQ4plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)", SQLITE_BLOB))
+    (iTRAQ8plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.iTRAQ_ReporterIonIntensities)", SQLITE_BLOB))
+    (TMT2plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)", SQLITE_BLOB))
+    (TMT6plex)(make_pair("DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)", SQLITE_BLOB))
     (PivotMatchesByGroup)(make_pair("0", SQLITE_INTEGER))
     (PivotMatchesBySource)(make_pair("0", SQLITE_INTEGER))
     (PivotPeptidesByGroup)(make_pair("0", SQLITE_INTEGER))
@@ -184,7 +184,11 @@ struct DistinctDoubleArraySum
 
     static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
     {
-        MyType** ppThis = static_cast<MyType**>(sqlite3_aggregate_context(context, sizeof(MyType*)));
+        void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
+        if (aggContext == NULL)
+            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+        MyType** ppThis = static_cast<MyType**>(aggContext);
         MyType* pThis = *ppThis;
 
         if (numValues > 1 || values[0] == NULL)
@@ -215,13 +219,18 @@ struct DistinctDoubleArraySum
 
     static void Final(sqlite3_context* context)
     {
-        MyType** ppThis = static_cast<MyType**>(sqlite3_aggregate_context(context, sizeof(MyType*)));
+        void* aggContext = sqlite3_aggregate_context(context, 0);
+        if (aggContext == NULL)
+            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+        MyType** ppThis = static_cast<MyType**>(aggContext);
         MyType* pThis = *ppThis;
         
         if (pThis == NULL)
             pThis = new DistinctDoubleArraySum(0);
 
         sqlite3_result_blob(context, &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+
         delete pThis;
     }
 };
@@ -339,6 +348,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     SchemaUpdater::update(filepath.string());
     sqlite::database idpDB(filepath.string());
     createUserSQLiteFunctions(idpDB);
+    //idpDB.execute("PRAGMA mmap_size=70368744177664; -- 2^46");
 
     try {sqlite::query q(idpDB, "SELECT Id FROM Protein LIMIT 1"); q.begin();}
     catch (sqlite::database_error&)
@@ -364,21 +374,6 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     else if (groupBy == GroupBy::Gene) groupByString = "pro.GeneId";
     else if (groupBy == GroupBy::GeneGroup) groupByString = "pro.GeneGroup";
 
-    // build SQL query
-    string sql = "SELECT " + groupByString + ", " + bal::join(selectedColumns | boost::adaptors::map_keys, ", ") + " "
-                 "FROM Protein pro "
-                 "LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id "
-                 "LEFT JOIN ProteinData pd ON pro.Id=pd.Id "
-                 "LEFT JOIN ProteinCoverage pc ON pro.Id=pc.Id "
-                 "JOIN PeptideInstance pi ON pro.Id=pi.Protein "
-                 "JOIN Peptide pep ON pi.Peptide=pep.Id "
-                 "JOIN PeptideSpectrumMatch psm ON psm.Peptide=pi.Peptide "
-                 "JOIN DistinctMatch dm ON psm.Id=dm.PsmId "
-                 "LEFT JOIN ProteinQuantitation proq ON pro.Id=proq.Id "
-                 "GROUP BY " + groupByString;
-    cout << sql << endl;
-    sqlite::query q(idpDB, sql.c_str());
-
     int iTRAQ_masses[8] = { 113, 114, 115, 116, 117, 118, 119, 121 };
     int TMT_masses[6] = { 126, 127, 128, 129, 130, 131 };
         
@@ -388,29 +383,46 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
     vector<boost::int64_t> pivotColumnIds;
     PivotDataType zeroBlob = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
+    bool hasQuantitation = false;
+
     sqlite::query itraqPlexQuery(idpDB, "SELECT DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16) = '0000000000000000' AND "
                                         "COUNT(DISTINCT substr(hex(iTRAQ_ReporterIonIntensities), 1, 16)) = 1 "
                                         "FROM SpectrumQuantitation");
-    bool hasITRAQ113 = itraqPlexQuery.begin()->get<int>(0) == 0;
+    bool hasITRAQ113 = false;
 
     sqlite::query tmtPlexQuery(idpDB, "SELECT DISTINCT substr(hex(TMT_ReporterIonIntensities), 33, 16) = '0000000000000000' AND "
                                       "COUNT(DISTINCT substr(hex(TMT_ReporterIonIntensities), 33, 16)) = 1 "
                                       "FROM SpectrumQuantitation");
-    bool hasTMT128 = tmtPlexQuery.begin()->get<int>(0) == 0;
+    bool hasTMT128 = false;
 
     // write column headers
     for (size_t i=0; i < tokens.size(); ++i)
     {
         if (tokens[i] == "iTRAQ4plex")
+        {
+            hasQuantitation = true;
             for(int j=1; j < 5; ++j) outputStream << "iTRAQ-" << iTRAQ_masses[j] << '\t';
+        }
         else if (tokens[i] == "iTRAQ8plex")
+        {
+            hasQuantitation = true;
             for(int j=0; j < 8; ++j) outputStream << "iTRAQ-" << iTRAQ_masses[j] << '\t';
+        }
         else if (tokens[i] == "TMT2plex")
+        {
+            hasQuantitation = true;
             for(int j=0; j < 2; ++j) outputStream << "TMT-" << TMT_masses[j] << '\t';
+        }
         else if (tokens[i] == "TMT6plex")
+        {
+            hasQuantitation = true;
             for(int j=0; j < 6; ++j) outputStream << "TMT-" << TMT_masses[j] << '\t';
+        }
         else if (bal::starts_with(tokens[i], "Pivot"))
-        {            
+        {
+            hasITRAQ113 = itraqPlexQuery.begin()->get<int>(0) == 0;
+            hasTMT128 = tmtPlexQuery.begin()->get<int>(0) == 0;
+
             string sql = bal::ends_with(tokens[i], "Source") ? "SELECT Name, Id FROM SpectrumSource"
                                                              : "SELECT Name, Id FROM SpectrumSourceGroup";
             sqlite::query q(idpDB, sql.c_str());
@@ -448,6 +460,21 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
             outputStream << tokens[i] << '\t';
     }
     outputStream << endl;
+
+    // build SQL query
+    string sql = "SELECT " + groupByString + ", " + bal::join(selectedColumns | boost::adaptors::map_keys, ", ") + " "
+                 "FROM Protein pro "
+                 "LEFT JOIN ProteinMetadata pmd ON pro.Id=pmd.Id "
+                 "LEFT JOIN ProteinData pd ON pro.Id=pd.Id "
+                 "LEFT JOIN ProteinCoverage pc ON pro.Id=pc.Id "
+                 "JOIN PeptideInstance pi ON pro.Id=pi.Protein "
+                 "JOIN Peptide pep ON pi.Peptide=pep.Id "
+                 "JOIN PeptideSpectrumMatch psm ON psm.Peptide=pi.Peptide "
+                 "JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
+                 string(hasQuantitation ? "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id " : "") +
+                 "GROUP BY " + groupByString;
+    cout << sql << endl;
+    sqlite::query q(idpDB, sql.c_str());
 
     // write column values
     BOOST_FOREACH(sqlite::query::rows row, q)
@@ -498,7 +525,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
                 case SQLITE_BLOB:
                     switch (enumColumns[i].index())
                     {
-                        case ProteinColumn::iTRAQ4plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 1, 4); break;
+                        case ProteinColumn::iTRAQ4plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 1, 5); break;
                         case ProteinColumn::iTRAQ8plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 0, 8); break;
                         case ProteinColumn::TMT2plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 0, 2); break;
                         case ProteinColumn::TMT6plex: writeBlobArray<double>(row.get<const void*>(i+1), outputStream, 0, 6); break;

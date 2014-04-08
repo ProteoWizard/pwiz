@@ -61,18 +61,20 @@ namespace IDPicker.Forms
             // 
             // cancelButton
             // 
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(253, 51);
+            this.cancelButton.Location = new System.Drawing.Point(250, 51);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
-            this.cancelButton.TabIndex = 0;
+            this.cancelButton.TabIndex = 2;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             // 
             // okButton
             // 
+            this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.okButton.Location = new System.Drawing.Point(172, 51);
+            this.okButton.Location = new System.Drawing.Point(169, 51);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 1;
@@ -81,11 +83,14 @@ namespace IDPicker.Forms
             // 
             // inputTextBox
             // 
+            this.inputTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.inputTextBox.Location = new System.Drawing.Point(12, 25);
             this.inputTextBox.Name = "inputTextBox";
-            this.inputTextBox.Size = new System.Drawing.Size(316, 20);
-            this.inputTextBox.TabIndex = 2;
+            this.inputTextBox.Size = new System.Drawing.Size(313, 20);
+            this.inputTextBox.TabIndex = 0;
             this.inputTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.inputTextBox_KeyPress);
+            this.inputTextBox.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.inputTextBox_PreviewKeyDown);
             // 
             // inputLabel
             // 
@@ -93,7 +98,7 @@ namespace IDPicker.Forms
             this.inputLabel.Location = new System.Drawing.Point(12, 9);
             this.inputLabel.Name = "inputLabel";
             this.inputLabel.Size = new System.Drawing.Size(101, 13);
-            this.inputLabel.TabIndex = 3;
+            this.inputLabel.TabIndex = 5;
             this.inputLabel.Text = "New <<Category>>:";
             // 
             // inputCheckBox
@@ -104,7 +109,7 @@ namespace IDPicker.Forms
             this.inputCheckBox.Location = new System.Drawing.Point(12, 55);
             this.inputCheckBox.Name = "inputCheckBox";
             this.inputCheckBox.Size = new System.Drawing.Size(128, 17);
-            this.inputCheckBox.TabIndex = 4;
+            this.inputCheckBox.TabIndex = 3;
             this.inputCheckBox.Text = "Save Column Options";
             this.inputCheckBox.UseVisualStyleBackColor = true;
             // 
@@ -112,13 +117,15 @@ namespace IDPicker.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(340, 85);
+            this.ClientSize = new System.Drawing.Size(337, 85);
             this.Controls.Add(this.inputCheckBox);
             this.Controls.Add(this.inputLabel);
             this.Controls.Add(this.inputTextBox);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.cancelButton);
+            this.MaximumSize = new System.Drawing.Size(42000, 123);
             this.Name = "TextInputPrompt";
+            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "<<Category>>";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TextInputBox_FormClosing);

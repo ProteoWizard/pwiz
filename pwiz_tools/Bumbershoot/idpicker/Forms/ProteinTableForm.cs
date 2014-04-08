@@ -538,6 +538,10 @@ namespace IDPicker.Forms
 
         List<DataGridViewTextBoxColumn> iTRAQ_ReporterIonColumns, TMT_ReporterIonColumns;
 
+        private ToolStripMenuItem exportNetGestaltAsLogMenuItem = new ToolStripMenuItem("Export values in log scale") { CheckOnClick = true, Checked = true };
+        private ToolStripMenuItem exportNetGestaltWithNormalizedColumnsMenuItem = new ToolStripMenuItem("Export values normalized by column") { CheckOnClick = true, Checked = true };
+        private ToolStripMenuItem exportNetGestaltWithTrackSampleInfoMenuItem = new ToolStripMenuItem("Create Track Sample Info (TSI) file") { CheckOnClick = true, Checked = false };
+
         public ProteinTableForm ()
         {
             InitializeComponent();
@@ -593,28 +597,90 @@ namespace IDPicker.Forms
             base.OnLoad(e);
 
             exportMenu.Items.Add(new ToolStripSeparator());
-            exportMenu.Items.Add(new ToolStripMenuItem("Export NetGestalt Composite Continuous Track (CCT)", null));
+
+            var exportNetGestaltMenuItem = new ToolStripMenuItem("Export NetGestalt Composite Continuous Track (CCT)", null);
+            exportMenu.Items.Add(exportNetGestaltMenuItem);
+            exportNetGestaltMenuItem.DropDownItems.Add(exportNetGestaltWithNormalizedColumnsMenuItem);
+            exportNetGestaltMenuItem.DropDownItems.Add(exportNetGestaltAsLogMenuItem);
+            exportNetGestaltMenuItem.DropDownItems.Add(exportNetGestaltWithTrackSampleInfoMenuItem);
             foreach (var pivotMode in pivotSetupControl.Pivots)
-                (exportMenu.Items[exportMenu.Items.Count-1] as ToolStripMenuItem).DropDownItems.Add(new ToolStripMenuItem(pivotMode.Text, null, exportNetGestaltCCT) { Tag = pivotMode });
+                exportNetGestaltMenuItem.DropDownItems.Add(new ToolStripMenuItem(pivotMode.Text, null, exportNetGestaltCCT) { Tag = pivotMode });
+
+            exportNetGestaltWithNormalizedColumnsMenuItem.Click += (s, e2) => { exportNetGestaltMenuItem.ShowDropDown(); };
+            exportNetGestaltAsLogMenuItem.Click += (s, e2) => { exportNetGestaltMenuItem.ShowDropDown(); };
+            exportNetGestaltWithTrackSampleInfoMenuItem.Click += (s, e2) => { exportNetGestaltMenuItem.ShowDropDown(); };
+        }
+
+        void createNetGestaltTSI(Pivot<PivotBy> pivotMode, List<DataGridViewTextBoxColumn> reporterIonColumns)
+        {
+            bool pivotIsOnSourceGroup = pivotMode.Text.Contains("Group");
+            bool pivotIsITRAQ = pivotMode.Text.Contains("iTRAQ");
+            bool pivotIsTMT = pivotMode.Text.Contains("TMT");
+
+            var pivotGroupNames = new List<string>();
+
+            if (pivotIsOnSourceGroup)
+                foreach (var group in groupById.OrderBy(o => o.Value.Name))
+                {
+                    if (group.Value.Name == "/")
+                        continue;
+
+                    string netgestaltValidName = group.Value.Name.TrimStart('/').Replace(' ', '-');
+
+                    if (reporterIonColumns != null)
+                        foreach (var column in reporterIonColumns)
+                            pivotGroupNames.Add(String.Format("{0}-{1}", netgestaltValidName, column.HeaderText));
+                    else
+                        pivotGroupNames.Add(String.Format("{0}", netgestaltValidName));
+                }
+            else
+                foreach (var source in sourceById.OrderBy(o => o.Value.Name))
+                {
+                    string netgestaltValidName = source.Value.Name.TrimStart('/').Replace(' ', '-');
+
+                    if (reporterIonColumns != null)
+                        foreach (var column in reporterIonColumns)
+                            pivotGroupNames.Add(String.Format("{0}-{1}", netgestaltValidName, column.HeaderText));
+                    else
+                        pivotGroupNames.Add(String.Format("{0}", netgestaltValidName));
+                }
+
+            using (var form = new NetGestaltTrackSampleInfoForm(Path.GetFileNameWithoutExtension(session.Connection.GetDataSource()))
+                                {
+                                    PivotGroupNames = pivotGroupNames
+                                })
+            {
+                form.ShowDialog(this);
+            }
         }
 
         void exportNetGestaltCCT(object sender, EventArgs e)
         {
             string outputFilename = null;
 
-            using (var sfd = new SaveFileDialog()
-                                 {
-                                     OverwritePrompt = true,
-                                     FileName = Path.GetFileNameWithoutExtension(session.Connection.GetDataSource()),
-                                     DefaultExt = ".cct",
-                                     Filter = "NetGestalt CCT|*.cct|All files|*.*"
-                                 })
-            {
-                if (sfd.ShowDialog(Program.MainWindow) == DialogResult.Cancel)
-                    return;
+            while(true)
+                using (var sfd = new SaveFileDialog()
+                                     {
+                                         OverwritePrompt = true,
+                                         FileName = Path.GetFileNameWithoutExtension(session.Connection.GetDataSource()),
+                                         DefaultExt = ".cct",
+                                         Filter = "NetGestalt CCT|*.cct|All files|*.*"
+                                     })
+                {
+                    if (sfd.ShowDialog(Program.MainWindow) == DialogResult.Cancel)
+                        return;
 
-                outputFilename = sfd.FileName;
-            }
+                    outputFilename = sfd.FileName;
+                    if (Path.GetFileName(outputFilename).Contains(" "))
+                    {
+                        MessageBox.Show("NetGestalt does not support spaces in imported filenames.",
+                                        "Invalid NetGestalt Filename",
+                                        MessageBoxButtons.OK,
+                                        MessageBoxIcon.Error);
+                        continue;
+                    }
+                    break;
+                }
 
             if (outputFilename == null)
                 return;
@@ -627,11 +693,33 @@ namespace IDPicker.Forms
             bool pivotIsITRAQ = pivotMode.Text.Contains("iTRAQ");
             bool pivotIsTMT = pivotMode.Text.Contains("TMT");
 
-            List<DataGridViewTextBoxColumn> reporterIonColumns = null;
-            if (pivotIsITRAQ)
-                reporterIonColumns = iTRAQ_ReporterIonColumns;
-            else if (pivotIsTMT)
-                reporterIonColumns = TMT_ReporterIonColumns;
+            var reporterIonColumns = new List<DataGridViewTextBoxColumn>();
+            int reporterIonFirstColumnIndex = 0;
+
+            lock (session)
+            {
+                var quantitationMethods = new Set<QuantitationMethod>(session.Query<SpectrumSource>().Select(o => o.QuantitationMethod).Distinct());
+                if (quantitationMethods.Count == 1 && quantitationMethods.Contains(QuantitationMethod.None))
+                    reporterIonColumns = null;
+                else if (quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
+                    // add all iTRAQ columns
+                    iTRAQ_ReporterIonColumns.ForEach(o => reporterIonColumns.Add(o));
+                else if (quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex))
+                {
+                    // add iTRAQ4plex-only columns
+                    iTRAQ_ReporterIonColumns.GetRange(1, 4).ForEach(o => reporterIonColumns.Add(o));
+                    reporterIonFirstColumnIndex = 1;
+                }
+                else if (quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                    // add all TMT columns
+                    TMT_ReporterIonColumns.ForEach(o => reporterIonColumns.Add(o));
+                else if (quantitationMethods.Contains(QuantitationMethod.TMT2plex))
+                    // add TMT2plex-only columns
+                    TMT_ReporterIonColumns.GetRange(0, 2).ForEach(o => reporterIonColumns.Add(o));
+            }
+
+            if (exportNetGestaltWithTrackSampleInfoMenuItem.Checked)
+                createNetGestaltTSI(pivotMode, reporterIonColumns);
 
             // getPivotData must return GeneIds in hashed form because the container type is Map<long, Map<long, PivotData>>
             Dictionary<long, string> geneIdByHash;
@@ -643,7 +731,7 @@ namespace IDPicker.Forms
 
                 if (pivotIsOnSourceGroup)
                 {
-                    var spectraBySourceGroupQuery = session.CreateSQLQuery("SELECT ssg.Id, COUNT(DISTINCT Spectrum) FROM PeptideSpectrumMatch psm JOIN Spectrum s ON psm.Spectrum=s.Id JOIN SpectrumSource ss ON s.Source=ss.Id JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source JOIN SpectrumSourceGroup ssg ON ssgl.Group_=ssg.Id GROUP BY ssg.Id").List<object[]>();
+                    var spectraBySourceGroupQuery = session.CreateSQLQuery("SELECT ssg.Id, COUNT(DISTINCT Spectrum) FROM PeptideSpectrumMatch psm JOIN Spectrum s ON psm.Spectrum=s.Id JOIN SpectrumSource ss ON s.Source=ss.Id JOIN SpectrumSourceGroupLink ssgl ON ss.Id=ssgl.Source JOIN SpectrumSourceGroup ssg ON ssgl.Group_=ssg.Id WHERE ssg.Id > 1 GROUP BY ssg.Id").List<object[]>();
                     spectraByPivotGroup = spectraBySourceGroupQuery.ToDictionary(o => Convert.ToInt64(o[0]), o => Convert.ToInt64(o[1]));
                 }
                 else
@@ -652,6 +740,8 @@ namespace IDPicker.Forms
                     spectraByPivotGroup = spectraBySourceQuery.ToDictionary(o => Convert.ToInt64(o[0]), o => Convert.ToInt64(o[1]));
                 }
             }
+
+            long maxSpectraByPivotGroup = spectraByPivotGroup.Max(o => o.Value);
 
             var columnIds = new List<long>();
             using (var fileStream = new StreamWriter(outputFilename))
@@ -663,21 +753,25 @@ namespace IDPicker.Forms
                         if (group.Value.Name == "/")
                             continue;
 
+                        string netgestaltValidName = group.Value.Name.TrimStart('/').Replace(' ', '-');
+
                         if (reporterIonColumns != null)
                             foreach (var column in reporterIonColumns)
-                                fileStream.Write("\t{0} ({1})", group.Value.Name, column.HeaderText);
+                                fileStream.Write("\t{0}-{1}", netgestaltValidName, column.HeaderText);
                         else
-                            fileStream.Write("\t{0}", group.Value.Name);
+                            fileStream.Write("\t{0}", netgestaltValidName);
                         columnIds.Add(group.Key);
                     }
                 else
                     foreach (var source in sourceById.OrderBy(o => o.Value.Name))
                     {
+                        string netgestaltValidName = source.Value.Name.TrimStart('/').Replace(' ', '-');
+
                         if (reporterIonColumns != null)
                             foreach (var column in reporterIonColumns)
-                                fileStream.Write("\t{0} ({1})", source.Value.Name, column.HeaderText);
+                                fileStream.Write("\t{0}-{1}", netgestaltValidName, column.HeaderText);
                         else
-                            fileStream.Write("\t{0}", source.Value.Name);
+                            fileStream.Write("\t{0}", netgestaltValidName);
                         columnIds.Add(source.Key);
                     }
                 fileStream.WriteLine();
@@ -707,9 +801,13 @@ namespace IDPicker.Forms
                                     fileStream.Write("\t0");
                             else
                             {
-                                int i = 0;
-                                foreach (var c in reporterIonColumns)
-                                    fileStream.Write("\t{0}", array[i++].ToString("f2"));
+                                int i = reporterIonFirstColumnIndex - 1;
+                                if (exportNetGestaltAsLogMenuItem.Checked)
+                                    foreach (var c in reporterIonColumns)
+                                        fileStream.Write("\t{0}", (array[++i] > 0 ? Math.Log(array[i]) : 0.0).ToString("f2"));
+                                else
+                                    foreach (var c in reporterIonColumns)
+                                        fileStream.Write("\t{0}", array[++i].ToString("f2"));
                             }
                         }
                         else
@@ -718,7 +816,14 @@ namespace IDPicker.Forms
                             if (!findItr.IsValid)
                                 value = "0";
                             else
-                                value = (Convert.ToDouble(findItr.Current.Value.Value) / spectraByPivotGroup[column]).ToString();
+                            {
+                                double tmpValue = Convert.ToDouble(findItr.Current.Value.Value);
+                                if (exportNetGestaltWithNormalizedColumnsMenuItem.Checked && spectraByPivotGroup[column] > 0)
+                                    tmpValue = tmpValue / spectraByPivotGroup[column] * maxSpectraByPivotGroup;
+                                if (exportNetGestaltAsLogMenuItem.Checked)
+                                    tmpValue = tmpValue > 0 ? Math.Log(tmpValue) : 0.0;
+                                value = tmpValue.ToString("f4");
+                            }
                             fileStream.Write("\t{0}", value);
                         }
                     }

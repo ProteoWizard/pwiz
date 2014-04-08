@@ -271,10 +271,10 @@ quasitelgui <- function(inputfile = NULL) {
     # save file dialog wrapper
     savefile <- function(parent, file="filename", dir=getwd()) {
         filters <- "
+            { {NetGestalt SCT}   {.sct} }
             { {Tab-separated}   {.tsv} }
             { {Comma-separated} {.csv} }
             { {Tab-delimited}   {.txt} }
-            { {NetGestalt SCT}   {.sct} }
         "
         tkgetSaveFile(parent=parent,
             title="Save Output",
@@ -296,7 +296,7 @@ quasitelgui <- function(inputfile = NULL) {
             csv=function(x){write.csv(x, filename, row.names=row.names, ...)},
             tsv=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
             txt=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
-            sct=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
+            sct=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, quote=F, ...)},
             function(x){write.csv(x, filename, row.names=row.names, ...)})(data.frame(x))
     }
 
@@ -419,8 +419,16 @@ quasitelgui <- function(inputfile = NULL) {
 
                     if (grepl(".sct", outputfile))
                     {
-                        result <- cbind(subset(datatmp, select="GeneId"), subset(result, select=c("poisson.fdr", "quasi.fdr", "2log(rate1/rate2)")))
-                        colnames(result) <- c("GeneSymbol", "PoissonFDR", "QuasiFDR", "LogOfRateRatio")
+                        spectral.count.log = log(rowSums(subset(result, select=c("count1","count2"))))
+                        quasi.p.log = log(subset(result, select=c("quasi.p")))
+                        rate.ratio.log = subset(result, select=c("2log(rate1/rate2)"))
+
+                        negate.negative.fold.change = function(n, x, y) { if (y > 0) { -1 * x } else { x } }
+                        signed.quasi.p.log = data.frame(unlist(mapply(negate.negative.fold.change, row.names(quasi.p.log), quasi.p.log, rate.ratio.log, SIMPLIFY=F, USE.NAMES=T)))
+                        geneIds <- subset(datatmp, select="GeneId")
+                        result <- cbind(geneIds, spectral.count.log, signed.quasi.p.log, rate.ratio.log)
+                        result <- subset(result, !grepl("^Unmapped", geneIds[,1])) # filter out unmapped genes
+                        colnames(result) <- c("GeneSymbol", "LogSpectralCount", "LogQuasiPvalue", "LogOfRateRatio")
                     }
                     else
                     {
@@ -450,7 +458,7 @@ quasitelgui <- function(inputfile = NULL) {
         tkwm.title(about.frm, "About QuasiTel")
         tkgrid.columnconfigure(about.frm, 0, weight=1)
         tkgrid.rowconfigure(about.frm, 0, weight=1)
-        about.lbl <- tklabel(about.frm, text="Copyright 2012 Vanderbilt University\n\nIf you use QuasiTel results in a publication, please cite:")
+        about.lbl <- tklabel(about.frm, text="Copyright 2014 Vanderbilt University\n\nIf you use QuasiTel results in a publication, please cite:")
         tkgrid(about.lbl)
         tkgrid.configure(about.lbl, sticky="nw", padx=15, pady=5)
         about.text <- tktext(about.frm, font="TkDefaultFont", height=3)
