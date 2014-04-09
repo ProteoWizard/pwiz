@@ -61,7 +61,7 @@ namespace pwiz.Skyline.SettingsUI
                 Combo.Items.Clear();
                 foreach (TItem item in List.ToArrayStd())
                 {
-                    string name = List.GetKey(item);
+                    string name = List.GetDisplayName(item);
                     int i = Combo.Items.Add(name);
                     if (Equals(Combo.Items[i].ToString(), selectedItemLast))
                         Combo.SelectedIndex = i;
@@ -93,10 +93,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                string selectedString = SelectedString;
-                if (!List.ContainsKey(selectedString))
+                int selectedIndex = Combo.SelectedIndex;
+                if (0 > selectedIndex || selectedIndex >= List.Count)
                     return default(TItem);
-                return List[selectedString];
+                return List[selectedIndex];
             }
         }
 

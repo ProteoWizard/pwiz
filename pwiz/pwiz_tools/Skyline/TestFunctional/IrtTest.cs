@@ -533,7 +533,7 @@ namespace pwiz.SkylineTestFunctional
              */
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsDlg6 =>
                                                             {
-                                                                peptideSettingsDlg6.ChooseRegression("None");
+                                                                peptideSettingsDlg6.ChooseRegression(Resources.SettingsList_ELEMENT_NONE_None);
                                                                 peptideSettingsDlg6.OkDialog();
                                                             });
 

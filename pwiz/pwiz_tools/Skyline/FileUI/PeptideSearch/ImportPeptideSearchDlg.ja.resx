@@ -841,9 +841,6 @@
   <data name="&gt;&gt;ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="lblFasta.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
   <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
     <value>Arial Rounded MT Bold, 12pt</value>
   </data>
@@ -851,7 +848,7 @@
     <value>12, 9</value>
   </data>
   <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>119, 18</value>
+    <value>350, 18</value>
   </data>
   <data name="lblFasta.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

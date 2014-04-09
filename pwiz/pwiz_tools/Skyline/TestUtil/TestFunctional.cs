@@ -430,6 +430,10 @@ namespace pwiz.SkylineTestUtil
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+                // Reset defaults with names from resources for testing different languages
+                Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
+                Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
+                Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
 
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)

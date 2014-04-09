@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Util
             DownloadSucceeded = false;
 
             Match file = Regex.Match(address.AbsolutePath, @"[^/]*$"); // Not L10N
-            _longWaitBroker.Message = "Downloading " + file;
+            _longWaitBroker.Message = string.Format(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file);
             _webClient.DownloadFileAsync(address, path);
 
             // while downloading, check to see if the user has canceled the operation
@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Util
         {
             if (!UserOkRunAsAdministrator)
             {
-                throw new System.ComponentModel.Win32Exception("The operation was canceled by the user");
+                throw new System.ComponentModel.Win32Exception(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_);
             }
             if (!ConnectSuccess)
                 throw new IOException(Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process);

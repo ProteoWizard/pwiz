@@ -48,15 +48,14 @@ namespace pwiz.Skyline.SettingsUI
             List<TItem> listChosen = new List<TItem>();
             for (int i = 0; i < CheckedListBox.Items.Count; i++)
             {
-                TItem item;
                 bool checkItem = CheckedListBox.GetItemChecked(i);
 
-                // If even refers to this item, then use the check state in the event.
+                // If event refers to this item, then use the check state in the event.
                 if (e != null && e.Index == i)
                     checkItem = (e.NewValue == CheckState.Checked);
 
-                if (checkItem && List.TryGetValue(CheckedListBox.Items[i].ToString(), out item))
-                    listChosen.Add(item);
+                if (checkItem)
+                    listChosen.Add(List[i]);
             }
             return listChosen.ToArray();                            
         }
@@ -81,7 +80,7 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (TItem item in List)
             {
-                string name = item.GetKey();
+                string name = List.GetDisplayName(item);
                 int i = ListBox.Items.Add(name);
 
                 if (CheckedListBox != null)

@@ -319,9 +319,6 @@
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Hello" xml:space="preserve">
-<value>Hello</value>
-  </data>
   <data name="FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found" xml:space="preserve">
 <value>「{0}」というテキストは見つかりませんでした。</value>
   </data>
@@ -724,9 +721,6 @@
   <data name="RefineListDlg_OkDialog_Do_you_want_to_continue" xml:space="preserve">
 <value>続行しますか？</value>
   </data>
-  <data name="RefineListDlg_OkDialog_The_peptide___2___is_not_in_the_document" xml:space="preserve">
-<value>ペプチド「{2}」はドキュメント内にありません。</value>
-  </data>
   <data name="RefineListDlg_OkDialog_The_peptide__0__is_not_in_the_document_Do_you_want_to_continue" xml:space="preserve">
 <value>ペプチド「{0}」はドキュメント内にありません。続行しますか？</value>
   </data>
@@ -829,7 +823,7 @@
 <value>キャッシュファイルの現在のサイズは {0:fs} です</value>
   </data>
   <data name="BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size" xml:space="preserve">
-<value>最小化すると、キャッシュファイルは現在のサイズの{0:0%}に縮小されます</value>
+<value>最小化すると、キャッシュファイルは現在のサイズの {0:0%} に縮小されます</value>
   </data>
   <data name="BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete" xml:space="preserve">
 <value>スペースの節約量を計算中 ({0} %完了)</value>
@@ -1130,7 +1124,7 @@
 <value>ペプチド</value>
   </data>
   <data name="PeptideTreeNode_ChildHeading__0__" xml:space="preserve">
-<value>{0} 個の前駆体</value>
+<value>前駆体({0}P)</value>
   </data>
   <data name="PeptideTreeNode_ChildUndoHeading__0__" xml:space="preserve">
 <value>{0} 個の前駆体</value>
@@ -1217,7 +1211,7 @@
 <value>酵素には 1 つ以上の開裂点が必要です。</value>
   </data>
   <data name="SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling" xml:space="preserve">
-<value>"{0}"はフルスキャン特別処理に有効な設定ではありません</value>
+<value>&quot;{0}&quot;はフルスキャン特別処理に有効な設定ではありません</value>
   </data>
   <data name="SpecialHandlingType_Validate_None" xml:space="preserve">
 <value>なし</value>
@@ -1226,7 +1220,7 @@
 <value>単離スキームでは、フィルタと事前指定の単離ウィンドウを持つことはできません</value>
   </data>
   <data name="IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_" xml:space="preserve">
-<value>前駆体m/z フィルタは {0} から {1} まででなければなりません</value>
+<value>前駆体m/zフィルタは {0} から {1} まででなければなりません</value>
   </data>
   <data name="IsolationScheme_DoValidate_Special_handling_applies_only_to_prespecified_isolation_windows" xml:space="preserve">
 <value>特別処理は、事前指定の単離ウィンドウのみに適用されます。</value>
@@ -1445,7 +1439,7 @@
 <value>修飾「{0}」には、既に別の定義があります。</value>
   </data>
   <data name="TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
-<value>高分解能MS1フィルタリングでは、モノアイソトピック前駆体質量を使用する必要があります。</value>
+<value>高分解能MS1 フィルタリングでは、モノアイソトピック前駆体質量を使用する必要があります。</value>
   </data>
   <data name="TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan" xml:space="preserve">
 <value>測定器のファームウェア包含制限は、多重化DIAスキャンを行う前に指定する必要があります。</value>
@@ -1713,7 +1707,7 @@
 <value>ライブラリは、完全に読み込まなければ最小化できません。</value>
   </data>
   <data name="AlignedFile_AlignLibraryRetentionTimes__0__1__" xml:space="preserve">
-    <value>{0}:{1}</value>
+<value>{0}：{1}</value>
     <comment>Time to Align name: Target name</comment>
   </data>
   <data name="BiblioSpecLibrary_Load_Loading__0__library" xml:space="preserve">
@@ -1735,7 +1729,7 @@
 <value>ライブラリ「{0}」を読み込めませんでした。</value>
   </data>
   <data name="BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
-<value>ピークを読み取れませんでした</value>
+<value>ピークを読み取る試みに失敗しました</value>
   </data>
   <data name="BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__" xml:space="preserve">
 <value>{0}のライブラリヘッダーを読み取れませんでした。</value>
@@ -1829,7 +1823,7 @@
     <comment>FilePath (line #): message</comment>
   </data>
   <data name="NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks" xml:space="preserve">
-<value>ピークを読み取れませんでした</value>
+<value>ピークを読み取る試みに失敗しました</value>
   </data>
   <data name="XHunterLibSpec_PEP_RANK_EXPECT_Expect" xml:space="preserve">
 <value>予想</value>
@@ -1934,7 +1928,7 @@
 <value>予期しない空のピーク</value>
   </data>
   <data name="ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__" xml:space="preserve">
-<value>間違って並べ替えられたクロマトグラム{0} &gt; {1}</value>
+<value>間違って並べ替えられたクロマトグラム {0} &gt; {1}</value>
   </data>
   <data name="ChromDataSet_ToString_empty" xml:space="preserve">
 <value>空</value>
@@ -2036,7 +2030,7 @@
 <value>単離リストのエクスポート中</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__" xml:space="preserve">
-<value>単離リストのエクスポート中 ({1} サイクル中 {0} サイクル目)</value>
+<value>単離リストのエクスポート中 ({1} / {0} サイクル)</value>
   </data>
   <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
 <value>必要な遷移数 {0} が最大数 {1} を超えています</value>
@@ -2232,7 +2226,7 @@
 <value>予期しないエラーが発生しました。</value>
   </data>
   <data name="PasteDlg_AddFasta_An_unexpected_error_occurred__0__1__" xml:space="preserve">
-<value>予期しないエラーが発生しました。 {0} ({1})</value>
+<value>予期しないエラーが発生しました。{0} ({1})</value>
     <comment>Message (Error Type)</comment>
   </data>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
@@ -2401,7 +2395,7 @@
 <value>ファイル{0}からの遷移をファイル{1}と統合中</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__" xml:space="preserve">
-<value>{0:F01}にピークがありません</value>
+<value>{0:F01} にはピークが見つかりませんでした。</value>
   </data>
   <data name="UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo" xml:space="preserve">
 <value>元に戻すトランザクションは、元に戻す/やり直し操作で開始することはできません。</value>
@@ -2789,7 +2783,7 @@
 <value>単離スキーム(&amp;I)：</value>
   </data>
   <data name="SrmSettingsList_DEFAULT_m_z_precursor" xml:space="preserve">
-<value>m/z&gt;前駆体</value>
+<value>m/z &gt;前駆体</value>
   </data>
   <data name="SrmSettingsList_DEFAULT_3_ions" xml:space="preserve">
 <value>3 個のイオン</value>
@@ -2982,7 +2976,7 @@
 <value>{0}は有効な数値でなければなりません。</value>
   </data>
   <data name="GridViewDriver_GetValue_An_invalid_number__0__was_specified_for__1__2__" xml:space="preserve">
-<value>{1} {2}に対して無効な数値 ("{0}") が指定されました。</value>
+<value>{1} {2}に対して無効な数値(「{0}」)が指定されました。</value>
   </data>
   <data name="GridViewDriver_ValidateRow_On_line__0__1__" xml:space="preserve">
 <value>{0} 行、{1}</value>
@@ -3055,10 +3049,10 @@
 <value>保持時間の予測にはカルキュレータアルゴリズムが必要です。</value>
   </data>
   <data name="EditRTDlg_ShowPeptides_Calculate_Left" xml:space="preserve">
-<value>&amp;計算 &lt;&lt;</value>
+<value>計算(&amp;C) &lt;&lt;</value>
   </data>
   <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
-<value>&amp;計算 &gt;&gt;</value>
+<value>計算(&amp;C) &gt;&gt;</value>
   </data>
   <data name="EditRTDlg_ShowGraph_Initializing" xml:space="preserve">
 <value>初期化中</value>
@@ -3112,7 +3106,7 @@
 <value>スケジュールメソッドは選択した測定器ではサポートされていません。</value>
   </data>
   <data name="FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__" xml:space="preserve">
-<value>{0} (読み込みに失敗しました： {1})</value>
+<value>{0} (読み込みに失敗しました：{1})</value>
   </data>
   <data name="NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found" xml:space="preserve">
 <value>{0} (見つかりませんでした)</value>
@@ -3154,7 +3148,7 @@
 <value>&lt;&lt; 詳細を隠す(&amp;V)</value>
   </data>
   <data name="FindNodeDlg_AdvancedVisible_Show_Advanced" xml:space="preserve">
-<value>詳細を表示  &gt;&gt;(&amp;V)</value>
+<value>詳細を表示(&amp;V) &gt;&gt;</value>
   </data>
   <data name="PasteDlg_ShowNoErrors_No_errors" xml:space="preserve">
 <value>エラーなし</value>
@@ -3267,7 +3261,7 @@
 <value>この名前の非標準設定を使用しますか？</value>
   </data>
   <data name="EditStaticModDlg_UpdateListAvailableMods_Show_common" xml:space="preserve">
-<value>&lt;共通表示..&gt;</value>
+<value>&lt;共通表示...&gt;</value>
   </data>
   <data name="EditStaticModDlg_UpdateListAvailableMods_Show_all" xml:space="preserve">
 <value>&lt;すべて表示...&gt;</value>
@@ -3348,10 +3342,10 @@
 <value>{1} 行に間違った列数 ({0}) が見つかりました。</value>
   </data>
   <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th" xml:space="preserve">
-<value>結果{0:0.##}、{1:0.##}m/z</value>
+<value>結果 {0:0.##}、{1:0.##} m/z</value>
   </data>
   <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th" xml:space="preserve">
-<value>結果{0:0.##}m/z</value>
+<value>結果 {0:0.##} m/z</value>
   </data>
   <data name="BiblioSpecLiteLibraryLoadLoading__0__library" xml:space="preserve">
 <value>{0}ライブラリの読み込み中、</value>
@@ -3488,7 +3482,7 @@
 <value>現在のドキュメントには既にすべてのライブラリペプチドがあります。</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
-<value>この操作では、{0} {1} 個のペプチド、{2} 個の前駆体、{3} 個の遷移がドキュメントに追加されます。</value>
+<value>この操作では、{0} {1} 個のペプチド、{2} 個の前駆体、{3} 個の遷移がドキュメントに追加されます。 </value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
 <value>{0}既存の</value>
@@ -3788,7 +3782,7 @@
 <value>作業中...</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__" xml:space="preserve">
-<value>単離リストのエクスポート中 ({0} サイクル中 {0} サイクル目)</value>
+<value>単離リストのエクスポート中 ({0} / {0} サイクル)</value>
   </data>
   <data name="ExportReportDlg_ShowPreview_An_unexpected_error_occurred_attempting_to_display_the_report___0___" xml:space="preserve">
 <value>レポート「{0}」を表示しようとして予期しないエラーが発生しました。</value>
@@ -3897,7 +3891,7 @@
 <value>6 個のイオン</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor" xml:space="preserve">
-<value>m/z &gt; 前駆体</value>
+<value>m/z &gt;前駆体</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1" xml:space="preserve">
 <value>(m/z &gt; 前駆体) - 1</value>
@@ -3918,7 +3912,7 @@
 <value>衝突エネルギー</value>
   </data>
   <data name="Peptide_ToString__missed__5__" xml:space="preserve">
-<value>(ミス {5})</value>
+<value>(欠如数 {5})</value>
   </data>
   <data name="BackgroundProteomeSpec_Digest_Digesting__0__" xml:space="preserve">
 <value>{0}の消化中</value>
@@ -3945,7 +3939,7 @@
 <value>BiblioSpecライブラリ</value>
   </data>
   <data name="BuildLibraryDlg_btnPrevious_Click__Next__" xml:space="preserve">
-<value>&amp;次へ &gt;</value>
+<value>次へ(&amp;N) &gt;</value>
   </data>
   <data name="MultiButtonMsgDlg_BUTTON_OK_OK" xml:space="preserve">
 <value>OK</value>
@@ -3969,7 +3963,7 @@
 <value>[遷移設定] の [フルスキャン] タブでプロダクト質量アナライザータイプが{0}に設定されていません。</value>
   </data>
   <data name="Peptide_ToString_missed__0__" xml:space="preserve">
-<value>(ミス {0})</value>
+<value>(欠如数 {0})</value>
   </data>
   <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides" xml:space="preserve">
 <value>ライブラリペプチド</value>
@@ -4176,7 +4170,7 @@
 <value>サーバー「{0}」は既にあります。</value>
   </data>
   <data name="SettingsListComboDriver_Edit_current" xml:space="preserve">
-<value>&lt;現在の設定を編集...&gt;</value>
+<value>&lt;現在値を編集...&gt;</value>
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library" xml:space="preserve">
 <value>スペクトルライブラリ</value>
@@ -4347,16 +4341,16 @@
 <value>保持時間の異常値を削除</value>
   </data>
   <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_" xml:space="preserve">
-<value>ピークの開始を{0:F01}に変更</value>
+<value>ピークの開始を {0:F01} に変更</value>
   </data>
   <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_" xml:space="preserve">
-<value>ピークを{0:F01}-{1:F01}に変更</value>
+<value>ピークを {0:F01} - {1:F01} に変更</value>
   </data>
   <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_" xml:space="preserve">
-<value>ピークの終了を{0:F01}に変更</value>
+<value>ピークの終了を {0:F01} に変更</value>
   </data>
   <data name="SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_" xml:space="preserve">
-<value>ピーク{0:F01}を選択</value>
+<value>ピーク {0:F01} を選択</value>
   </data>
   <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
 <value>サーバー情報を確認しています。</value>
@@ -4584,7 +4578,7 @@
 <value>データインポートの完了待ち...</value>
   </data>
   <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
-<value>{0:fs}/{1:fs} ページをアップロードしました</value>
+<value>{1:fs} ファイル中 {0:fs} ファイル目をアップロードしました</value>
   </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_" xml:space="preserve">
 <value>エラーの詳細は、こちらでご覧ください。</value>
@@ -4656,7 +4650,7 @@
 <value>ドキュメントを保存しなければペプチド検索をインポートできません。</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
-<value>&amp;次へ &gt;</value>
+<value>次へ(&amp;N) &gt;</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_" xml:space="preserve">
 <value>ドキュメント固有スペクトルライブラリに有効な保持時間がありません。</value>
@@ -5370,7 +5364,7 @@
 <value>ツール{0}が新しいインストールと競合しています</value>
   </data>
   <data name="UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_" xml:space="preserve">
-<value>ツール"{0}"には"{1}"というタイトルのレポートタイプが必要ですが、見つかりませんでした。インポートがキャンセルされました。</value>
+<value>ツール「{0}」には「{1}」というタイトルのレポートタイプが必要ですが、見つかりませんでした。インポートがキャンセルされました。</value>
   </data>
   <data name="RInstaller_RInstaller_Load_This_tool_requires_the_use_of_R__0___Click_Install_to_begin_the_installation_process_" xml:space="preserve">
 <value>このツールにはR {0}の使用が必要です。[インストール] をクリックしてインストールプロセスを開始してください。</value>
@@ -5838,7 +5832,7 @@
 <value>バージョン {0} が現在インストールされています。バージョン {1} は利用可能です。</value>
   </data>
   <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
-<value>現在インストールされ、フルにアップデートされています (バージョン：{0})。</value>
+<value>現在インストールされてｋん全にアップグレードされています(バージョン:{0})。</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
 <value>この識別子のファイルが見つかりません。</value>
@@ -5904,7 +5898,7 @@
 <value>{1} 個のトレインされたスコアのあるモデルで {0} 個の特長を持つピークをスコアしようとしました。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
-<value>モデルをトレインして複合スコアを確認します</value>
+<value>モデルをトレインして複数スコアを確認する</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
 <value>モデルをトレインできませんでした：</value>
@@ -6170,5 +6164,12 @@
   </data>
     <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
 <value>2 番目に良いピークの正規分布</value>
+  </data>
+  <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
+<value>保持時間の差の二乗</value>
+  </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
+<value>デフォルト ({0})</value>
+    <comment>Example: Default (English)</comment>
   </data>
 </root>

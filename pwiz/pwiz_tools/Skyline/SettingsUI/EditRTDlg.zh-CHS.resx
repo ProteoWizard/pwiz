@@ -1,0 +1,763 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element msdata:IsDataSet="true" name="root">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
+              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
+              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 25</value>
+  </data>
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>238, 20</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="textName.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>用于在肽设置分类中列出此方程式的名称</value>
+  </data>
+  <data name=">>textName.Name" xml:space="preserve">
+    <value>textName</value>
+  </data>
+  <data name=">>textName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textName.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>9, 9</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>38, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>名称(&amp;N)：</value>
+  </data>
+  <data name=">>label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name=">>label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label4.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label4.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>274, 39</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name=">>btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name=">>btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+    <value>18</value>
+  </data>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>274, 9</value>
+  </data>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name=">>btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
+  </data>
+  <data name=">>btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
+    <value>19</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>9, 83</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>37, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>斜度(&amp;S)：</value>
+  </data>
+  <data name=">>label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name=">>label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label1.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="textSlope.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 99</value>
+  </data>
+  <data name="textSlope.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>100, 20</value>
+  </data>
+  <data name="textSlope.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="textSlope.ToolTip" xml:space="preserve">
+    <value>利用分类中的方程式，用斜度从
+计算得出的肽分数中计算经预测的保留时间：
+
+保留时间 = 斜度 * 分数 + 截距</value>
+  </data>
+  <data name=">>textSlope.Name" xml:space="preserve">
+    <value>textSlope</value>
+  </data>
+  <data name=">>textSlope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textSlope.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textSlope.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>154, 83</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>52, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>截距(&amp;I)：</value>
+  </data>
+  <data name=">>label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name=">>label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label2.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="textIntercept.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>157, 99</value>
+  </data>
+  <data name="textIntercept.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>100, 20</value>
+  </data>
+  <data name="textIntercept.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textIntercept.ToolTip" xml:space="preserve">
+    <value>利用分类中的方程式，用 Y-截距从
+计算得出的肽分数中计算经预测的保留时间：
+
+保留时间 = 斜度 * 分数 + 截距
+</value>
+  </data>
+  <data name=">>textIntercept.Name" xml:space="preserve">
+    <value>textIntercept</value>
+  </data>
+  <data name=">>textIntercept.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textIntercept.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textIntercept.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="btnCalculate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnCalculate.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>274, 212</value>
+  </data>
+  <data name="btnCalculate.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCalculate.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="btnCalculate.Text" xml:space="preserve">
+    <value>计算 &gt;&gt;</value>
+  </data>
+  <data name="btnCalculate.ToolTip" xml:space="preserve">
+    <value>显示/隐藏用于利用线性回归计算方程式的
+肽值</value>
+  </data>
+  <data name=">>btnCalculate.Name" xml:space="preserve">
+    <value>btnCalculate</value>
+  </data>
+  <data name=">>btnCalculate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnCalculate.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnCalculate.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="labelPeptides.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPeptides.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>9, 257</value>
+  </data>
+  <data name="labelPeptides.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>100, 13</value>
+  </data>
+  <data name="labelPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="labelPeptides.Text" xml:space="preserve">
+    <value>经测量的肽(&amp;M)：</value>
+  </data>
+  <data name=">>labelPeptides.Name" xml:space="preserve">
+    <value>labelPeptides</value>
+  </data>
+  <data name=">>labelPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelPeptides.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelPeptides.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="labelRValue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="labelRValue.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelRValue.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>247, 258</value>
+  </data>
+  <data name="labelRValue.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>103, 13</value>
+  </data>
+  <data name="labelRValue.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="labelRValue.Text" xml:space="preserve">
+    <value>（0 个肽，R = 0.0）</value>
+  </data>
+  <data name="labelRValue.ToolTip" xml:space="preserve">
+    <value>肽的数量目前用于利用线性回归计算方程式，
+R 代表回归。</value>
+  </data>
+  <data name=">>labelRValue.Name" xml:space="preserve">
+    <value>labelRValue</value>
+  </data>
+  <data name=">>labelRValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelRValue.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelRValue.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>9, 140</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>72, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>时间窗口(&amp;W)：</value>
+  </data>
+  <data name=">>label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name=">>label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label3.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="textTimeWindow.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 156</value>
+  </data>
+  <data name="textTimeWindow.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>100, 20</value>
+  </data>
+  <data name="textTimeWindow.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="textTimeWindow.ToolTip" xml:space="preserve">
+    <value>在经预测的保留时间前后的数分钟内，时间窗口
+用于显示预测的保留时间并对
+未来的肽测量进行排程。对于利用回归计算的方程式，
+该值默认为残值标准偏差的两倍，
+范围包含 95% 的回归值。</value>
+  </data>
+  <data name=">>textTimeWindow.Name" xml:space="preserve">
+    <value>textTimeWindow</value>
+  </data>
+  <data name=">>textTimeWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textTimeWindow.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textTimeWindow.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>9, 198</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>57, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>计算器(&amp;C)：</value>
+  </data>
+  <data name=">>label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name=">>label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label5.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label5.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="comboCalculator.ItemHeight" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="comboCalculator.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 214</value>
+  </data>
+  <data name="comboCalculator.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>245, 21</value>
+  </data>
+  <data name="comboCalculator.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="comboCalculator.ToolTip" xml:space="preserve">
+    <value>所使用的计算器算法：
+SSRCalc - 特定于序列的保留计算器，属于疏水性计算器（Krokhin 等）。</value>
+  </data>
+  <data name=">>comboCalculator.Name" xml:space="preserve">
+    <value>comboCalculator</value>
+  </data>
+  <data name=">>comboCalculator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboCalculator.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboCalculator.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>118, 159</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>23, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>分钟</value>
+  </data>
+  <data name=">>label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name=">>label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label6.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label6.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnUseCurrent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnUseCurrent.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>92, 459</value>
+  </data>
+  <data name="btnUseCurrent.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>89, 23</value>
+  </data>
+  <data name="btnUseCurrent.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="btnUseCurrent.Text" xml:space="preserve">
+    <value>使用结果(&amp;U)</value>
+  </data>
+  <data name="btnUseCurrent.ToolTip" xml:space="preserve">
+    <value>在此文档中点击使用当前已导入的肽的结果数据，
+并用线性回归计算方程式</value>
+  </data>
+  <data name=">>btnUseCurrent.Name" xml:space="preserve">
+    <value>btnUseCurrent</value>
+  </data>
+  <data name=">>btnUseCurrent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnUseCurrent.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnUseCurrent.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnShowGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnShowGraph.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>187, 459</value>
+  </data>
+  <data name="btnShowGraph.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>89, 23</value>
+  </data>
+  <data name="btnShowGraph.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="btnShowGraph.Text" xml:space="preserve">
+    <value>显示图形(&amp;G)……</value>
+  </data>
+  <data name="btnShowGraph.ToolTip" xml:space="preserve">
+    <value>在此文档中显示当前已导入的肽的最优化结果数据的
+线性回归图</value>
+  </data>
+  <data name=">>btnShowGraph.Name" xml:space="preserve">
+    <value>btnShowGraph</value>
+  </data>
+  <data name=">>btnShowGraph.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnShowGraph.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnShowGraph.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="gridPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <metadata name="Sequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="Sequence.HeaderText" xml:space="preserve">
+    <value>经修饰的序列</value>
+  </data>
+  <data name="Sequence.MinimumWidth" type="System.Int32, mscorlib">
+    <value>120</value>
+  </data>
+  <metadata name="RetentionTime.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="RetentionTime.HeaderText" xml:space="preserve">
+    <value>保留时间（分钟）</value>
+  </data>
+  <data name="RetentionTime.MinimumWidth" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
+  <data name="RetentionTime.Width" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
+  <metadata name="bindingPeptides.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>109, 17</value>
+  </metadata>
+  <data name="gridPeptides.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 274</value>
+  </data>
+  <data name="gridPeptides.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>338, 175</value>
+  </data>
+  <data name="gridPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="gridPeptides.ToolTip" xml:space="preserve">
+    <value>肽及其经测量的保留时间用于利用线性回归
+计算方程式</value>
+  </data>
+  <data name=">>gridPeptides.Name" xml:space="preserve">
+    <value>gridPeptides</value>
+  </data>
+  <data name=">>gridPeptides.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name=">>gridPeptides.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>gridPeptides.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="cbAutoCalc.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoCalc.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 63</value>
+  </data>
+  <data name="cbAutoCalc.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>145, 17</value>
+  </data>
+  <data name="cbAutoCalc.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="cbAutoCalc.Text" xml:space="preserve">
+    <value>自动计算回归(&amp;O)</value>
+  </data>
+  <data name="cbAutoCalc.ToolTip" xml:space="preserve">
+    <value>检查并让 Skyline 基于以下条件为预测器计算斜度和截距：
+按照每个导入的文件的分数对保留时间
+分别进行回归分析</value>
+  </data>
+  <data name=">>cbAutoCalc.Name" xml:space="preserve">
+    <value>cbAutoCalc</value>
+  </data>
+  <data name=">>cbAutoCalc.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbAutoCalc.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>cbAutoCalc.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>362, 492</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>编辑保留时间预测器</value>
+  </data>
+  <data name=">>helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
+  </data>
+  <data name=">>helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>Sequence.Name" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name=">>Sequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>RetentionTime.Name" xml:space="preserve">
+    <value>RetentionTime</value>
+  </data>
+  <data name=">>RetentionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>bindingPeptides.Name" xml:space="preserve">
+    <value>bindingPeptides</value>
+  </data>
+  <data name=">>bindingPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>$this.Name" xml:space="preserve">
+    <value>EditRTDlg</value>
+  </data>
+  <data name=">>$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

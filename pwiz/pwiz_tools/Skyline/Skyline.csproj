@@ -1138,49 +1138,97 @@
     <EmbeddedResource Include="Alerts\AboutDlg.ja.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\AboutDlg.zh-CHS.resx">
+      <DependentUpon>AboutDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.ja.resx">
+      <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\AlertLinkDlg.zh-CHS.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\EmptyProteinsDlg.ja.resx">
       <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\EmptyProteinsDlg.zh-CHS.resx">
+      <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.ja.resx">
+      <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ImportDocResultsDlg.ja.resx">
       <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ImportDocResultsDlg.zh-CHS.resx">
+      <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\LocateFileDlg.ja.resx">
+      <DependentUpon>LocateFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\LocateFileDlg.zh-CHS.resx">
       <DependentUpon>LocateFileDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MessageDlg.ja.resx">
       <DependentUpon>MessageDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MessageDlg.zh-CHS.resx">
+      <DependentUpon>MessageDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.ja.resx">
+      <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.ja.resx">
       <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.zh-CHS.resx">
+      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.ja.resx">
+      <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.zh-CHS.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteTypeDlg.ja.resx">
       <DependentUpon>PasteTypeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PasteTypeDlg.zh-CHS.resx">
+      <DependentUpon>PasteTypeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
+      <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ReportErrorDlg.zh-CHS.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.ja.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareTypeDlg.zh-CHS.resx">
+      <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.ja.resx">
+      <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.zh-CHS.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeDlg.zh-CHS.resx">
+      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.ja.resx">
+      <DependentUpon>ColumnChooser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ColumnChooser.zh-CHS.resx">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.ja.resx">
@@ -1189,193 +1237,385 @@
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.zh-CHS.resx">
+      <DependentUpon>DataboundGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DocumentGridForm.ja.resx">
+      <DependentUpon>DocumentGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\DocumentGridForm.zh-CHS.resx">
       <DependentUpon>DocumentGridForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ExportLiveReportDlg.ja.resx">
       <DependentUpon>ExportLiveReportDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\ExportLiveReportDlg.zh-CHS.resx">
+      <DependentUpon>ExportLiveReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\LiveResultsGrid.ja.resx">
+      <DependentUpon>LiveResultsGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\LiveResultsGrid.zh-CHS.resx">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.ja.resx">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.zh-CHS.resx">
+      <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\FindResultsForm.ja.resx">
+      <DependentUpon>FindResultsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FindResultsForm.zh-CHS.resx">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AlignmentForm.ja.resx">
       <DependentUpon>AlignmentForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AlignmentForm.zh-CHS.resx">
+      <DependentUpon>AlignmentForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.ja.resx">
+      <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.zh-CHS.resx">
       <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncRenderControl.ja.resx">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AsyncRenderControl.zh-CHS.resx">
+      <DependentUpon>AsyncRenderControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.ja.resx">
+      <DependentUpon>GraphChromatogram.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.zh-CHS.resx">
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphRegression.ja.resx">
       <DependentUpon>GraphRegression.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphRegression.zh-CHS.resx">
+      <DependentUpon>GraphRegression.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.ja.resx">
+      <DependentUpon>GraphSpectrum.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.zh-CHS.resx">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSummary.ja.resx">
       <DependentUpon>GraphSummary.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphSummary.zh-CHS.resx">
+      <DependentUpon>GraphSummary.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\ImmediateWindow.ja.resx">
+      <DependentUpon>ImmediateWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ImmediateWindow.zh-CHS.resx">
       <DependentUpon>ImmediateWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\LongWaitDlg.ja.resx">
       <DependentUpon>LongWaitDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\LongWaitDlg.zh-CHS.resx">
+      <DependentUpon>LongWaitDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\PopupPickList.ja.resx">
+      <DependentUpon>PopupPickList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PopupPickList.zh-CHS.resx">
       <DependentUpon>PopupPickList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ResultsGridForm.ja.resx">
       <DependentUpon>ResultsGridForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ResultsGridForm.zh-CHS.resx">
+      <DependentUpon>ResultsGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTree.ja.resx">
+      <DependentUpon>SequenceTree.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTree.zh-CHS.resx">
       <DependentUpon>SequenceTree.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTreeForm.ja.resx">
       <DependentUpon>SequenceTreeForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTreeForm.zh-CHS.resx">
+      <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\StatementCompletionForm.ja.resx">
+      <DependentUpon>StatementCompletionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\StatementCompletionForm.zh-CHS.resx">
       <DependentUpon>StatementCompletionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\TreeViewMS.ja.resx">
       <DependentUpon>TreeViewMS.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TreeViewMS.zh-CHS.resx">
+      <DependentUpon>TreeViewMS.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\UndoRedoList.ja.resx">
+      <DependentUpon>UndoRedoList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\UndoRedoList.zh-CHS.resx">
       <DependentUpon>UndoRedoList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\AreaChartPropertyDlg.ja.resx">
       <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AreaChartPropertyDlg.zh-CHS.resx">
+      <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.ja.resx">
+      <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.zh-CHS.resx">
       <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.ja.resx">
       <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.zh-CHS.resx">
+      <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.ja.resx">
+      <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditNoteDlg.ja.resx">
       <DependentUpon>EditNoteDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditNoteDlg.zh-CHS.resx">
+      <DependentUpon>EditNoteDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditPepModsDlg.ja.resx">
+      <DependentUpon>EditPepModsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditPepModsDlg.zh-CHS.resx">
       <DependentUpon>EditPepModsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\FindNodeDlg.ja.resx">
       <DependentUpon>FindNodeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\FindNodeDlg.zh-CHS.resx">
+      <DependentUpon>FindNodeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\GenerateDecoysDlg.ja.resx">
+      <DependentUpon>GenerateDecoysDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\GenerateDecoysDlg.zh-CHS.resx">
       <DependentUpon>GenerateDecoysDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PasteDlg.ja.resx">
       <DependentUpon>PasteDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PasteDlg.zh-CHS.resx">
+      <DependentUpon>PasteDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.ja.resx">
+      <DependentUpon>RefineDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineDlg.zh-CHS.resx">
       <DependentUpon>RefineDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineListDlg.ja.resx">
       <DependentUpon>RefineListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RefineListDlg.zh-CHS.resx">
+      <DependentUpon>RefineListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RegressionRTThresholdDlg.ja.resx">
+      <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RegressionRTThresholdDlg.zh-CHS.resx">
       <DependentUpon>RegressionRTThresholdDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ReintegrateDlg.ja.resx">
       <DependentUpon>ReintegrateDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ReintegrateDlg.zh-CHS.resx">
+      <DependentUpon>ReintegrateDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RenameProteinsDlg.ja.resx">
+      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RenameProteinsDlg.zh-CHS.resx">
       <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RTChartPropertyDlg.ja.resx">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RTChartPropertyDlg.zh-CHS.resx">
+      <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.ja.resx">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.zh-CHS.resx">
       <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\SpectrumChartPropertyDlg.ja.resx">
       <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SpectrumChartPropertyDlg.zh-CHS.resx">
+      <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\UniquePeptidesDlg.ja.resx">
+      <DependentUpon>UniquePeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\UniquePeptidesDlg.zh-CHS.resx">
       <DependentUpon>UniquePeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.ja.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.zh-CHS.resx">
+      <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChromatogramDlg.ja.resx">
+      <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportChromatogramDlg.zh-CHS.resx">
       <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.ja.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportMethodDlg.zh-CHS.resx">
+      <DependentUpon>ExportMethodDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportOptimizeDlg.ja.resx">
+      <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportOptimizeDlg.zh-CHS.resx">
       <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportReportDlg.ja.resx">
       <DependentUpon>ExportReportDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportReportDlg.zh-CHS.resx">
+      <DependentUpon>ExportReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsDlg.ja.resx">
+      <DependentUpon>ImportResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsNameDlg.ja.resx">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsNameDlg.zh-CHS.resx">
+      <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsSamplesDlg.ja.resx">
+      <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportResultsSamplesDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ManageResultsDlg.ja.resx">
       <DependentUpon>ManageResultsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ManageResultsDlg.zh-CHS.resx">
+      <DependentUpon>ManageResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\MinimizeResultsDlg.ja.resx">
+      <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MinimizeResultsDlg.zh-CHS.resx">
       <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.ja.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.zh-CHS.resx">
+      <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\OpenDataSourceDialog.ja.resx">
+      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.zh-CHS.resx">
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.zh-CHS.resx">
+      <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportFastaControl.ja.resx">
+      <DependentUpon>ImportFastaControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportFastaControl.zh-CHS.resx">
       <DependentUpon>ImportFastaControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.ja.resx">
       <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportPeptideSearchDlg.zh-CHS.resx">
+      <DependentUpon>ImportPeptideSearchDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsControl.ja.resx">
+      <DependentUpon>ImportResultsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsControl.zh-CHS.resx">
       <DependentUpon>ImportResultsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.ja.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.zh-CHS.resx">
+      <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PivotReportDlg.ja.resx">
+      <DependentUpon>PivotReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PivotReportDlg.zh-CHS.resx">
       <DependentUpon>PivotReportDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PreviewReportDlg.ja.resx">
       <DependentUpon>PreviewReportDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PreviewReportDlg.zh-CHS.resx">
+      <DependentUpon>PreviewReportDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlg.zh-CHS.resx">
       <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RenameResultDlg.ja.resx">
       <DependentUpon>RenameResultDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RenameResultDlg.zh-CHS.resx">
+      <DependentUpon>RenameResultDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RescoreResultsDlg.ja.resx">
+      <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RescoreResultsDlg.zh-CHS.resx">
       <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\SchedulingOptionsDlg.ja.resx">
       <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\SchedulingOptionsDlg.zh-CHS.resx">
+      <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ShareListDlg.ja.resx">
+      <DependentUpon>ShareListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ShareListDlg.zh-CHS.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
@@ -1405,109 +1645,217 @@
     <EmbeddedResource Include="SettingsUI\AddPathsDlg.ja.resx">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddPathsDlg.zh-CHS.resx">
+      <DependentUpon>AddPathsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.ja.resx">
+      <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.zh-CHS.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.ja.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
+      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.ja.resx">
+      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.zh-CHS.resx">
       <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.zh-CHS.resx">
+      <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.ja.resx">
+      <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.zh-CHS.resx">
       <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.ja.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.zh-CHS.resx">
+      <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.ja.resx">
+      <DependentUpon>EditCEDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditCEDlg.zh-CHS.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditDPDlg.ja.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditDPDlg.zh-CHS.resx">
+      <DependentUpon>EditDPDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.ja.resx">
+      <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.zh-CHS.resx">
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditExclusionDlg.ja.resx">
       <DependentUpon>EditExclusionDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditExclusionDlg.zh-CHS.resx">
+      <DependentUpon>EditExclusionDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.ja.resx">
+      <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.zh-CHS.resx">
       <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.ja.resx">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.zh-CHS.resx">
+      <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsotopeEnrichmentDlg.ja.resx">
+      <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsotopeEnrichmentDlg.zh-CHS.resx">
       <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.ja.resx">
       <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.zh-CHS.resx">
+      <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditLibraryDlg.ja.resx">
+      <DependentUpon>EditLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLibraryDlg.zh-CHS.resx">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditListDlg.ja.resx">
       <DependentUpon>EditListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditListDlg.zh-CHS.resx">
+      <DependentUpon>EditListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.ja.resx">
+      <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.zh-CHS.resx">
       <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.ja.resx">
       <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.zh-CHS.resx">
+      <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditRTDlg.ja.resx">
+      <DependentUpon>EditRTDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditRTDlg.zh-CHS.resx">
       <DependentUpon>EditRTDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditStaticModDlg.ja.resx">
       <DependentUpon>EditStaticModDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditStaticModDlg.zh-CHS.resx">
+      <DependentUpon>EditStaticModDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.ja.resx">
+      <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.zh-CHS.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.zh-CHS.resx">
+      <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtPeptidesDlg.ja.resx">
+      <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtPeptidesDlg.zh-CHS.resx">
       <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtSpectralLibrary.ja.resx">
       <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtSpectralLibrary.zh-CHS.resx">
+      <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.ja.resx">
+      <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.zh-CHS.resx">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.ja.resx">
       <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.zh-CHS.resx">
+      <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.ja.resx">
+      <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.zh-CHS.resx">
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.ja.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.zh-CHS.resx">
+      <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.ja.resx">
+      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.zh-CHS.resx">
       <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.ja.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.zh-CHS.resx">
+      <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\RTDetails.ja.resx">
+      <DependentUpon>RTDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\RTDetails.zh-CHS.resx">
       <DependentUpon>RTDetails.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.ja.resx">
       <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.zh-CHS.resx">
+      <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.ja.resx">
+      <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.zh-CHS.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.ja.resx">
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.zh-CHS.resx">
+      <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Skyline.ja.resx">
+      <DependentUpon>Skyline.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Skyline.zh-CHS.resx">
       <DependentUpon>Skyline.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Skyline_Daily.ico" />
@@ -1641,6 +1989,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.zh-CHS.resx">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -1669,10 +2021,16 @@
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.zh-CHS.resx">
+      <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\PythonInstaller.ja.resx">
@@ -1681,10 +2039,16 @@
     <EmbeddedResource Include="ToolsUI\PythonInstaller.resx">
       <DependentUpon>PythonInstaller.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\PythonInstaller.zh-CHS.resx">
+      <DependentUpon>PythonInstaller.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.ja.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\RInstaller.resx">
+      <DependentUpon>RInstaller.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\RInstaller.zh-CHS.resx">
       <DependentUpon>RInstaller.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.ja.resx">
@@ -1707,16 +2071,25 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="ToolsUI\ToolOptionsUI.zh-CHS.resx">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.ja.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolStoreDlg.zh-CHS.resx">
+      <DependentUpon>ToolStoreDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.ja.resx">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.resx">
+      <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolUpdatesDlg.zh-CHS.resx">
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config">

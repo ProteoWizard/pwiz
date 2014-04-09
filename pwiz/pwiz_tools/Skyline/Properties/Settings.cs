@@ -1024,6 +1024,12 @@ namespace pwiz.Skyline.Properties
     {
         private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec(ELEMENT_NONE, string.Empty);
 
+        public override string GetDisplayName(BackgroundProteomeSpec item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
         public static BackgroundProteomeSpec GetDefault()
         {
             return NONE;
@@ -1347,6 +1353,12 @@ namespace pwiz.Skyline.Properties
         private static readonly DeclusteringPotentialRegression NONE =
             new DeclusteringPotentialRegression(ELEMENT_NONE, 0, 0);
 
+        public override string GetDisplayName(DeclusteringPotentialRegression item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
         public static DeclusteringPotentialRegression GetDefault()
         {
             return NONE;
@@ -1598,6 +1610,12 @@ namespace pwiz.Skyline.Properties
     {
         private static readonly RetentionTimeRegression NONE =
             new RetentionTimeRegression(ELEMENT_NONE, null, 0, 0, 0, new MeasuredRetentionTime[0]);
+
+        public override string GetDisplayName(RetentionTimeRegression item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
 
         public static RetentionTimeRegression GetDefault()
         {
@@ -2203,7 +2221,7 @@ namespace pwiz.Skyline.Properties
         : SettingsListBase<TItem>, IItemEditor<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        public static string ELEMENT_NONE { get { return Resources.SettingsList_ELEMENT_NONE_None; } }
+        public static string ELEMENT_NONE { get { return "None"; } }    // Not L10N - serialized to XML
 
         #region IItemEditor<T> Members
 
@@ -2240,6 +2258,11 @@ namespace pwiz.Skyline.Properties
         public virtual int RevisionIndexCurrent { get { return 0; } }
 
         public abstract IEnumerable<TItem> GetDefaults(int revisionIndex);
+
+        public virtual string GetDisplayName(TItem item)
+        {
+            return item.GetKey();
+        }
 
         #endregion
 

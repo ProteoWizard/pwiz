@@ -204,7 +204,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             var size = base.RenderTip(g, sizeMax, draw);
             if(ShowAnnotationTipOnly)
                 return size;
-            g.TranslateTransform(0, size.Height);
+            if (draw)
+                g.TranslateTransform(0, size.Height);
             Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
             var sizeNew = RenderTip(DocNode, g, sizeMaxNew, draw);
             return new Size(Math.Max(size.Width, sizeNew.Width), size.Height + sizeNew.Height);

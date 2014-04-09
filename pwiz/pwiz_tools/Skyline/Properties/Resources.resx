@@ -319,9 +319,6 @@
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Hello" xml:space="preserve">
-    <value>Hello</value>
-  </data>
   <data name="FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found" xml:space="preserve">
     <value>The text '{0}' could not be found.</value>
   </data>
@@ -723,9 +720,6 @@
   </data>
   <data name="RefineListDlg_OkDialog_Do_you_want_to_continue" xml:space="preserve">
     <value>Do you want to continue?</value>
-  </data>
-  <data name="RefineListDlg_OkDialog_The_peptide___2___is_not_in_the_document" xml:space="preserve">
-    <value>The peptide '{2}' is not in the document.</value>
   </data>
   <data name="RefineListDlg_OkDialog_The_peptide__0__is_not_in_the_document_Do_you_want_to_continue" xml:space="preserve">
     <value>The peptide '{0}' is not in the document. Do you want to continue?</value>
@@ -6177,5 +6171,11 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
     <value>Default ({0})</value>
     <comment>Example: Default (English)</comment>
+  </data>
+    <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_" xml:space="preserve">
+    <value>Downloading {0}</value>
+  </data>
+    <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
+    <value>The operation was canceled by the user.</value>
   </data>
 </root>
