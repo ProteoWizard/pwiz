@@ -1,10 +1,16 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:morpheus.blib	2	1	1
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:morpheus.blib	9	1	1
 id	RefSpectraID	position	mass
-1	2	2	57.021464
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	retentionTime	fileID	SpecIDinFile	score	scoreType
-1	ATFVVDPQGIIQAIEVTAEGIGR	1192.651733	2	ATFVVDPQGIIQAIEVTAEGIGR	-	-	1	663	51.616633	1	scanId=3097006	0.0	14
-2	ACIGIITNPVNTTVAIAAEVLK	756.059052	3	AC[+57.0]IGIITNPVNTTVAIAAEVLK	-	-	1	1347	47.9075	1	scanId=2874457	0.0	14
+1	NDAADLGAAGGMGGMGGMGGMM	964.877991	2	NDAADLGAAGGMGGMGGMGGMM	-	-	1	478	31.09855	1	test-morpheus.4.4.2	0.0	14
+2	AGDNAPMAYIELVDR	817.896606	2	AGDNAPMAYIELVDR	-	-	1	293	31.102983	1	test-morpheus.6.6.2	0.0	14
+3	GEEILANWSTFATK	783.894409	2	GEEILANWSTFATK	-	-	1	367	31.10545	1	test-morpheus.7.7.2	0.0	14
+4	LAFDEFDELAGDR	749.34967	2	LAFDEFDELAGDR	-	-	1	491	31.096367	1	test-morpheus.3.3.2	0.0	14
+5	YQQNPVTGGLIFIDR	860.953796	2	YQQNPVTGGLIFIDR	-	-	1	313	31.115733	1	test-morpheus.11.11.2	0.0	14
+6	DAASFAPLHNPAHLIGIEEALK	772.082581	3	DAASFAPLHNPAHLIGIEEALK	-	-	1	902	31.09425	1	test-morpheus.2.2.3	0.0	14
+7	LLDNAAADLAAISGQKPLITK	1062.106323	2	LLDNAAADLAAISGQKPLITK	-	-	1	193	31.1105	1	test-morpheus.9.9.2	0.0	14
+8	ADILTFHTPLFK	468.262095	3	ADILTFHTPLFK	-	-	1	219	31.107967	1	test-morpheus.8.8.3	0.0	14
+9	AMIEAGAAAVHFEDQLASVK	686.686422	3	AMIEAGAAAVHFEDQLASVK	-	-	1	539	31.100733	1	test-morpheus.5.5.3	0.0	14
 id	fileName
 1	/BiblioSpec/tests/inputs/test-morpheus.mzML
 id	scoreType

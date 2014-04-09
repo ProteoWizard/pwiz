@@ -138,8 +138,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                scoreType_ = MORPHEUS_SCORE;
                probCutOff = getScoreThreshold(MORPHEUS);
 
-               lookUpBy_ = NAME_ID;
-               specReader_->setIdType(NAME_ID);
+               lookUpBy_ = INDEX_ID; 
+               specReader_->setIdType(INDEX_ID);
            } else if(search_engine.find("MS-GFDB") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from MS-GFDB.");
                analysisType_ = MSGF_ANALYSIS;
@@ -191,6 +191,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
    } else if(isElement("spectrum_query", name)) {
        // is it better to do this at the start of the element or the end?
+       scanIndex=-1;
        scanNumber=0;
        charge=0;
        precursorMZ=0;
@@ -221,6 +222,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        // if morpheus type
        else if (analysisType_ == MORPHEUS_ANALYSIS) {
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
+           scanIndex = scanNumber - 1;
            spectrumName = getRequiredAttrValue("spectrum", attr);
        }
        else if (analysisType_ == MSGF_ANALYSIS) {
@@ -350,6 +352,9 @@ void PepXMLreader::endElement(const XML_Char* name)
             curPSM_ = new PSM();
             curPSM_->charge = charge;
             curPSM_->unmodSeq = pepSeq;
+            if (scanIndex >= 0) {
+                curPSM_->specIndex = scanIndex;
+            }
             curPSM_->specKey = scanNumber;
             curPSM_->score = pepProb;
             curPSM_->mods = mods;
@@ -369,6 +374,7 @@ void PepXMLreader::endElement(const XML_Char* name)
         charge = 0;
         precursorMZ = 0;
         pepSeq[0] = '\0';
+        scanIndex = -1;
         scanNumber = -1;
         pepProb = 0;
         spectrumName.clear();

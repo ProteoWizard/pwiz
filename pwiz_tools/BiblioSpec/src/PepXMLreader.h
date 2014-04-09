@@ -89,6 +89,7 @@ class PepXMLreader : public BuildParser{
   int modPosition;
   double modMass;
 
+  int scanIndex;
   int scanNumber;
   double precursorMZ;
   int charge;
