@@ -503,7 +503,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     }
                                     else
                                     {
-                                        label = chromData.Mz.ToString("0.####");
+                                        label = chromData.Mz.ToString("0.####"); // Not L10N
                                     }
                                     TransitionDocNode matchingTransition;
                                     Color color;

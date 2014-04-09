@@ -19,6 +19,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding
 {
@@ -59,7 +60,7 @@ namespace pwiz.Common.DataBinding
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Name cannot be blank");
+                throw new ArgumentException(Resources.PropertyPath_Property_Name_cannot_be_blank);
             }
             return new PropertyPath(this, name, true);
         }
@@ -165,21 +166,21 @@ namespace pwiz.Common.DataBinding
         {
             if (IsRoot)
             {
-                return "";
+                return string.Empty;
             }
             if (IsUnboundLookup)
             {
-                return Parent + "!*";
+                return Parent + "!*"; // Not L10N
             }
             if (IsLookup)
             {
-                return Parent + "!" + EscapeIfNeeded(Name);
+                return Parent + "!" + EscapeIfNeeded(Name); // Not L10N
             }
             if (Parent.IsRoot)
             {
                 return EscapeIfNeeded(Name);
             }
-            return Parent + "." + EscapeIfNeeded(Name);
+            return Parent + "." + EscapeIfNeeded(Name); // Not L10N
         }
         public static PropertyPath Parse(string path)
         {
@@ -199,7 +200,7 @@ namespace pwiz.Common.DataBinding
                     case '*':
                         if (!lookup)
                         {
-                            throw new ParseException(path, lastIndex, "Invalid character '*'");
+                            throw new ParseException(path, lastIndex, Resources.PropertyPath_Parse_Invalid_character____);
                         }
                         name = null;
                         lastIndex++;
@@ -239,7 +240,7 @@ namespace pwiz.Common.DataBinding
                         }
                         if (!atDoubleQuote)
                         {
-                            throw new ParseException(path, lastIndex, "Unterminated quote");
+                            throw new ParseException(path, lastIndex, Resources.PropertyPath_Parse_Unterminated_quote);
                         }
                         name = nameBuilder.ToString();
                         break;
@@ -273,7 +274,7 @@ namespace pwiz.Common.DataBinding
                     {
                         if (!current.IsRoot)
                         {
-                            throw new ParseException(path, lastIndex, "Empty name");
+                            throw new ParseException(path, lastIndex, Resources.PropertyPath_Parse_Empty_name);
                         }
                     }
                     else
@@ -291,7 +292,7 @@ namespace pwiz.Common.DataBinding
                     case '.':
                         if (lastIndex == 0)
                         {
-                            throw new ParseException(path, 0, "Invalid character");
+                            throw new ParseException(path, 0, Resources.PropertyPath_Parse_Invalid_character);
                         }
                         lookup = false;
                         break;
@@ -299,7 +300,7 @@ namespace pwiz.Common.DataBinding
                         lookup = true;
                         break;
                     default:
-                        throw new ParseException(path, lastIndex, "Invalid character " + ch);
+                        throw new ParseException(path, lastIndex, Resources.PropertyPath_Parse_Invalid_character+ " " + ch); // Not L10N
                 }
                 lastIndex++;
             }
@@ -349,7 +350,7 @@ namespace pwiz.Common.DataBinding
         {
             if (text == null)
             {
-                return "*";
+                return "*"; // Not L10N
             }
             var result = new StringBuilder(text.Length + 5);
             result.Append('\"');
@@ -357,14 +358,14 @@ namespace pwiz.Common.DataBinding
             {
                 if (ch == '\"')
                 {
-                    result.Append("\"\"");
+                    result.Append("\"\""); // Not L10N
                 }
                 else
                 {
                     result.Append(ch);
                 }
             }
-            result.Append("\"");
+            result.Append("\""); // Not L10N
             return result.ToString();
         }
         public static string EscapeIfNeeded(string text)
@@ -375,7 +376,7 @@ namespace pwiz.Common.DataBinding
         public class ParseException : Exception
         {
             public ParseException(string input, int location, string errorMessage) 
-                : base (string.Format("Error parsing {0} at location {1}: {2}", input, location, errorMessage))
+                : base (string.Format(Resources.ParseException_ParseException_Error_parsing__0__at_location__1____2_, input, location, errorMessage))
             {
                 Input = input;
                 Location = location;

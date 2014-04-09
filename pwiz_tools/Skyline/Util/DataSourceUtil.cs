@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Util
 {
     public static class DataSourceUtil
     {
-        // Not L10N
+        // ReSharper disable NonLocalizedString
         public const string EXT_THERMO_RAW = ".raw";
         public const string EXT_WIFF = ".wiff";
         public const string EXT_SHIMADZU_RAW = ".lcd";
@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_MZDATA = "mzData";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
+        // ReSharper restore NonLocalizedString
 
         public static bool IsDataSource(String path)
         {
@@ -72,9 +73,9 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
+            // ReSharper disable NonLocalizedString
             try
             {
-                // Not L10N
                 if (dirInfo.Name.EndsWith(".raw") &&
                         dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
                     return TYPE_WATERS_RAW;
@@ -85,6 +86,7 @@ namespace pwiz.Skyline.Util
                     return TYPE_BRUKER;
                 return FOLDER_TYPE;
             }
+            // ReSharper restore NonLocalizedString
             catch (Exception)
             {
                 // TODO: Folder without access type
@@ -150,6 +152,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (reader.NodeType == XmlNodeType.Element)
                         {
+                            // ReSharper disable NonLocalizedString
                             switch (reader.Name.ToLowerInvariant())
                             {
                                 // Not L10N
@@ -166,6 +169,7 @@ namespace pwiz.Skyline.Util
                                 default:
                                     return UNKNOWN_TYPE;
                             }
+                            // ReSharper restore NonLocalizedString
                         }
                     }
                 }

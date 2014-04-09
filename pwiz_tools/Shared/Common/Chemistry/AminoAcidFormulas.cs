@@ -28,7 +28,7 @@ namespace pwiz.Common.Chemistry
 // ReSharper disable InconsistentNaming
         public const double ProtonMass = 1.00727649;
 
-        // Not L10N
+        // ReSharper disable NonLocalizedString
         public static readonly IDictionary<String, char> LongNames = new ImmutableDictionary<String,char>(
             new Dictionary<string, char> {
             {"Ala",'A'},
@@ -52,8 +52,9 @@ namespace pwiz.Common.Chemistry
             {"Tyr",'Y'},
             {"Val",'V'}
         });
+        // ReSharper restore NonLocalizedString
 
-        // Not L10N
+        // ReSharper disable NonLocalizedString
         public static readonly IDictionary<char, String> DefaultFormulas = new ImmutableDictionary<char, String>
             (
             new Dictionary<char, string>
@@ -82,6 +83,8 @@ namespace pwiz.Common.Chemistry
                     {'Y', "C9H9O2N"},
                 }
                 );
+        // ReSharper restore NonLocalizedString
+
 
         public static readonly AminoAcidFormulas Default = new AminoAcidFormulas
                                                                {
@@ -163,7 +166,7 @@ namespace pwiz.Common.Chemistry
                 }
                 formula.Append(aaFormula);
             }
-            formula.Append("H2O");
+            formula.Append("H2O"); // Not L10N
             return Molecule.Parse(formula.ToString());
         }
         public Double GetMassShift(String peptide)

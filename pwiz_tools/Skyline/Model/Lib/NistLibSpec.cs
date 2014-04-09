@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new KeyValuePair<PeptideRankId, string>(NistLibSpecBase.PEP_RANK_TFRATIO,
                     TFRatio.ToString(LocalizationHelper.CurrentCulture));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_TOTAL_INTENSITY,
-                    string.Format("{0:F0}", TotalIntensity));
+                    string.Format("{0:F0}", TotalIntensity)); // Not L10N
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_COPIES,
                     SpectrumCount.ToString(LocalizationHelper.CurrentCulture));
             }
@@ -354,7 +354,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Dictionary<string, string> MODIFICATION_MASSES = new Dictionary<string, string>
             {
                 // Modification values taken from http://chemdata.nist.gov/mass-spc/ftp/mass-spc/PepLib.pdf
-                {"Oxidation", SequenceMassCalc.GetModDiffDescription(15.994915)},
+                {"Oxidation", SequenceMassCalc.GetModDiffDescription(15.994915)}, // Not L10N
                 // Use SpectraST (taken from Unimod) values below
 //                {"Carbamidomethyl", SequenceMassCalc.GetModDiffDescription(57.02146)},            
 //                {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.12)},
@@ -378,6 +378,7 @@ namespace pwiz.Skyline.Model.Lib
                 // Not L10N
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
                 // line 1196
+// ReSharper disable NonLocalizedString
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
                 {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
                 {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
@@ -489,7 +490,7 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1432.6894)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.1026)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
-
+        // ReSharper restore NonLocalizedString
         private IPooledStream _readStream;
 
         protected static Library Load(LibrarySpec spec, NistLibraryBase library, ILoadMonitor loader)
@@ -510,7 +511,7 @@ namespace pwiz.Skyline.Model.Lib
 
             CachePath = Path.ChangeExtension(FilePath, extCache);
 
-            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? ""; // ReSharper
+            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? string.Empty; // ReSharper
             Match match = REGEX_BASENAME.Match(baseName);
             if (match.Success)
             {
@@ -765,6 +766,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // Not L10N
+// ReSharper disable NonLocalizedString
         private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16]
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
         private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
@@ -773,7 +775,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
-
+// ReSharper restore NonLocalizedString
         private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;
@@ -1007,7 +1009,7 @@ namespace pwiz.Skyline.Model.Lib
             string[] parts = mod.Split(MINOR_SEP);
             if (parts.Length < 3)
             {
-                massDiff = "";
+                massDiff = string.Empty;
                 return -1;
             }
             int index = int.Parse(parts[0], CultureInfo.InvariantCulture);

@@ -867,10 +867,10 @@ namespace pwiz.Skyline.Properties
 
         public override IEnumerable<Enzyme> GetDefaults(int revisionIndex)
         {
+            // ReSharper disable NonLocalizedString
             return new[]
                 {
                     GetDefault(),
-                    // Not L10N
                     new Enzyme("Trypsin/P", "KR", ""),
                     new Enzyme("TrypsinK", "K", "P"), 
                     new Enzyme("TrypsinR", "R", "P"), 
@@ -894,6 +894,7 @@ namespace pwiz.Skyline.Properties
                     new Enzyme("Trypsin-CNBr", "KRM", "P"),
                     new Enzyme("Trypsin-GluC", "DEKR", "P")
                 };
+                // ReSharper restore NonLocalizedString
         }
 
         public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
@@ -1946,7 +1947,7 @@ namespace pwiz.Skyline.Properties
             Type tableTranRes = typeof (DbTransitionResult);
 
             var listDefaults = new List<ReportSpec>(new[]
-                       { // Not L10N
+                       { // ReSharper disable NonLocalizedString
                     new ReportSpec(
                         Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
                                           new QueryDef
@@ -1995,11 +1996,12 @@ namespace pwiz.Skyline.Properties
                                         new ReportColumn(tableTranRes, "PeakRank"),
                                                                }
                                               })
-                       });
+                        // ReSharper restore NonLocalizedString
+                        });
 
             if (revisionIndex < 1)
                 return listDefaults;
-
+            // ReSharper disable NonLocalizedString
             listDefaults.AddRange(new[]
                                     {
                                         (ReportSpec) DeserializeItem(
@@ -2017,6 +2019,7 @@ namespace pwiz.Skyline.Properties
     </select>
   </report>").ChangeName(SRM_COLLIDER_REPORT_NAME),
                                     });
+            // ReSharper restore NonLocalizedString
             return listDefaults;
         }
 

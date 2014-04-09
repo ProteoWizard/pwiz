@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// ReSharper disable NonLocalizedString
 namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniModData

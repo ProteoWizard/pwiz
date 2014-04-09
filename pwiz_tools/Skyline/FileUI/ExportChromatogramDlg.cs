@@ -35,7 +35,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ExportChromatogramDlg : FormEx
     {
-        public const string EXT = ".tsv";
+        public const string EXT = ".tsv"; // Not L10N
 
         private SrmDocument Document { get; set; }
         private string DocumentFilePath { get; set; }

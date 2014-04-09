@@ -230,4 +230,22 @@
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
     <value>Customize View...</value>
   </data>
+  <data name="PropertyPath_Property_Name_cannot_be_blank" xml:space="preserve">
+    <value>Name cannot be blank</value>
+  </data>
+  <data name="PropertyPath_Parse_Invalid_character____" xml:space="preserve">
+    <value>Invalid character '*'</value>
+  </data>
+  <data name="PropertyPath_Parse_Unterminated_quote" xml:space="preserve">
+    <value>Unterminated quote</value>
+  </data>
+  <data name="PropertyPath_Parse_Empty_name" xml:space="preserve">
+    <value>Empty name</value>
+  </data>
+  <data name="PropertyPath_Parse_Invalid_character" xml:space="preserve">
+    <value>Invalid character</value>
+  </data>
+  <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
+    <value>Error parsing {0} at location {1}: {2}</value>
+  </data>
 </root>

@@ -27,8 +27,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
     [XmlRoot("chromatogram_library_spec")]
     public class ChromatogramLibrarySpec : LibrarySpec
     {
-        public static readonly string EXT = ".clib";
-        public static readonly PeptideRankId PEPTIDE_RANK_PEAK_AREA = new PeptideRankId("Peak area", Resources.ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area);
+        public static readonly string EXT = ".clib"; // Not L10N
+        public static readonly PeptideRankId PEPTIDE_RANK_PEAK_AREA = new PeptideRankId("Peak area", Resources.ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area); // Not L10N
         public ChromatogramLibrarySpec(string name, string path) : base(name, path)
         {
             

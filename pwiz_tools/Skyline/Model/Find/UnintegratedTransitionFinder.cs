@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Find
     {
         public override string Name
         {
-            get { return "unintegrated_transitions"; }
+            get { return "unintegrated_transitions"; } // Not L10N
         }
 
         public override string DisplayName

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Lib
 {
     public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
     {
-        // Not L10N
+        // ReSharper disable NonLocalizedString
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
         public const string EXI_MZID = ".mzid";
@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_PERCOLATOR_XML = "results.xml";
         public const string EXT_MAX_QUANT = "msms.txt";
         public const string EXT_WATERS_MSE = "final_fragment.csv";
+        // ReSharper restore NonLocalizedString
 
         private ReadOnlyCollection<string> _inputFiles;
 
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
-            ProgressStatus status = new ProgressStatus("Preparing to build library");
+            ProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
             progress.UpdateProgress(status);
             if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
             {
