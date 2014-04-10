@@ -6312,9 +6312,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library" xml:space="preserve">
     <value>Preparing to build library</value>
   </data>
-  <data name="DotTraceProfile_Save_Save_profile_snapshot" xml:space="preserve">
-    <value>Save profile snapshot</value>
-  </data>
   <data name="RescoreResultsDlg_Rescore_There_are_not_results_in_this_document" xml:space="preserve">
     <value>There are not results in this document</value>
   </data>
