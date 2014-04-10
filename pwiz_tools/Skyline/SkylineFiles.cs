@@ -2086,7 +2086,7 @@ namespace pwiz.Skyline
                 if (buttonPress == DialogResult.Yes)
                 {
                     // person intends to register                   
-                    WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html");
+                    WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/panoramaweb-signup.html"); // Not L10N
                     tag = true;
                 }
 

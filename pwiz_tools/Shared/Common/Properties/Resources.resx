@@ -248,4 +248,7 @@
   <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
     <value>Error parsing {0} at location {1}: {2}</value>
   </data>
+  <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
+    <value>Column is read only</value>
+  </data>
 </root>

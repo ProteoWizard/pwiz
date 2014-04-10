@@ -41,7 +41,7 @@ namespace pwiz.ProteomeDatabase.Util
                 //.SetProperty("show_sql", "true")
                 //.SetProperty("generate_statistics", "true")
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName) // Not L10N
-                .SetProperty("connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString())
+                .SetProperty("connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString()) // Not L10N
                 .SetProperty("connection.driver_class", // Not L10N
                 typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
             if (createSchema)
@@ -68,7 +68,7 @@ namespace pwiz.ProteomeDatabase.Util
             // Also, in order to prevent a drive letter being prepended to UNC paths, we specify ToFullPath=false
             return new SQLiteConnectionStringBuilder
             {
-                DataSource = path.Replace("\\", "\\\\"),
+                DataSource = path.Replace("\\", "\\\\"), // Not L10N
                 ToFullPath = false,
             };
         }
@@ -77,7 +77,7 @@ namespace pwiz.ProteomeDatabase.Util
         {
             Assembly assembly = typeDb.Assembly;
             return configuration.AddInputStream(
-                assembly.GetManifestResourceStream(typeDb.Namespace + "." + schemaFilename));
+                assembly.GetManifestResourceStream(typeDb.Namespace + "." + schemaFilename)); // Not L10N
         }
     }
 }

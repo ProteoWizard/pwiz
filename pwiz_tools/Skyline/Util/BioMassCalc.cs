@@ -86,7 +86,8 @@ namespace pwiz.Skyline.Util
         public static readonly IsotopeAbundances DEFAULT_ABUNDANCES =
             MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
 
-        // Not L10N
+        
+// ReSharper disable NonLocalizedString
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
         public const string C = "C";    // Carbon
@@ -123,6 +124,7 @@ namespace pwiz.Skyline.Util
         public const string Co = "Co";  // Cobalt
         public const string Mn = "Mn";  // Manganese
         public const string Mg = "Mg";  // Magnesium
+        // ReSharper restore NonLocalizedString
 // ReSharper restore InconsistentNaming
 
         /// <summary>
@@ -408,8 +410,8 @@ namespace pwiz.Skyline.Util
                 if (!_atomicMasses.TryGetValue(atomAbundance.Key, out monoMassCalc))
                     continue;
                 double secondMassCalc, thirdMassCalc;
-                _atomicMasses.TryGetValue(atomAbundance.Key + "'", out secondMassCalc);
-                _atomicMasses.TryGetValue(atomAbundance.Key + "\"", out thirdMassCalc);
+                _atomicMasses.TryGetValue(atomAbundance.Key + "'", out secondMassCalc); // Not L10N
+                _atomicMasses.TryGetValue(atomAbundance.Key + "\"", out thirdMassCalc); // Not L10N
                 var massDist = atomAbundance.Value;
                 var massDistFixed = SynchDist(massDist, monoMassCalc, secondMassCalc, thirdMassCalc);
                 if (!ReferenceEquals(massDist, massDistFixed))

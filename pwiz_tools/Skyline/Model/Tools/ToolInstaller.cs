@@ -42,27 +42,29 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public static class PropertiesConstants
         {
+            // ReSharper disable NonLocalizedString
             //Required
-            public const string TITLE = "Title";                                        //Not L10N
-            public const string COMMAND = "Command";                                    //Not L10N
+            public const string TITLE = "Title";                                        
+            public const string COMMAND = "Command";                                    
             // Optional
-            public const string ARGUMENTS = "Arguments";                                //Not L10N
-            public const string INITIAL_DIRECTORY = "InitialDirectory";                 //Not L10N
-            public const string OUTPUT_TO_IMMEDIATE_WINDOW = "OutputToImmediateWindow"; //Not L10N
-            public const string INPUT_REPORT_NAME = "InputReportName";                  //Not L10N
-            public const string REPORT_SKYR_FILE = "ReportSkyrFile";                    //Not L10N
-            public const string ARGS_COLLECTOR_DLL = "ArgsCollectorDll";                //Not L10N
-            public const string ARGS_COLLECTOR_TYPE = "ArgsCollectorType";              //Not L10N
-            public const string PACKAGE = "Package{0}";                                 //Not L10N
-            public const string PACKAGE_VERSION = "Package{0}Version";                  //Not L10N
-            public const string ANNOTATION = "Annotation{0}";                           //Not L10N
+            public const string ARGUMENTS = "Arguments";                                
+            public const string INITIAL_DIRECTORY = "InitialDirectory";                 
+            public const string OUTPUT_TO_IMMEDIATE_WINDOW = "OutputToImmediateWindow"; 
+            public const string INPUT_REPORT_NAME = "InputReportName";                  
+            public const string REPORT_SKYR_FILE = "ReportSkyrFile";                    
+            public const string ARGS_COLLECTOR_DLL = "ArgsCollectorDll";                
+            public const string ARGS_COLLECTOR_TYPE = "ArgsCollectorType";              
+            public const string PACKAGE = "Package{0}";                                 
+            public const string PACKAGE_VERSION = "Package{0}Version";                  
+            public const string ANNOTATION = "Annotation{0}";                           
             //Package attributes in info.properties
-            public const string NAME = "Name";                                          //Not L10N
-            public const string VERSION = "Version";                                    //Not L10N
-            public const string AUTHOR = "Author";                                      //Not L10N
-            public const string DESCRIPTION = "Description";                            //Not L10N
-            public const string PROVIDER = "Provider";                                  //Not L10N
-            public const string IDENTIFIER = "Identifier";                              //Not L10N
+            public const string NAME = "Name";                                          
+            public const string VERSION = "Version";                                    
+            public const string AUTHOR = "Author";                                      
+            public const string DESCRIPTION = "Description";                            
+            public const string PROVIDER = "Provider";                                  
+            public const string IDENTIFIER = "Identifier";
+            // ReSharper restore NonLocalizedString
 
             // Defaults for optional values in the .properties file
             public static readonly Hashtable DEFAULTS = new Hashtable
@@ -228,9 +230,9 @@ namespace pwiz.Skyline.Model.Tools
     
     public static class ToolInstaller
     {
-        public const string TOOL_INF = "tool-inf";                    //Not L10N
-        public const string INFO_PROPERTIES = "info.properties";      //Not L10N
-        private const string INSTALL_R_PACKAGES = "InstallPackages.r"; //Not L10N
+        public const string TOOL_INF = "tool-inf"; // Not L10N
+        public const string INFO_PROPERTIES = "info.properties"; // Not L10N
+        private const string INSTALL_R_PACKAGES = "InstallPackages.r"; // Not L10N
 
         /// <summary>
         /// Function for unpacking zipped External tools.
@@ -261,7 +263,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
             }
-            string tempFolderPath = Path.Combine(outerToolsFolderPath, "Temp"); //Not L10N
+            string tempFolderPath = Path.Combine(outerToolsFolderPath, "Temp"); // Not L10N
 
             var toolDir = new DirectoryInfo(tempFolderPath);
             if (!toolDir.Exists)
@@ -360,7 +362,7 @@ namespace pwiz.Skyline.Model.Tools
                     }
                 }
 
-                foreach (FileInfo file in toolInfDir.GetFiles("*.properties")) // not L10N
+                foreach (FileInfo file in toolInfDir.GetFiles("*.properties")) // Not L10N
                 {
                     // We will replace the tool Directory value (null below) later when we know the import is sucessful.
                     AddToolFromProperties(file, retval, toolInfo, null, tempToolPath, reportRenameMapping);
@@ -372,7 +374,7 @@ namespace pwiz.Skyline.Model.Tools
                     foreach (var ppc in retval.Installations.Keys)
                     {
                         string pathToPackageInstallScript = null;
-                        if (ppc.ProgramName.Equals("R") && retval.Installations[ppc].Count != 0)
+                        if (ppc.ProgramName.Equals("R") && retval.Installations[ppc].Count != 0) // Not L10N
                         {
                             pathToPackageInstallScript = Path.Combine(tempToolPath, TOOL_INF, INSTALL_R_PACKAGES);
                             if (!File.Exists(pathToPackageInstallScript))
@@ -639,7 +641,7 @@ namespace pwiz.Skyline.Model.Tools
             var existingReports = new List<ReportSpec>();
             newReports = new List<ReportSpec>();
             var xmlSerializer = new XmlSerializer(typeof(ReportSpecList));
-            foreach (FileInfo file in toolInfDir.GetFiles("*" + ReportSpecList.EXT_REPORTS))
+            foreach (FileInfo file in toolInfDir.GetFiles("*" + ReportSpecList.EXT_REPORTS)) // Not L10N
             {
                 ReportSpecList loadedItems;
                 try
@@ -694,7 +696,7 @@ namespace pwiz.Skyline.Model.Tools
                 //     We have already ensured they all have the same version number and same unique identifier. If there 
                 //     are different package names then they have installed incorrectly defined tools
                 var tool = toolsToBeOverwritten.First();
-                string toolCollectionName = tool.PackageName + " v" + tool.PackageVersion; //Not L10N
+                string toolCollectionName = tool.PackageName + " v" + tool.PackageVersion; // Not L10N
                 string toolCollectionVersion = tool.PackageVersion;
 
                 return shouldOverwrite(toolCollectionName, toolCollectionVersion, existingReports,
@@ -790,7 +792,7 @@ namespace pwiz.Skyline.Model.Tools
                                                command,
                                                readin.Arguments,
                                                readin.Initial_Directory,
-                                               readin.Output_to_Immediate_Window.Contains("True"), //Not L10N
+                                               readin.Output_to_Immediate_Window.Contains("True"), // Not L10N
                                                reportTitle,
                                                dllPath,
                                                readin.Args_Collector_Type,
@@ -883,7 +885,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string GetUniqueName(string name, Func<string, bool> isUnique)
         {
-            return GetUniqueFormat(name + "{0}", isUnique);
+            return GetUniqueFormat(name + "{0}", isUnique); // Not L10N
         }
 
         public static string GetUniqueFormat(string formatString, Func<string, bool> isUnique)

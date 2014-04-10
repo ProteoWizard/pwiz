@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Controls
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + "|" + SequenceTree.GetPersistentString();
+            return base.GetPersistentString() + "|" + SequenceTree.GetPersistentString(); // Not L10N
         } 
 
         public SequenceTree SequenceTree { get { return sequenceTree; } }
@@ -84,13 +85,13 @@ namespace pwiz.Skyline.Controls
                     newTitle = _defaultTabText;
                     break;
                 case ProteinDisplayMode.ByAccession:
-                    newTitle = "Targets by Accession";
+                    newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Accession;
                     break;
                 case ProteinDisplayMode.ByPreferredName:
-                    newTitle = "Targets by Preferred Name";
+                    newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name;
                     break;
                 case ProteinDisplayMode.ByGene:
-                    newTitle = "Targets by Gene";
+                    newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Gene;
                     break;
             }
             TabText = newTitle ?? _defaultTabText;

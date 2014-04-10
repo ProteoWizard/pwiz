@@ -3643,6 +3643,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save profile snapshot.
+        /// </summary>
+        public static string DotTraceProfile_Save_Save_profile_snapshot {
+            get {
+                return ResourceManager.GetString("DotTraceProfile_Save_Save_profile_snapshot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
@@ -12512,6 +12521,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All results must be completely imported before they can be re-scored..
+        /// </summary>
+        public static string RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_ {
+            get {
+                return ResourceManager.GetString("RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can" +
+                        "_be_re_scored_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are not results in this document.
+        /// </summary>
+        public static string RescoreResultsDlg_Rescore_There_are_not_results_in_this_document {
+            get {
+                return ResourceManager.GetString("RescoreResultsDlg_Rescore_There_are_not_results_in_this_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data.  Chromatograms will not be re-imported from raw data files, but peak integration information may change..
         /// </summary>
         public static string RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_ {
@@ -13531,6 +13559,33 @@ namespace pwiz.Skyline.Properties {
         public static string SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula {
             get {
                 return ResourceManager.GetString("SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets by Accession.
+        /// </summary>
+        public static string SequenceTreeForm_UpdateTitle_Targets_by_Accession {
+            get {
+                return ResourceManager.GetString("SequenceTreeForm_UpdateTitle_Targets_by_Accession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets by Gene.
+        /// </summary>
+        public static string SequenceTreeForm_UpdateTitle_Targets_by_Gene {
+            get {
+                return ResourceManager.GetString("SequenceTreeForm_UpdateTitle_Targets_by_Gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets by Preferred Name.
+        /// </summary>
+        public static string SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name {
+            get {
+                return ResourceManager.GetString("SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name", resourceCulture);
             }
         }
         

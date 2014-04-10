@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model
                 (int) Field.end_time
             };
 
+        // ReSharper disable NonLocalizedString
         public static readonly string[][] FIELD_NAMES =
         {
             new[] {"PeptideModifiedSequence", "FullPeptideName"},
@@ -61,6 +62,7 @@ namespace pwiz.Skyline.Model
             new[] {"PrecursorIsDecoy", "IsDecoy", "decoy"},
             new[] {"SampleName"}
         };
+        // ReSharper restore NonLocalizedString
 
         public static readonly string[] STANDARD_FIELD_NAMES = FIELD_NAMES.Select(fieldNames => fieldNames[0]).ToArray();
 

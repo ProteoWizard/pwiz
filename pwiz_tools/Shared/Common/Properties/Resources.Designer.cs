@@ -263,6 +263,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column is read only.
+        /// </summary>
+        internal static string DisplayColumn_SetValue_Column_is_read_only {
+            get {
+                return ResourceManager.GetString("DisplayColumn_SetValue_Column_is_read_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap down_pro32 {

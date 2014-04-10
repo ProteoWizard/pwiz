@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             {
                 return ReplicateName;
             }
-            return string.Format("{0}[{1}]", ReplicateName, FileIndex);
+            return string.Format("{0}[{1}]", ReplicateName, FileIndex); // Not L10N
         }
 
         public int CompareTo(object obj)

@@ -59,7 +59,7 @@ namespace pwiz.BiblioSpec
                     return (LibraryBuildAction)i;
                 }
             }
-            throw new ArgumentException(string.Format("The string '{0}' does not match an enum value", enumValue));
+            throw new ArgumentException(string.Format(Resources.LibraryBuildActionExtension_GetEnum_The_string___0___does_not_match_an_enum_value, enumValue));
         }
 
         public static LibraryBuildAction GetEnum(string enumValue, LibraryBuildAction defaultValue)
@@ -77,8 +77,8 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        private const string EXE_BLIB_BUILD = "BlibBuild";
-        public const string EXT_SQLITE_JOURNAL = "-journal";
+        private const string EXE_BLIB_BUILD = "BlibBuild"; // Not L10N
+        public const string EXT_SQLITE_JOURNAL = "-journal"; // Not L10N
 
         private ReadOnlyCollection<string> _inputFiles;
 
@@ -106,6 +106,7 @@ namespace pwiz.BiblioSpec
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref ProgressStatus status)
         {
             // Arguments for BlibBuild
+            // ReSharper disable NonLocalizedString
             List<string> argv = new List<string> { "-s" };  // Read from stdin
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
@@ -140,8 +141,9 @@ namespace pwiz.BiblioSpec
                 foreach (string targetSequence in TargetSequences)
                     stdinBuilder.AppendLine(targetSequence);
             }
+            // ReSharper restore NonLocalizedString
 
-            argv.Add("\"" + OutputPath + "\"");
+            argv.Add("\"" + OutputPath + "\""); // Not L10N
 
             var psiBlibBuilder = new ProcessStartInfo(EXE_BLIB_BUILD)
                                      {
@@ -149,7 +151,7 @@ namespace pwiz.BiblioSpec
                                          UseShellExecute = false,
                                          // Common directory includes the directory separator
                                          WorkingDirectory = dirCommon.Substring(0, dirCommon.Length - 1),
-                                         Arguments = string.Join(" ", argv.ToArray()),
+                                         Arguments = string.Join(" ", argv.ToArray()), // Not L10N
                                          RedirectStandardOutput = true,
                                          RedirectStandardError = true,
                                          RedirectStandardInput = true

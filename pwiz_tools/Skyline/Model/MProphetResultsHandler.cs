@@ -250,6 +250,7 @@ namespace pwiz.Skyline.Model
         private static void WriteHeaderRow(TextWriter writer, IEnumerable<IPeakFeatureCalculator> calcs, CultureInfo cultureInfo)
         {
             char separator = TextUtil.GetCsvSeparator(cultureInfo);
+            // ReSharper disable NonLocalizedString
             var namesArray = new List<string>
                 {
                     "transition_group_id",
@@ -266,6 +267,8 @@ namespace pwiz.Skyline.Model
                     "pValue",
                     "qValue"
                 };
+            // ReSharper restore NonLocalizedString
+
             foreach (var name in namesArray)
             {
                 writer.WriteDsvField(name, separator);
@@ -276,7 +279,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!first)
                     writer.Write(separator);
-                writer.Write(first ? "main_var_{0}" : "var_{0}", peakFeatureCalculator.HeaderName.Replace(" ", "_"));
+                writer.Write(first ? "main_var_{0}" : "var_{0}", peakFeatureCalculator.HeaderName.Replace(" ", "_")); // Not L10N
                 first = false;
             }
             writer.WriteLine();

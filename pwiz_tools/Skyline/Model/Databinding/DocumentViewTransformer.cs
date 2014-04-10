@@ -16,6 +16,7 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class DocumentViewTransformer : IViewTransformer
     {
+        // ReSharper disable NonLocalizedString
         private static readonly PropertyPath Proteins = PropertyPath.Root.Property("Proteins").LookupAllItems();
         private static readonly PropertyPath Peptides 
             = Proteins.Property("Peptides").LookupAllItems();
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static readonly PropertyPath TransitionResults
             = PeptidesPrecursorsTransitions.Property("Results").LookupAllItems().Property("Value");
+        // ReSharper restore NonLocalizedString
 
         public KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> TransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths)
         {
@@ -184,6 +186,7 @@ namespace pwiz.Skyline.Model.Databinding
             return propertyPath;
         }
 
+        // ReSharper disable NonLocalizedString
         private static IList<KeyValuePair<PropertyPath, PropertyPath>> MappingFromProteins()
         {
             PropertyPath resultFiles = PropertyPath.Root.Property("Results").LookupAllItems().Property("Value");
@@ -262,7 +265,7 @@ namespace pwiz.Skyline.Model.Databinding
                 Kvp(PropertyPath.Root, Replicates),
             };
         }
-
+        // ReSharper restore NonLocalizedString
 
         private static PropertyPath ReplacePrefix(PropertyPath oldPrefix, PropertyPath newPrefix, PropertyPath tail)
         {

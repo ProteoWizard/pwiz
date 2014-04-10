@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lib_spec")]
     public sealed class BiblioSpecLibSpec : LibrarySpec
     {
-        public const string EXT = ".lib";
+        public const string EXT = ".lib"; // Not L10N
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Model.Lib
                 var dictLibrary = new Dictionary<LibKey, BiblioSpectrumInfo>(numSpectra);
                 var setSequences = new HashSet<LibSeqKey>();
 
-                string revStr = string.Format("{0}.{1}",
+                string revStr = string.Format("{0}.{1}", // Not L10N
                                               GetInt32(libHeader, (int) LibHeaders.version1),
                                               GetInt32(libHeader, (int) LibHeaders.version2));
                 Revision = float.Parse(revStr, CultureInfo.InvariantCulture);

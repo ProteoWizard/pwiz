@@ -55,14 +55,12 @@ namespace pwiz.Skyline.FileUI
             var document = DocumentUIContainer.DocumentUI;
             if (!document.Settings.HasResults)
             {
-                // TODO(nicksh):move this to a resource
-                MessageDlg.Show(this, "There are not results in this document");
+                MessageDlg.Show(this, Resources.RescoreResultsDlg_Rescore_There_are_not_results_in_this_document);
                 return;
             }
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                // TODO(nicksh):move this to a resource
-                MessageDlg.Show(this, "All results must be completely imported before they can be re-scored.");
+                MessageDlg.Show(this, Resources.RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_);
                 return;
             }
 

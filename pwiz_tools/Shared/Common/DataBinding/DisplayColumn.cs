@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding
 {
@@ -71,15 +72,15 @@ namespace pwiz.Common.DataBinding
             {
                 if (prefix.Length > 0)
                 {
-                    prefix.Append(" ");
+                    prefix.Append(" "); // Not L10N
                 }
-                prefix.Append(kvp.Value ?? "");
+                prefix.Append(kvp.Value ?? string.Empty);
             }
             if (prefix.Length == 0)
             {
                 return columnCaption;
             }
-            return prefix + " " + columnCaption;
+            return prefix + " " + columnCaption; // Not L10N
         }
 
         public object GetValue(RowItem rowItem, PivotKey pivotKey)
@@ -106,7 +107,7 @@ namespace pwiz.Common.DataBinding
         {
             if (IsReadOnly)
             {
-                throw new InvalidOperationException("Column is read only");
+                throw new InvalidOperationException(Resources.DisplayColumn_SetValue_Column_is_read_only);
             }
             ColumnDescriptor.SetValue(rowItem, pivotKey, value);
         }
