@@ -1766,6 +1766,18 @@ namespace pwiz.Skyline.Model.DocSettings
                                   });
         }
 
+        public PeptideLibraries ChangeLibrary(Library docLibrary, LibrarySpec docLibrarySpec, int indexOldLibrary)
+        {
+            var libs = Libraries.Select((l, i) => i == indexOldLibrary ? docLibrary : l).ToList();
+            var libSpecs = LibrarySpecs.Select((s, i) => i == indexOldLibrary ? docLibrarySpec : s).ToList();
+            if (indexOldLibrary == -1)
+            {
+                libs.Add(docLibrary);
+                libSpecs.Add(docLibrarySpec);
+            }
+            return ChangeLibraries(libSpecs, libs);            
+        }
+
         public PeptideLibraries Disconnect()
         {
             var libClone = ImClone(this);

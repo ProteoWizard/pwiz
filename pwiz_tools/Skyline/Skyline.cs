@@ -1134,7 +1134,7 @@ namespace pwiz.Skyline
                 }
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
-                    ImportMassList(new StringReader(text), provider, separator, Resources.SkylineWindow_Paste_Paste_transition_list);
+                    ImportMassList(text, provider, separator, Resources.SkylineWindow_Paste_Paste_transition_list);
                 else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)) // Name, Description, Sequence
                 {
                     var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,

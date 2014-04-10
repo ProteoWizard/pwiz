@@ -114,6 +114,88 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         }
 
         /// <summary>
+        /// Make a BiblioSpec SQLite library from a list of spectra and their intensities.
+        /// </summary>
+        /// <param name="librarySpec">Library spec for which the new library is created</param>
+        /// <param name="listSpectra">List of existing spectra, by LibKey</param>
+        /// /// <param name="libraryName">Name of the library to be created</param>
+        /// <returns>A library of type <see cref="BiblioSpecLiteLibrary"/></returns>
+        public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
+            List<SpectrumMzInfo> listSpectra, string libraryName)
+        {
+            const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
+            const int majorVer = 1;
+            const int minorVer = 0;
+            string libId = libraryName;
+            // Use a very specific LSID, since it really only matches this document.
+            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}", // Not L10N
+                libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
+
+            var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
+
+            using (ISession session = OpenWriteSession())
+            using (ITransaction transaction = session.BeginTransaction())
+            {
+                foreach (var spectrum in listSpectra)
+                {
+                    var dbRefSpectrum = RefSpectrumFromPeaks(spectrum);
+                    session.Save(dbRefSpectrum);
+                    dictLibrary.Add(spectrum.Key,
+                                    new BiblioLiteSpectrumInfo(spectrum.Key, dbRefSpectrum.Copies,
+                                                                dbRefSpectrum.NumPeaks,
+                                                                (int)(dbRefSpectrum.Id ?? 0),
+                                                                default(IndexedRetentionTimes)));
+                }
+
+                session.Flush();
+                session.Clear();
+                // Simulate ctime(d), which is what BlibBuild uses.
+                string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now);
+                DbLibInfo libInfo = new DbLibInfo
+                {
+                    LibLSID = libLsid,
+                    CreateTime = createTime,
+                    NumSpecs = dictLibrary.Count,
+                    MajorVersion = majorVer,
+                    MinorVersion = minorVer
+                };
+
+                session.Save(libInfo);
+                session.Flush();
+                session.Clear();
+                transaction.Commit();
+            }
+
+            var libraryEntries = dictLibrary.Values.ToArray();
+            return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer,
+                libraryEntries, FileStreamManager.Default);
+        }
+
+        private DbRefSpectra RefSpectrumFromPeaks(SpectrumMzInfo spectrum)
+        {
+            var peaksInfo = spectrum.SpectrumPeaks;
+            var refSpectra = new DbRefSpectra
+            {
+                PeptideSeq = FastaSequence.StripModifications(spectrum.Key.Sequence),
+                PrecursorMZ = spectrum.PrecursorMz,
+                PrecursorCharge = spectrum.Key.Charge,
+                PeptideModSeq = spectrum.Key.Sequence,
+                Copies = 1,
+                NumPeaks = (ushort)peaksInfo.Peaks.Length
+            };
+
+            refSpectra.Peaks = new DbRefSpectraPeaks
+            {
+                RefSpectra = refSpectra,
+                PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
+                PeakMZ = MZsToBytes(peaksInfo.Peaks)
+            };
+
+            ModsFromModifiedSequence(refSpectra);
+            return refSpectra;
+        }
+
+        /// <summary>
         /// Minimize any library type to a fully functional BiblioSpec SQLite library.
         /// </summary>
         /// <param name="librarySpec">Library spec for which the new library is created</param>

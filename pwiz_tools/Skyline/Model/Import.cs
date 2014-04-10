@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -232,7 +233,11 @@ namespace pwiz.Skyline.Model
         public IFormatProvider FormatProvider { get; private set; }
         public char Separator { get; private set; }
 
-        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader, ILongWaitBroker longWaitBroker, long lineCount, out List<KeyValuePair<string, double>> irtPeptides)
+        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader,
+                                                       ILongWaitBroker longWaitBroker,
+                                                       long lineCount,
+                                                       out List<KeyValuePair<string, double>> irtPeptides,
+                                                       out List<SpectrumMzInfo> librarySpectra)
         {
             // Make sure all existing group names in the document are represented, and
             // existing FASTA sequences are used.
@@ -246,7 +251,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                return Import(reader, longWaitBroker, lineCount, null, dictNameSeqAll, out irtPeptides);
+                return Import(reader, longWaitBroker, lineCount, null, dictNameSeqAll, out irtPeptides, out librarySpectra);
             }
             catch (LineColNumberedIoException x)
             {
@@ -261,7 +266,8 @@ namespace pwiz.Skyline.Model
                                                        IDictionary<string, FastaSequence> dictNameSeq)
         {
             List<KeyValuePair<string, double>> irtPeptides;
-            return Import(reader, longWaitBroker, lineCount, indices, dictNameSeq, out irtPeptides);
+            List<SpectrumMzInfo> librarySpectra;
+            return Import(reader, longWaitBroker, lineCount, indices, dictNameSeq, out irtPeptides, out librarySpectra);
         }
 
         public IEnumerable<PeptideGroupDocNode> Import(TextReader reader,
@@ -269,9 +275,11 @@ namespace pwiz.Skyline.Model
                                                        long lineCount,
                                                        ColumnIndices indices,
                                                        IDictionary<string, FastaSequence> dictNameSeq,
-                                                       out List<KeyValuePair<string, double>> irtPeptides)
+                                                       out List<KeyValuePair<string, double>> irtPeptides,
+                                                       out List<SpectrumMzInfo> librarySpectra)
         {
             irtPeptides = new List<KeyValuePair<string, double>>();
+            librarySpectra = new List<SpectrumMzInfo>();
             // Get the lines used to guess the necessary columns and create the row reader
             string line;
             MassListRowReader rowReader;
@@ -358,12 +366,12 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                seqBuilder = AddRow(seqBuilder, rowReader, dictNameSeq, peptideGroupsNew, lineIndex, irtPeptides);
+                seqBuilder = AddRow(seqBuilder, rowReader, dictNameSeq, peptideGroupsNew, lineIndex, irtPeptides, librarySpectra);
             }
 
             // Add last sequence.
             if (seqBuilder != null)
-                AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides);
+                AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides, librarySpectra);
 
             return peptideGroupsNew;
         }
@@ -373,13 +381,20 @@ namespace pwiz.Skyline.Model
                                            IDictionary<string, FastaSequence> dictNameSeq,
                                            ICollection<PeptideGroupDocNode> peptideGroupsNew,
                                            long lineNum,
-                                           List<KeyValuePair<string, double>> irtPeptides)
+                                           List<KeyValuePair<string, double>> irtPeptides,
+                                           List<SpectrumMzInfo> librarySpectra)
         {
             var info = rowReader.TransitionInfo;
             var irt = rowReader.Irt;
+            var libraryIntensity = rowReader.LibraryIntensity;
+            var productMz = rowReader.ProductMz;
             if (irt == null && rowReader.IrtColumn != -1)
             {
                 throw new InvalidDataException(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_, rowReader.IrtColumn, lineNum));
+            }
+            if (libraryIntensity == null && rowReader.LibraryColumn != -1)
+            {
+                throw new InvalidDataException(string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_, rowReader.LibraryColumn, lineNum));
             }
             string name = info.ProteinName;
             if (info.TransitionExps.Any(t => t.IsDecoy))
@@ -387,7 +402,7 @@ namespace pwiz.Skyline.Model
             if (seqBuilder == null || (name != null && !Equals(name, seqBuilder.BaseName)))
             {
                 if (seqBuilder != null)
-                    AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides);
+                    AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides, librarySpectra);
                 FastaSequence fastaSeq;
                 if (name != null && dictNameSeq.TryGetValue(name, out fastaSeq) && fastaSeq != null)
                     seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings);
@@ -401,7 +416,7 @@ namespace pwiz.Skyline.Model
             }
             try
             {
-                seqBuilder.AppendTransition(info, irt);
+                seqBuilder.AppendTransition(info, irt, libraryIntensity, productMz);
             }
             catch (InvalidDataException x)
             {
@@ -410,11 +425,12 @@ namespace pwiz.Skyline.Model
             return seqBuilder;
         }
 
-        private void AddPeptideGroup(ICollection<PeptideGroupDocNode> listGroups, PeptideGroupBuilder builder, List<KeyValuePair<string, double>>  irtPeptides)
+        private void AddPeptideGroup(ICollection<PeptideGroupDocNode> listGroups, PeptideGroupBuilder builder, List<KeyValuePair<string, double>>  irtPeptides, List<SpectrumMzInfo> librarySpectra)
         {
             PeptideGroupDocNode nodeGroup = builder.ToDocNode();
             listGroups.Add(nodeGroup);
             irtPeptides.AddRange(builder.IrtPeptides);
+            librarySpectra.AddRange(builder.LibrarySpectra);
             _countPeptides += nodeGroup.PeptideCount;
             _countIons += nodeGroup.TransitionCount;
         }
@@ -443,11 +459,11 @@ namespace pwiz.Skyline.Model
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
             protected double PrecursorMz { get { return ColumnMz(Fields, PrecursorColumn, FormatProvider); } }
             private int ProductColumn { get { return Indices.ProductColumn; } }
-            private double ProductMz { get { return ColumnMz(Fields, ProductColumn, FormatProvider); } }
+            public double ProductMz { get { return ColumnMz(Fields, ProductColumn, FormatProvider); } }
             private int DecoyColumn { get { return Indices.DecoyColumn; } }
             public int IrtColumn { get { return Indices.IrtColumn; } }
             public double? Irt { get { return ColumnDouble(Fields, IrtColumn, FormatProvider); } }
-            private int LibraryColumn { get { return Indices.LibraryColumn; } }
+            public int LibraryColumn { get { return Indices.LibraryColumn; } }
             public double? LibraryIntensity { get { return ColumnDouble(Fields, LibraryColumn, FormatProvider); } }
             protected bool IsDecoy
             {
@@ -1468,9 +1484,11 @@ namespace pwiz.Skyline.Model
         private List<PrecursorExp> _activePrecursorExps;
         private double _activePrecursorMz;
         private readonly List<ExTransitionInfo> _activeTransitionInfos;
-        private readonly List<TransitionGroupDocNode> _transitionGroups;
         private double? _irtValue;
-        private readonly List<KeyValuePair<string, double>> _irtPeptides; 
+        private readonly List<KeyValuePair<string, double>> _irtPeptides;
+        private readonly List<TransitionGroupLibraryPair> _groupLibPairs;
+        private readonly List<SpectrumMzInfo> _librarySpectra;
+        private List<SpectrumPeaksInfo.MI> _activeLibraryIntensities;
 
         private readonly ModificationMatcher _modMatcher;
         private bool _hasExplicitMods;
@@ -1487,9 +1505,11 @@ namespace pwiz.Skyline.Model
             _settings = settings;
             _enzyme = _settings.PeptideSettings.Enzyme;
             _peptides = new List<PeptideDocNode>();
-            _transitionGroups = new List<TransitionGroupDocNode>();
+            _groupLibPairs = new List<TransitionGroupLibraryPair>();
             _activeTransitionInfos = new List<ExTransitionInfo>();
             _irtPeptides = new List<KeyValuePair<string, double>>();
+            _librarySpectra = new List<SpectrumMzInfo>();
+            _activeLibraryIntensities = new List<SpectrumPeaksInfo.MI>();
         }
 
         public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings)
@@ -1551,6 +1571,7 @@ namespace pwiz.Skyline.Model
         public string BaseName { get; set; }
 
         public List<KeyValuePair<string, double>> IrtPeptides { get { return _irtPeptides; } }
+        public List<SpectrumMzInfo> LibrarySpectra { get { return _librarySpectra; } } 
 
         public string Name { get; private set; }
         public string Description { get; private set; }
@@ -1597,7 +1618,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void AppendTransition(ExTransitionInfo info, double? irt)
+        public void AppendTransition(ExTransitionInfo info, double? irt, double? libraryIntensity, double productMz)
         {
             // Treat this like a peptide list from now on.
             PeptideList = true;
@@ -1690,6 +1711,12 @@ namespace pwiz.Skyline.Model
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
             }
             _activeTransitionInfos.Add(info);
+
+            if (libraryIntensity != null)
+            {
+                _activeLibraryIntensities.Add(new SpectrumPeaksInfo.MI { Intensity = (float)libraryIntensity.Value, Mz = productMz });    
+            }
+            
             if (_irtValue.HasValue && (irt == null || Math.Abs(_irtValue.Value - irt.Value) > DbIrtPeptide.IRT_MIN_DIFF))
             {
                 throw new InvalidDataException(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
@@ -1703,17 +1730,37 @@ namespace pwiz.Skyline.Model
             if (andTransitionGroup)
                 CompleteTransitionGroup();
 
-            _transitionGroups.Sort(Peptide.CompareGroups);
+            _groupLibPairs.Sort(TransitionGroupLibraryPair.ComparePairs);
+            var finalGroupLibPairs = FinalizeTransitionGroups(_groupLibPairs);
+            var finalTransitionGroups = finalGroupLibPairs.Select(pair => pair.NodeGroup).ToArray();
             var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0],
-                FinalizeTransitionGroups(_transitionGroups), false);
+                finalTransitionGroups, false);
+            var finalLibrarySpectra = new List<SpectrumMzInfo>();
+            foreach (var groupLibPair in finalGroupLibPairs)
+            {
+                if (groupLibPair.SpectrumInfo == null)
+                    continue;
+                var sequence = groupLibPair.NodeGroup.TransitionGroup.Peptide.Sequence;
+                var mods = docNode.ExplicitMods;
+                var calcPre = _settings.GetPrecursorCalc(groupLibPair.SpectrumInfo.Label, mods);
+                string modifiedSequenceWithIsotopes = calcPre.GetModifiedSequence(sequence, false);
+
+                finalLibrarySpectra.Add(new SpectrumMzInfo
+                {
+                    Key = new LibKey(modifiedSequenceWithIsotopes, groupLibPair.NodeGroup.TransitionGroup.PrecursorCharge),
+                    Label = groupLibPair.SpectrumInfo.Label,
+                    PrecursorMz = groupLibPair.SpectrumInfo.PrecursorMz,
+                    SpectrumPeaks = groupLibPair.SpectrumInfo.SpectrumPeaks
+                }); 
+            }
+            _librarySpectra.AddRange(finalLibrarySpectra);
             _peptides.Add(docNode);
             if (_irtValue != null)
             {
                 _irtPeptides.Add(new KeyValuePair<string, double>(docNode.ModifiedSequence, _irtValue.Value));
             }
             _irtValue = null;
-
-            _transitionGroups.Clear();
+            _groupLibPairs.Clear();
 
             // Keep the same peptide, if the group is not being completed.
             // This is an attempt to explain a set of transitions with the same
@@ -1728,37 +1775,40 @@ namespace pwiz.Skyline.Model
                                              _activePeptide.Begin,
                                              _activePeptide.End,
                                              _activePeptide.MissedCleavages,
-                                             _transitionGroups.Any(nodeGroup => nodeGroup.IsDecoy));
+                                             _groupLibPairs.Any(pair => pair.NodeGroup.IsDecoy));
             }
         }
 
-        private static TransitionGroupDocNode[] FinalizeTransitionGroups(IList<TransitionGroupDocNode> groups)
+        private static TransitionGroupLibraryPair[] FinalizeTransitionGroups(IList<TransitionGroupLibraryPair> groupPairs)
         {
-            var finalGroups = new List<TransitionGroupDocNode>();
-            foreach (var nodeGroup in groups)
+            var finalPairs = new List<TransitionGroupLibraryPair>();
+            foreach (var groupPair in groupPairs)
             {
-                int iGroup = finalGroups.Count - 1;
-                if (iGroup == -1 || !Equals(finalGroups[iGroup].TransitionGroup, nodeGroup.TransitionGroup))
-                    finalGroups.Add(nodeGroup);
+                int iGroup = finalPairs.Count - 1;
+                if (iGroup == -1 || !Equals(finalPairs[iGroup].NodeGroup.TransitionGroup, groupPair.NodeGroup.TransitionGroup))
+                    finalPairs.Add(groupPair);
                 else
                 {
                     // Found repeated group, so merge transitions
-                    foreach (var nodeTran in nodeGroup.Children)
-                        finalGroups[iGroup] = (TransitionGroupDocNode) finalGroups[iGroup].Add(nodeTran);
+                    foreach (var nodeTran in groupPair.NodeGroup.Children)
+                        finalPairs[iGroup].NodeGroup = (TransitionGroupDocNode)finalPairs[iGroup].NodeGroup.Add(nodeTran);
+                    finalPairs[iGroup].SpectrumInfo = finalPairs[iGroup].SpectrumInfo == null ? groupPair.SpectrumInfo 
+                        : finalPairs[iGroup].SpectrumInfo.CombineSpectrumInfo(groupPair.SpectrumInfo);
                 }
             }
-
+            var groups = groupPairs.Select(pair => pair.NodeGroup).ToList();
+            var finalGroups = finalPairs.Select(pair => pair.NodeGroup).ToList();
             // If anything changed, make sure transitions are sorted
             if (!ArrayUtil.ReferencesEqual(groups, finalGroups))
             {
-                for (int i = 0; i < finalGroups.Count; i++)
+                for (int i = 0; i < finalPairs.Count; i++)
                 {
-                    var nodeGroup = finalGroups[i];
+                    var nodeGroup = finalPairs[i].NodeGroup;
                     var arrayTran = CompleteTransitions(nodeGroup.Children.Cast<TransitionDocNode>());
-                    finalGroups[i] = (TransitionGroupDocNode) nodeGroup.ChangeChildrenChecked(arrayTran);
+                    finalPairs[i].NodeGroup = (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(arrayTran);
                 }
             }
-            return finalGroups.ToArray();
+            return finalPairs.ToArray();
         }
 
         private void CompleteTransitionGroup()
@@ -1783,11 +1833,21 @@ namespace pwiz.Skyline.Model
                     return new TransitionDocNode(tran, productExp.Losses, 0, null, null);
                 });
             // m/z calculated later
-            _transitionGroups.Add(new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions)));
+            var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions));
+            var currentLibrarySpectrum = !_activeLibraryIntensities.Any() ? null : 
+                new SpectrumMzInfo
+                {
+                    Key = new LibKey(_activePeptide.Sequence, precursorExp.PrecursorCharge),
+                    PrecursorMz = _activePrecursorMz,
+                    Label = precursorExp.LabelType,
+                    SpectrumPeaks = new SpectrumPeaksInfo(_activeLibraryIntensities.ToArray())
+                };
+            _groupLibPairs.Add(new TransitionGroupLibraryPair(currentLibrarySpectrum, newTransitionGroup));
 
             _activePrecursorMz = 0;
             _activePrecursorExps.Clear();
             _activeTransitionInfos.Clear();
+            _activeLibraryIntensities.Clear();
         }
 
         private PrecursorExp GetBestPrecursorExp()
@@ -1871,6 +1931,23 @@ namespace pwiz.Skyline.Model
             // Materialize children, so that we have accurate accounting of
             // peptide and transition counts.
             return nodePepGroup.ChangeSettings(_settings, diff);
+        }
+    }
+
+    class TransitionGroupLibraryPair
+    {
+        public SpectrumMzInfo SpectrumInfo { get; set; }
+        public TransitionGroupDocNode NodeGroup { get; set; }
+
+        public TransitionGroupLibraryPair(SpectrumMzInfo spectrumInfo, TransitionGroupDocNode nodeGroup)
+        {
+            SpectrumInfo = spectrumInfo;
+            NodeGroup = nodeGroup;
+        }
+
+        public static int ComparePairs(TransitionGroupLibraryPair p1, TransitionGroupLibraryPair p2)
+        {
+            return Peptide.CompareGroups(p1.NodeGroup, p2.NodeGroup);
         }
     }
 

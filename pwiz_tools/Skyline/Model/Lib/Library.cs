@@ -1173,6 +1173,90 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     /// <summary>
+    /// Transfer format for library spectra
+    /// </summary>
+    public class SpectrumMzInfo
+    {
+        public LibKey Key { get; set; }
+        public double PrecursorMz { get; set; }
+        public IsotopeLabelType Label { get; set; }
+        public SpectrumPeaksInfo SpectrumPeaks { get; set; }
+
+        public const double PRECURSOR_MZ_TOL = 0.001;
+
+        /// <summary>
+        /// Combine two spectra, for when transition list import has alternating light-heavy transitions,
+        /// that need to be re-united with their groups at the end.
+        /// </summary>
+        public SpectrumMzInfo CombineSpectrumInfo(SpectrumMzInfo infoOther)
+        {
+            if (infoOther == null)
+                return this;
+            if ((PrecursorMz - infoOther.PrecursorMz) > PRECURSOR_MZ_TOL || !Equals(Label, infoOther.Label) || !Equals(Key, infoOther.Key))
+                throw new InvalidDataException(Resources.SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence);
+            var peaks = SpectrumPeaks.Peaks;
+            var peaksOther = infoOther.SpectrumPeaks.Peaks;
+            var newPeaks = peaks.Concat(peaksOther).ToArray();
+            return new SpectrumMzInfo
+            {
+                Key = infoOther.Key,
+                Label = infoOther.Label,
+                PrecursorMz = infoOther.PrecursorMz,
+                SpectrumPeaks = new SpectrumPeaksInfo(newPeaks)
+            };
+        }
+
+        public static List<SpectrumMzInfo> RemoveDuplicateSpectra(List<SpectrumMzInfo> librarySpectra)
+        {
+            var uniqueSpectra = new List<SpectrumMzInfo>();
+            var spectraGroups = librarySpectra.GroupBy(spectrum => spectrum.Key);
+            foreach (var spectraGroup in spectraGroups)
+            {
+                var spectraGroupList = spectraGroup.ToList();
+                spectraGroupList.Sort(CompareSpectrumMzLabels);
+                uniqueSpectra.Add(spectraGroupList[0]);
+            }
+            return uniqueSpectra;
+        }
+
+        /// <summary>
+        /// Order by isotope label type (e.g. light, heavy, ...)
+        /// </summary>
+        public static int CompareSpectrumMzLabels(SpectrumMzInfo info1, SpectrumMzInfo info2)
+        {
+            return info1.Label.CompareTo(info2.Label);
+        }
+
+        public static List<SpectrumMzInfo> GetInfoFromLibrary(Library library)
+        {
+            var spectrumMzInfos = new List<SpectrumMzInfo>();
+            foreach (var key in library.Keys)
+            {
+                SpectrumPeaksInfo peaks;
+                if (!library.TryLoadSpectrum(key, out peaks))
+                {
+                    throw new IOException(string.Format(Resources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Sequence));
+                }
+                spectrumMzInfos.Add(new SpectrumMzInfo
+                {
+                    Key = key,
+                    SpectrumPeaks = peaks
+                });
+            }
+            return spectrumMzInfos;
+        }
+
+        public static List<SpectrumMzInfo> MergeWithOverwrite(List<SpectrumMzInfo> originalSpectra, List<SpectrumMzInfo> overwriteSpectra)
+        {
+            var finalSpectra = new List<SpectrumMzInfo>(overwriteSpectra);
+            var dictOriginalSpectra = originalSpectra.ToDictionary(spectrum => spectrum.Key);
+            var dictOverwriteSpectra = overwriteSpectra.ToDictionary(spectrum => spectrum.Key);
+            finalSpectra.AddRange(from spectrum in dictOriginalSpectra where !dictOverwriteSpectra.ContainsKey(spectrum.Key) select spectrum.Value);
+            return finalSpectra;
+        }
+    }
+
+    /// <summary>
     /// Information required for spectrum display in a list.
     /// </summary>
     public class SpectrumInfo

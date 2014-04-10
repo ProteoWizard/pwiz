@@ -6294,6 +6294,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
     <value>&amp;Skip</value>
   </data>
+  <data name="SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_" xml:space="preserve">
+    <value>The transition list appears to contain spectral library intensities.  Create a document library from these intensities?</value>
+  </data>
   <data name="PeptideGroupTreeNode_ProteinModalDisplayText__name___0__" xml:space="preserve">
     <value>&lt;name: {0}&gt;</value>
   </data>
@@ -6305,5 +6308,23 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
     <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>The operation was canceled by the user.</value>
+  </data>
+  <data name="SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence" xml:space="preserve">
+    <value>Attempted to combine library spectra with incompatible precusor m/z, isotope label, or peptide sequence</value>
+  </data>
+  <data name="MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_" xml:space="preserve">
+    <value>Invalid library intensity value in column {0} on line {1}</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_" xml:space="preserve">
+    <value>There is an existing library with the same name {0} as the document library to be created.  Overwrite this library or skip import of library intensities?</value>
+  </data>
+  <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
+    <value>Library spectrum for sequence {0} is missing.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_" xml:space="preserve">
+    <value>Unexpected document change during operation: {0}</value>
   </data>
 </root>

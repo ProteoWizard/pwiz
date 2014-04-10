@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public const string EXT_REDUNDANT = ".redundant.blib"; // Not L10N
+        public const string ASSAY_NAME = "-assay";
 
         public static string GetLibraryFileName(string documentPath)
         {

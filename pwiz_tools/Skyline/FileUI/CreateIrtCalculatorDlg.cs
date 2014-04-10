@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -34,11 +35,21 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class CreateIrtCalculatorDlg : FormEx
     {
+        public List<SpectrumMzInfo> LibrarySpectra { get { return _librarySpectra; } } 
+        public List<DbIrtPeptide> DbIrtPeptides { get { return _dbIrtPeptides; } } 
+        public string IrtFile { get; private set; }
+
+        private List<SpectrumMzInfo> _librarySpectra;
+        private List<DbIrtPeptide> _dbIrtPeptides; 
+
         public CreateIrtCalculatorDlg(SrmDocument document, IList<RetentionScoreCalculatorSpec> existing)
         {
             _existing = existing;
             Document = document;
             InitializeComponent();
+            _librarySpectra = new List<SpectrumMzInfo>();
+            _dbIrtPeptides = new List<DbIrtPeptide>();
+            UpdateSelection(true);
         }
 
         public SrmDocument Document { get; private set; }
@@ -127,14 +138,14 @@ namespace pwiz.Skyline.FileUI
                     {
                         IdentityPath selectPath;
                         List<KeyValuePair<string, double>> irtPeptides;
-                        docNew = docNew.ImportMassList(readerList, null, -1, provider, sep, null, out selectPath, out irtPeptides);
-                        var dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, true, TimeSource.scan)).ToList();
-                        docNew = docNew.AddIrtPeptides(dbIrtPeptides, true);
+                        docNew = docNew.ImportMassList(readerList, provider, sep, null, out selectPath, out irtPeptides, out _librarySpectra);
+                        _dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, true, TimeSource.scan)).ToList();
                     }
+                    IrtFile = textImportText.Text;
                 }
                 catch (Exception x)
                 {
-                    MessageBox.Show(string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message));
+                    MessageDlg.Show(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message));
                     return;
                 }
             }
@@ -250,12 +261,12 @@ namespace pwiz.Skyline.FileUI
 
         private void radioUseExisting_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateSelection(true);
+            UpdateSelection(radioUseExisting.Checked);
         }
 
         private void radioCreateNew_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateSelection(false);
+            UpdateSelection(radioUseExisting.Checked);
         }
 
         public void UpdateSelection(bool useExisting)

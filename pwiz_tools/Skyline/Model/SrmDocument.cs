@@ -790,19 +790,41 @@ namespace pwiz.Skyline.Model
             return AddPeptideGroups(imported, true, to, out firstAdded, out nextAdded);
         }
 
-        public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,
-            IdentityPath to, out IdentityPath firstAdded)
+        public SrmDocument ImportMassList(TextReader reader,
+                                          IFormatProvider provider,
+                                          char separator,
+                                          IdentityPath to,
+                                          out IdentityPath firstAdded)
         {
             List<KeyValuePair<string, double>> irtPeptides;
-            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides);
+            List<SpectrumMzInfo> librarySpectra;
+            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra);
         }
 
-        public SrmDocument ImportMassList(TextReader reader, ILongWaitBroker longWaitBroker, long lines,
-            IFormatProvider provider, char separator, IdentityPath to, out IdentityPath firstAdded, out List<KeyValuePair<string, double>> irtPeptides)
+        public SrmDocument ImportMassList(TextReader reader,
+                                          IFormatProvider provider,
+                                          char separator,
+                                          IdentityPath to,
+                                          out IdentityPath firstAdded,
+                                          out List<KeyValuePair<string, double>> irtPeptides,
+                                          out List<SpectrumMzInfo> librarySpectra)
+        {
+            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra);
+        }
+
+        public SrmDocument ImportMassList(TextReader reader, 
+                                          ILongWaitBroker longWaitBroker,
+                                          long lines,
+                                          IFormatProvider provider, 
+                                          char separator,
+                                          IdentityPath to,
+                                          out IdentityPath firstAdded,
+                                          out List<KeyValuePair<string, double>> irtPeptides,
+                                          out List<SpectrumMzInfo> librarySpectra)
         {
             MassListImporter importer = new MassListImporter(this, provider, separator);
             IdentityPath nextAdd;
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines, out irtPeptides), false,
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines, out irtPeptides, out librarySpectra), false,
                 to, out firstAdded, out nextAdd);
         }
 

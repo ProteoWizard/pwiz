@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -1263,10 +1264,8 @@ namespace pwiz.Skyline
                         throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
 
-                using (var readerList = new StreamReader(fileName))
-                {
-                    ImportMassList(readerList, provider, sep, Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list);
-                }
+                string fileString = File.ReadAllText(fileName);
+                ImportMassList(fileString, provider, sep, Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list);
             }
             catch (Exception x)
             {
@@ -1274,17 +1273,22 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ImportMassList(TextReader reader, IFormatProvider provider, char separator, string description)
+        private void ImportMassList(string inputString, IFormatProvider provider, char separator, string description)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath;
             List<KeyValuePair<string, double>> irtPeptides;
+            List<SpectrumMzInfo> librarySpectra;
             bool irtsImported = false;
             var docCurrent = DocumentUI;
+            SrmDocument docNew;
             var retentionTimeRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
             bool calculatorMissing = retentionTimeRegression == null || retentionTimeRegression.Calculator as RCalcIrt == null;
-            var docNew = docCurrent.ImportMassList(reader, null, -1, provider, separator,
-                    nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides);
+            using (var reader = new StringReader(inputString))
+            {
+                docNew = docCurrent.ImportMassList(reader, provider, separator,
+                    nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra);
+            }
             var dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, false, TimeSource.scan)).ToList();
             var dbIrtPeptidesFilter = new List<DbIrtPeptide>();
             // Filter out peptides that have the same sequence and iRT as those in the database
@@ -1296,6 +1300,8 @@ namespace pwiz.Skyline
                     dbIrtPeptidesFilter.Add(dbIrtPeptide);
                 }
             }
+            bool overwriteExisting = false;
+            string irtFile = null;
             // If there are no iRT peptides or none with different values than the database, don't import any iRT's
             if (dbIrtPeptidesFilter.Any())
             {
@@ -1303,8 +1309,9 @@ namespace pwiz.Skyline
                 string useIrtMessage = calculatorMissing
                                         ? Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_
                                         : Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_;
+                string yesButton = calculatorMissing ? Resources.SkylineWindow_ImportMassList__Create___ : Resources.SkylineWindow_ImportMassList_Add;
                 var useIrtResult = MultiButtonMsgDlg.Show(this, useIrtMessage,
-                                                          Resources.SkylineWindow_ImportMassList__Create___, Resources.SkylineWindow_ImportMassList__Skip, true);
+                                                          yesButton, Resources.SkylineWindow_ImportMassList__Skip, true);
                 if (useIrtResult == DialogResult.Cancel)
                 {
                     return;
@@ -1319,7 +1326,10 @@ namespace pwiz.Skyline
                             if (dlg.ShowDialog(this) == DialogResult.OK)
                             {
                                 docNew = dlg.Document;
+                                librarySpectra.AddRange(dlg.LibrarySpectra);
+                                dbIrtPeptidesFilter.AddRange(dlg.DbIrtPeptides);
                                 retentionTimeRegression = docNew.Settings.PeptideSettings.Prediction.RetentionTime;
+                                irtFile = dlg.IrtFile;
                             }
                             else
                             {
@@ -1334,7 +1344,6 @@ namespace pwiz.Skyline
                     var oldPeptides = db.GetPeptides().ToList();
                     IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
                     DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, out conflicts);
-                    bool overwriteExisting = false;
                     // Ask whether to keep or overwrite peptides that are present in the import and already in the database
                     if (conflicts.Any())
                     {
@@ -1355,18 +1364,133 @@ namespace pwiz.Skyline
                     irtsImported = true;
                 }
             }
+            BiblioSpecLiteSpec docLibrarySpec = null;
+            BiblioSpecLiteLibrary docLibrary = null;
+            int indexOldLibrary = -1;
+            bool addLibrary = false;
+            if (librarySpectra.Any())
+            {
+                librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(librarySpectra);
+                string addLibraryMessage = Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_;
+                var addLibraryResult = MultiButtonMsgDlg.Show(this, addLibraryMessage,
+                    Resources.SkylineWindow_ImportMassList__Create___, Resources.SkylineWindow_ImportMassList__Skip,
+                    true);
+                if (addLibraryResult == DialogResult.Cancel)
+                {
+                    return;
+                }
+                if (addLibraryResult == DialogResult.Yes)
+                {
+                    addLibrary = true;
+                    string documentLibrary = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+// ReSharper disable once AssignNullToNotNullAttribute
+                    string outputPath = Path.Combine(Path.GetDirectoryName(documentLibrary), 
+                                                     Path.GetFileNameWithoutExtension(documentLibrary) + BiblioSpecLiteSpec.ASSAY_NAME + BiblioSpecLiteSpec.EXT);
+                    bool libraryExists = File.Exists(outputPath);
+                    string name = Path.GetFileNameWithoutExtension(DocumentFilePath) + BiblioSpecLiteSpec.ASSAY_NAME;
+                    indexOldLibrary = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(spec => spec.FilePath == outputPath);
+                    bool libraryLinkedToDoc = indexOldLibrary != -1;
+                    if (libraryLinkedToDoc)
+                    {
+                        string oldName = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs[indexOldLibrary].Name;
+                        var libraryOld = docNew.Settings.PeptideSettings.Libraries.GetLibrary(oldName);
+                        var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld);
+                        additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
+                        librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
+                        foreach (var stream in libraryOld.ReadStreams)
+                            stream.CloseStream();
+                    }
+                    if (libraryExists && !libraryLinkedToDoc)
+                    {
+                        string replaceLibraryMessage = string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_,
+                                          name);
+                        // If the document does not have an assay library linked to it, then ask if user wants to delete the one that we have found
+                        var replaceLibraryResult = MultiButtonMsgDlg.Show(this, replaceLibraryMessage,
+                            Resources.SkylineWindow_ImportMassList__Overwrite, Resources.SkylineWindow_ImportMassList__Skip, true);
+                        if (replaceLibraryResult == DialogResult.Cancel)
+                            return;
+                        if (replaceLibraryResult == DialogResult.No)
+                            addLibrary = false;
+                    }
+                    if (addLibrary)
+                    {
+                        // Delete the existing library; either it's not tied to the document or we've already extracted the spectra
+                        if (libraryExists)
+                        {
+                            FileEx.SafeDelete(outputPath);
+                            FileEx.SafeDelete(Path.ChangeExtension(outputPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
+                        }
+                        using (var blibDb = BlibDb.CreateBlibDb(outputPath))
+                        {
+                            docLibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
+                            docLibrary = blibDb.CreateLibraryFromSpectra(docLibrarySpec, librarySpectra, name);
+                        }
+                        var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
+                        docNew = docNew.ChangeSettings(newSettings);
+                    }
+                }
+            }
+
             ModifyDocument(description, doc =>
             {
-                if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
-                return docNew;
+                if (ReferenceEquals(doc, docCurrent))
+                    return docNew;
+                try
+                {
+                    // If the document was changed during the operation, try all the changes again
+                    // using the information given by the user.
+                    docCurrent = DocumentUI;
+                    using (var reader = new StringReader(inputString))
+                    {
+                        doc = doc.ImportMassList(reader, provider, separator,
+                            nodePaste != null ? nodePaste.Path : null, out selectPath);
+                    }
+                    if (irtFile !=null)
+                    {
+                        IFormatProvider providerIrt;
+                        char sep;
+                        using (var readerLine = new StreamReader(irtFile))
+                        {
+                            Type[] columnTypes;
+                            string line = readerLine.ReadLine();
+                            if (!MassListImporter.IsColumnar(line, out providerIrt, out sep, out columnTypes))
+                                throw new IOException(Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                        }
+                        using (var readerList = new StreamReader(irtFile))
+                        {
+                            doc = doc.ImportMassList(readerList, providerIrt, sep, null, out selectPath);
+                        }
+                    }
+                    if (calculatorMissing)
+                    {
+                        doc = doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(prediction =>
+                            prediction.ChangeRetentionTime(retentionTimeRegression)));
+                    }
+                    if (dbIrtPeptidesFilter.Any() && irtsImported)
+                        doc = doc.AddIrtPeptides(dbIrtPeptidesFilter, overwriteExisting);
+                    if (librarySpectra.Any() && addLibrary)
+                    {
+                        var newSettings = doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
+                        doc = doc.ChangeSettings(newSettings);
+                    }
+                }
+                catch (Exception x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_, x.Message, x));
+                }
+                return doc;
             });
+
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
             if (irtsImported)
             {
                 Settings.Default.RetentionTimeList.Add(Document.Settings.PeptideSettings.Prediction.RetentionTime);
                 Settings.Default.RTScoreCalculatorList.Add(Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
+            }
+            if (addLibrary)
+            {
+                Settings.Default.SpectralLibraryList.Insert(0, docLibrarySpec);
             }
         }
 

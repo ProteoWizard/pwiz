@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -57,18 +60,31 @@ namespace pwiz.SkylineTestFunctional
             // Document should be reference equal to what it was before
             Assert.AreSame(SkylineWindow.Document, docOld);
 
-            // 2. Import transitions but decline to import iRT's
+            // 2. Skip iRT's, then cancel on library import prompt, leading to no document change
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textNoError), importIrtMessage =>
             {
                 Assert.AreEqual(importIrtMessage.Message,
                     Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_);
                 importIrtMessage.Btn1Click();
             });
+            var libraryDlgCancel = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgCancel, libraryDlgCancel.BtnCancelClick);
+            WaitForDocumentLoaded();
+            Assert.AreSame(SkylineWindow.Document, docOld);
+
+            // 3. Import transitions but decline to import iRT's
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textNoError), importIrtMessage =>
+            {
+                Assert.AreEqual(importIrtMessage.Message,
+                    Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_);
+                importIrtMessage.Btn1Click();
+            });
+            SkipLibraryDlg();
             WaitForDocumentLoaded();
             // Transitions have been imported, but not iRT
             RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 294, 11, 10));
 
-            // 3. Importing mass list with iRT's into document with existing iRT calculator, no conflicts
+            // 4. Importing mass list with iRT's into document with existing iRT calculator, no conflicts
             LoadDocument(documentExisting);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textNoError), importIrtMessage =>
             {
@@ -76,10 +92,11 @@ namespace pwiz.SkylineTestFunctional
                     Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_);
                 importIrtMessage.Btn0Click();
             });
+            SkipLibraryDlg();
             WaitForDocumentLoaded();
             RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 294, 295, 10));
 
-            // 4. Peptide iRT in document conflicts with peptide iRT in database, respond by canceling whole operation
+            // 5. Peptide iRT in document conflicts with peptide iRT in database, respond by canceling whole operation
             LoadDocument(documentExisting);
             var docOldImport = SkylineWindow.Document;
             string textConflict = TestFilesDir.GetTestPath("OpenSWATH_SM4_Overwrite.csv");
@@ -93,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
             // Document is reference equal to what it was before, even if we cancel at second menu
             Assert.AreSame(docOldImport, SkylineWindow.Document);
 
-            // 5. Peptide iRT in document conflicts with peptide iRT in database, don't overwrite
+            // 6. Peptide iRT in document conflicts with peptide iRT in database, don't overwrite
             LoadDocument(documentExisting);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var importIrtConflictOverwriteNo = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -102,6 +119,7 @@ namespace pwiz.SkylineTestFunctional
                                                                 Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_)));
             // Don't overwrite the iRT value
             OkDialog(importIrtConflictOverwriteNo, importIrtConflictOverwriteNo.Btn0Click);
+            SkipLibraryDlg();
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -114,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(conflictIrt, 76.0, 0.1);
             });
 
-            // 6. If mass list contains a peptide that is already an iRT standard, throw exception
+            // 7. If mass list contains a peptide that is already an iRT standard, throw exception
             LoadDocument(documentExisting);
             var docOldStandard = SkylineWindow.Document;
             string textStandard = TestFilesDir.GetTestPath("OpenSWATH_SM4_StandardsConflict.csv");
@@ -130,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(messageDlgStandard, messageDlgStandard.OkDialog);
             Assert.AreSame(docOldStandard, SkylineWindow.Document);
 
-            // 7. Mass list contains different iRT times on same peptide
+            // 8. Mass list contains different iRT times on same peptide
             LoadDocument(documentExisting);
             var docOldIrt = SkylineWindow.Document;
             string textIrtConflict = TestFilesDir.GetTestPath("OpenSWATH_SM4_InconsistentIrt.csv");
@@ -146,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.AreSame(docOldIrt, SkylineWindow.Document);
 
-            // 8. iRT not a number leads to error
+            // 9. iRT not a number leads to error
             LoadDocument(documentExisting);
             var docNanIrt = SkylineWindow.Document;
             WaitForDocumentLoaded();
@@ -159,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
-            // 9. iRT blank leads to error
+            // 10. iRT blank leads to error
             const string textIrtBlank = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textIrtBlank));
             RunDlg<MessageDlg>(() => SkylineWindow.Paste(), messageDlg =>
@@ -169,7 +187,27 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
-            // 10. Title column missing causes iRT's to be skipped
+            // 11. Library not a number leads to error
+            const string textLibraryNan = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\tBAD_LIBRARY\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
+            RunUI(() => ClipboardEx.SetText(textLibraryNan));
+            RunDlg<MessageDlg>(() => SkylineWindow.Paste(), messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_, 3, 1));
+                messageDlg.OkDialog();
+            });
+            Assert.AreSame(docNanIrt, SkylineWindow.Document);
+
+            // 12. Library blank leads to error
+            const string textLibraryBlank = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\t\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
+            RunUI(() => ClipboardEx.SetText(textLibraryBlank));
+            RunDlg<MessageDlg>(() => SkylineWindow.Paste(), messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_, 3, 1));
+                messageDlg.OkDialog();
+            });
+            Assert.AreSame(docNanIrt, SkylineWindow.Document);
+
+            // 13. Title column missing causes iRT's and library to be skipped
             const string textTitleMissing = "728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textTitleMissing));
             RunUI(() =>
@@ -179,7 +217,7 @@ namespace pwiz.SkylineTestFunctional
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 11, 355, 10);
             });
 
-            // 11. Same as 5 but this time do overwrite the iRT value
+            // 14. Same as 5 but this time do overwrite the iRT value
             LoadDocument(documentExisting);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var importIrtConflictOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -187,6 +225,7 @@ namespace pwiz.SkylineTestFunctional
                                         TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_, 1),
                                                                 Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_)));
             OkDialog(importIrtConflictOverwriteYes, importIrtConflictOverwriteYes.Btn1Click);
+            SkipLibraryDlg();
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -199,12 +238,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(conflictIrt, 49.8, 0.1);
             });
 
-            // 12. Repeat 11, this time no dialog box should show up at all, and the iRT calculator should be unchanged
-            LoadDocument(documentExisting);
-            var calculatorOld = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
-            RunUI(() =>
+            // 15. Repeat 11, this time no dialog box should show up at all, and the iRT calculator should be unchanged
+            var docLoaded = LoadDocument(documentExisting);
+            var calculatorOld = docLoaded.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlg => libraryDlg.Btn1Click());
+            var docMassList = WaitForDocumentChangeLoaded(docLoaded);
+            RunUI(() => 
             {
-                SkylineWindow.ImportMassList(textConflict);
+
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
                 var peptides = scores.Select(item => item.Key).ToList();
@@ -213,14 +254,13 @@ namespace pwiz.SkylineTestFunctional
                 double conflictIrt = scores[conflictIndex].Value;
                 Assert.AreEqual(conflictIrt, 49.8, 0.1);
             });
-            Assert.AreSame(calculatorOld, SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
+            Assert.AreSame(calculatorOld, docMassList.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
 
             // Test on-the-fly creation of iRT calculator as part of mass list import
 
-            // 13. Attempt to create iRT calculator, then cancel, leaves the document the same
+            // 16. Attempt to create iRT calculator, then cancel, leaves the document the same
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
-            LoadDocument(documentBlank);
-            var docCreateIrtCancel = SkylineWindow.Document;
+            var docCreateIrtCancel = LoadDocument(documentBlank);
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt =>
             {
                 Assert.AreEqual(importIrt.Message,
@@ -229,12 +269,11 @@ namespace pwiz.SkylineTestFunctional
             });
             var createIrtCalc = WaitForOpenForm<CreateIrtCalculatorDlg>();
             OkDialog(createIrtCalc, createIrtCalc.CancelDialog);
-            WaitForDocumentLoaded();
+            var docCreateIrtError = WaitForDocumentLoaded();
             // Document hasn't changed
-            Assert.AreSame(docCreateIrtCancel, SkylineWindow.Document);
+            Assert.AreSame(docCreateIrtCancel, docCreateIrtError);
 
-            // 14. Missing name in CreateIrtCalculatorDlg shows error message
-            var docCreateIrtError = SkylineWindow.Document;
+            // 17. Missing name in CreateIrtCalculatorDlg shows error message
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtError = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -247,7 +286,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            // 15. Missing existing database name shows error message
+            // 18. Missing existing database name shows error message
             RunUI(() =>
             {
                 createIrtError.CalculatorName = "test1";
@@ -258,7 +297,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            // 16. Try to open existing database file that doesn't exist
+            // 19. Try to open existing database file that doesn't exist
             RunUI(() =>
             {
                 createIrtError.ExistingDatabaseName = TestFilesDir.GetTestPath("bad_file_name");
@@ -269,7 +308,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            // 17. Try to open existing database that isn't a database file
+            // 20. Try to open existing database that isn't a database file
             RunUI(() =>
             {
                 createIrtError.ExistingDatabaseName = textConflict;
@@ -281,7 +320,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            // 18. Try to open corrupted database file
+            // 21. Try to open corrupted database file
             var irtFileCorrupted = TestFilesDir.GetTestPath("irtAll_corrupted.irtdb");
             RunUI(() =>
             {
@@ -294,7 +333,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            // 19. Missing new database name shows error message
+            // 22. Missing new database name shows error message
             string newDatabase = TestFilesDir.GetTestPath("irtNew.irtdb");
             string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             RunUI(() =>
@@ -308,7 +347,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
-            // 20. Missing textIrt file shows error message
+            // 23. Missing textIrt file shows error message
             RunUI(() =>
             {
                 createIrtError.TextFilename = "";
@@ -320,15 +359,29 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
+            // 24. Blank textIrt file shows error message
+            RunUI(() =>
+            {
+                createIrtError.TextFilename = TestFilesDir.GetTestPath("blank_file.txt");
+                createIrtError.NewDatabaseName = newDatabase;
+            });
+            RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_,
+                                                                  Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line));
+                messageDlg.OkDialog();
+            });
+
             OkDialog(createIrtError, createIrtError.CancelDialog);
             WaitForDocumentLoaded();
             // Document hasn't changed
             Assert.AreSame(docCreateIrtError, SkylineWindow.Document);
 
-            // 21. Successful import and successful creation of database
+            // 25. Successful import and successful creation of iRT database and library
             // Document starts empty with no transitions and no iRT calculator
-            Assert.IsNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
-            Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
+            // 355 transitions, libraries, and iRT times are imported, including libraries for the iRT times
+            var docCalcGood = LoadDocument(documentBlank);
+            Assert.AreEqual(0, docCalcGood.Transitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcGood = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -339,7 +392,47 @@ namespace pwiz.SkylineTestFunctional
                 createIrtCalcGood.NewDatabaseName = newDatabase;
             });
             OkDialog(createIrtCalcGood, createIrtCalcGood.OkDialog);
-            RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10));
+            var libraryDlgAll = WaitForOpenForm<MultiButtonMsgDlg>();
+            // Make small change to document to test robustness to concurrent document change
+            RunUI(() => SkylineWindow.ModifyDocument("test change", doc =>
+            {
+                var settingsNew = doc.Settings.ChangeTransitionFilter(filter => filter.ChangeProductCharges(new List<int> { 1, 2, 3 }));
+                doc = doc.ChangeSettings(settingsNew);
+                return doc;
+            }));
+            OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
+            RunUI(() =>
+            {
+                ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
+                var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("AQUA4_Human_Blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(355, library.SpectrumCount);
+            });
+            bool foundLibraryCheck = false;
+            foreach (var groupNode in SkylineWindow.Document.TransitionGroups)
+            {
+                Assert.IsTrue(groupNode.HasLibInfo);
+                Assert.IsTrue(groupNode.HasLibRanks);
+                foreach (var transition in groupNode.Transitions)
+                {
+                    // Every transition excpet a and z transitions (which are filtered out in the transition settings) has library info
+                    if (Equals(transition.Transition.IonType, IonType.a) || Equals(transition.Transition.IonType, IonType.z))
+                        continue;
+                    Assert.IsTrue(transition.HasLibInfo);
+                    if (String.Equals(groupNode.TransitionGroup.Peptide.Sequence, "DAVNDITAK") && String.Equals(transition.Transition.FragmentIonName, "y7"))
+                    {
+                        Assert.AreEqual(transition.LibInfo.Intensity, 7336, 1e-2);
+                        Assert.AreEqual(transition.LibInfo.Rank, 2);
+                        foundLibraryCheck = true;
+                    }
+                }
+            }
+            Assert.IsTrue(foundLibraryCheck);
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
             Assert.IsTrue(Settings.Default.RetentionTimeList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
@@ -352,10 +445,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(documentPeptides.Count, irtPeptides.Count);
             Assert.AreEqual(documentPeptides.Count, documentPeptides.Intersect(irtPeptides).Count());
 
-            // 22. Successful import and succesful load of existing database, with keeping of iRT's
+            // 26. Successful import and succesful load of existing database, with keeping of iRT's, plus successful library import
             var irtOriginal = TestFilesDir.GetTestPath("irtOriginal.irtdb");
-            LoadDocument(documentBlank);
-            Assert.IsNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
+            var docReload = LoadDocument(documentBlank);
+            Assert.IsNull(docReload.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcExisting = WaitForOpenForm<CreateIrtCalculatorDlg>();
@@ -368,6 +461,10 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(createIrtCalcExisting, createIrtCalcExisting.OkDialog);
             var dlgKeep = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(dlgKeep, dlgKeep.Btn0Click);
+            var libraryDlgYes = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgYes, libraryDlgYes.Btn0Click);
+            var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(libraryDlgOverwriteYes.Btn0Click);
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -377,15 +474,44 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
                 Assert.AreEqual(conflictIrt, 76.0, 0.1);
+                var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("AQUA4_Human_Blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(345, library.SpectrumCount);
             });
+            // ReSharper disable once PossibleNullReferenceException
+            var calcTemp = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+            Assert.IsNotNull(calcTemp);
+            string dbPath = calcTemp.DatabasePath;
+            IrtDb db = IrtDb.GetIrtDb(dbPath, null);
+            var oldPeptides = db.GetPeptides().ToList();
+            var standardSeq = from peptide in oldPeptides where peptide.Standard select peptide.Sequence;
+            standardSeq = standardSeq.ToList();
+            foreach (var groupNode in SkylineWindow.Document.TransitionGroups)
+            {
+                // Every node other than iRT standards now has library info
+                if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Sequence))
+                    continue;
+                Assert.IsTrue(groupNode.HasLibInfo);
+                Assert.IsTrue(groupNode.HasLibRanks);
+                foreach (var transition in groupNode.Transitions)
+                {
+                    Assert.IsTrue(transition.HasLibInfo);
+                }
+            }
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
             Assert.IsTrue(Settings.Default.RetentionTimeList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
             Assert.IsTrue(Settings.Default.RTScoreCalculatorList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator));
+            Assert.IsTrue(Settings.Default.SpectralLibraryList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0]));
 
-            // 23. Successful import and succesful load of existing database, with overwrite of iRT's
-            LoadDocument(documentBlank);
-            Assert.IsNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
+            // 27. Successful import and succesful load of existing database, with overwrite of iRT's, plus overwrite of library
+            var docImport = LoadDocument(documentBlank);
+            Assert.IsNull(docImport.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcExistingOverwrite = WaitForOpenForm<CreateIrtCalculatorDlg>();
@@ -402,6 +528,10 @@ namespace pwiz.SkylineTestFunctional
             });
             var dlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(dlgOverwrite, dlgOverwrite.Btn1Click);
+            var libraryDlgYesNew = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgYesNew, libraryDlgYesNew.Btn0Click);
+            var libraryDlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(libraryDlgOverwrite.Btn0Click);
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -411,11 +541,155 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
                 Assert.AreEqual(conflictIrt, 49.8, 0.1);
+                var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("AQUA4_Human_Blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(345, library.SpectrumCount);
             });
+            foreach (var groupNode in SkylineWindow.Document.TransitionGroups)
+            {
+                // Every node other than iRT standards now has library info
+                if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Sequence))
+                    continue;
+                Assert.IsTrue(groupNode.HasLibInfo);
+                Assert.IsTrue(groupNode.HasLibRanks);
+                foreach (var transition in groupNode.Transitions)
+                {
+                    Assert.IsTrue(transition.HasLibInfo);
+                }
+            }
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime);
             Assert.IsNotNull(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator);
             Assert.IsTrue(Settings.Default.RetentionTimeList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
             Assert.IsTrue(Settings.Default.RTScoreCalculatorList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator));
+            Assert.IsTrue(Settings.Default.SpectralLibraryList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0]));
+
+            // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
+            RunUI(() =>
+            {
+                ValidateDocAndIrt(SkylineWindow.DocumentUI, 690, 355, 10);
+                var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("AQUA4_Human_Blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(345, library.SpectrumCount);
+            });
+
+
+            // 29. Start with blank document, skip iRT's entirely but import library intensities, show this works out fine
+            var docLibraryOnly = LoadDocument(documentBlank);
+            Assert.IsNull(docLibraryOnly.Settings.PeptideSettings.Prediction.RetentionTime);
+            Assert.AreEqual(0, SkylineWindow.Document.Transitions.Count());
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textNoError), importIrt => importIrt.Btn1Click());
+            var libraryDlgLibOnly = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgLibOnly, libraryDlgLibOnly.Btn0Click);
+            var libraryDlgOverwriteLibOnly = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(libraryDlgOverwriteLibOnly.Btn0Click);
+            var docLibraryOnlyComplete = WaitForDocumentChangeLoaded(docLibraryOnly);
+            // Haven't created a calculator
+            Assert.IsNull(docLibraryOnlyComplete.Settings.PeptideSettings.Prediction.RetentionTime);
+            RunUI(() =>
+            {
+                var libraries = docLibraryOnlyComplete.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("AQUA4_Human_Blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(284, library.SpectrumCount);
+            });
+
+            // 30. Repeat import with a larger library, show that there are no duplicates and it gets replaced cleanly
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn1Click());
+            var libraryDlgBiggerLib = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgBiggerLib, libraryDlgBiggerLib.Btn0Click);
+            var docLargeLibrary = WaitForDocumentChangeLoaded(docLibraryOnlyComplete);
+            Assert.IsNull(docLargeLibrary.Settings.PeptideSettings.Prediction.RetentionTime);
+            RunUI(() =>
+            {
+                var libraries = docLargeLibrary.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("AQUA4_Human_Blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(345, library.SpectrumCount);
+            });
+
+
+            // 31. Start with blank document, skip iRT's, cancel on library overwrite, document should be the same
+            var docCancel = LoadDocument(documentBlank);
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn1Click());
+            var libraryDlgCancelNew = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgCancelNew, libraryDlgCancelNew.Btn0Click);
+            var libraryDlgOverwriteCancel = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgOverwriteCancel, libraryDlgOverwriteCancel.BtnCancelClick);
+            Assert.AreSame(SkylineWindow.Document, docCancel);
+
+            // 32. Start with blank document, skip iRT's, decline to overwrite, only document should have changed
+            var docInitial31 = LoadDocument(documentBlank);
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn1Click());
+            var libraryDlgDecline = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgDecline, libraryDlgDecline.Btn0Click);
+            var libraryDlgOverwriteDecline = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryDlgOverwriteDecline, libraryDlgOverwriteDecline.Btn1Click);
+            var docComplete31 = WaitForDocumentChangeLoaded(docInitial31);
+            RunUI(() =>
+            {
+                Assert.IsNull(docComplete31.Settings.PeptideSettings.Prediction.RetentionTime);
+                var libraries = docComplete31.Settings.PeptideSettings.Libraries;
+                Assert.IsFalse(libraries.HasLibraries);
+                Assert.AreEqual(345, docComplete31.PeptideCount);
+            });
+
+            // 33. Try a different document with interleaved heavy and light transitions of the same peptide
+            // Tests mixing of transition groups within a peptide
+            var documentInterleaved = TestFilesDir.GetTestPath("Consensus_Dario_iRT_new_blank.sky");
+            var textInterleaved = TestFilesDir.GetTestPath("Interleaved.csv");
+            RunUI(() => SkylineWindow.OpenFile(documentInterleaved));
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleaved), addIrtDlg => addIrtDlg.Btn0Click());
+            var libraryInterleaved = WaitForOpenForm<MultiButtonMsgDlg>();
+            // Change to document to test handling of concurrent change during mass list import
+            RunUI(() => SkylineWindow.ModifyDocument("test change", doc =>
+            {
+                var settingsNew = doc.Settings.ChangeTransitionFilter(filter => filter.ChangeProductCharges(new List<int> { 1, 2, 3 }));
+                doc = doc.ChangeSettings(settingsNew);
+                return doc;
+            }));
+            OkDialog(libraryInterleaved, libraryInterleaved.Btn0Click);
+            var docInterleaved = SkylineWindow.Document; // WaitForDocumentLoaded();    TODO: Fix loading with iRT calc but no iRT peptides
+            RunUI(() =>
+            {
+                Assert.AreEqual(6, docInterleaved.PeptideCount);
+                Assert.AreEqual(60, docInterleaved.TransitionCount);
+                var libraries = docInterleaved.Settings.PeptideSettings.Libraries;
+                Assert.IsTrue(libraries.HasLibraries);
+                Assert.IsTrue(libraries.IsLoaded);
+                Assert.AreEqual(1, libraries.Libraries.Count);
+                Assert.AreEqual(1, libraries.LibrarySpecs.Count);
+                Assert.AreEqual("Consensus_Dario_iRT_new_blank-assay", libraries.LibrarySpecs[0].Name);
+                var library = libraries.Libraries[0];
+                Assert.AreEqual(12, library.SpectrumCount);
+            });
+            foreach (var groupNode in docInterleaved.TransitionGroups)
+            {
+                Assert.IsTrue(groupNode.HasLibInfo);
+                Assert.IsTrue(groupNode.HasLibRanks);
+                foreach (var transition in groupNode.Transitions)
+                {
+                    Assert.IsTrue(transition.HasLibInfo);
+                }
+            }
         }
 
         public static RCalcIrt ValidateDocAndIrt(SrmDocument doc, int peptides, int irtTotal, int irtStandards)
@@ -429,10 +703,16 @@ namespace pwiz.SkylineTestFunctional
             return calculator;
         }
 
-        public void LoadDocument(string document)
+        public SrmDocument LoadDocument(string document)
         {
             RunUI(() => SkylineWindow.OpenFile(document));
-            WaitForDocumentLoaded();
+            return WaitForDocumentLoaded();
+        }
+
+        public void SkipLibraryDlg()
+        {
+            var libraryDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(libraryDlg.Btn1Click);
         }
     }
 }

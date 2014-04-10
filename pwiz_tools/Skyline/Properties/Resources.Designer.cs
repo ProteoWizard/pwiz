@@ -8515,6 +8515,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid library intensity value in column {0} on line {1}.
+        /// </summary>
+        public static string MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_ {
+            get {
+                return ResourceManager.GetString("MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty transition list..
         /// </summary>
         public static string MassListImporter_Import_Empty_transition_list {
@@ -14317,6 +14327,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Add {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file.  Peptide {0} matches an existing iRT standard peptide..
         /// </summary>
         public static string SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_ {
@@ -14374,6 +14393,36 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__b" +
                         "ut_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_ad" +
                         "d_these_iRT_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The transition list appears to contain spectral library intensities.  Create a document library from these intensities?.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_libr" +
+                        "ary_intensities___Create_a_document_library_from_these_intensities_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is an existing library with the same name {0} as the document library to be created.  Overwrite this library or skip import of library intensities?.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__" +
+                        "as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of" +
+                        "_library_intensities_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected document change during operation: {0}.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_", resourceCulture);
             }
         }
         
@@ -15701,6 +15750,25 @@ namespace pwiz.Skyline.Properties {
         public static string SpectrumLibraryInfoDlg_SetLibraryLinks_Library_sources {
             get {
                 return ResourceManager.GetString("SpectrumLibraryInfoDlg_SetLibraryLinks_Library_sources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempted to combine library spectra with incompatible precusor m/z, isotope label, or peptide sequence.
+        /// </summary>
+        public static string SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence {
+            get {
+                return ResourceManager.GetString("SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_inco" +
+                        "mpatible_precusor_m_z__isotope_label__or_peptide_sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library spectrum for sequence {0} is missing..
+        /// </summary>
+        public static string SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_ {
+            get {
+                return ResourceManager.GetString("SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_", resourceCulture);
             }
         }
         
