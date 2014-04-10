@@ -1944,7 +1944,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                   ChromFileInfoId fileId,
                                                                   int step)
         {
-            if (!nodeTran.HasResults)
+            if (!nodeTran.HasResults || nodeTran.Results.Count <= indexChrom)
                 return null;
             var tranChromInfoList = nodeTran.Results[indexChrom];
             if (tranChromInfoList == null)
