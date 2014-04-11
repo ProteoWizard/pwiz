@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml;
@@ -104,6 +105,16 @@ namespace pwiz.Skyline.Model.Databinding
             get { return typeof(ReportOrViewSpecList); }
         }
 
+        public override Type DeserialType
+        {
+            get
+            {
+                // .skyr files may contain one of several different formats
+                // The base class implementation of DeserializeItems should never be used.
+                throw new InvalidOperationException();
+            }
+        }
+
         public override ICollection<ReportOrViewSpec> CreateEmptyList()
         {
             return new ReportOrViewSpecList();
@@ -129,6 +140,11 @@ namespace pwiz.Skyline.Model.Databinding
         public ReportOrViewSpec CopyItem(ReportOrViewSpec item)
         {
             return new ReportOrViewSpec(item.ViewSpec.SetName(null));
+        }
+
+        protected override IList<ReportOrViewSpec> DeserializeItems(Stream stream)
+        {
+            return ReportSharing.DeserializeReportList(stream);
         }
     }
 }

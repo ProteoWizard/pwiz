@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -94,7 +95,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public bool? ShouldOverwrite(string toolCollectionName,
                                          string toolCollectionVersion,
-                                         List<ReportSpec> reportList,
+                                         List<ReportOrViewSpec> reportList,
                                          string foundVersion,
                                          string newCollectionName)
             {
@@ -162,7 +163,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static bool? OverwriteOrInParallel(string toolCollectionName,
                                                   string toolCollectionVersion,
-                                                  List<ReportSpec> reportList,
+                                                  List<ReportOrViewSpec> reportList,
                                                   string foundVersion,
                                                   string newCollectionName)
         {

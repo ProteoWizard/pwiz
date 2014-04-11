@@ -596,6 +596,7 @@
     <Compile Include="Model\Databinding\RatioPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
+    <Compile Include="Model\Databinding\ReportSharing.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
     <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />

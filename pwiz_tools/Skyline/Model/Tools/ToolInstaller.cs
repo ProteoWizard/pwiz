@@ -25,6 +25,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Kajabity.Tools.Java;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -221,7 +222,7 @@ namespace pwiz.Skyline.Model.Tools
         bool? ShouldOverwriteAnnotations(List<AnnotationDef> annotations);
         bool? ShouldOverwrite(string toolCollectionName,
                               string toolCollectionVersion,
-                              List<ReportSpec> reportList,
+                              List<ReportOrViewSpec> reportList,
                               string foundVersion,
                               string newCollectionName);
 
@@ -312,7 +313,7 @@ namespace pwiz.Skyline.Model.Tools
 
                 var toolsToBeOverwritten = GetToolsToBeOverwritten(toolInfo.PackageIdentifier);
 
-                List<ReportSpec> newReports;
+                List<ReportOrViewSpec> newReports;
                 var existingReports = FindReportConflicts(toolInfDir, tempToolPath, out newReports);
 
                 bool? overwrite = IsOverwrite(unpackSupport.ShouldOverwrite, toolsToBeOverwritten, existingReports, toolInfo);
@@ -337,28 +338,27 @@ namespace pwiz.Skyline.Model.Tools
                     }
 
                     // Overwrite all existing reports. 
-                    foreach (ReportSpec item in existingReports)
+                    foreach (ReportOrViewSpec item in existingReports)
                     {
-                        Settings.Default.ReportSpecList.RemoveKey(item.GetKey());
-                        Settings.Default.ReportSpecList.Add(item);
+                        ReportSharing.SaveReport(item);
                     }
                 }
 
                 // Add all new reports.
-                foreach (ReportSpec item in newReports)
+                foreach (ReportOrViewSpec item in newReports)
                 {
-                    Settings.Default.ReportSpecList.Add(item);
+                    ReportSharing.SaveReport(item);
                 }
                 var reportRenameMapping = new Dictionary<string, string>();
                 if (overwrite == false) // Dont overwrite so rename reports.
                 {
                     // Deal with renaming reports!
-                    foreach (ReportSpec item in existingReports)
+                    foreach (ReportOrViewSpec item in existingReports)
                     {
                         string oldname = item.GetKey();
                         string newname = GetUniqueReportName(oldname);
                         reportRenameMapping.Add(oldname, newname);
-                        Settings.Default.ReportSpecList.Add((ReportSpec) item.ChangeName(newname));
+                        ReportSharing.SaveReportAs(item, newname);
                     }
                 }
 
@@ -636,19 +636,18 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Generate the list of Existing Reports that would be modified and the list of new reports
         /// </summary>
-        private static List<ReportSpec> FindReportConflicts(DirectoryInfo toolInfDir, string tempToolPath, out List<ReportSpec> newReports)
+        private static List<ReportOrViewSpec> FindReportConflicts(DirectoryInfo toolInfDir, string tempToolPath, out List<ReportOrViewSpec> newReports)
         {
-            var existingReports = new List<ReportSpec>();
-            newReports = new List<ReportSpec>();
-            var xmlSerializer = new XmlSerializer(typeof(ReportSpecList));
+            var existingReports = new List<ReportOrViewSpec>();
+            newReports = new List<ReportOrViewSpec>();
             foreach (FileInfo file in toolInfDir.GetFiles("*" + ReportSpecList.EXT_REPORTS)) // Not L10N
             {
-                ReportSpecList loadedItems;
+                List<ReportOrViewSpec> loadedItems;
                 try
                 {
                     using (var stream = File.OpenRead(file.FullName))
                     {
-                        loadedItems = (ReportSpecList)xmlSerializer.Deserialize(stream);
+                        loadedItems = ReportSharing.DeserializeReportList(stream);
                     }
                 }
                 catch (Exception exception)
@@ -658,20 +657,20 @@ namespace pwiz.Skyline.Model.Tools
                         string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__,
                                       file.FullName), exception);
                 }
-
-                foreach (ReportSpec reportSpec in loadedItems)
+                var allExistingReports = ReportSharing.GetExistingReports();
+                foreach (var reportOrViewSpec in loadedItems)
                 {
-                    if (Settings.Default.ReportSpecList.ContainsKey(reportSpec.GetKey()))
+                    if (allExistingReports.ContainsKey(reportOrViewSpec.GetKey()))
                     {
                         //Check if  the Reports are identical. If so don't worry.
-                        if (!reportSpec.Equals(Settings.Default.ReportSpecList[reportSpec.GetKey()]))
+                        if (!ReportSharing.AreEquivalent(allExistingReports[reportOrViewSpec.GetKey()], reportOrViewSpec))
                         {
-                            existingReports.Add(reportSpec);
+                            existingReports.Add(reportOrViewSpec);
                         }
                     }
                     else
                     {
-                        newReports.Add(reportSpec);
+                        newReports.Add(reportOrViewSpec);
                     }
                 }
                 // We now have the list of Reports that would have a naming conflict. 
@@ -681,13 +680,13 @@ namespace pwiz.Skyline.Model.Tools
 
         private delegate bool? ShouldOverwrite(string toolCollectionName,
                               string toolCollectionVersion,
-                              List<ReportSpec> reportList,
+                              List<ReportOrViewSpec> reportList,
                               string foundVersion,
                               string newCollectionName);
 
         private static bool? IsOverwrite(ShouldOverwrite shouldOverwrite,
                                         List<ToolDescription> toolsToBeOverwritten,
-                                        List<ReportSpec> existingReports,
+                                        List<ReportOrViewSpec> existingReports,
                                         ToolInfo toolInfo)
         {
             if (toolsToBeOverwritten.Count > 0)
@@ -756,7 +755,7 @@ namespace pwiz.Skyline.Model.Tools
                     reportTitle = reportRenameMapping[reportTitle];
                 }
                 // Check if they are still missing the report they want
-                if (!Settings.Default.ReportSpecList.ContainsKey(reportTitle))
+                if (!ReportSharing.GetExistingReports().ContainsKey(reportTitle))
                 {
                     accumulator.AddMessage(string.Format(Resources.UnpackZipToolHelper_UnpackZipTool_The_tool___0___requires_report_type_titled___1___and_it_is_not_provided__Import_canceled_,
                                                          readin.Title, reportTitle));
@@ -909,8 +908,9 @@ namespace pwiz.Skyline.Model.Tools
 
         private static string GetUniqueReportName(string key)
         {
-            return Settings.Default.ReportSpecList.ContainsKey(key)
-                       ? GetUniqueName(key, value => !Settings.Default.ReportSpecList.ContainsKey(value))
+            var existingReports = ReportSharing.GetExistingReports();
+            return existingReports.ContainsKey(key)
+                       ? GetUniqueName(key, value => !existingReports.ContainsKey(value))
                        : key;
         }
 

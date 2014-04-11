@@ -18,15 +18,18 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate.Query;
@@ -1809,6 +1812,12 @@ namespace pwiz.Skyline
                 return;
             }
 
+            if (Settings.Default.EnableLiveReports)
+            {
+                ExportLiveReport(reportName, reportFile, reportColSeparator);
+                return;
+            }
+
             //Check that the report exists
             ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportName);
             if (reportSpec == null)
@@ -1856,6 +1865,49 @@ namespace pwiz.Skyline
 
                         writer.Flush();
                         writer.Close();
+                    }
+
+                    broker.UpdateProgress(status.Complete());
+                    saver.Commit();
+                    _out.WriteLine("Report {0} exported successfully.", reportName);
+                }
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine("Error: Failure attempting to save {0} report to {1}.", reportName, reportFile);
+                _out.WriteLine(x.Message);
+            }
+        }
+
+        private void ExportLiveReport(string reportName, string reportFile, char reportColSeparator)
+        {
+            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc);
+            var viewSpec = viewContext.CustomViews.FirstOrDefault(view2 => view2.Name == reportName);
+            if (null == viewSpec)
+            {
+                _out.WriteLine("Error: The report {0} does not exist. If it has spaces in its name,", reportName);
+                _out.WriteLine("use \"double quotes\" around the entire list of command parameters.");
+                return;
+            }
+            _out.WriteLine("Exporting report {0}...", reportName);
+
+            try
+            {
+                using (var saver = new FileSaver(reportFile))
+                {
+                    if (!saver.CanSave())
+                    {
+                        _out.WriteLine("Error: The report {0} could not be saved to {1}.", reportName, reportFile);
+                        _out.WriteLine("Check to make sure it is not read-only.");
+                    }
+
+                    var status = new ProgressStatus(string.Empty);
+                    IProgressMonitor broker = new CommandWaitBroker(_out, status);
+
+                    using (var writer = new StreamWriter(saver.SafeName))
+                    {
+                        viewContext.Export(broker, ref status, viewContext.GetViewInfo(viewSpec), writer,
+                            new DsvWriter(CultureInfo.InvariantCulture, reportColSeparator));
                     }
 
                     broker.UpdateProgress(status.Complete());
@@ -1958,7 +2010,7 @@ namespace pwiz.Skyline
                     return;
                 }
 
-                if (!Settings.Default.ReportSpecList.ContainsKey(reportTitle))
+                if (!ReportSharing.GetExistingReports().ContainsKey(reportTitle))
                 {
                     _out.WriteLine("Error: Please import the report format for {0}.", reportTitle);
                     _out.WriteLine("        Use the --report-add parameter to add the missing custom report.");
@@ -2144,7 +2196,7 @@ namespace pwiz.Skyline
                 bool imported;
                 try
                 {
-                    imported = Settings.Default.ReportSpecList.ImportFile(path, helper.ResolveImportConflicts);                 
+                    imported = ReportSharing.ImportSkyrFile(path, helper.ResolveImportConflicts);
                 }
                 catch (Exception e)
                 {
@@ -2706,7 +2758,7 @@ namespace pwiz.Skyline
             packagesHandled = arePackagesHandled;
         }
 
-        public bool? ShouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reports,
+        public bool? ShouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportOrViewSpec> reports,
                                      string foundVersion,
                                      string newCollectionName)
         {

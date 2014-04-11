@@ -70,5 +70,18 @@ namespace pwiz.Skyline.Model.Databinding
             };
             dialog.ShowDialog(owner);
         }
+        /// <summary>
+        /// Creates a DocumentGridViewContext that can be used for exporting reports, importing report definitions, etc.
+        /// </summary>
+        public static DocumentGridViewContext CreateDocumentGridViewContext(SrmDocument document)
+        {
+            if (document == null)
+            {
+                document = new SrmDocument(SrmSettingsList.GetDefault());
+            }
+            var memoryDocumentContainer = new MemoryDocumentContainer();
+            memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
+            return new DocumentGridViewContext(new SkylineDataSchema(memoryDocumentContainer));
+        }
     }
 }

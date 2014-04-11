@@ -19,12 +19,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -36,7 +38,7 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class ConfigureToolsDlg : FormEx
     {
-        private readonly SettingsListComboDriver<ReportSpec> _driverReportSpec;
+        private readonly ComboBoxDriverWrapper _driverReportSpec;
 
         public ConfigureToolsDlg(SkylineWindow parent)
         {
@@ -48,8 +50,7 @@ namespace pwiz.Skyline.ToolsUI
             //           it had problems with the empty element added to the list.
             //           Might be nice to allow report spec editing in this form
             //           some day, though.
-            _driverReportSpec = new SettingsListComboDriver<ReportSpec>(comboReport,
-                Settings.Default.ReportSpecList, false);
+            _driverReportSpec = new ComboBoxDriverWrapper(components, comboReport);
 
             if (ToolStoreUtil.ToolStoreClient != null)
                 fromWebAddContextMenuItem.Visible = fromWebAddContextMenuItem.Enabled = true;
@@ -1001,6 +1002,82 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             return true;
+        }
+        private class ComboBoxDriverWrapper : Component
+        {
+            private readonly SettingsListComboDriver<ReportSpec> _oldReportDriver;
+            private readonly SettingsListComboDriver<ReportOrViewSpec> _liveReportDriver;
+
+            public ComboBoxDriverWrapper(IContainer container, ComboBox comboBox)
+            {
+                container.Add(this);
+                ViewSettings.SettingsChange += ViewSettingsOnSettingsChange;
+                // Initialize the report comboBox.
+                // CONSIDER: Settings list editing is currently disabled, because
+                //           it had problems with the empty element added to the list.
+                //           Also, for live reports, would need to add code to take the
+                //           modified list and persist it in ViewSettings.
+                //           Might be nice to allow report spec editing in this form
+                //           some day, though.
+                if (Settings.Default.EnableLiveReports)
+                {
+                    _liveReportDriver = new SettingsListComboDriver<ReportOrViewSpec>(comboBox, new ReportOrViewSpecList(), false);
+                    RepopulateLiveReportList();
+                }
+                else
+                {
+                    _oldReportDriver = new SettingsListComboDriver<ReportSpec>(comboBox, Settings.Default.ReportSpecList, false);
+                }
+            }
+
+            private void ViewSettingsOnSettingsChange(object sender, EventArgs eventArgs)
+            {
+                if (null != _liveReportDriver)
+                {
+                    RepopulateLiveReportList();
+                }
+            }
+
+            private void RepopulateLiveReportList()
+            {
+                _liveReportDriver.List.Clear();
+                var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null);
+                _liveReportDriver.List.AddRange(documentGridViewContext.CustomViews.Select(view => new ReportOrViewSpec(view)));
+            }
+
+            public void LoadList(string selectedItemLast)
+            {
+                if (null != _oldReportDriver)
+                {
+                    _oldReportDriver.LoadList(selectedItemLast);
+                }
+                if (null != _liveReportDriver)
+                {
+                    _liveReportDriver.LoadList(selectedItemLast);
+                }
+            }
+
+            public bool SelectedIndexChangedEvent(object sender, EventArgs e)
+            {
+                if (null != _oldReportDriver)
+                {
+                    return _oldReportDriver.SelectedIndexChangedEvent(sender, e);
+                }
+                if (null != _liveReportDriver)
+                {
+                    return _liveReportDriver.SelectedIndexChangedEvent(sender, e);
+                }
+                throw new InvalidOperationException();
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+                if (disposing)
+                {
+                    ViewSettings.SettingsChange -= ViewSettingsOnSettingsChange;
+                }
+            }
         }
 
         #region Functional test support

@@ -2178,13 +2178,12 @@ namespace pwiz.Skyline.Properties
             if (String.IsNullOrEmpty(fileName))
                 return false;
 
-            XmlSerializer xmlSerializer = new XmlSerializer(DeserialType);
-            SerializableSettingsList<TItem> loadedItems;
+            IList<TItem> loadedItems;
             try
             {
                 using (var stream = File.OpenRead(fileName))
                 {
-                    loadedItems = (SerializableSettingsList<TItem>)xmlSerializer.Deserialize(stream);
+                    loadedItems = DeserializeItems(stream);
                 }
             }
             catch (Exception exception)
@@ -2212,6 +2211,12 @@ namespace pwiz.Skyline.Properties
                 Add(item);
             }
             return true;
+        }
+
+        protected virtual IList<TItem> DeserializeItems(Stream stream)
+        {
+            XmlSerializer xmlSerializer = new XmlSerializer(DeserialType);
+            return (SerializableSettingsList<TItem>)xmlSerializer.Deserialize(stream);
         }
 
         //Todo

@@ -177,6 +177,7 @@
     <Compile Include="PythonInstallerTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
+    <Compile Include="ReportSharingTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="RetentionTimeAlignmentTest.cs" />
     <Compile Include="RetentionTimeFilterTest.cs" />
@@ -267,6 +268,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="RenameProteinsTest.zip" />
+    <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />

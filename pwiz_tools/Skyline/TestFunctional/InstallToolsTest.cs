@@ -24,6 +24,7 @@ using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -42,6 +43,21 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
             RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestInstallToolsOldReports()
+        {
+            bool wasEnableLiveReports = Settings.Default.EnableLiveReports;
+            try
+            {
+                Settings.Default.EnableLiveReports = false;
+                TestInstallTools();
+            }
+            finally
+            {
+                Settings.Default.EnableLiveReports = wasEnableLiveReports;
+            }
         }
 
         protected override void DoTest()
@@ -96,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
                 return false;
             }
 
-            public bool? ShouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportSpec> reportList, string foundVersion,
+            public bool? ShouldOverwrite(string toolCollectionName, string toolCollectionVersion, List<ReportOrViewSpec> reportList, string foundVersion,
                                          string newCollectionName)
             {
                 return true;

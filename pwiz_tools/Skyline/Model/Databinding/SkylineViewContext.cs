@@ -464,33 +464,20 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return;
             }
-            SaveViewSpecList(new ViewSpecList(reportOrViewSpecList.Select(item=>item.ViewSpec)));
+            SaveViews(reportOrViewSpecList.Select(item=>item.ViewSpec));
+        }
+
+        public void SaveViews(IEnumerable<ViewSpec> viewSpecs)
+        {
+            SaveViewSpecList(new ViewSpecList(viewSpecs));
         }
 
         protected IEnumerable<ViewSpec> LoadViews(string filename)
         {
             using (var stream = File.OpenRead(filename))
             {
-                try
-                {
-                    var reportSerializer = new XmlSerializer(typeof (ReportSpecList));
-                    var reportSpecList = reportSerializer.Deserialize(stream) as ReportSpecList;
-                    if (null != reportSpecList)
-                    {
-                        return ConvertReports(reportSpecList);
-                    }
-                    else
-                    {
-                        return new ViewSpec[0];
-                    }
-                }
-                catch (Exception)
-                {
-                    stream.Seek(0, SeekOrigin.Begin);
-                    var viewSerializer = new XmlSerializer(typeof(ViewSpecList));
-                    ViewSpecList viewSpecList = (ViewSpecList) viewSerializer.Deserialize(stream);
-                    return viewSpecList.ViewSpecs;
-                }
+                var reportOrViewSpecs = ReportSharing.DeserializeReportList(stream);
+                return ReportSharing.ConvertAll(reportOrViewSpecs, ((SkylineDataSchema) DataSchema).Document);
             }
         }
 
