@@ -574,52 +574,56 @@ make output/mascot.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp 
   : -o 
   : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
-  : 
+  : <conditional>@mascot-installed
   : build-mascot ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
   : output/mascot.blib reference/mascot.check
   : $(compare-reqs)
     <dependency>build-mascot
+    <conditional>@mascot-installed
   : check-mascot ;
 
 make output/mascot-15N.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib
-  : 
+  : <conditional>@mascot-installed
   : build-mascot-15N ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
   : output/mascot-15N.blib reference/mascot-15N.check
   : $(compare-reqs)
     <dependency>build-mascot-15N
+    <conditional>@mascot-installed
   : check-mascot-15N ;
 
 make output/mascot-distiller-1.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/F007401.dat output/mascot-distiller-1.blib
-  :
+  : <conditional>@mascot-installed
   : build-mascot-distiller-and-title ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
   : output/mascot-distiller-1.blib reference/mascot-distiller-1.check
   : $(compare-reqs)
     <dependency>build-mascot-distiller-and-title
+    <conditional>@mascot-installed
   : check-mascot-distiller-and-title ;
 
 make output/mascot-distiller-2.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/F007401b.dat output/mascot-distiller-2.blib
-  : 
+  : <conditional>@mascot-installed
   : build-mascot-distiller-from-file ;
 run-if-exists CompareLibraryContents.cpp compare-src
   :
   : output/mascot-distiller-2.blib reference/mascot-distiller-2.check
   : $(compare-reqs)
     <dependency>build-mascot-distiller-from-file
+    <conditional>@mascot-installed
   : check-mascot-distiller-from-file ;
 
 # TODO: Need something to test for failure that works with TeamCity.
