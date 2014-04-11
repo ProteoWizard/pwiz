@@ -59,7 +59,6 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <!-- ReSharper disable NotOverridenInSpecificCulture -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -347,10 +346,10 @@
   <data name="SkylineWindow_Copy_Failed_setting_data_to_the_clipboard" xml:space="preserve">
     <value>Failed setting data to the clipboard.</value>
   </data>
-    <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+  <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
     <value>Failed getting data from the clipboard.</value>
   </data>
-    <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
     <value>proteins</value>
   </data>
   <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
@@ -3440,7 +3439,7 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
     <value>File</value>
   </data>
-    <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
+  <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
     <value>RT</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
@@ -5832,7 +5831,7 @@ Are you sure you want to continue?</value>
   <data name="RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_" xml:space="preserve">
     <value>Dot Product To {0}</value>
   </data>
-    <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
     <value>Cannot train model without either decoys or second best peaks included.</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_" xml:space="preserve">
@@ -6118,34 +6117,34 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
     <value>Edit Report</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
     <value>U&amp;RL:</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
     <value>&amp;Query params:</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
     <value>&amp;Command:</value>
   </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
     <value>A&amp;rguments:</value>
   </data>
-    <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
     <value>The standard peptides for an iRT calculator can only be set in the iRT calculator editor.</value>
   </data>
-    <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
     <value>In the Peptide Settings - Prediction tab, click the calculator button to edit the current iRT calculator.</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
     <value>Decoy normal distribution</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
     <value>Second best peaks</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
     <value>Combined normal distribution</value>
   </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
     <value>Second best peaks normal distribution</value>
   </data>
   <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
@@ -6303,10 +6302,10 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PeptideGroupTreeNode_RenderTip_Species" xml:space="preserve">
     <value>Species</value>
   </data>
-    <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_" xml:space="preserve">
+  <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>
-    <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
+  <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>The operation was canceled by the user.</value>
   </data>
   <data name="BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library" xml:space="preserve">
@@ -6315,14 +6314,470 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="RescoreResultsDlg_Rescore_There_are_not_results_in_this_document" xml:space="preserve">
     <value>There are not results in this document</value>
   </data>
-  <data name="RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_" xml:space="preserve">
-    <value>All results must be completely imported before they can be re-scored.</value>
-  </data>
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>Targets by Accession</value>
   </data>
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name" xml:space="preserve">
     <value>Targets by Preferred Name</value>
+  </data>
+  <data name="CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export" xml:space="preserve">
+    <value>The instrument type {0} is not valid for transition list export</value>
+  </data>
+  <data name="CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export" xml:space="preserve">
+    <value>The instrument type {0} is not valid for method export</value>
+  </data>
+  <data name="CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_" xml:space="preserve">
+    <value>The instrument parameter {0} is not valid for optimization.</value>
+  </data>
+  <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The primary transition count {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The run length {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>The dwell time {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_ParseArgs_Error___0_" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_" xml:space="preserve">
+    <value>Warning: Incorrect Usage of the --tool-program-macro command.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_" xml:space="preserve">
+    <value>Error: Regular expression {0} cannot be parsed.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String" xml:space="preserve">
+    <value>Error: Regular expression '{0}' does not have any groups.  One group is required. The part of the file or sub-directory name that matches the first group in the regular expression is used as the replicate name.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_" xml:space="preserve">
+    <value>Warning: Invalid optimization parameter ({0}). Use "ce", "dp", or "none".  Defaulting to none.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_" xml:space="preserve">
+    <value>Error: Date {0} cannot be parsed.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__" xml:space="preserve">
+    <value>Warning: The report format {0} is invalid. It must be either "CSV" or "TSV".</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_CSV_" xml:space="preserve">
+    <value>Defaulting to CSV.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_" xml:space="preserve">
+    <value>Warning: The instrument type {0} is not valid. Please choose from:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_" xml:space="preserve">
+    <value>No transition list will be exported.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_No_method_will_be_exported_" xml:space="preserve">
+    <value>No method will be exported.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_export_strategy__0__is_not_valid__It_must_be_one_of_the_following___string" xml:space="preserve">
+    <value>Warning: The export strategy {0} is not valid. It must be one of the following: "single", "protein" or "buckets". Defaulting to single.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_standard_" xml:space="preserve">
+    <value>Defaulting to standard.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be_one_of_the_following___standard____scheduled__or__triggered__" xml:space="preserve">
+    <value>Warning: The method type {0} is invalid. It must be one of the following: "standard", "scheduled" or "triggered".</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_max_transitions_per_injection_parameter___0___" xml:space="preserve">
+    <value>Warning: Invalid max transitions per injection parameter ({0}).</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_It_must_be_a_number__Defaulting_to__0__" xml:space="preserve">
+    <value>It must be a number. Defaulting to {0}.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Defaulting_to_none_" xml:space="preserve">
+    <value>Defaulting to none.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none__" xml:space="preserve">
+    <value>Warning: Invalid optimization parameter ({0}). Use "ce", "dp", or "none".</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
+    <value>Warning: The primary transition count {0} is invalid. it must be a number between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Defaulting_to__0__" xml:space="preserve">
+    <value>Defaulting to {0}.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
+    <value>Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__" xml:space="preserve">
+    <value>Warning: The run length {0} is invalid. It must be a number between {1} and {2}.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_" xml:space="preserve">
+    <value>Error: Use --in to specify a Skyline document to open.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_" xml:space="preserve">
+    <value>Error: --import-file and --import-all options cannot be used simultaneously.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_" xml:space="preserve">
+    <value>Error: --import-naming-pattern cannot be used with the --import-file option.</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_" xml:space="preserve">
+    <value>Error: --import-replicate-name cannot be used with the --import-all option.</value>
+  </data>
+  <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
+    <value>The argument --{0} requires a value and must be specified in the format --name=value</value>
+  </data>
+  <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified" xml:space="preserve">
+    <value>The argument --{0} should not have a value specified</value>
+  </data>
+  <data name="CommandLine_Run_Exiting___" xml:space="preserve">
+    <value>Exiting...</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_" xml:space="preserve">
+    <value>Error: Failed to get optimization function {0}. {1}</value>
+  </data>
+  <data name="CommandLine_Run_Error__Failed_importing_the_file__0____1_" xml:space="preserve">
+    <value>Error: Failed importing the file {0}. {1}</value>
+  </data>
+  <data name="CommandLine_Run_Not_setting_library_" xml:space="preserve">
+    <value>Not setting library.</value>
+  </data>
+  <data name="CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__" xml:space="preserve">
+    <value>Error: You cannot simultaneously export a transition list and a method.  Neither will be exported. Please change the command line parameters.</value>
+  </data>
+  <data name="CommandLine_OpenSkyFile_Opening_file___" xml:space="preserve">
+    <value>Opening file...</value>
+  </data>
+  <data name="CommandLine_OpenSkyFile_File__0__opened_" xml:space="preserve">
+    <value>File {0} opened.</value>
+  </data>
+  <data name="CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The Skyline file {0} does not exist.</value>
+  </data>
+  <data name="CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_" xml:space="preserve">
+    <value>Error: There was an error opening the file {0}</value>
+  </data>
+  <data name="CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_" xml:space="preserve">
+    <value>Error: Could not find the spectral library {0} for this document.</value>
+  </data>
+  <data name="CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_" xml:space="preserve">
+    <value>Warning: Could not find the spectral library {0}</value>
+  </data>
+  <data name="CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__" xml:space="preserve">
+    <value>Error: Could not find the iRT database {0}.</value>
+  </data>
+  <data name="CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__" xml:space="preserve">
+    <value>Warning: Could not find the background proteome file {0}.</value>
+  </data>
+  <data name="CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__" xml:space="preserve">
+    <value>Error: Could not get last write time for file {0}.</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__" xml:space="preserve">
+    <value>Error: Failure reading file information from directory {0}.</value>
+  </data>
+  <data name="CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__" xml:space="preserve">
+    <value>Error: No data sources found in directory {0}.</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__" xml:space="preserve">
+    <value>Error: Match to regular expression is empty for {0}.</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
+    <value>Error: Duplicate replicate name '{0}' after applying regular expression.</value>
+  </data>
+  <data name="CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_" xml:space="preserve">
+    <value>Error: {0} does not match the regular expression.</value>
+  </data>
+  <data name="CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__" xml:space="preserve">
+    <value>Error: Replicate {0} in the document has an unexpected file {1}.</value>
+  </data>
+  <data name="CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
+    <value>{0} -&gt; {1}  Note: The file has already been imported. Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
+    <value>Warning: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document.</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
+    <value>{0} -&gt; {1}  Note: The file has already been imported. Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Adding_results___" xml:space="preserve">
+    <value>Adding results...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___" xml:space="preserve">
+    <value>Warning: Cannot read file {0}.  Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__" xml:space="preserve">
+    <value>Error: Failed importing the results file {0}.</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___" xml:space="preserve">
+    <value>Warning: Failed importing the results file {0}.  Ignoring...</value>
+  </data>
+  <data name="CommandLine_ImportResultsFile_Results_added_from__0__to_replicate__1__" xml:space="preserve">
+    <value>Results added from {0} to replicate {1}.</value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removing_results_before_" xml:space="preserve">
+    <value>Removing results before </value>
+  </data>
+  <data name="CommandLine_RemoveResults_Removed__0__" xml:space="preserve">
+    <value>Removed {0}.</value>
+    <comment>Context is removed file</comment>
+  </data>
+  <data name="CommandLine_ImportFasta_Importing_FASTA_file__0____" xml:space="preserve">
+    <value>Importing FASTA file {0}...</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_" xml:space="preserve">
+    <value>Error: Cannot set library name without path.</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_file__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The file {0} does not exist.</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
+    <value>Error: The file {0} appears to be a redundant library.</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_" xml:space="preserve">
+    <value>Error: The file {0} is not a supported spectral library file format.</value>
+  </data>
+  <data name="CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_" xml:space="preserve">
+    <value>Error: The library you are trying to add conflicts with a library already in the file.</value>
+  </data>
+  <data name="CommandLine_CanReadFile_Error__File_does_not_exist___0__" xml:space="preserve">
+    <value>Error: File does not exist: {0}.</value>
+  </data>
+  <data name="CommandLine_SaveFile_Saving_file___" xml:space="preserve">
+    <value>Saving file...</value>
+  </data>
+  <data name="CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_" xml:space="preserve">
+    <value>Error: The file could not be saved to {0}.  Check that the directory exists and is not read-only.</value>
+  </data>
+  <data name="CommandLine_SaveFile_File__0__saved_" xml:space="preserve">
+    <value>File {0} saved.</value>
+  </data>
+  <data name="CommandLine_ExportReport_" xml:space="preserve">
+    <value>Error: If you specify a report, you must specify the --report-file=path/to/file.csv parameter.</value>
+  </data>
+  <data name="CommandLine_ExportReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
+    <value>Error: The report {0} does not exist. If it has spaces in its name, use "double quotes" around the entire list of command parameters.</value>
+  </data>
+  <data name="CommandLine_ExportReport_Exporting_report__0____" xml:space="preserve">
+    <value>Exporting report {0}...</value>
+  </data>
+  <data name="CommandLine_ExportReport_Error__The_report__0__could_not_be_saved_to__1____Check_to_make_sure_it_is_not_read_only_" xml:space="preserve">
+    <value>Error: The report {0} could not be saved to {1}.  Check to make sure it is not read-only.</value>
+  </data>
+  <data name="CommandLine_ExportReport_Report__0__exported_successfully_" xml:space="preserve">
+    <value>Report {0} exported successfully.</value>
+  </data>
+  <data name="CommandLine_ExportReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
+    <value>Error: Failure attempting to save {0} report to {1}.</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_" xml:space="preserve">
+    <value>Error: to import tools from a zip you must specify a path --tool-add-zip must be followed by an existing path.</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_" xml:space="preserve">
+    <value>Error: the file specified with the --tool-add-zip command does not exist. Please verify the file location and try again.</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
+    <value>Error: the file specified with the --tool-add-zip command is not a .zip file. Please specify a valid .zip file.</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Installing_tools_from__0_" xml:space="preserve">
+    <value>Installing tools from {0}</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Installed_tool__0_" xml:space="preserve">
+    <value>Installed tool {0}</value>
+  </data>
+  <data name="CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__" xml:space="preserve">
+    <value>Canceled installing tools from {0}.</value>
+  </data>
+  <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
+    <value>Error: to import a tool it must have a name and a command.  Use --tool-add to specify a name and use --tool-command to specify a command.  The tool was not imported...</value>
+  </data>
+  <data name="CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___0_" xml:space="preserve">
+    <value>Error: the provided command for the tool {0} is not of a supported type.  Supported Types are: {0}</value>
+  </data>
+  <data name="CommandLine_ImportTool_The_tool_was_not_imported___" xml:space="preserve">
+    <value>The tool was not imported...</value>
+  </data>
+  <data name="CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_" xml:space="preserve">
+    <value>Error: If {0} is and argument the tool must have a Report Title. Use the --tool-report parameter to specify a report.</value>
+  </data>
+  <data name="CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_" xml:space="preserve">
+    <value>Error: Please import the report format for {0}.  Use the --report-add parameter to add the missing custom report.</value>
+  </data>
+  <data name="CommandLine_ImportTool_" xml:space="preserve">
+    <value>Error: A tool titled {0} already exists.  Please use --tool-conflict-resolution=&lt; overwrite | skip &gt;.  Tool titled {0} was not added.</value>
+  </data>
+  <data name="CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_" xml:space="preserve">
+    <value>Warning: skipping tool {0} due to a name conflict.</value>
+  </data>
+  <data name="CommandLine_ImportTool_Warning__the_tool__0__was_overwritten" xml:space="preserve">
+    <value>Warning: the tool {0} was overwritten</value>
+  </data>
+  <data name="CommandLine_ImportTool__0__was_added_to_the_Tools_Menu_" xml:space="preserve">
+    <value>{0} was added to the Tools Menu.</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_" xml:space="preserve">
+    <value>Error: {0} does not exist. --batch-commands failed.</value>
+  </data>
+  <data name="CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_" xml:space="preserve">
+    <value>Error: failed to open file {0} --batch-commands command failed.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_" xml:space="preserve">
+    <value>Error: {0} does not exist. --report-add command failed.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_" xml:space="preserve">
+    <value>Failure loading {0}. 
+ {1}</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Success__Imported_Reports_from__0_" xml:space="preserve">
+    <value>Success! Imported Reports from {0}</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_" xml:space="preserve">
+    <value>The name '{0}' already exists.</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_" xml:space="preserve">
+    <value>The following names already exist:
+
+{0}
+
+</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_Use_command" xml:space="preserve">
+    <value>Error: Please specify a way to resolve conflicts.  Use command --report-conflict-resolution=&lt; overwrite | skip &gt;.</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_skipping_" xml:space="preserve">
+    <value>Resolving conflicts by skipping.</value>
+  </data>
+  <data name="ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_overwriting_" xml:space="preserve">
+    <value>Resolving conflicts by overwriting.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
+    <value>Error: You must specify an output file to write to with the --exp-file=path/to/file parameter. No transition list will be exported.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_" xml:space="preserve">
+    <value>Error: A template file is required to export a method.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_" xml:space="preserve">
+    <value>Error: The template file {0} does not exist.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_" xml:space="preserve">
+    <value>Error: The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
+    <value>Warning: No export strategy specified (from "single", "protein" or "buckets"). Defaulting to "single".</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_" xml:space="preserve">
+    <value>Warning: The add-energy-ramp parameter is only applicable for Thermo transition lists. This parameter will be ignored.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___" xml:space="preserve">
+    <value>Warning: The vendor {0} does not match the vendor in either the CE or DP prediction setting.  Continuing exporting a transition list anyway...</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
+    <value>Warning: Max transitions per injection must be set to some value between {0} and {1} for export strategies "protein" and "buckets" and for scheduled methods. You specified {3}. Defaulting to {2}.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_" xml:space="preserve">
+    <value>Error: The template extension {0} does not match the expected extension for the instrument {1}. No method will be exported.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
+    <value>Error: the {0} instrument lacks support for direct method export for triggered acquisition.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
+    <value>You must export a {0} transition list and manually import it into a method file using vendor software.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
+    <value>Error: the instrument type {0} does not support triggered acquisition.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
+    <value>Error: triggered acquistion requires a spectral library or imported results in order to rank transitions.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
+    <value>Error: The current document contains peptides without enough information to rank transitions for triggered acquisition.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_No_list_will_be_exported_" xml:space="preserve">
+    <value>No list will be exported.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_No_method_will_be_exported_" xml:space="preserve">
+    <value>No method will be exported.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_" xml:space="preserve">
+    <value>Error: the specified instrument {0} is not compatible with scheduled methods.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction__or_import_results_for_all_peptides_in_the_document_" xml:space="preserve">
+    <value>Error: to export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction, or import results for all peptides in the document.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
+    <value>Error: to export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_" xml:space="preserve">
+    <value>Error: the retention time prediction calculator is unable to score.  Check the calculator settings.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_" xml:space="preserve">
+    <value>Error: the retention time predictor is unable to auto-calculate a regression.  Check to make sure the document contains times for all of the required standard peptides.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_" xml:space="preserve">
+    <value>Error: To export a scheduled method, you must first import results for all peptides in the document.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_" xml:space="preserve">
+    <value>Error: the specified replicate {0} does not exist in the document.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_" xml:space="preserve">
+    <value>Error: The file {0} could not be saved.  Check that the specified file directory exists and is writeable.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_List__0__exported_successfully_" xml:space="preserve">
+    <value>List {0} exported successfully.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
+    <value>Method {0} exported successfully.</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool" xml:space="preserve">
+    <value>Error: There is a conflicting tool</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report" xml:space="preserve">
+    <value>Error: There is a conflicting report</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports" xml:space="preserve">
+    <value>Error: There are {0} conflicting reports</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool" xml:space="preserve">
+    <value> and a conflicting tool</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite__in_the_file__0_" xml:space="preserve">
+    <value> in the file {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_" xml:space="preserve">
+    <value>Please specify 'overwrite' or 'parallel' with the --tool-zip-conflict-resolution command.</value>
+  </data>
+  <data name="AddZipToolHelper_InstallProgram_Error__Package_installation_not_handled_in_SkylineRunner___If_you_have_already_handled_package_installation_use_the___tool_ignore_required_packages_flag" xml:space="preserve">
+    <value>Error: Package installation not handled in SkylineRunner.  If you have already handled package installation use the --tool-ignore-required-packages flag</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwriteAnnotations_There_are_annotations_with_conflicting_names__Please_use_the___tool_zip_overwrite_annotations_command_" xml:space="preserve">
+    <value>There are annotations with conflicting names. Please use the --tool-zip-overwrite-annotations command.</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwriteAnnotations_There_are_conflicting_annotations__Overwriting_" xml:space="preserve">
+    <value>There are conflicting annotations. Overwriting.</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__is_being_overwritten" xml:space="preserve">
+    <value>Warning: the annotation {0} is being overwritten</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwriteAnnotations_There_are_conflicting_annotations__Keeping_existing_" xml:space="preserve">
+    <value>There are conflicting annotations. Keeping existing.</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__may_not_be_what_your_tool_requires_" xml:space="preserve">
+    <value>Warning: the annotation {0} may not be what your tool requires.</value>
+  </data>
+  <data name="AddZipToolHelper_FindProgramPath_A_tool_requires_Program__0__Version__1__and_it_is_not_specified_with_the___tool_program_macro_and___tool_program_path_commands__Tool_Installation_Canceled_" xml:space="preserve">
+    <value>A tool requires Program:{0} Version:{1} and it is not specified with the --tool-program-macro and --tool-program-path commands. Tool Installation Canceled.</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_" xml:space="preserve">
+    <value>Conflicting tool: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_" xml:space="preserve">
+    <value>Conflicting report: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_" xml:space="preserve">
+    <value>Conflicting reports: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_" xml:space="preserve">
+    <value>Overwriting tool: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_" xml:space="preserve">
+    <value>Overwriting report: {0}</value>
+  </data>
+  <data name="AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_" xml:space="preserve">
+    <value>Overwriting reports: {0}</value>
+  </data>
+  <data name="RescoreResultsDlg_Rescore_All_results_must_be_completely_imported_before_they_can_be_re_scored_" xml:space="preserve">
+    <value>All results must be completely imported before they can be re-scored.</value>
   </data>
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Gene" xml:space="preserve">
     <value>Targets by Gene</value>
@@ -6344,5 +6799,8 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_" xml:space="preserve">
     <value>Unexpected document change during operation: {0}</value>
+  </data>
+  <data name="String1" xml:space="preserve">
+    <value>foo</value>
   </data>
 </root>

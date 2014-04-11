@@ -35,19 +35,21 @@ namespace pwiz.Skyline.Model.Results
 {
     internal static class VendorIssueHelper
     {
-        private const string EXE_MZ_WIFF = "mzWiff"; // Not L10N
-        private const string EXT_WIFF_SCAN = ".scan"; // Not L10N
+        // ReSharper disable NonLocalizedString
+        private const string EXE_MZ_WIFF = "mzWiff";
+        private const string EXT_WIFF_SCAN = ".scan";
         private const string KEY_COMPASSXPORT = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CompassXport.exe";
 
         private const string EXE_GROUP2_XML = "group2xml";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
+        // ReSharper restore NonLocalizedString
 
         public static string CreateTempFileSubstitute(string filePath, int sampleIndex,
             LoadingTooSlowlyException slowlyException, ILoadMonitor loader, ref ProgressStatus status)
         {
             string tempFileSubsitute = Path.GetTempFileName();
             // Bruker CompassXport may append .mzML to the name we give it
-            string tempFileMzml = tempFileSubsitute + ".mzML";
+            string tempFileMzml = tempFileSubsitute + ".mzML"; // Not L10N
 
             try
             {
@@ -132,7 +134,7 @@ namespace pwiz.Skyline.Model.Results
                         string proteinPilotCommandWithArgs = (string)key.GetValue(string.Empty);
 
                         var proteinPilotCommandWithArgsSplit =
-                            proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1"
+                            proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1" // Not L10N
                         string path = Path.GetDirectoryName(proteinPilotCommandWithArgsSplit[0].Trim(new[] { '\\', '\"' })); // Remove preceding "
                         if (path != null)
                             group2XmlPath = Path.Combine(path, EXE_GROUP2_XML);
@@ -145,12 +147,14 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // run group2xml
+                // ReSharper disable NonLocalizedString
                 var argv = new[]
                                {
                                    "XML",
                                    "\"" + inputFile + "\"",
                                    "\"" + outputFile + "\""
                                };
+                // ReSharper restore NonLocalizedString
 
                 var psi = new ProcessStartInfo(group2XmlPath)
                               {
@@ -158,7 +162,7 @@ namespace pwiz.Skyline.Model.Results
                                   UseShellExecute = false,
                                   // Common directory includes the directory separator
                                   WorkingDirectory = Path.GetDirectoryName(group2XmlPath) ?? string.Empty,
-                                  Arguments = string.Join(" ", argv.ToArray()),
+                                  Arguments = string.Join(" ", argv.ToArray()), // Not L10N
                                   RedirectStandardError = true,
                                   RedirectStandardOutput = true,
                               };
@@ -255,7 +259,7 @@ namespace pwiz.Skyline.Model.Results
                 UseShellExecute = false,
                 // Common directory includes the directory separator
                 WorkingDirectory = Path.GetDirectoryName(filePathWiff) ?? string.Empty,
-                Arguments = string.Join(" ", argv.ToArray()),
+                Arguments = string.Join(" ", argv.ToArray()), // Not L10N
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
@@ -321,6 +325,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new IOException(Resources.VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_);
 
             // CompassXport arguments
+            // ReSharper disable NonLocalizedString
             var argv = new[]
                            {
                                "-a \"" + filePathBruker + "\"",     // input file (directory)
@@ -328,6 +333,7 @@ namespace pwiz.Skyline.Model.Results
                                "-mode 2",                           // mode 2 (mzML)
                                "-raw 0"                             // export line spectra (profile data is HUGE and SLOW!)
                            };
+            // ReSharper restore NonLocalizedString
 
             // Start CompassXport in its own process.
             var psi = new ProcessStartInfo(compassXportExe)
@@ -335,8 +341,8 @@ namespace pwiz.Skyline.Model.Results
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 // Common directory includes the directory separator
-                WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
-                Arguments = string.Join(" ", argv),
+                WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                Arguments = string.Join(" ", argv), // Not L10N
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
@@ -382,7 +388,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Update progress as each spectra batch is converted.
-                match = Regex.Match(line, @"Spectrum \d+ - (\d+)");
+                match = Regex.Match(line, @"Spectrum \d+ - (\d+)"); // Not L10N
                 if (match.Success)
                 {
                     var spectrumEnd = int.Parse(match.Groups[1].Value);

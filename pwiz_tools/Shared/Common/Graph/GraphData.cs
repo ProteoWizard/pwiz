@@ -50,7 +50,7 @@ namespace pwiz.Common.Graph
         public override string ToString()
         {
             var stringWriter = new StringWriter();
-            Write(stringWriter, "\t");
+            Write(stringWriter, "\t"); // Not L10N
             return stringWriter.ToString();
         }
         public void Write(TextWriter writer, string separator)

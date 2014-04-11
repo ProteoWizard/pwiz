@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public static CultureInfo English { get { return CultureInfo.GetCultureInfo("en"); }}
+        public static CultureInfo English { get { return CultureInfo.GetCultureInfo("en"); }} // Not L10N
 
         private static bool IsDisplayLanguageSupported(CultureInfo cultureInfo)
         {

@@ -31,8 +31,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     {
         public static readonly Identifier REPLICATE_NAME_ID
             = new Identifier("ResultFile", // Not L10N
-                             "Replicate",
-                             "Replicate");
+                             "Replicate",  // Not L10N
+                             "Replicate"); // Not L10N
 
         public static readonly PivotType REPLICATE = new ReplicatePivotType();
         public static readonly PivotType ISOTOPE_LABEL = new IsotopeLabelPivotType();
@@ -146,21 +146,21 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             var result = new List<ReportColumn>();
             if (Contains(columns, typeof(DbProteinResult)))
             {
-                result.Add(new ReportColumn(typeof(DbProteinResult), "Protein"));
+                result.Add(new ReportColumn(typeof(DbProteinResult), "Protein")); // Not L10N
             }
             else if (Contains(columns, typeof(DbPeptideResult)))
             {
-                result.Add(new ReportColumn(typeof(DbPeptideResult), "Peptide"));
+                result.Add(new ReportColumn(typeof(DbPeptideResult), "Peptide")); // Not L10N
             } 
             else if (Contains(columns, typeof(DbPrecursorResult)))
             {
-                result.Add(new ReportColumn(typeof(DbPrecursorResult), "Precursor"));
-                result.Add(new ReportColumn(typeof(DbPrecursorResult), "OptStep"));
+                result.Add(new ReportColumn(typeof(DbPrecursorResult), "Precursor")); // Not L10N
+                result.Add(new ReportColumn(typeof(DbPrecursorResult), "OptStep")); // Not L10N
             }
             else if (Contains(columns, typeof(DbTransitionResult)))
             {
-                result.Add(new ReportColumn(typeof(DbTransitionResult), "Transition"));
-                result.Add(new ReportColumn(typeof(DbTransitionResult), "PrecursorResult", "OptStep"));
+                result.Add(new ReportColumn(typeof(DbTransitionResult), "Transition")); // Not L10N
+                result.Add(new ReportColumn(typeof(DbTransitionResult), "PrecursorResult", "OptStep")); // Not L10N
             }
             return result;
         }
@@ -186,9 +186,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             if (columns.Count > 0)
             {
                 if (columns.Contains(column => IsPrecursorType(column.Table)))
-                    return new [] {new ReportColumn(typeof(DbPrecursor), "IsotopeLabelType")};
+                    return new[] { new ReportColumn(typeof(DbPrecursor), "IsotopeLabelType") }; // Not L10N
                 if (columns.Contains(column => IsTransitionType(column.Table)))
-                    return new [] {new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType")};
+                    return new[] { new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType") }; // Not L10N
             }
             return new ReportColumn[0];
         }
@@ -208,6 +208,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         public override IList<ReportColumn> GetGroupByColumns(IList<ReportColumn> columns)
         {
             var result = new List<ReportColumn>();
+            // ReSharper disable NonLocalizedString
             if (Contains(columns, typeof (DbPrecursor)))
             {
                 result.Add(new ReportColumn(typeof (DbPrecursor), "Peptide"));
@@ -220,7 +221,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 result.Add(new ReportColumn(typeof (DbTransition), "Losses"));
                 result.Add(new ReportColumn(typeof (DbTransition), "Precursor", "Peptide"));
                 result.Add(new ReportColumn(typeof (DbTransition), "Precursor", "Charge"));
-            } 
+            }
 
             if (Contains(columns, typeof(DbPrecursorResult)))
             {
@@ -232,9 +233,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 result.Add(new ReportColumn(typeof(DbTransitionResult), REPLICATE_NAME_ID));
                 result.Add(new ReportColumn(typeof(DbTransitionResult), "PrecursorResult", "OptStep"));
             }
+            // ReSharper restore NonLocalizedString
+
             return result;
         }
-
+        // ReSharper disable NonLocalizedString
         public static readonly IList<String> PRECURSOR_CROSSTAB_VALUES 
             = new ReadOnlyCollection<String>(
                 new []
@@ -258,6 +261,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         "Note"
                     }
                 );
+        // ReSharper restore NonLocalizedString
 
         public override bool IsCrosstabValue(Type table, String column)
         {

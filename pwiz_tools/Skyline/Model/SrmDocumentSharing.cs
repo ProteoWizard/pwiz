@@ -37,8 +37,8 @@ namespace pwiz.Skyline.Model
 {
     internal class SrmDocumentSharing
     {
-        public const string EXT = ".zip";
-        public const string EXT_SKY_ZIP = ".sky.zip";
+        public const string EXT = ".zip"; // Not L10N
+        public const string EXT_SKY_ZIP = ".sky.zip"; // Not L10N
 
         public static string FILTER_SHARING
         {

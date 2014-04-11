@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model
 // ReSharper restore InconsistentNaming
     public static class ExportInstrumentType
     {
-        // Not L10N
+        // ReSharper disable NonLocalizedString
         public const string ABI = "AB SCIEX";
         public const string ABI_QTRAP = "AB SCIEX QTRAP";
         public const string ABI_TOF = "AB SCIEX TOF";
@@ -174,6 +174,7 @@ namespace pwiz.Skyline.Model
         public const string EXT_BRUKER = ".m";
         public const string EXT_THERMO = ".meth";
         public const string EXT_WATERS = ".exp";
+        // ReSharper restore NonLocalizedString
 
         public static readonly string[] METHOD_TYPES =
             {
@@ -821,7 +822,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            writer.Write("Positive");
+            writer.Write("Positive"); // Not L10N
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
@@ -915,9 +916,9 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             writer.Write(Document.Settings.GetModifiedSequence(nodePep) +
-                "_" + nodeTranGroup.TransitionGroup.LabelType.ToString().Replace(' ', '_'));
+                "_" + nodeTranGroup.TransitionGroup.LabelType.ToString().Replace(' ', '_')); // Not L10N
             if (step != 0)
-                writer.Write("_" + step);
+                writer.Write("_" + step); // Not L10N
             writer.Write(FieldSeparator);
             int id;
             var key = new GroupStepKey(nodeTranGroup.Id.GlobalIndex, step);
@@ -1183,10 +1184,10 @@ namespace pwiz.Skyline.Model
             string primaryOrSecondary = string.Empty;
             if (MethodType == ExportMethodType.Triggered)
             {
-                primaryOrSecondary = IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran) ? "1" : "2";
+                primaryOrSecondary = IsPrimary(nodeTranGroup, nodeTranGroupPrimary, nodeTran) ? "1" : "2"; // Not L10N
             }
 
-            string oneLine = string.Format("{0},{1},{2},{3}", q1, q3, dwellOrRt, extPeptideId) +
+            string oneLine = string.Format("{0},{1},{2},{3}", q1, q3, dwellOrRt, extPeptideId) + // Not L10N
                              GetOptionalColumns(dp,
                                                 ce,
                                                 precursorWindow,
@@ -1215,8 +1216,8 @@ namespace pwiz.Skyline.Model
                     extGroupId,
                     variableRtWindowText,
                     primaryOrSecondary,
-                    "1000",
-                    "1.0",
+                    "1000", // Not L10N
+                    "1.0", // Not L10N
                     dp,
                     ce);
             }
@@ -1270,7 +1271,7 @@ namespace pwiz.Skyline.Model
                     nodePepGroup.Name,
                     modifiedPepSequence,
                     GetTransitionName(charge, nodeTran),
-                    GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture),
+                    GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture), // Not L10N
                     nodeTranGroup.TransitionGroup.LabelType);
                 extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                     nodePepGroup.Name,
@@ -1280,8 +1281,8 @@ namespace pwiz.Skyline.Model
             }
 
             // remove commas to prevent addition of extra columns that will be misinterpretted in method builder exe 
-            extPeptideId = extPeptideId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_");
-            extGroupId = extGroupId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_");
+            extPeptideId = extPeptideId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_"); // Not L10N
+            extGroupId = extGroupId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_"); // Not L10N
 
             int existCharge;
             if (!_groupNamesToCharge.TryGetValue(extGroupId, out existCharge))
@@ -1290,7 +1291,7 @@ namespace pwiz.Skyline.Model
             }
             else if (existCharge != charge)
             {
-                extGroupId = string.Format("{0} +{1}", extGroupId, charge);
+                extGroupId = string.Format("{0} +{1}", extGroupId, charge); // Not L10N
             }
         }
 
@@ -1668,16 +1669,16 @@ namespace pwiz.Skyline.Model
             else if (MethodType == ExportMethodType.Triggered)
             {
                 writer.Write(FieldSeparator);
-                writer.Write("Primary");
+                writer.Write("Primary"); // Not L10N
                 writer.Write(FieldSeparator);
-                writer.Write("Trigger");
+                writer.Write("Trigger"); // Not L10N
             }
             writer.Write(FieldSeparator);
             writer.Write("Fragmentor"); // Not L10N
             writer.Write(FieldSeparator);
             writer.Write("Collision Energy"); // Not L10N
             writer.Write(FieldSeparator);
-            writer.Write("Cell Accelerator Voltage");
+            writer.Write("Cell Accelerator Voltage"); // Not L10N
             if (MethodType != ExportMethodType.Standard)
             {
                 writer.Write(FieldSeparator);
@@ -1707,7 +1708,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             // Write modified sequence for the light peptide molecule
             string modifiedSequence = Document.Settings.GetModifiedSequence(nodePep);
-            string compoundName = string.Format("{0}.{1}", modifiedSequence, nodeTranGroup.TransitionGroup.LabelType);
+            string compoundName = string.Format("{0}.{1}", modifiedSequence, nodeTranGroup.TransitionGroup.LabelType); // Not L10N
             writer.Write(compoundName);
 
             writer.Write(FieldSeparator);
@@ -1905,8 +1906,8 @@ namespace pwiz.Skyline.Model
             if (IsDda)
             {
                 const string deltaMz = "20"; // Not L10N // TODO check: Delta m/z (ppm) 
-                Write(writer, "True", precursorMz, deltaMz, z,
-                      "Preferred", retentionTime,
+                Write(writer, "True", precursorMz, deltaMz, z, // Not L10N
+                      "Preferred", retentionTime, // Not L10N
                       deltaRetentionTime, isolationWidth, collisionEnergy);
             }
             else
@@ -2109,9 +2110,9 @@ namespace pwiz.Skyline.Model
 
         public override bool HasHeaders { get { return true; } }
 
+        // ReSharper disable NonLocalizedString
         protected override void WriteHeaders(TextWriter writer)
         {
-            // Not L10N
             writer.Write("protein.name");
             writer.Write(FieldSeparator);
             writer.Write("peptide.seq");    // modified sequence to support 1:1 requirement with precursor m/z
@@ -2139,6 +2140,7 @@ namespace pwiz.Skyline.Model
             }
             writer.WriteLine();
         }
+        // ReSharper restore NonLocalizedString
 
         protected override void WriteTransition(TextWriter writer,
                                                 PeptideGroupDocNode nodePepGroup,
@@ -2245,7 +2247,8 @@ namespace pwiz.Skyline.Model
 
         private const string PRIMARY_DEPENDENCY_LIBRARY = "QuantifyClassLibrary.dll"; // Not L10N
 
-        private static readonly string[] DEPENDENCY_LIBRARIES = {   // Not L10N
+        // ReSharper disable NonLocalizedString
+        private static readonly string[] DEPENDENCY_LIBRARIES = {   
                                                                     PRIMARY_DEPENDENCY_LIBRARY,
                                                                     "CompoundDatabaseClassLibrary.dll",
                                                                     "MassSpectrometerLibrary.dll",
@@ -2256,6 +2259,8 @@ namespace pwiz.Skyline.Model
                                                                     "UtilityClassLibrary.dll",
                                                                     "WizardData.dll"
                                                                 };
+        // ReSharper restore NonLocalizedString
+
         private static void EnsureLibraries()
         {
             string skylinePath = Assembly.GetExecutingAssembly().Location;
@@ -2345,7 +2350,7 @@ namespace pwiz.Skyline.Model
 
         public static string RegQueryKeyValue(UIntPtr hKey, string path)
         {
-            return RegQueryKeyValue(hKey, path, "");
+            return RegQueryKeyValue(hKey, path, string.Empty);
         }
 
         public static string RegQueryKeyValue(UIntPtr hKey, string path, string valueName)

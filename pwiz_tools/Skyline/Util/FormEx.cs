@@ -77,10 +77,8 @@ namespace pwiz.Skyline.Util
             if (Program.FunctionalTest)
                 _undisposedForms.Add(this);
 
-// ReSharper disable LocalizableElement
             if (ShowFormNames)
-                Text += "  (" + GetType().Name + ")";
-// ReSharper restore LocalizableElement
+                Text += "  (" + GetType().Name + ")"; // Not L10N
         }
 
         protected override bool ShowWithoutActivation

@@ -40,7 +40,7 @@ namespace pwiz.Common.DataBinding
         public EventHandler ClickEventHandler { get; private set; }
         public override string ToString()
         {
-            return ReferenceEquals(null, Value) ? "" : Value.ToString();
+            return ReferenceEquals(null, Value) ? string.Empty : Value.ToString();
         }
     }
 }

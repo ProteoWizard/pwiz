@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
             string xAxisTitle = Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide;
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
-                xAxisTitle += " (" + paneKey.IsotopeLabelType + ")";
+                xAxisTitle += " (" + paneKey.IsotopeLabelType + ")"; // Not L10N
             }
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Text;
