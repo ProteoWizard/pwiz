@@ -181,6 +181,8 @@ void WatersMseReader::initTargetColumns(){
                                               LineEntry::insertPrecursorMass));
   optionalColumns_.push_back(wColumnTranslator("minMass", -1,
                                               LineEntry::insertMinMass));
+  optionalColumns_.push_back(wColumnTranslator("precursor.Mobility", -1,
+                                              LineEntry::insertPrecursorMobility));
 
 
   numColumns_ = targetColumns_.size();
@@ -263,11 +265,15 @@ void WatersMseReader::parseHeader(string& line){
         }
     }
 
-    // if both optional columns were found, add them to the targets
+    // if the first two optional columns were found, add them to the targets
     if( optionalColumns_[0].position_ != -1 &&
         optionalColumns_[1].position_ != -1 ){
         targetColumns_.insert(targetColumns_.end()-1, 
                               optionalColumns_.begin(), optionalColumns_.end());
+    }
+    // add precursor mobility column if found
+    if( optionalColumns_[2].position_ != -1 ){
+        targetColumns_.push_back(optionalColumns_[2]);
     }
     
     // sort by column number so they can be fetched in order
@@ -377,6 +383,7 @@ void WatersMseReader::storeLine(LineEntry& entry){
         curMsePSM_->unmodSeq = entry.sequence;
         curMsePSM_->mz = entry.precursorMz;
         curMsePSM_->score = entry.score;
+        curMsePSM_->precursorMobility = entry.precursorMobility;
         curMsePSM_->retentionTime = entry.retentionTime;
         parseModString(entry, curMsePSM_);
         curMsePSM_->mzs.push_back(entry.fragmentMz);
@@ -487,6 +494,8 @@ bool WatersMseReader::getSpectrum(PSM* psm,
                                   bool getPeaks){    
 
     returnData.id = ((MsePSM*)psm)->specKey;
+    returnData.ionMobility = ((MsePSM*)psm)->precursorMobility;
+    returnData.ionMobilityType = 1;
     returnData.retentionTime = ((MsePSM*)psm)->retentionTime;
     returnData.mz = ((MsePSM*)psm)->mz;
     returnData.numPeaks = ((MsePSM*)psm)->mzs.size();

@@ -693,9 +693,8 @@ namespace BiblioSpec
         sqlite3_stmt* statement;
         if (sqlite3_prepare(msfFile_, query.c_str(), -1, &statement, NULL) != SQLITE_OK)
         {
-            Verbosity::debug("SQLITE error message: %s", sqlite3_errmsg(msfFile_) );
             Verbosity::error("Cannot prepare SQL select statement for fetching "
-                             "spectra from %s", msfName_);
+                             "spectra from %s: %s", msfName_, sqlite3_errmsg(msfFile_));
         }
         return statement;
     }

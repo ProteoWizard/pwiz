@@ -83,7 +83,7 @@ class BlibFilter : public BlibMaker
     int minPeaks_;        // Spectrum must have this many peaks to be included
     double minAverageScore_; // don't include best spec if average dotp is lower
 
-    bool redundantLibHasAdditionalColumns_;
+    int tableVersion_;
     bool useBestScoring_;
     map<int, bool> higherIsBetter_;
     char zSql[2048];
@@ -130,7 +130,7 @@ BlibFilter::BlibFilter()
     redundantDbName_ = "redundant";
     minPeaks_ = 20; 
     minAverageScore_ = 0;
-    redundantLibHasAdditionalColumns_ = true;
+    tableVersion_ = 0;
     useBestScoring_ = false;
     // Never append to a non-redundant library
     setOverwrite(true);
@@ -289,6 +289,8 @@ void BlibFilter::init(){
            "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, "
            "RedundantRefSpectraID INTEGER, "
            "SpectrumSourceID INTEGER, "
+           "ionMobilityValue REAL, "
+           "ionMobilityType INTEGER, "
            "retentionTime REAL, "
            "bestSpectrum INTEGER, " // boolean
            "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )" );
@@ -359,15 +361,15 @@ void BlibFilter::buildNonRedundantLib()
     transferSpectrumFiles(redundantDbName_);
 
     // find out if we have retention times and other additional columns
-    string optional_cols = "";
-    if( tableColumnExists(redundantDbName_, "RefSpectra", "SpecIDinFile") ){
-        optional_cols += ", SpecIDinFile";
-    }
-    if( tableColumnExists(redundantDbName_, "RefSpectra", "retentionTime") ){
-        optional_cols += ", retentionTime ";
-        redundantLibHasAdditionalColumns_ = true;
-    } else {
-        redundantLibHasAdditionalColumns_ = false;
+    tableVersion_ = 0;
+    string optional_cols;
+    if (tableColumnExists(redundantDbName_, "RefSpectra", "retentionTime")) {
+        ++tableVersion_;
+        optional_cols = ", SpecIDinFile, retentionTime";
+        if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityValue")) {
+            ++tableVersion_;
+            optional_cols += ", ionMobilityValue, ionMobilityType";
+        }
     }
 
     vector<RefSpectrum*> oneIon;
@@ -384,7 +386,7 @@ void BlibFilter::buildNonRedundantLib()
     //first Order by peptideModSeq and charge, filter by num peaks
     sprintf(zSql,
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
-            "prevAA, nextAA, numPeaks, score, scoreType %s"
+            "prevAA, nextAA, numPeaks, score, scoreType %s "
             "FROM %s.RefSpectra "
             "WHERE numPeaks >= %i "
             "ORDER BY peptideModSeq, precursorCharge %s", optional_cols.c_str(), redundantDbName_, minPeaks_,
@@ -435,6 +437,8 @@ void BlibFilter::buildNonRedundantLib()
         tmpRef->setMz(sqlite3_column_double(pStmt,2));
         tmpRef->setCharge(charge);
         // if not selected, value == 0
+        tmpRef->setIonMobility(sqlite3_column_double(pStmt, 12));
+        tmpRef->setIonMobilityType(sqlite3_column_int(pStmt, 13));
         tmpRef->setRetentionTime(sqlite3_column_double(pStmt, 11));
         tmpRef->setMods(pepModSeq);
         tmpRef->setPrevAA("-");
@@ -584,7 +588,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
         specID = transferSpectrum(redundantDbName_, 
                                   oneIon.at(0)->getLibSpecID(), 
                                   num_spec,
-                                  redundantLibHasAdditionalColumns_);
+                                  tableVersion_);
     } else if(!useBestScoring_) { // choose the one with more peaks
 		if (num_spec == 2){
 			// in the future, pick the one with the best search score
@@ -596,7 +600,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
 			specID = transferSpectrum(redundantDbName_, 
 									  oneIon.at(bestIndex)->getLibSpecID(), 
 									  num_spec,
-									  redundantLibHasAdditionalColumns_);
+									  tableVersion_);
 		} else { // compute all-by-all dot-products
 
 				// preprocess all RefSpectrum in oneIon
@@ -644,7 +648,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
 					specID = transferSpectrum(redundantDbName_, 
 											  oneIon.at(bestIndex)->getLibSpecID(), 
 											  oneIon.size(),
-											  redundantLibHasAdditionalColumns_);
+											  tableVersion_);
 				} else {
 					Verbosity::warn("Best score is %f for %s, charge %d after "
 									"comparing %i spectra.  This sequence will not be "
@@ -706,7 +710,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
 			}*/
         }
         specID = transferSpectrum(redundantDbName_, winner->getLibSpecID(),
-                                    oneIon.size(), redundantLibHasAdditionalColumns_);
+                                    oneIon.size(), tableVersion_);
 		bestIndex = indices[winner];
     }
 
@@ -715,11 +719,15 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
         // if( oneIon.at(i)->getRetentionTime() == 0){ continue; }
         int specIdRedundant = oneIon.at(i)->getLibSpecID();
         sprintf(zSql,
-                "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, SpectrumSourceID, retentionTime, bestSpectrum) "
-                "VALUES (%d, %d, %d, %f, %d)",
+                "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, "
+                "SpectrumSourceID, ionMobilityValue, ionMobilityType, "
+                "retentionTime, bestSpectrum) "
+                "VALUES (%d, %d, %d, %f, %d, %f, %d)",
                 specID,
                 specIdRedundant,
                 getNewFileId(redundantDbName_, specIdRedundant),  // All files should exist by now
+                oneIon.at(i)->getIonMobility(),
+                oneIon.at(i)->getIonMobilityType(),
                 oneIon.at(i)->getRetentionTime(),
                 i == bestIndex ? 1 : 0);
         sql_stmt(zSql);

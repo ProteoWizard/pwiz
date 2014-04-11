@@ -402,11 +402,11 @@ void BuildParser::insertSpectrum(PSM* psm,
     
     // construct insert statement for RefSpectra
     sprintf(sql_statement_buf,
-            "INSERT INTO RefSpectra(peptideSeq, precursorMZ,"
-            "precursorCharge, peptideModSeq, prevAA, nextAA, copies,"
-            "numPeaks, retentionTime, fileID, specIDinFile, score, "
-            "scoreType) "
-            "VALUES('%s', %f, %d, '%s', '%s', '%s', 1, %d, %f, %lld, '%s', "
+            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobilityValue, "
+            "ionMobilityType, retentionTime, fileID, specIDinFile, "
+            "score, scoreType) "
+            "VALUES('%s', %f, %d, '%s', '%s', '%s', 1, %d, %f, %d, %f, %lld, '%s', "
             "%f, %d)",
             psm->unmodSeq.c_str(),
             curSpectrum.mz,
@@ -414,6 +414,8 @@ void BuildParser::insertSpectrum(PSM* psm,
             psm->modifiedSeq.c_str(),
             "-", "-", // don't add flanking AA
             curSpectrum.numPeaks,
+            curSpectrum.ionMobility,
+            curSpectrum.ionMobilityType,
             curSpectrum.retentionTime,
             fileId,
             specIdStr.c_str(),

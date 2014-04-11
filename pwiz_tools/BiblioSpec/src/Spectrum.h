@@ -108,6 +108,8 @@ class Spectrum
     int scanNumber_;
     SPEC_TYPE type_;
     double mz_;
+    double ionMobility_;
+    int ionMobilityType_;
     double retentionTime_;
     double totalIonCurrentRaw_;
     double totalIonCurrentProcessed_;
@@ -131,6 +133,8 @@ class Spectrum
     //getters
     int getScanNumber() const;
     double getMz() const;
+    double getIonMobility() const;
+    int getIonMobilityType() const;
     double getRetentionTime() const;
     int getNumRawPeaks() const; 
     int getNumProcessedPeaks() const;
@@ -151,6 +155,8 @@ class Spectrum
     
     //setters
     void setScanNumber(int newNum);
+    void setIonMobility(double mobility);
+    void setIonMobilityType(int type);
     void setRetentionTime(double rt);
     void setRawPeaks(const vector<PEAK_T>& newpeaks);
     void setProcessedPeaks(const vector<PEAK_T>& newpeaks);

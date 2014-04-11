@@ -294,6 +294,8 @@ void BlibMaker::createTables()
            "nextAA CHAR(1), "
            "copies INTEGER, "
            "numPeaks INTEGER, "
+           "ionMobilityValue REAL, "
+           "ionMobilityType INTEGER, "
            "retentionTime REAL, "
            "fileID INTEGER, "
            "SpecIDinFile VARCHAR(256), "// spec label (id) in source file
@@ -375,22 +377,18 @@ void BlibMaker::updateTables(){
         createTable("ScoreTypes");
     }
 
-    const char* newColumns[] = {"retentionTime", 
-                                "fileID", 
-                                "SpecIDinFile",
-                                "score",
-                                "scoreType" };
-    const char* newTypes[] = {"REAL", 
-                              "INTEGER", 
-                              "VARCHAR(256)", 
-                              "REAL", 
-                              "TINYINT" };
-    int numCols = sizeof(newColumns) / sizeof(char*);
-    for(int i = 0; i < numCols; i++){
-        if( ! tableColumnExists("main", "RefSpectra", newColumns[i]) ){
-            sprintf(zSql,
-                    "ALTER TABLE RefSpectra ADD %s %s",
-                    newColumns[i], newTypes[i]);
+    vector< pair<string, string> > newColumns;
+    newColumns.push_back(make_pair("retentionTime", "REAL"));
+    newColumns.push_back(make_pair("fileID", "INTEGER"));
+    newColumns.push_back(make_pair("SpecIDinFile", "VARCHAR(256)"));
+    newColumns.push_back(make_pair("score", "REAL"));
+    newColumns.push_back(make_pair("scoreType", "TINYINT"));
+    newColumns.push_back(make_pair("ionMobilityValue", "REAL"));
+    newColumns.push_back(make_pair("ionMobilityType", "INTEGER"));
+
+    for (vector< pair<string, string> >::const_iterator i = newColumns.begin(); i != newColumns.end(); ++i) {
+        if (!tableColumnExists("main", "RefSpectra", i->first.c_str())) {
+            sprintf(zSql, "ALTER TABLE RefSpectra ADD %s %s", i->first.c_str(), i->second.c_str());
             sql_stmt(zSql);
         }
     }
@@ -568,25 +566,28 @@ int BlibMaker::getNewFileId(const char* libName, int specID){
 int BlibMaker::transferSpectrum(const char* schemaTmp, 
                                 int spectraTmpID, 
                                 int copies,
-                                bool tmpHasAdditionalColumns)
+                                int tableVersion)
 {
     int newFileID = getNewFileId(schemaTmp, spectraTmpID);
 
     // find out if the source library has the same columns as the new
-    const char* alternate_cols ="retentionTime, specIDinFile, score, scoreType";
-    if( ! tmpHasAdditionalColumns ){
-        alternate_cols = "'0', '0', '0', '0'";
+    string alternate_cols = "'0', '0', '0', '0', '0', '0'";
+    if (tableVersion > 0) {
+        alternate_cols = (tableVersion > 1) ?
+            "ionMobilityValue, ionMobilityType" : "'0', '0'";
+        alternate_cols += ", retentionTime, specIDinFile, score, scoreType";
     }
 
     sprintf(zSql,
-            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, "
-            "precursorCharge, peptideModSeq, prevAA, nextAA, copies, numPeaks, "
-            "fileID, retentionTime, specIDinFile, score, scoreType) "
+            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
+            "ionMobilityValue, ionMobilityType, retentionTime, specIDinFile, "
+            "score, scoreType) "
             "SELECT peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
             "FROM %s.RefSpectra "
             "WHERE id = %d",
-            copies, newFileID, alternate_cols, schemaTmp, spectraTmpID);
+            copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
     sql_stmt(zSql);
 
     int spectraID = (int)sqlite3_last_insert_rowid(getDb());

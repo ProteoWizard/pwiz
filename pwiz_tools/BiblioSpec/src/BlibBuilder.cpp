@@ -254,8 +254,14 @@ int BlibBuilder::transferLibrary(int iLib,
     sql_stmt(zSql);
 
     // does the incomming library have retentiontime, score, etc columns
-    bool tmpHasAdditionalColumns =
-        tableColumnExists(schemaTmp, "RefSpectra", "retentionTime");
+    int tableVersion = 0;
+    if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
+        if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityValue")) {
+            tableVersion = 2;
+        } else {
+            tableVersion = 1;
+        }
+    }
 
     beginTransaction();
 
@@ -288,7 +294,7 @@ int BlibBuilder::transferLibrary(int iLib,
 
         // Even if you are transfering from a non-redundant library
         // you only get credit for one spectrum in a redundant library
-        transferSpectrum(schemaTmp, spectraId, 1, tmpHasAdditionalColumns);
+        transferSpectrum(schemaTmp, spectraId, 1, tableVersion);
 
         rc = sqlite3_step(pStmt);
     }

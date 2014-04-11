@@ -34,6 +34,8 @@ namespace BiblioSpec {
 
 struct SpecData{
     int id;
+    float ionMobility;
+    int ionMobilityType;
     double retentionTime;
     double mz;
     int numPeaks;
@@ -41,7 +43,7 @@ struct SpecData{
     float* intensities;
     
     SpecData():
-    id(0), retentionTime(0), mz(0), numPeaks(-1){
+    id(0), ionMobility(0), ionMobilityType(0), retentionTime(0), mz(0), numPeaks(-1){
         mzs = NULL;
         intensities = NULL;
     };
@@ -53,6 +55,8 @@ struct SpecData{
 
     SpecData& operator=(SpecData& rhs){
         id = rhs.id;
+        ionMobility = rhs.ionMobility;
+        ionMobilityType = rhs.ionMobilityType;
         retentionTime = rhs.retentionTime;
         mz = rhs.mz;
         numPeaks = rhs.numPeaks;

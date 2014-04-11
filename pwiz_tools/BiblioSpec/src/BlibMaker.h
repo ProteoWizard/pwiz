@@ -101,7 +101,7 @@ protected:
     int transferSpectrum(const char* schemaTmp, 
                          int spectraTmpID, 
                          int copies,
-                         bool tmpHasAdditionalColumns = true);
+                         int tableVersion = 0);
     void transferModifications(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeaks(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferSpectrumFiles(const char* schmaTmp);

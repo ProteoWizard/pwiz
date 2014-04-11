@@ -34,7 +34,10 @@ namespace BiblioSpec {
 Spectrum::Spectrum() :
     scanNumber_(0), 
     type_(SPEC_UNDEF), 
-    mz_(0), 
+    mz_(0),
+    ionMobility_(0),
+    ionMobilityType_(0),
+    retentionTime_(0),
     totalIonCurrentRaw_(-1),
     totalIonCurrentProcessed_(-1), 
     basePeakIntensityRaw_(-1), 
@@ -46,6 +49,9 @@ Spectrum::Spectrum(const Spectrum& s)
 {
     scanNumber_ = s.scanNumber_;
     mz_ = s.mz_;
+    ionMobility_ = s.ionMobility_;
+    ionMobilityType_ = s.ionMobilityType_;
+    retentionTime_ = s.retentionTime_;
     type_ = s.type_;
     totalIonCurrentRaw_ = s.totalIonCurrentRaw_;
     totalIonCurrentProcessed_ = s.totalIonCurrentProcessed_;
@@ -66,6 +72,9 @@ Spectrum::~Spectrum()
 void Spectrum::clear() {
     scanNumber_ = 0;
     mz_ = 0;
+    ionMobility_ = 0;
+    ionMobilityType_ = 0;
+    retentionTime_ = 0;
     type_ = SPEC_UNDEF;
     possibleCharges_.clear();
     rawPeaks_.clear();
@@ -80,6 +89,9 @@ Spectrum& Spectrum::operator= (const Spectrum& right)
     scanNumber_ = right.scanNumber_;
     type_ = right.type_;
     mz_ = right.mz_;
+    ionMobility_ = right.ionMobility_;
+    ionMobilityType_ = right.ionMobilityType_;
+    retentionTime_ = right.retentionTime_;
     possibleCharges_ = right.possibleCharges_;
     rawPeaks_ = right.rawPeaks_;
     processedPeaks_ = right.processedPeaks_;
@@ -100,6 +112,16 @@ int Spectrum::getScanNumber() const
 double Spectrum::getMz() const
 {
     return mz_;
+}
+
+double Spectrum::getIonMobility() const
+{
+    return ionMobility_;
+}
+
+int Spectrum::getIonMobilityType() const
+{
+    return ionMobilityType_;
 }
 
 double Spectrum::getRetentionTime() const
@@ -233,6 +255,14 @@ void Spectrum::setScanNumber(int newNum) {
 
 void Spectrum::setMz(double newmz){
     mz_ = newmz;
+}
+
+void Spectrum::setIonMobility(double mobility) {
+    ionMobility_ = mobility;
+}
+
+void Spectrum::setIonMobilityType(int type) {
+    ionMobilityType_ = type;
 }
 
 void Spectrum::setRetentionTime(double rt){

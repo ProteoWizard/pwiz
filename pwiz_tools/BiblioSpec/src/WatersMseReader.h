@@ -35,17 +35,19 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> >::iterator
  */
 struct MsePSM : PSM {
     double mz;
+    float precursorMobility;
     double retentionTime;
     std::vector<double> mzs;
     std::vector<double> intensities;
     bool valid; // if false, don't add to library
 
-    MsePSM() : PSM(), mz(0), retentionTime(0), valid(true) {
+    MsePSM() : PSM(), mz(0), precursorMobility(0), retentionTime(0), valid(true) {
     }
 
     void clear(){
         PSM::clear();
         mz = 0;
+        precursorMobility = 0;
         retentionTime = 0;
         mzs.clear();
         intensities.clear();
@@ -64,7 +66,11 @@ struct compMsePsm{
         if( left->charge == right->charge ){
             if( left->mz == right->mz ){
                 if( left->retentionTime == right->retentionTime ){
-                    return false;
+                    if( left->precursorMobility == right->precursorMobility) {
+                        return false;
+                    } else {
+                        return (left->precursorMobility < right->precursorMobility);
+                    }
                 } else {
                     return (left->retentionTime < right->retentionTime);
                 }
@@ -96,75 +102,48 @@ public:
   double fragmentIntensity;
   double precursorMass;
   double minMass;
+  float precursorMobility;
   string pass;
 
   LineEntry() : precursorMz(0), precursorZ(0), retentionTime(0),
-      fragmentMz(0), fragmentIntensity(0), precursorMass(0), minMass(0){};
+      fragmentMz(0), fragmentIntensity(0), precursorMass(0), minMass(0),
+      precursorMobility(0) {};
 
   static void insertPrecursorMz(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.precursorMz = 0;
-      } else {
-          le.precursorMz = boost::lexical_cast<double>(value);
-      }
+      le.precursorMz = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertPrecursorZ(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.precursorZ = 0;
-      } else {
-          le.precursorZ = boost::lexical_cast<int>(value);
-      }
+      le.precursorZ = (value.empty()) ? 0 : boost::lexical_cast<int>(value);
   }
   static void insertScore(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.score = 0;
-      } else {
-          le.score = boost::lexical_cast<double>(value);
-      }
+      le.score = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertRetentionTime(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.retentionTime = 0;
-      } else {
-          le.retentionTime = boost::lexical_cast<double>(value);
-      }
+      le.retentionTime = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertSequence(LineEntry& le, const string& value){
-    le.sequence = value;
+      le.sequence = value;
   }
   static void insertModification(LineEntry& le, const string& value){
-    le.modification = value;
+      le.modification = value;
   }
   static void insertFragmentMz(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.fragmentMz = 0;
-      } else {
-          le.fragmentMz = boost::lexical_cast<double>(value);
-      }
+      le.fragmentMz = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertFragmentIntensity(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.fragmentIntensity = 0;
-      } else {
-          le.fragmentIntensity = boost::lexical_cast<double>(value);
-      }
+      le.fragmentIntensity = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertPrecursorMass(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.precursorMass = 0;
-      } else {
-          le.precursorMass = boost::lexical_cast<double>(value);
-      }
+      le.precursorMass = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertMinMass(LineEntry& le, const string& value){
-      if( value.empty() ){
-          le.minMass = 0;
-      } else {
-          le.minMass = boost::lexical_cast<double>(value);
-      }
+      le.minMass = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
+  }
+  static void insertPrecursorMobility(LineEntry& le, const string& value){
+      le.precursorMobility = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertPass(LineEntry& le, const string& value){
-    le.pass = value;
+      le.pass = value;
   }
 };
 /**
