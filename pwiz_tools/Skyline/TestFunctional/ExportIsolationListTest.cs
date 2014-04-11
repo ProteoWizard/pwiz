@@ -134,20 +134,19 @@ namespace pwiz.SkylineTestFunctional
             ExportMethodType methodType, params string[] checkStrings)
         {
             // Set acquisition method, mass analyzer type, resolution, etc.
-            SrmDocument doc = SkylineWindow.Document;
             if (Equals(instrumentType, ExportInstrumentType.AGILENT_TOF))
             {
-                SkylineWindow.SetDocument(doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
+                RunUI(() => SkylineWindow.ModifyDocument("Set TOF full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
                     .ChangePrecursorResolution(FullScanMassAnalyzerType.tof, 10000, null)
                     .ChangeProductResolution(FullScanMassAnalyzerType.tof, 10000, null)
-                    .ChangeAcquisitionMethod(acquisitionMethod, null))), doc);
+                    .ChangeAcquisitionMethod(acquisitionMethod, null)))));
             }
             else
             {
-                SkylineWindow.SetDocument(doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
+                RunUI(() => SkylineWindow.ModifyDocument("Set Orbitrap full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
                     .ChangePrecursorResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
                     .ChangeProductResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
-                    .ChangeAcquisitionMethod(acquisitionMethod, null))), doc);
+                    .ChangeAcquisitionMethod(acquisitionMethod, null)))));
             }
 
             // Open Export Method dialog, and set method to scheduled or standard.
