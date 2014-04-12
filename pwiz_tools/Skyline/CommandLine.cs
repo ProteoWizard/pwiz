@@ -1907,7 +1907,7 @@ namespace pwiz.Skyline
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         viewContext.Export(broker, ref status, viewContext.GetViewInfo(viewSpec), writer,
-                            new DsvWriter(CultureInfo.InvariantCulture, reportColSeparator));
+                            new DsvWriter(CultureInfo.CurrentCulture, reportColSeparator));
                     }
 
                     broker.UpdateProgress(status.Complete());
