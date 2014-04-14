@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, String name, String description,
+        public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, string name, string description,
             PeptideDocNode[] children, bool autoManageChildren)
             : this(id, annotations, new ProteinMetadata(name, description), children, autoManageChildren)
         {
@@ -75,9 +75,9 @@ namespace pwiz.Skyline.Model
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 
-        public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name; } } // prefer ours over peptidgroup, if set
+        public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name; } } // prefer ours over peptidegroup, if set
         public string OriginalName { get { return PeptideGroup.Name; } }
-        public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidgroup, if set
+        public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidegroup, if set
         public string OriginalDescription { get { return PeptideGroup.Description; } } 
         public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(new ProteinMetadata(PeptideGroup.Name, PeptideGroup.Description)); } } // prefer our name and description over peptidegroup
 

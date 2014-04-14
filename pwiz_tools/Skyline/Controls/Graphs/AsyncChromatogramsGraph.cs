@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var peak = curveInfo.Peak;
             int peakId = peak.FilterIndex;
             var color = GetPeakColor(peakId);
-            var curve = curveInfo.Curve = new LineItem(peakId + "", new PointPairList(), color, SymbolType.None);
+            var curve = curveInfo.Curve = new LineItem(peakId + string.Empty, new PointPairList(), color, SymbolType.None);
             curve.Label.IsVisible = false;
             curve.Line.Color = Color.FromArgb(peakId == 0 ? 70 : lineTransparency, color);
             curve.Line.Width = CURVE_LINE_WIDTH;
@@ -619,7 +619,9 @@ namespace pwiz.Skyline.Controls.Graphs
         // Generate a pleasant color for a peak by subdividing the hue circle.
         private Color GetPeakColor(int peakId)
         {
-            if (peakId == 0)
+            // BUG: This won't happen now (peakId will always be positive), but we need
+            // to fix color generation so that unknown/ peptides actually do get the unknown color.
+            if (peakId == -1)
                 return _unknownPeakColor;
 
             double hue = (peakId*109)%360;
