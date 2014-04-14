@@ -162,7 +162,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("The instrument type {0} is not valid for transition list export", value));
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export, value));
                 }
             }
         }
@@ -184,7 +184,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("The instrument type {0} is not valid for method export", value));
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export, value));
                 }
             }
         }
@@ -216,9 +216,9 @@ namespace pwiz.Skyline
             set { _exportOptimizeType = ToOptimizeString(value); }
         }
 
-        public const string OPT_NONE = "NONE";
-        public const string OPT_CE = "CE";
-        public const string OPT_DP = "DP";
+        public const string OPT_NONE = "NONE"; // Not L10N
+        public const string OPT_CE = "CE"; // Not L10N
+        public const string OPT_DP = "DP"; // Not L10N
 
         private static string ToOptimizeString(string value)
         {
@@ -234,7 +234,7 @@ namespace pwiz.Skyline
                 case OPT_DP:
                     return ExportOptimize.DP;
                 default:
-                    throw new ArgumentException(string.Format("The instrument parameter {0} is not valid for optimization.", value));
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_, value));
             }
         }
 
@@ -264,7 +264,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.PRIMARY_COUNT_MIN || value > AbstractMassListExporter.PRIMARY_COUNT_MAX)
                 {
-                    throw new ArgumentException(string.Format("The primary transition count {0} must be between {1} and {2}.", value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__, value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
                 }
                 _primaryTransitionCount = value;
             }
@@ -278,7 +278,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.DWELL_TIME_MIN || value > AbstractMassListExporter.DWELL_TIME_MAX)
                 {
-                    throw new ArgumentException(string.Format("The dwell time {0} must be between {1} and {2}.", value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__, value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
                 }
                 _dwellTime = value;
             }
@@ -293,7 +293,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.RUN_LENGTH_MIN || value > AbstractMassListExporter.RUN_LENGTH_MAX)
                 {
-                    throw new ArgumentException(string.Format("The run length {0} must be between {1} and {2}.", value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
+                    throw new ArgumentException(string.Format(Resources.CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__, value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
                 }
                 _runLength = value;
             }
@@ -350,7 +350,7 @@ namespace pwiz.Skyline
             public NameValuePair(string arg)
                 : this()
             {
-                if (arg.StartsWith("--"))
+                if (arg.StartsWith("--")) // Not L10N
                 {
                     var parts = arg.Substring(2).Split('=');
                     Name = parts[0];
@@ -372,14 +372,14 @@ namespace pwiz.Skyline
             }
             catch (UsageException x)
             {
-                _out.WriteLine("Error: {0}", x.Message);
+                _out.WriteLine(Resources.CommandArgs_ParseArgs_Error___0_, x.Message);
                 return false;
             }
             catch (Exception x)
             {
                 // Unexpected behavior, but better to output the error then appear to crash, and
                 // have Windows write it to the application event log.
-                _out.WriteLine("Error: {0}", x.Message);
+                _out.WriteLine(Resources.CommandArgs_ParseArgs_Error___0_, x.Message);
                 _out.WriteLine(x.StackTrace);
                 return false;
             }
@@ -393,23 +393,24 @@ namespace pwiz.Skyline
                 if (string.IsNullOrEmpty(pair.Name))
                     continue;
 
-                if (IsNameValue(pair, "in"))
+                if (IsNameValue(pair, "in")) // Not L10N
                 {
                     SkylineFile = GetFullPath(pair.Value);
                     // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "dir"))
+                else if (IsNameValue(pair, "dir")) // Not L10N
                 {
                     Directory.SetCurrentDirectory(pair.Value);
                 }
-                else if (IsNameOnly(pair, "timestamp"))
+                else if (IsNameOnly(pair, "timestamp")) // Not L10N
                 {
                     _out.IsTimeStamped = true;
                 }
 
                 // A command that exports all the tools to a text file in a SkylineRunner form for --batch-commands
                 // Not advertised.
+                // ReSharper disable NonLocalizedString
                 else if (IsNameValue(pair, "tool-list-export"))
                 {
                     string pathToOutputFile = pair.Value;
@@ -431,61 +432,63 @@ namespace pwiz.Skyline
                         }
                     }
                 }
+                // ReSharper restore NonLocalizedString
 
                  // Import a skyr file.
-                else if (IsNameValue(pair, "report-add"))
+                else if (IsNameValue(pair, "report-add")) // Not L10N
                 {
                     ImportingSkyr = true;
                     SkyrPath = pair.Value;
                 }
 
-                else if (IsNameValue(pair, "report-conflict-resolution"))
+                else if (IsNameValue(pair, "report-conflict-resolution")) // Not L10N
                 {
                     string input = pair.Value.ToLowerInvariant();
-                    if (input == "overwrite")
+                    if (input == "overwrite") // Not L10N
                     {
                         ResolveSkyrConflictsBySkipping = false;
                     }
-                    if (input == "skip")
+                    if (input == "skip") // Not L10N
                     {
                         ResolveSkyrConflictsBySkipping = true;
                     }
                 }
-                else if (IsNameValue(pair, "tool-add-zip"))
+
+                else if (IsNameValue(pair, "tool-add-zip")) // Not L10N
                 {
                     InstallingToolsFromZip = true;
                     ZippedToolsPath = pair.Value;
                 }
-                else if (IsNameValue(pair, "tool-zip-conflict-resolution"))
+                else if (IsNameValue(pair, "tool-zip-conflict-resolution")) // Not L10N
                 {
                     string input = pair.Value.ToLowerInvariant();
-                    if (input == "overwrite")
+                    if (input == "overwrite") // Not L10N
                     {
                         ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.overwrite;
                     }
-                    if (input == "parallel")
+                    if (input == "parallel") // Not L10N
                     {
                         ResolveZipToolConflictsBySkipping = CommandLine.ResolveZipToolConflicts.in_parallel;
                     }
                 }
-                else if (IsNameValue(pair, "tool-zip-overwrite-annotations"))
+                else if (IsNameValue(pair, "tool-zip-overwrite-annotations")) // Not L10N
                 {
                     string input = pair.Value.ToLowerInvariant();
-                    if (input == "true")
+                    if (input == "true") // Not L10N
                     {
                         ResolveZipToolAnotationConflictsBySkipping = true;
                     }
-                    if (input == "false")
+                    if (input == "false") // Not L10N
                     {
                         ResolveZipToolAnotationConflictsBySkipping = false;
                     }
                 }
-                else if (IsNameValue(pair, "tool-program-macro")) // example --tool-program-macro=R,2.15.2
+                else if (IsNameValue(pair, "tool-program-macro")) // example --tool-program-macro=R,2.15.2  // Not L10N
                 {
                     string [] spliced = pair.Value.Split(',');
                     if (spliced.Count() > 2)
                     {
-                        _out.WriteLine("Warning: Incorrect Usage of the --tool-program-macro command.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_);
                     }
                     else
                     {
@@ -499,6 +502,7 @@ namespace pwiz.Skyline
                         ZippedToolsProgramPathContainer = new ProgramPathContainer(programName, programVersion);
                     }
                 }
+// ReSharper disable NonLocalizedString
                 else if (IsNameValue(pair, "tool-program-path"))
                 {
                     ZippedToolsProgramPathValue = pair.Value;
@@ -620,8 +624,9 @@ namespace pwiz.Skyline
                     ImportSourceDirectory = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
+                // ReSharper restore NonLocalizedString
 
-                else if (IsNameValue(pair, "import-naming-pattern"))
+                else if (IsNameValue(pair, "import-naming-pattern")) // Not L10N
                 {
                     var importNamingPatternVal = pair.Value;
                     RequiresSkylineDocument = true;
@@ -633,27 +638,22 @@ namespace pwiz.Skyline
                         }
                         catch (Exception e)
                         {
-                            _out.WriteLine("Error: Regular expression {0} cannot be parsed.", importNamingPatternVal);
+                            _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_, importNamingPatternVal);
                             _out.WriteLine(e.Message);
                             return false;
                         }
 
-                        Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*");
+                        Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*"); // Not L10N
                         if (!match.Success)
                         {
-                            _out.WriteLine("Error: Regular expression '{0}' does not have any groups.",
+                            _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String,
                                             importNamingPatternVal);
-                            _out.WriteLine(
-                                "       One group is required. The part of the file or sub-directory name");
-                            _out.WriteLine(
-                                "       that matches the first group in the regular expression is used as");
-                            _out.WriteLine("       the replicate name.");
                             return false;
                         }
                     }
                 }
 
-                else if (IsNameValue(pair, "import-optimizing"))
+                else if (IsNameValue(pair, "import-optimizing")) // Not L10N
                 {
                     try
                     {
@@ -662,13 +662,12 @@ namespace pwiz.Skyline
                     catch (ArgumentException)
                     {
                         _out.WriteLine(
-                            "Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none____Defaulting_to_none_,
                             pair.Value);
-                        _out.WriteLine("Defaulting to none.");
                     }
                 }
 
-                else if (IsNameValue(pair, "import-before"))
+                else if (IsNameValue(pair, "import-before")) // Not L10N
                 {
                     var importBeforeDate = pair.Value;
                     if (importBeforeDate != null)
@@ -679,14 +678,14 @@ namespace pwiz.Skyline
                         }
                         catch (Exception e)
                         {
-                            _out.WriteLine("Error: Date {0} cannot be parsed.", importBeforeDate);
+                            _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_, importBeforeDate);
                             _out.WriteLine(e.Message);
                             return false;
                         }
                     }
                 }
 
-                else if (IsNameValue(pair, "import-on-or-after"))
+                else if (IsNameValue(pair, "import-on-or-after")) // Not L10N
                 {
                     var importAfterDate = pair.Value;
                     if (importAfterDate != null)
@@ -697,14 +696,14 @@ namespace pwiz.Skyline
                         }
                         catch (Exception e)
                         {
-                            _out.WriteLine("Error: Date {0} cannot be parsed.", importAfterDate);
+                            _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_, importAfterDate);
                             _out.WriteLine(e.Message);
                             return false;
                         }
                     }
                 }
 
-                else if (IsNameValue(pair, "remove-before"))
+                else if (IsNameValue(pair, "remove-before")) // Not L10N
                 {
                     var removeBeforeDate = pair.Value;
                     RemovingResults = true;
@@ -717,42 +716,42 @@ namespace pwiz.Skyline
                         }
                         catch (Exception e)
                         {
-                            _out.WriteLine("Error: Date {0} cannot be parsed.", removeBeforeDate);
+                            _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Date__0__cannot_be_parsed_, removeBeforeDate);
                             _out.WriteLine(e.Message);
                             return false;
                         }
                     }
                 }
 
-                else if (IsNameValue(pair, "report-name"))
+                else if (IsNameValue(pair, "report-name")) // Not L10N
                 {
                     ReportName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "report-file"))
+                else if (IsNameValue(pair, "report-file")) // Not L10N
                 {
                     ReportFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "report-format"))
+                else if (IsNameValue(pair, "report-format")) // Not L10N
                 {
-                    if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase))
+                    if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                         ReportColumnSeparator = TextUtil.SEPARATOR_TSV;
-                    else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase))
+                    else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                         ReportColumnSeparator = TextUtil.CsvSeparator;
                     else
                     {
                         _out.WriteLine(
-                            "Warning: The report format {0} is invalid. It must be either \"CSV\" or \"TSV\".",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__The_report_format__0__is_invalid__It_must_be_either__CSV__or__TSV__,
                             pair.Value);
-                        _out.WriteLine("Defaulting to CSV.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to_CSV_);
                         ReportColumnSeparator = TextUtil.CsvSeparator;
                     }
                 }
 
-                else if (IsNameValue(pair, "exp-translist-instrument"))
+                else if (IsNameValue(pair, "exp-translist-instrument")) // Not L10N
                 {
                     try
                     {
@@ -761,16 +760,16 @@ namespace pwiz.Skyline
                     }
                     catch (ArgumentException)
                     {
-                        _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:",
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
                                         pair.Value);
                         foreach (string str in ExportInstrumentType.TRANSITION_LIST_TYPES)
                         {
                             _out.WriteLine(str);
                         }
-                        _out.WriteLine("No transition list will be exported.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, "exp-method-instrument"))
+                else if (IsNameValue(pair, "exp-method-instrument")) // Not L10N
                 {
                     try
                     {
@@ -779,70 +778,69 @@ namespace pwiz.Skyline
                     }
                     catch (ArgumentException)
                     {
-                        _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:",
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
                                         pair.Value);
                         foreach (string str in ExportInstrumentType.METHOD_TYPES)
                         {
                             _out.WriteLine(str);
                         }
-                        _out.WriteLine("No method will be exported.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
                     }
                 }
-                else if (IsNameValue(pair, "exp-file"))
+                else if (IsNameValue(pair, "exp-file")) // Not L10N
                 {
                     ExportPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-strategy"))
+                else if (IsNameValue(pair, "exp-strategy")) // Not L10N
                 {
                     ExportStrategySet = true;
                     RequiresSkylineDocument = true;
 
                     string strategy = pair.Value;
 
-                    if (strategy.Equals("single", StringComparison.CurrentCultureIgnoreCase))
+                    if (strategy.Equals("single", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                     {
                         //default
                     }
-                    else if (strategy.Equals("protein", StringComparison.CurrentCultureIgnoreCase))
+                    else if (strategy.Equals("protein", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                         ExportStrategy = ExportStrategy.Protein;
-                    else if (strategy.Equals("buckets", StringComparison.CurrentCultureIgnoreCase))
+                    else if (strategy.Equals("buckets", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                         ExportStrategy = ExportStrategy.Buckets;
                     else
                     {
-                        _out.WriteLine("Warning: The export strategy {0} is not valid. It must be one of",
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_export_strategy__0__is_not_valid__It_must_be_one_of_the_following___string,
                                         pair.Value);
-                        _out.WriteLine("\"single\", \"protein\" or \"buckets\". Defaulting to single.");
                         //already set to Single
                     }
                 }
 
-                else if (IsNameValue(pair, "exp-method-type"))
+                else if (IsNameValue(pair, "exp-method-type")) // Not L10N
                 {
                     var type = pair.Value;
                     RequiresSkylineDocument = true;
-                    if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase))
+                    if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                     {
                         ExportMethodType = ExportMethodType.Scheduled;
                     }
-                    else if (type.Equals("triggered", StringComparison.CurrentCultureIgnoreCase))
+                    else if (type.Equals("triggered", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                     {
                         ExportMethodType = ExportMethodType.Triggered;
                     }
-                    else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase))
+                    else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase)) // Not L10N
                     {
                         //default
                     }
                     else
                     {
                         _out.WriteLine(
-                            "Warning: The method type {0} is invalid. It must be \"standard\", \"scheduled\" or \"triggered\".",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be_one_of_the_following___standard____scheduled__or__triggered__,
                             pair.Value);
-                        _out.WriteLine("Defaulting to standard.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to_standard_);
                     }
                 }
 
-                else if (IsNameValue(pair, "exp-max-trans"))
+                else if (IsNameValue(pair, "exp-max-trans")) // Not L10N
                 {
                     //This one can't be kept within bounds because the bounds depend on the instrument
                     //and the document. 
@@ -852,15 +850,14 @@ namespace pwiz.Skyline
                     }
                     catch
                     {
-                        _out.WriteLine("Warning: Invalid max transitions per injection parameter ({0}).", pair.Value);
-                        _out.WriteLine("It must be a number. Defaulting to " +
-                                        AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__Invalid_max_transitions_per_injection_parameter___0___, pair.Value);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_It_must_be_a_number__Defaulting_to__0__, AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT);
                         MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
                     }
                     RequiresSkylineDocument = true;
                 }
 
-                else if (IsNameValue(pair, "exp-optimizing"))
+                else if (IsNameValue(pair, "exp-optimizing")) // Not L10N
                 {
                     try
                     {
@@ -869,28 +866,28 @@ namespace pwiz.Skyline
                     catch (ArgumentException)
                     {
                         _out.WriteLine(
-                            "Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__Invalid_optimization_parameter___0____Use__ce____dp___or__none__,
                             pair.Value);
-                        _out.WriteLine("Defaulting to none.");
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to_none_);
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-scheduling-replicate"))
+                else if (IsNameValue(pair, "exp-scheduling-replicate")) // Not L10N
                 {
                     SchedulingReplicate = pair.Value;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-template"))
+                else if (IsNameValue(pair, "exp-template")) // Not L10N
                 {
                     TemplateFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameOnly(pair, "exp-ignore-proteins"))
+                else if (IsNameOnly(pair, "exp-ignore-proteins")) // Not L10N
                 {
                     IgnoreProteins = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-primary-count"))
+                else if (IsNameValue(pair, "exp-primary-count")) // Not L10N
                 {
                     try
                     {
@@ -899,14 +896,14 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine(
-                            "Warning: The primary transition count {0} is invalid. it must be a number between {1} and {2}.",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__,
                             pair.Value,
                             AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX);
-                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.PRIMARY_COUNT_DEFAULT);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to__0__, AbstractMassListExporter.PRIMARY_COUNT_DEFAULT);
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-dwell-time"))
+                else if (IsNameValue(pair, "exp-dwell-time")) // Not L10N
                 {
                     try
                     {
@@ -915,19 +912,19 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine(
-                            "Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}.",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__The_dwell_time__0__is_invalid__it_must_be_a_number_between__1__and__2__,
                             pair.Value,
                             AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX);
-                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.DWELL_TIME_DEFAULT);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to__0__, AbstractMassListExporter.DWELL_TIME_DEFAULT);
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameOnly(pair, "exp-add-energy-ramp"))
+                else if (IsNameOnly(pair, "exp-add-energy-ramp")) // Not L10N
                 {
                     AddEnergyRamp = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (IsNameValue(pair, "exp-run-length"))
+                else if (IsNameValue(pair, "exp-run-length")) // Not L10N
                 {
                     try
                     {
@@ -936,10 +933,10 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine(
-                            "Warning: The run length {0} is invalid. It must be a number between {1} and {2}.",
+                            Resources.CommandArgs_ParseArgsInternal_Warning__The_run_length__0__is_invalid__It_must_be_a_number_between__1__and__2__,
                             pair.Value,
                             AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX);
-                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.RUN_LENGTH_DEFAULT);
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Defaulting_to__0__, AbstractMassListExporter.RUN_LENGTH_DEFAULT);
                     }
                     RequiresSkylineDocument = true;
                 }
@@ -948,23 +945,23 @@ namespace pwiz.Skyline
             // If skylineFile isn't set and one of the commands that requires --in is called, complain.
             if (String.IsNullOrEmpty(SkylineFile) && RequiresSkylineDocument && !_isDocumentLoaded)
             {
-                _out.WriteLine("Error: Use --in to specify a Skyline document to open.");
+                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_);
                 return false;
             }
 
             if(ImportingReplicateFile && ImportingSourceDirectory)
             {
-                _out.WriteLine("Error: --import-file and --import-all options cannot be used simultaneously.");
+                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_);
                 return false;
             }
             if(ImportingReplicateFile && ImportNamingPattern != null)
             {       
-                _out.WriteLine("Error: --import-naming-pattern cannot be used with the --import-file option.");
+                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_);
                 return false;
             }
             if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
             {
-                _out.WriteLine("Error: --import-replicate-name cannot be used with the --import-all option.");
+                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
                 return false;
             }
             
@@ -1002,7 +999,7 @@ namespace pwiz.Skyline
         private class ValueMissingException : UsageException
         {
             public ValueMissingException(string name)
-                : base(string.Format("The argument --{0} requires a value and must be specified in the format --name=value",  name))
+                : base(string.Format(Resources.ValueMissingException_ValueMissingException_,  name))
             {
             }
         }
@@ -1010,7 +1007,7 @@ namespace pwiz.Skyline
         private class ValueUnexpectedException : UsageException
         {
             public ValueUnexpectedException(string name)
-                : base(string.Format("The argument --{0} should not have a value specified", name))
+                : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified, name))
             {
             }
         }
@@ -1044,7 +1041,7 @@ namespace pwiz.Skyline
 
             if(!commandArgs.ParseArgs(args))
             {
-                _out.WriteLine("Exiting...");
+                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return;
             }
 
@@ -1078,7 +1075,7 @@ namespace pwiz.Skyline
             if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
                 (skylineFile == null && _doc == null))
             {
-                _out.WriteLine("Exiting...");
+                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return;
             }
 
@@ -1092,7 +1089,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine("Error: Failed to get optimization function {0}. {1}", commandArgs.ImportOptimizeType, x.Message);
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_, commandArgs.ImportOptimizeType, x.Message);
                 }
 
                 if (commandArgs.ImportingReplicateFile)
@@ -1134,14 +1131,14 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine("Error: Failed importing the file {0}. {1}", commandArgs.FastaPath, x.Message);
+                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
                 }
             }
 
             if (commandArgs.SettingLibraryPath)
             {
                 if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
-                    _out.WriteLine("Not setting library.");
+                    _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
             }
 
             if (commandArgs.Saving)
@@ -1157,8 +1154,7 @@ namespace pwiz.Skyline
             if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) &&
                 !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
             {
-                _out.WriteLine("Error: You cannot simultaneously export a transition list and a method.");
-                _out.WriteLine("Neither will be exported. Please change the command line parameters.");
+                _out.WriteLine(Resources.CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__);
             }
             else
             {
@@ -1181,24 +1177,23 @@ namespace pwiz.Skyline
                 using (var stream = new FileStream(skylineFile, FileMode.Open))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                    _out.WriteLine("Opening file...");
+                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
                     _doc = ConnectDocument((SrmDocument)xmlSerializer.Deserialize(stream), skylineFile);
                     if (_doc == null)
                         return false;
 
-                    _out.WriteLine("File {0} opened.", Path.GetFileName(skylineFile));
+                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
                 }
             }
             catch (FileNotFoundException)
             {
-                _out.WriteLine("Error: The Skyline file {0} does not exist.", skylineFile);
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, skylineFile);
                 return false;
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: There was an error opening the file");
-                _out.WriteLine("{0}", skylineFile);
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, skylineFile);
                 _out.WriteLine(XmlUtil.GetInvalidDataMessage(skylineFile, x));
                 return false;
             }
@@ -1224,7 +1219,7 @@ namespace pwiz.Skyline
                 docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
-                    _out.WriteLine("Error: Could not find the spectral library {0} for this document.", docLibFile);
+                    _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_, docLibFile);
                     return null;
                 }
             }
@@ -1247,7 +1242,7 @@ namespace pwiz.Skyline
                     if (File.Exists(pathLibrary))
                         return library.CreateSpec(pathLibrary);
                 }
-                _out.WriteLine("Warning: Could not find the spectral library {0}", library.Name);
+                _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, library.Name);
                 return library.CreateSpec(null);
             }, docLibFile);
 
@@ -1297,7 +1292,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine("Error: Could not find the iRT database {0}", Path.GetFileName(irtCalc.DatabasePath));
+            _out.WriteLine(Resources.CommandLine_FindIrtDatabase_Error__Could_not_find_the_iRT_database__0__, Path.GetFileName(irtCalc.DatabasePath));
             return null;
         }
 
@@ -1327,7 +1322,7 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? string.Empty);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
-            _out.WriteLine("Warning: Could not find the background proteome file {0}", Path.GetFileName(fileName));
+            _out.WriteLine(Resources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__, Path.GetFileName(fileName));
             return BackgroundProteomeList.GetDefault();
         }
 
@@ -1355,7 +1350,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception e)
                     {
-                        _out.WriteLine("Error: Could not get last write time for file {0}", file);
+                        _out.WriteLine(Resources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, file);
                         _out.WriteLine(e);
                         return false;
                     }
@@ -1377,13 +1372,13 @@ namespace pwiz.Skyline
             }
             catch(IOException e)
             {
-                _out.WriteLine("Error: Failure reading file information from directory {0}.", sourceDir);
+                _out.WriteLine(Resources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
                 _out.WriteLine(e.Message);
                 return null;
             }
             if (!listNamedPaths.Any())
             {
-                _out.WriteLine("Error: No data sources found in directory {0}.", sourceDir);
+                _out.WriteLine(Resources.CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__, sourceDir);
                 return null;
             }
 
@@ -1430,13 +1425,12 @@ namespace pwiz.Skyline
                     var replNameNew = match.Groups[1].Value;
                     if (string.IsNullOrEmpty(replNameNew))
                     {
-                        _out.WriteLine("Error: Match to regular expression is empty for {0}.", replName);
+                        _out.WriteLine(Resources.CommandLine_ApplyNamingPattern_Error__Match_to_regular_expression_is_empty_for__0__, replName);
                         return false;
                     }                    
                     if (uniqNames.Contains(replNameNew))
                     {
-                        _out.WriteLine("Error: Duplicate replicate name '{0}'", replNameNew);
-                        _out.WriteLine("       after applying regular expression.");
+                        _out.WriteLine(Resources.CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_, replNameNew);
                         return false;
                     }
                     uniqNames.Add(replNameNew);
@@ -1444,7 +1438,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    _out.WriteLine("Error: {0} does not match the regular expression.", replName);
+                    _out.WriteLine(Resources.CommandLine_ApplyNamingPattern_Error___0__does_not_match_the_regular_expression_, replName);
                     return false;
                 }
             }
@@ -1480,7 +1474,7 @@ namespace pwiz.Skyline
                         if (!filePaths.Contains(dataFilePath.ToLower()))
                         {
                             _out.WriteLine(
-                                "Error: Replicate {0} in the document has an unexpected file {1}.",
+                                Resources.CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__,
                                 replicateName,
                                 dataFilePath);
                             return false;
@@ -1526,8 +1520,7 @@ namespace pwiz.Skyline
                     {
                         if (chromatFilePaths.Contains(fpath.ToLower()))
                         {
-                            _out.WriteLine("{0} -> {1}", replicateName, fpath);
-                            _out.WriteLine("  Note: The file has already been imported. Ignoring...");
+                            _out.WriteLine(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, fpath);
                         }
                         else
                         {
@@ -1557,9 +1550,7 @@ namespace pwiz.Skyline
                     // CONSIDER: Error? Check if the replicate contains the file?
                     //           It does not seem right to just continue on to export a report
                     //           or new method without the results added.
-                    _out.WriteLine("Warning: The replicate {0} already exists", replicateName);
-                    _out.WriteLine("in the given document and the --import-append option is not specified.");
-                    _out.WriteLine("The replicate will not be added to the document.");
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_, replicateName);
                     return true;
                 }
                 
@@ -1571,9 +1562,7 @@ namespace pwiz.Skyline
 
                 if (chromatogram.MSDataFilePaths.Contains(replicateFile, StringComparer.OrdinalIgnoreCase))
                 {
-                    _out.WriteLine("{0} -> {1}", replicateName, replicateFile);
-                    _out.WriteLine("    Note: The file has already been imported. Ignoring...");
-
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
                     return true;
                 }
             }
@@ -1583,13 +1572,12 @@ namespace pwiz.Skyline
 
         public bool ImportResultsFile(string replicateFile, string replicateName, OptimizableRegression optimize)
         {
-            _out.WriteLine("Adding results...");
+            _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
 
             // Hack for un-readable RAW files from Thermo instruments.
             if(!CanReadFile(replicateFile))
             {
-                _out.WriteLine("Warning: Cannot read file {0}.", replicateFile);
-                _out.WriteLine("         Ignoring...");
+                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
                 return true;
             }
 
@@ -1604,41 +1592,40 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
+                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, replicateFile);
                 _out.WriteLine(x.Message);
                 return false;
             }
 
-            status = status ?? new ProgressStatus("").Complete();
+            status = status ?? new ProgressStatus(string.Empty).Complete();
             if (status.IsError && status.ErrorException != null)
             {
                 if (status.ErrorException is MissingDataException)
                 {
-                    _out.WriteLine("Warning: Failed importing the results file {0}.", replicateFile);
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, replicateFile);
                     _out.WriteLine(status.ErrorException.Message);
-                    _out.WriteLine("         Ignoring...");
                     return true;
                 }
-                _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
+                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, replicateFile);
                 _out.WriteLine(status.ErrorException.Message);
                 return false;
             }
             if (!status.IsComplete || ReferenceEquals(_doc, newDoc))
             {
-                _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
+                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, replicateFile);
                 return false;
             }
 
             _doc = newDoc;
 
-            _out.WriteLine("Results added from {0} to replicate {1}.", Path.GetFileName(replicateFile), replicateName);
+            _out.WriteLine(Resources.CommandLine_ImportResultsFile_Results_added_from__0__to_replicate__1__, Path.GetFileName(replicateFile), replicateName);
             //the file was imported successfully
             return true;
         }
 
         public void RemoveResults(DateTime removeBefore)
         {
-            _out.WriteLine("Removing results before " + removeBefore.ToShortDateString() + "...");
+            _out.WriteLine(Resources.CommandLine_RemoveResults_Removing_results_before_ + removeBefore.ToShortDateString() + "..."); // Not L10N
             var filteredChroms = new List<ChromatogramSet>();
             foreach (var chromSet in _doc.Settings.MeasuredResults.Chromatograms)
             {
@@ -1649,7 +1636,7 @@ namespace pwiz.Skyline
                 else
                 {
                     foreach (var fileInfo in chromSet.MSDataFileInfos.Except(listFileInfos))
-                        _out.WriteLine("Removed {0}.", fileInfo.FilePath);
+                        _out.WriteLine(Resources.CommandLine_RemoveResults_Removed__0__, fileInfo.FilePath);
                     if (listFileInfos.Any())
                         filteredChroms.Add(chromSet.ChangeMSDataFileInfos(listFileInfos));
                 }
@@ -1665,7 +1652,7 @@ namespace pwiz.Skyline
 
         public void ImportFasta(string path, bool keepEmptyProteins)
         {
-            _out.WriteLine("Importing FASTA file {0}...", Path.GetFileName(path));
+            _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(path));
             using (var readerFasta = new StreamReader(path))
             {
                 IProgressMonitor progressMonitor = new NoMessageCommandWaitBroker(_out, new ProgressStatus(string.Empty));
@@ -1684,17 +1671,17 @@ namespace pwiz.Skyline
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                _out.WriteLine("Error: Cannot set library name without path.");
+                _out.WriteLine(Resources.CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_);
                 return false;
             }
             else if (!File.Exists(path))
             {
-                _out.WriteLine("Error: The file {0} does not exist.", path);
+                _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__does_not_exist_, path);
                 return false;
             }
             else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
-                _out.WriteLine("Error: The file {0} appears to be a redundant library.");
+                _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__appears_to_be_a_redundant_library_);
                 return false;
             }
 
@@ -1716,7 +1703,7 @@ namespace pwiz.Skyline
                 librarySpec = new SpectrastSpec(name, path);
             else
             {
-                _out.WriteLine("Error: The file {0} is not a supported spectral library file format.", path);
+                _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, path);
                 return false;
             }
 
@@ -1725,7 +1712,7 @@ namespace pwiz.Skyline
             {
                 if (docLibrarySpec.Name == librarySpec.Name || docLibrarySpec.FilePath == librarySpec.FilePath)
                 {
-                    _out.WriteLine("Error: The library you are trying to add conflicts with a library already in the file.");
+                    _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_);
                     return false;
                 }
             }
@@ -1748,7 +1735,7 @@ namespace pwiz.Skyline
         {
             if (!File.Exists(replicatePath) && !Directory.Exists(replicatePath))
             {
-                _out.WriteLine("Error: File does not exist: {0}.",replicatePath);
+                _out.WriteLine(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,replicatePath);
                 return false;
             }
 
@@ -1788,18 +1775,17 @@ namespace pwiz.Skyline
 
         public void SaveFile(string saveFile)
         {
-            _out.WriteLine(("Saving file..."));
+            _out.WriteLine(Resources.CommandLine_SaveFile_Saving_file___);
             try
             {
                 SaveDocument(_doc, saveFile);
             }
             catch
             {
-                _out.WriteLine("Error: The file could not be saved to {0}.", saveFile);
-                _out.WriteLine("Check that the directory exists and is not read-only.");
+                _out.WriteLine(Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_, saveFile);
                 return;
             }
-            _out.WriteLine("File " + Path.GetFileName(saveFile) + " saved.");
+            _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
         }
 
         public void ExportReport(string reportName, string reportFile, char reportColSeparator)
@@ -1807,8 +1793,7 @@ namespace pwiz.Skyline
 
             if (String.IsNullOrEmpty(reportFile))
             {
-                _out.WriteLine("Error: If you specify a report, you must specify the");
-                _out.WriteLine("--report-file=path/to/file.csv parameter.");
+                _out.WriteLine(Resources.CommandLine_ExportReport_);
                 return;
             }
 
@@ -1822,12 +1807,11 @@ namespace pwiz.Skyline
             ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportName);
             if (reportSpec == null)
             {
-                _out.WriteLine("Error: The report {0} does not exist. If it has spaces in its name,", reportName);
-                _out.WriteLine("use \"double quotes\" around the entire list of command parameters.");
+                _out.WriteLine(Resources.CommandLine_ExportReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
                 return;
             }
 
-            _out.WriteLine("Exporting report {0}...", reportName);
+            _out.WriteLine(Resources.CommandLine_ExportReport_Exporting_report__0____, reportName);
 
             try
             {
@@ -1835,8 +1819,7 @@ namespace pwiz.Skyline
                 {
                     if (!saver.CanSave())
                     {
-                        _out.WriteLine("Error: The report {0} could not be saved to {1}.", reportName, reportFile);
-                        _out.WriteLine("Check to make sure it is not read-only.");
+                        _out.WriteLine(Resources.CommandLine_ExportReport_Error__The_report__0__could_not_be_saved_to__1____Check_to_make_sure_it_is_not_read_only_, reportName, reportFile);
                     }
 
                     var status = new ProgressStatus(string.Empty);
@@ -1869,12 +1852,12 @@ namespace pwiz.Skyline
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine("Report {0} exported successfully.", reportName);
+                    _out.WriteLine(Resources.CommandLine_ExportReport_Report__0__exported_successfully_, reportName);
                 }
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: Failure attempting to save {0} report to {1}.", reportName, reportFile);
+                _out.WriteLine(Resources.CommandLine_ExportReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
                 _out.WriteLine(x.Message);
             }
         }
@@ -1885,11 +1868,10 @@ namespace pwiz.Skyline
             var viewSpec = viewContext.CustomViews.FirstOrDefault(view2 => view2.Name == reportName);
             if (null == viewSpec)
             {
-                _out.WriteLine("Error: The report {0} does not exist. If it has spaces in its name,", reportName);
-                _out.WriteLine("use \"double quotes\" around the entire list of command parameters.");
+                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
                 return;
             }
-            _out.WriteLine("Exporting report {0}...", reportName);
+            _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, reportName);
 
             try
             {
@@ -1897,8 +1879,8 @@ namespace pwiz.Skyline
                 {
                     if (!saver.CanSave())
                     {
-                        _out.WriteLine("Error: The report {0} could not be saved to {1}.", reportName, reportFile);
-                        _out.WriteLine("Check to make sure it is not read-only.");
+                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, reportName, reportFile);
+                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
                     }
 
                     var status = new ProgressStatus(string.Empty);
@@ -1912,12 +1894,12 @@ namespace pwiz.Skyline
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine("Report {0} exported successfully.", reportName);
+                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_, reportName);
                 }
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: Failure attempting to save {0} report to {1}.", reportName, reportFile);
+                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
                 _out.WriteLine(x.Message);
             }
         }
@@ -1933,24 +1915,21 @@ namespace pwiz.Skyline
         {
             if (string.IsNullOrEmpty(path))
             {
-                _out.WriteLine("Error: to import tools from a zip you must specify a path");
-                _out.WriteLine("        --tool-add-zip must be followed by an existing path.");
+                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_);
                 return;
             }
             if (!File.Exists(path))
             {
-                _out.WriteLine("Error: the file specified with the --tool-add-zip command");
-                _out.WriteLine("       does not exist. Please verify the file location and try again.");
+                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_);
                 return;
             }
-            if (Path.GetExtension(path) != ".zip")
+            if (Path.GetExtension(path) != ".zip") // Not L10N
             {
-                _out.WriteLine("Error: the file specified with the --tool-add-zip command");
-                _out.WriteLine("       is not a .zip file. Please specify a valid .zip file.");
+                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_);
                 return;
             }
             string filename = Path.GetFileName(path);
-            _out.WriteLine("Installing tools from {0}", filename);
+            _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installing_tools_from__0_, filename);
             ToolInstaller.UnzipToolReturnAccumulator result = null;
             try
             {
@@ -1969,13 +1948,13 @@ namespace pwiz.Skyline
                 }
                 foreach (var tool in result.ValidToolsFound)
                 {
-                    _out.WriteLine("Installed tool {0}", tool.Title);
+                    _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, tool.Title);
                 }
                 Settings.Default.Save();
             }
             else
             {
-                _out.WriteLine("Canceled installing tools from {0}.", filename);
+                _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Canceled_installing_tools_from__0__, filename);
             }
         }
 
@@ -1984,37 +1963,31 @@ namespace pwiz.Skyline
         {
             if (title == null | command == null)
             {
-                _out.WriteLine("Error: to import a tool it must have a name and a command");
-                _out.WriteLine("       Use --tool-add to specify a name");
-                _out.WriteLine("       Use --tool-command to specify a command");
-                _out.WriteLine("       The tool was not imported...");
+                _out.WriteLine(Resources.CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___);
                 return;
             }
             // Check if the command is of a supported type and not a URL
             else if (!ConfigureToolsDlg.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
             {
-                string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS);
-                supportedTypes = supportedTypes.Replace(".", "*.");
-                _out.WriteLine("Error: the provided command for the tool {0} is not of a supported type", title);
-                _out.WriteLine("       Supported Types are: {0}", supportedTypes);
-                _out.WriteLine("       The tool was not imported...");
+                string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS); // Not L10N
+                supportedTypes = supportedTypes.Replace(".", "*."); // Not L10N
+                _out.WriteLine(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, title, supportedTypes);
+                _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                 return;
             }
             if (arguments != null && arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH))
             {
                 if (string.IsNullOrEmpty(reportTitle))
                 {
-                    _out.WriteLine("Error: If {0} is and argument the tool must have a Report Title", ToolMacros.INPUT_REPORT_TEMP_PATH);
-                    _out.WriteLine("        use the --tool-report parameter to specify a report");
-                    _out.WriteLine("        The tool was not imported...");
+                    _out.WriteLine(Resources.CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_, ToolMacros.INPUT_REPORT_TEMP_PATH);
+                    _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                     return;
                 }
 
                 if (!ReportSharing.GetExistingReports().ContainsKey(reportTitle))
                 {
-                    _out.WriteLine("Error: Please import the report format for {0}.", reportTitle);
-                    _out.WriteLine("        Use the --report-add parameter to add the missing custom report.");
-                    _out.WriteLine("        The tool was not imported...");
+                    _out.WriteLine(Resources.CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_, reportTitle);
+                    _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                     return;                    
                 }
             }            
@@ -2029,22 +2002,20 @@ namespace pwiz.Skyline
                     if (resolveToolConflictsBySkipping == null)
                     {
                         // Complain. No resolution specified.
-                        _out.WriteLine("Error: A tool titled {0} already exists.", tool.Title);
-                        _out.WriteLine(              "       Please use --tool-conflict-resolution=< overwrite | skip >");
-                        _out.WriteLine("       tool titled {0} was not added.", tool.Title);
+                        _out.WriteLine(Resources.CommandLine_ImportTool_, tool.Title);
                         return; // Dont add.
                     }
                     // Skip conflicts
                     if (resolveToolConflictsBySkipping == true)
                     {
-                        _out.WriteLine("Warning: skipping tool {0} due to a name conflict.", tool.Title);
+                        _out.WriteLine(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, tool.Title);
 //                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
                         return;
                     }
                     // Ovewrite conflicts
                     if (resolveToolConflictsBySkipping == false)
                     {
-                        _out.WriteLine("Warning: the tool {0} was overwritten", tool.Title);
+                        _out.WriteLine(Resources.CommandLine_ImportTool_Warning__the_tool__0__was_overwritten, tool.Title);
 //                      _out.WriteLine("         tool {0} was modified.", tool.Title);
                         if (toolToRemove == null) // If there are multiple tools with the same name this makes sure the first one with a naming conflict is overwritten.
                             toolToRemove = tool;
@@ -2057,7 +2028,7 @@ namespace pwiz.Skyline
             // If no tool was overwritten then its a new tool. Show this message. 
             if (toolToRemove == null)
             {
-                _out.WriteLine("{0} was added to the Tools Menu", title);
+                _out.WriteLine(Resources.CommandLine_ImportTool__0__was_added_to_the_Tools_Menu_, title);
             }
             // Conflicts have been dealt with now add the tool.                       
             // Adding the tool. ToolArguments and ToolInitialDirectory are optional. 
@@ -2073,7 +2044,7 @@ namespace pwiz.Skyline
         {
             if (!File.Exists(path))
             {
-                _out.WriteLine("Error: {0} does not exist. --batch-commands failed.", path);
+                _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error___0__does_not_exist____batch_commands_failed_, path);
             }
             else
             {
@@ -2093,7 +2064,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception)
                 {
-                    _out.WriteLine("Error: failed to open file {0} --batch-commands command failed.", path);
+                    _out.WriteLine(Resources.CommandLine_RunBatchCommands_Error__failed_to_open_file__0____batch_commands_command_failed_, path);
                 }
             }            
         }
@@ -2169,11 +2140,11 @@ namespace pwiz.Skyline
             {
                 if (argument == null)
                 {
-                    commandLineArguments.Append(" \"\"");
+                    commandLineArguments.Append(" \"\""); // Not L10N
                 }
-                else if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty))
+                else if (argument.Contains(" ") || argument.Contains("\t") || argument.Equals(string.Empty)) // Not L10N
                 {
-                    commandLineArguments.Append(" \"" + argument + "\"");
+                    commandLineArguments.Append(" \"" + argument + "\""); // Not L10N
                 }
                 else
                 {
@@ -2188,7 +2159,7 @@ namespace pwiz.Skyline
         {          
             if (!File.Exists(path))
             {
-                _out.WriteLine("Error: {0} does not exist. --report-add command failed.", path);
+                _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, path);
             }
             else
             {           
@@ -2200,13 +2171,13 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    _out.WriteLine("Failure loading {0}. \n {1}", path, e);
+                    _out.WriteLine(Resources.CommandLine_ImportSkyr_, path, e);
                     return;
                 }
                 if (imported)
                 {
                     Settings.Default.Save();
-                    _out.WriteLine("Success! Imported Reports from {0}", Path.GetFileNameWithoutExtension(path));
+                    _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileNameWithoutExtension(path));
                 }
             }
         }
@@ -2225,23 +2196,22 @@ namespace pwiz.Skyline
             internal IList<string> ResolveImportConflicts(IList<string> existing)
             {
                 string messageFormat = existing.Count == 1
-                                           ? "The name '{0}' already exists."
-                                           : "The following names already exist:\n\n{0}\n\n";
-                _outWriter.WriteLine(messageFormat, string.Join("\n", existing.ToArray()));
+                                           ? Resources.ImportSkyrHelper_ResolveImportConflicts_The_name___0___already_exists_
+                                           : Resources.ImportSkyrHelper_ResolveImportConflicts_;
+                _outWriter.WriteLine(messageFormat, string.Join("\n", existing.ToArray())); // Not L10N
                 if (resolveSkyrConflictsBySkipping == null)
                 {
-                    _outWriter.WriteLine("Error: Please specify a way to resolve conflicts.");
-                    _outWriter.WriteLine("       Use command --report-conflict-resolution=< overwrite | skip >");
+                    _outWriter.WriteLine(Resources.ImportSkyrHelper_ResolveImportConflicts_Use_command);
                     return null;
                 }
                 if (resolveSkyrConflictsBySkipping == true)
                 {
-                    _outWriter.WriteLine("Resolving conflicts by skipping.");
+                    _outWriter.WriteLine(Resources.ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_skipping_);
                     // The objects are skipped below for being in the list called existing
                 }
                 if (resolveSkyrConflictsBySkipping == false)
                 {
-                    _outWriter.WriteLine("Resolving conflicts by overwriting.");
+                    _outWriter.WriteLine(Resources.ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_overwriting_);
                     existing.Clear();
                     // All conflicts are overwritten because existing is empty. 
                 }
@@ -2254,9 +2224,7 @@ namespace pwiz.Skyline
         {
             if (string.IsNullOrEmpty(args.ExportPath))
             {
-                _out.WriteLine("Error: You must specify an output file to write to with the");
-                _out.WriteLine("--exp-file=path/to/file parameter. No transition list");
-                _out.WriteLine("will be exported.");
+                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_);
                 return;
             }
 
@@ -2264,37 +2232,33 @@ namespace pwiz.Skyline
             {
                 if (string.IsNullOrEmpty(args.TemplateFile))
                 {
-                    _out.WriteLine("Error: A template file is required to export a method.");
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
                     return;
                 }
                 if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
-                    _out.WriteLine("Error: The template file {0} does not exist.", args.TemplateFile);
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_, args.TemplateFile);
                     return;
                 }
                 if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
-                    _out.WriteLine("Error: The folder {0} does not appear to contain an Agilent QQQ", args.TemplateFile);
-                    _out.WriteLine("method template.  The folder is expected to have a .m extension, and contain the");
-                    _out.WriteLine("file qqqacqmethod.xsd.");
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
                     return;
                 }
             }
 
             if (!args.ExportStrategySet)
             {
-                _out.WriteLine("Warning: No export strategy specified (from \"single\", \"protein\" or");
-                _out.WriteLine("\"buckets\"). Defaulting to \"single\".");
+                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__);
                 args.ExportStrategy = ExportStrategy.Single;
             }
 
             if (args.AddEnergyRamp && !Equals(args.TransListInstrumentType, ExportInstrumentType.THERMO))
             {
-                _out.WriteLine("Warning: The add-energy-ramp parameter is only applicable for Thermo");
-                _out.WriteLine("transition lists. This parameter will be ignored.");
+                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__The_add_energy_ramp_parameter_is_only_applicable_for_Thermo_transition_lists__This_parameter_will_be_ignored_);
             }
 
             string instrument = Equals(type, ExportFileType.List)
@@ -2302,9 +2266,7 @@ namespace pwiz.Skyline
                                     : args.MethodInstrumentType;
             if (!CheckInstrument(instrument, _doc))
             {
-                _out.WriteLine("Warning: The vendor {0} does not match the vendor", instrument);
-                _out.WriteLine("in either the CE or DP prediction setting.");
-                _out.WriteLine("Continuing exporting a transition list anyway...");
+                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__The_vendor__0__does_not_match_the_vendor_in_either_the_CE_or_DP_prediction_setting___Continuing_exporting_a_transition_list_anyway___, instrument);
             }
 
 
@@ -2316,9 +2278,7 @@ namespace pwiz.Skyline
                 (Equals(args.ExportStrategy, ExportStrategy.Buckets) ||
                  Equals(args.ExportStrategy, ExportStrategy.Protein)))
             {
-                _out.WriteLine("Warning: Max transitions per injection must be set to some value between");
-                _out.WriteLine("{0} and {1} for export strategies \"protein\" and \"buckets\" and for", AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans);
-                _out.WriteLine("scheduled methods. You specified {1}. Defaulting to {0}.", AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
+                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__, AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans,AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
 
                 args.MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             }
@@ -2342,8 +2302,7 @@ namespace pwiz.Skyline
                 string extension = Path.GetExtension(args.TemplateFile);
                 if(!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType),extension))
                 {
-                    _out.WriteLine("Error: The template extension {0} does not match the expected extension for",extension);
-                    _out.WriteLine("the instrument {0}. No method will be exported.", args.MethodInstrumentType);
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_template_extension__0__does_not_match_the_expected_extension_for_the_instrument__1___No_method_will_be_exported_, extension,args.MethodInstrumentType);
                     return;
                 }
             }
@@ -2403,33 +2362,29 @@ namespace pwiz.Skyline
                         canTrigger = false;
                         if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO_TSQ))
                         {
-                            _out.WriteLine("Error: the {0} instrument lacks support for direct method export for", instrument);
-                            _out.WriteLine("       triggered acquisition.");
-                            _out.WriteLine("       You must export a {0} transition list and manually import it into", ExportInstrumentType.THERMO);
-                            _out.WriteLine("       a method file using vendor software.");
+                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_, instrument);
+                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_, ExportInstrumentType.THERMO);
                         }
                         else
                         {
-                            _out.WriteLine("Error: the instrument type {0} does not support triggered acquisition.", instrument);
+                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_, instrument);
                         }
                     }
                     else if (!_doc.Settings.HasResults && !_doc.Settings.HasLibraries)
                     {
                         canTrigger = false;
-                        _out.WriteLine("Error: triggered acquistion requires a spectral library or imported results");
-                        _out.WriteLine("       in order to rank transitions.");
+                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_);
                     }
                     else if (!ExportInstrumentType.CanTrigger(instrument, _doc, _exportProperties.SchedulingReplicateNum))
                     {
                         canTrigger = false;
-                        _out.WriteLine("Error: The current document contains peptides without enough information");
-                        _out.WriteLine("       to rank transitions for triggered acquisition.");
+                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_);
                     }
                     if (!canTrigger)
                     {
                         _out.WriteLine(Equals(type, ExportFileType.List)
-                                               ? "No list will be exported."
-                                               : "No method will be exported.");
+                                               ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
+                                               : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
                         return;
                     }
                     _exportProperties.PrimaryTransitionCount = args.PrimaryTransitionCount;
@@ -2440,42 +2395,35 @@ namespace pwiz.Skyline
                     var predictionPep = _doc.Settings.PeptideSettings.Prediction;
                     if (!ExportInstrumentType.CanScheduleInstrumentType(instrument, _doc))
                     {
-                        _out.WriteLine("Error: the specified instrument {0} is not compatible with scheduled methods.",
+                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_,
                                        instrument);
                     }
                     else if (predictionPep.RetentionTime == null)
                     {
                         if (predictionPep.UseMeasuredRTs)
                         {
-                            _out.WriteLine("Error: to export a scheduled method, you must first choose a retention time");
-                            _out.WriteLine("       predictor in Peptide Settings / Prediction, or import results for all");
-                            _out.WriteLine("       peptides in the document.");
+                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction__or_import_results_for_all_peptides_in_the_document_);
                         }
                         else
                         {
-                            _out.WriteLine("Error: to export a scheduled method, you must first choose a retention time");
-                            _out.WriteLine("       predictor in Peptide Settings / Prediction.");
+                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_);
                         }
                     }
                     else if (!predictionPep.RetentionTime.Calculator.IsUsable)
                     {
-                        _out.WriteLine("Error: the retention time prediction calculator is unable to score.");
-                        _out.WriteLine("       Check the calculator settings.");
+                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_retention_time_prediction_calculator_is_unable_to_score___Check_the_calculator_settings_);
                     }
                     else if (!predictionPep.RetentionTime.IsUsable)
                     {
-                        _out.WriteLine("Error: the retention time predictor is unable to auto-calculate a regression.");
-                        _out.WriteLine("       Check to make sure the document contains times for all of the required");
-                        _out.WriteLine("       standard peptides.");
+                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_retention_time_predictor_is_unable_to_auto_calculate_a_regression___Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides_);
                     }
                     else
                     {
-                        _out.WriteLine("Error: To export a scheduled method, you must first import results for all");
-                        _out.WriteLine("       peptides in the document.");
+                        _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__To_export_a_scheduled_method__you_must_first_import_results_for_all_peptides_in_the_document_);
                     }
                     _out.WriteLine(Equals(type, ExportFileType.List)
-                                           ? "No list will be exported."
-                                           : "No method will be exported.");
+                                           ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
+                                           : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
                     return;
                 }
 
@@ -2485,7 +2433,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    if(args.SchedulingReplicate.Equals("LAST"))
+                    if(args.SchedulingReplicate.Equals("LAST")) // Not L10N
                     {
                         _exportProperties.SchedulingReplicateNum = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
                     }
@@ -2494,11 +2442,11 @@ namespace pwiz.Skyline
                         //check whether the given replicate exists
                         if (!_doc.Settings.MeasuredResults.ContainsChromatogram(args.SchedulingReplicate))
                         {
-                            _out.WriteLine("Error: the specified replicate {0} does not exist in the document.",
+                            _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_replicate__0__does_not_exist_in_the_document_,
                                            args.SchedulingReplicate);
                             _out.WriteLine(Equals(type, ExportFileType.List)
-                                                   ? "No list will be exported."
-                                                   : "No method will be exported.");
+                                                   ? Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_
+                                                   : Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_);
                             return;
                         }
 
@@ -2515,15 +2463,14 @@ namespace pwiz.Skyline
             }
             catch (IOException x)
             {
-                _out.WriteLine("Error: The file {0} could not be saved.", args.ExportPath);
-                _out.WriteLine("       Check that the specified file directory exists and is writeable.");
+                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, args.ExportPath);
                 _out.WriteLine(x.Message);
                 return;
             }
 
             _out.WriteLine(Equals(type, ExportFileType.List)
-                               ? "List {0} exported successfully."
-                               : "Method {0} exported successfully.",
+                               ? Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_
+                               : Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_,
                            Path.GetFileName(args.ExportPath));
         }
 
@@ -2700,7 +2647,7 @@ namespace pwiz.Skyline
         public override void WriteLine(string value)
         {
             if (IsTimeStamped)
-                value = DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t") + value;
+                value = DateTime.Now.ToString("[yyyy/MM/dd HH:mm:ss]\t") + value; // Not L10N
             _writer.WriteLine(value);
             Flush();
         }
@@ -2766,9 +2713,9 @@ namespace pwiz.Skyline
                 return false;
             if (resolveToolsAndReports == CommandLine.ResolveZipToolConflicts.overwrite)
             {
-                const string singularToolMessage = "Overwriting tool: {0}";
-                const string singularReportMessage = "Overwriting report: {0}";
-                const string plualReportMessage = "Overwriting reports: {0}";
+                string singularToolMessage = Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_;
+                string singularReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_report___0_;
+                string plualReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_reports___0_;
                 if (reports.Count == 1)
                 {
                     _out.WriteLine(singularReportMessage, reports[0].GetKey());
@@ -2776,7 +2723,7 @@ namespace pwiz.Skyline
                 else if (reports.Count > 1)
                 {
                     List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
-                    string reportTitlesJoined = string.Join(", ", reportTitles);
+                    string reportTitlesJoined = string.Join(", ", reportTitles); // Not L10N
                     _out.WriteLine(plualReportMessage, reportTitlesJoined);
                 }
                 if (toolCollectionName != null)
@@ -2794,32 +2741,32 @@ namespace pwiz.Skyline
                 {
                     if (toolCollectionName != null)
                     {
-                        secondpart = "Error: There is a conflicting tool";   
+                        secondpart = Resources.AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool;   
                     }
                 }
                 else
                 {
                     if (reports.Count == 1)
                     {
-                        firstpart = "Error: There is a conflicting report";
+                        firstpart = Resources.AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_report;
                     }
                     if (reports.Count > 1)
                     {
-                        firstpart = string.Format("Error: There are {0} conflicting reports", reports.Count);
+                        firstpart = string.Format(Resources.AddZipToolHelper_ShouldOverwrite_Error__There_are__0__conflicting_reports, reports.Count);
                     }
                     if (toolCollectionName != null)
                     {                     
-                        secondpart = " and a conflicting tool";
+                        secondpart = Resources.AddZipToolHelper_ShouldOverwrite__and_a_conflicting_tool;
                     }
                 }
-                string message = string.Format(string.Concat(firstpart, secondpart, " in the file {0}"), zipFileName); 
+                string message = string.Format(string.Concat(firstpart, secondpart, Resources.AddZipToolHelper_ShouldOverwrite__in_the_file__0_), zipFileName); 
 
                 _out.WriteLine(message);
-                _out.WriteLine("    Please specify 'overwrite' or 'parallel' with the --tool-zip-conflict-resolution command.");
+                _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_);
                 
-                const string singularToolMessage = "Conflicting tool: {0}";
-                const string singularReportMessage = "Conflicting report: {0}";
-                const string plualReportMessage = "Conflicting reports: {0}";
+                string singularToolMessage = Resources.AddZipToolHelper_ShouldOverwrite_Conflicting_tool___0_;
+                string singularReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Conflicting_report___0_;
+                string plualReportMessage = Resources.AddZipToolHelper_ShouldOverwrite_Conflicting_reports___0_;
                 if (reports.Count == 1)
                 {
                     _out.WriteLine(singularReportMessage, reports[0].GetKey());
@@ -2827,7 +2774,7 @@ namespace pwiz.Skyline
                 else if (reports.Count > 1)
                 {
                     List<string> reportTitles = reports.Select(sp => sp.GetKey()).ToList();
-                    string reportTitlesJoined = string.Join(", ", reportTitles);
+                    string reportTitlesJoined = string.Join(", ", reportTitles); // Not L10N
                     _out.WriteLine(plualReportMessage, reportTitlesJoined);
                 }
                 if (toolCollectionName != null)
@@ -2842,8 +2789,7 @@ namespace pwiz.Skyline
         {
             if (packages.Count > 0 && !packagesHandled)
             {
-                _out.WriteLine("Error: Package installation not handled in SkylineRunner.");
-                _out.WriteLine("       if you have already handled package installation use the --tool-ignore-required-packages flag");
+                _out.WriteLine(Resources.AddZipToolHelper_InstallProgram_Error__Package_installation_not_handled_in_SkylineRunner___If_you_have_already_handled_package_installation_use_the___tool_ignore_required_packages_flag);
                 return null;
             }
             string path;
@@ -2854,22 +2800,22 @@ namespace pwiz.Skyline
         {
             if (overwriteAnnotations == null)
             {
-                _out.WriteLine("There are annotations with conflicting names. Please use the --tool-zip-overwrite-annotations command.");
+                _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_There_are_annotations_with_conflicting_names__Please_use_the___tool_zip_overwrite_annotations_command_);
             }
             if (overwriteAnnotations == true)
             {
-                _out.WriteLine("There are conflicting annotations. Overwriting.");
+                _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_There_are_conflicting_annotations__Overwriting_);
                 foreach (var annotationDef in annotations)
                 {
-                    _out.WriteLine("    Warning: the annotation {0} is being overwritten", annotationDef.GetKey());
+                    _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__is_being_overwritten, annotationDef.GetKey());
                 }
             }
             if (overwriteAnnotations == false)
             {
-                _out.WriteLine("There are conflicting annotations. Keeping existing.");
+                _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_There_are_conflicting_annotations__Keeping_existing_);
                 foreach (var annotationDef in annotations)
                 {
-                    _out.WriteLine("    Warning: the annotation {0} may not be what your tool requires", annotationDef.GetKey());
+                    _out.WriteLine(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__may_not_be_what_your_tool_requires_, annotationDef.GetKey());
                 }
             }
             return overwriteAnnotations;
@@ -2883,8 +2829,7 @@ namespace pwiz.Skyline
                 Settings.Default.ToolFilePaths.Add(programPathContainer,programPath);
                 return programPath;
             }
-            _out.WriteLine("A tool requires Program:{0} Version:{1} and it is not specified with the", missingProgramPathContainer.ProgramName, missingProgramPathContainer.ProgramVersion);
-            _out.WriteLine("--tool-program-macro and --tool-program-path commands. Tool Installation Canceled.");
+            _out.WriteLine(Resources.AddZipToolHelper_FindProgramPath_A_tool_requires_Program__0__Version__1__and_it_is_not_specified_with_the___tool_program_macro_and___tool_program_path_commands__Tool_Installation_Canceled_, missingProgramPathContainer.ProgramName, missingProgramPathContainer.ProgramVersion);
             return null;
         }
     }
@@ -2936,7 +2881,7 @@ namespace pwiz.Skyline
                 var currentTime = DateTime.Now;
                 if ((currentTime - _lastOutput).Seconds > 2 || (status.PercentComplete == 100 && _lastOutput != _waitStart))
                 {
-                    _out.WriteLine("{0}%", status.PercentComplete);
+                    _out.WriteLine("{0}%", status.PercentComplete); // Not L10N
                     _lastOutput = currentTime;
                 }
             }

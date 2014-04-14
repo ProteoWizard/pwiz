@@ -3320,6 +3320,63 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Check to make sure it is not read-only..
+        /// </summary>
+        public static string CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save {0} report to {1}..
+        /// </summary>
+        public static string CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The report {0} could not be saved to {1}..
+        /// </summary>
+        public static string CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The report {0} does not exist. If it has spaces in its name, use &quot;double quotes&quot; around the entire list of command parameters..
+        /// </summary>
+        public static string CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spac" +
+                        "es_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting report {0}....
+        /// </summary>
+        public static string CommandLine_ExportLiveReport_Exporting_report__0____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportLiveReport_Exporting_report__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportLiveReport_Report__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportLiveReport_Report__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: If you specify a report, you must specify the --report-file=path/to/file.csv parameter..
         /// </summary>
         public static string CommandLine_ExportReport_ {
@@ -3566,12 +3623,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: the provided command for the tool {0} is not of a supported type.  Supported Types are: {0}.
+        ///   Looks up a localized string similar to Error: the provided command for the tool {0} is not of a supported type.  Supported Types are: {1}.
         /// </summary>
-        public static string CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___0_ {
+        public static string CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_s" +
-                        "upported_type___Supported_Types_are___0_", resourceCulture);
+                        "upported_type___Supported_Types_are___1_", resourceCulture);
             }
         }
         

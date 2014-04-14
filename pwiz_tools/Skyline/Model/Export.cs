@@ -35,7 +35,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-
+// ReSharper disable NonLocalizedString
 namespace pwiz.Skyline.Model
 {
 // ReSharper disable InconsistentNaming

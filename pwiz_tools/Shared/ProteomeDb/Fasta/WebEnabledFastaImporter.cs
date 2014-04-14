@@ -310,8 +310,8 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const char UNIPROTKB_TAG = 'U';
         public const char SEARCHDONE_TAG = 'X'; // to note searches which have been completed
 
-        private const string STANDARD_REGEX_OUTPUT_FORMAT =
-            "name:${name}\ndescription:${description}\naccession:${accession}\npreferredname:${preferredname}\ngene:${gene}\nspecies:${species}\nsearchterm:";//  Not L10N // Not L10N
+        private const string STANDARD_REGEX_OUTPUT_FORMAT = "name:${name}\ndescription:${description}\naccession:${accession}\npreferredname:${preferredname}\ngene:${gene}\nspecies:${species}\nsearchterm:"; // Not L10N
+
 
         private const string MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN = // match common uniprot OS and GN format
             @"(?<description>((.*?(((\sOS=(?<species>(.*?)))?)((\sGN=(?<gene>(.*?)))?)(\s\w\w\=)+).*))|.*)"; // Not L10N

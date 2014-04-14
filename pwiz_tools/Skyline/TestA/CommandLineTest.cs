@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestA
         }
 
         // TODO: Enable this again once file locking issues have been resolved
-        //[TestMethod]
+//        [TestMethod]
         public void ConsoleSetLibraryTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -893,7 +893,7 @@ namespace pwiz.SkylineTestA
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                Assert.IsTrue(msg.Contains("Warning: Cannot read file"));
+                Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath)));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -903,7 +903,7 @@ namespace pwiz.SkylineTestA
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--save");
 
-                Assert.IsTrue(msg.Contains("Warning: Cannot read file"), msg);
+                Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath)), msg);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults);
                 Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
@@ -1079,7 +1079,7 @@ namespace pwiz.SkylineTestA
                                  "--out=" + outPath1);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Regular expression 'A' does not have any groups."), msg);
+            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String, "A")), msg);
 
 
 
@@ -1090,7 +1090,7 @@ namespace pwiz.SkylineTestA
                       "--out=" + outPath1);
             // output file should not exist
             Assert.IsTrue(!File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Regular expression 'invalid' does not have any groups."), msg);
+            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String, "invalid")), msg);
 
 
 
@@ -1102,7 +1102,7 @@ namespace pwiz.SkylineTestA
                              "--import-naming-pattern=.*_(REP[0-9]+)_(.+)",
                              "--out=" + outPath1);
             Assert.IsFalse(File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Duplicate replicate name"), msg);
+            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_,"REP1")), msg);
 
 
 
@@ -1166,9 +1166,9 @@ namespace pwiz.SkylineTestA
             string rawPathDisk = GetThermoDiskPath(rawPath);
 
             // These messages are due to files that were already in the document.
-            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)), msg); 
-            Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring..."), msg);
-            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
+            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)), msg);
+            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, "160109_Mix1_calcurve_070", rawPath2)), msg);
+//            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
 
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.IsTrue(doc.Settings.HasResults);
@@ -1220,7 +1220,7 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(
                 msg.Contains(
                     string.Format(
-                        "Error: Replicate REP01 in the document has an unexpected file {0}",
+                        Resources.CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__,"REP01",
                         rawPath3)), msg);
 
         }
@@ -1228,7 +1228,6 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ConsoleAddToolTest()
         {
-
             // Get a unique tool title.
             string title = GetTitleHelper();
             const string command = @"C:\Windows\Notepad.exe";
@@ -1265,15 +1264,15 @@ namespace pwiz.SkylineTestA
 
             // Test failure to add tool
             string output = RunCommand("--tool-add=" + title);
-            Assert.IsTrue(output.Contains("The tool was not imported"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ImportTool_The_tool_was_not_imported___));
 
             string output2 = RunCommand("--tool-command=" + command);
-            Assert.IsTrue(output2.Contains("The tool was not imported"));
+            Assert.IsTrue(output2.Contains(Resources.CommandLine_ImportTool_The_tool_was_not_imported___));
 
             const string badCommand = "test";
             string output3 = RunCommand("--tool-add=" + title,"--tool-command=" + badCommand);
-            Assert.IsTrue(output3.Contains("Supported Types are: *.exe; *.com; *.pif; *.cmd; *.bat"));
-            Assert.IsTrue(output3.Contains("The tool was not imported"));
+            Assert.IsTrue(output3.Contains(string.Format(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, title, "*.exe; *.com; *.pif; *.cmd; *.bat")));
+            Assert.IsTrue(output3.Contains(Resources.CommandLine_ImportTool_The_tool_was_not_imported___));
 
             // Now test conflicting titles.
             // Add the tool.
@@ -1353,10 +1352,9 @@ namespace pwiz.SkylineTestA
                      "--tool-arguments=" + importReportArgument,
                      "--tool-initial-dir=" + initialDirectory,
                      "--tool-output-to-immediate-window",
-                     "--tool-report=" + reportTitle3);           
-            Assert.IsTrue(output9.Contains(string.Format("Error: Please import the report format for {0}.", reportTitle3)));
-            Assert.IsTrue(output9.Contains("Use the --report-add parameter to add the missing custom report."));
-            Assert.IsTrue(output9.Contains("The tool was not imported..."));
+                     "--tool-report=" + reportTitle3);
+            Assert.IsTrue(output9.Contains(string.Format(Resources.CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_, reportTitle3)));
+            Assert.IsTrue(output9.Contains(Resources.CommandLine_ImportTool_The_tool_was_not_imported___));
         }
 
         [TestMethod]
@@ -1372,17 +1370,14 @@ namespace pwiz.SkylineTestA
                     Assert.IsFalse(File.Exists(badFileName));
                     const string command = "--tool-add-zip=" + badFileName;
                     string output = RunCommand(command);
-                    Assert.IsTrue(output.Contains("Error: the file specified with the --tool-add-zip command"));
-                    Assert.IsTrue(
-                        output.Contains("       does not exist. Please verify the file location and try again."));
+                    Assert.IsTrue(output.Contains(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_));
                 }
                 {
                     string notZip = testFilesDir.GetTestPath("Broken_file.sky");
                     Assert.IsTrue(File.Exists(notZip));
                     string command = "--tool-add-zip=" + notZip;
                     string output = RunCommand(command);
-                    Assert.IsTrue(output.Contains("Error: the file specified with the --tool-add-zip command"));
-                    Assert.IsTrue(output.Contains("       is not a .zip file. Please specify a valid .zip file."));
+                    Assert.IsTrue(output.Contains(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_));
                 }
                 {
                     var uniqueReportZip = testFilesDir.GetTestPath("UniqueReport.zip");
@@ -1400,10 +1395,10 @@ namespace pwiz.SkylineTestA
                     Assert.IsTrue(output.Contains("Installed tool HelloWorld"));
                     //Try to add the same tool again. Get conflicting report and tool with no overwrite specified.
                     string output1 = RunCommand(command);
-                    Assert.IsTrue(output1.Contains("Error: There is a conflicting tool in the file UniqueReport.zip"));
+                    Assert.IsTrue(output1.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool + Resources.AddZipToolHelper_ShouldOverwrite__in_the_file__0_, "UniqueReport.zip")));
                     Assert.IsTrue(
                         output1.Contains(
-                            "Please specify 'overwrite' or 'parallel' with the --tool-zip-conflict-resolution command."));
+                            Resources.AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_));
                     //Now run with overwrite specified.
                     string output2 = RunCommand(command, "--tool-zip-conflict-resolution=overwrite");
                     Assert.IsTrue(output2.Contains("Overwriting tool: HelloWorld"));
@@ -1428,16 +1423,12 @@ namespace pwiz.SkylineTestA
                     Assert.IsTrue(File.Exists(testCommandLine));
                     string command = "--tool-add-zip=" + testCommandLine;
                     string output = RunCommand(command);
-                    Assert.IsTrue(output.Contains("Error: Package installation not handled in SkylineRunner."));
-                    Assert.IsTrue(
-                        output.Contains(
-                            "if you have already handled package installation use the --tool-ignore-required-packages flag"));
+                    StringAssert.Contains(output, Resources.AddZipToolHelper_InstallProgram_Error__Package_installation_not_handled_in_SkylineRunner___If_you_have_already_handled_package_installation_use_the___tool_ignore_required_packages_flag);
                     string output1 = RunCommand(command, "--tool-ignore-required-packages");
-                    Assert.IsTrue(
-                        output1.Contains("A tool requires Program:Bogus Version:2.15.2 and it is not specified with the"));
-                    Assert.IsTrue(
-                        output1.Contains(
-                            "--tool-program-macro and --tool-program-path commands. Tool Installation Canceled."));
+                    StringAssert.Contains(output1, string.Format(
+                        Resources.AddZipToolHelper_FindProgramPath_A_tool_requires_Program__0__Version__1__and_it_is_not_specified_with_the___tool_program_macro_and___tool_program_path_commands__Tool_Installation_Canceled_, 
+                        "Bogus",
+                        "2.15.2"));
 
                     string path = testFilesDir.GetTestPath("NumberWriter.exe");
                     string output2 = RunCommand(command, "--tool-ignore-required-packages",
@@ -1472,16 +1463,18 @@ namespace pwiz.SkylineTestA
                     string command = "--tool-add-zip=" + conflictingAnnotations;
                     string output = RunCommand(command);
                     Assert.IsTrue(
-                        output.Contains(
-                            "There are annotations with conflicting names. Please use the --tool-zip-overwrite-annotations command."));
+                        output.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_There_are_annotations_with_conflicting_names__Please_use_the___tool_zip_overwrite_annotations_command_)));
                     output = RunCommand(command, "--tool-zip-overwrite-annotations=false");
-                    Assert.IsTrue(output.Contains("There are conflicting annotations. Keeping existing."));
+                    Assert.IsTrue(output.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_There_are_conflicting_annotations__Keeping_existing_)));
                     Assert.IsTrue(
-                        output.Contains("    Warning: the annotation SampleID may not be what your tool requires"));
+                        output.Contains(
+                            string.Format(
+                                Resources.AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__may_not_be_what_your_tool_requires_,
+                                "SampleID")));
 
                     output = RunCommand(command, "--tool-zip-overwrite-annotations=true");
-                    Assert.IsTrue(output.Contains("There are conflicting annotations. Overwriting."));
-                    Assert.IsTrue(output.Contains("    Warning: the annotation SampleID is being overwritten"));
+                    Assert.IsTrue(output.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_There_are_conflicting_annotations__Overwriting_)));
+                    Assert.IsTrue(output.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwriteAnnotations_Warning__the_annotation__0__is_being_overwritten,"SampleID")));
 
                     Settings.Default.AnnotationDefList = new AnnotationDefList();
                     Settings.Default.ToolList.Clear();

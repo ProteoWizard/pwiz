@@ -6582,9 +6582,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___" xml:space="preserve">
     <value>Error: to import a tool it must have a name and a command.  Use --tool-add to specify a name and use --tool-command to specify a command.  The tool was not imported...</value>
   </data>
-  <data name="CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___0_" xml:space="preserve">
-    <value>Error: the provided command for the tool {0} is not of a supported type.  Supported Types are: {0}</value>
-  </data>
   <data name="CommandLine_ImportTool_The_tool_was_not_imported___" xml:space="preserve">
     <value>The tool was not imported...</value>
   </data>
@@ -6802,5 +6799,26 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="String1" xml:space="preserve">
     <value>foo</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__" xml:space="preserve">
+    <value>Error: Failure attempting to save {0} report to {1}.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Report__0__exported_successfully_" xml:space="preserve">
+    <value>Report {0} exported successfully.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_" xml:space="preserve">
+    <value>Error: The report {0} does not exist. If it has spaces in its name, use "double quotes" around the entire list of command parameters.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Exporting_report__0____" xml:space="preserve">
+    <value>Exporting report {0}...</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
+    <value>Error: The report {0} could not be saved to {1}.</value>
+  </data>
+  <data name="CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_" xml:space="preserve">
+    <value>Check to make sure it is not read-only.</value>
+  </data>
+  <data name="CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_" xml:space="preserve">
+    <value>Error: the provided command for the tool {0} is not of a supported type.  Supported Types are: {1}</value>
   </data>
 </root>
