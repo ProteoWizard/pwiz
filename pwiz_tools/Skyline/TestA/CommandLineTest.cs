@@ -640,7 +640,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-max-trans=100",
                                 "--exp-scheduling-replicate=LAST");
             Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction__or_import_results_for_all_peptides_in_the_document_));
-            Assert.IsTrue(output.Contains("No list"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_));
 
             //check for success. This is merely to cover more paths
             string schedulePath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
@@ -1429,6 +1429,7 @@ namespace pwiz.SkylineTestA
                     string output2 = RunCommand(command, "--tool-ignore-required-packages",
                                                 "--tool-program-macro=Bogus,2.15.2",
                                                 "--tool-program-path=" + path);
+
                     StringAssert.Contains(output2, string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, "TestCommandline"));
                     ToolDescription newTool = Settings.Default.ToolList.Last();
                     Assert.AreEqual("TestCommandline", newTool.Title);
