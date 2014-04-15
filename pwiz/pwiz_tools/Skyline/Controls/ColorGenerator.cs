@@ -40,6 +40,10 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public static Color GetColor(string proteinName, string peptideName)
         {
+            // Names may be null, but we can't look up a null value in a dictionary.
+            proteinName = proteinName ?? string.Empty;
+            peptideName = peptideName ?? string.Empty;
+
             // Get dictionary of peptide colors for this protein, or create it.
             Dictionary<string, int> colorsPerPeptide;
             if (!_colorDictionary.TryGetValue(proteinName, out colorsPerPeptide))
