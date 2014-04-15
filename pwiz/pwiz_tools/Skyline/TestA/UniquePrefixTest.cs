@@ -35,6 +35,8 @@ namespace pwiz.SkylineTestA
             var testStrings = new [,]
             {
                 // Original name on left, expected result on right.
+                {null, null},
+                {"", ""},
                 {"A", "A"},
                 {"A", "A"}, // duplicate name (on purpose)
                 {"AB", "AB"},
