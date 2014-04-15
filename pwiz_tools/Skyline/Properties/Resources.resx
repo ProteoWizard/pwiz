@@ -6821,4 +6821,14 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_" xml:space="preserve">
     <value>Error: the provided command for the tool {0} is not of a supported type.  Supported Types are: {1}</value>
   </data>
+  <data name="CommandLineTest_ConsoleAddFastaTest_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="CommandLineTest_ConsoleAddFastaTest_Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
+    <value>successfully.</value>
+    <comment>Context: something finished "successfully".</comment>
+  </data>
 </root>

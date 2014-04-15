@@ -131,8 +131,8 @@ namespace pwiz.SkylineTestA
                                        "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
             
             // check for removed filenames
             Assert.AreEqual(removedFiles.Count(), Regex.Matches(output, "\nRemoved").Count);
@@ -147,8 +147,8 @@ namespace pwiz.SkylineTestA
                                 "--out=" + outPath);
 
             doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
 
             Assert.AreEqual(allFiles.Count(), Regex.Matches(output, "\nRemoved").Count);
             AssertEx.Contains(output, allFiles);
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestA
         }
 
         // TODO: Enable this again once file locking issues have been resolved
-//        [TestMethod]
+        [TestMethod]
         public void ConsoleSetLibraryTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
@@ -173,25 +173,25 @@ namespace pwiz.SkylineTestA
             string output = RunCommand("--in=" + docPath,
                                 "--add-library-name=" + libName,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_));
 
             // Test error (file does not exist)
             output = RunCommand("--in=" + docPath,
                                 "--add-library-path=" + fakePath,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__does_not_exist_, fakePath)));
 
             // Test error (file does not exist)
             output = RunCommand("--in=" + docPath,
                                 "--add-library-path=" + libPathRedundant,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
 
             // Test error (unsupported library format)
             output = RunCommand("--in=" + docPath,
                                 "--add-library-path=" + docPath,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_,docPath)));
 
             // Test add library without name
             output = RunCommand("--in=" + docPath,
@@ -199,8 +199,8 @@ namespace pwiz.SkylineTestA
                                 "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
             Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
@@ -216,8 +216,8 @@ namespace pwiz.SkylineTestA
                                 "--save");
 
             doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
             Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestA
             output = RunCommand("--in=" + outPath,
                                 "--add-library-path=" + libPath,
                                 "--out=" + outPath);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_));
         }
 
         [TestMethod]
@@ -250,8 +250,8 @@ namespace pwiz.SkylineTestA
                                        "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
 
             // Before import, there are 2 peptides. 3 peptides after
             AssertEx.IsDocumentState(doc, 0, 3, 7, 7, 49);
@@ -262,8 +262,8 @@ namespace pwiz.SkylineTestA
                                 "--out=" + outPath);
 
             doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
         }
@@ -347,7 +347,7 @@ namespace pwiz.SkylineTestA
                                        "--exp-translist-instrument=" + ExportInstrumentType.THERMO,
                                        "--exp-file=" + thermoPath);
 
-            Assert.IsTrue(output.Contains("successfully."));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Thermo_test.csv")));
             Assert.IsTrue(File.Exists(thermoPath));
             Assert.AreEqual(doc.TransitionCount, File.ReadAllLines(thermoPath).Length);
 
@@ -363,7 +363,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-dwelltime=20");
 
             //check for success
-            Assert.IsTrue(output.Contains("successfully."));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv")));
             Assert.IsTrue(File.Exists(agilentPath));
             Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(agilentPath).Length);
 
@@ -379,7 +379,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-dwelltime=20");
 
             //check for success
-            Assert.IsTrue(output.Contains("successfully."));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv")));
             Assert.IsTrue(File.Exists(sciexPath));
             Assert.AreEqual(doc.TransitionCount, File.ReadAllLines(sciexPath).Length);
 
@@ -394,7 +394,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-runlength=100");
 
             //check for success
-            Assert.IsTrue(output.Contains("successfully."));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv")));
             Assert.IsTrue(File.Exists(watersPath));
             Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(watersPath).Length);
         }
@@ -446,7 +446,7 @@ namespace pwiz.SkylineTestA
                                            "--exp-max-trans=75");
 
                 //check for success
-                success = output.Contains("successfully.");
+                success = output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Method__0__exported_successfully_, "Agilent_test.m"));
 
                 // Relax a bit if things aren't going well.
                 if (!success)
@@ -477,8 +477,8 @@ namespace pwiz.SkylineTestA
                                 "--exp-primary-count=x");
 
             //check for warning and error
-            Assert.AreEqual(2, CountInstances("Warning", output));  // exp-primary-count and CE not Waters
-            Assert.IsTrue(output.Contains("Error"));    // Waters
+            Assert.AreEqual(2, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Waters
+            Assert.IsTrue(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));    // Waters
             Assert.AreEqual(2, CountInstances(ExportInstrumentType.WATERS, output));
 
             var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
@@ -489,8 +489,8 @@ namespace pwiz.SkylineTestA
                                 "--exp-file=" + failurePath,
                                 "--exp-strategy=single",
                                 "--exp-method-type=triggered");
-            Assert.IsTrue(output.Contains("Error"));    // Thermo TSQ method
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsTrue(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));    // Thermo TSQ method
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
             Assert.AreEqual(2, CountInstances(ExportInstrumentType.THERMO, output));    // Thermo and Thermo TSQ
             Assert.AreEqual(1, CountInstances(ExportInstrumentType.THERMO_TSQ, output));
 
@@ -499,10 +499,9 @@ namespace pwiz.SkylineTestA
                                 "--exp-file=" + failurePath,
                                 "--exp-strategy=single",
                                 "--exp-method-type=triggered");
-            Assert.AreEqual(1, CountInstances("Warning", output));  // exp-primary-count and CE not Agilent
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));  // exp-primary-count and CE not Agilent
             Assert.AreEqual(1, CountInstances(ExportInstrumentType.AGILENT, output));   // CE not Agilent
-            Assert.IsTrue(output.Contains("Error"));    // No library and no data
-            Assert.IsTrue(output.Contains("library"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_Error__triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_));    // No library and no data
 
             // Successful export to Agilent transtion list
             string triggerPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_triggered.sky");
@@ -521,8 +520,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-method-type=triggered");
             Assert.AreEqual(1, CountInstances("Warning", output));  // exp-primary-count and CE not Agilent
             Assert.AreEqual(1, CountInstances(ExportInstrumentType.AGILENT, output));   // CE not Agilent
-            Assert.IsTrue(output.Contains("Error"));    // peptides without enough information
-            Assert.IsTrue(output.Contains("peptides"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_)); // peptides without enough information
 
             //check for success
             var doc = ResultsUtil.DeserializeDocument(triggerPath);
@@ -537,9 +535,9 @@ namespace pwiz.SkylineTestA
                                 "--exp-file=" + agilentTriggeredPath,
                                 "--exp-strategy=single",
                                 "--exp-method-type=triggered");
-            Assert.IsTrue(output.Contains("successfully."));
-            Assert.IsFalse(output.Contains("Error"));
-            Assert.IsFalse(output.Contains("Warning"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AgilentTriggered.csv")));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
             Assert.IsTrue(File.Exists(agilentTriggeredPath));
             Assert.AreEqual(doc.TransitionCount + 1, File.ReadAllLines(agilentTriggeredPath).Length);
         }
@@ -560,13 +558,13 @@ namespace pwiz.SkylineTestA
 
             //Error: file does not exist
             string output = RunCommand("--in=" + bogusPath);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
             //Error: no raw file
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath + "x",
                                 "--import-replicate-name=Single");
-            Assert.IsTrue(output.ToLower().Contains("error"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,rawPath+"x")));
 
             //Error: no reportfile
             output = RunCommand("--in=" + docPath,
@@ -575,7 +573,7 @@ namespace pwiz.SkylineTestA
                                 "--out=" + outPath,
                                 "--report-format=TSV",
                                 "--report-name=" + "Peptide Ratio Results");
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ExportReport_));
 
 
             //Error: no such report
@@ -583,20 +581,20 @@ namespace pwiz.SkylineTestA
                                 "--import-file=" + rawPath,
                                 "--report-file=" + tsvPath,
                                 "--report-name=" + "Bogus Report");
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_,"Bogus Report")));
 
 
             //Error: no --in specified with --import-file
             output = RunCommand("--import-file=" + rawPath,
                                 "--save");
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_));
 
 
             //Error: no --in specified with --report
             output = RunCommand("--out=" + outPath,
                                 "--report-file=" + tsvPath,
                                 "--report-name=" + "Bogus Report");
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_));
 
             //Error: no template
             output = RunCommand("--in=" + docPath,
@@ -604,7 +602,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-method-type=scheduled",
                                 "--exp-strategy=single",
                                 "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"));
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_));
             Assert.IsFalse(output.Contains("No method"));
 
             //Error: template does not exist
@@ -614,8 +612,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-strategy=single",
                                 "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
                                 "--exp-template=" + testFilesDir.GetTestPath("Bogus_template.meth"));
-            Assert.IsTrue(output.Contains("Error"));
-            Assert.IsTrue(output.Contains("exist"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_, testFilesDir.GetTestPath("Bogus_template.meth"))));
             Assert.IsFalse(output.Contains("No method"));
 
             //Error: can't schedule instrument type
@@ -627,7 +624,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-strategy=single",
                                 "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
                                 "--exp-template=" + thermoTemplate);
-            Assert.IsTrue(output.Contains("Error"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_,"Thermo LTQ")));
             Assert.IsTrue(output.Contains("No method"));
 
             //Error: not all peptides have RT info
@@ -642,8 +639,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-strategy=protein",
                                 "--exp-max-trans=100",
                                 "--exp-scheduling-replicate=LAST");
-            Assert.IsTrue(output.Contains("Error"));
-            Assert.IsTrue(output.Contains("peptides"));
+            Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction__or_import_results_for_all_peptides_in_the_document_));
             Assert.IsTrue(output.Contains("No list"));
 
             //check for success. This is merely to cover more paths
@@ -678,7 +674,7 @@ namespace pwiz.SkylineTestA
                                 "--exp-strategy=buckets",
                                 "--exp-max-trans=10000000",
                                 "--exp-scheduling-replicate=Single");
-            Assert.IsTrue(output.Contains("successfully."));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv")));
 
 
             //Check a bunch of warnings
@@ -700,24 +696,24 @@ namespace pwiz.SkylineTestA
                                 "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ);
                                 //1 Error for using the above 2 parameters simultaneously
 
-            Assert.IsFalse(output.Contains("successfully."));
+            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
-            Assert.AreEqual(CountInstances("Warning", output), 11);
-            Assert.AreEqual(CountInstances("Error", output), 1);
+            Assert.AreEqual(CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output), 11);
+            Assert.AreEqual(CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output), 1);
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
 
             output = RunCommand("--in=" + brokenFile);
-            Assert.AreEqual(1, CountInstances("Error", output));
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output));
             AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 2, 7));
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var invalidFile = commandFilesDir.GetTestPath("InvalidFile.sky");
             output = RunCommand("--in=" + invalidFile);
-            Assert.AreEqual(1, CountInstances("Error", output));
+            Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output));
             AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 7, 8));
             AssertEx.Contains(output, string.Format(Resources.DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__, Resources.DigestSettings_Validate_maximum_missed_cleavages, 10, 0, 9));
 
@@ -783,7 +779,7 @@ namespace pwiz.SkylineTestA
             {
                 string arg = string.Format("--{0}", name);
                 string output = RunCommand(getCommandLineForArg(arg));
-                Assert.AreEqual(1, CountInstances("Error", output), string.Format("No error for argument {0}", arg));
+                Assert.AreEqual(1, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Error, output), string.Format("No error for argument {0}", arg));
                 Assert.AreEqual(1, CountInstances(arg, output), string.Format("Missing expected argument {0}", arg));
             }
         }
@@ -964,7 +960,7 @@ namespace pwiz.SkylineTestA
                        "--import-file=" + rawPath,
                        "--out=" + outPath);
 
-            Assert.IsTrue(msg.Contains("Warning: Failed importing the results file"), msg);
+            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___,rawPath)), msg);
             // Read the saved document. FullScan.RAW|mzML should not have been imported
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.IsFalse(doc.Settings.HasResults);
@@ -973,7 +969,8 @@ namespace pwiz.SkylineTestA
             msg = RunCommand("--in=" + outPath,
                              "--import-all=" + testFilesDir.FullPath,
                              "--save");
-            Assert.IsTrue(msg.Contains("Warning: Failed importing the results file"), msg);
+            Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath)), msg);
+
 
             doc = ResultsUtil.DeserializeDocument(outPath);
             Assert.IsTrue(doc.Settings.HasResults);
@@ -1043,7 +1040,7 @@ namespace pwiz.SkylineTestA
                                  "--import-replicate-name=Unscheduled01",
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains("Error:"), msg);
+            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_file_and___import_all_options_cannot_be_used_simultaneously_), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
@@ -1054,7 +1051,7 @@ namespace pwiz.SkylineTestA
                              "--import-replicate-name=Unscheduled01",
                              "--import-all=" + testFilesDir.FullPath,
                              "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains("Error:"), msg);
+            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
@@ -1065,7 +1062,7 @@ namespace pwiz.SkylineTestA
                                  "--import-file=" + rawPath,
                                  "--import-naming-pattern=prefix_(.*)",
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains("Error:"), msg);
+            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_), msg);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
 
@@ -1285,7 +1282,7 @@ namespace pwiz.SkylineTestA
             // Add another tool with the same title.
             string output4 = RunCommand("--tool-add=" + title,
                      "--tool-command=" + command);
-            Assert.IsTrue(output4.Contains(("Error:")));
+            Assert.IsTrue(output4.Contains((string.Format(Resources.CommandLine_ImportTool_, "TestTool1"))));
 
             ToolDescription tool3 = Settings.Default.ToolList.Last();
             Assert.AreNotEqual("", tool3.Arguments);
@@ -1294,8 +1291,7 @@ namespace pwiz.SkylineTestA
             string output5 = RunCommand("--tool-add=" + title,
                      "--tool-command=" + command,
                      "--tool-conflict-resolution=overwrite");
-            Assert.IsTrue((output5.Contains("Warning:")));
-            Assert.IsTrue((output5.Contains("overwritten")));
+            Assert.IsTrue((output5.Contains(string.Format(Resources.CommandLine_ImportTool_Warning__the_tool__0__was_overwritten,"TestTool1"))));
             // Check arguments and initialDir were written over.
             ToolDescription tool4 = Settings.Default.ToolList.Last();
             Assert.AreEqual(title,tool4.Title);
@@ -1306,7 +1302,7 @@ namespace pwiz.SkylineTestA
                      "--tool-command=" + command,
                      "--tool-arguments=thisIsATest",
                      "--tool-conflict-resolution=skip");
-            Assert.IsTrue((output6.Contains("Warning: skipping")));
+            Assert.IsTrue((output6.Contains(string.Format(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_,"TestTool1"))));
             // Check Arguments
             ToolDescription tool5 = Settings.Default.ToolList.Last();
             Assert.AreEqual(title, tool5.Title);
@@ -1315,7 +1311,7 @@ namespace pwiz.SkylineTestA
             // It now complains in this case.
             string output7 = RunCommand( "--tool-arguments=" + arguments,
                      "--tool-initial-dir=" + initialDirectory);
-            Assert.IsTrue(output7.Contains("Error"));
+            Assert.IsTrue(output7.Contains(Resources.CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___));
 
             // Test adding a tool.
             const string newToolTitle = "TestTitle";
@@ -1342,9 +1338,8 @@ namespace pwiz.SkylineTestA
                      "--tool-command=" + command,
                      "--tool-arguments=" + importReportArgument,
                      "--tool-initial-dir=" + initialDirectory,
-                     "--tool-output-to-immediate-window");                        
-            Assert.IsTrue(output8.Contains("Error:"));
-            Assert.IsTrue(output8.Contains("the tool must have a Report Title"));
+                     "--tool-output-to-immediate-window");
+            Assert.IsTrue(output8.Contains(string.Format(Resources.CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_, "$(InputReportTempPath)")));
 
             const string reportTitle3 = "fakeReport";
             string output9 = RunCommand("--tool-add=" + newToolTitle,
@@ -1392,7 +1387,7 @@ namespace pwiz.SkylineTestA
                     Assert.AreEqual("UniqueReport", newTool.ReportTitle);
                     string path = newTool.ToolDirPath;
                     Assert.IsTrue(File.Exists(Path.Combine(path, "HelloWorld.exe")));
-                    Assert.IsTrue(output.Contains("Installed tool HelloWorld"));
+                    Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_,"HelloWorld")));
                     //Try to add the same tool again. Get conflicting report and tool with no overwrite specified.
                     string output1 = RunCommand(command);
                     Assert.IsTrue(output1.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwrite_Error__There_is_a_conflicting_tool + Resources.AddZipToolHelper_ShouldOverwrite__in_the_file__0_, "UniqueReport.zip")));
@@ -1401,10 +1396,10 @@ namespace pwiz.SkylineTestA
                             Resources.AddZipToolHelper_ShouldOverwrite_Please_specify__overwrite__or__parallel__with_the___tool_zip_conflict_resolution_command_));
                     //Now run with overwrite specified.
                     string output2 = RunCommand(command, "--tool-zip-conflict-resolution=overwrite");
-                    Assert.IsTrue(output2.Contains("Overwriting tool: HelloWorld"));
+                    Assert.IsTrue(output2.Contains(string.Format(Resources.AddZipToolHelper_ShouldOverwrite_Overwriting_tool___0_,"HelloWorld")));
                     //Now install in parallel.
                     string output3 = RunCommand(command, "--tool-zip-conflict-resolution=parallel");
-                    Assert.IsTrue(output3.Contains("Installed tool HelloWorld1"));
+                    Assert.IsTrue(output3.Contains(string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, "HelloWorld1")));
                     ToolDescription newTool1 = Settings.Default.ToolList.Last();
                     Assert.AreEqual("HelloWorld1", newTool1.Title);
                     Assert.IsTrue(newTool1.OutputToImmediateWindow);
@@ -1434,7 +1429,7 @@ namespace pwiz.SkylineTestA
                     string output2 = RunCommand(command, "--tool-ignore-required-packages",
                                                 "--tool-program-macro=Bogus,2.15.2",
                                                 "--tool-program-path=" + path);
-                    Assert.IsTrue(output2.Contains("Installed tool TestCommandline"));
+                    StringAssert.Contains(output2, string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, "TestCommandline"));
                     ToolDescription newTool = Settings.Default.ToolList.Last();
                     Assert.AreEqual("TestCommandline", newTool.Title);
                     Assert.AreEqual("$(ProgramPath(Bogus,2.15.2))", newTool.Command);
