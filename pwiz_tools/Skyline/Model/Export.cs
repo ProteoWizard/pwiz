@@ -158,6 +158,7 @@ namespace pwiz.Skyline.Model
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent TOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
+        public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker TOF";
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
@@ -192,6 +193,7 @@ namespace pwiz.Skyline.Model
             {
                 ABI,
                 AGILENT,
+                BRUKER,
                 SHIMADZU,
                 THERMO,
                 THERMO_QUANTIVA,
@@ -369,6 +371,8 @@ namespace pwiz.Skyline.Model
                     return ExportThermoQuantivaCsv(doc, path);
                 case ExportInstrumentType.SHIMADZU:
                     return ExportShimadzuCsv(doc, path);
+                case ExportInstrumentType.BRUKER:
+                    return ExportBrukerCsv(doc, path);
                 case ExportInstrumentType.THERMO_LTQ:
                     OptimizeType = null;
                     return ExportThermoLtqMethod(doc, path, template);
@@ -493,6 +497,16 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.Export(fileName);
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportBrukerCsv(SrmDocument document, string filename)
+        {
+            var exporter = InitExporter(new BrukerMassListExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            exporter.Export(filename);
 
             return exporter;
         }
@@ -972,6 +986,222 @@ namespace pwiz.Skyline.Model
             }
 
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.WriteLine();
+        }
+    }
+
+    public class BrukerMassListExporter : AbstractMassListExporter
+    {
+        public double? DwellTime { get; set; }
+        protected readonly Dictionary<double, int> _retentionIndices = new Dictionary<double, int>();
+        protected int _retentionIndex;
+
+        public BrukerMassListExporter(SrmDocument document)
+            : base(document, null)
+        {
+        }
+
+        protected override string InstrumentType
+        {
+            get { return ExportInstrumentType.BRUKER; }
+        }
+
+        public override bool HasHeaders { get { return true; } }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.Write("Compound Name"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Retention Time"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Retention Time Window"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("CAS Number"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Retention Index"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Scan Type"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Polarity"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Scan Time (ms)"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Separation Method"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Source"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Regulation"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Classification"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Comment"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Transitions Count"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Q1 First Mass"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Q1 Last Mass"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Q1 Resolution"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Q3 First Mass"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Q3 Last Mass"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Q3 Resolution"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Collision Energy"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Dwell Time (ms)"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Is Quantifier"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Quantifier Ions"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Is Qualifier"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qualifier Count"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Mass 1"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Ratio 1"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Mass 2"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Ratio 2"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Mass 3"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Ratio 3"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Mass 4"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Ratio 4"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Mass 5"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("Qual Ratio 5"); // Not L10N
+            writer.Write(FieldSeparator);
+            writer.Write("GUID (Dont fill this Column)");
+
+            writer.WriteLine();
+        }
+
+        protected override void WriteTransition(TextWriter writer,
+                                                PeptideGroupDocNode nodePepGroup,
+                                                PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeTranGroup,
+                                                TransitionGroupDocNode nodeTranGroupPrimary,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            // Compound Name
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep));
+            for (int i = 0; i < nodeTranGroup.TransitionGroup.PrecursorCharge; ++i)
+                writer.Write('+');
+            writer.Write(FieldSeparator);
+            // Retention Time
+            double rtWindow;
+            double? rt = Document.Settings.PeptideSettings.Prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out rtWindow);
+            writer.Write(rt.HasValue ? rt.ToString() : "");
+            writer.Write(FieldSeparator);
+            // Retention Time Window
+            writer.Write(rtWindow);
+            writer.Write(FieldSeparator);
+            // CAS Number
+            writer.Write(FieldSeparator);
+            // Retention Index
+            double retentionIndexKey = rt.GetValueOrDefault();
+            if (_retentionIndices.ContainsKey(retentionIndexKey))
+            {
+                writer.Write(_retentionIndices[retentionIndexKey]);
+            }
+            else
+            {
+                _retentionIndices[retentionIndexKey] = ++_retentionIndex;
+                writer.Write(_retentionIndex);
+            }
+            writer.Write(FieldSeparator);
+            // Scan Type
+            writer.Write("MRM");
+            writer.Write(FieldSeparator);
+            // Polarity
+            writer.Write("Positive");
+            writer.Write(FieldSeparator);
+            // Scan Time (ms)
+            writer.Write("100");
+            writer.Write(FieldSeparator);
+            // Separation Method
+            writer.Write("LCMS");
+            writer.Write(FieldSeparator);
+            // Source
+            writer.Write(FieldSeparator);
+            // Regulation
+            writer.Write(FieldSeparator);
+            // Classification
+            writer.Write(FieldSeparator);
+            // Comment
+            writer.Write(FieldSeparator);
+            // Transitions Count
+            writer.Write(nodePepGroup.TransitionCount);
+            writer.Write(FieldSeparator);
+            // Q1 First Mass
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // Q1 Last Mass
+            writer.Write(FieldSeparator);
+            // Q1 Resolution
+            // TODO fill in value
+            writer.Write(FieldSeparator);
+            // Q3 First Mass
+            double productMz = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step);
+            writer.Write(productMz.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // Q3 Last Mass
+            writer.Write(FieldSeparator);
+            // Q3 Resolution
+            // TODO fill in value
+            writer.Write(FieldSeparator);
+            // Collision Energy
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // Dwell Time
+            writer.Write(DwellTime.HasValue ? DwellTime.ToString() : "");
+            writer.Write(FieldSeparator);
+            // Is Quantifier
+            writer.Write(1);
+            writer.Write(FieldSeparator);
+            // Quantifier Ions
+            writer.Write(productMz.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            // Is Qualifier
+            writer.Write(0);
+            writer.Write(FieldSeparator);
+            // Qualifier Count
+            writer.Write(FieldSeparator);
+            // Qual Mass 1
+            writer.Write(FieldSeparator);
+            // Qual Ratio 1
+            writer.Write(FieldSeparator);
+            // Qual Mass 2
+            writer.Write(FieldSeparator);
+            // Qual Ratio 2
+            writer.Write(FieldSeparator);
+            // Qual Mass 3
+            writer.Write(FieldSeparator);
+            // Qual Ratio 3
+            writer.Write(FieldSeparator);
+            // Qual Mass 4
+            writer.Write(FieldSeparator);
+            // Qual Ratio 4
+            writer.Write(FieldSeparator);
+            // Qual Mass 5
+            writer.Write(FieldSeparator);
+            // Qual Ratio 5
+            writer.Write(FieldSeparator);
+            // GUID ("Dont fill this Column")
+
             writer.WriteLine();
         }
     }

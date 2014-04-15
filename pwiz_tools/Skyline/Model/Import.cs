@@ -904,6 +904,7 @@ namespace pwiz.Skyline.Model
                 int dotIndex = seqClean.IndexOf('.'); // Not L10N
                 if (dotIndex != -1 || (dotIndex = seqClean.IndexOf('_')) != -1)
                     seqClean = seqClean.Substring(0, dotIndex);
+                seqClean = seqClean.TrimEnd(new[]{'+'});
                 return seqClean;
             }
 

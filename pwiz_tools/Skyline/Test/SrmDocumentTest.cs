@@ -193,6 +193,12 @@ namespace pwiz.SkylineTest
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
                               ExportMethodType.Scheduled);
             Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
+                              ExportMethodType.Standard);
+            Assert.AreEqual(1, count);
+            count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
+                              ExportMethodType.Scheduled);
+            Assert.AreEqual(1, count);
         }
 
         private static int EqualCsvs(string xml, int countFields, CreateExporters exporters,
@@ -350,6 +356,18 @@ namespace pwiz.SkylineTest
                     MethodType = methodType,
                     Strategy = strategy,
                     RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : (double?)null
+                };
+        }
+
+        private static void CreateBrukerExporter(SrmDocument actual, ExportMethodType methodType,
+                                                 ExportStrategy strategy,
+                                                 out AbstractMassListExporter exporterActual)
+        {
+            exporterActual = new BrukerMassListExporter(actual)
+                {
+                    MethodType = methodType,
+                    Strategy = strategy,
+                    DwellTime = (methodType == ExportMethodType.Standard) ? DEFAULT_DWELL_TIME : (double?)null
                 };
         }
 
