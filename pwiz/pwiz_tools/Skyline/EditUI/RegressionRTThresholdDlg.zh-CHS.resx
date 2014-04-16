@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>针对保留时间线性回归指定 r 的目标最小值。</value>
+    <value>保留时间线性回归 r 的目标最小值。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>

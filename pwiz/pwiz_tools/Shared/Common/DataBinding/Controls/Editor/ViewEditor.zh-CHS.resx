@@ -187,7 +187,7 @@
     <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>查看姓名（&amp;N）：</value>
+    <value>查看名称(&amp;N)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>

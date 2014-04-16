@@ -428,7 +428,7 @@
     <value>本文档能够以完整形式共享，也能够以仅限阅读的最小形式共享：</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected" xml:space="preserve">
-    <value>其背景蛋白质组已分离。</value>
+    <value>其背景蛋白质组链接已去除。</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only_standard_peptides_and_library_peptides_used_in_the_document" xml:space="preserve">
     <value>其保留时间计算器已被最小化，以仅包含用于文档的标准肽段和库肽段。</value>
@@ -500,7 +500,7 @@
     <value>方法模板</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>选定的文件夹看起来并不包括 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
+    <value>选定的文件夹无 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
   </data>
   <data name="SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching" xml:space="preserve">
     <value>您是否想要在转换前保存您的当前设置？</value>
@@ -509,7 +509,7 @@
     <value>您是否想要针对下列修饰使用 Unimod 定义？</value>
   </data>
   <data name="SkylineWindow_UpdateProgressUI_Ready" xml:space="preserve">
-    <value>准备好的</value>
+    <value>准备完成</value>
   </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
     <value>{0}不能为空。</value>
@@ -584,7 +584,7 @@
     <value>最佳保留时间</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Max_Fwhm" xml:space="preserve">
-    <value>最大半锋全宽</value>
+    <value>最大半峰宽</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Min_Start_Time" xml:space="preserve">
     <value>最短启动时间</value>
@@ -629,7 +629,7 @@
     <value>保留时间</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Fwhm" xml:space="preserve">
-    <value>Fwhm</value>
+    <value>半峰宽</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Start_Time" xml:space="preserve">
     <value>启动时间</value>
@@ -847,7 +847,7 @@
     <value>数据文件</value>
   </data>
   <data name="ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT" xml:space="preserve">
-    <value>每次样品注射的最大离子对(&amp;X)：</value>
+    <value>每次样品允许的最多离子对数(&amp;X)：</value>
   </data>
   <data name="ExportMethodDlg_CONCUR_TRANS_TXT" xml:space="preserve">
     <value>最大并行离子对(&amp;X)：</value>
@@ -1091,7 +1091,7 @@
     <value>蛋白质</value>
   </data>
   <data name="PeptideGroupTreeNode_Heading_Peptide_List" xml:space="preserve">
-    <value>肽列表</value>
+    <value>肽段列表</value>
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_ID__0__" xml:space="preserve">
     <value>ID：{0}</value>
@@ -1196,13 +1196,13 @@
     <value>库排名</value>
   </data>
   <data name="TransitionTreeNode_RenderTip_Library_intensity" xml:space="preserve">
-    <value>库强度</value>
+    <value>库亮度</value>
   </data>
   <data name="PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression" xml:space="preserve">
-    <value>肽排除必须具备正则表达式。</value>
+    <value>肽排除必须具备正规表达式。</value>
   </data>
   <data name="DigestSettings_Validate_maximum_missed_cleavages" xml:space="preserve">
-    <value>最多漏切位点</value>
+    <value>最大遗漏的酶解位点数</value>
   </data>
   <data name="DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__" xml:space="preserve">
     <value>针对{0}的值{1}必须在{2}和{3}之间。</value>
@@ -1277,10 +1277,10 @@
     <value>中性丢失必须指定公式或有效的单一同位素和平均质量。</value>
   </data>
   <data name="FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
-    <value>中性丢失必须大于或等于{0}。</value>
+    <value>中性丢失数必须大于或等于{0}。</value>
   </data>
   <data name="FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
-    <value>中性丢失必须小于或等于{0}。</value>
+    <value>中性丢失数必须小于或等于{0}。</value>
   </data>
   <data name="TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_" xml:space="preserve">
     <value>预计丢失{0}未在修饰{1}中发现</value>
@@ -1358,10 +1358,10 @@
     <value>最大肽长度</value>
   </data>
   <data name="PeptideFilter_DoValidate_The_peptide_exclusion__0__has_an_invalid_regular_expression__1__" xml:space="preserve">
-    <value>肽排除{0}具备无效的正则表达式“{1}”。</value>
+    <value>肽段排除{0}具备无效的正规表达式“{1}”。</value>
   </data>
   <data name="PeptideFilter_ExcludeExprToRegEx_Invalid_exclusion_list" xml:space="preserve">
-    <value>无效的排除列。</value>
+    <value>无效的排除列表。</value>
   </data>
   <data name="PeptideFilter_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__" xml:space="preserve">
     <value>针对{0}的值{1}必须在{2}和{3}之间。</value>
@@ -1370,10 +1370,10 @@
     <value>未发现修饰类型{0}。</value>
   </data>
   <data name="PeptideModifications_DoValidate_Maximum_variable_modifications__0__must_be_between__1__and__2__" xml:space="preserve">
-    <value>最大可变修饰{0}必须在{1}和{2}之间</value>
+    <value>最大可变修饰数{0}必须在{1}和{2}之间</value>
   </data>
   <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
-    <value>最大中性丢失{0}必须在{1}和{2}之间</value>
+    <value>最大中性丢失数{0}必须在{1}和{2}之间</value>
   </data>
   <data name="PeptideModifications_ReadXml_Heavy_modifications_found_without__0__attribute" xml:space="preserve">
     <value>发现重修饰无“{0}”属性。</value>
@@ -1388,7 +1388,7 @@
     <value>指定的库谱图匹配方法不支持肽排名。</value>
   </data>
   <data name="PeptideLibraries_DoValidate_Limiting_peptides_per_protein_requires_a_ranking_method_to_be_specified" xml:space="preserve">
-    <value>限制每个蛋白质的肽需要指定一种排名方法。</value>
+    <value>限制每个蛋白质的肽段需要指定一种排名方法。</value>
   </data>
   <data name="PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>库选择的肽计数{0}必须在{1}和{2}之间。</value>
@@ -1412,7 +1412,7 @@
     <value>序列{0}不是有效的肽段。</value>
   </data>
   <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
-    <value>测量保留时间必须是正数值。</value>
+    <value>实际检测到的保留时间必须是正数值。</value>
   </data>
   <data name="CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
     <value>碰撞能量回归至少需要一个回归函数。</value>
@@ -1717,7 +1717,7 @@
     <value>库标题中的数据截断。文件可能已崩溃。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted" xml:space="preserve">
-    <value>谱图标题中的数据截断。文件可能已崩溃。</value>
+    <value>谱图头中的数据截断。文件可能已崩溃。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>发现无效的母离子电荷。文件可能已崩溃。</value>
@@ -1771,7 +1771,7 @@
     <value>尝试构建库{0}失败。</value>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
-    <value>库标题中的数据截断。文件可能已崩溃。</value>
+    <value>库头中的数据截断。文件可能已损坏。</value>
   </data>
   <data name="CachedLibrary_LoadSpectrum_Library_entry_not_found__0__" xml:space="preserve">
     <value>未发现库条目{0}。</value>
@@ -1780,10 +1780,10 @@
     <value>谱图计数</value>
   </data>
   <data name="LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity" xml:space="preserve">
-    <value>总强度</value>
+    <value>总亮度</value>
   </data>
   <data name="LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity" xml:space="preserve">
-    <value>选择强度</value>
+    <value>选择亮度</value>
   </data>
   <data name="LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML" xml:space="preserve">
     <value>文档本地库谱图无法存储到 XML。</value>
@@ -1829,10 +1829,10 @@
     <value>预期</value>
   </data>
   <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
-    <value>处理的强度</value>
+    <value>处理的亮度</value>
   </data>
   <data name="XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
-    <value>库标题中的数据截断。文件可能已崩溃。</value>
+    <value>库标题中的数据截断。文件可能已损坏。</value>
   </data>
   <data name="XHunterLibrary_Load_Building_binary_cache_for__0__library" xml:space="preserve">
     <value>针对{0}库构建二进制缓存</value>
@@ -1871,7 +1871,7 @@
     <value>加载{0}缓存</value>
   </data>
   <data name="ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted" xml:space="preserve">
-    <value>缓存标题中的数据截断。文件可能已崩溃。</value>
+    <value>缓存头中的数据截断。文件可能已损坏。</value>
   </data>
   <data name="ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_" xml:space="preserve">
     <value>写入缓存失败。特定的{0}峰超出总峰计数{1}</value>
@@ -2027,10 +2027,10 @@
     <value>无法保存至{0}。</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List" xml:space="preserve">
-    <value>导出隔离列表</value>
+    <value>导出采集列表</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__" xml:space="preserve">
-    <value>导出隔离列表（来自{1}的{0}个周期）</value>
+    <value>导出采集列表（来自{1}的{0}个周期）</value>
   </data>
   <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
     <value>采集离子对的数目{0}超出最大{1}</value>
@@ -2063,7 +2063,7 @@
     <value>写入离子对的意外失败。</value>
   </data>
   <data name="AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted" xml:space="preserve">
-    <value>下列修饰无法解释。</value>
+    <value>下列修饰无法识别。</value>
   </data>
   <data name="Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations" xml:space="preserve">
     <value>针对“{0}”的注释冲突经发现尝试合并注释。</value>
@@ -2428,7 +2428,7 @@
     <value>1 个运行已成功转化。</value>
   </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_not_converted_due_to_insufficient_correlation" xml:space="preserve">
-    <value>1 个运行因关联不足未被转化。</value>
+    <value>1 个运行因相关性不足未被转化。</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_Please_specify_a_path_to_an_existing_spectral_library" xml:space="preserve">
     <value>请为现有的谱图库指定一个路径。</value>
@@ -2572,7 +2572,7 @@
     <value>校准(&amp;B)……</value>
   </data>
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptide" xml:space="preserve">
-    <value>{0}肽</value>
+    <value>{0}肽段</value>
   </data>
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
     <value>{0}肽</value>
@@ -2623,7 +2623,7 @@
     <value>蛋白质组文件包含{0}个蛋白质。</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_has_already_been_digested" xml:space="preserve">
-    <value>蛋白质组已经被消化。</value>
+    <value>蛋白质组已经被酶解。</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>单击“添加文件”按钮来添加一个 FASTA 文件，并且创建一个新的蛋白质组文件。</value>
@@ -2641,7 +2641,7 @@
     <value>目录{0}不存在。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server" xml:space="preserve">
-    <value>实验室机构名称{0}无效。它应该看起来像是互联网服务器地址（例如，mylab.myu.edu），并且不可能被任何其他实验室使用，但无需参考实际的服务器。</value>
+    <value>实验室机构名称{0}无效。它应该形如互联网服务器地址（例如，mylab.myu.edu），并且不可能被任何其他实验室使用，但无需参考实际的服务器。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes" xml:space="preserve">
     <value>库标识符{0}无效。标识符以字母、数字或下划线开始，并且仅包含字母、数字、下划线和破折号。</value>
@@ -2681,7 +2681,7 @@
     <value>蛋白质</value>
   </data>
   <data name="ColumnSet_GetTransitionsTable_Peptide" xml:space="preserve">
-    <value>肽</value>
+    <value>肽段</value>
   </data>
   <data name="ColumnSet_GetTransitionsTable_Peptides" xml:space="preserve">
     <value>肽</value>
@@ -2928,7 +2928,7 @@
     <value>肽排除“{0}”已经存在。</value>
   </data>
   <data name="EditExclusionDlg_OkDialog_The_text__0__is_not_a_valid_regular_expression" xml:space="preserve">
-    <value>文本“{0}”不是有效的正则表达式。</value>
+    <value>文本“{0}”不是有效的正规表达式。</value>
   </data>
   <data name="EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>中性丢失质量必须大于或等于{0}。</value>
@@ -3013,7 +3013,7 @@
     <value>请选择一个非冗余库。</value>
   </data>
   <data name="EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
-    <value>文件{0}看起来像是冗余库。</value>
+    <value>文件{0}貌似冗余库。</value>
   </data>
   <data name="EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format" xml:space="preserve">
     <value>文件{0}不是支持的谱图库文件格式。</value>
@@ -3085,10 +3085,10 @@
     <value>序列“{0}”不是有效的修饰后肽序列。</value>
   </data>
   <data name="MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers" xml:space="preserve">
-    <value>测量保留时间必须是有效的十进制数。</value>
+    <value>实际检测到的保留时间必须是有效的十进制数。</value>
   </data>
   <data name="MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero" xml:space="preserve">
-    <value>测量保留时间必须大于零。</value>
+    <value>实际检测到的保留时间必须大于零。</value>
   </data>
   <data name="AreaPeptideGraphPane_UpdateAxes_Peak_Area" xml:space="preserve">
     <value>峰面积</value>
@@ -3163,10 +3163,10 @@
     <value>导出离子对列表</value>
   </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
-    <value>导出隔离列表</value>
+    <value>导出采集列表</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>文件夹{0}看起来不包括 Agilent QQQ 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 qqqacqmethod.xsd。</value>
+    <value>文件夹{0}无 Agilent QQQ 方法模板。文件夹应包括一个 .m 文件， 以及 qqqacqmethod.xsd。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results" xml:space="preserve">
     <value>您将不可以连同采集结果使用保留时间预测。</value>
@@ -3446,7 +3446,7 @@
     <value>RT</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
-    <value>加载谱图失败。库可能已崩溃。</value>
+    <value>加载谱图失败。库可能已损坏。</value>
   </data>
   <data name="ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings" xml:space="preserve">
     <value>针对此肽的修饰不匹配当前的文档设置。</value>
@@ -3536,7 +3536,7 @@
     <value>尝试从文件{0}中读取样品信息出现错误。</value>
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>文件可能已崩溃或丢失，或者正确的库可能未安装。</value>
+    <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
   </data>
   <data name="FileSize_CompareTo_Must_be_FileSize" xml:space="preserve">
     <value>必须是文件大小</value>
@@ -3689,7 +3689,7 @@
     <value>尝试创建共享文件{0}失败。</value>
   </data>
   <data name="SkylineWindow_exportIsolationListMenuItem_Click_There_is_no_isolation_list_data_to_export" xml:space="preserve">
-    <value>没有需要导出的隔离列表。</value>
+    <value>没有需要导出的采集列表。</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_peptides_for_which_to_export_features" xml:space="preserve">
     <value>文档必须包含针对其导出特性的肽。</value>
@@ -3782,7 +3782,7 @@
     <value>作业……</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__" xml:space="preserve">
-    <value>导出隔离列表（来自{0}的{0}个周期）</value>
+    <value>导出采集列表（来自{0}的{0}个周期）</value>
   </data>
   <data name="ExportReportDlg_ShowPreview_An_unexpected_error_occurred_attempting_to_display_the_report___0___" xml:space="preserve">
     <value>尝试显示报告“{0}”时出现意外错误。</value>
@@ -3792,7 +3792,7 @@
     <comment>In RTLinearRegressionGraphPane</comment>
   </data>
   <data name="ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>文件可能已崩溃或丢失，或者正确的库可能未安装。</value>
+    <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
   </data>
   <data name="ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
     <value>尝试从文件{0}中读取样品信息出现错误。</value>
@@ -3858,7 +3858,7 @@
     <value>离子对列表</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Isolation_List" xml:space="preserve">
-    <value>隔离列表</value>
+    <value>采集列表</value>
   </data>
   <data name="TextUtil_FileDialogFiltersAll_All_Files" xml:space="preserve">
     <value>所有文件</value>
@@ -4242,10 +4242,10 @@
     <value>删除空蛋白质</value>
   </data>
   <data name="SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides" xml:space="preserve">
-    <value>删除重复肽段</value>
+    <value>删除所有重复肽段</value>
   </data>
   <data name="SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides" xml:space="preserve">
-    <value>删除重复的肽段</value>
+    <value>删除多余重复肽段</value>
   </data>
   <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
     <value>按名称归类蛋白质</value>
@@ -4734,7 +4734,7 @@
     <value>FWB 时间</value>
   </data>
   <data name="RtGraphValue_FWHM_Time" xml:space="preserve">
-    <value>FWHM 时间</value>
+    <value>半峰宽时间</value>
   </data>
   <data name="AggregateOp_AxisTitleCv" xml:space="preserve">
     <value>{0} CV</value>
@@ -4872,10 +4872,10 @@
     <value>参考共洗脱计数</value>
   </data>
   <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
-    <value>库强度点积</value>
+    <value>库亮度点积</value>
   </data>
   <data name="MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation" xml:space="preserve">
-    <value>参考强度点积</value>
+    <value>参考亮度点积</value>
   </data>
   <data name="MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape" xml:space="preserve">
     <value>形状（权重）</value>
@@ -4905,7 +4905,7 @@
     <value>无法针对此文档找到谱图库{0}。如果没有库，那么所有谱图 ID 信息将不可用。</value>
   </data>
   <data name="EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_" xml:space="preserve">
-    <value>“{0}”必须包含有效的正则表达式。</value>
+    <value>“{0}”必须包含有效的正规表达式。</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
     <value>无授权访问尝试从库中读取。</value>
@@ -5019,7 +5019,7 @@
     <value>保留时间（分钟）</value>
   </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
-    <value>强度</value>
+    <value>亮度</value>
   </data>
   <data name="AsyncChromatogramsGraph_Render__0___sample__1_" xml:space="preserve">
     <value>{0}，样品 {1}</value>
@@ -5115,7 +5115,7 @@
     <value>峰面积</value>
   </data>
   <data name="SavitzkyGolaySmoother_WindowSize_SavitzkyGolaySmoother__Invalid_window_size___0____argument_must_be_positive_and_odd" xml:space="preserve">
-    <value>SavitzkyGolay 滤波器：无效的窗口大小({0}) ：参数必须是正数和奇数</value>
+    <value>SavitzkyGolay 滤波器：无效的窗口大小({0}) ：参数必须是正奇数</value>
   </data>
   <data name="DoconvolutionMethod_MSX_Msx" xml:space="preserve">
     <value>Msx</value>
@@ -5145,7 +5145,7 @@
     <value>..\Resources\ChromLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MQuestIntensityCalc_MQuestIntensityCalc_Intensity" xml:space="preserve">
-    <value>强度</value>
+    <value>亮度</value>
   </data>
   <data name="MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape" xml:space="preserve">
     <value>参考形状（权重）</value>
@@ -5169,10 +5169,10 @@
     <value>未知</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
-    <value>文件夹{0}看起来不包括 Bruker TOF 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 submethods.xml。</value>
+    <value>文件夹{0}无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_" xml:space="preserve">
-    <value>选定的文件夹看起来不包括 Bruker TOF 方法模板。文件夹预计将拥有 .m 扩展名，并且包含文件 submethods.xml。</value>
+    <value>选定的文件夹无 Bruker TOF 方法模板。文件夹应包括一个 .m 文件，以及 submethods.xml。</value>
   </data>
   <data name="MQuestShapeCalc_MQuestShapeCalc_Shape" xml:space="preserve">
     <value>形状</value>
@@ -5679,7 +5679,7 @@
     <value>重复测定{0}包含的肽不具有足够信息，无法针对触发采集排名离子对。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
-    <value>更改消化设置</value>
+    <value>更改酶解设置</value>
   </data>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
     <value>全扫描 MS1 过滤必须被启用，以导入一个肽搜索。</value>
@@ -6000,16 +6000,16 @@
     <value>将标准类型设定为{0}</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Ratio_to_Global_Standards" xml:space="preserve">
-    <value>相对于全球标准品比率</value>
+    <value>相对于总体标准品比率</value>
   </data>
   <data name="RatioPropertyAccessor_PeptideRatioProperty_Ratio__0__To_Global_Standards" xml:space="preserve">
-    <value>相对于全球标准品比率{0}</value>
+    <value>相对于总体标准品比率{0}</value>
   </data>
   <data name="RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards" xml:space="preserve">
-    <value>相对于全球标准品比率</value>
+    <value>相对于总体标准品比率</value>
   </data>
   <data name="RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards" xml:space="preserve">
-    <value>相对于全球标准品的总面积比率</value>
+    <value>相对于总体标准品的总面积比率</value>
   </data>
   <data name="RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To__0_" xml:space="preserve">
     <value>相对于{0}的总面积比率</value>
@@ -6018,10 +6018,10 @@
     <value>相对于{0}的面积比率</value>
   </data>
   <data name="RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards" xml:space="preserve">
-    <value>相对于全球标准品的面积比率</value>
+    <value>相对于总体标准品的面积比率</value>
   </data>
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards" xml:space="preserve">
-    <value>相对于全球标准品的峰面积比率</value>
+    <value>相对于总体标准品的峰面积比率</value>
   </data>
   <data name="DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_" xml:space="preserve">
     <value>行{0}在{2}预期时拥有{1}个字段。</value>
@@ -6100,19 +6100,19 @@
     <value>隔离方案的设定旨在用于多路传输，但文件看起来不包含多路复用的采集数据。</value>
   </data>
   <data name="AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_" xml:space="preserve">
-    <value>尝试针对{0}获取窗口遮掩，一个带有先前未观察的隔离窗口之谱图。多路复用需要隔离窗口的重复循环。</value>
+    <value>尝试针对{0}获取窗口覆盖，因先前的隔离窗口无法检测谱图。无需同时检测则请重设隔离窗口。</value>
   </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
-    <value>导入的谱图看起来缺少质核比或强度值（{0} != {1}）</value>
+    <value>导入的谱图看起来缺少质核比或亮度值（{0} != {1}）</value>
   </data>
   <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
-    <value>对导入文件的扫描看起来缺少一个隔离窗口中心。</value>
+    <value>导入文件的扫描数据貌似缺少一个隔离窗口中心。</value>
   </data>
   <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_" xml:space="preserve">
-    <value>对导入文件的扫描看起来缺少一个隔离窗口下边界。</value>
+    <value>导入文件的扫描数据貌似缺少一个隔离窗口下边界。</value>
   </data>
   <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_" xml:space="preserve">
-    <value>对导入文件的扫描看起来缺少一个隔离窗口上边界。</value>
+    <value>导入文件的扫描数据貌似缺少一个隔离窗口上边界。</value>
   </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
     <value>在扫描{0}上缺少扫描时间值。基于重叠的多路复用需要扫描时间。</value>

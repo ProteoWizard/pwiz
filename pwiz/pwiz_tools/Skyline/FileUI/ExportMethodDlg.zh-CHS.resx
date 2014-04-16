@@ -170,7 +170,7 @@
   </data>
   <data name="radioProtein.ToolTip" xml:space="preserve">
     <value>蛋白质范围内的分割方法。如果该文件并非仅供参考，
-确保您的仪器能够处理每个文件中一定量的离子对。</value>
+确保您的仪器能够处理每个文件中的离子对数量。</value>
   </data>
   <data name=">>radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>
@@ -200,7 +200,7 @@
     <value>多个方法(&amp;M)</value>
   </data>
   <data name="radioBuckets.ToolTip" xml:space="preserve">
-    <value>创建所需的任意数量的文件，对每个离子对计数设定限制条件。</value>
+    <value>根据允许的最多离子对数量，创建所需的任意数量的文件。</value>
   </data>
   <data name=">>radioBuckets.Name" xml:space="preserve">
     <value>radioBuckets</value>
@@ -252,7 +252,7 @@
     <value>6</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
-    <value>每次样品注册的最大离子对数(&amp;X)：</value>
+    <value>每次样品允许的最多离子对数(&amp;X)：</value>
   </data>
   <data name=">>labelMaxTransitions.Name" xml:space="preserve">
     <value>labelMaxTransitions</value>
@@ -607,7 +607,7 @@
     <value>忽视蛋白质(&amp;R)</value>
   </data>
   <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
-    <value>如果选中，肽将在文件中进行分配，不会考虑蛋白质范围。
+    <value>如果被选，肽将在文件中进行分配，不会考虑蛋白质范围。
 否则，如果蛋白质所包含的离子对数
 超过最大限制，那么相同蛋白质中的肽只会分离。</value>
   </data>

@@ -129,7 +129,7 @@
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>当前文件包含{0}个带有已测量的保留时间的肽。您应在针对某一 iRT 标准进行单次注射的过程中使用少量的肽单，以方便您测量。为此，您可以编辑文件，只留下所需肽，或者从下方选择一些肽，以便让 Skyline 从当前文件中自动选择。</value>
+    <value>当前文件包含{0}个带有实际检测到的保留时间的肽段。您应在针对某一 iRT 标准进行单次注射的过程中使用少量的肽单，以方便您测量。为此，您可以编辑文件，只留下所需肽，或者从下方选择一些肽，以便让 Skyline 从当前文件中自动选择。</value>
   </data>
   <data name=">>labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>
@@ -156,7 +156,7 @@
     <value>1</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>肽计数(&amp;P)：</value>
+    <value>肽段计数(&amp;P)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>

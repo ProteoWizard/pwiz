@@ -314,7 +314,7 @@
     <value>4</value>
   </data>
   <data name="textMaxVariableMods.ToolTip" xml:space="preserve">
-    <value>允许在任何肽实例中组合出现的
+    <value>允许出现的最大可变修饰数
 变量修饰最大数目。</value>
   </data>
   <data name=">>textMaxVariableMods.Name" xml:space="preserve">
@@ -339,7 +339,7 @@
     <value>6</value>
   </data>
   <data name="textMaxNeutralLosses.ToolTip" xml:space="preserve">
-    <value>允许在任何片段实例中组合出现的
+    <value>允许出现的中性丢失活动最大数
 中性丢失事件的最大数目。</value>
   </data>
   <data name=">>textMaxNeutralLosses.Name" xml:space="preserve">
@@ -364,8 +364,8 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-    <value>在考虑到蛋白质消化时于肽中允许的
-最大丢失剪切数量。</value>
+    <value>当考虑到蛋白质酶解时，肽段中允许的最大遗漏的酶解位点数
+最大遗漏的酶解位点数。</value>
   </data>
   <data name=">>cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -415,9 +415,9 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>指定全套蛋白质的经处理的 FASTA 序列信息，
+    <value>指定全部可能的蛋白质的 FASTA 序列信息，
 这些蛋白质可能存在于用来注入质谱仪的
-这些样品基质可注射入质谱仪。</value>
+样品基质中。</value>
   </data>
   <data name=">>comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -469,10 +469,10 @@
     <value>3</value>
   </data>
   <data name="cbUseMeasuredRT.Text" xml:space="preserve">
-    <value>在出现时使用测量的保留时间(&amp;U)</value>
+    <value>在出现时使用实际检测到的保留时间(&amp;U)</value>
   </data>
   <data name="cbUseMeasuredRT.ToolTip" xml:space="preserve">
-    <value>如果核选，那么先前测量的保留时间将用于
+    <value>如果核选，那么先前实际检测到的保留时间将用于
 预测计划未来肽测量的保留时间。</value>
   </data>
   <data name=">>cbUseMeasuredRT.Name" xml:space="preserve">
@@ -528,7 +528,7 @@
     <value>自动选择所有匹配的肽(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>如果核选，那么肽将借助指定的过滤器和库设置
+    <value>如果被选，那么肽将借助指定的过滤器和库设置
 从蛋白质中被自动选择。否则，所有肽
 选择都必须通过手动文档编辑来完成。</value>
   </data>
@@ -582,7 +582,7 @@
     <value>8</value>
   </data>
   <data name="cbRaggedEnds.Text" xml:space="preserve">
-    <value>排除电位不完全末端(&amp;R)</value>
+    <value>排除潜在的不规则酶切末端(&amp;R)</value>
   </data>
   <data name="cbRaggedEnds.ToolTip" xml:space="preserve">
     <value>排除因紧邻前方或后方位置具有剪切位点而产生的肽，
@@ -637,7 +637,7 @@
     <value>10</value>
   </data>
   <data name="listboxExclusions.ToolTip" xml:space="preserve">
-    <value>正则表达式模式可用于排除部分肽</value>
+    <value>正规表达式模式可用于排除部分肽段</value>
   </data>
   <data name=">>listboxExclusions.Name" xml:space="preserve">
     <value>listboxExclusions</value>
@@ -859,10 +859,10 @@
     <value>4</value>
   </data>
   <data name="cbLimitPeptides.Text" xml:space="preserve">
-    <value>限制每个蛋白质的肽(&amp;L)</value>
+    <value>限制每个蛋白质的肽段(&amp;L)</value>
   </data>
   <data name="cbLimitPeptides.ToolTip" xml:space="preserve">
-    <value>如果核选，那么只有特定数目的最高等级肽才能
+    <value>如果被选，那么只有特定数目的最高等级肽才能
 针对每个蛋白质获得拣选。</value>
   </data>
   <data name=">>cbLimitPeptides.Name" xml:space="preserve">
@@ -1000,7 +1000,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最多漏切位点(&amp;M)：</value>
+    <value>最大遗漏的酶解位点数(&amp;M)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1081,7 +1081,7 @@
     <value>0</value>
   </data>
   <data name="tabDigestion.Text" xml:space="preserve">
-    <value>消化</value>
+    <value>酶解</value>
   </data>
   <data name=">>tabDigestion.Name" xml:space="preserve">
     <value>tabDigestion</value>
@@ -1501,7 +1501,7 @@
     <value>5</value>
   </data>
   <data name="label18.Text" xml:space="preserve">
-    <value>最大中性损失(&amp;N)：</value>
+    <value>最大中性丢失数(&amp;N)：</value>
   </data>
   <data name=">>label18.Name" xml:space="preserve">
     <value>label18</value>
@@ -1528,7 +1528,7 @@
     <value>3</value>
   </data>
   <data name="label17.Text" xml:space="preserve">
-    <value>最大变量修饰(&amp;M)：</value>
+    <value>最大可变修饰数(&amp;M)：</value>
   </data>
   <data name=">>label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -1843,7 +1843,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>肽设置</value>
+    <value>肽段设置</value>
   </data>
   <data name=">>helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

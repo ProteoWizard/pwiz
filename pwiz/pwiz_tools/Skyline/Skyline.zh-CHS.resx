@@ -741,7 +741,7 @@
     <value>155, 22</value>
   </data>
   <data name="fwhmRTValueContextMenuItem.Text" xml:space="preserve">
-    <value>FWHM</value>
+    <value>半峰宽</value>
   </data>
   <data name="fwbRTValueContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>155, 22</value>
@@ -957,7 +957,7 @@
     <value>163, 22</value>
   </data>
   <data name="areaNormalizeGlobalContextMenuItem.Text" xml:space="preserve">
-    <value>全球标准</value>
+    <value>全体标准</value>
   </data>
   <data name="areaNormalizeMaximumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
@@ -1345,7 +1345,7 @@
     <value>193, 22</value>
   </data>
   <data name="newMenuItem.Text" xml:space="preserve">
-    <value>全新(&amp;N)</value>
+    <value>新建(&amp;N)</value>
   </data>
   <data name="openMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1453,7 +1453,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportIsolationListMenuItem.Text" xml:space="preserve">
-    <value>隔离列表(&amp;I)……</value>
+    <value>采集列表(&amp;I)……</value>
   </data>
   <data name="exportMethodMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1696,13 +1696,13 @@
     <value>218, 22</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
-    <value>删除重复肽段(&amp;D)</value>
+    <value>删除所有重复肽段(&amp;D)</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
-    <value>删除重复的肽段(&amp;R)</value>
+    <value>删除多余重复肽段(&amp;R)</value>
   </data>
   <data name="removeMissingResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2461,13 +2461,13 @@
     <value>181, 22</value>
   </data>
   <data name="peptideSettingsMenuItem.Text" xml:space="preserve">
-    <value>肽设置(&amp;P)……</value>
+    <value>肽段设置(&amp;P)……</value>
   </data>
   <data name="transitionSettingsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>
   </data>
   <data name="transitionSettingsMenuItem.Text" xml:space="preserve">
-    <value>转化设置(&amp;T)……</value>
+    <value>离子对设置(&amp;T)……</value>
   </data>
   <data name="annotationsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>

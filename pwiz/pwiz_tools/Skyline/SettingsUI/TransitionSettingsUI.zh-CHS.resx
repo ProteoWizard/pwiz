@@ -855,7 +855,7 @@
     <value>动态最少子离子质核比（&amp;D）</value>
   </data>
   <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
-    <value>如果核选，子离子的最小质核比值
+    <value>如果被选，子离子的最小质核比值
 采用 Thermo-Scientific 特别为 LTQ 仪器提供的特定方程式
 从母离子质核比中动态计算。</value>
   </data>
@@ -1233,7 +1233,7 @@
     <value>在最优化值存在时使用该值（&amp;U）</value>
   </data>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
-    <value>如果核选，任何已测量的 CE 或 DP 最优化值将
+    <value>如果被选，任何已测量的 CE 或 DP 最优化值将
 用于选择在方法和离子对列表中导出的
 值。生成最大总峰面积的值将被
 选择。</value>
@@ -1540,7 +1540,7 @@
     <value>自动选择所有匹配的离子对（&amp;A）</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>如果核选，那么离子对将针对使用
+    <value>如果被选，那么离子对将针对使用
 特定过滤器和库设置的肽段被自动选定。否则，所有离子对
 选择都必须由文档编辑完成。</value>
   </data>
@@ -2345,7 +2345,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
   </data>
   <data name="textIonCount.ToolTip" xml:space="preserve">
     <value>通过库谱图峰值强度排序针对每个母离子
-选择此类众多离子对</value>
+峰值亮度排名</value>
   </data>
   <data name=">>textIonCount.Name" xml:space="preserve">
     <value>textIonCount</value>
@@ -2400,7 +2400,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>如果库谱图可用，则选择其最强的离子（&amp;S）</value>
   </data>
   <data name="cbLibraryPick.ToolTip" xml:space="preserve">
-    <value>如果核选，那么无论何时当肽段与库谱图匹配时，
+    <value>如果被选，那么无论何时当肽段与库谱图匹配时，
 离子对过滤都将以 MS/MS 谱图库峰值为基础。</value>
   </data>
   <data name=">>cbLibraryPick.Name" xml:space="preserve">

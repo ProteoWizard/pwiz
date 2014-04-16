@@ -197,7 +197,7 @@
     <value>0</value>
   </data>
   <data name="bindingNavigatorPositionItem.ToolTipText" xml:space="preserve">
-    <value>{0}的</value>
+    <value>当前位置</value>
   </data>
   <data name="bindingNavigatorCountItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 22</value>

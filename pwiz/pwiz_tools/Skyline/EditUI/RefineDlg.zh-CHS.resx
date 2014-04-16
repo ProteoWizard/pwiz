@@ -163,7 +163,7 @@
     <value>8</value>
   </data>
   <data name="cbAutoPrecursors.Text" xml:space="preserve">
-    <value>前体(&amp;E)</value>
+    <value>母离子(&amp;E)</value>
   </data>
   <data name=">>cbAutoPrecursors.Name" xml:space="preserve">
     <value>cbAutoPrecursors</value>
@@ -319,7 +319,7 @@
     <value>2</value>
   </data>
   <data name="cbRemoveRepeatedPeptides.Text" xml:space="preserve">
-    <value>删除重复的肽段(&amp;R)</value>
+    <value>删除多余重复肽段(&amp;R)</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -353,7 +353,7 @@
     <value>3</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.Text" xml:space="preserve">
-    <value>删除重复肽段(&amp;D)</value>
+    <value>删除所有重复肽段(&amp;D)</value>
   </data>
   <data name="cbRemoveDuplicatePeptides.ToolTip" xml:space="preserve">
     <value>文档内不是独一无二的所有肽段
@@ -381,7 +381,7 @@
     <value>5</value>
   </data>
   <data name="textMinTransitions.ToolTip" xml:space="preserve">
-    <value>离子对少于此数目的前体将
+    <value>离子对少于此数目的母离子将
 被从文档中删除。</value>
   </data>
   <data name=">>textMinTransitions.Name" xml:space="preserve">
@@ -409,7 +409,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>每个前体的最少离子对(&amp;T)：</value>
+    <value>每个母离子的最少离子对数(&amp;T)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -461,7 +461,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>每个蛋白质的最少肽(&amp;M)</value>
+    <value>每个蛋白质的最少肽段数(&amp;M)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -541,7 +541,7 @@
     <value>4</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-    <value>最大肽峰值排名(&amp;K)：</value>
+    <value>最大肽段峰值排名(&amp;K)：</value>
   </data>
   <data name=">>label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -889,7 +889,7 @@
     <value>3</value>
   </data>
   <data name="textMinIdotProduct.ToolTip" xml:space="preserve">
-    <value>对预期同位素分布点积的 MS1 前体
+    <value>对预期同位素分布点积的 MS1 母离子
 峰面积小于此阈值的所有前体都将
 被从文档中删除。</value>
   </data>
@@ -1007,7 +1007,7 @@
     <value>12</value>
   </data>
   <data name="groupLibCorr.Text" xml:space="preserve">
-    <value>预期的相对强度关联(&amp;E)：</value>
+    <value>预期的相对亮度关联(&amp;E)：</value>
   </data>
   <data name=">>groupLibCorr.Name" xml:space="preserve">
     <value>groupLibCorr</value>
@@ -1031,7 +1031,7 @@
     <value>1</value>
   </data>
   <data name="textRTRegressionThreshold.ToolTip" xml:space="preserve">
-    <value>前体将从文档中被删除，
+    <value>母离子将从文档中被删除，
 直至具有最佳保留时间计算器的
 线性回归残差目标值
 超过此阈值。</value>

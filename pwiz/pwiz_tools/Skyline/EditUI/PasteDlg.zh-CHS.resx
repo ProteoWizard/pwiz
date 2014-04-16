@@ -247,7 +247,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTA 记录以“&gt;”开始，蛋白质名称之后紧随可选的蛋白质描述。 </value>
+    <value>FASTA 记录以“&gt;”作为开头并含有蛋白质名称，名称后可带有蛋白质描述。 </value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -361,7 +361,7 @@
     <value>True</value>
   </metadata>
   <data name="colPeptideSequence.HeaderText" xml:space="preserve">
-    <value>肽序列</value>
+    <value>肽段序列</value>
   </data>
   <metadata name="colPeptideProtein.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
