@@ -46,7 +46,7 @@ namespace MPP_Export
 
             using (var saveFileDialog = new SaveFileDialog
             {
-                FileName = "MPPReport.txt",
+                FileName = "MPPReport.txt", // Not L10N
                 Filter = MppExportResources.Program_Main_Text_files____txt____txt_All_files__________,
             })
             {
