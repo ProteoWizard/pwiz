@@ -18,6 +18,9 @@ sink()
 # Input data
 arguments<-commandArgs(trailingOnly=TRUE);
 
+##  C:\Users\Ijae\AppData\Local\Temp\MSstats_Group_Comparison_MSstats_Input.csv 1 -1 Disease-Healthy 1 TRUE TRUE R E TRUE TRUE11
+ ##C:\Users\Ijae\AppData\Local\Temp\MSstats_Group_Comparison_MSstats_Input.csv 1 -1 D-H 1 TRUE TRUE R E TRUE FALSE11
+####                                                                       1   2     
 ### test argument
 #cat("arguments--> ")
 #cat(arguments)
@@ -27,7 +30,7 @@ arguments<-commandArgs(trailingOnly=TRUE);
 cat("\n\n =======================================")
 cat("\n ** Reading the data for MSstats..... \n")
 
-raw<-read.csv(arguments[1])
+raw<-read.csv(arguments[1],sep=";")
 
 # remove the rows for iRT peptides
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
@@ -72,7 +75,7 @@ cat("\n ** Data Processing for analysis..... \n")
 ## get length of command line argument array
 len<-length(arguments)
 
-optionnormalize<-arguments[len-5]
+optionnormalize<-arguments[len-6] ## 5th
 
 ## first check name of global standard
 #if(optionnormalize==3 & is.null(standardpepname)){
@@ -86,7 +89,14 @@ if(optionnormalize==2){ inputnormalize<-"quantile" }
 if(optionnormalize==3){ inputnormalize<-"globalStandards" }
 if(optionnormalize!=0 & optionnormalize!=1 & optionnormalize!=2 & optionnormalize!=3){ inputnormalize<-FALSE }
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname))
+# missing peaks cbox
+inputmissingpeaks<-arguments[11] ## 11 th, last
+#if(inputmissingpeaks=="TRUE")
+#{
+#  cat("\n Input missing peaks was checked! \n")
+#}
+
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE")))
 
 
 if(class(quantData)!="try-error"){
@@ -151,7 +161,7 @@ for(k in 1:numcomparison){
 ## cat("\n\n ** Enter your choices for model..... \n")
 
 # labeled or label-free?
-inputlabel<-arguments[len-4] ## count from the end, because length of group level can be different.
+inputlabel<-arguments[6] ## 6th ## count from the end, because length of group level can be different.
 
 
 ### about input, is it possible neither true nor false? 12022013 meena
@@ -163,7 +173,7 @@ if(inputlabel!="TRUE" & inputlabel!="FALSE"){
 }
 
 ##Equal Variance Check Box
-equalvariance<-arguments[len-3] ## count from the end, because length of group level can be different.
+equalvariance<-arguments[7] ## 7th
 
 if(equalvariance!="TRUE" & equalvariance!="FALSE"){
 	equalvariance<-"TRUE"
@@ -172,7 +182,7 @@ if(equalvariance!="TRUE" & equalvariance!="FALSE"){
 
 
 # scope of biological replicate?
-inputbio<-arguments[len-2]
+inputbio<-arguments[8] ## 8th
 
 if(inputbio=="" | inputbio=="R") inputbio<-"restricted"
 if(inputbio=="E") inputbio<-"expanded"
@@ -184,7 +194,7 @@ if(inputbio!="expanded" & inputbio!="restricted"){
 
 # scope of technical replicate?
 
-inputtech<-arguments[len-1]
+inputtech<-arguments[9] ## 9th
 
 if(inputtech=="" | inputtech=="E") inputtech<-"expanded"
 if(inputtech=="R") inputtech<-"restricted"
@@ -209,7 +219,7 @@ cat("\n\n ============================")
 cat("\n ** Starting comparison... \n \n")
 
 ## here is the issues : labeled, and interference need to be binary, not character
-resultComparison<-try(groupComparison(contrast.matrix=comparison,data=quantData,labeled=inputlabel=="TRUE",scopeOfBioReplication=inputbio, scopeOfTechReplication=inputtech, interference=inputinfer=="TRUE", featureVar=equalvariance!="TRUE"))
+resultComparison<-try(groupComparison(contrast.matrix=comparison,data=quantData,labeled=inputlabel=="TRUE",scopeOfBioReplication=inputbio, scopeOfTechReplication=inputtech, interference=inputinfer=="TRUE", equalFeatureVar=equalvariance=="TRUE"))
 
 if(class(resultComparison)!="try-error"){
 

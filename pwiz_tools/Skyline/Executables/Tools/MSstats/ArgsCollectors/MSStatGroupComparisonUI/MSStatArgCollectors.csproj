@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\..\..\..\AppData\Local\Apps\2.0\W8O92JRO.3CN\XX5G30HG.1QN\skyl..tion_e4141a2a22107248_0002.0005_d5b230f4fc3faecd\Tools\MSstats\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -51,6 +51,11 @@
     <Compile Include="GroupComparisonUI.designer.cs">
       <DependentUpon>GroupComparisonUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="MSstatsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MSstatsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QualityControlUI.cs">
       <SubType>Form</SubType>
@@ -61,7 +66,7 @@
     <Compile Include="SampleSizeUI.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SampleSizeUI.designer.cs">
+    <Compile Include="SampleSizeUI.Designer.cs">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </Compile>
     <Compile Include="Text.cs" />
@@ -70,8 +75,10 @@
     <EmbeddedResource Include="GroupComparisonUI.resx">
       <DependentUpon>GroupComparisonUI.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="QualityControlUI.resx">
-      <DependentUpon>QualityControlUI.cs</DependentUpon>
+    <EmbeddedResource Include="MSstatsResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>MSstatsResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SampleSizeUI.resx">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>

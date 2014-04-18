@@ -24,7 +24,7 @@ namespace MSStatArgsCollector
 {
     public partial class QualityControlUI : Form
     {
-        private enum Args { normalize_to}
+        private enum Args {normalize_to, allow_missing_peaks}
 
         public string[] Arguments { get; private set; }
         public QualityControlUI(string[] oldArgs)
@@ -36,11 +36,14 @@ namespace MSStatArgsCollector
             if (oldArgs != null && oldArgs.Length == 1)
                 Arguments = oldArgs;
         }
+
+        private const string TRUESTRING = "TRUE"; // Not L10N
+        private const string FALSESTRING = "FALSE"; // Not L10N
         private void GenerateArguments()
         {
-            Arguments = Arguments ?? new string[1];
+            Arguments = Arguments ?? new string[2];
             Arguments[(int)Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
-          
+            Arguments[(int)Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? TRUESTRING : FALSESTRING;           
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

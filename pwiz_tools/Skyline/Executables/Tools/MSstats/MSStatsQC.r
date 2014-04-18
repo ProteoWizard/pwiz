@@ -28,7 +28,7 @@ cat("\n\n =======================================")
 cat("\n ** Reading the data for MSstats..... \n")
 
 
-raw<-read.csv(arguments[1])
+raw<-read.csv(arguments[1],sep=";")
 
 # remove the rows for iRT peptides
 raw<-raw[is.na(raw$StandardType) | raw$StandardType!="iRT",]
@@ -77,7 +77,14 @@ if(optionnormalize==2){ inputnormalize<-"quantile" }
 if(optionnormalize==3){ inputnormalize<-"globalStandards" }
 if(optionnormalize!=0 & optionnormalize!=1 & optionnormalize!=2 & optionnormalize!=3){ inputnormalize<-FALSE }
 
-quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname))
+# missing peaks cbox
+inputmissingpeaks<-arguments[3]
+#if(inputmissingpeaks=="TRUE")
+#{
+#  cat("\n Input missing peaks was checked! \n")
+#}
+
+quantData<-try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE")))
 
 if(class(quantData)!="try-error"){
 

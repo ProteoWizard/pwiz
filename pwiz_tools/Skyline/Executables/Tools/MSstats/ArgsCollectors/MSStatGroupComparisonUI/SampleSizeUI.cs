@@ -25,7 +25,7 @@ namespace MSStatArgsCollector
 {
     public partial class SampleSizeUi : Form
     {
-        private enum Args { normalize_to, samples, peptides, transitions, power, fdr, lower_fold, upper_fold }
+        private enum Args { normalize_to, samples, peptides, transitions, power, fdr, lower_fold, upper_fold, allow_missing_peaks }
 
         public string[] Arguments { get; private set; }
 
@@ -46,51 +46,32 @@ namespace MSStatArgsCollector
             RestoreValues();
         }
 
-        private const string TRUESTRING = "TRUE";
+        private const string Truestring = "TRUE"; // Not L10N
+        private const string Falsestring = "FALSE"; // Not L10N
 
         private void RestoreValues()
         {
-            if (Arguments != null)
+            if (Arguments == null)
+                RestoreDefaults();
+            else
             {
-                if (Arguments[(int) Args.samples].Equals(TRUESTRING))
-                {
-                    rBtnSamples.Checked = true;
-                }
-                else
-                {
-                    numberSamples.Value = decimal.Parse(Arguments[(int) Args.samples]);
-                }
+                RestoreCountValue(Args.samples, rBtnSamples, numberSamples, Samples);
+                RestoreCountValue(Args.peptides, rBtnPeptides, numberPeptides, Peptides);
+                RestoreCountValue(Args.transitions, rBtnTransitions, numberTransitions, Transitions);
 
-                if (Arguments[(int) Args.peptides].Equals(TRUESTRING))
-                {
-                    rBtnPeptides.Checked = true;
-                }
-                else
-                {
-                    numberPeptides.Value = decimal.Parse(Arguments[(int) Args.peptides]);
-                }
-
-                if (Arguments[(int) Args.transitions].Equals(TRUESTRING))
-                {
-                    rBtnTransitions.Checked = true;
-                }
-                else
-                {
-                    numberTransitions.Value = decimal.Parse(Arguments[2]);
-                }
-
-                if (Arguments[(int) Args.power].Equals(TRUESTRING))
+                string valueText = Arguments[(int) Args.power];
+                if (valueText.Equals(Truestring))
                 {
                     rBtnPower.Checked = true;
                 }
                 else
                 {
-                    numberPower.Text = Arguments[(int) Args.power];
+                    RestoreDecimalText(valueText, numberPower, Power);
                 }
 
-                numberFDR.Text = Arguments[(int) Args.fdr];
-                numberLDFC.Text = Arguments[(int) Args.lower_fold];
-                numberUDFC.Text = Arguments[(int) Args.upper_fold];
+                RestoreDecimalText(Arguments[(int)Args.fdr], numberFDR, Fdr);
+                RestoreDecimalText(Arguments[(int)Args.lower_fold], numberLDFC, Ldfc);
+                RestoreDecimalText(Arguments[(int)Args.upper_fold], numberUDFC, Udfc);
             }
 
             if (!rBtnSamples.Checked && !rBtnPeptides.Checked && !rBtnTransitions.Checked && !rBtnPower.Checked)
@@ -101,44 +82,93 @@ namespace MSStatArgsCollector
             Height += Math.Min(Math.Min(SampleShift, PeptideShift), TransitionShift) + 5;
         }
 
+        private void RestoreCountValue(Args argument, RadioButton radio, NumericUpDown numeric, decimal defaultValue)
+        {
+            int count;
+            string argText = Arguments[(int) argument];
+            if (argText.Equals(Truestring))
+            {
+                radio.Checked = true;
+            }
+            else if (int.TryParse(argText, NumberStyles.Integer, CultureInfo.InvariantCulture, out count))
+            {
+                numeric.Value = count;
+            }
+            else
+            {
+                numeric.Value = defaultValue;
+            }
+        }
+
+        private void RestoreDecimalText(string valueText, TextBox textBox, decimal defaultValue)
+        {
+            decimal decimalValue;
+            if (!decimal.TryParse(valueText, NumberStyles.Float, CultureInfo.InvariantCulture, out decimalValue))
+                decimalValue = defaultValue;
+            textBox.Text = decimalValue.ToString(CultureInfo.CurrentCulture);
+        }
+
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
         }
 
-        private const string PERIOD_STRING = ".";
-
         private void OkDialog()
         {
+            var decimalPoint = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
             if (!rBtnPower.Checked && string.IsNullOrEmpty(numberPower.Text))
             {
-                MessageBox.Show(this, "Please enter a value for Power.");
+                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_Power_);
             }
-            else if (string.IsNullOrEmpty(numberFDR.Text) || numberFDR.Text.Equals(PERIOD_STRING))
+            else if (string.IsNullOrEmpty(numberFDR.Text) || numberFDR.Text.Equals(decimalPoint))
             {
-                MessageBox.Show(this, "Please enter a value for FDR.");
+                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_FDR_);
             }
-            else if (string.IsNullOrEmpty(numberLDFC.Text) || numberLDFC.Text.Equals(PERIOD_STRING))
+            else if (string.IsNullOrEmpty(numberLDFC.Text) || numberLDFC.Text.Equals(decimalPoint))
             {
-                MessageBox.Show(this, "Please enter a value for the lower desired fold change.");
+                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_the_lower_desired_fold_change_);
             }
-            else if (string.IsNullOrEmpty(numberUDFC.Text) || numberLDFC.Text.Equals(PERIOD_STRING))
+            else if (string.IsNullOrEmpty(numberUDFC.Text) || numberLDFC.Text.Equals(decimalPoint))
             {
-                MessageBox.Show(this, "Please enter a value for the upper desired fold change.");
-            }
-            else if (decimal.Parse(numberUDFC.Text) <= decimal.Parse(numberLDFC.Text))
-            {
-                MessageBox.Show(this, "The upper desired fold change must be greater than lower desired fold change.");
-            } else if ((rBtnPower.Enabled && decimal.Parse(numberPower.Text) < 0) || decimal.Parse(numberFDR.Text) < 0 || 
-                       decimal.Parse(numberLDFC.Text) < 0 || decimal.Parse(numberUDFC.Text) < 0)
-            {
-                MessageBox.Show(this, "Negative values are not valid.");
+                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Please_enter_a_value_for_the_upper_desired_fold_change_);
             }
             else
             {
-                GenerateArguments();
-                DialogResult = DialogResult.OK;
+                decimal decimalPower, decimalFdr, decimalLdfc, decimalUdfc;
+                if (!ValidateNumber(numberPower, out decimalPower) ||
+                    !ValidateNumber(numberFDR, out decimalFdr) ||
+                    !ValidateNumber(numberLDFC, out decimalLdfc) ||
+                    !ValidateNumber(numberUDFC, out decimalUdfc))
+                {
+                    return;
+                }
+                if (decimalUdfc <= decimalLdfc)
+                {
+                    MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_The_upper_desired_fold_change_must_be_greater_than_lower_desired_fold_change_);
+                }
+                else
+                {
+                    GenerateArguments(decimalPower, decimalFdr, decimalLdfc, decimalUdfc);
+                    DialogResult = DialogResult.OK;
+                }
             }
+        }
+
+        private bool ValidateNumber(TextBox textBox, out decimal decimalPower)
+        {
+            if (!decimal.TryParse(textBox.Text, out decimalPower))
+            {
+                MessageBox.Show(this, string.Format(MSstatsResources.SampleSizeUi_ValidateNumber_The_number___0___is_not_valid_, textBox.Text));
+                numberPower.Focus();
+                return false;
+            }
+            if (decimalPower < 0)
+            {
+                MessageBox.Show(this, MSstatsResources.SampleSizeUi_OkDialog_Negative_values_are_not_valid_);
+                numberPower.Focus();
+                return false;
+            }
+            return true;
         }
 
         // The command line arguments generated by the Sample Size UI is a 7 element array
@@ -152,19 +182,20 @@ namespace MSStatArgsCollector
         // 5. The lower desired fold change 
         // 6. The upper desired fold change
         //
-        private void GenerateArguments()
+        private void GenerateArguments(decimal power, decimal fdr, decimal ldfc, decimal udfc)
         {
-            Arguments = Arguments ?? new string[8];
+            Arguments = Arguments ?? new string[9];
 
-            Arguments[(int)Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? TRUESTRING : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.peptides] = (rBtnPeptides.Checked) ? TRUESTRING : numberPeptides.Value.ToString(CultureInfo.InvariantCulture);
-            Arguments[(int) Args.transitions] = (rBtnTransitions.Checked) ? TRUESTRING : numberTransitions.Value.ToString(CultureInfo.InvariantCulture); 
-            Arguments[(int) Args.power] = (rBtnPower.Checked) ? TRUESTRING : numberPower.Text;
+            Arguments[(int) Args.normalize_to] = (comboBoxNoramilzeTo.SelectedIndex).ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.samples] = (rBtnSamples.Checked) ? Truestring : numberSamples.Value.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.peptides] = (rBtnPeptides.Checked) ? Truestring : numberPeptides.Value.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.transitions] = (rBtnTransitions.Checked) ? Truestring : numberTransitions.Value.ToString(CultureInfo.InvariantCulture); 
+            Arguments[(int) Args.power] = (rBtnPower.Checked) ? Truestring : power.ToString(CultureInfo.InvariantCulture);
 
-            Arguments[(int) Args.fdr] = numberFDR.Text;
-            Arguments[(int) Args.lower_fold] = numberLDFC.Text;
-            Arguments[(int) Args.upper_fold] = numberUDFC.Text;
+            Arguments[(int) Args.fdr] = fdr.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.lower_fold] = ldfc.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.upper_fold] = udfc.ToString(CultureInfo.InvariantCulture);
+            Arguments[(int) Args.allow_missing_peaks] = (cboxAllowMissingPeaks.Checked) ? Truestring : Falsestring; 
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -174,27 +205,29 @@ namespace MSStatArgsCollector
 
         private void numericTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!char.IsDigit(e.KeyChar) && e.KeyChar != '.' && e.KeyChar != (char)Keys.Back)
+            var decimalPoint = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            bool decimalKey = decimalPoint.IndexOf(e.KeyChar) != -1;
+            if (!char.IsDigit(e.KeyChar) && !decimalKey && e.KeyChar != (char)Keys.Back)
             {
                 e.Handled = true;
             }
-            if (e.KeyChar == '.')
+            if (decimalKey)
             {
                 var source = (TextBox) sender;
-                if (source.Text.Contains("."))
+                if (source.Text.Contains(decimalPoint)) // Not L10N
                     e.Handled = true;
             }
         }
 
         // defaults
-        private const int NORMALIZE = 1;
-        private const decimal SAMPLES = 2m;
-        private const decimal PEPTIDES = 1m;
-        private const decimal TRANSITIONS = 1m;
-        private const string POWER = "0.80";
-        private const string FDR = "0.05";
-        private const string LDFC = "1.25";
-        private const string UDFC = "1.75";
+        private const int Normalize = 1;
+        private const decimal Samples = 2m;
+        private const decimal Peptides = 1m;
+        private const decimal Transitions = 1m;
+        private const decimal Power = 0.80m;
+        private const decimal Fdr = 0.05m;
+        private const decimal Ldfc = 1.25m;
+        private const decimal Udfc = 1.75m;
 
         private void btnDefault_Click(object sender, EventArgs e)
         {
@@ -203,15 +236,15 @@ namespace MSStatArgsCollector
 
         private void RestoreDefaults()
         {
-            comboBoxNoramilzeTo.SelectedIndex = NORMALIZE;
+            comboBoxNoramilzeTo.SelectedIndex = Normalize;
             rBtnSamples.Checked = true;
-            numberSamples.Value = SAMPLES;
-            numberPeptides.Value = PEPTIDES;
-            numberTransitions.Value = TRANSITIONS;
-            numberPower.Text = POWER;
-            numberFDR.Text = FDR;
-            numberLDFC.Text = LDFC;
-            numberUDFC.Text = UDFC;
+            numberSamples.Value = Samples;
+            numberPeptides.Value = Peptides;
+            numberTransitions.Value = Transitions;
+            numberPower.Text = Power.ToString(CultureInfo.CurrentCulture);
+            numberFDR.Text = Fdr.ToString(CultureInfo.CurrentCulture);
+            numberLDFC.Text = Ldfc.ToString(CultureInfo.CurrentCulture);
+            numberUDFC.Text = Udfc.ToString(CultureInfo.CurrentCulture);
         }
 
         private int SampleShift { get; set; }
@@ -287,7 +320,6 @@ namespace MSStatArgsCollector
 
     public class MSstatsSampleSizeCollector
     {
-
         public static string[] CollectArgs(IWin32Window parent, string report, string[] args)
         {
             using (var dlg = new SampleSizeUi(args))

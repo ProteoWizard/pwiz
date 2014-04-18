@@ -25,8 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 
 namespace MSStatArgsCollector
-{
-    
+{    
     public partial class GroupComparisonUi : Form
     {
         // Groups for comparison
@@ -69,10 +68,10 @@ namespace MSStatArgsCollector
         }
 
         // Constants
-        private const string EXPANDED = "E";
-        private const string RESTRICTED = "R";
-        private const string TRUESTRING = "TRUE";
-        private const string FALSESTRING = "FALSE";
+        private const string Expanded = "E"; // Not L10N
+        private const string RESTRICTED = "R"; // Not L10N
+        private const string TRUESTRING = "TRUE"; // Not L10N
+        private const string FALSESTRING = "FALSE"; // Not L10N
 
         // If there is no stored argument string, or if the number of groups has changed, the UI loads the
         // default settings for group comparisons
@@ -84,14 +83,16 @@ namespace MSStatArgsCollector
             if (Arguments != null && (Arguments.Length - nonIndexArguments == ControlGroupList.Length))
             {
                 // Restore the selected control group 
-                ControlGroup.SelectedIndex = Array.IndexOf(Arguments, "1");
+                ControlGroup.SelectedIndex = Array.IndexOf(Arguments, "1"); // Not L10N
 
                 // Restore the selection of comparison groups (if necessary)
                 if (ControlGroupList.Length > 2)
                 {
                     for (int i = 0; i < Arguments.Length - nonIndexArguments; i++)
                     {
-                        double groupConstant = Double.Parse(Arguments[i]);
+                        double groupConstant;
+                        if (!double.TryParse(Arguments[i], NumberStyles.Float, CultureInfo.InvariantCulture, out groupConstant))
+                            continue;
 // ReSharper disable CompareOfFloatsByEqualityOperator
                         if (groupConstant != 1.0 && groupConstant != 0.0)
 // ReSharper restore CompareOfFloatsByEqualityOperator
@@ -106,10 +107,10 @@ namespace MSStatArgsCollector
                 int lastArg = Arguments.Length - 1;
                 cboxInterferenceTransitions.Checked = Arguments[lastArg--].Equals(TRUESTRING);
 
-                if (Arguments[lastArg--].Equals(EXPANDED))
+                if (Arguments[lastArg--].Equals(Expanded))
                     techRepExp.Checked = true;
 
-                if (!Arguments[lastArg--].Equals(EXPANDED))
+                if (!Arguments[lastArg--].Equals(Expanded))
                     bioRepRes.Checked = true;
 
                 // Restore settings 
@@ -125,7 +126,7 @@ namespace MSStatArgsCollector
                 for (int i = 0; i < ControlGroupList.Length; i++)
                 {
                     string group = ControlGroupList[i].ToLower();
-                    if (group.StartsWith("control") || group.StartsWith("healthy"))
+                    if (group.StartsWith("control") || group.StartsWith("healthy")) // Not L10N
                     {
                         ControlGroup.SelectedIndex = i;
                         break;
@@ -163,11 +164,11 @@ namespace MSStatArgsCollector
         {
             if (ComparisonGroups.Visible && ComparisonGroups.SelectedIndices.Count == 0)
             {
-                MessageBox.Show(this, "Please select at least one comparison group.");
+                MessageBox.Show(this, MSstatsResources.GroupComparisonUi_OkDialog_Please_select_at_least_one_comparison_group_);
             }
             else if (string.IsNullOrWhiteSpace(textBoxName.Text))
             {
-                MessageBox.Show(this, "Please enter a name for this comparison.");
+                MessageBox.Show(this, MSstatsResources.GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_);
             }
             else
             {
@@ -195,8 +196,8 @@ namespace MSStatArgsCollector
         //
         // The last four elements of the argument array are as follows:
         // "TRUE" - the user wants to label data, otherwise "FALSE"
-        // "E" - expanded: the user wants the scope of biological replicates to be expanded, otherwise "R" - Restricted
-        // "E" - expanded: the user wants the scope of technical replicates to be expanded, otherwise "R" - Restricted
+        // "E" - expanded: the user wants the scope of biological replicates to be expanded, otherwise "R" - RESTRICTED
+        // "E" - expanded: the user wants the scope of technical replicates to be expanded, otherwise "R" - RESTRICTED
         // "TRUE" - the user wants to include inference transitions, otherwise "FALSE"
         //
         // An example of a complete array would be [0 , -1 , 0.5 , 0.5 , 0 , 0 , Disease-Healthy , TRUE , E , R , FALSE]
@@ -233,9 +234,10 @@ namespace MSStatArgsCollector
             commandLineArguments.Add(comboBoxNoramilzeTo.SelectedIndex.ToString(CultureInfo.InvariantCulture));            
             commandLineArguments.Add(cboxLabelData.Checked ? TRUESTRING : FALSESTRING);
             commandLineArguments.Add(cboxEqualVariance.Checked ? TRUESTRING : FALSESTRING);
-            commandLineArguments.Add(bioRepExp.Checked ? EXPANDED : RESTRICTED);
-            commandLineArguments.Add(techRepExp.Checked ? EXPANDED : RESTRICTED);
+            commandLineArguments.Add(bioRepExp.Checked ? Expanded : RESTRICTED);
+            commandLineArguments.Add(techRepExp.Checked ? Expanded : RESTRICTED);
             commandLineArguments.Add(cboxInterferenceTransitions.Checked ? TRUESTRING : FALSESTRING);
+            commandLineArguments.Add(cboxAllowMissingPeaks.Checked ? TRUESTRING : FALSESTRING);
           
 
             Arguments = commandLineArguments.ToArray();
@@ -250,8 +252,8 @@ namespace MSStatArgsCollector
         {
             // Split report (.csv file) by lines
             string[] lines = report.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            string[] fields = lines[0].ParseCsvFields();
-            int groupIndex = Array.IndexOf(fields, "Condition");
+            string[] fields = lines[0].ParseDsvFields(TextUtil.CsvSeparator);
+            int groupIndex = Array.IndexOf(fields, "Condition"); // Not L10N
 
             ICollection<string> groups = new HashSet<string>();
             try
@@ -259,7 +261,7 @@ namespace MSStatArgsCollector
                 // The last line in the CSV file is empty, thus we compare length - 1 
                 for (int i = 1; i < lines.Length - 1; i++)
                 {
-                    groups.Add(lines[i].ParseCsvFields()[groupIndex]);
+                    groups.Add(lines[i].ParseDsvFields(TextUtil.CsvSeparator)[groupIndex]);
                 }
             }
             catch
