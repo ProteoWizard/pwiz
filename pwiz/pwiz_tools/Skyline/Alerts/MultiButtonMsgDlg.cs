@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -114,6 +115,33 @@ namespace pwiz.Skyline.Alerts
         {
             get { return labelMessage.Text; }
             set { labelMessage.Text = value;}
+        }
+
+        private void MultiButtonMsgDlg_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.C && e.Control)
+            {
+                CopyMessage();
+            }
+        }
+
+        private void CopyMessage()
+        {
+            const string formatMessage =
+@"---------------------------
+{0}
+---------------------------
+{1}
+---------------------------
+{2}
+---------------------------
+"; // Not L10N
+            var sbButtons = new StringBuilder();
+            if (btn0.Visible)
+                sbButtons.Append(btn0.Text).Append("    "); // Not L10N
+            sbButtons.Append(btn1.Text).Append("    ");
+            sbButtons.Append(btnCancel.Text);
+            ClipboardEx.SetText(string.Format(formatMessage, Text, Message, sbButtons));
         }
     }
 }

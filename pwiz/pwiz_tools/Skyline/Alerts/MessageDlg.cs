@@ -63,5 +63,27 @@ namespace pwiz.Skyline.Alerts
         {
             OkDialog();
         }
+
+        private void MessageDlg_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.C && e.Control)
+            {
+                CopyMessage();
+            }
+        }
+
+        public void CopyMessage()
+        {
+            const string formatMessage =
+@"---------------------------
+{0}
+---------------------------
+{1}
+---------------------------
+OK
+---------------------------
+";
+            ClipboardEx.SetText(string.Format(formatMessage, Text, Message));
+        }
     }
 }
