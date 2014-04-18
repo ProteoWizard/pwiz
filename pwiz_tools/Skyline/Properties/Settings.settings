@@ -458,7 +458,7 @@
     <Setting Name="DisplayLanguage" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ShowPeptidesDisplayModeEnum" Type="System.String" Scope="User">
+    <Setting Name="ShowPeptidesDisplayMode" Type="System.String" Scope="User">
       <Value Profile="(Default)">ByName</Value>
     </Setting>
   </Settings>
