@@ -426,6 +426,18 @@
     <Compile Include="EditUI\CopyGraphDataToolStripMenuItem.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="EditUI\ComparePeakPickingDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\ComparePeakPickingDlg.Designer.cs">
+      <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\AddPeakCompareDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\AddPeakCompareDlg.Designer.cs">
+      <DependentUpon>AddPeakCompareDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\ReintegrateDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -560,6 +572,7 @@
     </Compile>
     <Compile Include="Model\AbstractDiaExporter.cs" />
     <Compile Include="Model\AbstractMassListExporter.cs" />
+    <Compile Include="Model\ComparePeakBoundaries.cs" />
     <Compile Include="Model\Databinding\AnnotationPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
     <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
@@ -1384,6 +1397,9 @@
     <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.zh-CHS.resx">
       <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AddPeakCompareDlg.resx">
+      <DependentUpon>AddPeakCompareDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromatogramRTThresholdDlg.ja.resx">
       <DependentUpon>ChromatogramRTThresholdDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1396,6 +1412,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\ComparePeakPickingDlg.resx">
+      <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditNoteDlg.ja.resx">
       <DependentUpon>EditNoteDlg.cs</DependentUpon>

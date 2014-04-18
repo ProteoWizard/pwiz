@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model
                     return defsNew;
                 }));
                 var annotationNamesToKeep = Document.Settings.DataSettings.AnnotationDefs.Select(def => def.Name).ToList();
-                Document = (SrmDocument) ChooseAnnotationsDlg.StripAnnotationValues(annotationNamesToKeep, Document);
+                Document = (SrmDocument) Document.StripAnnotationValues(annotationNamesToKeep);
             }
             SrmDocument docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;

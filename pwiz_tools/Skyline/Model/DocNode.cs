@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -159,6 +160,138 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+
+        /// <summary>
+        /// Walks the node tree, and removes any annotation values whose name is not
+        /// in "annotationNamesToKeep".  Returns true if the node was modified.
+        /// </summary>
+        public DocNode StripAnnotationValues(ICollection<string> annotationNamesToKeep)
+        {
+            DocNode newDocNode = this;
+            var annotations = Annotations;
+            if (StripAnnotationValues(annotationNamesToKeep, ref annotations))
+            {
+                newDocNode = ChangeAnnotations(annotations);
+            }
+            var docNodeParent = newDocNode as DocNodeParent;
+            if (docNodeParent != null)
+            {
+                var newChildren = new List<DocNode>();
+                var childrenChanged = false;
+                foreach (var child in docNodeParent.Children)
+                {
+                    var newChild = child.StripAnnotationValues(annotationNamesToKeep);
+                    childrenChanged = childrenChanged || !ReferenceEquals(child, newChild);
+                    newChildren.Add(newChild);
+                }
+                if (childrenChanged)
+                {
+                    newDocNode = docNodeParent.ChangeChildren(newChildren);
+                }
+            }
+            if (newDocNode is TransitionGroupDocNode)
+            {
+                var transitionGroupDocNode = newDocNode as TransitionGroupDocNode;
+                if (transitionGroupDocNode.Results != null)
+                {
+                    var results = transitionGroupDocNode.Results;
+                    if (StripAnnotationValues(annotationNamesToKeep, ref results))
+                    {
+                        newDocNode = transitionGroupDocNode.ChangeResults(results);
+                    }
+                }
+            }
+            if (newDocNode is TransitionDocNode)
+            {
+                var transitionDocNode = newDocNode as TransitionDocNode;
+                if (transitionDocNode.Results != null)
+                {
+                    var results = transitionDocNode.Results;
+                    if (StripAnnotationValues(annotationNamesToKeep, ref results))
+                    {
+                        newDocNode = transitionDocNode.ChangeResults(results);
+                    }
+                }
+            }
+            return newDocNode;
+        }
+
+        private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref Results<TItem> results)
+            where TItem : ChromInfo
+        {
+            if (results == null)
+            {
+                return false;
+            }
+            var newResults = new List<ChromInfoList<TItem>>();
+            bool fResult = false;
+            foreach (var replicate in results)
+            {
+                var chromInfoList = replicate;
+                fResult |= StripAnnotationValues(annotationNamesToKeep, ref chromInfoList);
+                newResults.Add(chromInfoList);
+            }
+            if (fResult)
+            {
+                results = new Results<TItem>(newResults);
+            }
+            return fResult;
+        }
+
+        private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref ChromInfoList<TItem> chromInfoList)
+        {
+            if (chromInfoList == null)
+                return false;
+
+            bool fResult = false;
+            var newList = new List<TItem>();
+            foreach (var chromInfo in chromInfoList)
+            {
+                var transitionChromInfo = chromInfo as TransitionChromInfo;
+                if (transitionChromInfo != null)
+                {
+                    var annotations = transitionChromInfo.Annotations;
+                    if (StripAnnotationValues(annotationNamesToKeep, ref annotations))
+                    {
+                        newList.Add((TItem)(object) transitionChromInfo.ChangeAnnotations(annotations));
+                        fResult = true;
+                        continue;
+                    }
+                }
+                var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
+                if (transitionGroupChromInfo != null)
+                {
+                    var annotations = transitionGroupChromInfo.Annotations;
+                    if (StripAnnotationValues(annotationNamesToKeep, ref annotations))
+                    {
+                        newList.Add((TItem) (object) transitionGroupChromInfo.ChangeAnnotations(annotations));
+                        fResult = true;
+                        continue;
+                    }
+                }
+                newList.Add(chromInfo);
+            }
+            if (fResult)
+            {
+                chromInfoList = new ChromInfoList<TItem>(newList);
+            }
+            return fResult;
+        }
+
+        private static bool StripAnnotationValues(ICollection<string> annotationNamesToKeep, ref Annotations annotations)
+        {
+            bool result = false;
+            foreach (var entry in annotations.ListAnnotations())
+            {
+                if (annotationNamesToKeep.Contains(entry.Key))
+                {
+                    continue;
+                }
+                annotations = annotations.ChangeAnnotation(entry.Key, null);
+                result = true;
+            }
+            return result;
+        }
     }
 
     /// <summary>

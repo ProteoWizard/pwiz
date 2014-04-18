@@ -192,11 +192,17 @@ namespace pwiz.SkylineTestA
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
                 Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
 
+            // But ok if not adjusting peaks
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
+
             // 7. Invalid end time
             valuesBadTime[(int) PeakBoundaryImporter.Field.start_time] =
                 values[(int) PeakBoundaryImporter.Field.start_time];
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
                 Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_);
+
+            // But ok if not adjusting peaks
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
 
             // #N/A in times ok
             valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
@@ -217,22 +223,19 @@ namespace pwiz.SkylineTestA
             ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
                 Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
             
-            // 8. Not imported file
+            // 8. Not imported file gets skipped
             string[] valuesBadFile = new List<string>(values).ToArray();
             valuesBadFile[(int) PeakBoundaryImporter.Field.filename] = "Q_2012_0918_RJ_15.raw";
-            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadFile)),
-                Resources.PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_);
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadFile)));
 
-            // 9. Unknown modification state
+            // 9. Unknown modification state gets skipped
             string[] valuesBadSequence = new List<string>(values).ToArray();
             valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "T[+80]PEVDDEALEK";
-            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)),
-                Resources.PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__);
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)));
 
-            // 10. Unknown peptide sequence
+            // 10. Unknown peptide sequence gets skipped
             valuesBadSequence[(int)PeakBoundaryImporter.Field.modified_peptide] = "PEPTIDER";
-            ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)),
-                Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_);
+            ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadSequence)));
 
             // 11. Bad value in decoy field
             string[] valuesBadDecoys = new List<string>(values).ToArray();
@@ -333,23 +336,23 @@ namespace pwiz.SkylineTestA
 
         }
 
-        private static void ImportThrowsException(SrmDocument docResults, string importText, string message, bool isMinutes = true)
+        private static void ImportThrowsException(SrmDocument docResults, string importText, string message, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
             using (var readerPeakBoundaries = new StringReader(importText))
             {
                 long lineCount = Helpers.CountLinesInString(importText);
-                AssertEx.ThrowsException<IOException>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes), message);
+                AssertEx.ThrowsException<IOException>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes, removeMissing, changePeaks), message);
             }
         }
 
-        private static void ImportNoException(SrmDocument docResults, string importText, bool isMinutes = true)
+        private static void ImportNoException(SrmDocument docResults, string importText, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)
         {
             var peakBoundaryImporter = new PeakBoundaryImporter(docResults);
             using (var readerPeakBoundaries = new StringReader(importText))
             {
                 long lineCount = Helpers.CountLinesInString(importText);
-                AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes));
+                AssertEx.NoExceptionThrown<Exception>(() => peakBoundaryImporter.Import(readerPeakBoundaries, null, lineCount, isMinutes, removeMissing, changePeaks));
             }
         }
 

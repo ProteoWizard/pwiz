@@ -5084,15 +5084,6 @@
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_" xml:space="preserve">
 <value>{1} 行目の値「{0}」は有効な終了時間ではありません。</value>
   </data>
-  <data name="PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_" xml:space="preserve">
-<value>{1} 行目の{0}ファイルはこのドキュメントにインポートされていません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__" xml:space="preserve">
-<value>{1} 行目の修飾状態{0}は、ペプチド{2}のドキュメントにあるどの修飾状態にも一致しません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
-<value>{1} 行目にあるペプチドシークエンス{0}は、ドキュメント内のどのペプチドにも一致しません。</value>
-  </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
 <value>OverlapDemultiplexer:InitializeFile が多重化ファイルに重複して不適切に形成されています</value>
   </data>

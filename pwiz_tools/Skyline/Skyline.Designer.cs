@@ -285,6 +285,7 @@ namespace pwiz.Skyline
             this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateDecoysMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reintegrateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.compareModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
@@ -2128,6 +2129,7 @@ namespace pwiz.Skyline
             this.acceptPeptidesMenuItem,
             this.generateDecoysMenuItem,
             this.reintegrateToolStripMenuItem,
+            this.compareModelsToolStripMenuItem,
             this.toolStripSeparator35,
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
@@ -2224,6 +2226,12 @@ namespace pwiz.Skyline
             this.reintegrateToolStripMenuItem.Name = "reintegrateToolStripMenuItem";
             resources.ApplyResources(this.reintegrateToolStripMenuItem, "reintegrateToolStripMenuItem");
             this.reintegrateToolStripMenuItem.Click += new System.EventHandler(this.reintegrateToolStripMenuItem_Click);
+            // 
+            // compareModelsToolStripMenuItem
+            // 
+            this.compareModelsToolStripMenuItem.Name = "compareModelsToolStripMenuItem";
+            resources.ApplyResources(this.compareModelsToolStripMenuItem, "compareModelsToolStripMenuItem");
+            this.compareModelsToolStripMenuItem.Click += new System.EventHandler(this.compareModelsToolStripMenuItem_Click);
             // 
             // toolStripSeparator35
             // 
@@ -3539,6 +3547,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByAccessionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByPreferredNameToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByGeneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem compareModelsToolStripMenuItem;
     }
 }
 

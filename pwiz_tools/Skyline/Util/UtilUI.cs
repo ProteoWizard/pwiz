@@ -25,9 +25,11 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using ZedGraph;
 
 namespace pwiz.Skyline.Util
 {
@@ -354,7 +356,25 @@ window.onload = submitForm;
             Thread.Sleep(30*1000); //30 seconds.
             FileEx.SafeDelete(_path, true);
         }
+    }
 
+    public static class ZedGraphHelper
+    {
+        public static void BuildContextMenu(ZedGraphControl graphControl, ContextMenuStrip menuStrip)
+        {
+            var items = new ToolStripItem[menuStrip.Items.Count];
+            for (int i = 0; i < items.Length; i++)
+                items[i] = menuStrip.Items[i];
+
+            // Remove some ZedGraph menu items not of interest
+            foreach (var item in items)
+            {
+                var tag = (string)item.Tag;
+                if (tag == "set_default" || tag == "show_val" || tag == "unzoom" || tag == "undo_all") // Not L10N
+                    menuStrip.Items.Remove(item);
+            }
+            CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);            
+        }
     }
 }
 

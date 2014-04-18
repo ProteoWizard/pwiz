@@ -1014,6 +1014,35 @@ namespace pwiz.Skyline
             }
         }
 
+        private void compareModelsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowCompareModelsDlg();
+        }
+
+        public void ShowCompareModelsDlg()
+        {
+            var document = DocumentUI;
+            if (!document.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_);
+                return;
+            }
+            if (document.PeptideCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_have_peptides_in_order_to_compare_model_peak_picking_);
+                return;
+            }
+            if (!document.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_);
+                return;
+            }
+            using (var dlg = new ComparePeakPickingDlg(document))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
         private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)
         {
             ShowMProphetFeaturesDialog();
@@ -1083,7 +1112,8 @@ namespace pwiz.Skyline
 
                 if (docNew == null)
                     return;
-
+                if (!peakBoundaryImporter.UnrecognizedPeptidesCancel(this))
+                    return;
                 if (longWaitDlg.IsDocumentChanged(docCurrent))
                 {
                     MessageDlg.Show(this, Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);

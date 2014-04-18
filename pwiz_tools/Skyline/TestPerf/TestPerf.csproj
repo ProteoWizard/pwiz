@@ -134,6 +134,7 @@
     <Compile Include="PeakScoreCompareTest.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PerfMinimizeResultsTest.cs" />
+    <Compile Include="PerfPeakTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

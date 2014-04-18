@@ -20,10 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
@@ -35,10 +38,17 @@ namespace pwiz.Skyline.Model
     public class PeakBoundaryImporter
     {
         public SrmDocument Document { get; private set; }
+        public int CountMissing { get; private set; }
+        public List<string> AnnotationsAdded { get; private set; }
+        public HashSet<string> UnrecognizedPeptides { get; private set; }
+        public HashSet<string> UnrecognizedFiles { get; private set; }
 	    
         public PeakBoundaryImporter(SrmDocument document)
 	    {
             Document = document;
+            AnnotationsAdded = new List<string>();
+            UnrecognizedFiles = new HashSet<string>();
+            UnrecognizedPeptides = new HashSet<string>();
 	    }
 
         public enum Field { modified_peptide, filename, start_time, end_time, charge, is_decoy, sample_name }
@@ -50,6 +60,8 @@ namespace pwiz.Skyline.Model
                 (int) Field.start_time,
                 (int) Field.end_time
             };
+
+        public static int[] REQUIRED_NO_CHROM { get { return REQUIRED_FIELDS.Take(2).ToArray(); }}
 
         // ReSharper disable NonLocalizedString
         public static readonly string[][] FIELD_NAMES =
@@ -66,20 +78,34 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] STANDARD_FIELD_NAMES = FIELD_NAMES.Select(fieldNames => fieldNames[0]).ToArray();
 
-        public SrmDocument Import(string inputFile, ILongWaitBroker longWaitBroker, long lineCount)
+
+        /// <summary>
+        /// Imports peak boundaries from a file to an SrmDocument
+        /// </summary>
+        /// <param name="inputFile">path to the input file</param>
+        /// <param name="progressMonitor"></param>
+        /// <param name="lineCount">number of lines in the file</param>
+        /// <param name="removeMissing">if true, all results in the document that are NOT found in the file will have peak boundaries removed</param>
+        /// <param name="changePeaks">set to false to to only import annotations, not actually adjust peaks</param>
+        /// <returns></returns>
+        public SrmDocument Import(string inputFile, IProgressMonitor progressMonitor, long lineCount, bool removeMissing = false, bool changePeaks = true)
         {
+            CountMissing = 0;
             // Determine if the peak times are in minutes or seconds
-            bool isMinutes;
-            using (var reader = new StreamReader(inputFile))
+            bool isMinutes = true;
+            if (changePeaks)
             {
-                isMinutes = IsMinutesPeakBoundaries(reader);
+                using (var reader = new StreamReader(inputFile))
+                {
+                    isMinutes = IsMinutesPeakBoundaries(reader);
+                }
             }
 
             // Import the peak times
             SrmDocument doc;
             using (var reader = new StreamReader(inputFile))
             {
-                doc = Import(reader, longWaitBroker, lineCount, isMinutes);
+                doc = Import(reader, progressMonitor, lineCount, isMinutes, removeMissing, changePeaks);
             }
             return doc;
         }
@@ -91,7 +117,7 @@ namespace pwiz.Skyline.Model
             string line = reader.ReadLine();
             int[] fieldIndices;
             int fieldsTotal;
-            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, out fieldIndices, out fieldsTotal);
+            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out fieldsTotal);
             // Find the first 50 peak times that are not #N/A, if any is larger than the maxRT, then times are in seconds
             while (peakTimes.Count < 50)
             {
@@ -105,19 +131,20 @@ namespace pwiz.Skyline.Model
                 if (startTime.HasValue)
                     peakTimes.Add(startTime.Value);
             }
-            bool isMinutes = peakTimes.Count == 0 || peakTimes.Max() < GetMaxRt();
+            bool isMinutes = peakTimes.Count == 0 || peakTimes.Max() < GetMaxRt(Document);
             return isMinutes;
         }
 
-        private double GetMaxRt()
+        public static double GetMaxRt(SrmDocument document)
         {
-            var chromFileInfos = Document.Settings.MeasuredResults.MSDataFileInfos;
+            var chromFileInfos = document.Settings.MeasuredResults.MSDataFileInfos;
             double maxRt = chromFileInfos.Select(info => info.MaxRetentionTime).Max();
             return maxRt != 0 ? maxRt : 720;    // 12 hours as default maximum RT in minutes
         }
 
-        public SrmDocument Import(TextReader reader, ILongWaitBroker longWaitBroker, long lineCount, bool isMinutes)
+        public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
+            var status = new ProgressStatus(Resources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
             double timeConversionFactor = isMinutes ? 1.0 : 60.0;
             int linesRead = 0;
             int progressPercent = 0;
@@ -125,6 +152,7 @@ namespace pwiz.Skyline.Model
             var docReference = docNew;
             var sequenceToNode = new Dictionary<Tuple<string, bool>, IList<IdentityPath>>();
             var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
+            var trackAdjustedResults = new HashSet<ResultsKey>();
             var modMatcher = new ModificationMatcher();
             // Make the dictionary of modified peptide strings to doc nodes and paths
             for (int i = 0; i < Document.PeptideCount; ++i)
@@ -157,20 +185,23 @@ namespace pwiz.Skyline.Model
             linesRead++;
             int[] fieldIndices;
             int fieldsTotal;
-            char correctSeparator = ReadFirstLine(line, allFieldNames, out fieldIndices, out fieldsTotal);
+            // If we aren't changing peaks, allow start and end time to be missing
+            var requiredFields = changePeaks ? REQUIRED_FIELDS : REQUIRED_NO_CHROM;
+            char correctSeparator = ReadFirstLine(line, allFieldNames, requiredFields, out fieldIndices, out fieldsTotal);
 
             while ((line = reader.ReadLine()) != null)
             {
                 linesRead++;
-                if (longWaitBroker != null)
+                if (progressMonitor != null)
                 {
-                    if (longWaitBroker.IsCanceled)
-                        //TODO: got rid of line below, but want to test for it -- need another way
-                        //if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(Document))
+                    if (progressMonitor.IsCanceled)
                         return Document;
                     int progressNew = (int) (linesRead*100/lineCount);
                     if (progressPercent != progressNew)
-                        longWaitBroker.ProgressValue = progressPercent = progressNew;
+                    {
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
+                        progressPercent = progressNew;
+                    }
                 }
                 var dataFields = new DataFields(fieldIndices, line.ParseDsvFields(correctSeparator), allFieldNames);
                 if (dataFields.Length != fieldsTotal)
@@ -199,13 +230,17 @@ namespace pwiz.Skyline.Model
                 bool chargeSpecified = dataFields.TryGetCharge(linesRead, out charge);
                 string sampleName = dataFields.GetField(Field.sample_name);
 
-                double? startTime = dataFields.GetTime(Field.start_time, Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, linesRead);
-                if (startTime.HasValue)
-                    startTime = startTime / timeConversionFactor;
-
-                double? endTime = dataFields.GetTime(Field.end_time, Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, linesRead);
-                if (endTime.HasValue)
-                    endTime = endTime / timeConversionFactor;
+                double? startTime = null;
+                double? endTime = null;
+                if (changePeaks)
+                {
+                    startTime = dataFields.GetTime(Field.start_time, Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, linesRead);
+                    if (startTime.HasValue)
+                        startTime = startTime / timeConversionFactor;
+                    endTime = dataFields.GetTime(Field.end_time, Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, linesRead);
+                    if (endTime.HasValue)
+                        endTime = endTime / timeConversionFactor;
+                }
 
                 // Error if only one of startTime and endTime is null
                 if (startTime == null && endTime != null)
@@ -221,7 +256,8 @@ namespace pwiz.Skyline.Model
                 }
                 if (fileMatch == null)
                 {
-                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_, fileName, linesRead));
+                    UnrecognizedFiles.Add(fileName);
+                    continue;
                 }
                 var chromSet = fileMatch.Chromatograms;
                 string nameSet = chromSet.Name;
@@ -243,19 +279,13 @@ namespace pwiz.Skyline.Model
                 IList<IdentityPath> pepPaths;
                 if (!sequenceToNode.TryGetValue(peptideIdentifier, out pepPaths))
                 {
-                    string sequence = FastaSequence.StripModifications(modifiedPeptideString);
-                    if (Document.Peptides.Any(pep => Equals(sequence, pep.Peptide.Sequence)))
-                    {
-                        throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__, modifiedPeptideString, linesRead, sequence));
-                    }
-                    else
-                    {
-                        throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_, sequence, linesRead));
-                    }
+                    UnrecognizedPeptides.Add(modifiedPeptideString);
+                    continue;
                 }
 
                 // Define the annotations to be added
                 var annotations = dataFields.GetAnnotations();
+                AnnotationsAdded = annotations.Keys.ToList();
 
                 // Loop over all the transition groups in that peptide to find matching charge,
                 // or use all transition groups if charge not specified
@@ -282,8 +312,13 @@ namespace pwiz.Skyline.Model
                                     docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
                                     // Change peak
                                     string filePath = chromSet.GetFileInfo(fileId).FilePath;
-                                    docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                        null, startTime, endTime, UserSet.IMPORTED, null, false);
+                                    if (changePeaks)
+                                    {
+                                        docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
+                                            null, startTime, endTime, UserSet.IMPORTED, null, false);
+                                    }
+                                    // For removing peaks that are not in the file, if removeMissing = true
+                                    trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
                                     foundSample = true;
                                 }
                             }
@@ -296,27 +331,89 @@ namespace pwiz.Skyline.Model
                                                         modifiedPeptideString, fileName, linesRead));
                 }
             }
+            // Remove peaks from the document that weren't in the file.
+            if (removeMissing)
+                docNew = RemoveMissing(docNew, trackAdjustedResults, changePeaks);
             // If nothing has changed, return the old Document before ChangeIgnoreChangingChildren was turned off
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
         }
 
-        private static char ReadFirstLine(string line, IList<string[]> allFieldNames, out int[] fieldIndices, out int fieldsTotal)
+        /// <summary>
+        /// Removes peaks and annotations that were in the document but not in the file, so that all peptide results that were not explicitly imported as part of this file are now blank
+        /// </summary>
+        /// <param name="docNew">SrmDocument for which missing peaks should be removed</param>
+        /// <param name="trackAdjustedResults">List of peaks that were in the imported file</param>
+        /// <param name="changePeaks">If true, remove both peaks and annotations.  If false, only remove annotations</param>
+        /// <returns></returns>
+        private SrmDocument RemoveMissing(SrmDocument docNew, ICollection<ResultsKey> trackAdjustedResults, bool changePeaks)
+        {
+            var measuredResults = docNew.Settings.MeasuredResults;
+            var chromatogramSets = measuredResults.Chromatograms;
+            for (int i = 0; i < chromatogramSets.Count; ++i)
+            {
+                var set = chromatogramSets[i];
+                var nameSet = set.Name;
+                for (int k = 0; k < docNew.PeptideCount; ++k)
+                {
+                    IdentityPath pepPath = docNew.GetPathTo((int)SrmDocument.Level.Peptides, k);
+                    var pepNode = (PeptideDocNode)Document.FindNode(pepPath);
+                    if (pepNode.IsDecoy)
+                        continue;
+                    if (pepNode.GlobalStandardType != null)
+                        continue;
+                    foreach (var groupNode in pepNode.TransitionGroups)
+                    {
+                        var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                        var chromInfos = groupNode.Results[i];
+                        foreach (var groupChromInfo in chromInfos)
+                        {
+                            if (groupChromInfo == null)
+                                continue;
+                            var key = new ResultsKey(groupChromInfo.FileId.GlobalIndex, groupNode.Id);
+                            if (!trackAdjustedResults.Contains(key))
+                            {
+                                CountMissing++;
+                                var fileId = groupChromInfo.FileId;
+                                var fileInfo = set.GetFileInfo(fileId);
+                                var filePath = fileInfo.FilePath;
+                                // Remove annotations for defs that were imported into the document and were on this peptide prior to import
+                                var newAnnotationValues = groupChromInfo.Annotations.ListAnnotations().ToList();
+                                newAnnotationValues = newAnnotationValues.Where(a => !AnnotationsAdded.Contains(a.Key)).ToList();
+                                var newAnnotations = new Annotations(groupChromInfo.Annotations.Note, newAnnotationValues, groupChromInfo.Annotations.ColorIndex);
+                                var newGroupNode = groupNode.ChangePrecursorAnnotations(fileId, newAnnotations);
+                                if (!ReferenceEquals(groupNode, newGroupNode))
+                                    docNew = (SrmDocument) docNew.ReplaceChild(groupPath.Parent, newGroupNode);
+                                // Adjust peaks to null if they weren't in the file
+                                if (changePeaks)
+                                {
+                                    docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
+                                        null, null, null, UserSet.IMPORTED, null, false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return docNew;
+        }
+
+        private static char ReadFirstLine(string line, IList<string[]> allFieldNames, ICollection<int> requiredFields, out int[] fieldIndices, out int fieldsTotal)
         {
 
             if (line == null)
             {
                 throw new IOException(Resources.PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file);
             }
-            char? correctSeparator = DetermineCorrectSeparator(line, allFieldNames, REQUIRED_FIELDS, out fieldIndices, out fieldsTotal);
+            char? correctSeparator = DetermineCorrectSeparator(line, allFieldNames, requiredFields, out fieldIndices, out fieldsTotal);
             if (correctSeparator == null)
             {
                 string fieldNames = string.Empty;
                 // Keep ReSharper from complaining
                 if (fieldIndices != null)
                 {
-                    string[] missingFields = fieldIndices.Where((index, i) => index == -1 && REQUIRED_FIELDS.Contains(i))
+                    string[] missingFields = fieldIndices.Where((index, i) => index == -1 && requiredFields.Contains(i))
                                                          .Select((index, i) => allFieldNames[i][0]).ToArray();
                     fieldNames = string.Join(", ", missingFields); // Not L10N
                 }
@@ -325,7 +422,7 @@ namespace pwiz.Skyline.Model
             return correctSeparator.Value;
         }
 
-        private static char? DetermineCorrectSeparator(string line,
+        public static char? DetermineCorrectSeparator(string line,
                                                        IList<string[]> fieldNames,
                                                        ICollection<int> requiredFields,
                                                        out int[] fieldIndices,
@@ -381,6 +478,105 @@ namespace pwiz.Skyline.Model
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// UI for warning about unrecognized peptides in imported file
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        public bool UnrecognizedPeptidesCancel(IWin32Window parent)
+        {
+            var peptides = UnrecognizedPeptides.ToList();
+            if (peptides.Any())
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine(peptides.Count == 1
+                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_
+                    : string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__,
+                                                  peptides.Count));
+                sb.AppendLine();
+                int peptidesToShow = Math.Min(peptides.Count, 10);
+                for (int i = 0; i < peptidesToShow; ++i)
+                {
+                    sb.AppendLine(peptides[i]);
+                }
+                if (peptidesToShow < peptides.Count)
+                {
+                    sb.AppendLine("..."); // Not L10N
+                }
+                sb.AppendLine();
+                sb.Append(peptides.Count == 1
+                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_
+                    : Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
+                var dlgPeptides = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
+                if (dlgPeptides == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
+            var files = UnrecognizedFiles.ToList();
+            if (files.Any())
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine(files.Count == 1
+                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_file_name_in_the_peak_boundaries_file_was_not_recognized_
+                    : string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_,
+                             files.Count));
+                sb.AppendLine();
+                int filesToShow = Math.Min(files.Count, 10);
+                for (int i = 0; i < filesToShow; ++i)
+                {
+                    sb.AppendLine(files[i]);
+                }
+                if (filesToShow < files.Count)
+                {
+                    sb.AppendLine("..."); // Not L10N
+                }
+                sb.AppendLine();
+                sb.Append(files.Count == 1
+                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_
+                    : Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
+                var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
+                if (dlgFiles == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private class ResultsKey
+        {
+            private int FileId { get; set; }
+            private Identity NodeId { get; set; }
+
+            public ResultsKey(int fileId, Identity nodeId)
+            {
+                FileId = fileId;
+                NodeId = nodeId;
+            }
+
+            private bool Equals(ResultsKey other)
+            {
+                return Equals(NodeId, other.NodeId) && FileId == other.FileId;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((ResultsKey) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((NodeId != null ? NodeId.GetHashCode() : 0)*397) ^ FileId;
+                }
+            }
         }
 
         private class DataFields

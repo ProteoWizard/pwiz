@@ -199,6 +199,7 @@
     <Compile Include="TreeRestorationTest.cs" />
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
+    <Compile Include="PeakBoundaryCompareTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

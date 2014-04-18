@@ -1317,18 +1317,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void zedGraph_ContextMenuBuilder(ZedGraphControl graphControl, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            var items = new ToolStripItem[menuStrip.Items.Count];
-            for (int i = 0; i < items.Length; i++)
-                items[i] = menuStrip.Items[i];
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                var tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val" || tag == "unzoom" || tag == "undo_all") // Not L10N
-                    menuStrip.Items.Remove(item);
-            }
-            CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);
+            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
         }
     }
 

@@ -1720,25 +1720,25 @@
     <value>Re&amp;name Proteins...</value>
   </data>
   <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Name</value>
   </data>
   <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Accession</value>
   </data>
   <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Preferred Name</value>
   </data>
   <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Gene</value>
@@ -1765,13 +1765,19 @@
     <value>218, 22</value>
   </data>
   <data name="generateDecoysMenuItem.Text" xml:space="preserve">
-    <value>Add &amp;Decoy Peptides...</value>
+    <value>Add Decoy &amp;Peptides...</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
     <value>Rein&amp;tegrate...</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 22</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
+    <value>C&amp;ompare Peak Scoring...</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1927,25 +1933,25 @@
     <value>&amp;Edit</value>
   </data>
   <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="showTargetsByNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Name</value>
   </data>
   <data name="showTargetsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="showTargetsByAccessionToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Accession</value>
   </data>
   <data name="showTargetsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="showTargetsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Preferred Name</value>
   </data>
   <data name="showTargetsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>203, 24</value>
+    <value>173, 22</value>
   </data>
   <data name="showTargetsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Gene</value>
@@ -4122,6 +4128,12 @@
   <data name="&gt;&gt;reintegrateToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;compareModelsToolStripMenuItem.Name" xml:space="preserve">
+    <value>compareModelsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;compareModelsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator35.Name" xml:space="preserve">
     <value>toolStripSeparator35</value>
   </data>
@@ -4900,6 +4912,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

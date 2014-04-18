@@ -5084,15 +5084,6 @@ Are you sure you want to continue?</value>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_" xml:space="preserve">
     <value>The value '{0}' on line {1} is not a valid end time.</value>
   </data>
-  <data name="PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_" xml:space="preserve">
-    <value>The file {0} on line {1} has not been imported into this document.</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__" xml:space="preserve">
-    <value>The modified state {0} on line {1} does not match any modified state in the document for the peptide {2}.</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
-    <value>The peptide sequence {0} on line {1} does not match any of the peptides in the document.</value>
-  </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>OverlapDemultiplexer:InitializeFile Improperly-formed overlap multiplexing file</value>
   </data>
@@ -6830,5 +6821,143 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
     <value>successfully.</value>
     <comment>Context: something finished "successfully".</comment>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Comparison_name_cannot_be_empty_" xml:space="preserve">
+    <value>Comparison name cannot be empty.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_File_path_cannot_be_empty_" xml:space="preserve">
+    <value>File path cannot be empty.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_File_path_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
+    <value>File path field must contain a path to a valid file.</value>
+  </data>
+  <data name="PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
+    <value>Unable to read q value annotation for peptide {0} of file {1}</value>
+  </data>
+  <data name="ComparePeakBoundaries_ComputeMatches_Documents_have_different_number_of_transition_groups___0__vs__1__" xml:space="preserve">
+    <value>Documents have different number of transition groups, {0} vs {1}.</value>
+  </data>
+  <data name="ComparePeakBoundaries_ComputeMatches_Number_of_results_in_transition_group__0__does_not_match_between_the_two_documents" xml:space="preserve">
+    <value>Number of results in transition group {0} does not match between the two documents</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_" xml:space="preserve">
+    <value>Error applying imported peak boundaries: {0}</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Error_comparing_model_peak_boundaries___0_" xml:space="preserve">
+    <value>Error comparing model peak boundaries: {0}</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate" xml:space="preserve">
+    <value>Observed False Positive Rate</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Correct_Peaks" xml:space="preserve">
+    <value>Correct Peaks</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_ROC_plot_" xml:space="preserve">
+    <value>Add models/files for comparison to see a ROC plot.</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Expected_False_Positive_Rate" xml:space="preserve">
+    <value>Expected False Positive Rate</value>
+  </data>
+  <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
+    <value>Add models/files for comparison to see a q-Q plot</value>
+  </data>
+  <data name="ComparePeakPickingDlg_SaveGraph_Save_Model_Comparison_Graph" xml:space="preserve">
+    <value>Save Model Comparison Graph</value>
+  </data>
+  <data name="ComparePeakPickingDlg_SaveGraph_Either_the_ROC_or_Q_q_plot_tab_must_be_selected_to_save_a_graph_" xml:space="preserve">
+    <value>Either the ROC or Q-q plot tab must be selected to save a graph.</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Equality" xml:space="preserve">
+    <value>Equality</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Models" xml:space="preserve">
+    <value>Comparing Models</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Comparing_Imported_Files" xml:space="preserve">
+    <value>Comparing Imported Files</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_ROC_plot_comparison" xml:space="preserve">
+    <value>ROC plot comparison</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Q_q_comparison" xml:space="preserve">
+    <value>Q-q comparison</value>
+  </data>
+  <data name="CompareElement_CompareElement__Compare____" xml:space="preserve">
+    <value>&lt;Compare...&gt;</value>
+  </data>
+  <data name="ComparePeakPickingDlg_SaveData_Save_Model_Comparison_Data" xml:space="preserve">
+    <value>Save Model Comparison Data</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Title_Edit_Peak_Boundary_Comparisons" xml:space="preserve">
+    <value>Edit Peak Boundary Comparisons</value>
+  </data>
+  <data name="ComparePeakBoundariesList_Label__Model_or_File_" xml:space="preserve">
+    <value>&amp;Model or File:</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_Importing_Peak_Boundaries" xml:space="preserve">
+    <value>Importing Peak Boundaries</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_" xml:space="preserve">
+    <value>Document has no eligible chromatograms for analysis.  Valid chromatograms must not be decoys or iRT standards.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_The_selected_model_is_already_included_in_the_list_of_comparisons__Please_choose_another_model_" xml:space="preserve">
+    <value>The selected model is already included in the list of comparisons. Please choose another model.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_There_is_already_an_imported_file_with_the_current_name___Please_choose_another_name" xml:space="preserve">
+    <value>There is already an imported file with the current name.  Please choose another name</value>
+  </data>
+  <data name="PeakBoundaryCompareTest_DoTest_Must_select_a_model_for_comparison_" xml:space="preserve">
+    <value>Must select a model for comparison.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_Model_must_be_trained_before_it_can_be_used_for_peak_boundary_comparison_" xml:space="preserve">
+    <value>Model must be trained before it can be used for peak boundary comparison.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_The_imported_file_does_not_contain_any_peak_boundaries_for__0__transition_group___file_pairs___These_chromatograms_will_be_treated_as_if_no_boundary_was_selected_" xml:space="preserve">
+    <value>The imported file does not contain any peak boundaries for {0} transition group / file pairs.  These chromatograms will be treated as if no boundary was selected.</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
+    <value>The selected file or model does not assign peak boundaries to any chromatograms in the document.  Please select a different model or file.</value>
+  </data>
+  <data name="ComparePeakBoundaries_GenerateComparison_Missing_q_value_for_peptide__0__of_file__1_" xml:space="preserve">
+    <value>Missing q value for peptide {0} of file {1}</value>
+  </data>
+  <data name="AddPeakCompareDlg_OkDialog_The_current_file_or_model_has_no_q_values_or_scores_to_analyze___Either_q_values_or_scores_are_necessary_to_compare_peak_picking_tools_" xml:space="preserve">
+    <value>The current file or model has no q values or scores to analyze.  Either q values or scores are necessary to compare peak picking tools.</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__" xml:space="preserve">
+    <value>The following {0} peptides in the peak boundaries file were not recognized:</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_" xml:space="preserve">
+    <value>Continue peak boundary import ignoring these peptides?</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_" xml:space="preserve">
+    <value>Continue peak boundary import ignoring these files?</value>
+  </data>
+  <data name="SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_" xml:space="preserve">
+    <value>The following {0} file names in the peak boundaries file were not recognized:</value>
+  </data>
+  <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__" xml:space="preserve">
+    <value>Unable to read apex retention time value for peptide {0} of file {1}.</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_" xml:space="preserve">
+    <value>The following peptide in the peak boundaries file was not recognized:</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_" xml:space="preserve">
+    <value>Continue peak boundary import ignoring this peptide?</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_file_name_in_the_peak_boundaries_file_was_not_recognized_" xml:space="preserve">
+    <value>The following file name in the peak boundaries file was not recognized:</value>
+  </data>
+  <data name="PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_" xml:space="preserve">
+    <value>Continue peak boundary import ignoring this file?</value>
+  </data>
+  <data name="ComparePeakBoundaries_ComparePeakBoundaries__0___external_" xml:space="preserve">
+    <value>{0} [external]</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_have_peptides_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>The document must have peptides in order to compare model peak picking.</value>
+  </data>
+  <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
+    <value>The document must be fully loaded in order to compare model peak picking.</value>
   </data>
 </root>
