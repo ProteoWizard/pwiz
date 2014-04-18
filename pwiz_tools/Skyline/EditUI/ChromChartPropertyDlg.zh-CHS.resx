@@ -469,7 +469,7 @@
     <value>3</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>最大强度(&amp;M)：</value>
+    <value>最大亮度(&amp;M)：</value>
   </data>
   <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>

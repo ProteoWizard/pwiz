@@ -280,7 +280,7 @@
     <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTA 记录以“&gt;”作为开头并含有蛋白质名称，名称后带有可选蛋白质描述。</value>
+    <value>FASTA 记录以“&gt;”作为开头并含有蛋白质名称，名称后可带有蛋白质描述。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -307,7 +307,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大丢失剪切数量：</value>
+    <value>最大遗漏的酶解位点数：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>

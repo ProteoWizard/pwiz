@@ -512,7 +512,7 @@
     <value>2</value>
   </data>
   <data name="labelRunsFailed.Text" xml:space="preserve">
-    <value>{0}次运行因缺乏关联性而未被成功转换。</value>
+    <value>{0}次运行因相关性不足而未被成功转换。</value>
   </data>
   <data name=">>labelRunsFailed.Name" xml:space="preserve">
     <value>labelRunsFailed</value>

@@ -217,8 +217,8 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-    <value>当考虑到蛋白质消化时，肽中允许的
-最大丢失剪切数量。</value>
+    <value>当考虑到蛋白质酶解时，肽段中允许的最大遗漏的酶解位点数
+最大遗漏的酶解位点数。</value>
   </data>
   <data name=">>cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -256,7 +256,7 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>指定全套蛋白质的经处理的 FASTA 序列信息，
+    <value>指定全部可能的蛋白质的 FASTA 序列信息，
 这些蛋白质可能存在于用来注入质谱仪的
 样品基质中。</value>
   </data>
@@ -306,8 +306,8 @@
     <value>3</value>
   </data>
   <data name="comboBox1.ToolTip" xml:space="preserve">
-    <value>当考虑到蛋白质消化时，肽中允许的
-最大丢失剪切数量。</value>
+    <value>当考虑到蛋白质酶解时，肽段中允许的最大遗漏的酶解位点数
+最大遗漏的酶解位点数。</value>
   </data>
   <data name=">>comboBox1.Name" xml:space="preserve">
     <value>comboBox1</value>
@@ -345,7 +345,7 @@
     <value>5</value>
   </data>
   <data name="comboBox3.ToolTip" xml:space="preserve">
-    <value>指定全套蛋白质的经处理的 FASTA 序列信息，
+    <value>指定全部可能的蛋白质的 FASTA 序列信息，
 这些蛋白质可能存在于用来注入质谱仪的
 样品基质中。</value>
   </data>
@@ -368,7 +368,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>最大丢失剪切数量(&amp;M)：</value>
+    <value>最大遗漏的酶解位点数(&amp;M)：</value>
   </data>
   <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>

@@ -135,7 +135,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>指定将为其显示保留时间标记的最小强度。</value>
+    <value>指定将为其显示保留时间标记的最小亮度。</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -162,7 +162,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>强度(&amp;I)：</value>
+    <value>亮度(&amp;I)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -265,7 +265,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>保留时间强度阈值</value>
+    <value>保留时间亮度阈值</value>
   </data>
   <data name=">>$this.Name" xml:space="preserve">
     <value>ShowRTThresholdDlg</value>

@@ -499,7 +499,7 @@
     <value>1</value>
   </data>
   <data name="PeptideLabel.Text" xml:space="preserve">
-    <value>肽（&amp;P）：</value>
+    <value>肽段(&amp;P)：</value>
   </data>
   <data name=">>PeptideLabel.Name" xml:space="preserve">
     <value>PeptideLabel</value>

@@ -502,7 +502,7 @@
     <value>5</value>
   </data>
   <data name="labelEnrichments.Text" xml:space="preserve">
-    <value>同位素分类富集(&amp;B)：</value>
+    <value>同位素标记富集(&amp;B)：</value>
   </data>
   <data name=">>labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>

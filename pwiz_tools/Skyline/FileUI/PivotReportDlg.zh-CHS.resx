@@ -448,7 +448,7 @@
     <value>3</value>
   </data>
   <data name="cbxPivotIsotopeLabel.Text" xml:space="preserve">
-    <value>枢轴同位素标记</value>
+    <value>Pivot 同位素标记</value>
   </data>
   <data name=">>cbxPivotIsotopeLabel.Name" xml:space="preserve">
     <value>cbxPivotIsotopeLabel</value>
@@ -475,7 +475,7 @@
     <value>2</value>
   </data>
   <data name="cbxPivotReplicate.Text" xml:space="preserve">
-    <value>枢轴重复测定名称</value>
+    <value>Pivot 重复测定名称</value>
   </data>
   <data name=">>cbxPivotReplicate.Name" xml:space="preserve">
     <value>cbxPivotReplicate</value>

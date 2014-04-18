@@ -231,7 +231,7 @@
     <value>4</value>
   </data>
   <data name="textExclusionRegex.ToolTip" xml:space="preserve">
-    <value>排除与此正规表示式相匹配的肽</value>
+    <value>排除与此正规表达式相匹配的肽段</value>
   </data>
   <data name=">>textExclusionRegex.Name" xml:space="preserve">
     <value>textExclusionRegex</value>
@@ -347,7 +347,7 @@
     <value>3</value>
   </data>
   <data name="linkRegex.Text" xml:space="preserve">
-    <value>正规表示式</value>
+    <value>正规表达式：</value>
   </data>
   <data name=">>linkRegex.Name" xml:space="preserve">
     <value>linkRegex</value>

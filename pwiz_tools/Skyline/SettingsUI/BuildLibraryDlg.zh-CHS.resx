@@ -534,7 +534,7 @@ Yeast_20090902</value>
     <value>8</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>截止分数(&amp;C)：</value>
+    <value>阈值分数(&amp;C)：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
