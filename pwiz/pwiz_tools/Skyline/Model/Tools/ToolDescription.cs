@@ -765,7 +765,7 @@ namespace pwiz.Skyline.Model.Tools
                         reportTitle));
                 var writer = new StringWriter();
                 if (viewContext.Export(exceptionHandler as IProgressMonitor, ref status, viewContext.GetViewInfo(viewSpec), writer, 
-                    new DsvWriter(CultureInfo.InvariantCulture, TextUtil.CsvSeparator)))
+                    new DsvWriter(CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV)))
                 {
                     return writer.ToString();
                 }
