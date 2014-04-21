@@ -45,21 +45,6 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod]
-        public void TestInstallToolsOldReports()
-        {
-            bool wasEnableLiveReports = Settings.Default.EnableLiveReports;
-            try
-            {
-                Settings.Default.EnableLiveReports = false;
-                TestInstallTools();
-            }
-            finally
-            {
-                Settings.Default.EnableLiveReports = wasEnableLiveReports;
-            }
-        }
-
         protected override void DoTest()
         {
             Settings.Default.ToolList.Clear();
