@@ -71,9 +71,15 @@ namespace pwiz.Skyline.Controls.Databinding
                     ListBox.SelectedIndex = i;
             }
             ListBox.EndUpdate();
+            ListBoxReportsOnSelectedIndexChanged();
         }
 
         private void listboxReports_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ListBoxReportsOnSelectedIndexChanged();
+        }
+
+        private void ListBoxReportsOnSelectedIndexChanged()
         {
             bool selReport = listboxReports.SelectedIndex != -1;
             btnPreview.Enabled = selReport;

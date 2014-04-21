@@ -147,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, Settings.Default.ToolList.Count);
             string toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
 
-            WaitForCondition(3*1000, () => !Directory.Exists(toolsDir));
+            WaitForCondition(5*1000, () => !Directory.Exists(toolsDir));
         }
 
         private void ClearAllTools()

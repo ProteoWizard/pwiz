@@ -82,10 +82,12 @@
             this.Controls.Add(this.btn1);
             this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MultiButtonMsgDlg";
             this.ShowInTaskbar = false;
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MultiButtonMsgDlg_KeyDown);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);

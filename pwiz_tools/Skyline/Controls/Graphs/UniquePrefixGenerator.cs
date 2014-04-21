@@ -43,7 +43,10 @@ namespace pwiz.Skyline.Controls.Graphs
             _minLength = minLength;
 
             foreach (var s in seqs)
-                AddString(StripModifications(s));
+            {
+                if (s != null)
+                    AddString(StripModifications(s));
+            }
         }
 
         /// <summary>
@@ -52,6 +55,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public string GetUniquePrefix(string seq)
         {
+            if (seq == null)
+                return null;
             seq = StripModifications(seq);
 
             // Get sequences that match this prefix, and ones that match both prefix and suffix.
@@ -76,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     matchingLengthCount++;
             }
             if (matchingLengthCount == 1)
-                return string.Format("{0}({1})", prefix, seq.Length - _minLength);
+                return string.Format("{0}({1})", prefix, seq.Length - _minLength); // Not L10N
 
             // Use ellipses to indicate common parts of matching sequences.
             var matches = new List<string>();
