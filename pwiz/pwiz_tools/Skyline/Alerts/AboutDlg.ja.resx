@@ -370,7 +370,7 @@ http://www.zlib.net</value>
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>ソフトウェア依存性クレジット:</value>
+<value>各ソフトウェアのクレジット:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

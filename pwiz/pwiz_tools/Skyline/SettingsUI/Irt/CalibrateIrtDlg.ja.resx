@@ -183,7 +183,7 @@
     <value>3</value>
   </data>
   <data name="textMaxIrt.Text" xml:space="preserve">
-    <value>100</value>
+<value>100</value>
   </data>
   <data name="&gt;&gt;textMaxIrt.Name" xml:space="preserve">
     <value>textMaxIrt</value>
@@ -207,7 +207,7 @@
     <value>1</value>
   </data>
   <data name="textMinIrt.Text" xml:space="preserve">
-    <value>0</value>
+<value>0</value>
   </data>
   <data name="&gt;&gt;textMinIrt.Name" xml:space="preserve">
     <value>textMinIrt</value>
@@ -313,7 +313,7 @@
     <value>True</value>
   </metadata>
   <data name="calibratePeptides.HeaderText" xml:space="preserve">
-<value>修飾シークエンス</value>
+<value>修飾配列</value>
   </data>
   <metadata name="calibrateMeasuredRt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -325,7 +325,7 @@
     <value>True</value>
   </metadata>
   <data name="checkFixedPoint.HeaderText" xml:space="preserve">
-<value>固定小数点</value>
+<value>固定点</value>
   </data>
   <data name="gridViewCalibrate.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 79</value>
@@ -361,7 +361,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>iRTカルキュレータを校正</value>
+<value>iRTカルキュレータの校正</value>
   </data>
   <data name="&gt;&gt;bindingSourceStandard.Name" xml:space="preserve">
     <value>bindingSourceStandard</value>

@@ -349,7 +349,7 @@
     <value>229, 22</value>
   </data>
   <data name="menuItemAddHeavyModification.Text" xml:space="preserve">
-<value>重い修飾を追加(&amp;H)...</value>
+<value>安定同位体修飾を追加(&amp;H)...</value>
   </data>
   <data name="menuAddModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>230, 48</value>

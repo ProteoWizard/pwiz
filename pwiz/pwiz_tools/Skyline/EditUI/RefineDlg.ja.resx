@@ -136,7 +136,7 @@
     <value>9</value>
   </data>
   <data name="cbAutoTransitions.Text" xml:space="preserve">
-<value>遷移(&amp;N)</value>
+<value>トランジション(&amp;N)</value>
   </data>
   <data name="&gt;&gt;cbAutoTransitions.Name" xml:space="preserve">
     <value>cbAutoTransitions</value>
@@ -163,7 +163,7 @@
     <value>8</value>
   </data>
   <data name="cbAutoPrecursors.Text" xml:space="preserve">
-<value>前駆体(&amp;E)</value>
+<value>プリカーサー(&amp;E)</value>
   </data>
   <data name="&gt;&gt;cbAutoPrecursors.Name" xml:space="preserve">
     <value>cbAutoPrecursors</value>
@@ -381,7 +381,7 @@
     <value>5</value>
   </data>
   <data name="textMinTransitions.ToolTip" xml:space="preserve">
-<value>遷移数がこの数より少ない前駆体は
+<value>トランジションがこの数より少ないプリカーサーは
 ドキュメントから削除されます。</value>
   </data>
   <data name="&gt;&gt;textMinTransitions.Name" xml:space="preserve">
@@ -409,7 +409,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>前駆体あたりの最小遷移数(&amp;T)：</value>
+<value>プリカーサーあたりの最小遷移数(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -513,7 +513,7 @@
   </data>
   <data name="textMaxPepPeakRank.ToolTip" xml:space="preserve">
 <value>平均面積ピークランクがこの数値より
-大きい遷移はすべてドキュメントから
+大きいトランジションは全てドキュメントから
 削除されます。</value>
   </data>
   <data name="&gt;&gt;textMaxPepPeakRank.Name" xml:space="preserve">
@@ -630,7 +630,7 @@
     <value>8</value>
   </data>
   <data name="cbPreferLarger.Text" xml:space="preserve">
-<value>大きいプロダクトイオンを選択(&amp;P)</value>
+<value>大きいプロダクトイオンを優先(&amp;P)</value>
   </data>
   <data name="cbPreferLarger.ToolTip" xml:space="preserve">
 <value>小さい、選択性の良くないイオンではピーク面積が
@@ -660,7 +660,7 @@
   </data>
   <data name="textMaxPeakRank.ToolTip" xml:space="preserve">
 <value>平均面積ピークランクがこの数値より
-大きい遷移はすべてドキュメントから
+大きいトランジションは全てドキュメントから
 削除されます。</value>
   </data>
   <data name="&gt;&gt;textMaxPeakRank.Name" xml:space="preserve">
@@ -688,7 +688,7 @@
     <value>6</value>
   </data>
   <data name="labelMaxPeakRank.Text" xml:space="preserve">
-<value>最大遷移ピークランク(&amp;T)：</value>
+<value>最大トランジションピークランク(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;labelMaxPeakRank.Name" xml:space="preserve">
     <value>labelMaxPeakRank</value>
@@ -889,7 +889,7 @@
     <value>3</value>
   </data>
   <data name="textMinIdotProduct.ToolTip" xml:space="preserve">
-<value>MS1 前駆体ピーク面積の予測される同位体分布
+<value>MS1 プリカーサーピーク面積と予測される同位体分布の
 ドット積に対する比率がこの閾値を下回るすべての前駆体は
 ドキュメントから削除されます。</value>
   </data>
@@ -1031,7 +1031,7 @@
     <value>1</value>
   </data>
   <data name="textRTRegressionThreshold.ToolTip" xml:space="preserve">
-<value>前駆体は、最適保持時間カルキュレータを持つ
+<value>プリカーサーは、最適保持時間カルキュレータを持つ
 線形回帰の残差の目標値が
 この閾値を超えるまで、ドキュメントから
 削除されます。</value>

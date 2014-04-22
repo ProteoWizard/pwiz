@@ -187,7 +187,7 @@
     <value>2</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-<value>このツールではPython &lt;バージョン番号&gt; と以下のパッケージの使用が必要です。インストールするパッケージを選択してから [インストール] をクリックしてインストールプロセスを開始してください。</value>
+<value>このツールではPython &lt;バージョン番号&gt; と以下のパッケージが必要です。インストールするパッケージを選択してから [インストール] をクリックしてインストールを開始してください。</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>

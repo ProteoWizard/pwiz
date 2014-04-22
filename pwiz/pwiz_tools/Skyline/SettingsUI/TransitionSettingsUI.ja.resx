@@ -556,8 +556,8 @@
     <value>20</value>
   </data>
   <data name="textMaxInclusions.ToolTip" xml:space="preserve">
-<value>多重化スキャン中にターゲット測定器で測定した
-最大包含ウィンドウ数です。</value>
+<value>多重化スキャン中に使用する装置で測定した
+最大インクルージョンウィンドウ数です。</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
@@ -611,7 +611,7 @@
     <value>18</value>
   </data>
   <data name="label30.Text" xml:space="preserve">
-<value>最小</value>
+<value>分</value>
   </data>
   <data name="&gt;&gt;label30.Name" xml:space="preserve">
     <value>label30</value>
@@ -716,8 +716,8 @@
     <value>17</value>
   </data>
   <data name="textMaxTime.ToolTip" xml:space="preserve">
-<value>取得方法に関係なくクロマトグラムで許可される最大時間です。
-これを設定すると、勾配で関与しない部分で
+<value>分析方法に関係なくクロマトグラムで許可される最大時間です。
+これを設定すると、データ採取に関与しない部分のグラジアントで
 使用される可能性のあるメモリとディスク容量を節約できます。</value>
   </data>
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
@@ -742,8 +742,8 @@
     <value>13</value>
   </data>
   <data name="textMinTime.ToolTip" xml:space="preserve">
-<value>取得方法に関係なくクロマトグラムで
-許可される最小時間です。これを設定すると、勾配で関与しない部分で使用される可能性のある
+<value>分析方法に関係なくクロマトグラムで
+許可される最小時間です。これを設定すると、データ採取に関与しない部分のグラジアントで使用される可能性のある
 メモリとディスク容量を節約できます。</value>
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
@@ -855,9 +855,9 @@
 <value>動的最小プロダクトm/z(&amp;D)</value>
   </data>
   <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
-<value>チェックマークをオンにすると、プロダクトイオンの最小m/z値が
-LTQ測定器用にThermo-Scientificが提供する
-特定の方程式で前駆体m/zから動的に計算されます。</value>
+<value>チェックマークをオンにすると、プロダクトイオンの最小m/z値を
+プリカーサーイオンm/zから動的に計算します。
+この計算にはThermo-Scientificが提供するLTQ測定器用の特定の方程式を用います。</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
     <value>cbDynamicMinimum</value>
@@ -881,8 +881,8 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>11</value>
   </data>
   <data name="textMaxTrans.ToolTip" xml:space="preserve">
-<value>1 回の注入でターゲット測定器により測定可能な最大総遷移数、
-または最大値が適用されない場合は空白となります</value>
+<value>1 回の注入でターゲット装置により測定可能な最大総トランジション数です。
+最大値が適用されない場合は空白となります</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
@@ -909,7 +909,7 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>10</value>
   </data>
   <data name="label17.Text" xml:space="preserve">
-<value>ファームウェア遷移制限(&amp;F)：</value>
+<value>ファームウェアトランジション制限(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -933,8 +933,8 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>8</value>
   </data>
   <data name="textMzMatchTolerance.ToolTip" xml:space="preserve">
-<value>測定器のメソッド遷移m/z値を
-予測される遷移m/z 値と一致させる最大デルタ値です。
+<value>装置メソッドのトランジションm/z値を
+予測トランジションm/z値とマッチする時の最大許容誤差です。
 (SRMとターゲットMS/MSにのみ適用されます。)</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
@@ -962,7 +962,7 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>7</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-<value>メソッド一致耐性m/z(&amp;T)：</value>
+<value>メソッド比較時の許容誤差m/z(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -1040,7 +1040,7 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>5</value>
   </data>
   <data name="textMaxMz.ToolTip" xml:space="preserve">
-<value>ターゲット測定器の最大測定可能m/z値です</value>
+<value>使用する装置で測定可能な最大m/z値です。</value>
   </data>
   <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
     <value>textMaxMz</value>
@@ -1064,7 +1064,7 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>1</value>
   </data>
   <data name="textMinMz.ToolTip" xml:space="preserve">
-<value>ターゲット測定器の最小測定可能m/z値です</value>
+<value>使用する装置で測定可能な最小m/z値です。</value>
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>
@@ -1088,7 +1088,7 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>2</value>
   </data>
   <data name="tabInstrument.Text" xml:space="preserve">
-<value>測定器</value>
+<value>装置</value>
   </data>
   <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
     <value>tabInstrument</value>
@@ -1184,10 +1184,10 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>17, 17</value>
   </metadata>
   <data name="comboOptimizeType.Items" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="comboOptimizeType.Items1" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="comboOptimizeType.Location" type="System.Drawing.Point, System.Drawing">
     <value>23, 206</value>
@@ -1199,8 +1199,8 @@ LTQ測定器用にThermo-Scientificが提供する
     <value>10</value>
   </data>
   <data name="comboOptimizeType.ToolTip" xml:space="preserve">
-<value>最適化を合計される各前駆体のすべての遷移に対して実施するか、
-各遷移ごとに別々に実施するかを指定します。</value>
+<value>同一プリカーサーイオン由来のトランジションはまとめて最適化するか、
+各トランジションごとに個別に最適化するかを選択します。</value>
   </data>
   <data name="comboOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1234,7 +1234,7 @@ LTQ測定器用にThermo-Scientificが提供する
   </data>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
 <value>チェックマークをオンにすると、測定されたCEまたは
-DP最適化値を使用してメソッドリストと遷移リストで
+DP最適化値を使用して、メソッドリストとトランジションリストで
 エクスポートされる値を選択します。最大総ピーク面積が
 得られる値が選択されます。</value>
   </data>
@@ -1260,9 +1260,9 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>7</value>
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
-<value>質量対電荷比率から各前駆体の最適デクラスタリングポテンシャル(DP)を
+<value>m/z値からプリカーサーイオンの最適デクラスタリングポテンシャル(DP)を
 予測するのに使用する一次方程式です。同位体標識ペプチドは、
-非標識形態に対して予測されたDPを使用します。(AB測定器のみ)</value>
+非標識ペプチドと同一のDPを使用します。(AB装置のみ)</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
@@ -1313,9 +1313,9 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>5</value>
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
-<value>質量対電荷比率から各前駆体の最適衝突エネルギー(CE)を
+<value>プリカーサーイオンの最適コリジョンエネルギー (CE) を
 予測するのに使用する一次方程式です。同位体標識
-ペプチドは、非標識形態に対して予測されたCEを使用します。</value>
+ペプチドは、非標識ペプチドと同一のCEを使用します。</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
     <value>comboCollisionEnergy</value>
@@ -1342,7 +1342,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>4</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-<value>衝突エネルギー(&amp;C)：</value>
+<value>コリジョンエネルギー(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -1373,7 +1373,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
   </data>
   <data name="comboIonMass.ToolTip" xml:space="preserve">
 <value>すべてのプロダクトイオン質量の計算に使用する
-分子質量計算戦略 (モノアイソトピックまたは平均) です</value>
+分子質量計算法 (モノアイソトピックまたは平均) です</value>
   </data>
   <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
     <value>comboIonMass</value>
@@ -1430,8 +1430,8 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>1</value>
   </data>
   <data name="comboPrecursorMass.ToolTip" xml:space="preserve">
-<value>すべての前駆体質量の計算に使用する
-分子質量計算戦略 (モノアイソトピックまたは平均) です</value>
+<value>すべてのプリカーサー質量の計算に使用する
+分子質量計算法 (モノアイソトピックまたは平均) です。</value>
   </data>
   <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
     <value>comboPrecursorMass</value>
@@ -1458,7 +1458,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>前駆体質量&amp;(P)：</value>
+<value>プリカーサー質量(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -1482,8 +1482,8 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>5</value>
   </data>
   <data name="textIonTypes.ToolTip" xml:space="preserve">
-<value>ポテンシャルプロダクトイオンの計算に使用するカンマ区切りの
-プロダクトイオンタイプ (前駆体のa、b、c、x、y、z、p) のリストです</value>
+<value>プロダクトイオン候補の掲載に用いる
+プロダクトイオンタイプ (a、b、c、x、y、z、p (プリカーサー)) のリスト (カンマ区切り) です</value>
   </data>
   <data name="&gt;&gt;textIonTypes.Name" xml:space="preserve">
     <value>textIonTypes</value>
@@ -1510,7 +1510,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>4</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-<value>イオンタイプ(&amp;T)：</value>
+<value>イオンの種類(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -1537,11 +1537,11 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>7</value>
   </data>
   <data name="cbAutoSelect.Text" xml:space="preserve">
-<value>すべての一致遷移を自動選択(&amp;A)</value>
+<value>すべての一致したトランジションを自動選択(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
 <value>チェックマークをオンにすると、指定したフィルタとライブラリ設定を使用して
-遷移が自動的に選択されます。オフにすると、すべての遷移を
+トランジションが自動的に選択されます。オフにすると、すべてのトランジションを
 手動ドキュメント編集で選択する必要があります。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
@@ -1737,8 +1737,8 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>8</value>
   </data>
   <data name="textExclusionWindow.ToolTip" xml:space="preserve">
-<value>遷移が除外されている前駆体m/z周りのm/zウィンドウ、または
-空白になります。20 のウィンドウは、前駆体m/zの両側で 10 以内のすべての遷移を
+<value>プリカーサーイオン直近m/zのトランジションは除外し、
+空白となります。例えば、入力値 20 の場合は、プリカーサーイオンm/z値の前後 10 の範囲にあるすべてのトランジションを
 除外します。</value>
   </data>
   <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
@@ -1766,7 +1766,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>7</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-<value>前駆体m/z除外ウィンドウ：</value>
+<value>プリカーサーm/z除外ウィンドウ：</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
@@ -1793,7 +1793,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
 <value>リストを編集(&amp;E)...</value>
   </data>
   <data name="btnEditSpecialTransitions.ToolTip" xml:space="preserve">
-<value>平均特殊プロダクトイオンのリストを編集します</value>
+<value>特別プロダクトイオンのリストを編集します</value>
   </data>
   <data name="&gt;&gt;btnEditSpecialTransitions.Name" xml:space="preserve">
     <value>btnEditSpecialTransitions</value>
@@ -1845,7 +1845,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
   </data>
   <data name="listAlwaysAdd.ToolTip" xml:space="preserve">
 <value>フィルタ範囲外であっても、存在していれば
-測定される特殊プロダクトイオンセットです</value>
+測定される特別なプロダクトイオンセットです</value>
   </data>
   <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
     <value>listAlwaysAdd</value>
@@ -1869,7 +1869,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>1</value>
   </data>
   <data name="comboRangeFrom.ToolTip" xml:space="preserve">
-<value>イオンのフィルタ範囲の開始プロダクトイオン</value>
+<value>イオンのフィルタ範囲の最初のプロダクトイオン</value>
   </data>
   <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
     <value>comboRangeFrom</value>
@@ -1971,7 +1971,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>3</value>
   </data>
   <data name="textIonCharges.ToolTip" xml:space="preserve">
-<value>プロダクトイオンの質量対電荷比率の計算に使用する
+<value>プロダクトイオンの質量電荷比の計算に使用する
 カンマ区切りの荷電状態のリストです</value>
   </data>
   <data name="&gt;&gt;textIonCharges.Name" xml:space="preserve">
@@ -1996,7 +1996,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>1</value>
   </data>
   <data name="textPrecursorCharges.ToolTip" xml:space="preserve">
-<value>前駆体の質量対電荷比率の計算に使用する
+<value>プリカーサーの質量電荷比の計算に使用する
 カンマ区切りの荷電状態のリストです</value>
   </data>
   <data name="&gt;&gt;textPrecursorCharges.Name" xml:space="preserve">
@@ -2024,7 +2024,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>イオンの電荷(&amp;I)：</value>
+<value>イオンの電荷数(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -2051,7 +2051,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-<value>前駆体の電荷(&amp;P)：</value>
+<value>プリカーサーの電荷(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -2078,7 +2078,7 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-<value>イオン一致耐性(&amp;I)：</value>
+<value>イオン比較時の許容誤差(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
@@ -2198,13 +2198,13 @@ DP最適化値を使用してメソッドリストと遷移リストで
     <value>4</value>
   </data>
   <data name="radioAllAndFiltered.Text" xml:space="preserve">
-<value>フィルタされたイオン電荷とタイプ、フィルタされたプロダクトイオン(&amp;U)</value>
+<value>フィルタされたイオン電荷とタイプ、そしてフィルタされたプロダクトイオン(&amp;U)</value>
   </data>
   <data name="radioAllAndFiltered.ToolTip" xml:space="preserve">
-<value>[フィルタ] タブでイオン電荷とタイプのみをランク用に
-選択したMS/MSピークの一致イオンに適用しますが、
-それがライブラリで見つからない場合は、フルフィルタに
-一致するすべてのプロダクトイオンも追加します。</value>
+<value>[フィルタ] タブで設定したイオン電荷数とタイプだけを用いて
+MS/MSピークを選択し、ライブラリにマッチするプロダクトイオンのランキングを行います。
+ただし、ライブラリにマッチするものが見つからない場合は、
+[フィルタ] タブ全体に合致するすべてのプロダクトイオンも追加します。</value>
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
     <value>radioAllAndFiltered</value>
@@ -2234,8 +2234,8 @@ DP最適化値を使用してメソッドリストと遷移リストで
 <value>フィルタされたプロダクトイオンから(&amp;D)</value>
   </data>
   <data name="radioFiltered.ToolTip" xml:space="preserve">
-<value>[フィルタ] タブのパラメータを、ランク用に選択された
-MS/MSピークの一致イオンに適用します。</value>
+<value>[フィルタ] タブのパラメータを適用して、MS/MSピークを選択し、
+ライブラリとマッチするプロダクトイオンのランキングを行います。</value>
   </data>
   <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
     <value>radioFiltered</value>
@@ -2262,11 +2262,11 @@ MS/MSピークの一致イオンに適用します。</value>
     <value>3</value>
   </data>
   <data name="radioAll.Text" xml:space="preserve">
-<value>フィルタイオンの電荷とタイプから(&amp;C)</value>
+<value>イオン電荷数とタイプがフィルタを通過するものから(&amp;C)</value>
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
-<value>[フィルタ] タブでイオン電荷とタイプのみを
-ランク用のイオンに一致するMS/MSピークの選択に適用します</value>
+<value>[フィルタ] タブで設定したイオン電荷数とタイプだけを用いて
+MS/MSピークを選択し、ライブラリにマッチするプロダクトイオンのランキングを行います。</value>
   </data>
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
     <value>radioAll</value>
@@ -2345,7 +2345,7 @@ MS/MSピークの一致イオンに適用します。</value>
   </data>
   <data name="textIonCount.ToolTip" xml:space="preserve">
 <value>ライブラリスペクトルピーク強度ランク別に
-各前駆体に対してこれだけの遷移を選択します</value>
+各プリカーサーに対してこのトランジションを選択します</value>
   </data>
   <data name="&gt;&gt;textIonCount.Name" xml:space="preserve">
     <value>textIonCount</value>
@@ -2370,7 +2370,7 @@ MS/MSピークの一致イオンに適用します。</value>
   </data>
   <data name="textTolerance.ToolTip" xml:space="preserve">
 <value>予測プロダクトイオンm/z値を測定MS/MSスペクトルライブラリ
-ピークm/z値に一致させるときに許可される最大デルタ値です</value>
+ピークm/z値にマッチするときの最大許容誤差です。</value>
   </data>
   <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
     <value>textTolerance</value>
@@ -2401,7 +2401,7 @@ MS/MSピークの一致イオンに適用します。</value>
   </data>
   <data name="cbLibraryPick.ToolTip" xml:space="preserve">
 <value>チェックマークをオンにすると、ペプチドがライブラリスペクトルに一致するときは必ず
-MS/MSスペクトルライブラリピークに基づいて遷移フィルタが選択されます。</value>
+MS/MSスペクトルライブラリピークに基づいてトランジションフィルタが選択されます。</value>
   </data>
   <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
     <value>cbLibraryPick</value>
@@ -2461,7 +2461,7 @@ MS/MSスペクトルライブラリピークに基づいて遷移フィルタが
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>遷移の設定</value>
+<value>トランジションの設定</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

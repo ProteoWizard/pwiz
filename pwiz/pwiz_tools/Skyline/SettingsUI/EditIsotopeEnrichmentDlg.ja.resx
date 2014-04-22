@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-<value>遷移設定フォームでこの式の表示に使用する名前です</value>
+<value>トランジション設定フォームでこの式の表示に使用する名前です</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>

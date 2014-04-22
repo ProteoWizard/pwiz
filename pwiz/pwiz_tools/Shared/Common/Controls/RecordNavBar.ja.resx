@@ -139,7 +139,7 @@
     <value>0</value>
   </data>
   <data name="btnNavFirst.Text" xml:space="preserve">
-    <value>|&lt;</value>
+<value>|&lt;</value>
   </data>
   <data name="&gt;&gt;btnNavFirst.Name" xml:space="preserve">
     <value>btnNavFirst</value>
@@ -292,7 +292,7 @@
     <value>5</value>
   </data>
   <data name="btnNavLast.Text" xml:space="preserve">
-    <value>&gt;|</value>
+<value>&gt;|</value>
   </data>
   <data name="&gt;&gt;btnNavLast.Name" xml:space="preserve">
     <value>btnNavLast</value>

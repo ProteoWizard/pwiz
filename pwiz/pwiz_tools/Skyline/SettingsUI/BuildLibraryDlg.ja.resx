@@ -268,7 +268,7 @@
     <value>3</value>
   </data>
   <data name="textPath.ToolTip" xml:space="preserve">
-<value>ディスク上で最終的な非冗長ライブラリが作成される場所です。
+<value>ディスク上で最終的な無重複ライブラリが作成される場所です。
 </value>
   </data>
   <data name="&gt;&gt;textPath.Name" xml:space="preserve">
@@ -303,7 +303,7 @@
   </data>
   <data name="comboAction.ToolTip" xml:space="preserve">
 <value>新しいライブラリを作成するか、
-以前に冗長ライブラリデータのコピーを保存している場合には
+以前に重複許容ライブラリデータのコピーを保存している場合には
 既存のライブラリに追加するかを選択してください。</value>
   </data>
   <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
@@ -358,7 +358,7 @@
     <value>11</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>管轄研究室 (proteome.gs.washington.edu など)(&amp;U)：</value>
+<value>管理者 (proteome.gs.washington.edu など)(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -382,10 +382,11 @@
     <value>12</value>
   </data>
   <data name="textAuthority.ToolTip" xml:space="preserve">
-<value>この値は、このライブラリを一意に識別するLSIDに
+<value>入力値は、このライブラリを一意に識別するLSIDに
 使用されます。これは他の研究室が使用しないもの、
-つまり研究室のウェブサーバーのDNS名などです。
+例えば、研究室のウェブサーバーのDNS名などです。
 または、少なくとも
+
 proteome.gs.washington.edu や
 tabb.vanderbilt.edu などのようなものにします。</value>
   </data>
@@ -411,9 +412,9 @@ tabb.vanderbilt.edu などのようなものにします。</value>
     <value>13</value>
   </data>
   <data name="textID.ToolTip" xml:space="preserve">
-<value>この値は、このライブラリを一意に識別するLSIDに
-使用されます。これは選択した管轄研究室で作成された
-すべてのライブラリ間で一意となるように選択してください。
+<value>入力値は、このライブラリを一意に識別するLSIDに
+使用されます。同一管理者名で作成された
+ライブラリ間で唯一無二となるように選択してください。
 例：
 
 Worm
@@ -472,10 +473,10 @@ Yeast_20090902</value>
     <value>7</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
-<value>冗長ライブラリを保持(&amp;K)</value>
+<value>重複許容ライブラリを保持(&amp;K)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
-<value>今後冗長ライブラリにスペクトルを追加できるようにコピーを
+<value>重複許容ライブラリにスペクトルを後で追加できるようにコピーを
 保持する場合にはチェックボックスをオンにします。</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
@@ -500,13 +501,13 @@ Yeast_20090902</value>
     <value>9</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-<value>1.0 から 0 (最も正しいと思われるものを 1.0 とする) の
-スコアを使用して、ライブラリに含まれる結果のスペクトルの
-カットオフ値を設定します。
+<value>ライブラリに含めるスペクトルを決める
+基準値を設定します。(最も正しいと思われるものを 1.0 とする)
+ 0 から 1.0 の値を入力してください。
 
-TPP pepXMLでは、これはPeptideProphetの最小確率です。
-Mascotでは、これが 1 から最大期待値となります。
-SEQUEST SQTでは、これが 1 から最大FDRとなります。</value>
+TPP pepXMLでは、これはPeptideProphetの最小値です。
+Mascotでは、最大期待値の 1 となります。
+SEQUEST SQTでは、最大FDRの 1 となります。</value>
   </data>
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
@@ -789,9 +790,9 @@ SEQUEST SQTでは、これが 1 から最大FDRとなります。</value>
     <value>1</value>
   </data>
   <data name="listInputFiles.ToolTip" xml:space="preserve">
-<value>スコアカットオフ値を満たし、チェックボックスがオンになっているファイルから
-スペクトルが冗長ライブラリに追加され、ここから最終的な非冗長ライブラリが
-構築されます。</value>
+<value>チェックボックスがオンのファイル中のスペクトルで、
+スコアカットオフ値を満たすものが重複許容ライブラリに追加されます。これをもとに
+重複のない最終的なライブラリが作成されます。</value>
   </data>
   <data name="&gt;&gt;listInputFiles.Name" xml:space="preserve">
     <value>listInputFiles</value>

@@ -250,7 +250,7 @@
     <value>11</value>
   </data>
   <data name="btnCalculate.Text" xml:space="preserve">
-<value>計算(&amp;C)...</value>
+<value>計算する(&amp;C)...</value>
   </data>
   <data name="&gt;&gt;btnCalculate.Name" xml:space="preserve">
     <value>btnCalculate</value>

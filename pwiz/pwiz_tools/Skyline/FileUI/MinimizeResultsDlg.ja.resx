@@ -202,7 +202,7 @@
     <value>1</value>
   </data>
   <data name="tbxNoiseTimeRange.Text" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="tbxNoiseTimeRange.TextAlign" type="System.Windows.Forms.HorizontalAlignment, System.Windows.Forms">
     <value>Right</value>
@@ -289,7 +289,7 @@
     <value>6</value>
   </data>
   <data name="btnMinimize.Text" xml:space="preserve">
-<value>インプレース最小化</value>
+<value>その場で最小化</value>
   </data>
   <data name="&gt;&gt;btnMinimize.Name" xml:space="preserve">
     <value>btnMinimize</value>
@@ -313,7 +313,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>Skylineキャッシュファイル (.skyd) のサイズを小さくするには、このドキュメントで使用していないクロマトグラムを破棄したり、クロマトグラムの長さを制限することができます。</value>
+<value>このドキュメントで使用していないクロマトグラムを破棄したり、クロマトグラムの長さを制限することで、Skylineキャッシュファイル (.skyd) のサイズを小さくできます。</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

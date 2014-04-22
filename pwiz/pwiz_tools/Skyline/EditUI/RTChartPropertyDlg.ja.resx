@@ -235,7 +235,7 @@
     <value>5</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>最小</value>
+<value>分</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -262,7 +262,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>最小</value>
+<value>分</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -337,7 +337,7 @@
     <value>9</value>
   </data>
   <data name="cbDecimalCvs.Text" xml:space="preserve">
-<value>十進数のCV値を表示(&amp;D)</value>
+<value>CV値を (小数で) 表示(&amp;D)</value>
   </data>
   <data name="&gt;&gt;cbDecimalCvs.Name" xml:space="preserve">
     <value>cbDecimalCvs</value>
@@ -364,7 +364,7 @@
     <value>8</value>
   </data>
   <data name="labelCvPercent.Text" xml:space="preserve">
-    <value>%</value>
+<value>%</value>
   </data>
   <data name="&gt;&gt;labelCvPercent.Name" xml:space="preserve">
     <value>labelCvPercent</value>

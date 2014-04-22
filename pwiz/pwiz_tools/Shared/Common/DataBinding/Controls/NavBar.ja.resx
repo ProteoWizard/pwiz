@@ -161,7 +161,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorMoveFirstItem.Text" xml:space="preserve">
-<value>最初へ移動</value>
+<value>最初に移動</value>
     </data>
   <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="bindingNavigatorMovePreviousItem.Image" type="System.Drawing.Bitmap, System.Drawing">
     <value>
@@ -179,7 +179,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorMovePreviousItem.Text" xml:space="preserve">
-<value>前へ移動</value>
+<value>戻る</value>
     </data>
   <data name="bindingNavigatorSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -197,16 +197,16 @@
 <value>0</value>
   </data>
   <data name="bindingNavigatorPositionItem.ToolTipText" xml:space="preserve">
-<value>現在位置</value>
+<value>現位置</value>
     </data>
   <data name="bindingNavigatorCountItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 22</value>
   </data>
   <data name="bindingNavigatorCountItem.Text" xml:space="preserve">
-<value>/{0}</value>
+<value>の{0}</value>
     </data>
   <data name="bindingNavigatorCountItem.ToolTipText" xml:space="preserve">
-<value>総アイテム数</value>
+<value>合計</value>
     </data>
   <data name="bindingNavigatorSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -271,7 +271,7 @@
     <value>23, 22</value>
   </data>
   <data name="bindingNavigatorAddNewItem.Text" xml:space="preserve">
-<value>新しく追加</value>
+<value>新規追加</value>
     </data>
   <data mimetype="application/x-microsoft.net.object.bytearray.base64" name="navBarDeleteItem.Image" type="System.Drawing.Bitmap, System.Drawing">
     <value>
@@ -345,7 +345,7 @@
     <value>23, 22</value>
   </data>
   <data name="navBarButtonMatchCase.Text" xml:space="preserve">
-<value>大文字と小文字を区別する</value>
+<value>文字形式の一致</value>
     </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>

@@ -136,7 +136,7 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-<value>このツールではR &lt;バージョン名&gt; と以下のパッケージの使用が必要です。</value>
+<value>このツールではR &lt;バージョン名&gt; と以下のパッケージが必要です。</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>

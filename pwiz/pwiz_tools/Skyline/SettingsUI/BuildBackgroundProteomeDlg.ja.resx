@@ -367,7 +367,7 @@
     <value>7</value>
   </data>
   <data name="btnBuild.Text" xml:space="preserve">
-<value>構築(&amp;U) &lt;&lt;</value>
+<value>作成(&amp;U) &lt;&lt;</value>
   </data>
   <data name="&gt;&gt;btnBuild.Name" xml:space="preserve">
     <value>btnBuild</value>

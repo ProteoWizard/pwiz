@@ -132,7 +132,7 @@
     <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>断片AA(&amp;F)：</value>
+<value>フラグメントAA(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -388,7 +388,7 @@
     <value>2</value>
   </data>
   <data name="radioFragment.Text" xml:space="preserve">
-<value>強い断片(&amp;S)</value>
+<value>高強度フラグメント(&amp;S)</value>
   </data>
   <data name="radioFragment.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -643,7 +643,7 @@
     <value>14</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-<value>モノアイソトピックロス質量(&amp;M)：</value>
+<value>モノアイソトピック質量(&amp;M)：</value>
   </data>
   <data name="label8.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -793,7 +793,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>特殊イオンを編集</value>
+<value>特別イオンを編集</value>
   </data>
   <data name="&gt;&gt;hContextMenuItem.Name" xml:space="preserve">
     <value>hContextMenuItem</value>

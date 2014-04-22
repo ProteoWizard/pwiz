@@ -178,34 +178,34 @@
     <value>17, 17</value>
   </metadata>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
-    <value>0</value>
+<value>0</value>
   </data>
   <data name="cbMissedCleavages.Items1" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="cbMissedCleavages.Items2" xml:space="preserve">
-    <value>2</value>
+<value>2</value>
   </data>
   <data name="cbMissedCleavages.Items3" xml:space="preserve">
-    <value>3</value>
+<value>3</value>
   </data>
   <data name="cbMissedCleavages.Items4" xml:space="preserve">
-    <value>4</value>
+<value>4</value>
   </data>
   <data name="cbMissedCleavages.Items5" xml:space="preserve">
-    <value>5</value>
+<value>5</value>
   </data>
   <data name="cbMissedCleavages.Items6" xml:space="preserve">
-    <value>6</value>
+<value>6</value>
   </data>
   <data name="cbMissedCleavages.Items7" xml:space="preserve">
-    <value>7</value>
+<value>7</value>
   </data>
   <data name="cbMissedCleavages.Items8" xml:space="preserve">
-    <value>8</value>
+<value>8</value>
   </data>
   <data name="cbMissedCleavages.Items9" xml:space="preserve">
-    <value>9</value>
+<value>9</value>
   </data>
   <data name="cbMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 95</value>
@@ -217,8 +217,8 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-<value>タンパク質の消化を考慮するときにペプチドで許可される
-最大欠如開裂数です。</value>
+<value>タンパク質消化時に、1 ペプチド内で許可される
+最大未切断サイト数です。</value>
   </data>
   <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -236,8 +236,8 @@
     <value>1</value>
   </data>
   <data name="comboEnzyme.ToolTip" xml:space="preserve">
-<value>質量分析計に注入する前にタンパク質をペプチドに消化するために
-使用するプロテアーゼ酵素
+<value>質量分析計に注入するペプチドサンプルを調製するときに
+使用したプロテアーゼ酵素
 </value>
   </data>
   <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
@@ -256,9 +256,9 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-<value>質量分析計に注入する試料マトリックス内に存在する可能性のある
-タンパク質のフルセットを指定する
-処理済みFASTAシークエンス情報です。</value>
+<value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
+全タンパク質の
+処理済みFASTA配列情報です。</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -267,34 +267,34 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox1.Items" xml:space="preserve">
-    <value>0</value>
+<value>0</value>
   </data>
   <data name="comboBox1.Items1" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="comboBox1.Items2" xml:space="preserve">
-    <value>2</value>
+<value>2</value>
   </data>
   <data name="comboBox1.Items3" xml:space="preserve">
-    <value>3</value>
+<value>3</value>
   </data>
   <data name="comboBox1.Items4" xml:space="preserve">
-    <value>4</value>
+<value>4</value>
   </data>
   <data name="comboBox1.Items5" xml:space="preserve">
-    <value>5</value>
+<value>5</value>
   </data>
   <data name="comboBox1.Items6" xml:space="preserve">
-    <value>6</value>
+<value>6</value>
   </data>
   <data name="comboBox1.Items7" xml:space="preserve">
-    <value>7</value>
+<value>7</value>
   </data>
   <data name="comboBox1.Items8" xml:space="preserve">
-    <value>8</value>
+<value>8</value>
   </data>
   <data name="comboBox1.Items9" xml:space="preserve">
-    <value>9</value>
+<value>9</value>
   </data>
   <data name="comboBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 95</value>
@@ -306,8 +306,8 @@
     <value>3</value>
   </data>
   <data name="comboBox1.ToolTip" xml:space="preserve">
-<value>タンパク質の消化を考慮するときにペプチドで許可される
-最大欠如開裂数です。</value>
+<value>タンパク質消化時に、1 ペプチド内で許可される
+最大未切断サイト数です。</value>
   </data>
   <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
     <value>comboBox1</value>
@@ -325,8 +325,8 @@
     <value>1</value>
   </data>
   <data name="comboBox2.ToolTip" xml:space="preserve">
-<value>質量分析計に注入する前にタンパク質をペプチドに消化するために
-使用するプロテアーゼ酵素
+<value>質量分析計に注入するペプチドサンプルを調製するときに
+使用したプロテアーゼ酵素
 </value>
   </data>
   <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
@@ -345,9 +345,9 @@
     <value>5</value>
   </data>
   <data name="comboBox3.ToolTip" xml:space="preserve">
-<value>質量分析計に注入する試料マトリックス内に存在する可能性のある
-タンパク質のフルセットを指定する
-処理済みFASTAシークエンス情報です。</value>
+<value>質量分析計に注入するサンプルマトリックス内に存在する可能性のある
+全タンパク質の
+処理済みFASTA配列情報です。</value>
   </data>
   <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
     <value>comboBox3</value>
@@ -368,7 +368,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>最大欠如開裂数(&amp;M)：</value>
+<value>最大未切断サイト数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -431,7 +431,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>最大欠如開裂数(&amp;M)：</value>
+<value>最大未切断サイト数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -584,7 +584,7 @@
     <value>0</value>
   </data>
   <data name="buildSearchSpecLibPage.Text" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="&gt;&gt;buildSearchSpecLibPage.Name" xml:space="preserve">
     <value>buildSearchSpecLibPage</value>
@@ -665,7 +665,7 @@
     <value>1</value>
   </data>
   <data name="getChromatogramsPage.Text" xml:space="preserve">
-    <value>2</value>
+<value>2</value>
   </data>
   <data name="&gt;&gt;getChromatogramsPage.Name" xml:space="preserve">
     <value>getChromatogramsPage</value>
@@ -746,7 +746,7 @@
     <value>3</value>
   </data>
   <data name="matchModificationsPage.Text" xml:space="preserve">
-    <value>3</value>
+<value>3</value>
   </data>
   <data name="&gt;&gt;matchModificationsPage.Name" xml:space="preserve">
     <value>matchModificationsPage</value>
@@ -827,7 +827,7 @@
     <value>5</value>
   </data>
   <data name="ms1FullScanSettingsPage.Text" xml:space="preserve">
-    <value>4</value>
+<value>4</value>
   </data>
   <data name="&gt;&gt;ms1FullScanSettingsPage.Name" xml:space="preserve">
     <value>ms1FullScanSettingsPage</value>
@@ -905,7 +905,7 @@
     <value>4</value>
   </data>
   <data name="importFastaPage.Text" xml:space="preserve">
-    <value>5</value>
+<value>5</value>
   </data>
   <data name="&gt;&gt;importFastaPage.Name" xml:space="preserve">
     <value>importFastaPage</value>

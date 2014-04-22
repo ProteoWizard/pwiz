@@ -309,7 +309,7 @@
     <value>193, 22</value>
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -318,25 +318,25 @@
     <value>80, 22</value>
   </data>
   <data name="charge1ContextMenuItem.Text" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="charge2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge2ContextMenuItem.Text" xml:space="preserve">
-    <value>2</value>
+<value>2</value>
   </data>
   <data name="charge3ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge3ContextMenuItem.Text" xml:space="preserve">
-    <value>3</value>
+<value>3</value>
   </data>
   <data name="charge4ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge4ContextMenuItem.Text" xml:space="preserve">
-    <value>4</value>
+<value>4</value>
   </data>
   <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -537,7 +537,7 @@
     <value>132, 22</value>
   </data>
   <data name="precursorsTranContextMenuItem.Text" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="productsTranContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 22</value>
@@ -585,7 +585,7 @@
     <value>212, 22</value>
   </data>
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="transformChromNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>213, 22</value>
@@ -615,7 +615,7 @@
     <value>212, 22</value>
   </data>
   <data name="transformChromContextMenuItem.Text" xml:space="preserve">
-<value>形質転換</value>
+<value>変換</value>
   </data>
   <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -852,7 +852,7 @@
     <value>177, 22</value>
   </data>
   <data name="removeRTOutliersContextMenuItem.Text" xml:space="preserve">
-<value>異常値を削除</value>
+<value>外れ値を削除</value>
   </data>
   <data name="removeRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
@@ -1429,7 +1429,7 @@
     <value>170, 22</value>
   </data>
   <data name="importMassListMenuItem.Text" xml:space="preserve">
-<value>遷移リスト(&amp;T)...</value>
+<value>トランジションリスト(&amp;T)...</value>
   </data>
   <data name="importDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1447,7 +1447,7 @@
     <value>183, 22</value>
   </data>
   <data name="exportTransitionListMenuItem.Text" xml:space="preserve">
-<value>遷移リスト(&amp;T)...</value>
+<value>トランジションリスト(&amp;T)...</value>
   </data>
   <data name="exportIsolationListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -1678,7 +1678,7 @@
     <value>157, 22</value>
   </data>
   <data name="insertTransitionListMenuItem.Text" xml:space="preserve">
-<value>遷移リスト(&amp;T)...</value>
+<value>トランジションリスト(&amp;T)...</value>
   </data>
   <data name="insertToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -1708,7 +1708,7 @@
     <value>218, 22</value>
   </data>
   <data name="removeMissingResultsMenuItem.Text" xml:space="preserve">
-<value>欠如結果を削除(&amp;M)</value>
+<value>欠損結果を削除(&amp;M)</value>
   </data>
   <data name="toolStripSeparator45.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1747,7 +1747,7 @@
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-<value>再統合(&amp;T)...</value>
+<value>再積分(&amp;T)...</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1792,7 +1792,7 @@
     <value>174, 22</value>
   </data>
   <data name="expandPrecursorsMenuItem.Text" xml:space="preserve">
-<value>前駆体(&amp;R)</value>
+<value>プリカーサー(&amp;R)</value>
   </data>
   <data name="expandAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -1825,7 +1825,7 @@
     <value>206, 22</value>
   </data>
   <data name="collapsePrecursorsMenuItem.Text" xml:space="preserve">
-<value>前駆体(&amp;R)</value>
+<value>プリカーサー(&amp;R)</value>
   </data>
   <data name="collapseAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -1987,7 +1987,7 @@
     <value>183, 22</value>
   </data>
   <data name="graphsToolStripMenuItem.Text" xml:space="preserve">
-<value>ライブラリの一致(&amp;M)</value>
+<value>ライブラリマッチ(&amp;M)</value>
   </data>
   <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
@@ -2029,7 +2029,7 @@
     <value>124, 22</value>
   </data>
   <data name="precursorIonMenuItem.Text" xml:space="preserve">
-<value>前駆体(&amp;P)</value>
+<value>プリカーサー(&amp;P)</value>
   </data>
   <data name="ionTypesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2044,25 +2044,25 @@
     <value>80, 22</value>
   </data>
   <data name="charge1MenuItem.Text" xml:space="preserve">
-    <value>&amp;1</value>
+<value>&amp;1</value>
   </data>
   <data name="charge2MenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge2MenuItem.Text" xml:space="preserve">
-    <value>&amp;2</value>
+<value>&amp;2</value>
   </data>
   <data name="charge3MenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge3MenuItem.Text" xml:space="preserve">
-    <value>&amp;3</value>
+<value>&amp;3</value>
   </data>
   <data name="charge4MenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge4MenuItem.Text" xml:space="preserve">
-    <value>&amp;4</value>
+<value>&amp;4</value>
   </data>
   <data name="chargesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2146,7 +2146,7 @@
     <value>210, 22</value>
   </data>
   <data name="precursorsTranMenuItem.Text" xml:space="preserve">
-<value>前駆体(&amp;P)</value>
+<value>プリカーサー(&amp;P)</value>
   </data>
   <data name="productsTranMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Alt+F10</value>
@@ -2212,7 +2212,7 @@
     <value>183, 22</value>
   </data>
   <data name="transitionsMenuItem.Text" xml:space="preserve">
-<value>遷移(&amp;N)</value>
+<value>トランジション(&amp;N)</value>
   </data>
   <data name="transformChromNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F12</value>
@@ -2257,7 +2257,7 @@
     <value>183, 22</value>
   </data>
   <data name="transformChromMenuItem.Text" xml:space="preserve">
-<value>形質転換(&amp;F)</value>
+<value>変換(&amp;F)</value>
   </data>
   <data name="autoZoomNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F11</value>
@@ -2380,7 +2380,7 @@
     <value>183, 22</value>
   </data>
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
-<value>ピーク領域(&amp;K)</value>
+<value>ピーク面積(&amp;K)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2467,7 +2467,7 @@
     <value>181, 22</value>
   </data>
   <data name="transitionSettingsMenuItem.Text" xml:space="preserve">
-<value>遷移の設定(&amp;T)...</value>
+<value>トランジションの設定(&amp;T)...</value>
   </data>
   <data name="annotationsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 22</value>
@@ -2482,7 +2482,7 @@
     <value>181, 22</value>
   </data>
   <data name="integrateAllMenuItem.Text" xml:space="preserve">
-<value>すべて統合(&amp;N)</value>
+<value>すべて積分(&amp;N)</value>
   </data>
   <data name="settingsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 20</value>
@@ -2551,7 +2551,7 @@
     <value>120, 22</value>
   </data>
   <data name="homeMenuItem.Text" xml:space="preserve">
-<value>ホーム(&amp;H)</value>
+<value>ホームページ(&amp;H)</value>
   </data>
   <data name="videosMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 22</value>
