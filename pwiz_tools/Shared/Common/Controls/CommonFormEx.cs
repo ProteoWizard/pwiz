@@ -45,7 +45,7 @@ namespace pwiz.Common.Controls
 
 // ReSharper disable LocalizableElement
             if (ShowFormNames)
-                Text += "  (" + GetType().Name + ")";
+                Text += "  (" + GetType().Name + ")"; // Not L10N
 // ReSharper restore LocalizableElement
         }
 

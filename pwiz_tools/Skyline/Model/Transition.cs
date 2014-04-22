@@ -185,14 +185,14 @@ namespace pwiz.Skyline.Model
             if (massIndex == 0)
                 return string.Empty;
 
-            return " " + SequenceMassCalc.GetMassIDescripion(massIndex);
+            return " " + SequenceMassCalc.GetMassIDescripion(massIndex); // Not L10N
         }
 
         public static string GetDecoyText(int? decoyMassShift)
         {
             if (!decoyMassShift.HasValue || decoyMassShift.Value == 0)
                 return string.Empty;
-            return string.Format("({0}{1})",
+            return string.Format("({0}{1})", // Not L10N
                                  decoyMassShift.Value >= 0 ? "+" : string.Empty, // Not L10N
                                  decoyMassShift.Value);
         }

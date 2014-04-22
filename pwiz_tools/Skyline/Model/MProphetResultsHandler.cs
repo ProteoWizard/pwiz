@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model
 
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; }}
 
-        public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + "Score"; } }
+        public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + "Score"; } } // Not L10N
 
         public MProphetResultsHandler(SrmDocument document, PeakScoringModelSpec scoringModel)
         {

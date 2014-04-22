@@ -230,9 +230,6 @@
   <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
     <value>Customize View...</value>
   </data>
-  <data name="PropertyPath_Property_Name_cannot_be_blank" xml:space="preserve">
-    <value>Name cannot be blank</value>
-  </data>
   <data name="PropertyPath_Parse_Invalid_character____" xml:space="preserve">
     <value>Invalid character '*'</value>
   </data>
@@ -250,5 +247,26 @@
   </data>
   <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
     <value>Column is read only</value>
+  </data>
+  <data name="AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_" xml:space="preserve">
+    <value>Exception constructing column of type {0}:{1}</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
+    <value>An unknown error occurred updating the value.</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
+    <value>There was an error updating the value:
+{0}</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
+    <value>Writing row </value>
+    <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
+</comment>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
+    <value>Writing {0} rows</value>
+  </data>
+  <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
+    <value>Executing query</value>
   </data>
 </root>

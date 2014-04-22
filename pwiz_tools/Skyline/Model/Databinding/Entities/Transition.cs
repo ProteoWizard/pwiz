@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null);
+            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null); // Not L10N
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public string Losses
         {
-            get { return DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : null; }
+            get { return DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : null; } // Not L10N
         }
         [InvariantDisplayName("TransitionNote")]
         public string Note
@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Obsolete]
-        public string ReplicatePath { get { return "/"; } }
+        public string ReplicatePath { get { return "/"; } } // Not L10N
         [Obsolete]
         public Transition Transition { get; private set; }
         [ChildDisplayName("{0}RetentionTime")]

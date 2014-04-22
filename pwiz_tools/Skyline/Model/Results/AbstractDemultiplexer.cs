@@ -651,15 +651,15 @@ namespace pwiz.Skyline.Model.Results
 
                 if (!isolationCenter.HasValue)
                 {
-                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_);
+                    throw new ArgumentException("Scan in imported file appears to be missing an isolation window center."); // Not L10N
                 }
                 if (!isolationLower.HasValue)
                 {
-                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_);
+                    throw new ArgumentException("Scan in imported file appears to be missing an isolation window lower boundary."); // Not L10N
                 }
                 if (!isolationUpper.HasValue)
                 {
-                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_);
+                    throw new ArgumentException("Scan in imported file appears to be missing an isolation window upper boundary."); // Not L10N
                 }
                    
                 long hash = IsoWindowHasher.Hash(isolationCenter.Value);

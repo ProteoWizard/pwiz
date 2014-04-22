@@ -101,18 +101,18 @@ namespace pwiz.Skyline.Alerts
                     {
                         int iSuffix = line.LastIndexOf("\\", StringComparison.Ordinal);  // Not L10N
                         if (iSuffix == -1)
-                            iSuffix = line.LastIndexOf(".", StringComparison.Ordinal);
+                            iSuffix = line.LastIndexOf(".", StringComparison.Ordinal); // Not L10N
 
                         string location = line.Substring(iSuffix + 1);
                         string userInputIndicator = string.Empty;
                         if (!string.IsNullOrEmpty(tbEmail.Text))
-                            userInputIndicator = "*";
+                            userInputIndicator = "*"; // Not L10N
                         else if (!string.IsNullOrEmpty(tbMessage.Text))
-                            userInputIndicator = "+";
+                            userInputIndicator = "+"; // Not L10N
                         string version = Install.Version;
                         string guid = UserGuid;
                         guid = guid.Substring(guid.LastIndexOf('-') + 1);
-                        return userInputIndicator + _exceptionType + " | " + location + " | " + version + " | " + guid;
+                        return userInputIndicator + _exceptionType + " | " + location + " | " + version + " | " + guid; // Not L10N
                     }
                 }
                 return _exceptionType;
@@ -136,8 +136,9 @@ namespace pwiz.Skyline.Alerts
             WebClient webClient = new WebClient();
 
             const string address = "https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view"; // Not L10N
-
-            NameValueCollection form = new NameValueCollection // Not L10N: Information passed to browser
+            
+            // ReSharper disable NonLocalizedString
+            NameValueCollection form = new NameValueCollection
                                            {
                                                { "title", PostTitle},
                                                { "body", messageBody },
@@ -145,9 +146,9 @@ namespace pwiz.Skyline.Alerts
                                                { "allowMultipleDiscussions", "false"},
                                                { "rendererType", "TEXT_WITH_LINKS"}
                                            };
-
             webClient.UploadValues(address, form);
         }
+        // ReSharper restore NonLocalizedString
 
         protected static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null)
         {
@@ -167,7 +168,7 @@ namespace pwiz.Skyline.Alerts
             }
             if (null != stackTraceExceptionCaughtAt)
             {
-                stackTrace.AppendLine("Exception caught at: ");
+                stackTrace.AppendLine("Exception caught at: "); // Not L10N
                 stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
             return stackTrace.ToString();
@@ -189,7 +190,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     sb.Append("Skyline version: ").Append(Install.Version); // Not L10N
                     if (Install.Is64Bit)
-                        sb.Append(" (64-bit)");
+                        sb.Append(" (64-bit)"); // Not L10N
                     sb.AppendLine();
                 }
 

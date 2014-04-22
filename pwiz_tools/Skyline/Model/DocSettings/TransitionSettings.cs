@@ -1067,10 +1067,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 int offset = _offset;
                 int length = masses.GetLength(1);
                 if (length == 0)
-                    throw new ArgumentException(Resources.MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions);
+                    throw new ArgumentException("Invalid attempt to find a fragment in a peptide without fragment ions."); // Not L10N
                 int typeIndex = (int) type;
                 if (0 > typeIndex || typeIndex >= masses.Length)
-                    throw new IndexOutOfRangeException(string.Format(Resources.MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array, type));
+                    throw new IndexOutOfRangeException("Ion type {0} not found in masses array"); // Not L10N
 
                 // Make sure to start outside the precursor m/z window
                 double thresholdMz = precursorMz + precursorMzWindow / 2;
@@ -1818,10 +1818,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double ISOTOPE_PEAK_CENTERING_RES = 0.1;
         public const double MIN_ISOTOPE_PEAK_ABUNDANCE = 0.01;
 
-        public const string QIT = "QIT"; //L10N
-        public const string ORBITRAP = "Orbitrap"; //L10N
-        public const string TOF = "TOF"; //L10N
-        public const string FT_ICR = "FT-ICR"; //L10N
+        public const string QIT = "QIT"; // Not L10N
+        public const string ORBITRAP = "Orbitrap"; // Not L10N
+        public const string TOF = "TOF"; // Not L10N
+        public const string FT_ICR = "FT-ICR"; // Not L10N
 
         public static readonly string[] MASS_ANALYZERS = {QIT, TOF, ORBITRAP, FT_ICR};
         public static readonly double[] DEFAULT_RES_VALUES = {0.7, 10*1000, 60*1000, 100*1000};

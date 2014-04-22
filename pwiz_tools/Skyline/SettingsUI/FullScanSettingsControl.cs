@@ -736,7 +736,7 @@ namespace pwiz.Skyline.SettingsUI
                     tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentCulture);
                     break;
                 default:
-                    throw new ArgumentException(Resources.FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType, "retentionTimeFilterType"); // Not L10N
+                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType"); // Not L10N
             }
         }
 

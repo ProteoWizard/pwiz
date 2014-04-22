@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Util
               without the surrounding 0s.
             */
 
-            // Not L10N
+            // ReSharper disable NonLocalizedString
             CLUSTCOMB.Add("0110", 0.3);
             CLUSTCOMB.Add("0150", 0.4);
             CLUSTCOMB.Add("0510", 0.4);
@@ -442,7 +442,8 @@ namespace pwiz.Skyline.Util
             HlxScore6.Add("ZZUUXX", 1.25);
             HlxScore6.Add("ZZUUXZ", 1.25);
             HlxScore6.Add("ZZUUZX", 0.75);
-            HlxScore6.Add("ZZUUZZ", 0.75);            
+            HlxScore6.Add("ZZUUZZ", 0.75);
+            // ReSharper restore NonLocalizedString
         }
 
         public enum Column { A300, A100 }
@@ -1029,7 +1030,7 @@ namespace pwiz.Skyline.Util
 
             for (int i = 0; i < sqlen - 3; i++)
             {
-                string hc4 = "", hc5 = "", hc6 = "";
+                string hc4 = string.Empty, hc5 = string.Empty, hc6 = string.Empty;
                 double sc4 = 0.0, sc5 = 0.0, sc6 = 0.0;
 
                 if (hc.Substring(i).Length >= 6)
@@ -1118,7 +1119,7 @@ namespace pwiz.Skyline.Util
                 {
                     iss = 0; far1 = '\0'; far2 = '\0'; // Not L10N
                 }
-                if (fpart.Equals("<-"))
+                if (fpart.Equals("<-")) // Not L10N
                 {
                     iss = 1; far1 = testsqCopy[i + 1]; far2 = '\0'; // Not L10N
                 }
@@ -1196,7 +1197,7 @@ namespace pwiz.Skyline.Util
 
             double[] ret = new double[2];
             string traps; //not my()'ed in perl source
-            string best = "";
+            string best = string.Empty;
             const int llim = 50;
             double hiscore = 0.0;
             int best_pos = 0;
@@ -1221,7 +1222,7 @@ namespace pwiz.Skyline.Util
                 {
                     string lc = pass1.Substring(i);
                     string sq2 = sqCopy.Substring(i);
-                    string pat = "";
+                    string pat = string.Empty;
                     int zap = 0;
                     int subt = 0;
 
@@ -1340,7 +1341,7 @@ namespace pwiz.Skyline.Util
 
                 switch (mpart)
                 {
-                    // Not L10N
+                    // ReSharper disable NonLocalizedString
                     case "XX": return 1.0;
                     case "ZX": return 0.5;
                     case "XZ": return 0.5;
@@ -1349,6 +1350,7 @@ namespace pwiz.Skyline.Util
                     case "UX": return 0.4;
                     case "ZU": return 0.2;
                     case "UZ": return 0.2;
+                    // ReSharper restore NonLocalizedString
                 }
             }
             return 0;

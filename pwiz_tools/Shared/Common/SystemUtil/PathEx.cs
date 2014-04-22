@@ -44,7 +44,7 @@ namespace pwiz.Common.SystemUtil
 
         public static string GetCommonRoot(IEnumerable<string> paths)
         {
-            string rootPath = "";
+            string rootPath = string.Empty;
             foreach (string path in paths)
             {
                 string dirName = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
@@ -74,7 +74,7 @@ namespace pwiz.Common.SystemUtil
         {
             var parts = new List<string>(path.Split(new[] { Path.DirectorySeparatorChar }));
             if (parts.Count < 2)
-                return "";
+                return string.Empty;
 
             int iElipsis = parts.IndexOf("...");
             int iStart = (iElipsis != -1 ? iElipsis : parts.Count - 2);

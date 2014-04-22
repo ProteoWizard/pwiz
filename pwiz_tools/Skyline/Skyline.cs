@@ -778,7 +778,7 @@ namespace pwiz.Skyline
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
             if (!Program.FunctionalTest)
-                LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
+                LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------"); // Not L10N
             
             base.OnClosed(e);
         }
@@ -3433,7 +3433,7 @@ namespace pwiz.Skyline
                     positions[i] = -1;
             }
 
-            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.PeptideGroups, "prot"); // TODO: Not L10N?
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.PeptideGroups, "prot"); // Not L10N
             UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Peptides, "pep"); // Not L10N
             UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec"); // Not L10N
             UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran"); // Not L10N
@@ -3556,10 +3556,10 @@ namespace pwiz.Skyline
                         innerException = innerException.InnerException;
                     if (innerException is OutOfMemoryException)
                     {
-                        message += string.Format("\n\n{0} ran out of memory.", Program.Name);
+                        message += string.Format(Resources.SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory, Program.Name);
                         if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
                         {
-                            message += string.Format("\n\nYou may be able to avoid this problem by installing a 64-bit version of {0}.", Program.Name);
+                            message += string.Format(Resources.SkylineWindow_CompleteProgressUI_version_issue, Program.Name);
                         }
                     }
 
@@ -3795,7 +3795,7 @@ namespace pwiz.Skyline
         // currently a work-around to get an R-installer
         public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<ToolPackage> packages, string pathToPackageInstallScript)
         {
-            if (programPathContainer.ProgramName.Equals("R"))
+            if (programPathContainer.ProgramName.Equals("R")) // Not L10N
             {
                 bool installed = RUtil.CheckInstalled(programPathContainer.ProgramVersion);
                 if (!installed || packages.Count != 0)
@@ -3827,7 +3827,7 @@ namespace pwiz.Skyline
                 }
                 return RUtil.FindRProgramPath(programPathContainer.ProgramVersion);
             }
-            else if (programPathContainer.ProgramName.Equals("Python"))
+            else if (programPathContainer.ProgramName.Equals("Python")) // Not L10N
             {
                 if (!PythonUtil.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
                 {

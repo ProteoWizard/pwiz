@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public const string EXT_REDUNDANT = ".redundant.blib"; // Not L10N
-        public const string ASSAY_NAME = "-assay";
+        public const string ASSAY_NAME = "-assay"; // Not L10N
 
         public static string GetLibraryFileName(string documentPath)
         {
@@ -432,7 +432,7 @@ namespace pwiz.Skyline.Model.Lib
                 ILookup<int, KeyValuePair<int, double>> retentionTimesBySpectraIdAndFileId = null;
                 if (schemaVer >= 1)
                 {
-                    select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime FROM [RetentionTimes]";
+                    select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime FROM [RetentionTimes]"; // Not L10N
                     var spectraIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
@@ -1193,6 +1193,7 @@ namespace pwiz.Skyline.Model.Lib
  
             // Make the changes to the redundant library and then use BlibFilter
             using (var myTrans = _sqliteConnectionRedundant.Connection.BeginTransaction(IsolationLevel.ReadCommitted))
+            // ReSharper disable NonLocalizedString
             using (var sqCommand = _sqliteConnectionRedundant.Connection.CreateCommand())
             {
                 if (hasModsTable)
@@ -1223,6 +1224,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 myTrans.Commit();
             }
+            // ReSharper restore NonLocalizedString
 
             // Write the non-redundant library to a temporary file first
             using (var saver = new FileSaver(FilePath))
@@ -1230,7 +1232,7 @@ namespace pwiz.Skyline.Model.Lib
                 var blibFilter = new BlibFilter();
                 var status = new ProgressStatus(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
                 if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor, ref status))
-                    throw new IOException(string.Format("Failed attempting to filter redundant library {0} to {1}", FilePathRedundant, FilePath));
+                    throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_, FilePathRedundant, FilePath));
 
                 _sqliteConnectionRedundant.CloseStream();
                 _sqliteConnection.CloseStream();
@@ -1247,7 +1249,7 @@ namespace pwiz.Skyline.Model.Lib
                     sb.Append(',');
                 sb.Append('\'').Append(filename).Append('\'');
             }
-            return "(" + sb + ")";
+            return "(" + sb + ")"; // Not L10N
         }
 
 

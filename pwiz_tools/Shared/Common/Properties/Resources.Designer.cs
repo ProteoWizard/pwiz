@@ -61,6 +61,62 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exception constructing column of type {0}:{1}.
+        /// </summary>
+        internal static string AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0___1_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_CreateCustomColumn_Exception_constructing_column_of_type__0__" +
+                        "_1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing query.
+        /// </summary>
+        internal static string AbstractViewContext_ExecuteQuery_Executing_query {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_ExecuteQuery_Executing_query", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error updating the value:
+        ///{0}.
+        /// </summary>
+        internal static string AbstractViewContext_OnDataError_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_OnDataError_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unknown error occurred updating the value..
+        /// </summary>
+        internal static string AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing {0} rows.
+        /// </summary>
+        internal static string AbstractViewContext_WriteData_Writing__0__rows {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_WriteData_Writing__0__rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing row .
+        /// </summary>
+        internal static string AbstractViewContext_WriteData_Writing_row_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_WriteData_Writing_row_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap agg_count {
@@ -427,15 +483,6 @@ namespace pwiz.Common.Properties {
         internal static string PropertyPath_Parse_Unterminated_quote {
             get {
                 return ResourceManager.GetString("PropertyPath_Parse_Unterminated_quote", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Name cannot be blank.
-        /// </summary>
-        internal static string PropertyPath_Property_Name_cannot_be_blank {
-            get {
-                return ResourceManager.GetString("PropertyPath_Property_Name_cannot_be_blank", resourceCulture);
             }
         }
         

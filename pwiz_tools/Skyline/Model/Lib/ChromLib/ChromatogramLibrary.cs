@@ -29,6 +29,7 @@ using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
     {
         private IStreamManager _streamManager;
         private PooledSessionFactory _pooledSessionFactory;
-        public const string EXT_CACHE = ".clc";
+        public const string EXT_CACHE = ".clc"; // Not L10N
 
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec) : base(chromatogramLibrarySpec)
         {
@@ -100,8 +101,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     }
                     var precursorRetentionTime =
                         session.CreateCriteria<PrecursorRetentionTime>()
-                               .Add(Restrictions.Eq("SampleFile", precursor.SampleFile))
-                               .Add(Restrictions.Eq("Precursor", precursor))
+                               .Add(Restrictions.Eq("SampleFile", precursor.SampleFile)) // Not L10N
+                               .Add(Restrictions.Eq("Precursor", precursor)) // Not L10N
                                .List<PrecursorRetentionTime>()
                                .FirstOrDefault();
                     double startTime = 0;
@@ -133,7 +134,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll("Chromatogram Libraries", ChromatogramLibrarySpec.EXT); }
+            get { return TextUtil.FileDialogFilterAll("Chromatogram Libraries", ChromatogramLibrarySpec.EXT); } // Not L10N
         }
 
         public override IPooledStream ReadStream
@@ -164,7 +165,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus(string.Format("Loading {0}", Name));
+            ProgressStatus status = new ProgressStatus(string.Format(Resources.ChromatogramLibrary_Load_Loading__0_, Name));
             loader.UpdateProgress(status);
             if (LoadFromCache(loader, status))
             {
@@ -194,22 +195,22 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         {
             try
             {
-                var status = new ProgressStatus(string.Format("Reading precursors from {0}", Name));
+                var status = new ProgressStatus(string.Format(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_, Name));
                 loader.UpdateProgress(status);
                 //                _pooledSessionFactory = new PooledSessionFactory(loader.StreamManager.ConnectionPool,
 //                                                                 typeof (ChromLibEntity), FilePath);
                 using (var session = _pooledSessionFactory.Connection.OpenSession())
                 {
                     var libInfo =
-                        session.CreateSQLQuery("SELECT PanoramaServer, LibraryRevision, SchemaVersion FROM LibInfo")
+                        session.CreateSQLQuery("SELECT PanoramaServer, LibraryRevision, SchemaVersion FROM LibInfo") // Not L10N
                                .UniqueResult<object[]>();
                     PanoramaServer = Convert.ToString(libInfo[0]);
                     LibraryRevision = Convert.ToInt32(libInfo[1]);
                     SchemaVersion = Convert.ToString(libInfo[2]);
 
                     var precursorQuery =
-                        session.CreateQuery("SELECT P.Id, P.ModifiedSequence, P.Charge, P.TotalArea FROM " + typeof (Precursor) +
-                                            " P");
+                        session.CreateQuery("SELECT P.Id, P.ModifiedSequence, P.Charge, P.TotalArea FROM " + typeof (Precursor) + // Not L10N
+                                            " P"); // Not L10N
                     var allTransitionAreas = ReadAllTransitionAreas(session);
                     var spectrumInfos = new List<ChromLibSpectrumInfo>();
                     foreach (object[] row in precursorQuery.List<object[]>())
@@ -244,7 +245,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception e)
             {
-                Trace.TraceWarning("Error loading chromatogram library:{0}", e);
+                Trace.TraceWarning(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
                 return false;
             }
         }
@@ -256,7 +257,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         {
             var allPeakAreas = new Dictionary<int, IList<SpectrumPeaksInfo.MI>>();
             var query =
-                session.CreateQuery("SELECT T.Precursor.Id as First, T.Mz, T.Area FROM " + typeof(Data.Transition) + " T");
+                session.CreateQuery("SELECT T.Precursor.Id as First, T.Mz, T.Area FROM " + typeof(Data.Transition) + " T"); // Not L10N
             var rows = query.List<object[]>();
             var rowsLookup = rows.ToLookup(row => (int) (row[0]));
             foreach (var grouping in rowsLookup)
@@ -296,7 +297,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning("Exception reading cache:{0}", exception);
+                Trace.TraceWarning(Resources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
                 return false;
             }
         }
@@ -431,7 +432,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 int version = PrimitiveArrays.ReadOneValue<int>(_stream);
                 if (version > CURRENT_VERSION || version < MIN_READABLE_VERSION)
                 {
-                    throw new InvalidDataException(string.Format("Unsupported file version {0}", version));
+                    throw new InvalidDataException(string.Format(Resources.Serializer_ReadHeader_Unsupported_file_version__0_, version));
                 }
                 _locationEntries = PrimitiveArrays.ReadOneValue<long>(_stream);
                 _library.PanoramaServer = ReadString(_stream);

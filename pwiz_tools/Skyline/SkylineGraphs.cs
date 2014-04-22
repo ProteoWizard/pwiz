@@ -2836,7 +2836,7 @@ namespace pwiz.Skyline
                 chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
 
             //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem(Resources.SkylineWindow_SetupCalculatorChooser_Auto, null, delegate { ChooseCalculator(""); })
+            var autoItem = new ToolStripMenuItem(Resources.SkylineWindow_SetupCalculatorChooser_Auto, null, delegate { ChooseCalculator(string.Empty); })
                                {
                                    Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
                                };
@@ -3047,7 +3047,7 @@ namespace pwiz.Skyline
                 catch (CalculatorException e)
                 {
                     MessageDlg.Show(this, e.Message);
-                    Settings.Default.RTCalculatorName = "";
+                    Settings.Default.RTCalculatorName = string.Empty;
                 }
             }
         }

@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model
        
         public string LabelTypeText
         {
-            get { return (!LabelType.IsLight ? " (" + LabelType + ")" : string.Empty); }
+            get { return (!LabelType.IsLight ? " (" + LabelType + ")" : string.Empty); } // Not L10N
         }
 
         public static int CompareTransitions(TransitionDocNode node1, TransitionDocNode node2)

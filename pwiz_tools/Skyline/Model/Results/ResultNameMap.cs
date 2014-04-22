@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Results
 
             var nameLower = ToLower(name);
             var bestResult = default(T);
-            var bestName = "";
+            var bestName = string.Empty;
             int firstDotOrUnderscore = nameLower.Length;
             int indexOfDot = nameLower.IndexOf('.');
             if (indexOfDot >= 0)

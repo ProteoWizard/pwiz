@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class EmptyNode : TreeNodeMS
     {
-        public const string TEXT_EMPTY = "                 ";
+        public const string TEXT_EMPTY = "                 "; // Not L10N
 
         public EmptyNode(): base(TEXT_EMPTY)
         {

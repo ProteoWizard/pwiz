@@ -78,7 +78,7 @@ namespace pwiz.Common.SystemUtil
                 if (writer != null && !line.StartsWith(HideLinePrefix))
                     writer.WriteLine(line);
 
-                if (progress == null || line.ToLowerInvariant().StartsWith("error"))
+                if (progress == null || line.ToLowerInvariant().StartsWith("error")) // Not L10N
                 {
                     sbError.AppendLine(line);
                 }
@@ -91,7 +91,7 @@ namespace pwiz.Common.SystemUtil
                         return;
                     }
 
-                    if (line.EndsWith("%"))
+                    if (line.EndsWith("%")) // Not L10N
                     {
                         double percent;
                         string[] parts = line.Split(' ');

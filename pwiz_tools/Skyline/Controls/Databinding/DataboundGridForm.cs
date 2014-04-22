@@ -103,8 +103,8 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // DataboundGridForm
             // 
-            resources.ApplyResources(this, "$this");
-            Name = "DataboundGridForm";
+            resources.ApplyResources(this, "$this"); // Not L10N
+            Name = "DataboundGridForm"; // Not L10N
             ShowInTaskbar = false;
             ResumeLayout(false);
 

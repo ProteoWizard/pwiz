@@ -48,13 +48,13 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public static readonly SkylineRowSource<Protein> Proteins
-            = MakeRowSource("Proteins", schema=>new Proteins(schema));
+            = MakeRowSource("Proteins", schema=>new Proteins(schema)); // Not L10N
         public static readonly SkylineRowSource<Entities.Peptide> Peptides 
-            = MakeRowSource("Peptides", schema => new Peptides(schema, new[]{IdentityPath.ROOT}));
+            = MakeRowSource("Peptides", schema => new Peptides(schema, new[]{IdentityPath.ROOT})); // Not L10N
         public static readonly SkylineRowSource<Precursor> Precursors
-            = MakeRowSource("Precursors", schema => new Precursors(schema, new[] { IdentityPath.ROOT }));
+            = MakeRowSource("Precursors", schema => new Precursors(schema, new[] { IdentityPath.ROOT })); // Not L10N
         public static readonly SkylineRowSource<Entities.Transition> Transitions 
-            = MakeRowSource("Transitions", schema => new Transitions(schema, new[] {IdentityPath.ROOT}));
+            = MakeRowSource("Transitions", schema => new Transitions(schema, new[] {IdentityPath.ROOT})); // Not L10N
 
         public static readonly IList<SkylineRowSource> RowSources =
             ImmutableList.ValueOf(new SkylineRowSource[] {Proteins, Peptides, Precursors, Transitions});

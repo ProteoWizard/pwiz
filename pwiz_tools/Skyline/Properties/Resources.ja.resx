@@ -535,9 +535,6 @@
   <data name="MessageBoxHelper_GetControlMessage_Field" xml:space="preserve">
 <value>フィールド</value>
   </data>
-  <data name="CustomTip_Alpha_Alpha_must_be_between_0_and_255" xml:space="preserve">
-<value>アルファは 0 ～ 255 でなければなりません。</value>
-  </data>
   <data name="LongWaitDlg_PerformWork_canceled" xml:space="preserve">
 <value>キャンセル</value>
   </data>
@@ -1486,12 +1483,6 @@
   <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
 <value>イオン 4</value>
   </data>
-  <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
-<value>断片イオンのないペプチドで断片を見つけようとする無効な試みです。</value>
-  </data>
-  <data name="MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array" xml:space="preserve">
-<value>質量配列でイオンタイプ{0}が見つかりません</value>
-  </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
 <value>ライブラリイオン一致許容値{0}は {1} から {2} まででなければなりません。</value>
   </data>
@@ -2291,9 +2282,6 @@
   </data>
   <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
 <value>前駆体同位体{0}は同位体分布 {1} から {2} の範囲外です。</value>
-  </data>
-  <data name="SequenceMassCalc_GetTermMass_Invalid_ion_type" xml:space="preserve">
-<value>無効なイオンタイプ</value>
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
 <value>ユーザー修飾のあるペプチド{0}が複数回見つかりました。</value>
@@ -3534,9 +3522,6 @@
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
 <value>ファイルが壊れているか、ファイルがないか、または正しいライブラリがインストールされていない可能性があります。</value>
-  </data>
-  <data name="FileSize_CompareTo_Must_be_FileSize" xml:space="preserve">
-<value>FileSizeでなければなりません</value>
   </data>
   <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
 <value>読み取り専用コレクションを修飾しようとしました。</value>
@@ -4904,9 +4889,6 @@
   <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
 <value>ライブラリから読み取ろうとする無許可のアクセスがありました。</value>
   </data>
-  <data name="PopupPickList_PopupPickList_Choices_must_be_unique" xml:space="preserve">
-<value>選択は一意でなければなりません</value>
-  </data>
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
 <value>{0}レポートをエクスポートしています</value>
   </data>
@@ -5026,9 +5008,6 @@
   </data>
   <data name="AllIonsStatusButton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AllIonsStatusButton.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType" xml:space="preserve">
-<value>無効な RetentionTimeFilterType</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
 <value>ペプチド、前駆体、または遷移を選択して、クロマトグラムを表示します</value>
@@ -6077,15 +6056,6 @@
   </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
 <value>インポートされたスペクトルには、m/zまたは強度値 ({0} != {1}) がないようです。</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
-<value>インポートされたファイルのスキャンに単離ウィンドウの中心がないようです。</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_" xml:space="preserve">
-<value>インポートされたファイルのスキャンに単離ウィンドウの下方境界がないようです。</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_" xml:space="preserve">
-<value>インポートされたファイルのスキャンに単離ウィンドウの上方境界がないようです。</value>
   </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
 <value>スキャン{0}にはスキャン時間値がありません。オーバーラップベースの逆多重化にはスキャン時間が必要です。</value>

@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Irt
     [XmlRoot("irt_calculator")]
     public class RCalcIrt : RetentionScoreCalculatorSpec
     {
-        public static readonly RCalcIrt NONE = new RCalcIrt("None", "");
+        public static readonly RCalcIrt NONE = new RCalcIrt("None", string.Empty); // Not L10N
 
         private IrtDb _database;
 
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             RequireUsable();
 
-            string persistPath = Path.Combine(pathDestDir, Path.GetFileName(PersistencePath) ?? "");  // ReSharper
+            string persistPath = Path.Combine(pathDestDir, Path.GetFileName(PersistencePath) ?? string.Empty);  // ReSharper
             using (var fs = new FileSaver(persistPath))
             {
                 var irtDbMinimal = IrtDb.CreateIrtDb(fs.SafeName);

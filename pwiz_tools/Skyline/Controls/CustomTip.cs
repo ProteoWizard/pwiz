@@ -1072,7 +1072,7 @@ namespace pwiz.Skyline.Controls
 				if (_alpha == value) return;
 				if (value < 0 || value > 255)
 				{
-					throw new ArgumentException(Resources.CustomTip_Alpha_Alpha_must_be_between_0_and_255);
+                    throw new ArgumentException("Alpha must be between 0 and 255"); // Not L10N
 				}
 				_alpha = (byte)value;
 				UpdateLayeredWindow(_alpha);

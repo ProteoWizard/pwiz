@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Controls
             bool filter = tbbFilter.Checked = _picker.Filtered;
             var choices = picker.GetChoices(filter).ToArray();            
             if (choices.Length != choices.Select(c => c.Id.GlobalIndex).Distinct().Count())
-                throw new ArgumentException(Resources.PopupPickList_PopupPickList_Choices_must_be_unique);
+                throw new ArgumentException("Choices must be unique"); // Not L10N
 
             if (filter)
             {

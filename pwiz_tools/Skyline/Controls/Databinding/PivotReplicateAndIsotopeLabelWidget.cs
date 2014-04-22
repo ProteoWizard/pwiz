@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             ViewSpec = PivotIsotopeLabel(ViewSpec, pivotIsotopeLabel);
         }
-
+        // ReSharper disable NonLocalizedString
         private static readonly IList<PropertyPath> PrecursorCrosstabValues =
             ImmutableList.ValueOf(new[]
             {
@@ -114,6 +114,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 PropertyPath.Root.Property("Results").LookupAllItems(),
                 PropertyPath.Root.Property("ResultSummary"),
             });
+
         public static ViewSpec PivotIsotopeLabel(ViewSpec viewSpec, bool pivot)
         {
             PropertyPath pivotKey;
@@ -212,6 +213,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return viewSpec.SetColumns(newColumns);
         }
+        // ReSharper restore NonLocalizedString
 
         #region for testing
 

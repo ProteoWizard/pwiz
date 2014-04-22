@@ -3199,7 +3199,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return MeasuredTime.ToString(CultureInfo.InvariantCulture);
             }
-            return string.Format("{0} ({1})", MeasuredTime, DisplayTime);
+            return string.Format("{0} ({1})", MeasuredTime, DisplayTime); // Not L10N
         }
     }
 }

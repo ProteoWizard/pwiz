@@ -535,9 +535,6 @@
   <data name="MessageBoxHelper_GetControlMessage_Field" xml:space="preserve">
     <value>字段</value>
   </data>
-  <data name="CustomTip_Alpha_Alpha_must_be_between_0_and_255" xml:space="preserve">
-    <value>阿尔法必须在 0 至 255 之间</value>
-  </data>
   <data name="LongWaitDlg_PerformWork_canceled" xml:space="preserve">
     <value>已取消</value>
   </data>
@@ -1486,12 +1483,6 @@
   <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
     <value>离子 4</value>
   </data>
-  <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
-    <value>尝试在肽段中发现没有片段离子的片段失败。</value>
-  </data>
-  <data name="MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array" xml:space="preserve">
-    <value>在质量序列中未发现离子类型{0}</value>
-  </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>库离子匹配耐受性值{0}必须在{1}和{2}之间。</value>
   </data>
@@ -2291,9 +2282,6 @@
   </data>
   <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
     <value>母离子同位素{0}在同位素分布{1}至{2}之外。</value>
-  </data>
-  <data name="SequenceMassCalc_GetTermMass_Invalid_ion_type" xml:space="preserve">
-    <value>无效的离子类型</value>
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>肽段{0}经多次发现带有用户修饰。</value>
@@ -3537,9 +3525,6 @@
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
     <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
-  </data>
-  <data name="FileSize_CompareTo_Must_be_FileSize" xml:space="preserve">
-    <value>必须是文件大小</value>
   </data>
   <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
     <value>尝试修饰一个只读采集。</value>
@@ -4910,9 +4895,6 @@
   <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
     <value>无授权访问尝试从库中读取。</value>
   </data>
-  <data name="PopupPickList_PopupPickList_Choices_must_be_unique" xml:space="preserve">
-    <value>选择必须是独特的</value>
-  </data>
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>导出{0}报告</value>
   </data>
@@ -5032,9 +5014,6 @@
   </data>
   <data name="AllIonsStatusButton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AllIonsStatusButton.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType" xml:space="preserve">
-    <value>无效的保留时间过滤器类型</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
     <value>选择一个肽、母离子或离子对，以查看其色谱图</value>
@@ -6095,15 +6074,6 @@
   </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>导入的谱图看起来缺少质核比或亮度值（{0} != {1}）</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
-    <value>导入文件的扫描数据貌似缺少一个隔离窗口中心。</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_" xml:space="preserve">
-    <value>导入文件的扫描数据貌似缺少一个隔离窗口下边界。</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_" xml:space="preserve">
-    <value>导入文件的扫描数据貌似缺少一个隔离窗口上边界。</value>
   </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
     <value>在扫描{0}上缺少扫描时间值。基于重叠的多路复用需要扫描时间。</value>

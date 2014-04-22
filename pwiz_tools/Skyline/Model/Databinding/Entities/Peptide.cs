@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override PeptideDocNode CreateEmptyNode()
         {
-            return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0));
+            return new PeptideDocNode(new Model.Peptide(null, "X", null, null, 0)); // Not L10N
         }
 
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]

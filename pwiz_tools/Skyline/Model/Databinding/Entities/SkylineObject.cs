@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 throw new InvalidOperationException();
             }
-            skylineWindow.ModifyDocument("Edit", action);
+            skylineWindow.ModifyDocument("Edit", action); // Not L10N
         }
     }
 }

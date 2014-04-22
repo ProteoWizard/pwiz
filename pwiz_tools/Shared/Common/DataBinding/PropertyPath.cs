@@ -60,7 +60,7 @@ namespace pwiz.Common.DataBinding
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(Resources.PropertyPath_Property_Name_cannot_be_blank);
+                throw new ArgumentException("Name cannot be blank"); // Not L10N
             }
             return new PropertyPath(this, name, true);
         }
@@ -72,7 +72,7 @@ namespace pwiz.Common.DataBinding
         {
             if (null == key)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException("key"); // Not L10N
             }
             return new PropertyPath(this, key, false);
         }

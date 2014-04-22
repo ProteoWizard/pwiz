@@ -37,7 +37,7 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class EditServerDlg : FormEx
     {
-        public const string PANORAMA_WEB = "https://panoramaweb.org/";
+        public const string PANORAMA_WEB = "https://panoramaweb.org/"; // Not L10N
 
         private Server _server;
         private readonly IEnumerable<Server> _existing;
@@ -262,8 +262,8 @@ namespace pwiz.Skyline.ToolsUI
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            Username = reader.GetAttribute(ATTR.username) ?? "";
-            Password = reader.GetAttribute(ATTR.password) ?? "";
+            Username = reader.GetAttribute(ATTR.username) ?? string.Empty;
+            Password = reader.GetAttribute(ATTR.password) ?? string.Empty;
             string uriText = reader.GetAttribute(ATTR.uri);
             if (string.IsNullOrEmpty(uriText))
             {
@@ -376,9 +376,9 @@ namespace pwiz.Skyline.ToolsUI
             Uri currentUri = ServerUri;
 
             // try again using https
-            if (!ServerUri.AbsoluteUri.StartsWith("https"))
+            if (!ServerUri.AbsoluteUri.StartsWith("https")) // Not L10N
             {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("http", "https"));
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace("http", "https")); // Not L10N
                 return testFunc();
             }
 

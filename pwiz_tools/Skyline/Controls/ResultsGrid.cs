@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Controls
             public int SelectedResultsIndex { get; set; }
         }
 
+        // ReSharper disable NonLocalizedString
         public ResultsGrid()
         {
             // Replicate
@@ -391,6 +392,7 @@ namespace pwiz.Skyline.Controls
             CurrentCellChanged += ResultsGrid_CurrentCellChanged;
             DataError += ResultsGrid_DataError;
         }
+        // ReSharper restore NonLocalizedString
 
         public void Init(IDocumentUIContainer documentUiContainer)
         {
@@ -1086,7 +1088,7 @@ namespace pwiz.Skyline.Controls
                             var comboBoxColumn = column as DataGridViewComboBoxColumn;
                             if (comboBoxColumn != null)
                             {
-                                if (comboBoxColumn.Items.Count == annotationDef.Items.Count + 1 && "".Equals(comboBoxColumn.Items[0]))
+                                if (comboBoxColumn.Items.Count == annotationDef.Items.Count + 1 && string.Empty.Equals(comboBoxColumn.Items[0]))
                                 {
                                     canReuseColumn = true;
                                     for (int i = 0; i < annotationDef.Items.Count; i++)
@@ -1118,7 +1120,7 @@ namespace pwiz.Skyline.Controls
                             break;
                         case AnnotationDef.AnnotationType.value_list:
                             var comboBoxColumn = new DataGridViewComboBoxColumn();
-                            comboBoxColumn.Items.Add("");
+                            comboBoxColumn.Items.Add(string.Empty);
                             foreach (var item in annotationDef.Items)
                             {
                                 comboBoxColumn.Items.Add(item);
@@ -2294,7 +2296,7 @@ namespace pwiz.Skyline.Controls
 
             public override string ToString()
             {
-                return string.Format("{0}, {1}, {2}", ReplicateIndex, FileIndex, OptimizationStep);
+                return string.Format("{0}, {1}, {2}", ReplicateIndex, FileIndex, OptimizationStep); // Not L10N
             }
         }
     }

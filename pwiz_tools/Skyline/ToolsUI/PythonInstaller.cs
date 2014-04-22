@@ -172,7 +172,7 @@ namespace pwiz.Skyline.ToolsUI
             string fileName = "python-" + _version + ".msi"; // Not L10N
 
             // the fully formed Uri, e.g. http://python.org/ftp/python/2.7/python-2.7.msi
-            var downloadUri = new Uri(baseUri + _version + "/" + fileName);
+            var downloadUri = new Uri(baseUri + _version + "/" + fileName); // Not L10N
 
             using (var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(waitBroker, 1))
             {
@@ -347,12 +347,14 @@ namespace pwiz.Skyline.ToolsUI
                 var argumentBuilder = new StringBuilder("echo installing packages"); // Not L10N
                 foreach (var package in packages)
                 {
+                    // ReSharper disable NonLocalizedString
                     argumentBuilder.Append(" & ")
                                  .Append(pipPath)
                                  .Append(" install ")
                                  .Append("\"")
                                  .Append(package)
-                                 .Append("\""); // Not L10N
+                                 .Append("\""); 
+                    // ReSharper restore NonLocalizedString
                 }
 
                 var pipedProcessRunner = TestSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();

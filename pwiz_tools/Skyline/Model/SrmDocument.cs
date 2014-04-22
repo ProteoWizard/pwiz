@@ -1249,8 +1249,8 @@ namespace pwiz.Skyline.Model
         // Enum.ToString() was too slow for use in the document
         public static class EL
         {
-            //Not L10N
             // v0.1 lists
+            // ReSharper disable NonLocalizedString
             public const string selected_proteins = "selected_proteins";
             public const string selected_peptides = "selected_peptides";
             public const string selected_transitions = "selected_transitions";
@@ -1290,6 +1290,7 @@ namespace pwiz.Skyline.Model
             public const string declustering_potential = "declustering_potential";
             public const string start_rt = "start_rt";
             public const string stop_rt = "stop_rt";
+            // ReSharper restore NonLocalizedString
         }
         // ReSharper restore InconsistentNaming
 
@@ -1297,7 +1298,7 @@ namespace pwiz.Skyline.Model
         // Enum.ToString() was too slow for use in the document
         public static class ATTR
         {
-            // Not L10N
+            // ReSharper disable NonLocalizedString
             public const string format_version = "format_version";
             public const string software_version = "software_version";
             public const string name = "name";
@@ -1367,6 +1368,7 @@ namespace pwiz.Skyline.Model
             public const string peak_count_ratio = "peak_count_ratio";
             public const string library_dotp = "library_dotp";
             public const string isotope_dotp = "isotope_dotp";
+            // ReSharper restore NonLocalizedString
         }
         // ReSharper restore InconsistentNaming
 

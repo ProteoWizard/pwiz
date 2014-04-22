@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Util
             }
             if (!(obj is FileSize))
             {
-                throw new ArgumentException(Resources.FileSize_CompareTo_Must_be_FileSize);
+                throw new ArgumentException("Must be FileSize"); // Not L10N
             }
             return ByteCount.CompareTo(((FileSize) obj).ByteCount);
         }

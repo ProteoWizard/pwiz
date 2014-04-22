@@ -908,7 +908,7 @@ namespace pwiz.Skyline.Model
                 case IonType.y: return _massDiffY + modMasses._massModCleaveC;
                 case IonType.z: return _massDiffZ + modMasses._massModCleaveC;
                 default:
-                    throw new ArgumentException(Resources.SequenceMassCalc_GetTermMass_Invalid_ion_type);
+                    throw new ArgumentException("Invalid ion type"); // Not L10N
             }
         }
 

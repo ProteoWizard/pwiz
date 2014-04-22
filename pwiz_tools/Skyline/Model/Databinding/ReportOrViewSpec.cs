@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Databinding
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
-            if (null != reader.GetAttribute("rowsource") || null != reader.GetAttribute("sublist"))
+            if (null != reader.GetAttribute("rowsource") || null != reader.GetAttribute("sublist")) // Not L10N
             {
                 ViewSpec = ViewSpec.ReadXml(reader);
             }
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Databinding
         public ReportOrViewSpec EditItem(Control owner, ReportOrViewSpec item, IEnumerable<ReportOrViewSpec> existing, object tag)
         {
             var skylineViewContext = (SkylineViewContext) tag;
-            var view = item == null ? new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse("Results!*")) : item.ViewSpec;
+            var view = item == null ? new ViewSpec().SetRowType(typeof (Protein)).SetSublistId(PropertyPath.Parse("Results!*")) : item.ViewSpec; // Not L10N
             var result = skylineViewContext.CustomizeView(owner, view);
             if (null == result)
             {

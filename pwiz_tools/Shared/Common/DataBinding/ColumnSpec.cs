@@ -94,8 +94,10 @@ namespace pwiz.Common.DataBinding
         }
         public ColumnSpec SetPropertyPath(PropertyPath value)
         {
-            return new ColumnSpec(this) {Name = value == null ? "" : value.ToString()};
+            return new ColumnSpec(this) {Name = value == null ? string.Empty : value.ToString()};
         }
+
+        // ReSharper disable NonLocalizedString
         public static ColumnSpec ReadXml(XmlReader reader)
         {
             TotalOperation total = TotalOperation.GroupBy;
@@ -132,7 +134,9 @@ namespace pwiz.Common.DataBinding
             }
             return columnSpec;
         }
+        // ReSharper restore NonLocalizedString
 
+        // ReSharper disable NonLocalizedString
         public void WriteXml(XmlWriter writer)
         {
             if (Name != null)
@@ -164,6 +168,7 @@ namespace pwiz.Common.DataBinding
                 writer.WriteAttributeString("total", Total.ToString());
             }
         }
+        // ReSharper restore NonLocalizedString
 
         public bool Equals(ColumnSpec other)
         {
@@ -236,13 +241,14 @@ namespace pwiz.Common.DataBinding
         public IFilterOperation Operation {get { return FilterOperations.GetOperation(OpName);}}
         public FilterSpec SetOperation(IFilterOperation operation)
         {
-            return SetOp(operation == null ? "" : operation.OpName);
+            return SetOp(operation == null ? string.Empty : operation.OpName);
         }
         public string Operand { get; private set; }
         public FilterSpec SetOperand(string operand)
         {
             return new FilterSpec(this){Operand = operand};
         }
+        // ReSharper disable NonLocalizedString
         public static FilterSpec ReadXml(XmlReader reader)
         {
             var filterSpec = new FilterSpec
@@ -269,6 +275,7 @@ namespace pwiz.Common.DataBinding
                 writer.WriteAttributeString("operand", Operand);
             }
         }
+        // ReSharper restore NonLocalizedString
 
         public bool Equals(FilterSpec other)
         {
@@ -367,6 +374,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        // ReSharper disable NonLocalizedString
         public static ViewSpec ReadXml(XmlReader reader)
         {
             var viewSpec = new ViewSpec
@@ -435,6 +443,7 @@ namespace pwiz.Common.DataBinding
                 writer.WriteEndElement();
             }
         }
+        // ReSharper restore NonLocalizedString
 
         public bool Equals(ViewSpec other)
         {
@@ -520,14 +529,14 @@ namespace pwiz.Common.DataBinding
             if (reader.IsEmptyElement)
             {
                 ViewSpecs = ImmutableList.Empty<ViewSpec>();
-                reader.ReadElementString("views");
+                reader.ReadElementString("views"); // Not L10N
                 return;
             }
             reader.Read();
             var viewSpecs = new List<ViewSpec>();
             while (true)
             {
-                if (reader.IsStartElement("view"))
+                if (reader.IsStartElement("view")) // Not L10N
                 {
                     viewSpecs.Add(ViewSpec.ReadXml(reader));
                 }
@@ -548,7 +557,7 @@ namespace pwiz.Common.DataBinding
         {
             foreach (var viewSpec in ViewSpecs)
             {
-                writer.WriteStartElement("view");
+                writer.WriteStartElement("view"); // Not L10N
                 viewSpec.WriteXml(writer);
                 writer.WriteEndElement();
             }

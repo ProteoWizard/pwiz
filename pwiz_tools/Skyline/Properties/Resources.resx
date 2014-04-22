@@ -535,9 +535,6 @@
   <data name="MessageBoxHelper_GetControlMessage_Field" xml:space="preserve">
     <value>Field</value>
   </data>
-  <data name="CustomTip_Alpha_Alpha_must_be_between_0_and_255" xml:space="preserve">
-    <value>Alpha must be between 0 and 255</value>
-  </data>
   <data name="LongWaitDlg_PerformWork_canceled" xml:space="preserve">
     <value>canceled</value>
   </data>
@@ -1486,12 +1483,6 @@ Are you sure you want to continue?</value>
   <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
     <value>ion 4</value>
   </data>
-  <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
-    <value>Invalid attempt to find a fragment in a peptide without fragment ions.</value>
-  </data>
-  <data name="MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array" xml:space="preserve">
-    <value>Ion type {0} not found in masses array</value>
-  </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>Library ion match tolerance value {0} must be between {1} and {2}.</value>
   </data>
@@ -2291,9 +2282,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
     <value>Precursor isotope {0} is outside the isotope distribution {1} to {2}.</value>
-  </data>
-  <data name="SequenceMassCalc_GetTermMass_Invalid_ion_type" xml:space="preserve">
-    <value>Invalid ion type</value>
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>The peptide {0} was found multiple times with user modifications.</value>
@@ -3534,9 +3522,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
     <value>The file may be corrupted, missing, or the correct libraries may not be installed.</value>
-  </data>
-  <data name="FileSize_CompareTo_Must_be_FileSize" xml:space="preserve">
-    <value>Must be FileSize</value>
   </data>
   <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
     <value>Attempted modification of a read-only collection.</value>
@@ -4904,9 +4889,6 @@ Are you sure you want to continue?</value>
   <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
     <value>Unauthorized access attempting to read from library.</value>
   </data>
-  <data name="PopupPickList_PopupPickList_Choices_must_be_unique" xml:space="preserve">
-    <value>Choices must be unique</value>
-  </data>
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>Exporting {0} report</value>
   </data>
@@ -5026,9 +5008,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="AllIonsStatusButton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AllIonsStatusButton.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType" xml:space="preserve">
-    <value>Invalid RetentionTimeFilterType</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
     <value>Select a peptide, precursor or transition to view its chromatograms</value>
@@ -6078,15 +6057,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>Imported spectrum appears to be missing m/z or intensity values ({0} != {1})</value>
   </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
-    <value>Scan in imported file appears to be missing an isolation window center.</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_" xml:space="preserve">
-    <value>Scan in imported file appears to be missing an isolation window lower boundary.</value>
-  </data>
-  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_" xml:space="preserve">
-    <value>Scan in imported file appears to be missing an isolation window upper boundary.</value>
-  </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_" xml:space="preserve">
     <value>Missing scan time value on scan {0}. Scan times are required for overlap-based demultiplexing.</value>
   </data>
@@ -6821,6 +6791,49 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
     <value>successfully.</value>
     <comment>Context: something finished "successfully".</comment>
+  </data>
+  <data name="ChromatogramLibrary_Load_Loading__0_" xml:space="preserve">
+    <value>Loading {0}</value>
+  </data>
+  <data name="ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_" xml:space="preserve">
+    <value>Reading precursors from {0}</value>
+  </data>
+  <data name="ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_" xml:space="preserve">
+    <value>Error loading chromatogram library:{0}</value>
+  </data>
+  <data name="ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_" xml:space="preserve">
+    <value>Exception reading cache:{0}</value>
+  </data>
+  <data name="Serializer_ReadHeader_Unsupported_file_version__0_" xml:space="preserve">
+    <value>Unsupported file version {0}</value>
+  </data>
+  <data name="SkylineWindow_CompleteProgressUI_version_issue" xml:space="preserve">
+    <value>
+
+You may be able to avoid this problem by installing a 64-bit version of {0}.</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
+    <value>'{0}' is not a capital letter that corresponds to an amino acid.</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_This_must_start_with____" xml:space="preserve">
+    <value>This must start with '&gt;'</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_There_is_no_name_for_this_protein" xml:space="preserve">
+    <value>There is no name for this protein</value>
+  </data>
+  <data name="ImportFastaHelper_AddFasta_An_unexpected_error_occurred__" xml:space="preserve">
+    <value>An unexpected error occurred: </value>
+  </data>
+  <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
+    <value>There is no sequence for this protein</value>
+  </data>
+  <data name="SkylineWindow_CompleteProgressUI_Ran_Out_Of_Memory" xml:space="preserve">
+    <value>
+
+{0} ran out of memory.</value>
+  </data>
+  <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_" xml:space="preserve">
+    <value>Failed attempting to filter redundant library {0} to {1}</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_Comparison_name_cannot_be_empty_" xml:space="preserve">
     <value>Comparison name cannot be empty.</value>

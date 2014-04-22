@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionGroupDocNode CreateEmptyNode()
         {
-            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), null);
+            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), null); // Not L10N
         }
 
         [InvariantDisplayName("PrecursorResultsSummary")]
@@ -166,15 +166,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (DocNode.LibInfo is NistSpectrumHeaderInfo)
                 {
-                    return "NIST";
+                    return "NIST"; // Not L10N
                 }
                 if (DocNode.LibInfo is XHunterSpectrumHeaderInfo)
                 {
-                    return "GPM";
+                    return "GPM"; // Not L10N
                 }
                 if (DocNode.LibInfo is BiblioSpecSpectrumHeaderInfo)
                 {
-                    return "BiblioSpec";
+                    return "BiblioSpec"; // Not L10N
                 }
                 return null;
             }
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Obsolete]
         public Precursor Precursor { get; private set; }
         [Obsolete]
-        public string ReplicatePath { get { return "/"; } }
+        public string ReplicatePath { get { return "/"; } } // Not L10N
         [ChildDisplayName("{0}BestRetentionTime")]
         public RetentionTimeSummary BestRetentionTime { get; private set; }
         [ChildDisplayName("{0}MaxFwhm")]

@@ -1463,11 +1463,11 @@ namespace pwiz.Skyline.EditUI
             {
                 return document;
             }
-            if (!text.StartsWith(">"))
+            if (!text.StartsWith(">")) // Not L10N
             {
                 ShowFastaError(new PasteError
                 {
-                    Message = "This must start with '>'",
+                    Message = Resources.ImportFastaHelper_AddFasta_This_must_start_with____,
                     Column = 0,
                     Length = 1,
                     Line = 0,
@@ -1480,13 +1480,13 @@ namespace pwiz.Skyline.EditUI
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
-                if (line.StartsWith(">"))
+                if (line.StartsWith(">")) // Not L10N
                 {
                     if (line.Trim().Length == 1)
                     {
                         ShowFastaError(new PasteError
                         {
-                            Message = "There is no name for this protein",
+                            Message = Resources.ImportFastaHelper_AddFasta_There_is_no_name_for_this_protein,
                             Column = 0,
                             Line = i,
                             Length = 1
@@ -1510,7 +1510,7 @@ namespace pwiz.Skyline.EditUI
                         ShowFastaError(new PasteError
                         {
                             Message =
-                                String.Format("'{0}' is not a capital letter that corresponds to an amino acid.", c),
+                                String.Format(Resources.ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_, c),
                             Column = column,
                             Line = i,
                             Length = 1,
@@ -1539,7 +1539,7 @@ namespace pwiz.Skyline.EditUI
             {
                 ShowFastaError(new PasteError
                 {
-                    Message = "An unexpected error occurred: " + exception.Message + " (" + exception.GetType() + ")"
+                    Message = Resources.ImportFastaHelper_AddFasta_An_unexpected_error_occurred__ + exception.Message + " (" + exception.GetType() + ")" // Not L10N
                 });
                 return null;
             }
@@ -1551,7 +1551,7 @@ namespace pwiz.Skyline.EditUI
             PanelError.Visible = true;
             if (pasteError == null)
             {
-                TbxError.Text = "";
+                TbxError.Text = string.Empty;
                 TbxError.Visible = false;
                 return;
             }
@@ -1566,7 +1566,7 @@ namespace pwiz.Skyline.EditUI
 
         public void ClearFastaError()
         {
-            TbxError.Text = "";
+            TbxError.Text = string.Empty;
             TbxError.Visible = false;
             PanelError.Visible = false;
         }
@@ -1577,7 +1577,7 @@ namespace pwiz.Skyline.EditUI
             {
                 ShowFastaError(new PasteError
                 {
-                    Message = "There is no sequence for this protein",
+                    Message = Resources.ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein,
                     Column = 0,
                     Line = lastNameLine,
                     Length = lines[lastNameLine].Length

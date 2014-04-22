@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestA
         }
 
         // TODO: Enable this again once file locking issues have been resolved
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleSetLibraryTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
