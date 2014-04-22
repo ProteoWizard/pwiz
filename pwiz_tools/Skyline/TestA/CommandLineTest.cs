@@ -26,9 +26,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate.Query;
@@ -292,7 +294,6 @@ namespace pwiz.SkylineTestA
             StringWriter reportWriter = new StringWriter(reportBuffer);
 
             ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportName);
-            Report report = Report.Load(reportSpec);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
 
@@ -301,20 +302,38 @@ namespace pwiz.SkylineTestA
             doc = CommandLine.ImportResults(doc, docPath, replicate, rawPath, null, null, out status);
             Assert.IsNull(status);
 
-            using(Database database = new Database(doc.Settings))
+            string programmaticReport;
+            if (Settings.Default.EnableLiveReports)
             {
-                database.AddSrmDocument(doc);
-                ResultSet resultSet = report.Execute(database);
-
-                ResultSet.WriteReportHelper(resultSet, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture), reportWriter,
-                                                  LocalizationHelper.CurrentCulture);
+                MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
+                Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
+                SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+                DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
+                ViewInfo viewInfo = new ReportSpecConverter(skylineDataSchema).Convert(reportSpec);
+                StringWriter writer = new StringWriter();
+                status = new ProgressStatus("Exporting report");
+                viewContext.Export(null, ref status, viewInfo, writer,
+                    new DsvWriter(CultureInfo.CurrentCulture, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)));
+                programmaticReport = writer.ToString();
             }
+            else
+            {
+                Report report = Report.Load(reportSpec);
+                using (Database database = new Database(doc.Settings))
+                {
+                    database.AddSrmDocument(doc);
+                    ResultSet resultSet = report.Execute(database);
 
-            reportWriter.Flush();
+                    ResultSet.WriteReportHelper(resultSet, TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture), reportWriter,
+                                                      LocalizationHelper.CurrentCulture);
+                }
 
-            reportWriter.Close();
+                reportWriter.Flush();
 
-            string programmaticReport = reportBuffer.ToString();
+                reportWriter.Close();
+
+                programmaticReport = reportBuffer.ToString();
+            }
 
             RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,

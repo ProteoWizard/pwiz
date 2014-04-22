@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Model.Databinding
                 return new ColumnSpec(identifierPath);
             }
             var columnSpec = new ColumnSpec(columnDescriptor.PropertyPath);
-            var newCaption = columnDescriptor.DefaultCaption;
+            var newCaption = DataSchema.GetColumnCaption(columnDescriptor).InvariantCaption;
             if (oldCaption != newCaption)
             {
                 columnSpec = columnSpec.SetCaption(oldCaption);

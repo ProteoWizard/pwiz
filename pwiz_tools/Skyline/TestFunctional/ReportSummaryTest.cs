@@ -75,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            RunUI(()=>exportLiveReportDlg.SetUseInvariantLanguage(true));
             var editReportList = ShowDialog<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>(exportLiveReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(editReportList.AddItem);
 
@@ -188,7 +189,11 @@ namespace pwiz.SkylineTestFunctional
 
             exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
 
-            RunUI(() => exportLiveReportDlg.ReportName = transitionReportName);
+            RunUI(() =>
+            {
+                exportLiveReportDlg.SetUseInvariantLanguage(true);
+                exportLiveReportDlg.ReportName = transitionReportName;
+            });
             string transitionReport = TestFilesDir.GetTestPath("TransitionRTAreaSummary.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(transitionReport, ','));
             VerifyReportFile(transitionReport,

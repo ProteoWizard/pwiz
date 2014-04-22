@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -27,7 +26,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    // ReSharper disable LocalizableElement
     [AnnotationTarget(AnnotationDef.AnnotationTarget.peptide)]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
@@ -45,7 +43,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return _precursors = _precursors ?? new Precursors(this); }
         }
 
-        [DisplayName("PeptideResults")]
+        [InvariantDisplayName("PeptideResults")]
         [OneToMany(ForeignKey = "Peptide", ItemDisplayName = "PeptideResult")]
         public IDictionary<ResultKey, PeptideResult> Results
         {
@@ -71,13 +69,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return new Protein(DataSchema, IdentityPath.Parent); }
         }
 
-        [DisplayName("PeptideSequence")]
+        [InvariantDisplayName("PeptideSequence")]
         public string Sequence
         {
             get { return DocNode.Peptide.Sequence; }
         }
 
-        [DisplayName("PeptideModifiedSequence")]
+        [InvariantDisplayName("PeptideModifiedSequence")]
         public string ModifiedSequence
         {
             get
@@ -146,7 +144,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.AverageMeasuredRetentionTime; }
         }
 
-        [DisplayName("PeptideNote")]
+        [InvariantDisplayName("PeptideNote")]
         public string Note
         {
             get { return DocNode.Note; }

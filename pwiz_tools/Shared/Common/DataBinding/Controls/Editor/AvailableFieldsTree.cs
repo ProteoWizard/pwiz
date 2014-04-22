@@ -152,7 +152,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             var nodeData = new NodeData(columnDescriptor);
             node.Tag = nodeData;
-            node.Text = columnDescriptor.DisplayName;
+            node.Text = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
             UpdateNode(node);
             node.Nodes.Clear();
             node.Nodes.Add(new TreeNode {Tag = NodeData.UninitializedTag});

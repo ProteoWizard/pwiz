@@ -42,26 +42,25 @@ namespace pwiz.Common.DataBinding
         public PropertyPath PropertyPath { get { return ColumnSpec.PropertyPath; } }
         public ColumnDescriptor ColumnDescriptor { get; private set; }
         public ColumnDescriptor CollectionColumn { get; private set; }
-        public string DefaultDisplayName 
+        public string GetColumnCaption(PivotKey pivotKey, ColumnCaptionType columnCaptionType)
         {
-            get
+            string columnCaption;
+            if (null != ColumnSpec.Caption)
             {
-                return DataSchema.GetBaseDisplayName(this);
+                columnCaption = ColumnSpec.Caption;
             }
-        }
-        public string ColumnCaption
-        {
-            get
+            else if (null == ColumnDescriptor)
             {
-                return ColumnSpec.Caption ?? DefaultDisplayName;
+                columnCaption = PropertyPath.ToString();
             }
-        }
-        public string GetColumnCaption(PivotKey pivotKey)
-        {
-            return GetColumnCaption(pivotKey, ColumnCaption);
+            else
+            {
+                columnCaption = DataSchema.GetColumnCaption(DataSchema.GetColumnCaption(ColumnDescriptor), columnCaptionType);
+            }
+            return QualifyColumnCaption(pivotKey, columnCaption);
         }
 
-        public static string GetColumnCaption(PivotKey pivotKey, string columnCaption)
+        public static string QualifyColumnCaption(PivotKey pivotKey, string columnCaption)
         {
             if (null == pivotKey)
             {
@@ -129,7 +128,7 @@ namespace pwiz.Common.DataBinding
             {
                 return new Attribute[0];
             }
-            var overrideAttributes = new Attribute[] {new DisplayNameAttribute(GetColumnCaption(pivotKey))};
+            var overrideAttributes = new Attribute[] {new DisplayNameAttribute(GetColumnCaption(pivotKey, ColumnCaptionType.localized))};
             var mergedAttributes = AttributeCollection.FromExisting(new AttributeCollection(ColumnDescriptor.GetAttributes().ToArray()), overrideAttributes);
             return mergedAttributes.Cast<Attribute>();
         }

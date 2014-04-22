@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -461,7 +462,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var transitionNoteColumn =
-                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "TransitionReplicateNote" == col.HeaderText);
+                    resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => GetLocalizedCaption("TransitionReplicateNote") == col.HeaderText);
                 // Since only transitions are selected, transition _note column should be visible.
                 cell = resultsGrid.Rows[0].Cells[transitionNoteColumn.Index];
                 Assert.IsTrue(cell.Visible);
@@ -553,6 +554,10 @@ namespace pwiz.SkylineTestFunctional
                 }
                 Thread.Sleep(100);
             }
+        }
+        private string GetLocalizedCaption(string caption)
+        {
+            return SkylineDataSchema.GetLocalizedSchemaLocalizer().LookupColumnCaption(new ColumnCaption(caption));
         }
     }
 }

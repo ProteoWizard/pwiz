@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly IDocumentContainer _documentContainer;
         private readonly HashSet<IDocumentChangeListener> _documentChangedEventHandlers 
             = new HashSet<IDocumentChangeListener>();
-        public SkylineDataSchema(IDocumentContainer documentContainer)
+        public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
         {
             _documentContainer = documentContainer;
         }
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, container.Document);
-            return new SkylineDataSchema(container);
+            return new SkylineDataSchema(container, DataSchemaLocalizer);
         }
 
         protected override bool IsScalar(Type type)
@@ -224,6 +225,11 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             return null;
+        }
+
+        public static DataSchemaLocalizer GetLocalizedSchemaLocalizer()
+        {
+            return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager);
         }
     }
 }

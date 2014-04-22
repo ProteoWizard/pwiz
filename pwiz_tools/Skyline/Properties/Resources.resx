@@ -6960,4 +6960,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_" xml:space="preserve">
     <value>The document must be fully loaded in order to compare model peak picking.</value>
   </data>
+  <data name="ExportLiveReportDlg_ExportLiveReportDlg_Invariant" xml:space="preserve">
+    <value>Invariant</value>
+  </data>
 </root>

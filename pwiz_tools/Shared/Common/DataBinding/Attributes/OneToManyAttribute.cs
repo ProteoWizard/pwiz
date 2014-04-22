@@ -47,7 +47,7 @@ namespace pwiz.Common.DataBinding.Attributes
         /// <summary>
         /// Specifies the caption to use on elements from this collection.
         /// The default is what is returned by 
-        /// <see cref="DataSchema.CaptionFromType"/>.
+        /// <see cref="DataSchema.ColumnCaptionFromType"/>.
         /// </summary>
         public string ItemDisplayName { get; set; }
     }

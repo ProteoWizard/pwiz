@@ -88,7 +88,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                return DisplayColumn.GetColumnCaption(PivotKey);
+                return DisplayColumn.GetColumnCaption(PivotKey, ColumnCaptionType.localized);
             }
         }
         public delegate void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor);

@@ -103,7 +103,7 @@ namespace pwiz.SkylineTest.Reporting
             var document = new SrmDocument(SrmSettingsList.GetDefault());
             var container = new MemoryDocumentContainer();
             Assert.IsTrue(container.SetDocument(document, container.Document));
-            return new SkylineDataSchema(container);
+            return new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
         }
     }
 }

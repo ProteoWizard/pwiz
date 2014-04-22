@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -30,7 +29,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    // ReSharper disable LocalizableElement
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition)]
     public class Transition : SkylineDocNode<TransitionDocNode>
     {
@@ -51,7 +49,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DisplayName("TransitionResults")]
+        [InvariantDisplayName("TransitionResults")]
         [OneToMany(ForeignKey = "Transition", ItemDisplayName = "TransitionResult")]
         public IDictionary<ResultKey, TransitionResult> Results
         {
@@ -71,7 +69,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null);
         }
 
-        [DisplayName("TransitionResultsSummary")]
+        [InvariantDisplayName("TransitionResultsSummary")]
         public TransitionResultSummary ResultSummary
         {
             get
@@ -120,7 +118,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : null; }
         }
-        [DisplayName("TransitionNote")]
+        [InvariantDisplayName("TransitionNote")]
         public string Note
         {
             get { return DocNode.Note; }
@@ -163,7 +161,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
         }
-        [DisplayName("TransitionIsDecoy")]
+        [InvariantDisplayName("TransitionIsDecoy")]
         public bool IsDecoy
         {
             get { return DocNode.IsDecoy; }
@@ -243,15 +241,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string ReplicatePath { get { return "/"; } }
         [Obsolete]
         public Transition Transition { get; private set; }
-        [ChildDisplayName(Format="{0}RetentionTime")]
+        [ChildDisplayName("{0}RetentionTime")]
         public RetentionTimeSummary RetentionTime { get; private set; }
-        [ChildDisplayName(Format="{0}Fwhm")]
+        [ChildDisplayName("{0}Fwhm")]
         public FwhmSummary Fwhm { get; private set; }
-        [ChildDisplayName(Format="{0}Area")]
+        [ChildDisplayName("{0}Area")]
         public AreaSummary Area { get; private set; }
-        [ChildDisplayName(Format="{0}AreaNormalized")]
+        [ChildDisplayName("{0}AreaNormalized")]
         public AreaNormalizedSummary AreaNormalized { get; private set; }
-        [ChildDisplayName(Format="{0}AreaRatio")]
+        [ChildDisplayName("{0}AreaRatio")]
         public AreaRatioSummary AreaRatio { get; private set; }
 
         public override string ToString()

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -101,7 +102,7 @@ namespace pwiz.Skyline.Model.Databinding
                 return Settings.Default.ReportSpecList.ToDictionary(reportSpec => reportSpec.Name,
                     reportSpec => new ReportOrViewSpec(reportSpec));
             }
-            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(GetDefaultDocument()));
+            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(GetDefaultDocument(), DataSchemaLocalizer.INVARIANT));
             return SafeToDictionary(documentGridViewContext.CustomViews, 
                 view => view.Name,
                 view => new ReportOrViewSpec(view));
@@ -116,7 +117,7 @@ namespace pwiz.Skyline.Model.Databinding
                 return;
             }
             var srmDocument = GetDefaultDocument();
-            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(srmDocument));
+            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(srmDocument, DataSchemaLocalizer.INVARIANT));
             var newCustomViews =
                 documentGridViewContext.CustomViews.Where(view => view.Name != reportOrViewSpec.GetKey())
                     .Concat(ConvertAll(new[]{reportOrViewSpec}, srmDocument));
@@ -147,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else
                 {
-                    converter = converter ?? new ReportSpecConverter(GetSkylineDataSchema(document));
+                    converter = converter ?? new ReportSpecConverter(GetSkylineDataSchema(document, DataSchemaLocalizer.INVARIANT));
                     yield return converter.Convert(reportOrViewSpec.ReportSpec).GetViewSpec();
                 }
             }
@@ -174,12 +175,12 @@ namespace pwiz.Skyline.Model.Databinding
             return new SrmDocument(SrmSettingsList.GetDefault());
         }
 
-        private static SkylineDataSchema GetSkylineDataSchema(SrmDocument srmDocument)
+        private static SkylineDataSchema GetSkylineDataSchema(SrmDocument srmDocument, DataSchemaLocalizer dataSchemaLocalizer)
         {
             var memoryDocumentContainer = new MemoryDocumentContainer();
             memoryDocumentContainer.SetDocument(srmDocument,
                 memoryDocumentContainer.Document);
-            return new SkylineDataSchema(memoryDocumentContainer);
+            return new SkylineDataSchema(memoryDocumentContainer, dataSchemaLocalizer);
         }
 
         private static IDictionary<TKey, TValue> SafeToDictionary<TItem, TKey, TValue>(IEnumerable<TItem> items,

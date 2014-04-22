@@ -667,11 +667,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 int indexCvTotalArea =
-                    viewEditor.ChooseColumnsTab.ColumnNames.ToList().IndexOf("CvTotalArea");
+                    viewEditor.ChooseColumnsTab.ColumnNames.ToList().IndexOf(GetLocalizedCaption("CvTotalArea"));
                 Assert.IsFalse(indexCvTotalArea < 0, "{0} < 0", indexCvTotalArea);
                 viewEditor.ChooseColumnsTab.ActivateColumn(indexCvTotalArea);
             });
-            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View forrm", 21);
+            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form", 21);
             RunUI(()=>viewEditor.TabControl.SelectTab(1));
             RunUI(() =>
             {
@@ -722,7 +722,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var precursorNoteColumn =
                     resultsGrid.Columns.Cast<DataGridViewColumn>()
-                        .First(col => "PrecursorReplicateNote" == col.HeaderText);
+                        .First(col => GetLocalizedCaption("PrecursorReplicateNote") == col.HeaderText);
                 resultsGrid.CurrentCell = resultsGrid.Rows[0].Cells[precursorNoteColumn.Index];
                 resultsGrid.BeginEdit(true);
                 // ReSharper disable LocalizableElement
@@ -747,10 +747,10 @@ namespace pwiz.SkylineTestTutorial
                             PropertyPath.Parse("TotalAreaRatio")
                         })
                 {
-                    Assert.IsTrue(chooseColumnTab.ColumnNames.Contains(column.Name));
+                    Assert.IsTrue(chooseColumnTab.ColumnNames.Contains(GetLocalizedCaption(column.Name)));
                     Assert.IsTrue(chooseColumnTab.TrySelect(column), "Unable to select {0}", column);
                     chooseColumnTab.RemoveColumn(column);
-                    Assert.IsFalse(chooseColumnTab.ColumnNames.Contains(column.Name));
+                    Assert.IsFalse(chooseColumnTab.ColumnNames.Contains(GetLocalizedCaption(column.Name)));
                 }
                 resultsGridViewEditor.OkDialog();
             });
@@ -790,6 +790,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form showing Tailing annotation checked", 30);
             OkDialog(viewEditor, viewEditor.OkDialog);
             PauseForScreenShot("Main window with Tailing column added to Results Grid");   // p. 27
+        }
+        private string GetLocalizedCaption(string caption)
+        {
+            return SkylineDataSchema.GetLocalizedSchemaLocalizer().LookupColumnCaption(new ColumnCaption(caption));
         }
     }
 }

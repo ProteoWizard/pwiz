@@ -19,9 +19,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -114,8 +114,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return FindResults(docNode.Results, GetResultFile());
         }
-        // ReSharper disable once LocalizableElement
-        [DisplayName("PrecursorReplicateNote")]
+        [InvariantDisplayName("PrecursorReplicateNote")]
         public string Note
         {
             get
@@ -143,8 +142,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return FindResults(docNode.Results, GetResultFile());
         }
 
-        // ReSharper disable once LocalizableElement
-        [DisplayName("TransitionReplicateNote")]
+        [InvariantDisplayName("TransitionReplicateNote")]
         public string Note
         {
             get

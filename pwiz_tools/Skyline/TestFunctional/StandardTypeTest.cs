@@ -252,9 +252,8 @@ namespace pwiz.SkylineTestFunctional
                 int countReplicates = doc.Settings.MeasuredResults.Chromatograms.Count;
                 Assert.AreEqual(doc.TransitionCount * countReplicates, previewReportDlg.RowCount);
                 Assert.AreEqual(columnsToAdd.Length, previewReportDlg.ColumnCount);
-                var headerNames = previewReportDlg.ColumnHeaderNames.ToArray();
-                int iStandardType = headerNames.IndexOf(name => Equals(name, "StandardType"));
-                int iLabelType = headerNames.IndexOf(name => Equals(name, "IsotopeLabelType"));
+                int iStandardType = previewReportDlg.FindColumn(PropertyPath.Parse("Precursor.Peptide.StandardType")).Index;
+                int iLabelType = previewReportDlg.FindColumn(PropertyPath.Parse("Precursor.IsotopeLabelType")).Index;
                 int iLightRatio = previewReportDlg.FindColumn(
                         PropertyPath.Parse("Results!*.Value.PrecursorResult.PeptideResult").Concat(ratioColumnLight))
                         .Index;

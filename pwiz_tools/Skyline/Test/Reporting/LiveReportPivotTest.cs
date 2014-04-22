@@ -80,7 +80,7 @@ namespace pwiz.SkylineTest.Reporting
             var bindingListSource = new BindingListSource();
             var documentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(documentContainer.SetDocument(document, null));
-            var dataSchema = new SkylineDataSchema(documentContainer);
+            var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
             bindingListSource.SetViewContext(new DocumentGridViewContext(dataSchema), new ViewInfo(dataSchema, typeof(Precursor), view));
             var expectedColumnNames = new[] {
                     "PeptideSequence",

@@ -76,8 +76,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public UserSet UserSetPeak { get { return ChromInfo.UserSet; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int OptStep { get { return ChromInfo.OptimizationStep; } }
-        // ReSharper disable once LocalizableElement
-        [DisplayName("TransitionReplicateNote")]
+        [InvariantDisplayName("TransitionReplicateNote")]
         public string Note
         {
             get { return ChromInfo.Annotations.Note; }

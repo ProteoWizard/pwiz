@@ -1864,7 +1864,7 @@ namespace pwiz.Skyline
 
         private void ExportLiveReport(string reportName, string reportFile, char reportColSeparator)
         {
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc);
+            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var viewSpec = viewContext.CustomViews.FirstOrDefault(view2 => view2.Name == reportName);
             if (null == viewSpec)
             {

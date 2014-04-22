@@ -32,6 +32,14 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class DataSchema
     {
+        public DataSchema() : this(DataSchemaLocalizer.INVARIANT)
+        {
+        }
+
+        public DataSchema(DataSchemaLocalizer dataSchemaLocalizer)
+        {
+            DataSchemaLocalizer = dataSchemaLocalizer;
+        }
         /// <summary>
         /// Returns the properties for the specified type.
         /// </summary>
@@ -197,31 +205,27 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public virtual string CaptionFromName(string name)
-        {
-            return name;
-        }
-        public virtual string CaptionFromType(Type type)
+        protected virtual ColumnCaption ColumnCaptionFromType(Type type)
         {
             var pdChain = GetChainedPropertyDescriptorParent(type);
             if (pdChain == null)
             {
                 var displayNameAttribute =
-                    type.GetCustomAttributes(typeof (DisplayNameAttribute), true)
-                        .Cast<DisplayNameAttribute>().FirstOrDefault();
+                    type.GetCustomAttributes(typeof (InvariantDisplayNameAttribute), true)
+                        .Cast<InvariantDisplayNameAttribute>().FirstOrDefault();
                 if (displayNameAttribute != null && !displayNameAttribute.IsDefaultAttribute())
                 {
-                    return displayNameAttribute.DisplayName;
+                    return displayNameAttribute.ColumnCaption;
                 }
-                return CaptionFromName(type.Name);
+                return new ColumnCaption(type.Name);
             }
-            return CaptionFromType(pdChain.PropertyType);
+            return ColumnCaptionFromType(pdChain.PropertyType);
         }
         public virtual bool IsRootTypeSelectable(Type type)
         {
             return typeof (ILinkValue).IsAssignableFrom(type);
         }
-        public virtual string GetBaseDisplayName(ColumnDescriptor columnDescriptor)
+        private string GetBaseDisplayName(ColumnDescriptor columnDescriptor)
         {
             var oneToManyColumn = columnDescriptor.GetOneToManyColumn();
             if (oneToManyColumn != null)
@@ -239,31 +243,26 @@ namespace pwiz.Common.DataBinding
                     }
                 }
             }
-            var displayNameAttribute = columnDescriptor.GetAttributes().OfType<DisplayNameAttribute>().FirstOrDefault();
-            if (null != displayNameAttribute)
+            var invariantDisplayNameAttribute = columnDescriptor.GetAttributes().OfType<InvariantDisplayNameAttribute>().FirstOrDefault();
+            if (null != invariantDisplayNameAttribute)
             {
-                return displayNameAttribute.DisplayName;
+                return invariantDisplayNameAttribute.InvariantDisplayName;
             }
             if (columnDescriptor.Name == null)
             {
                 if (columnDescriptor.Parent != null)
                 {
-                    return GetDisplayName(columnDescriptor.Parent);
+                    return GetBaseDisplayName(columnDescriptor.Parent);
                 }
                 if (columnDescriptor.PropertyType != null)
                 {
-                    return CaptionFromType(columnDescriptor.PropertyType);
+                    return columnDescriptor.PropertyType.Name;
                 }
             } 
-            return CaptionFromName(columnDescriptor.Name);
+            return columnDescriptor.Name;
         }
 
-        public virtual string FormatDisplayName(ColumnDescriptor columnDescriptor, string baseName)
-        {
-            return FormatChildDisplayName(columnDescriptor.Parent, baseName);
-        }
-
-        public virtual string FormatChildDisplayName(ColumnDescriptor columnDescriptor, string childDisplayName)
+        private string FormatChildDisplayName(ColumnDescriptor columnDescriptor, string childDisplayName)
         {
             if (null == columnDescriptor)
             {
@@ -274,45 +273,29 @@ namespace pwiz.Common.DataBinding
                 
             if (null != childDisplayNameAttribute)
             {
-                childDisplayName = string.Format(childDisplayNameAttribute.Format, childDisplayName);
+                childDisplayName = string.Format(childDisplayNameAttribute.InvariantFormat, childDisplayName);
             }
             return FormatChildDisplayName(columnDescriptor.Parent, childDisplayName);
         }
 
-
-        public virtual string GetDisplayName(ColumnDescriptor columnDescriptor)
+        public virtual ColumnCaption GetColumnCaption(ColumnDescriptor columnDescriptor)
         {
-            return FormatDisplayName(columnDescriptor, GetBaseDisplayName(columnDescriptor));
+            DisplayNameAttribute displayNameAttribute =
+                columnDescriptor.GetAttributes().OfType<DisplayNameAttribute>().FirstOrDefault();
+            if (null != displayNameAttribute)
+            {
+                return ColumnCaption.UnlocalizableCaption(displayNameAttribute.DisplayName);
+            }
+            return new ColumnCaption(FormatChildDisplayName(columnDescriptor.Parent, GetBaseDisplayName(columnDescriptor)));
         }
 
-        public virtual string GetBaseDisplayName(DisplayColumn displayColumn)
+        public string GetColumnCaption(ColumnCaption columnCaption, ColumnCaptionType columnCaptionType)
         {
-            var columnDescriptor = displayColumn.ColumnDescriptor;
-            if (null == columnDescriptor)
+            if (columnCaptionType == ColumnCaptionType.invariant)
             {
-                return displayColumn.PropertyPath.ToString();
+                return columnCaption.InvariantCaption;
             }
-            var oneToManyColumn = columnDescriptor.GetOneToManyColumn();
-            if (oneToManyColumn != null)
-            {
-                var oneToManyAttribute = oneToManyColumn.GetAttributes().OfType<OneToManyAttribute>().FirstOrDefault();
-                if (oneToManyAttribute != null)
-                {
-                    if ("Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null)
-                    {
-                        return oneToManyAttribute.IndexDisplayName;
-                    }
-                    if ("Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null)
-                    {
-                        return oneToManyAttribute.ItemDisplayName;
-                    }
-                }
-            }
-            if (columnDescriptor.Name == null && columnDescriptor.PropertyType != null)
-            {
-                return CaptionFromType(columnDescriptor.PropertyType);
-            }
-            return GetDisplayName(columnDescriptor);
+            return DataSchemaLocalizer.LookupColumnCaption(columnCaption);
         }
 
         public virtual bool IsAdvanced(ColumnDescriptor columnDescriptor)
@@ -356,5 +339,11 @@ namespace pwiz.Common.DataBinding
         {
             return columnDescriptor.GetAttributes().OfType<ObsoleteAttribute>().Any();
         }
+
+        public string GetLocalizedColumnCaption(ColumnCaption columnCaption)
+        {
+            return DataSchemaLocalizer.LookupColumnCaption(columnCaption);
+        }
+        public DataSchemaLocalizer DataSchemaLocalizer { get; protected set; }
     }
 }

@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
             Icon = Resources.Skyline;
             SkylineWindow = skylineWindow;
-            _dataSchema = new SkylineDataSchema(skylineWindow);
+            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             DataGridViewPasteHandler.Attach(skylineWindow, boundDataGridView);
         }
 

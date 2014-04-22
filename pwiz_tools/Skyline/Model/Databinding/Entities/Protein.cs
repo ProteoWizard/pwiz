@@ -18,14 +18,12 @@
  */
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    // ReSharper disable LocalizableElement
     [AnnotationTarget(AnnotationDef.AnnotationTarget.protein)]
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
@@ -70,39 +68,37 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);
         }
 
-        [DisplayName("ProteinName")]
+        [InvariantDisplayName("ProteinName")]
         public string Name
         {
             get { return DocNode.Name; }
             set { ChangeDocNode(DocNode.ChangeName(value)); } // the user can ovveride this label
         }
-
-        [DisplayName("ProteinDescription")]
+        [InvariantDisplayName("ProteinDescription")]
         public string Description
         {
             get { return DocNode.Description; }
             set { ChangeDocNode(DocNode.ChangeDescription(value)); } // the user can ovveride this label
         }
-
-        [DisplayName("ProteinAccession")]
+        [InvariantDisplayName("ProteinAccession")]
         public string Accession
         {
             get { return DocNode.ProteinMetadata.Accession; }
         }
 
-        [DisplayName("ProteinPreferredName")]
+        [InvariantDisplayName("ProteinPreferredName")]
         public string PreferredName
         {
             get { return DocNode.ProteinMetadata.PreferredName; }
         }
 
-        [DisplayName("ProteinGene")]
+        [InvariantDisplayName("ProteinGene")]
         public string Gene
         {
             get { return DocNode.ProteinMetadata.Gene; }
         }
 
-        [DisplayName("ProteinSpecies")]
+        [InvariantDisplayName("ProteinSpecies")]
         public string Species
         {
             get { return DocNode.ProteinMetadata.Species; }
@@ -115,13 +111,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         //    get { return DocNode.ProteinMetadata.WebSearchInfo.ToString(); }
         // }
 
-        [DisplayName("ProteinSequence")]
+        [InvariantDisplayName("ProteinSequence")]
         public string Sequence 
         {
             get { return DocNode.PeptideGroup.Sequence; }
         }
-
-        [DisplayName("ProteinNote")]
+        [InvariantDisplayName("ProteinNote")]
         public string Note
         {
             get { return DocNode.Note; }

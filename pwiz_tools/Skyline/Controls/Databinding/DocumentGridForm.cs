@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.Databinding
         }
 
         public DocumentGridForm(IDocumentContainer documentContainer) 
-            : this(new DocumentGridViewContext(new SkylineDataSchema(documentContainer)))
+            : this(new DocumentGridViewContext(new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer())))
         {
             var skylineWindow = documentContainer as SkylineWindow;
             if (null != skylineWindow)

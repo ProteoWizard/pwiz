@@ -96,19 +96,9 @@ namespace pwiz.Common.DataBinding
         {
         }
 
-        public string DefaultCaption
+        public string GetColumnCaption(ColumnCaptionType columnCaptionType)
         {
-            get
-            {
-                return DataSchema.GetDisplayName(this);
-            }
-        }
-
-        public string DisplayName {
-            get
-            {
-                return DefaultCaption;
-            }
+            return DataSchema.GetColumnCaption(DataSchema.GetColumnCaption(this), columnCaptionType);
         }
 
         public ColumnDescriptor CollectionAncestor()
@@ -135,6 +125,11 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
+            return new Reflected(this, propertyDescriptor);
+        }
+
+        public ColumnDescriptor GetChild(PropertyDescriptor propertyDescriptor)
+        {
             return new Reflected(this, propertyDescriptor);
         }
 

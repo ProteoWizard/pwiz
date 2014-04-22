@@ -21,30 +21,30 @@ namespace CommonTest.DataBinding
             var coldescRetentionTime = coldescRoot.ResolveChild("RetentionTime");
             var coldescMinRetentionTime = coldescRetentionTime.ResolveChild("Min");
             var coldescMeanRetentionTime = coldescRetentionTime.ResolveChild("Mean");
-            Assert.AreEqual("MinRetentionTime", dataSchema.GetDisplayName(coldescMinRetentionTime));
-            Assert.AreEqual("AverageRetentionTime", dataSchema.GetDisplayName(coldescMeanRetentionTime));
+            Assert.AreEqual("MinRetentionTime", dataSchema.GetColumnCaption(coldescMinRetentionTime).InvariantCaption);
+            Assert.AreEqual("AverageRetentionTime", dataSchema.GetColumnCaption(coldescMeanRetentionTime).InvariantCaption);
             var coldescParent = coldescRoot.ResolveChild("Parent");
             var coldescParentRetentionTime = coldescParent.ResolveChild("RetentionTime");
             var coldescParentMeanRetentionTime = coldescParentRetentionTime.ResolveChild("Mean");
-            Assert.AreEqual("Parent", dataSchema.GetDisplayName(coldescParent));
-            Assert.AreEqual("ParentRetentionTime", dataSchema.GetDisplayName(coldescParentRetentionTime));
-            Assert.AreEqual("ParentAverageRetentionTime", dataSchema.GetDisplayName(coldescParentMeanRetentionTime));
+            Assert.AreEqual("Parent", dataSchema.GetColumnCaption(coldescParent).InvariantCaption);
+            Assert.AreEqual("ParentRetentionTime", dataSchema.GetColumnCaption(coldescParentRetentionTime).InvariantCaption);
+            Assert.AreEqual("ParentAverageRetentionTime", dataSchema.GetColumnCaption(coldescParentMeanRetentionTime).InvariantCaption);
         }
 
         class Stats
         {
             public double Min { get; set; }
             public double Max { get; set; }
-            [DisplayName("Average")]
+            [InvariantDisplayName("Average")]
             public double Mean { get; set; }
         }
         class RowValue
         {
-            [ChildDisplayName(Format = "{0}RetentionTime")]
+            [ChildDisplayName("{0}RetentionTime")]
             public Stats RetentionTime { get; set; }
-            [ChildDisplayName(Format = "{0}Area")]
+            [ChildDisplayName("{0}Area")]
             public Stats Area { get; set; }
-            [ChildDisplayName(Format = "Parent{0}")]
+            [ChildDisplayName("Parent{0}")]
             public RowValue Parent { get; set; }
         }
     }

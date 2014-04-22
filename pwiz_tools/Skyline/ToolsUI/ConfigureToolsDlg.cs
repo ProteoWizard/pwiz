@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding;
@@ -1041,7 +1042,7 @@ namespace pwiz.Skyline.ToolsUI
             private void RepopulateLiveReportList()
             {
                 _liveReportDriver.List.Clear();
-                var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null);
+                var documentGridViewContext = DocumentGridViewContext.CreateDocumentGridViewContext(null, DataSchemaLocalizer.INVARIANT);
                 _liveReportDriver.List.AddRange(documentGridViewContext.CustomViews.Select(view => new ReportOrViewSpec(view)));
             }
 

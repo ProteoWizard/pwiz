@@ -475,6 +475,7 @@ namespace pwiz.Common.DataBinding
                     column.DefaultCellStyle.NullValue = formatAttribute.NullValue;
                 }
             }
+            column.DefaultCellStyle.FormatProvider = DataSchema.DataSchemaLocalizer.FormatProvider;
             return column;
         }
 

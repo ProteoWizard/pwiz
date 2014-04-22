@@ -766,7 +766,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 var container = new MemoryDocumentContainer();
                 container.SetDocument(doc, container.Document);
-                var dataSchema = new SkylineDataSchema(container);
+                var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
                 var viewContext = new DocumentGridViewContext(dataSchema);
                 var viewSpec = viewContext.CustomViews.First(view2 => view2.Name == reportTitle);
                 if (null == viewSpec)

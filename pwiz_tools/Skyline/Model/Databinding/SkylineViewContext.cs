@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -82,7 +81,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public bool Export(Control owner, ViewInfo viewInfo, CultureInfo cultureInfo)
+        public bool Export(Control owner, ViewInfo viewInfo)
         {
             using (var saveFileDialog = new SaveFileDialog
             {
@@ -100,8 +99,8 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 char separator = saveFileDialog.FilterIndex == 2
                     ? TextUtil.SEPARATOR_TSV
-                    : TextUtil.GetCsvSeparator(cultureInfo);
-                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, new DsvWriter(cultureInfo, separator));
+                    : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
+                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, separator));
             }
         }
 

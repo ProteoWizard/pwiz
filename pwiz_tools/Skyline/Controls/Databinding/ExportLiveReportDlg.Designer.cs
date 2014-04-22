@@ -37,6 +37,8 @@
             this.listboxReports = new System.Windows.Forms.ListBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnExport = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.comboLanguage = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnImport
@@ -74,8 +76,8 @@
             // 
             // listboxReports
             // 
-            this.listboxReports.FormattingEnabled = true;
             resources.ApplyResources(this.listboxReports, "listboxReports");
+            this.listboxReports.FormattingEnabled = true;
             this.listboxReports.Name = "listboxReports";
             this.listboxReports.SelectedIndexChanged += new System.EventHandler(this.listboxReports_SelectedIndexChanged);
             // 
@@ -93,12 +95,26 @@
             this.btnExport.UseVisualStyleBackColor = true;
             this.btnExport.Click += new System.EventHandler(this.btnOk_Click);
             // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // comboLanguage
+            // 
+            resources.ApplyResources(this.comboLanguage, "comboLanguage");
+            this.comboLanguage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLanguage.FormattingEnabled = true;
+            this.comboLanguage.Name = "comboLanguage";
+            // 
             // ExportLiveReportDlg
             // 
             this.AcceptButton = this.btnExport;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.comboLanguage);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btnImport);
             this.Controls.Add(this.btnShare);
             this.Controls.Add(this.btnPreview);
@@ -126,5 +142,7 @@
         private System.Windows.Forms.ListBox listboxReports;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnExport;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox comboLanguage;
     }
 }

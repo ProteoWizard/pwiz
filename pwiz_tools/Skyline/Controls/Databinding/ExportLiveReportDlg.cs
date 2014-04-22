@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -35,6 +36,8 @@ namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class ExportLiveReportDlg : FormEx
     {
+        private const int indexLocalizedLanguage = 0;
+        private const int indexInvariantLanguage = 1;
         private readonly SkylineViewContext _viewContext;
         private readonly IDocumentUIContainer _documentUiContainer;
 
@@ -42,10 +45,14 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             Icon = Resources.Skyline;
-            CultureInfo = LocalizationHelper.CurrentCulture;
             _documentUiContainer = documentUIContainer;
-            _viewContext = new DocumentGridViewContext(new SkylineDataSchema(documentUIContainer)) {EnablePreview = true};
+            _viewContext = new DocumentGridViewContext(new SkylineDataSchema(documentUIContainer, GetDataSchemaLocalizer())) {EnablePreview = true};
             LoadList();
+            Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
+            comboLanguage.Items.Add(CultureInfo.CurrentUICulture.DisplayName);
+            Debug.Assert(indexInvariantLanguage == comboLanguage.Items.Count);
+            comboLanguage.Items.Add(Resources.ExportLiveReportDlg_ExportLiveReportDlg_Invariant);
+            comboLanguage.SelectedIndex = 0;
         }
 
         protected void LoadList()
@@ -106,18 +113,24 @@ namespace pwiz.Skyline.Controls.Databinding
             Close();
         }
 
-
+        private DataSchemaLocalizer GetDataSchemaLocalizer()
+        {
+            return InvariantLanguage
+                ? DataSchemaLocalizer.INVARIANT
+                : SkylineDataSchema.GetLocalizedSchemaLocalizer();
+        }
+       
         private bool ExportReport(string filename, char separator)
         {
-            var dataSchema = new SkylineDataSchema(_documentUiContainer).Clone();
+            var dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer()).Clone();
             var viewContext = new SkylineViewContext(dataSchema,
                 SkylineViewContext.GetDocumentGridRowSources(dataSchema));
             var viewInfo = viewContext.GetViewInfo(((ListItem) listboxReports.SelectedItem).ViewSpec);
             if (null == filename)
             {
-                return viewContext.Export(this, viewInfo, CultureInfo);
+                return viewContext.Export(this, viewInfo);
             }
-            return viewContext.ExportToFile(this, viewInfo, filename, new DsvWriter(CultureInfo, separator));
+            return viewContext.ExportToFile(this, viewInfo, filename, new DsvWriter(InvariantLanguage ? CultureInfo.InvariantCulture : LocalizationHelper.CurrentCulture, separator));
         }
 
 
@@ -128,10 +141,20 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return null;
             }
-            return _viewContext.GetViewInfo(selectedItem.ViewSpec);
+            var dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer());
+            SkylineViewContext viewContext = new DocumentGridViewContext(dataSchema);
+            return viewContext.GetViewInfo(selectedItem.ViewSpec);
         }
-        public CultureInfo CultureInfo { get; set; }
 
+        public bool InvariantLanguage
+        {
+            get { return comboLanguage.SelectedIndex == indexInvariantLanguage; }
+        }
+
+        public void SetUseInvariantLanguage(bool useInvariantLanguage)
+        {
+            comboLanguage.SelectedIndex = useInvariantLanguage ? indexInvariantLanguage : indexLocalizedLanguage;
+        }
 
         public class ListItem
         {
@@ -176,7 +199,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private void SetViewSpecList(IEnumerable<ReportOrViewSpec> reportOrViewSpecList)
         {
             var newViews = new List<ViewSpec>();
-            var converter = new ReportSpecConverter(new SkylineDataSchema(_documentUiContainer));
+            var converter = new ReportSpecConverter(new SkylineDataSchema(_documentUiContainer, DataSchemaLocalizer.INVARIANT));
             foreach (var item in reportOrViewSpecList)
             {
                 if (null != item.ViewSpec)
@@ -239,7 +262,8 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            var form = new DocumentGridForm(_documentUiContainer)
+            SkylineDataSchema dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer());
+            var form = new DocumentGridForm(new DocumentGridViewContext(dataSchema))
             {
                 ViewInfo = viewInfo,
                 Text = Resources.ExportLiveReportDlg_ShowPreview_Preview__ + viewInfo.Name,
@@ -256,7 +280,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public void EditList()
         {
             var list = GetCurrentList();
-            var newList = list.EditList(this, _viewContext);
+            var newList = list.EditList(this, new DocumentGridViewContext(new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer())) {EnablePreview = true});
             if (null != newList)
             {
                 _viewContext.SaveSettingsList(newList);

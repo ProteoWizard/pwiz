@@ -28,7 +28,6 @@ using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    // ReSharper disable LocalizableElement
     [AnnotationTarget(AnnotationDef.AnnotationTarget.replicate)]
     public class Replicate : SkylineObject, ILinkValue, IComparable
     {
@@ -57,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             );
         }
 
-        [DisplayName("ReplicateName")]
+        [InvariantDisplayName("ReplicateName")]
         public string Name
         {
             get { return ChromatogramSet.Name; }

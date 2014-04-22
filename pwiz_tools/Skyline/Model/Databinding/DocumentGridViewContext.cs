@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// <summary>
         /// Creates a DocumentGridViewContext that can be used for exporting reports, importing report definitions, etc.
         /// </summary>
-        public static DocumentGridViewContext CreateDocumentGridViewContext(SrmDocument document)
+        public static DocumentGridViewContext CreateDocumentGridViewContext(SrmDocument document, DataSchemaLocalizer dataSchemaLocalizer)
         {
             if (document == null)
             {
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             var memoryDocumentContainer = new MemoryDocumentContainer();
             memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
-            return new DocumentGridViewContext(new SkylineDataSchema(memoryDocumentContainer));
+            return new DocumentGridViewContext(new SkylineDataSchema(memoryDocumentContainer, dataSchemaLocalizer));
         }
     }
 }

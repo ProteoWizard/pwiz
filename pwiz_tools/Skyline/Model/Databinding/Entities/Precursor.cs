@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
@@ -32,7 +31,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    // ReSharper disable LocalizableElement
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor)]
     public class Precursor : SkylineDocNode<TransitionGroupDocNode>
     {
@@ -58,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return _transitions.Value; }
         }
 
-        [DisplayName("PrecursorResults")]
+        [InvariantDisplayName("PrecursorResults")]
         [OneToMany(ForeignKey = "Precursor", ItemDisplayName = "PrecursorResult")]
         public IDictionary<ResultKey, PrecursorResult> Results
         {
@@ -75,7 +73,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), 1, IsotopeLabelType.light), null);
         }
 
-        [DisplayName("PrecursorResultsSummary")]
+        [InvariantDisplayName("PrecursorResultsSummary")]
         public PrecursorResultSummary ResultSummary
         {
             get
@@ -84,7 +82,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DisplayName("PrecursorCharge")]
+        [InvariantDisplayName("PrecursorCharge")]
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int Charge
         {
@@ -96,7 +94,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.TransitionGroup.LabelType; }
         }
 
-        [DisplayName("PrecursorNeutralMass")]
+        [InvariantDisplayName("PrecursorNeutralMass")]
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double NeutralMass
         {
@@ -107,7 +105,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DisplayName("PrecursorMz")]
+        [InvariantDisplayName("PrecursorMz")]
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double Mz
         {
@@ -150,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DisplayName("PrecursorNote")]
+        [InvariantDisplayName("PrecursorNote")]
         public string Note
         {
             get { return DocNode.Note; }
@@ -307,17 +305,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Precursor Precursor { get; private set; }
         [Obsolete]
         public string ReplicatePath { get { return "/"; } }
-        [ChildDisplayName(Format = "{0}BestRetentionTime")]
+        [ChildDisplayName("{0}BestRetentionTime")]
         public RetentionTimeSummary BestRetentionTime { get; private set; }
-        [ChildDisplayName(Format="{0}MaxFwhm")]
+        [ChildDisplayName("{0}MaxFwhm")]
         public FwhmSummary MaxFwhm { get; private set; }
-        [ChildDisplayName(Format="{0}TotalArea")]
+        [ChildDisplayName("{0}TotalArea")]
         public AreaSummary TotalArea { get; private set; }
-        [ChildDisplayName(Format="{0}TotalAreaRatio")]
+        [ChildDisplayName("{0}TotalAreaRatio")]
         public AreaRatioSummary TotalAreaRatio { get; private set; }
-        [ChildDisplayName(Format="{0}TotalAreaNormalized")]
+        [ChildDisplayName("{0}TotalAreaNormalized")]
         public AreaNormalizedSummary TotalAreaNormalized { get; private set; }
-        [ChildDisplayName(Format="{0}MaxHeigth")]
+        [ChildDisplayName("{0}MaxHeight")]
         public AreaSummary MaxHeight { get; private set; }
 
         public override string ToString()

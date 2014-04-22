@@ -594,6 +594,11 @@
     <Compile Include="Model\Databinding\Entities\PeptideResult.cs" />
     <Compile Include="Model\Databinding\Entities\Precursor.cs" />
     <Compile Include="Model\Databinding\Entities\PrecursorResult.cs" />
+    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnCaptions.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\Entities\Protein.cs" />
     <Compile Include="Model\Databinding\Entities\ProteinResult.cs" />
     <Compile Include="Model\Databinding\Entities\Replicate.cs" />
@@ -1255,6 +1260,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>ColumnCaptions.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.zh-CHS.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>

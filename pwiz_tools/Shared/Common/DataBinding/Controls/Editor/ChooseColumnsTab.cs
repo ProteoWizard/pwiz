@@ -101,12 +101,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         }
         private ListViewItem MakeListViewColumnItem(DisplayColumn displayColumn)
         {
-            var listViewItem = new ListViewItem {Text = displayColumn.ColumnCaption};
+            string listItemText = displayColumn.GetColumnCaption(null, ColumnCaptionType.localized);
+            
+            var listViewItem = new ListViewItem {Text = listItemText };
             Debug.Assert(!displayColumn.ColumnSpec.Hidden);
             if (!string.IsNullOrEmpty(displayColumn.ColumnSpec.Caption))
             {
                 listViewItem.Font = new Font(listViewItem.Font, FontStyle.Bold | listViewItem.Font.Style);
-                listViewItem.ToolTipText = displayColumn.ColumnDescriptor.DefaultCaption;
+                DataSchema dataSchema = displayColumn.DataSchema;
+                ColumnCaption columnCaption = dataSchema.GetColumnCaption(displayColumn.ColumnDescriptor);
+                listViewItem.ToolTipText = dataSchema.GetLocalizedColumnCaption(columnCaption);
             }
             return listViewItem;
         }

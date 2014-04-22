@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NHibernate;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Model;
@@ -51,7 +52,7 @@ namespace pwiz.SkylineTest.Reporting
             documentContainer.SetDocument(document, null);
             using (var database = new Database(settings))
             {
-                var dataSchema = new SkylineDataSchema(documentContainer);
+                var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
                 var sessionFactory = database.SessionFactory;
                 foreach (var classMetaData in sessionFactory.GetAllClassMetadata().Values)
                 {

@@ -98,6 +98,7 @@
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
@@ -105,6 +106,8 @@
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
+    <Compile Include="DataBinding\DataSchemaLocalizer.cs" />
+    <Compile Include="DataBinding\ColumnCaption.cs" />
     <Compile Include="DataBinding\ColumnDescriptor.cs" />
     <Compile Include="DataBinding\ColumnPropertyDescriptor.cs" />
     <Compile Include="DataBinding\ColumnSpec.cs" />

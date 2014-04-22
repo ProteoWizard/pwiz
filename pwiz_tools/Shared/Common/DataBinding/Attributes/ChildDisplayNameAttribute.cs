@@ -29,11 +29,10 @@ namespace pwiz.Common.DataBinding.Attributes
     [AttributeUsage(AttributeTargets.Property)]
     public class ChildDisplayNameAttribute : Attribute
     {
-        /// <summary>
-        /// Specifies a format string to be used to generate the display
-        /// name for properties.  In the format string, "{0}" gets filled 
-        /// in with the original name of the property.
-        /// </summary>
-        public string Format { get; set; }
+        public ChildDisplayNameAttribute(string format)
+        {
+            InvariantFormat = format;
+        }
+        public string InvariantFormat { get; private set; }
     }
 }

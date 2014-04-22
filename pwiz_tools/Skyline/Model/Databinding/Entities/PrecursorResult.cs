@@ -107,8 +107,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return dpRegression.GetDeclustringPotential(Precursor.GetRegressionMz(), ChromInfo.OptimizationStep);
             }
         }
-        // ReSharper disable once LocalizableElement
-        [DisplayName("PrecursorReplicateNote")] // Not L10N
+        [InvariantDisplayName("PrecursorReplicateNote")] // Not L10N
         public string Note 
         { 
             get { return ChromInfo.Annotations.Note; } 

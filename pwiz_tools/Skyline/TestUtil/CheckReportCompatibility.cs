@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestUtil
             Assert.IsTrue(documentContainer.SetDocument(document, null));
             _database = new Database(document.Settings);
             _database.AddSrmDocument(document);
-            _dataSchema = new SkylineDataSchema(documentContainer);
+            _dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
         }
 
         public void Dispose()
