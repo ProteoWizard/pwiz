@@ -235,8 +235,8 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("ImWindowTestWithMacro", SkylineWindow.GetToolText(1)); // Not L10N
                     SkylineWindow.RunTool(0);                                               
                 });
-            string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio" // Not L10N
-                .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
+            const string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
+                //.Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
             WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
             RunUI(() =>
@@ -244,8 +244,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ImmediateWindow.Clear();
                 SkylineWindow.RunTool(1);
             });
-            string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank" //Not L10N
-                .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
+            const string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; //Not L10N
+                //.Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
             // Make sure the running EXE does not cause test to fail, because it is locked.
             WaitForCondition(() =>
