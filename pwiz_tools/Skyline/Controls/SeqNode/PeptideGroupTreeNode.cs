@@ -465,7 +465,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (!Equals(DocNode.Name, fastaSeq.Name))
             {
                 int oldNameLen = (fastaSeq.Name != null ? fastaSeq.Name.Length : 0);
-                fastaText = ">" + DocNode.Name + fastaText.Substring(oldNameLen + 1);
+                fastaText = ">" + DocNode.Name + fastaText.Substring(oldNameLen + 1); // Not L10N
             }
             data.SetData(DataFormats.Text, fastaText);
 

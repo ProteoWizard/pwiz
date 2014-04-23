@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model
 {
     public class ComparePeakBoundaries : XmlNamedElement
     {
-        public const string APEX_ANNOTATION = "Apex"; // NOT L10N
+        public const string APEX_ANNOTATION = "Apex"; // Not L10N
 
         public bool IsModel { get; private set; }
         public PeakScoringModelSpec PeakScoringModel { get; private set; }

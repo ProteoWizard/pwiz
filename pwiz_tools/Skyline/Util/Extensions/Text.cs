@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Util.Extensions
         public const char SEPARATOR_TSV = '\t'; // Not L10N
         public const char SEPARATOR_SPACE = ' '; // Not L10N
 
-        public const string EXCEL_NA = "#N/A";
+        public const string EXCEL_NA = "#N/A"; // Not L10N
 
         /// <summary>
         /// The CSV separator character for the current culture.  Like Excel, a comma

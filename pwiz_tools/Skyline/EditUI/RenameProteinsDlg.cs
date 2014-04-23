@@ -303,7 +303,7 @@ namespace pwiz.Skyline.EditUI
                 }));
             if (NameCount == 0)
             {
-                MessageDlg.Show(this, string.Format("No protein metadata available"));
+                MessageDlg.Show(this, string.Format(Resources.RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available));
             }
             
         }

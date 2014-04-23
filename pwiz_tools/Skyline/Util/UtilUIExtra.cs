@@ -218,13 +218,13 @@ StartFragment:<<<<<<<3
 EndFragment:<<<<<<<4
 StartSelection:<<<<<<<3
 EndSelection:<<<<<<<3
-";
+"; // Not L10N
 
             string pre = // Not L10N
 @"<!DOCTYPE HTML PUBLIC ""-//W3C//DTD HTML 4.0 Transitional//EN"">
-<HTML><HEAD><TITLE>" + title + @"</TITLE></HEAD><BODY><!--StartFragment-->";
+<HTML><HEAD><TITLE>" + title + @"</TITLE></HEAD><BODY><!--StartFragment-->"; // Not L10N
 
-            const string post = @"<!--EndFragment--></BODY></HTML>";
+            const string post = @"<!--EndFragment--></BODY></HTML>"; // Not L10N
 
             sb.Append(header);
             if (sourceUrl != null)

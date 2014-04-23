@@ -64,7 +64,7 @@ namespace pwiz.Common.SystemUtil
                 {
                     if (progressMonitor != null && progressMonitor.IsCanceled)
                     {
-                        return "";
+                        return string.Empty;
                     }
                     if (_readLines.Count > 0)
                     {

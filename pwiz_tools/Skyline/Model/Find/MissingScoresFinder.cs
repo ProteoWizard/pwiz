@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string Name
         {
-            get { return "missing_scores_finder"; }
+            get { return "missing_scores_finder"; } // Not L10N
         }
 
         public override string DisplayName

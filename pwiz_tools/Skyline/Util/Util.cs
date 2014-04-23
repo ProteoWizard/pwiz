@@ -1145,7 +1145,7 @@ namespace pwiz.Skyline.Util
         {
             int i = localizedStrings.IndexOf(v => Equals(v, value));
             if (i == -1)
-                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value", value));
+                throw new ArgumentException(string.Format("The string '{0}' does not match an enum value", value)); // Not L10N
             return (TEnum) (object) i;            
         }
 
@@ -1204,12 +1204,13 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        // Not L10N
+        // ReSharper disable NonLocalizedString
         private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
         private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         private const string XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
         private const string XML_NON_ID_PUNCTUATION_CHARS = ",?";
+        // ReSharper restore NonLocalizedString
 
         public static string MakeXmlId(string name)
         {
@@ -1546,19 +1547,19 @@ namespace pwiz.Skyline.Util
                 Fail(error);
         }
 
-        public static void IsNotNull(object o, string parameterName = "")
+        public static void IsNotNull(object o, string parameterName = "") // Not L10N
         {
             if (o == null)
                 Fail(string.IsNullOrEmpty(parameterName) ? "null object" : parameterName + " is null"); // Not L10N
         }
 
-        public static void IsNull(object o, string parameterName = "")
+        public static void IsNull(object o, string parameterName = "") // Not L10N
         {
             if (o != null)
                 Fail(string.IsNullOrEmpty(parameterName) ? "non-null object" : parameterName + " is not null"); // Not L10N
         }
 
-        public static void Fail(string error = "")
+        public static void Fail(string error = "") // Not L10N
         {
             throw new AssumptionException(error);
         }

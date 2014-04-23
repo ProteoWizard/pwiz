@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (showMz)
                 label.Append(string.Format(" = {0:F01}", mz)); // Not L10N
             if (rank > 0 && ShowRanks)
-                label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format("({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank)));
+                label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format("({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank))); // Not L10N
             return label.ToString();
         }
 

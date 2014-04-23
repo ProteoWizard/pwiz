@@ -273,10 +273,10 @@ namespace pwiz.Skyline.Model
                             shortName = foundMod.ShortName;
                     }
                     return shortName != null
-                        ? string.Format("[{0}]", shortName)
+                        ? string.Format("[{0}]", shortName) // Not L10N
                         : GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff_narrow);
                 default:
-                    throw new ArgumentOutOfRangeException("format");
+                    throw new ArgumentOutOfRangeException("format"); // Not L10N
             }
         }
 
@@ -346,6 +346,8 @@ namespace pwiz.Skyline.Model
             // See http://antoine.frostburg.edu/chem/senese/101/atoms/index.shtml
             // _massWater = _massCalc.CalculateMass("H2O");
             // _massAmmonia = _massCalc.CalculateMass("NH3");
+
+            // ReSharper disable NonLocalizedString
             _massDiffA = -_massCalc.CalculateMass("CO");
             _massDiffB = 0.0;
             _massDiffC = _massCalc.CalculateMass("NH3");
@@ -355,6 +357,7 @@ namespace pwiz.Skyline.Model
 
             _massCleaveN = _massCalc.CalculateMass("H");
             _massCleaveC = _massCalc.CalculateMass("OH");
+            // ReSharper restore NonLocalizedString
 
             // These numbers are set intentionally smaller than any known instrument
             // can measure.  Filters are then applied to resulting distributions
@@ -661,7 +664,7 @@ namespace pwiz.Skyline.Model
                     formula.Append(modFormula, modUnexplainedMass);
                 }
             }
-            formula.Append("H2O"); // N-term = H, C-term = OH
+            formula.Append("H2O"); // N-term = H, C-term = OH // Not L10N
             unexplainedMass = formula.UnexplainedMass;
             // CONSIDER: More efficient translation between builder and Molecure.
             //           Both contain a dictionary for atom counts.
@@ -934,12 +937,12 @@ namespace pwiz.Skyline.Model
             // Handle values for non-amino acids
             // Wikipedia says Aspartic acid or Asparagine
             _aminoMasses['b'] = _aminoMasses['B'] =
-                (_massCalc.CalculateMass("C4H5NO3") + _massCalc.CalculateMass("C4H6N2O2")) / 2;
+                (_massCalc.CalculateMass("C4H5NO3") + _massCalc.CalculateMass("C4H6N2O2")) / 2; // Not L10N
             _aminoMasses['j'] = _aminoMasses['J'] = 0.0;
             _aminoMasses['x'] = _aminoMasses['X'] = 111.060000;	// Why?
             // Wikipedia says Glutamic acid or Glutamine
             _aminoMasses['z'] = _aminoMasses['Z'] =
-                (_massCalc.CalculateMass("C5H6ON2") + _massCalc.CalculateMass("C5H8N2O2")) / 2;
+                (_massCalc.CalculateMass("C5H6ON2") + _massCalc.CalculateMass("C5H8N2O2")) / 2; // Not L10N
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
@@ -949,7 +952,9 @@ namespace pwiz.Skyline.Model
         {
             // Not L10N
 
+
             // ReSharper disable CharImplicitlyConvertedToNumeric
+            // ReSharper disable NonLocalizedString
             AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = "C3H5ON";
             AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = "C3H5ONS";
             AMINO_FORMULAS['d'] = AMINO_FORMULAS['D'] = "C4H5O3N";
@@ -972,6 +977,7 @@ namespace pwiz.Skyline.Model
             AMINO_FORMULAS['v'] = AMINO_FORMULAS['V'] = "C5H9ON";
             AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = "C11H10ON2";
             AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = "C9H9O2N";
+            // ReSharper restore NonLocalizedString
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
@@ -994,7 +1000,7 @@ namespace pwiz.Skyline.Model
                 formulaHeavy = formulaHeavy.Replace(BioMassCalc.O, BioMassCalc.O18);
             if ((labelAtoms & LabelAtoms.H2) != 0)
                 formulaHeavy = formulaHeavy.Replace(BioMassCalc.H, BioMassCalc.H2);
-            return formulaHeavy + " - " + formulaAA;
+            return formulaHeavy + " - " + formulaAA; // Not L10N
         }
     }
 

@@ -193,9 +193,9 @@ namespace pwiz.Common.Graph
             }
             if (values.Contains(null))
             {
-                return new DataColumn<double?>("Z", values);
+                return new DataColumn<double?>("Z", values); // Not L10N
             }
-            return new DataColumn<double>("Z", values.Cast<double>());
+            return new DataColumn<double>("Z", values.Cast<double>()); // Not L10N
         }
         
         /// <summary>
@@ -213,7 +213,7 @@ namespace pwiz.Common.Graph
             {
                 return null;
             }
-            return new DataColumn<string>("Label", values);
+            return new DataColumn<string>("Label", values); // Not L10N
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace pwiz.Common.Graph
             {
                 return point => point.Y;
             }
-            Trace.TraceError("Could not determine type of axis {0}", axis);
+            Trace.TraceError("Could not determine type of axis {0}", axis); // Not L10N
             return null;
         }
 

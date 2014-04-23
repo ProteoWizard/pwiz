@@ -211,9 +211,9 @@ namespace pwiz.Skyline.FileUI
 
                 // User can only upload to folders where TargetedMS is an active module.
                 JToken modules = subFolder["activeModules"]; // Not L10N
-                string folderType = (string) subFolder["folderType"];
+                string folderType = (string) subFolder["folderType"]; // Not L10N
                 bool canUpload = ContainsTargetedMSModule(modules) &&
-                                 Equals(folderType, "Targeted MS") &&
+                                 Equals(folderType, "Targeted MS") && // Not L10N
                                  Equals(userPermissions & 2, 2);
 
                 // If the user does not have write permissions in this folder or any
@@ -409,7 +409,7 @@ namespace pwiz.Skyline.FileUI
         private WebClient _webClient;
         private ILongWaitBroker _longWaitBroker;
 
-        private const string FORM_POST = "POST";
+        private const string FORM_POST = "POST"; // Not L10N
 
         private Uri Call(Uri serverUri, string controller, string folderPath, string method, bool isApi = false)
         {
@@ -418,8 +418,8 @@ namespace pwiz.Skyline.FileUI
 
         private Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
         {
-            string path = "labkey/" + controller + "/" + (folderPath ?? string.Empty) +
-                method + (isApi ? ".api" : ".view");
+            string path = "labkey/" + controller + "/" + (folderPath ?? string.Empty) + // Not L10N
+                method + (isApi ? ".api" : ".view"); // Not L10N
 
             if(string.IsNullOrEmpty(query))
             {
@@ -427,7 +427,7 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                return new UriBuilder(serverUri.Scheme, serverUri.Host, serverUri.Port, path, "?" + query).Uri;   
+                return new UriBuilder(serverUri.Scheme, serverUri.Host, serverUri.Port, path, "?" + query).Uri; // Not L10N   
             }
         }
 
@@ -467,7 +467,7 @@ namespace pwiz.Skyline.FileUI
                 // Use Uri.EscapeDataString instead of Uri.EscapleUriString.  
                 // The latter will not escape characters such as '+' or '#' 
                 var escapedZipFileName = Uri.EscapeDataString(zipFileName);
-                var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + ".part");
+                var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + ".part"); // Not L10N
                 var uploadUri = new Uri(baseUploadUri, escapedZipFileName);
 
                 lock (this)
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.FileUI
                     // Write to a temp file first. This will be renamed after a successful upload or deleted if the upload is canceled.
                     // Add a "Temporary" header so that LabKey marks this as a temporary file.
                     // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
-                    _webClient.Headers.Add("Temporary", "T"); 
+                    _webClient.Headers.Add("Temporary", "T"); // Not L10N
                     _webClient.UploadFileAsync(tmpUploadUri, "PUT", zipFilePath); // Not L10N
 
                     // Wait for the upload to complete
@@ -514,8 +514,8 @@ namespace pwiz.Skyline.FileUI
                 // ID to check import status.
                 var details = importResponse["UploadedJobDetails"]; // Not L10N
                 int rowId = (int) details[0]["RowId"]; // Not L10N
-                Uri statusUri = Call(server.URI, "query", folderPath, "selectRows",
-                                     "query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
+                Uri statusUri = Call(server.URI, "query", folderPath, "selectRows", // Not L10N
+                                     "query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId); // Not L10N
                 bool complete = false;
                 // Wait for import to finish before returning.
                 while (!complete)
@@ -526,14 +526,14 @@ namespace pwiz.Skyline.FileUI
                     string statusResponse = _webClient.UploadString(statusUri, FORM_POST, string.Empty);
                     JToken jStatusResponse = JObject.Parse(statusResponse);
                     JToken rows = jStatusResponse["rows"]; // Not L10N
-                    var row = rows.FirstOrDefault(r => (int) r["RowId"] == rowId);
+                    var row = rows.FirstOrDefault(r => (int) r["RowId"] == rowId); // Not L10N
                     if (row == null)
                         continue;
 
                     string status = (string) row["Status"]; // Not L10N
-                    if (string.Equals(status, "ERROR"))
+                    if (string.Equals(status, "ERROR")) // Not L10N
                     {
-                        throw new PanoramaImportErrorException(server.URI, (string)row["_labkeyurl_RowId"]);
+                        throw new PanoramaImportErrorException(server.URI, (string)row["_labkeyurl_RowId"]); // Not L10N
                     }
                    
                     complete = string.Equals(status, "COMPLETE"); // Not L10N
@@ -563,15 +563,15 @@ namespace pwiz.Skyline.FileUI
             var request = (HttpWebRequest) WebRequest.Create(sourceUri);
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
             // Specify the method.
-            request.Method = "MOVE";
+            request.Method = "MOVE"; // Not L10N
 
             // Destination URI.  
             // NOTE: Do not use Uri.ToString since it does not return the escaped version.
-            request.Headers.Add("Destination", destUri.AbsoluteUri);
+            request.Headers.Add("Destination", destUri.AbsoluteUri); // Not L10N
 
             // If a file already exists at the destination URI, it will not be overwritten.  
             // The server would return a 412 Precondition Failed status code.
-            request.Headers.Add("Overwrite", "F");
+            request.Headers.Add("Overwrite", "F"); // Not L10N
 
             WebResponse response = null;
             try
@@ -587,7 +587,7 @@ namespace pwiz.Skyline.FileUI
                 var msg = x.Message;
                 if(x.InnerException != null)
                 {
-                    msg += ". Inner Exception: " + x.InnerException.Message;
+                    msg += ". Inner Exception: " + x.InnerException.Message; // Not L10N
                 }
                 throw new Exception(TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__, msg), x);
             }
@@ -602,7 +602,7 @@ namespace pwiz.Skyline.FileUI
             var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
             // Specify the method.
-            request.Method = "DELETE";
+            request.Method = "DELETE"; // Not L10N
 
             WebResponse response = null;
             try

@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Alerts
 ---------------------------
 OK
 ---------------------------
-";
+"; // Not L10N
             ClipboardEx.SetText(string.Format(formatMessage, Text, Message));
         }
     }

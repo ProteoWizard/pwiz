@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Obsolete]
-        public string ReplicatePath { get { return "/"; } }
+        public string ReplicatePath { get { return "/"; } } // Not L10N
 
         [HideWhen(AncestorOfType = typeof(ResultFile))]
         public IList<ResultFile> Files

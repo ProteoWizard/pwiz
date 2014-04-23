@@ -204,17 +204,17 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ToolList"] == null)
+                if (this["ToolList"] == null) // Not L10N
                 {
                     var list = new ToolList();
                     list.AddDefaults();
                     ToolList = list;
                 }
-                return (ToolList)(this["ToolList"]);
+                return (ToolList)(this["ToolList"]); // Not L10N
             }
             set
             {
-                this["ToolList"] = value;
+                this["ToolList"] = value; // Not L10N
             }
         }
 
@@ -223,15 +223,15 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ToolFilePaths"] == null)
+                if (this["ToolFilePaths"] == null) // Not L10N
                 {
                     ToolFilePaths = new SerializableDictionary<ProgramPathContainer, string>();
                 }
-                return (SerializableDictionary<ProgramPathContainer, string>)(this["ToolFilePaths"]);
+                return (SerializableDictionary<ProgramPathContainer, string>)(this["ToolFilePaths"]); // Not L10N
             }
             set
             {
-                this["ToolFilePaths"] = value;
+                this["ToolFilePaths"] = value; // Not L10N
             }
         }
 
@@ -240,13 +240,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["MruList"] == null)
+                if (this["MruList"] == null) // Not L10N
                     MruList = new List<string>();
-                return (List<string>)(this["MruList"]);
+                return (List<string>)(this["MruList"]); // Not L10N
             }
             set
             {
-                this["MruList"] = value;
+                this["MruList"] = value; // Not L10N
             }
         }
 
@@ -255,11 +255,11 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["StackTraceList"] == null)
+                if (this["StackTraceList"] == null) // Not L10N
                     StackTraceList = new List<string>();
-                return (List<string>)(this["StackTraceList"]);
+                return (List<string>)(this["StackTraceList"]); // Not L10N
             }
-            set { this["StackTraceList"] = value; }
+            set { this["StackTraceList"] = value; } // Not L10N
         }
 
         [UserScopedSettingAttribute]
@@ -267,13 +267,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ViewSpecList"] == null)
+                if (this["ViewSpecList"] == null) // Not L10N
                 {
                     ViewSpecList = new ViewSpecList(new ViewSpec[0]);
                 }
-                return (ViewSpecList) this["ViewSpecList"];
+                return (ViewSpecList)this["ViewSpecList"]; // Not L10N
             }
-            set { this["ViewSpecList"] = value; }
+            set { this["ViewSpecList"] = value; } // Not L10N
         }
 
         [UserScopedSettingAttribute]
@@ -281,13 +281,13 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ExportMethodTemplateList"] == null)
+                if (this["ExportMethodTemplateList"] == null) // Not L10N
                     ExportMethodTemplateList = new MethodTemplateList();
-                return (MethodTemplateList)(this["ExportMethodTemplateList"]);
+                return (MethodTemplateList)(this["ExportMethodTemplateList"]); // Not L10N
             }
             set
             {
-                this["ExportMethodTemplateList"] = value;
+                this["ExportMethodTemplateList"] = value; // Not L10N
             }
         }
 
@@ -307,16 +307,16 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["GridColumnsList"] == null)
+                if (this["GridColumnsList"] == null) // Not L10N
                 {
                     var list = new GridColumnsList();
                     GridColumnsList = list;
                 }
-                return ((GridColumnsList)(this["GridColumnsList"]));
+                return ((GridColumnsList)(this["GridColumnsList"])); // Not L10N
             }
             set
             {
-                this["GridColumnsList"] = value;
+                this["GridColumnsList"] = value; // Not L10N
             }
         }
         [UserScopedSettingAttribute]
@@ -324,14 +324,14 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                if (this["ResultsGridActiveViews"] == null)
+                if (this["ResultsGridActiveViews"] == null) // Not L10N
                 {
                     var list = new SerializableDictionary<string, string>();
                     ResultsGridActiveViews = list;
                 }
-                return (SerializableDictionary<string, string>)(this["ResultsGridActiveViews"]);
+                return (SerializableDictionary<string, string>)(this["ResultsGridActiveViews"]); // Not L10N
             }
-            set { this["ResultsGridActiveViews"] = value; }
+            set { this["ResultsGridActiveViews"] = value; } // Not L10N
         }
         [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Properties
         {
             PeptideExcludeRegex exclusion;
             if (!PeptideExcludeList.TryGetValue(name, out exclusion))
-                exclusion = new PeptideExcludeRegex("Unknown", "");
+                exclusion = new PeptideExcludeRegex("Unknown", string.Empty); // Not L10N
             return exclusion;
         }
 
@@ -780,7 +780,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (AnnotationDefList)this["AnnotationDefList"];
+                var list = (AnnotationDefList)this["AnnotationDefList"]; // Not L10N
                 if (list == null)
                 {
                     list = new AnnotationDefList();
@@ -791,7 +791,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["AnnotationDefList"] = value;
+                this["AnnotationDefList"] = value; // Not L10N
             }
         }
 
@@ -800,7 +800,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (ServerList) this["ServerList"];
+                var list = (ServerList)this["ServerList"]; // Not L10N
                 if (list == null)
                 {
                     list = new ServerList();
@@ -811,7 +811,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["ServerList"] = value;
+                this["ServerList"] = value; // Not L10N
             }
         }
     }
@@ -830,14 +830,14 @@ namespace pwiz.Skyline.Properties
         {
             return new[]
                        {
-                           new ToolDescription("SRM Collider",
-                               "http://www.srmcollider.org/srmcollider/srmcollider.py",
+                           new ToolDescription("SRM Collider", // Not L10N
+                               "http://www.srmcollider.org/srmcollider/srmcollider.py", // Not L10N
                                ReportSpecList.SRM_COLLIDER_REPORT_NAME)
                        };
         }
 
-        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription("QuaSAR",
-                                                                              "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
+        public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription("QuaSAR", // Not L10N
+                                                                              "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR", // Not L10N
                                                                               string.Empty);
 
         // All list editing for tools is handled by the ConfigureToolsDlg
@@ -922,15 +922,16 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
         {
+            // ReSharper disable NonLocalizedString
             return new[]
                 {
-                    // Not L10N
                     new PeptideExcludeRegex("Cys", "[C]"),
                     new PeptideExcludeRegex("Met", "[M]"),
                     new PeptideExcludeRegex("His", "[H]"),
                     new PeptideExcludeRegex("NXT/NXS", "N.[TS]"),
                     new PeptideExcludeRegex("RP/KP", "[RK]P")
                 };
+            // ReSharper restore NonLocalizedString
         }
 
         public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
@@ -962,9 +963,9 @@ namespace pwiz.Skyline.Properties
             yield break;
         }
 
-        public override string Title { get { return "Edit Servers"; } }
+        public override string Title { get { return Resources.ServerList_Title_Edit_Servers; } }
 
-        public override string Label { get { return "&Servers"; } }
+        public override string Label { get { return Resources.ServerList_Label__Servers; } }
 
         public override Server EditItem(Control owner, Server item, IEnumerable<Server> existing, object tag)
         {
@@ -1101,8 +1102,8 @@ namespace pwiz.Skyline.Properties
 
     public sealed class StaticModList : SettingsList<StaticMod>
     {
-        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
-        public const string DEFAULT_NAME = "Carbamidomethyl (C)";
+        public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine"; // Not L10N
+        public const string DEFAULT_NAME = "Carbamidomethyl (C)"; // Not L10N
 
         public static StaticMod[] GetDefaultsOn()
         {
@@ -1337,7 +1338,7 @@ namespace pwiz.Skyline.Properties
                 default:    // v2.5.1 - add Shimadzu
                     {
                         var list5 = GetDefaults(5).ToList();
-                        list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[]
+                        list5.Add(new CollisionEnergyRegression("Shimadzu QQQ", new[] // Not L10N
                         {
                             new ChargeRegressionLine(2, 0.04, -0.5082),
                             new ChargeRegressionLine(3, 0.037, -0.8368), 
@@ -1926,15 +1927,15 @@ namespace pwiz.Skyline.Properties
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
         public const string EXT_REPORTS = ".skyr"; // Not L10N
-
+        // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME
         {
-            get { return "SRM Collider Input"; }
+            get { return "SRM Collider Input"; } // Not L10N
         }
 
         public static string QUASAR_REPORT_NAME
         {
-            get { return "QuaSAR Input"; }
+            get { return "QuaSAR Input"; } // Not L10N
         }
 
         public override int RevisionIndexCurrent { get { return 1; } }

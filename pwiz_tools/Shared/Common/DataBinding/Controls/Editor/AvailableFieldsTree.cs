@@ -316,9 +316,9 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 if (ShowAdvancedFields)
                 {
-                    result.Add(parent.ResolveChild("Key"));
+                    result.Add(parent.ResolveChild("Key")); // Not L10N
                 }
-                result.AddRange(ListChildren(parent.ResolveChild("Value")));
+                result.AddRange(ListChildren(parent.ResolveChild("Value"))); // Not L10N
                 return result;
             }
             foreach (var child in parent.GetChildColumns())
@@ -440,7 +440,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 TreeColumn = treeColumn;
                 if (treeColumn.CollectionInfo != null && treeColumn.CollectionInfo.IsDictionary)
                 {
-                    ValueColumn = treeColumn.ResolveChild("Value");
+                    ValueColumn = treeColumn.ResolveChild("Value"); // Not L10N
                 }
                 ValueColumn = ValueColumn ?? TreeColumn;
             }

@@ -1135,10 +1135,10 @@ namespace pwiz.Skyline.Model.Results
     public static class InstrumentInfoUtil
     {
         // Not L10N: Used for cache and testing
-        public const string MODEL = "MODEL:";
-        public const string ANALYZER = "ANALYZER:";
-        public const string DETECTOR = "DETECTOR:";
-        public const string IONIZATION = "IONIZATION:";
+        public const string MODEL = "MODEL:"; // Not L10N
+        public const string ANALYZER = "ANALYZER:"; // Not L10N
+        public const string DETECTOR = "DETECTOR:"; // Not L10N
+        public const string IONIZATION = "IONIZATION:"; // Not L10N
 
         public static IEnumerable<MsInstrumentConfigInfo> GetInstrumentInfo(string infoString)
         {
@@ -1331,7 +1331,7 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             if (ModifiedSequence != null)
-                return string.Format("{0:F04}, {1:F04} - {2} - {3}", Precursor, Product, Source, ModifiedSequence);
+                return string.Format("{0:F04}, {1:F04} - {2} - {3}", Precursor, Product, Source, ModifiedSequence); // Not L10N
             return string.Format("{0:F04}, {1:F04} - {2}", Precursor, Product, Source); // Not L10N
         }
 
@@ -1410,9 +1410,9 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // Not LS0N
-        private const string PREFIX_TOTAL = "SRM TIC ";
-        private const string PREFIX_SINGLE = "SRM SIC ";
-        private const string PREFIX_PRECURSOR = "SIM SIC ";
+        private const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
+        private const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
+        private const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
 
         private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) "); // Not L10N
 

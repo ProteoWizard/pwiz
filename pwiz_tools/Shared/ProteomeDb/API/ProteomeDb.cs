@@ -36,7 +36,7 @@ namespace pwiz.ProteomeDatabase.API
     /// </summary>
     public class ProteomeDb : IDisposable
     {
-        public const string EXT_PROTDB = ".protdb";
+        public const string EXT_PROTDB = ".protdb"; // Not L10N
 
         internal static readonly Type TYPE_DB = typeof(DbDigestion);
         public const int SCHEMA_VERSION_MAJOR_0 = 0;
@@ -125,7 +125,7 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     foreach (
                         var col in
-                            new[] {"PreferredName", "Accession", "Gene", "Species", "WebSearchStatus"})
+                            new[] {"PreferredName", "Accession", "Gene", "Species", "WebSearchStatus"}) // Not L10N
                         // new protein metadata for v2  // Not L10N
                     {
                         command.CommandText =

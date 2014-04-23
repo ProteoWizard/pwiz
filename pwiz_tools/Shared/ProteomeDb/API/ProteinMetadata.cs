@@ -316,11 +316,11 @@ namespace pwiz.ProteomeDatabase.API
             switch (Service)
             {
                 case WebEnabledFastaImporter.GENINFO_TAG:
-                    return String.Format("gi:{0}", Query);
+                    return String.Format("gi:{0}", Query); // Not L10N
                 case WebEnabledFastaImporter.ENTREZ_TAG:
-                    return String.Format("Entrez:{0}", Query);
+                    return String.Format("Entrez:{0}", Query); // Not L10N
                 case WebEnabledFastaImporter.UNIPROTKB_TAG:
-                    return String.Format("Uniprot:{0}", Query);
+                    return String.Format("Uniprot:{0}", Query); // Not L10N
             }
             return null;
         }

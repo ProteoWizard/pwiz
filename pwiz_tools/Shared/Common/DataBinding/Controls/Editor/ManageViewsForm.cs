@@ -21,6 +21,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
@@ -86,11 +87,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             string message;
             if (selectedItems.Length == 1)
             {
-                message = string.Format("Are you sure you want to delete the view '{0}'?", selectedItems[0].Name);
+                message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___, selectedItems[0].Name);
             }
             else
             {
-                message = string.Format("Are you sure you want to delete these {0} views?", selectedItems.Length);
+                message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_, selectedItems.Length);
             }
             if (ViewContext.ShowMessageBox(this, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
             {

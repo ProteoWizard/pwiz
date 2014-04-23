@@ -6976,4 +6976,13 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="ExportLiveReportDlg_ExportLiveReportDlg_Invariant" xml:space="preserve">
     <value>Invariant</value>
   </data>
+  <data name="RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available" xml:space="preserve">
+    <value>No protein metadata available</value>
+  </data>
+  <data name="ServerList_Title_Edit_Servers" xml:space="preserve">
+    <value>Edit Servers</value>
+  </data>
+  <data name="ServerList_Label__Servers" xml:space="preserve">
+    <value>&amp;Servers</value>
+  </data>
 </root>

@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Databinding
             foreach (var reportColumn in columns)
             {
                 var databindingTableAttribute = GetDatabindingTableAttribute(reportColumn);
-                if (null != databindingTableAttribute.Property && !databindingTableAttribute.Property.EndsWith("Summary"))
+                if (null != databindingTableAttribute.Property && !databindingTableAttribute.Property.EndsWith("Summary")) // Not L10N
                 {
                     propertyPaths.Add(PropertyPath.Parse(databindingTableAttribute.Property));
                 }
@@ -156,14 +156,14 @@ namespace pwiz.Skyline.Model.Databinding
             if (null != reportSpec.CrossTabHeaders)
             {
                 pivotIsotopeLabel =
-                    reportSpec.CrossTabHeaders.Any(reportColumn => !reportColumn.Column.ToString().EndsWith("Replicate"));
+                    reportSpec.CrossTabHeaders.Any(reportColumn => !reportColumn.Column.ToString().EndsWith("Replicate")); // Not L10N
                 if (pivotIsotopeLabel)
                 {
-                    sublistId = PropertyPath.Root.Property("Results").LookupAllItems();
+                    sublistId = PropertyPath.Root.Property("Results").LookupAllItems(); // Not L10N
                 }
                 foreach (var reportColumn in reportSpec.CrossTabHeaders)
                 {
-                    if (pivotIsotopeLabel || !reportColumn.Column.ToString().EndsWith("Replicate"))
+                    if (pivotIsotopeLabel || !reportColumn.Column.ToString().EndsWith("Replicate")) // Not L10N
                     {
                         var columnSpec = ConvertReportColumn(reportColumn).SetTotal(TotalOperation.PivotKey).SetHidden(true);
                         columns.Add(columnSpec);
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Model.Databinding
                     string annotationName = AnnotationDef.GetColumnDisplayName(part);
                     if (component == typeof (DbProteinResult))
                     {
-                        propertyPath = PropertyPath.Root.Property("Replicate").Property(AnnotationDef.ANNOTATION_PREFIX + annotationName);
+                        propertyPath = PropertyPath.Root.Property("Replicate").Property(AnnotationDef.ANNOTATION_PREFIX + annotationName); // Not L10N
                     }
                     else
                     {
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model.Databinding
                     propertyPath = null;
                     if (component == typeof (DbPeptideResult))
                     {
-                        const string prefixPeptideRatio = "ratio_Ratio";
+                        const string prefixPeptideRatio = "ratio_Ratio"; // Not L10N
                         string labelName, standardName;
                         if (part.StartsWith(prefixPeptideRatio))
                         {
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model.Databinding
                                     RatioPropertyDescriptor.RATIO_PREFIX, labelName, standardName));
                             }
                         }
-                        const string prefixPeptideRdotp = "rdotp_DotProduct";
+                        const string prefixPeptideRdotp = "rdotp_DotProduct"; // Not L10N
                         if (part.StartsWith(prefixPeptideRdotp))
                         {
                             if (TryParseLabelNames(part.Substring(prefixPeptideRdotp.Length), out labelName, out standardName))
@@ -244,8 +244,8 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     else if (component == typeof (DbPrecursorResult))
                     {
-                        const string prefixPrecursorRatio = "ratio_TotalAreaRatioTo";
-                        const string prefixPrecursorRdotp = "rdotp_DotProductTo";
+                        const string prefixPrecursorRatio = "ratio_TotalAreaRatioTo"; // Not L10N
+                        const string prefixPrecursorRdotp = "rdotp_DotProductTo"; // Not L10N
                         if (part.StartsWith(prefixPrecursorRatio))
                         {
                             propertyPath = PropertyPath.Root.Property(
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     else if (component == typeof (DbTransitionResult))
                     {
-                        const string prefixTransitionRatio = "ratio_AreaRatioTo";
+                        const string prefixTransitionRatio = "ratio_AreaRatioTo"; // Not L10N
                         if (part.StartsWith(prefixTransitionRatio))
                         {
                             propertyPath = PropertyPath.Root.Property(
@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.Databinding
                     oldCaption = null;
                     if (null == propertyPath)
                     {
-                        Trace.TraceWarning("Unable to parse ratio property {0}", part);
+                        Trace.TraceWarning("Unable to parse ratio property {0}", part); // Not L10N
                         propertyPath = PropertyPath.Root.Property(part);
                     }
                 }
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model.Databinding
                     PropertyInfo property = component.GetProperty(part);
                     if (null == property)
                     {
-                        Trace.TraceWarning("Could not find property {0}", part);
+                        Trace.TraceWarning("Could not find property {0}", part); // Not L10N
                         continue;
                     }
                     propertyPath = PropertyPath.Root.Property(part);
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private bool TryParseLabelNames(string ratioParts, out string labelName, out string standardName)
         {
-            const string splitter = "To";
+            const string splitter = "To"; // Not L10N
             int ichSplitter = ratioParts.IndexOf(splitter, 1, StringComparison.InvariantCulture);
             if (ichSplitter < 0 || ichSplitter + splitter.Length >= ratioParts.Length)
             {

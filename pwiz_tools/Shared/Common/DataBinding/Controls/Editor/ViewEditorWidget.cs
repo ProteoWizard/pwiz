@@ -171,7 +171,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (_subEditors.Contains(subEditor))
             {
-                throw new ArgumentException("Editor already added");
+                throw new ArgumentException("Editor already added"); // Not L10N
             }
             _subEditors.Add(subEditor);
             if (null != ViewEditor)
@@ -184,7 +184,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (!_subEditors.Remove(subEditor))
             {
-                throw new ArgumentException("Editor not added");
+                throw new ArgumentException("Editor not added"); // Not L10N
             }
             if (null != ViewEditor)
             {

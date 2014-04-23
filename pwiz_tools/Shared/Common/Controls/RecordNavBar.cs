@@ -19,6 +19,7 @@
 using System;
 using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.Controls
 {
@@ -123,14 +124,14 @@ namespace pwiz.Common.Controls
             int filteredRowCount = GetVisibleRowCount();
             int totalRowCount = DataGridView.Rows.Count;
             lblFilteredFrom.Text = filteredRowCount == totalRowCount
-                ? "" 
-                : string.Format("(Filtered from {0})", totalRowCount);
+                ? string.Empty 
+                : string.Format(Resources.RecordNavBar_UpdateNow__Filtered_from__0__, totalRowCount);
             int currentVisibleRowIndex = GetVisibleRowIndex(GetCurrentRowIndex());
             btnNavFirst.Enabled = btnNavPrev.Enabled = currentVisibleRowIndex > 0;
             btnNavNext.Enabled = btnNavLast.Enabled = currentVisibleRowIndex < GetVisibleRowCount() - 1;
             if (!tbxRecordNumber.Focused)
             {
-                tbxRecordNumber.Text = string.Format("{0} of {1}", (currentVisibleRowIndex + 1), filteredRowCount);
+                tbxRecordNumber.Text = string.Format(Resources.RecordNavBar_UpdateNow__0__of__1_, (currentVisibleRowIndex + 1), filteredRowCount);
             }
         }
 

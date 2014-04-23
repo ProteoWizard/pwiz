@@ -31,6 +31,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.RowSources;
+using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
@@ -40,7 +41,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public abstract class AbstractViewContext : IViewContext
     {
-        public const string DefaultViewName = "default";
+        public const string DefaultViewName = "default"; // Not L10N
         private IList<RowSourceInfo> _rowSources;
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
@@ -55,7 +56,7 @@ namespace pwiz.Common.DataBinding
         protected virtual string GetDefaultExportFilename(ViewInfo viewInfo)
         {
             string currentViewName = viewInfo.Name;
-            return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? "" : currentViewName);
+            return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? string.Empty : currentViewName);
         }
         public abstract bool RunLongJob(Control owner, Action<IProgressMonitor> job);
         public DataSchema DataSchema { get; private set; }
@@ -134,7 +135,7 @@ namespace pwiz.Common.DataBinding
         {
             var takenNames = new HashSet<string>(BuiltInViews.Select(viewSpec => viewSpec.Name));
             takenNames.UnionWith(CustomViews.Select(viewSpec=>viewSpec.Name));
-            const string baseName = "CustomView";
+            const string baseName = "CustomView"; // Not L10N
             for (int index = 1;;index++)
             {
                 string name = baseName + index;
@@ -166,7 +167,7 @@ namespace pwiz.Common.DataBinding
         {
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
-            var status = new ProgressStatus("Writing " + rows.Count + " rows");
+            var status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, rows.Count));
             dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
@@ -175,7 +176,7 @@ namespace pwiz.Common.DataBinding
                 {
                     return;
                 }
-                status = status.ChangeMessage("Writing row " + (rowIndex + 1) + "/" + rowCount)
+                status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
                     .ChangePercentComplete(rowIndex*100/rowCount);
                 progressMonitor.UpdateProgress(status);
                 dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
@@ -185,7 +186,7 @@ namespace pwiz.Common.DataBinding
         public void Export(Control owner, BindingListSource bindingListSource)
         {
             var dataFormats = new[] { DataFormats.CSV, DataFormats.TSV };
-            string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
+            string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray()); // Not L10N
             using (var saveFileDialog = new SaveFileDialog
                 {
                 Filter = fileFilter,
@@ -235,7 +236,7 @@ namespace pwiz.Common.DataBinding
                 var clonedValues = ((ICloneableList) rowSource).DeepClone();
                 RunLongJob(owner, progressMonitor =>
                 {
-                    progressMonitor.UpdateProgress(new ProgressStatus("Executing query"));
+                    progressMonitor.UpdateProgress(new ProgressStatus(Resources.AbstractViewContext_ExecuteQuery_Executing_query));
                     bindingListSource.SetView(viewInfo, clonedValues);
                 });
             }
@@ -284,7 +285,7 @@ namespace pwiz.Common.DataBinding
             baseName = baseName.Substring(0, lastDigit);
             if (baseName.Length == 0)
             {
-                baseName = "CustomView";
+                baseName = "CustomView"; // Not L10N
             }
             for (int uniquifier = 1;; uniquifier++)
             {
@@ -441,7 +442,7 @@ namespace pwiz.Common.DataBinding
             }
             catch (Exception exception)
             {
-                Trace.TraceError("Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
+                Trace.TraceError("Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception); // Not L10N
                 return null;
             }
         }
@@ -512,11 +513,11 @@ namespace pwiz.Common.DataBinding
                 string message;
                 if (dataGridViewDataErrorEventArgs.Exception == null)
                 {
-                    message = "An unknown error occurred updating the value.";
+                    message = Resources.AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_;
                 }
                 else
                 {
-                    message = string.Format("There was an error updating the value:\r\n{0}",
+                    message = string.Format(Resources.AbstractViewContext_OnDataError_,
                                             dataGridViewDataErrorEventArgs.Exception.Message);
                 }
                 if (dataGridView != null && dataGridView.IsCurrentCellInEditMode)

@@ -176,13 +176,13 @@ namespace pwiz.Skyline.Util
 
             while (reader.NodeType != XmlNodeType.EndElement)
             {
-                reader.ReadStartElement("item");
+                reader.ReadStartElement("item"); // Not L10N
 
-                reader.ReadStartElement("key");
+                reader.ReadStartElement("key"); // Not L10N
                 TKey key = (TKey)keySerializer.Deserialize(reader);
                 reader.ReadEndElement();
 
-                reader.ReadStartElement("value");
+                reader.ReadStartElement("value"); // Not L10N
                 TValue value = (TValue)valueSerializer.Deserialize(reader);
                 reader.ReadEndElement();
 
@@ -201,13 +201,13 @@ namespace pwiz.Skyline.Util
 
             foreach (TKey key in Keys)
             {
-                writer.WriteStartElement("item");
+                writer.WriteStartElement("item"); // Not L10N
 
-                writer.WriteStartElement("key");
+                writer.WriteStartElement("key"); // Not L10N
                 keySerializer.Serialize(writer, key);
                 writer.WriteEndElement();
 
-                writer.WriteStartElement("value");
+                writer.WriteStartElement("value"); // Not L10N
                 TValue value = this[key];
                 valueSerializer.Serialize(writer, value);
                 writer.WriteEndElement();
@@ -903,7 +903,7 @@ namespace pwiz.Skyline.Util
         {
             line = column = 0;
 
-            if (!message.Contains("XML"))
+            if (!message.Contains("XML")) // Not L10N
                 return false;
 
             Match match = REGEX_XML_ERROR.Match(message);

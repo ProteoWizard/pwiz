@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
             PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime)
         {
-            string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
+            string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime); // Not L10N
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
             SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
             PointF realTopPoint = ptTop;
@@ -626,9 +626,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             string label = string.Format("{0:F01}", time); // Not L10N
             if (massError.HasValue && !_isSummary)
-                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value); // not L10N
+                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value); // Not L10N
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // not L10N
+                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // Not L10N
             return label;
         }
 
@@ -765,7 +765,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public ScaledRetentionTime RetentionTime { get; private set; }
             public override string ToString()
             {
-                return string.Format("{0}:{1}", GraphObjType, RetentionTime);
+                return string.Format("{0}:{1}", GraphObjType, RetentionTime); // Not L10N
             }
         }
     }

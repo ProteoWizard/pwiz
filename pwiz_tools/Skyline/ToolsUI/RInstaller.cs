@@ -96,7 +96,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
-                    packageList.Add(string.Concat(packageContainer.Name, " (", packageContainer.Version, ")")); //Not L10N
+                    packageList.Add(string.Concat(packageContainer.Name, " (", packageContainer.Version, ")")); // Not L10N
                 }
             }
             return packageList;
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.ToolsUI
                 // Otherwise, check and see if it is an older release
 
                 var recentUri = new Uri(baseUri + exe);
-                var olderUri = new Uri(baseUri + "old/" + _version + "/" + exe);
+                var olderUri = new Uri(baseUri + "old/" + _version + "/" + exe); // Not L10N
 
                 if (!webClient.DownloadFileAsync(recentUri, DownloadPath) && !webClient.DownloadFileAsync(olderUri, DownloadPath))
                     throw new ToolExecutionException(
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var line in lines.Where(l => !string.IsNullOrEmpty(l)))
             {
                 string[] split = line.Split('-');
-                if (split.Length > 1 && split[1].Contains("FALSE"))
+                if (split.Length > 1 && split[1].Contains("FALSE")) // Not L10N
                 {
                     string packageName = split[0].Trim();
                     var toInstall = packages.First(packageContainer => Equals(packageContainer.Name, packageName));
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private static string RunRscript(string pathToR, string pathToScriptFile)
         {
-            string args = String.Format("-f {0} --slave", pathToScriptFile);
+            string args = String.Format("-f {0} --slave", pathToScriptFile); // Not L10N
             ProcessStartInfo startInfo = new ProcessStartInfo(pathToR, args)
                 {
                     RedirectStandardOutput = true,
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 using (var client = new WebClient())
-                using (client.OpenRead("http://www.google.com"))
+                using (client.OpenRead("http://www.google.com")) // Not L10N
                 {
                     return true;
                 }

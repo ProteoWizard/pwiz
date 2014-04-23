@@ -218,7 +218,7 @@ namespace pwiz.Common.Chemistry
                         }
                     }
                     currentQuantity = 0;
-                    currentElement = "" + ch;
+                    currentElement = string.Empty + ch;
                 }
                 // Allow apostrophe for heavy isotopes (e.g. C' for 13C)
                 else if (!Char.IsWhiteSpace(ch))

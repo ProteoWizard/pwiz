@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Controls
             {
                 string lineText = textImWindow.Lines[line];
                 // This is to take care of the annoying case when the user trys to add a tool with a title they already used and the tool runs.@
-                if (!lineText.Contains("--tool-add"))
+                if (!lineText.Contains("--tool-add")) // Not L10N
                 {
                     //Check if there is a tool to run on the line
                     foreach (var tool in Settings.Default.ToolList.Where(tool => lineText.Contains(tool.Title)))
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
-                WriteLine(mapping + ">" + s);
+                WriteLine(mapping + ">" + s); // Not L10N
             }
         }
 
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Controls
         {
             int currentline = _box.GetLineFromCharIndex((_box.SelectionStart) + 1);
             // if there is text on the current line, write to the next one
-            if (currentline < _box.Lines.Count() && _box.Lines[currentline] != "")
+            if (currentline < _box.Lines.Count() && _box.Lines[currentline] != string.Empty)
             {
                 WriteLine();    
             }

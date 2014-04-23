@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class MProphetFeaturesDlg : FormEx
     {
-        public const string EXT = ".csv";
+        public const string EXT = ".csv"; // Not L10N
 
         private readonly IPeakFeatureCalculator[] _calculators;
 

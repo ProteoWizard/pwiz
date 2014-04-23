@@ -388,9 +388,9 @@ namespace pwiz.Skyline.Model.Tools
                     if (boxStreamWriterHelper == null)
                     {
                         p.OutputDataReceived += (sender, dataReceivedEventArgs) => textWriter.WriteLine(p.Id + 
-                                                                                                        ">" + dataReceivedEventArgs.Data);
+                                                                                                        ">" + dataReceivedEventArgs.Data); // Not L10N
                         p.ErrorDataReceived += (sender, dataReceivedEventArgs) => textWriter.WriteLine(p.Id +
-                                                                                                       ">" + dataReceivedEventArgs.Data);
+                                                                                                       ">" + dataReceivedEventArgs.Data); // Not L10N
                     }                    
                     else
                     {
@@ -505,8 +505,8 @@ namespace pwiz.Skyline.Model.Tools
                              ? parent.Invoke(
                                  Delegate.CreateDelegate(
                                      typeof (Func<IWin32Window, string, string[], string[]>),
-                                     type.GetMethod("CollectArgs")), collectorArgs)
-                             : type.GetMethod("CollectArgs").Invoke(null, collectorArgs);
+                                     type.GetMethod("CollectArgs")), collectorArgs) // Not L10N
+                             : type.GetMethod("CollectArgs").Invoke(null, collectorArgs); // Not L10N
             }
             catch (Exception x)
             {
@@ -538,7 +538,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else
                 {
-                    startInfo.Arguments = args + " " + argString;
+                    startInfo.Arguments = args + " " + argString; // Not L10N
                 }
             }
             else
@@ -807,7 +807,7 @@ namespace pwiz.Skyline.Model.Tools
             string skylineDirPath = Path.GetDirectoryName(skylinePath);
             if (string.IsNullOrEmpty(skylineDirPath))
                 return null;
-            return Path.Combine(skylineDirPath, "Tools"); //Not L10N            
+            return Path.Combine(skylineDirPath, "Tools"); // Not L10N            
         }
     }
 }

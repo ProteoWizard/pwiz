@@ -229,7 +229,7 @@ namespace pwiz.Skyline
         private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
         {
             //Copy tools to a different folder then Directory.Move if successful.
-            string tempOutterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); //Not L10N
+            string tempOutterToolsFolderPath = string.Concat(outerToolsFolderPath, "_installing"); // Not L10N
             if (Directory.Exists(tempOutterToolsFolderPath))
             {
                 DirectoryEx.SafeDelete(tempOutterToolsFolderPath);
@@ -333,7 +333,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError("Unhandled exception: {0}", exception);
+            Trace.TraceError("Unhandled exception: {0}", exception); // Not L10N
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
@@ -345,7 +345,7 @@ namespace pwiz.Skyline
             }
             catch (Exception exception2)
             {
-                Trace.TraceError("Exception in ReportException: {0}", exception2);
+                Trace.TraceError("Exception in ReportException: {0}", exception2); // Not L10N
             }
         }
 
@@ -357,7 +357,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception);
+            Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception); // Not L10N
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
         }
@@ -424,7 +424,7 @@ namespace pwiz.Skyline
 
     public class CommandLineRunner
     {
-        private const string COMMAND_PREFIX = "CMD";
+        private const string COMMAND_PREFIX = "CMD"; // Not L10N
 
         public static bool HasCommandPrefix(string arg)
         {
@@ -481,7 +481,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            string outPipeName = "SkylineOutputPipe" + guidSuffix;
+            string outPipeName = "SkylineOutputPipe" + guidSuffix; // Not L10N
             using (var serverStream = new NamedPipeServerStream(outPipeName)) // Not L10N
             {
                 var namedPipeServerConnector = new NamedPipeServerConnector();

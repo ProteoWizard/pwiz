@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Find
                 strings.Add(Text);
             }
             strings.AddRange(CustomFinders.Select(finder => finder.DisplayName));
-            return string.Join(" ", strings.ToArray());
+            return string.Join(string.Empty, strings.ToArray());
         }
 
         public string GetNotFoundMessage()

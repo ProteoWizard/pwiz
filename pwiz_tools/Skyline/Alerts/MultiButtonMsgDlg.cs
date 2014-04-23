@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Alerts
             var sbButtons = new StringBuilder();
             if (btn0.Visible)
                 sbButtons.Append(btn0.Text).Append("    "); // Not L10N
-            sbButtons.Append(btn1.Text).Append("    ");
+            sbButtons.Append(btn1.Text).Append("    "); // Not L10N
             sbButtons.Append(btnCancel.Text);
             ClipboardEx.SetText(string.Format(formatMessage, Text, Message, sbButtons));
         }

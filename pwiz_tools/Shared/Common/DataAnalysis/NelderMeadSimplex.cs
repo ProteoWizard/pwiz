@@ -40,10 +40,10 @@ namespace pwiz.Common.DataAnalysis
         {
             // confirm that we are in a position to commence
             if (objectiveFunction == null)
-                throw new InvalidOperationException("ObjectiveFunction must be set to a valid ObjectiveFunctionDelegate");
+                throw new InvalidOperationException("ObjectiveFunction must be set to a valid ObjectiveFunctionDelegate"); // Not L10N
 
             if (simplexConstants == null)
-                throw new InvalidOperationException("SimplexConstants must be initialized");
+                throw new InvalidOperationException("SimplexConstants must be initialized"); // Not L10N
 
             // create the initial simplex
             int numDimensions = simplexConstants.Length;

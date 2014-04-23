@@ -110,8 +110,8 @@ namespace pwiz.Skyline.FileUI
                 string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
                 // We still have some CE regressions that begin with ABI, while all instruments
                 // have been changed to AB SCIEX
-                if (Equals("ABI", instrumentTypePrefix))
-                    instrumentTypePrefix = "AB";
+                if (Equals("ABI", instrumentTypePrefix)) // Not L10N
+                    instrumentTypePrefix = "AB"; // Not L10N
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
                 {

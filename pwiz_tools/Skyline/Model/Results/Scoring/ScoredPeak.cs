@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         // for debugging...
         public override string ToString()
         {
-            return String.Format("{0:0.00}", Score);
+            return String.Format("{0:0.00}", Score); // Not L10N
         }
     }
 }

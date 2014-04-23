@@ -44,7 +44,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var dlg = new OpenFileDialog
             {
                 Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")),
+                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ".zip")), // Not L10N
                 Multiselect = false
             })
             {
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.ToolsUI
                     case RelativeVersion.olderversion:
                         toolMessage =
                             TextUtil.LineSeparate(
-                                String.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_, foundVersion, "{0}"), //Not L10N
+                                String.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_is_an_older_installation_v_0__of_the_tool__1_, foundVersion, "{0}"), // Not L10N
                                 String.Empty,
                                 String.Format(Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_with_the_older_version__0__or_install_in_parallel_,
                                 foundVersion));
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.ToolsUI
                 List<string> reportTitles = reportList.Select(sp => sp.GetKey()).ToList();
 
                 string reportMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports, String.Empty,
-                                                              "{0}", String.Empty); //Not L10N
+                                                              "{0}", String.Empty); // Not L10N
                 string reportSingleMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_, String.Empty);
 
                 string reportMessage = reportList.Count == 1 ? reportSingleMessage : reportMultiMessage;
@@ -262,10 +262,10 @@ namespace pwiz.Skyline.ToolsUI
             List<string> annotationTitles = annotations.Select(annotation => annotation.GetKey()).ToList();
 
             string annotationMultiMessage = TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_, String.Empty,
-                                                    "{0}", String.Empty);
+                                                    "{0}", String.Empty); // Not L10N
 
             string annotationSingleMessage =
-                TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_, String.Empty, "{0}", String.Empty);
+                TextUtil.LineSeparate(Resources.ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_, String.Empty, "{0}", String.Empty); // Not L10N
 
             string annotationMessage = annotations.Count == 1 ? annotationSingleMessage : annotationMultiMessage;
             string question = Resources.ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_;

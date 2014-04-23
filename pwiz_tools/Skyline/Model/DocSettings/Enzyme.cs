@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return regexN;
                 else if (regexN == null)
                     return regexC;
-                return regexC + "|" + regexN;
+                return regexC + "|" + regexN; // Not L10N
             }
         }
 
@@ -347,10 +347,10 @@ namespace pwiz.Skyline.Model.DocSettings
             string textC = ToString(CleavageC, RestrictC, SequenceTerminus.C);
             string textN = ToString(CleavageN, RestrictN, SequenceTerminus.N);
             if (string.IsNullOrEmpty(textN))
-                return string.Format("{0} {1}", Name, textC);
+                return string.Format("{0} {1}", Name, textC); // Not L10N
             if (string.IsNullOrEmpty(textC))
-                return string.Format("{0} {1} n-term", Name, textN);
-            return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN);
+                return string.Format("{0} {1} n-term", Name, textN); // Not L10N
+            return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN); // Not L10N
         }
 
         private static string ToString(string cleavage, string restrict, SequenceTerminus term)

@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (Stdev.HasValue)
             {
-                return Mean.ToString(format) + "+/-" + Stdev.Value.ToString(format);
+                return Mean.ToString(format) + "+/-" + Stdev.Value.ToString(format); // Not L10N
             }
             return Mean.ToString(format);
         }

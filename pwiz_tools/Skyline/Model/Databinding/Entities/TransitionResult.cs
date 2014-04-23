@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         public override string ToString()
         {
-            return string.Format("{0:0}", ChromInfo.Area);
+            return string.Format("{0:0}", ChromInfo.Area); // Not L10N
         }
     }
 }

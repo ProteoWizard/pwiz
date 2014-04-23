@@ -194,7 +194,7 @@ namespace pwiz.Common.Collections
             }
             return (TElement) Convert.ChangeType(stringValue, typeof (TElement));
         }
-        protected virtual string ElementSeparator { get { return ", "; } }
+        protected virtual string ElementSeparator { get { return ", "; } } // Not L10N?
         protected virtual IEnumerable<TElement> ParseElements(string stringValue)
         {
             if (string.IsNullOrEmpty(stringValue))

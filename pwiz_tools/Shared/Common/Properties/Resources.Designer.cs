@@ -117,6 +117,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Writing row {0}/{1}.
+        /// </summary>
+        internal static string AbstractViewContext_WriteData_Writing_row__0___1_ {
+            get {
+                return ResourceManager.GetString("AbstractViewContext_WriteData_Writing_row__0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap agg_count {
@@ -348,6 +357,25 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the view &apos;{0}&apos;?.
+        /// </summary>
+        internal static string ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___ {
+            get {
+                return ResourceManager.GetString("ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} views?.
+        /// </summary>
+        internal static string ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_ {
+            get {
+                return ResourceManager.GetString("ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap MatchCase {
@@ -483,6 +511,24 @@ namespace pwiz.Common.Properties {
         internal static string PropertyPath_Parse_Unterminated_quote {
             get {
                 return ResourceManager.GetString("PropertyPath_Parse_Unterminated_quote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1}.
+        /// </summary>
+        internal static string RecordNavBar_UpdateNow__0__of__1_ {
+            get {
+                return ResourceManager.GetString("RecordNavBar_UpdateNow__0__of__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Filtered from {0}).
+        /// </summary>
+        internal static string RecordNavBar_UpdateNow__Filtered_from__0__ {
+            get {
+                return ResourceManager.GetString("RecordNavBar_UpdateNow__Filtered_from__0__", resourceCulture);
             }
         }
         

@@ -56,7 +56,7 @@ namespace pwiz.Common.SystemUtil
 
             var proc = Process.Start(psi);
             if (proc == null)
-                throw new IOException(string.Format("Failure starting {0} command.", psi.FileName));
+                throw new IOException(string.Format("Failure starting {0} command.", psi.FileName)); // Not L10N
             if (stdin != null)
             {
                 try
@@ -124,7 +124,7 @@ namespace pwiz.Common.SystemUtil
                 if (line != null)
                     sbError.AppendLine(line);
                 if (sbError.Length == 0)
-                    throw new IOException("Error occurred running process.");
+                    throw new IOException("Error occurred running process."); // Not L10N
                 throw new IOException(sbError.ToString());
             }
             // Make to complete the status, if the process succeeded, but never

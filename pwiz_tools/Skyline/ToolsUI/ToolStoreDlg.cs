@@ -329,7 +329,7 @@ namespace pwiz.Skyline.ToolsUI
 
     public class WebToolStoreClient : IToolStoreClient
     {
-        public static readonly Uri TOOL_STORE_URI = new Uri("https://skyline.gs.washington.edu");
+        public static readonly Uri TOOL_STORE_URI = new Uri("https://skyline.gs.washington.edu"); // Not L10N
         protected const string GET_TOOLS_URL = "/labkey/skyts/home/getToolsApi.view";  // Not L10N
         protected const string DOWNLOAD_TOOL_URL = "/labkey/skyts/home/downloadTool.view";  // Not L10N
         public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";  // Not L10N
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.ToolsUI
             UriBuilder uri = new UriBuilder(TOOL_STORE_URI)
                 {
                     Path = DOWNLOAD_TOOL_URL,
-                    Query = "lsid=" + packageIdentifier
+                    Query = "lsid=" + packageIdentifier // Not L10N
                 };
             byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);  // Not L10N
             string contentDisposition = webClient.ResponseHeaders.Get("Content-Disposition");   // Not L10N
@@ -472,7 +472,7 @@ namespace pwiz.Skyline.ToolsUI
             UriBuilder uri = new UriBuilder(WebToolStoreClient.TOOL_STORE_URI)
                 {
                     Path = WebToolStoreClient.TOOL_DETAILS_URL,
-                    Query = "name=" + Uri.EscapeDataString(name)
+                    Query = "name=" + Uri.EscapeDataString(name) // Not L10N
                 };
             FilePath = uri.Uri.AbsoluteUri; // Not L10N
         }

@@ -160,15 +160,15 @@ namespace pwiz.ProteowizardWrapper
                     GetInstrumentConfig(ic, out instrumentIonSource, out instrumentAnalyzer, out instrumentDetector);
 
                     if (ionSource.Length > 0)
-                        ionSource += ", "; // TODO: Not L10N?
+                        ionSource += ", "; // Not L10N
                     ionSource += instrumentIonSource;
 
                     if (analyzer.Length > 0)
-                        analyzer += ", ";
+                        analyzer += ", "; // Not L10N
                     analyzer += instrumentAnalyzer;
 
                     if (detector.Length > 0)
-                        detector += ", ";
+                        detector += ", "; // Not L10N
                     detector += instrumentDetector;
                 }
 
@@ -177,7 +177,7 @@ namespace pwiz.ProteowizardWrapper
                     contentTypeSet.Add(term.name);
                 var contentTypes = contentTypeSet.ToArray();
                 Array.Sort(contentTypes);
-                string contentType = String.Join(", ", contentTypes);
+                string contentType = String.Join(", ", contentTypes); // Not L10N
 
                 return new MsDataConfigInfo
                            {
@@ -306,7 +306,7 @@ namespace pwiz.ProteowizardWrapper
         private static bool HasInfo(UserParam uParam)
         {
             return !uParam.empty() && !String.IsNullOrEmpty(uParam.value) &&
-                   !String.Equals("unknown", uParam.value.ToString().ToLowerInvariant());
+                   !String.Equals("unknown", uParam.value.ToString().ToLowerInvariant()); // Not L10N
         }
 
         public bool IsABFile

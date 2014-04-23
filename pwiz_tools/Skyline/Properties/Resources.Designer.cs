@@ -14173,6 +14173,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No protein metadata available.
+        /// </summary>
+        public static string RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file {0}. {1}.
         /// </summary>
         public static string RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__ {
@@ -15476,6 +15486,24 @@ namespace pwiz.Skyline.Properties {
         public static string Server_ReadXml_Server_URL_is_corrupt {
             get {
                 return ResourceManager.GetString("Server_ReadXml_Server_URL_is_corrupt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Servers.
+        /// </summary>
+        public static string ServerList_Label__Servers {
+            get {
+                return ResourceManager.GetString("ServerList_Label__Servers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Servers.
+        /// </summary>
+        public static string ServerList_Title_Edit_Servers {
+            get {
+                return ResourceManager.GetString("ServerList_Title_Edit_Servers", resourceCulture);
             }
         }
         
