@@ -241,7 +241,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>ファイルに複数の試料が見つかりました</value>
+<value>ファイルに複数のサンプルが見つかりました</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -322,7 +322,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>試料を選択</value>
+<value>サンプルを選択</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsSamplesDlg</value>

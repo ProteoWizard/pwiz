@@ -138,8 +138,8 @@
     <value>17, 17</value>
   </metadata>
   <data name="radioSingle.ToolTip" xml:space="preserve">
-<value>すべての遷移を含む単一のファイルを作成します。参照だけが目的ではない場合は、
-お使いの測定器がすべての遷移を処理できることを確認してください。</value>
+<value>すべてのトランジションを含むファイルを 1 つ作成します。実際に分析する場合は、
+お使いの装置がすべてのトランジションを処理できることを確認してください。</value>
   </data>
   <data name="&gt;&gt;radioSingle.Name" xml:space="preserve">
     <value>radioSingle</value>
@@ -169,8 +169,8 @@
 <value>各タンパク質につき 1 つのメソッド(&amp;O)</value>
   </data>
   <data name="radioProtein.ToolTip" xml:space="preserve">
-<value>タンパク質境界に沿ってメソッドを分割します。参照だけが目的ではない場合は、
-お使いの測定器が各ファイルにある遷移数をすべて処理できることを確認してください。</value>
+<value>タンパク質ごとにメソッドを分割します。実際に分析する場合は、
+お使いの装置が各ファイルのトランジション数をすべて処理できることを確認してください。</value>
   </data>
   <data name="&gt;&gt;radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>
@@ -200,7 +200,7 @@
 <value>複数メソッド(&amp;M)</value>
   </data>
   <data name="radioBuckets.ToolTip" xml:space="preserve">
-<value>遷移数が制限されている場合に、必要な数のファイルを作成します。</value>
+<value>トランジション数が制限されている場合に、必要な数のファイルを作成します。</value>
   </data>
   <data name="&gt;&gt;radioBuckets.Name" xml:space="preserve">
     <value>radioBuckets</value>
@@ -224,8 +224,8 @@
     <value>7</value>
   </data>
   <data name="textMaxTransitions.ToolTip" xml:space="preserve">
-<value>作成された各ファイルに含まれる遷移数の最大値はこの値となりますが、
-ペプチドまたはタンパク質境界で最大数が許可されない場合にはそれより少ないこともあります。</value>
+<value>作成された各ファイルに含まれるトランジション数の最大値はこの値になります。
+ただし、ペプチドまたはタンパク質の組み合わせによっては最大数とならず、少なくなることもあります。</value>
   </data>
   <data name="&gt;&gt;textMaxTransitions.Name" xml:space="preserve">
     <value>textMaxTransitions</value>
@@ -252,7 +252,7 @@
     <value>6</value>
   </data>
   <data name="labelMaxTransitions.Text" xml:space="preserve">
-<value>試料注入あたりの最大遷移数(&amp;X)：</value>
+<value>サンプル注入あたりの最大トランジション数(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;labelMaxTransitions.Name" xml:space="preserve">
     <value>labelMaxTransitions</value>
@@ -469,7 +469,7 @@
     <value>1</value>
   </data>
   <data name="comboInstrument.ToolTip" xml:space="preserve">
-<value>これらの設定が実行される測定器タイプ</value>
+<value>これらの設定が実行される装置タイプ</value>
   </data>
   <data name="&gt;&gt;comboInstrument.Name" xml:space="preserve">
     <value>comboInstrument</value>
@@ -496,7 +496,7 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-<value>測定器タイプ(&amp;I)：</value>
+<value>装置タイプ(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -607,9 +607,9 @@
 <value>タンパク質を無視(&amp;R)</value>
   </data>
   <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
-<value>これを選択すると、ペプチドはタンパク質境界に関係なくファイル間で分配されます。
-これを選択せず、タンパク質に最大数を超える遷移が含まれている場合には、
-同じタンパク質内のペプチドが分割されるのみとなります。</value>
+<value>これを選択すると、ペプチドはタンパク質に関係なくファイル間で分配されます。
+未選択時には、最大数を超えるトランジションを含むタンパク質がある場合にだけ、
+1 タンパク質内のペプチドが分割されます。</value>
   </data>
   <data name="&gt;&gt;cbIgnoreProteins.Name" xml:space="preserve">
     <value>cbIgnoreProteins</value>
@@ -804,7 +804,7 @@
     <value>9</value>
   </data>
   <data name="labelMethodNum.Text" xml:space="preserve">
-    <value>##</value>
+<value>##</value>
   </data>
   <data name="&gt;&gt;labelMethodNum.Name" xml:space="preserve">
     <value>labelMethodNum</value>

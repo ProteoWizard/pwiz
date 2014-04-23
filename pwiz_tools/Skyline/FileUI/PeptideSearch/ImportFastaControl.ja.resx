@@ -145,7 +145,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="tbxFasta.ToolTip" xml:space="preserve">
-<value>FASTAシークエンステキストがファイルから貼り付けまたは読み込まれました</value>
+<value>FASTA配列テキストがファイルから貼り付けまたは読み込まれました</value>
   </data>
   <data name="tbxFasta.WordWrap" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -307,7 +307,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>最大欠如開裂数：</value>
+<value>最大未切断サイト数：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -322,34 +322,34 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
-    <value>0</value>
+<value>0</value>
   </data>
   <data name="cbMissedCleavages.Items1" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="cbMissedCleavages.Items2" xml:space="preserve">
-    <value>2</value>
+<value>2</value>
   </data>
   <data name="cbMissedCleavages.Items3" xml:space="preserve">
-    <value>3</value>
+<value>3</value>
   </data>
   <data name="cbMissedCleavages.Items4" xml:space="preserve">
-    <value>4</value>
+<value>4</value>
   </data>
   <data name="cbMissedCleavages.Items5" xml:space="preserve">
-    <value>5</value>
+<value>5</value>
   </data>
   <data name="cbMissedCleavages.Items6" xml:space="preserve">
-    <value>6</value>
+<value>6</value>
   </data>
   <data name="cbMissedCleavages.Items7" xml:space="preserve">
-    <value>7</value>
+<value>7</value>
   </data>
   <data name="cbMissedCleavages.Items8" xml:space="preserve">
-    <value>8</value>
+<value>8</value>
   </data>
   <data name="cbMissedCleavages.Items9" xml:space="preserve">
-    <value>9</value>
+<value>9</value>
   </data>
   <data name="cbMissedCleavages.Location" type="System.Drawing.Point, System.Drawing">
     <value>199, 16</value>

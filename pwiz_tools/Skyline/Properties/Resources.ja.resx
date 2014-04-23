@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -353,13 +353,13 @@
 <value>タンパク質</value>
   </data>
   <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
-<value>{0} 行目に空のシークエンスが見つかりました。</value>
+<value>{0} 行目に空の配列が見つかりました。</value>
   </data>
   <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
 <value>予期しない文字「{0}」が {1} 行目に見つかりました。</value>
   </data>
   <data name="SkylineWindow_Paste_Paste_transition_list" xml:space="preserve">
-<value>遷移リストの貼り付け</value>
+<value>トランジションリストの貼り付け</value>
   </data>
   <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
 <value>タンパク質の貼り付け</value>
@@ -416,7 +416,7 @@
 <value>結果をインポートする前にドキュメントを保存する必要があります。</value>
   </data>
   <data name="ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below" xml:space="preserve">
-<value>以下のような予期しないエラーが発生しました。</value>
+<value>次の予期しないエラーが発生しました。</value>
   </data>
   <data name="ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted" xml:space="preserve">
 <value>エラーレポートが表示されます。</value>
@@ -425,7 +425,7 @@
 <value>閉じる</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_or_in_a_minimal_form_intended_for_read_only_use_with" xml:space="preserve">
-<value>ドキュメントは、全体としても、読み取り専用の最小フォームでも共有できます。</value>
+<value>ドキュメントは、ドキュメント全体あるいは読み取り専用の最小フォームとして共有できます。</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected" xml:space="preserve">
 <value>バックグラウンドプロテオームが切断されています。</value>
@@ -434,7 +434,7 @@
 <value>保持時間カルキュレータがドキュメントで使用する標準ペプチドとライブラリペプチドのみを含むように最小化されています。</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used_in_the_document" xml:space="preserve">
-<value>すべてのライブラリがドキュメントで使用する前駆体のみを含むように最小化されています</value>
+<value>ドキュメントで使用するプリカーサーのみを含むようにすべてのライブラリを最小化します。</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries" xml:space="preserve">
 <value>バックグラウンドプロテオーム、保持時間カルキュレータまたはライブラリのないドキュメントの{0}の無効な使用です。</value>
@@ -458,16 +458,16 @@
 <value>テンプレートファイル{0}がありません。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides" xml:space="preserve">
-<value>ドキュメントには保持時間標準ペプチドがすべて含まれているわけではありません。</value>
+<value>ドキュメントは保持時間標準ペプチドの一部を含みません。</value>
   </data>
   <data name="OK" xml:space="preserve">
 <value>OK</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__" xml:space="preserve">
-<value>このドキュメントの設定は測定器タイプ{0}に適合しません：</value>
+<value>このドキュメントの設定は装置タイプ{0}に適合しません：</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Collision_Energy" xml:space="preserve">
-<value>衝突エネルギー：</value>
+<value>コリジョンエネルギー：</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Declustering_Potential" xml:space="preserve">
 <value>クラスター分離ポテンシャル：</value>
@@ -485,7 +485,7 @@
 <value>DIAメソッドのエクスポートは{0}ではサポートされていません。</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Scheduled_methods_are_not_yet_supported_for_DIA_acquisition" xml:space="preserve">
-<value>スケジュールメソッドはDIA収集ではまだサポートされていません。</value>
+<value>DIAはスケジュールメソッドをまだサポートしていません。</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document" xml:space="preserve">
 <value>スケジュールメソッドをエクスポートするには、まず [ペプチド設定]/[予測] で保持時間の予測を選択するか、ドキュメント内のすべてのペプチドに対する結果をインポートする必要があります。</value>
@@ -512,7 +512,7 @@
 <value>準備完了</value>
   </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
-<value>{0}は空にはできません。</value>
+<value>{0}を設定してください。</value>
   </data>
   <data name="MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value" xml:space="preserve">
 <value>{0}は十進数値でなければなりません。</value>
@@ -524,7 +524,7 @@
 <value>{0}は {1} 以下でなければなりません。</value>
   </data>
   <data name="MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__" xml:space="preserve">
-<value>{0}は、{1} から {2} までの十進数値のカンマ区切りリストを含まなければなりません。</value>
+<value>{0}は、カンマで区切られた {1} から {2} までの小数点以下を含む値のリストを含まなければなりません。</value>
   </data>
   <data name="MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer" xml:space="preserve">
 <value>{0}は整数値でなければなりません。</value>
@@ -551,7 +551,7 @@
 <value>ファイル名</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Sample_Name" xml:space="preserve">
-<value>試料名</value>
+<value>サンプル名</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Modified_Time" xml:space="preserve">
 <value>修飾時間</value>
@@ -572,10 +572,10 @@
 <value>標準に対する比率</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Precursor_Replicate_Note" xml:space="preserve">
-<value>前駆体繰り返し測定メモ</value>
+<value>プリカーサー繰り返し測定メモ</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Precursor_Peak_Found_Ratio" xml:space="preserve">
-<value>前駆体ピーク検出率</value>
+<value>プリカーサーピーク検出率</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Best_Retention_Time" xml:space="preserve">
 <value>最良保持時間</value>
@@ -614,13 +614,13 @@
 <value>同位体ドット積</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Collision_Energy" xml:space="preserve">
-<value>最適衝突エネルギー</value>
+<value>最適コリジョンエネルギー</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
 <value>最適デクラスタリングポテンシャル</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Transition_Replicate_Note" xml:space="preserve">
-<value>遷移繰り返し測定メモ</value>
+<value>トランジション繰り返し測定メモ</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Retention_Time" xml:space="preserve">
 <value>保持時間</value>
@@ -707,7 +707,7 @@
 <value>標識タイプを削除(&amp;B)：</value>
   </data>
   <data name="RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
-<value>シークエンス「{0}」は有効なペプチドではありません。</value>
+<value>配列「{0}」は有効なペプチドではありません。</value>
   </data>
   <data name="RefineListDlg_OkDialog_None_of_the_specified_peptides_are_in_the_document" xml:space="preserve">
 <value>指定されたペプチドはどれもドキュメント内にありません。</value>
@@ -731,7 +731,7 @@
 <value>バックグラウンドプロテオームデータベースのクエリ中</value>
   </data>
   <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences" xml:space="preserve">
-<value>一致するペプチドシークエンスを持つタンパク質の検索中</value>
+<value>一致するペプチド配列を持つタンパク質の検索中</value>
   </data>
   <data name="Skyline_protein" xml:space="preserve">
 <value>タンパク質</value>
@@ -774,17 +774,17 @@
 <value>指定した名前が既にこのドキュメント内にあります。</value>
   </data>
   <data name="ImportResultsDlg_CanCreateMultiInjectionMethods_The_current_document_does_not_appear_to_have_enough_transitions_to_require_multiple_injections" xml:space="preserve">
-<value>現在のドキュメントには、複数の注入を必要とするような数の遷移はないようです。
+<value>現在のドキュメントのトランジション数では、複数の注入が必要ないようです。
 続行しますか？</value>
   </data>
   <data name="ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files" xml:space="preserve">
 <value>結果ファイルをインポート</value>
   </data>
   <data name="ImportResultsDlg_GetWiffSubPaths_Sample_Names" xml:space="preserve">
-<value>試料名</value>
+<value>サンプル名</value>
   </data>
   <data name="ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__" xml:space="preserve">
-<value>{0}から試料名を読み取り中</value>
+<value>{0}からサンプル名を読み取り中</value>
   </data>
   <data name="ImportResultsDlg_GetDataSourcePathsDir_Results_Directory" xml:space="preserve">
 <value>結果ディレクトリ</value>
@@ -802,10 +802,10 @@
 <value>キャッシュファイルが読み込まれていません。</value>
   </data>
   <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_valid_decimal_number" xml:space="preserve">
-<value>ノイズ時間制限は、有効な十進数でなければなりません。</value>
+<value>ノイズの制限値は、小数点以下を含む有効な値でなければいけません。</value>
   </data>
   <data name="MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number" xml:space="preserve">
-<value>ノイズ時間制限は、正の十進数でなければなりません。</value>
+<value>ノイズの制限値は、小数点以下を含む正の値でなければいけません。</value>
   </data>
   <data name="MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized" xml:space="preserve">
 <value>結果を最小化するには、すべての結果のインポートが完了していなければなりません。</value>
@@ -844,16 +844,16 @@
 <value>データファイル</value>
   </data>
   <data name="ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT" xml:space="preserve">
-<value>試料注入あたりの最大遷移数(&amp;X)：</value>
+<value>サンプル注入あたりの最大トランジション数(&amp;X)：</value>
   </data>
   <data name="ExportMethodDlg_CONCUR_TRANS_TXT" xml:space="preserve">
-<value>最大同時遷移数(&amp;X)：</value>
+<value>最大同時トランジション数(&amp;X)：</value>
   </data>
   <data name="ExportMethodDlg_PREC_PER_SAMPLE_INJ_TXT" xml:space="preserve">
-<value>試料注入あたりの最大前駆体数(&amp;X)：</value>
+<value>サンプル注入あたりの最大プリカーサー数(&amp;X)：</value>
   </data>
   <data name="ExportMethodDlg_CONCUR_PREC_TXT" xml:space="preserve">
-<value>最大同時前駆体数(&amp;X)：</value>
+<value>最大同時プリカーサー数(&amp;X)：</value>
   </data>
   <data name="ExportMethodDlg_RUN_DURATION_TXT" xml:space="preserve">
 <value>実行時間 (分)(&amp;D)：</value>
@@ -937,22 +937,22 @@
 <value>「{0}」という名前が既にあります。置き換えますか？</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides_Refined" xml:space="preserve">
-<value> 個のペプチドが精製されました</value>
+<value>線形回帰に使用したペプチド</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
 <value>ペプチド</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Outliers" xml:space="preserve">
-<value>異常値</value>
+<value>外れ値</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Regression_line" xml:space="preserve">
-<value>回帰線</value>
+<value>回帰曲線</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Alignment_of__0__to__1_" xml:space="preserve">
-<value>{0}を{1}にアライン</value>
+<value>{0} を {1} にアライメント</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Aligned_time" xml:space="preserve">
-<value>アライン時間</value>
+<value>アライメント済保持時間</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Time_from__0__" xml:space="preserve">
 <value>{0}からの時間</value>
@@ -1028,13 +1028,13 @@
 <value>回帰の調整</value>
   </data>
   <data name="GraphData_Graph_Peptides_Refined" xml:space="preserve">
-<value> 個のペプチドが精製されました</value>
+<value>線形回帰に使用したペプチド</value>
   </data>
   <data name="GraphData_Graph_Predictor" xml:space="preserve">
 <value>予測</value>
   </data>
   <data name="GraphData_Graph_Outliers" xml:space="preserve">
-<value>異常値</value>
+<value>外れ値</value>
   </data>
   <data name="RTPeptideGraphPane_UpdateAxes_Time" xml:space="preserve">
 <value>時間</value>
@@ -1055,19 +1055,19 @@
 <value>スケジュール時間</value>
   </data>
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors" xml:space="preserve">
-<value>同時前駆体</value>
+<value>同時プリカーサー</value>
   </data>
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions" xml:space="preserve">
-<value>同時遷移</value>
+<value>同時トランジション</value>
   </data>
   <data name="RTScheduleGraphPane_AddCurve__0__Minute_Window" xml:space="preserve">
 <value>{0} 分ウィンドウ</value>
   </data>
   <data name="SpectrumGraphItem_Title__0__1__Charge__2__" xml:space="preserve">
-<value>{0}{1}、電荷 {2}</value>
+<value>{0}{1}、価数 {2}</value>
   </data>
   <data name="SpectrumGraphItem_Title__0__1__Charge__2__3__" xml:space="preserve">
-<value>{0}{1}、電荷{2} ({3})</value>
+<value>{0}{1}、価数{2} ({3})</value>
   </data>
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
 <value>スペクトル情報がありません</value>
@@ -1121,10 +1121,10 @@
 <value>ペプチド</value>
   </data>
   <data name="PeptideTreeNode_ChildHeading__0__" xml:space="preserve">
-<value>前駆体({0}P)</value>
+<value>{0} 個のプリカーサー</value>
   </data>
   <data name="PeptideTreeNode_ChildUndoHeading__0__" xml:space="preserve">
-<value>{0} 個の前駆体</value>
+<value>{0} 個のプリカーサー</value>
   </data>
   <data name="PeptideTreeNode_RenderTip_Previous" xml:space="preserve">
 <value>前へ</value>
@@ -1154,7 +1154,7 @@
 <value>総比率{0}</value>
   </data>
   <data name="TransitionTreeNode_Title" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="TransitionTreeNode_GetResultsText__0__" xml:space="preserve">
     <value>[{0}]</value>
@@ -1199,13 +1199,13 @@
 <value>ペプチドの除外は、正規表現を必要とします。</value>
   </data>
   <data name="DigestSettings_Validate_maximum_missed_cleavages" xml:space="preserve">
-<value>最大欠如開裂数</value>
+<value>最大未切断サイト数</value>
   </data>
   <data name="DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__" xml:space="preserve">
 <value>{0}の値{1}は {2} から {3} でなければなりません。</value>
   </data>
   <data name="Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point" xml:space="preserve">
-<value>酵素には 1 つ以上の開裂点が必要です。</value>
+<value>酵素には 1 つ以上の切断点が必要です。</value>
   </data>
   <data name="SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling" xml:space="preserve">
 <value>&quot;{0}&quot;はフルスキャン特別処理に有効な設定ではありません</value>
@@ -1217,7 +1217,7 @@
 <value>単離スキームでは、フィルタと事前指定の単離ウィンドウを持つことはできません</value>
   </data>
   <data name="IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_" xml:space="preserve">
-<value>前駆体m/zフィルタは {0} から {1} まででなければなりません</value>
+<value>プリカーサーm/zフィルタは {0} から {1} まででなければなりません</value>
   </data>
   <data name="IsolationScheme_DoValidate_Special_handling_applies_only_to_prespecified_isolation_windows" xml:space="preserve">
 <value>特別処理は、事前指定の単離ウィンドウのみに適用されます。</value>
@@ -1259,7 +1259,7 @@
 <value>単離ウィンドウのマージンは負の値にはできません。</value>
   </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range" xml:space="preserve">
-<value>単離ウィンドウのマージンは、測定器範囲の極限で単離ウィンドウ全体に及びます。</value>
+<value>単離ウィンドウのマージンは、装置範囲の極限で単離ウィンドウ全体に及びます。</value>
   </data>
   <data name="IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__" xml:space="preserve">
 <value>同位体濃縮は記号{0}に対してはサポートされていません。</value>
@@ -1271,7 +1271,7 @@
     <value>{0} = {1}%</value>
   </data>
   <data name="FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
-<value>ニュートラルロスでは、公式または有効なモノアイソトピック質量と平均質量を指定する必要があります。</value>
+<value>ニュートラルロスには、組成式または有効なモノアイソトピック質量と平均質量を指定する必要があります。</value>
   </data>
   <data name="FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
 <value>ニュートラルロスは {0} 以上でなければなりません。</value>
@@ -1283,13 +1283,13 @@
 <value>予期されるロス{0}が修飾{1}にありません</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue" xml:space="preserve">
-<value>特殊断片イオンでは、断片化の残留物が 1 つ以上必要です。</value>
+<value>特別フラグメントイオンでは、フラグメント化の残留物が 1 つ以上必要です。</value>
   </data>
   <data name="MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs" xml:space="preserve">
-<value>特殊断片イオンは、断片化が発生したアミノ酸残留物の末端側を指定する必要があります。</value>
+<value>特別フラグメントイオンは、フラグメント化が発生したアミノ酸残留物の末端側を指定する必要があります。</value>
   </data>
   <data name="MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>最小長{0}は {1} から {2} まででなければなりません。</value>
+<value>最短値{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses" xml:space="preserve">
 <value>レポーターイオンでは、公式または有効なモノアイソトピック質量と平均質量を指定する必要があります。</value>
@@ -1367,10 +1367,10 @@
 <value>修飾タイプ{0}が見つかりません。</value>
   </data>
   <data name="PeptideModifications_DoValidate_Maximum_variable_modifications__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>最大可変修飾{0}は {1} から {2} まででなければなりません</value>
+<value>最大可変修飾数{0}は {1} から {2} まででなければなりません</value>
   </data>
   <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>最大ニュートラルロス{0}は {1} から {2} まででなければなりません</value>
+<value>最大ニュートラルロス数{0}は {1} から {2} まででなければなりません</value>
   </data>
   <data name="PeptideModifications_ReadXml_Heavy_modifications_found_without__0__attribute" xml:space="preserve">
 <value>「{0}」属性のない重い修飾が見つかりました。</value>
@@ -1397,7 +1397,7 @@
 <value>勾配と切片は、共に値を持つか、共に値を持たないようにしなければなりません。</value>
   </data>
   <data name="RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator" xml:space="preserve">
-<value>保持時間回帰では、スコアカルキュレータへのシークエンスを指定する必要があります。</value>
+<value>保持時間回帰では、スコアカルキュレータへの配列を指定する必要があります。</value>
   </data>
   <data name="RetentionTimeRegression_Validate_Invalid_negative_retention_time_window__0__" xml:space="preserve">
 <value>無効な負の保持時間ウィンドウ{0}です。</value>
@@ -1406,16 +1406,16 @@
 <value>保持時間カルキュレータ{0}が無効です。</value>
   </data>
   <data name="MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
-<value>シークエンス{0}は有効なペプチドではありません。</value>
+<value>配列{0}は有効なペプチドではありません。</value>
   </data>
   <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
-<value>測定保持時間は正の値でなければなりません。</value>
+<value>測定された保持時間は正の値でなければなりません。</value>
   </data>
   <data name="CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
-<value>衝突エネルギー回帰には、1 つ以上の回帰関数が必要です。</value>
+<value>コリジョンエネルギー回帰には、1 つ以上の回帰関数が必要です。</value>
   </data>
   <data name="CollisionEnergyRegression_Validate_Collision_energy_regression_contains_multiple_coefficients_for_charge__0__" xml:space="preserve">
-<value>衝突エネルギー回帰には、電荷{0}の係数が複数含まれています。</value>
+<value>コリジョンエネルギー回帰には、電荷{0}の係数が複数含まれています。</value>
   </data>
   <data name="OptimizableRegression_Validate_The_optimization_step_size__0__is_not_greater_than_zero" xml:space="preserve">
 <value>最適ステップサイズ{0}が正の値ではありません。</value>
@@ -1436,16 +1436,16 @@
 <value>修飾「{0}」には、既に別の定義があります。</value>
   </data>
   <data name="TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
-<value>高分解能MS1 フィルタリングでは、モノアイソトピック前駆体質量を使用する必要があります。</value>
+<value>高分解能MS1 フィルタリングでは、モノアイソトピックプリカーサー質量を使用する必要があります。</value>
   </data>
   <data name="TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan" xml:space="preserve">
-<value>測定器のファームウェア包含制限は、多重化DIAスキャンを行う前に指定する必要があります。</value>
+<value>装置のファームウェア包含制限は、多重化DIAスキャンを行う前に指定する必要があります。</value>
   </data>
   <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
-<value>遷移予測には、衝突エネルギー回帰関数が必要です。</value>
+<value>トランジション予測には、コリジョンエネルギー回帰関数が必要です。</value>
   </data>
   <data name="TransitionFilter_PrecursorCharges_Precursor_charges" xml:space="preserve">
-<value>前駆体電荷</value>
+<value>プリカーサー電荷</value>
   </data>
   <data name="TransitionFilter_ProductCharges_Product_ion_charges" xml:space="preserve">
 <value>プロダクトイオン電荷</value>
@@ -1454,22 +1454,22 @@
 <value>1 つ以上のイオンタイプが必要です。</value>
   </data>
   <data name="TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__" xml:space="preserve">
-<value>最初の断片名{0}はサポートされていません。</value>
+<value>最初のフラグメント名{0}はサポートされていません。</value>
   </data>
   <data name="TransitionFilter_FragmentRangeLastName_Unsupported_last_fragment_name__0__" xml:space="preserve">
-<value>最後の断片名{0}はサポートされていません。</value>
+<value>最後のフラグメント名{0}はサポートされていません。</value>
   </data>
   <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
 <value>{0}は空にはできません。</value>
   </data>
   <data name="TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once" xml:space="preserve">
-<value>前駆体電荷に電荷{0}が複数回指定されています。</value>
+<value>プリカーサー電荷に電荷{0}が複数回指定されています。</value>
   </data>
   <data name="TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__" xml:space="preserve">
 <value>無効な電荷{1}が見つかりました。{0}は {2} から {3} まででなければなりません。</value>
   </data>
   <data name="TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__" xml:space="preserve">
-<value>前駆体除外ウィンドウは、{0} から {1} まででなければなりません。</value>
+<value>プリカーサー除外ウィンドウは、{0} から {1} まででなければなりません。</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_ion_1" xml:space="preserve">
 <value>イオン 1</value>
@@ -1483,6 +1483,12 @@
   <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
 <value>イオン 4</value>
   </data>
+  <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
+<value>フラグメントイオンのないペプチドでフラグメントを見つけようとする無効な試みです。</value>
+  </data>
+  <data name="MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array" xml:space="preserve">
+<value>質量配列でイオンタイプ{0}が見つかりません</value>
+  </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
 <value>ライブラリイオン一致許容値{0}は {1} から {2} まででなければなりません。</value>
   </data>
@@ -1490,19 +1496,19 @@
 <value>ライブラリイオン数{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_Instrument_minimum_mz_value__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>測定器の最小m/z値{0}は、{1} から {2} まででなければなりません。</value>
+<value>装置の最小m/z値{0}は、{1} から {2} まででなければなりません。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_Instrument_maximum_m_z_value__0__is_less_than__1__from_minimum__2__" xml:space="preserve">
-<value>測定器の最大m/z値{0}は最小{2}より {1} 低い値です。</value>
+<value>装置の最大m/z値{0}は最小{2}より {1} 低い値です。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_Instrument_maximum_mz_exceeds_allowable_maximum__0__" xml:space="preserve">
-<value>測定器の最大m/z値は最大許容値{0}を超えています。</value>
+<value>装置の最大m/z値は最大許容値{0}を超えています。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_The_mz_match_tolerance__0__must_be_between__1__and__2__" xml:space="preserve">
 <value>m/z一致許容値{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_The_maximum_number_of_transitions__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>遷移{0}の最大数は {1} から {2} まででなければなりません。</value>
+<value>トランジション{0}の最大数は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_The_maximum_number_of_inclusions__0__must_be_between__1__and__2__" xml:space="preserve">
 <value>包含{0}の最大数は {1} から {2} まででなければなりません。</value>
@@ -1517,28 +1523,28 @@
 <value>許容保持時間範囲 {0} から {1} までの間隔は {2} 分以上でなければなりません。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_No_other_full_scan_MS_MS_filter_settings_are_allowed_when_precursor_filter_is_none" xml:space="preserve">
-<value>前駆体フィルタがない場合、他のフルスキャンMS/MSフィルタ設定は使用できません。</value>
+<value>プリカーサーフィルタがない場合、他のフルスキャンMS/MSフィルタ設定は使用できません。</value>
   </data>
   <data name="TransitionInstrument_DoValidate_The_precursor_mz_filter_must_be_between__0__and__1__" xml:space="preserve">
-<value>前駆体m/zフィルタは {0} から {1} まででなければなりません</value>
+<value>プリカーサーm/zフィルタは {0} から {1} まででなければなりません</value>
   </data>
   <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode" xml:space="preserve">
 <value>非DIAモードの単離スキームを作成しようとしました。</value>
   </data>
   <data name="TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter" xml:space="preserve">
-<value>前駆体フィルタなしで単離スキームを作成しようとしました</value>
+<value>プリカーサーフィルタなしで単離スキームを作成しようとしました</value>
   </data>
   <data name="TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included" xml:space="preserve">
-<value>前駆体同位体が含まれていない場合、他のフルスキャンMS1 フィルタ設定は使用できません。</value>
+<value>プリカーサー同位体が含まれていない場合、他のフルスキャンMS1 フィルタ設定は使用できません。</value>
   </data>
   <data name="TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
 <value>QIT質量アナライザーによるMS1 フィルタリングでは、同位体ピークは 1 つしかサポートされません。</value>
   </data>
   <data name="TransitionFullScan_DoValidate_The_precursor_isotope_count_for_MS1_filtering_must_be_between__0__and__1__peaks" xml:space="preserve">
-<value>MS1 フィルタリングの前駆体同位体数は {0} から {1} までのピークでなければなりません。</value>
+<value>MS1 フィルタリングのプリカーサー同位体数は {0} から {1} までのピークでなければなりません。</value>
   </data>
   <data name="TransitionFullScan_DoValidate_The_precursor_isotope_percent_for_MS1_filtering_must_be_between__0___and__1___of_the_base_peak" xml:space="preserve">
-<value>MS1 フィルタリングの前駆体同位体のパーセントは、ベースピークの {0} から {1} % まででなければなりません。</value>
+<value>MS1 フィルタリングのプリカーサー同位体のパーセントは、ベースピークの {0} から {1} % まででなければなりません。</value>
   </data>
   <data name="TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode" xml:space="preserve">
 <value>単離ウィンドウ幅値はターゲットモードでは使用できません。</value>
@@ -1547,10 +1553,10 @@
 <value>DIAモードでは単離ウィンドウ幅値が必要です。</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_precursor_resolution_must_be_between__0__and__1__for_QIT" xml:space="preserve">
-<value>QITの前駆体分解能は {0} から {1} まででなければなりません。</value>
+<value>QITのプリカーサー分解能は {0} から {1} まででなければなりません。</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_precursor_resolving_power_must_be_between__0__and__1__for__2__" xml:space="preserve">
-<value>{2}の前駆体分解能は {0} から {1} まででなければなりません。</value>
+<value>{2}のプリカーサー分解能は {0} から {1} まででなければなりません。</value>
   </data>
   <data name="TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__" xml:space="preserve">
 <value>{0}には分解能を校正するm/z値が必要です。</value>
@@ -1605,10 +1611,10 @@
 <value>{0} 個の一致が見つかりました</value>
   </data>
   <data name="ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks" xml:space="preserve">
-<value>手動統合ピーク</value>
+<value>手動積分ピーク</value>
   </data>
   <data name="ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak" xml:space="preserve">
-<value>手動統合ピーク</value>
+<value>手動積分ピーク</value>
   </data>
   <data name="TruncatedPeakFinder_DisplayName_Truncated_peaks" xml:space="preserve">
 <value>切断ピーク</value>
@@ -1623,10 +1629,10 @@
 <value>{0} 個の切断ピーク</value>
   </data>
   <data name="UnintegratedTransitionFinder_DisplayName_Unintegrated_transitions" xml:space="preserve">
-<value>統合されていない遷移</value>
+<value>積分されていないトランジション</value>
   </data>
   <data name="UnintegratedTransitionFinder_Match_Unintegrated_transition" xml:space="preserve">
-<value>統合されていない遷移</value>
+<value>積分されていないトランジション</value>
   </data>
   <data name="ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_" xml:space="preserve">
 <value>{0}の表が見つかりません</value>
@@ -1680,10 +1686,10 @@
 <value>初期化に成功する前に予期せずiRTカルキュレータが使用されました。</value>
   </data>
   <data name="IncompleteStandardException_IncompleteStandardException_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression" xml:space="preserve">
-<value>カﾙキュレータ{0}では、すべての標準ペプチドがなければ回帰を決定できません。</value>
+<value>カルキュレータ{0}では、すべての標準ペプチドがなければ回帰を決定できません。</value>
   </data>
   <data name="DatabaseNotConnectedException_DatabaseNotConnectedException_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted" xml:space="preserve">
-<value>カﾙキュレータ{0}のデータベースを開けませんでした。{1}ファイルが移動または削除されていないことを確認してください。</value>
+<value>カルキュレータ{0}のデータベースを開けませんでした。{1}ファイルが移動または削除されていないことを確認してください。</value>
   </data>
   <data name="BlibDb_MinimizeLibrary_Minimizing_library__0__" xml:space="preserve">
 <value>ライブラリ{0}の最小化中</value>
@@ -1711,10 +1717,10 @@
 <value>スペクトルヘッダーでデータが切り捨てられました。ファイルが破損している可能性があります。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
-<value>無効な前駆体電荷が見つかりました。ファイルが破損している可能性があります。</value>
+<value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted" xml:space="preserve">
-<value>スペクトルシークエンスでデータが切り捨てられました。ファイルが破損している可能性があります。</value>
+<value>スペクトル配列でデータが切り捨てられました。ファイルが破損している可能性があります。</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
 <value>ライブラリ「{0}」を読み込めませんでした。</value>
@@ -1735,7 +1741,7 @@
 <value>{0}ライブラリのバイナリキャッシュを構築中</value>
   </data>
   <data name="BiblioSpecLiteLibrary_Load_Invalid_precursor_charge__0__found__File_may_be_corrupted" xml:space="preserve">
-<value>無効な前駆体電荷{0}が見つかりました。ファイルが破損している可能性があります。</value>
+<value>無効なプリカーサー電荷{0}が見つかりました。ファイルが破損している可能性があります。</value>
   </data>
   <data name="BiblioSpecLiteLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
 <value>ライブラリ「{0}」を読み込めませんでした。</value>
@@ -1744,7 +1750,7 @@
 <value>{0}の読み取り中に予期しないSQLiteエラーが発生しました。</value>
   </data>
   <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist" xml:space="preserve">
-<value>冗長ライブラリ{0}がありません。</value>
+<value>重複許容ライブラリ{0}がありません。</value>
   </data>
   <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_Spectrum_peaks__0__excede_the_maximum_allowed__1__" xml:space="preserve">
 <value>スペクトルピーク{0}が最大許容値 {1} を超えています。</value>
@@ -1756,7 +1762,7 @@
 <value>{0}ライブラリの構築中</value>
   </data>
   <data name="BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__" xml:space="preserve">
-<value>冗長ライブラリ{0}を構築できませんでした。</value>
+<value>重複許容ライブラリ{0}を構築できませんでした。</value>
   </data>
   <data name="BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__" xml:space="preserve">
 <value>ライブラリ{0}を構築できませんでした。</value>
@@ -1789,7 +1795,7 @@
 <value>{0}ライブラリの読み込み中</value>
   </data>
   <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
-<value>無効な前駆体電荷が見つかりました。ファイルが破損している可能性があります。</value>
+<value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
   </data>
   <data name="NistLibraryBase_Load_Failed_loading_library__0__" xml:space="preserve">
 <value>ライブラリ「{0}」を読み込めませんでした。</value>
@@ -1832,7 +1838,7 @@
 <value>{0}ライブラリの読み込み中</value>
   </data>
   <data name="XHunterLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
-<value>無効な前駆体電荷が見つかりました。ファイルが破損している可能性があります。</value>
+<value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
   </data>
   <data name="XHunterLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
 <value>ライブラリ「{0}」を読み込めませんでした。</value>
@@ -1856,7 +1862,7 @@
 <value>無効なタイプを含むリストをシリアル化しようとしました。</value>
   </data>
   <data name="ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found" xml:space="preserve">
-<value>見つからないファイルの結果情報を保存しようとしています。</value>
+<value>結果情報を保存しようとしているファイルが見つかりません。</value>
   </data>
   <data name="ChromatogramCache_Load_Loading__0__cache" xml:space="preserve">
 <value>{0}キャッシュの読み込み中</value>
@@ -1874,7 +1880,7 @@
 <value>ファイル{0}がありません。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data" xml:space="preserve">
-<value>試料{0}には使用できるデータがありません。</value>
+<value>サンプル{0}には使用できるデータがありません。</value>
   </data>
   <data name="ChromCacheBuilder_WriteLoop_Existing_write_threads___0_" xml:space="preserve">
 <value>既存の書き込みスレッド: {0}</value>
@@ -1883,7 +1889,7 @@
 <value>ファイル書き込みエラー。</value>
   </data>
   <data name="ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__" xml:space="preserve">
-<value>異なるピーク数{0}と{1}を持つ、同一プレカーサーの遷移が見つかりました</value>
+<value>異なるピーク数{0}と{1}を持つ、同一プレカーサーのトランジションが見つかりました</value>
   </data>
   <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
 <value>ファイル{0}の結合中</value>
@@ -1892,13 +1898,13 @@
 <value>キャッシュ「{0}」を作成できませんでした。</value>
   </data>
   <data name="ChromCacheJoiner_FinishRead_Unexpected_end_of_file_in__0__" xml:space="preserve">
-<value>{0}で予期しないファイルの終わりになりました。</value>
+<value>{0}でファイルが予期せず終了しました。</value>
   </data>
   <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time" xml:space="preserve">
 <value>スキャン時間のないスキャン{0}が見つかりました。</value>
   </data>
   <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz" xml:space="preserve">
-<value>前駆体m/zのないスキャン{0}が見つかりました。</value>
+<value>プリカーサーm/zのないスキャン{0}が見つかりました。</value>
   </data>
   <data name="ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count" xml:space="preserve">
 <value>点数内の時間 ({0}) と強度 ({1}) が一致しません。</value>
@@ -1928,13 +1934,13 @@
 <value>機器設定における予期しない行： {0}</value>
   </data>
   <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values" xml:space="preserve">
-<value>無効なクロマトグラムID{0}が見つかりました。IDには前駆体とプロダクトm/z値の両方が含まれていなければなりません。</value>
+<value>無効なクロマトグラムID{0}が見つかりました。IDにはプリカーサーとプロダクトm/z値の両方が含まれていなければなりません。</value>
   </data>
   <data name="ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID" xml:space="preserve">
 <value>値「{0}」は有効なクロマトグラムIDではありません。</value>
   </data>
   <data name="ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values" xml:space="preserve">
-<value>無効なクロマトグラムID{0}が見つかりました。m/z 値を解析できません。</value>
+<value>無効なクロマトグラムID{0}が見つかりました。m/z 値を読み込めません。</value>
   </data>
   <data name="ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points" xml:space="preserve">
 <value>点を読み取れませんでした</value>
@@ -2000,16 +2006,16 @@
 <value>Analystをインストールするか、Analystがインストールされているコンピュータでこのインポートを実行してください</value>
   </data>
   <data name="VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library" xml:space="preserve">
-<value>AB Sciex WiffFileDataReaderライブラリでのパフォーマンス問題に対処するために{1}内の試料{0}をmzXMLに変換しようとしましたが失敗しました。</value>
+<value>AB Sciex WiffFileDataReaderライブラリでのパフォーマンス問題に対処するために{1}内のサンプル{0}をmzXMLに変換しようとしましたが失敗しました。</value>
   </data>
   <data name="LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues" xml:space="preserve">
 <value>データのインポートには {0} 分 (最大 {1} 分) かかることが予測されます。</value>
   </data>
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
-<value>非開裂FASTAシークエンスからペプチドリストを取得しようとしました。</value>
+<value>非切断FASTA配列からペプチドリストを取得しようとしました。</value>
   </data>
   <data name="XmlMassListExporter_Export_Unexpected_failure_writing_transitions" xml:space="preserve">
-<value>予期しない遷移の書き込みエラーです。</value>
+<value>予期しないトランジションの書き込みエラーです。</value>
   </data>
   <data name="XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed" xml:space="preserve">
 <value>スケジュールパラメータを書き込めませんでした。</value>
@@ -2021,25 +2027,25 @@
 <value>単離リストのエクスポート中</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__" xml:space="preserve">
-<value>単離リストのエクスポート中 ({1} / {0} サイクル)</value>
+<value>単離リストのエクスポート中 ({1} サイクル中 {0} サイクル目)</value>
   </data>
   <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
-<value>必要な遷移数 {0} が最大数 {1} を超えています</value>
+<value>必要なトランジション数 {0} が最大数 {1} を超えています</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required" xml:space="preserve">
-<value>ファイルあたりに必要な最大遷移数</value>
+<value>ファイルあたりに必要な最大トランジション数</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled" xml:space="preserve">
 <value>必要なペプチド{0}をスケジュールできません</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_precursors" xml:space="preserve">
-<value> 個の前駆体</value>
+<value> 個のプリカーサー</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_transitions" xml:space="preserve">
-<value> 個の遷移</value>
+<value> 個のトランジション</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings" xml:space="preserve">
-<value>現在の設定で以下のペプチドをスケジュールできませんでした：</value>
+<value>現在の設定で以下のペプチドのスケジュールを作成できませんでした：</value>
   </data>
   <data name="AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count" xml:space="preserve">
 <value>最大同時{0}数と最適化ステップ数を確認してください。</value>
@@ -2051,13 +2057,13 @@
 <value>{0}に保存できません。</value>
   </data>
   <data name="FileIterator_WriteTransition_Unexpected_failure_writing_transitions" xml:space="preserve">
-<value>予期しない遷移の書き込みエラーです。</value>
+<value>予期しないトランジションの書き込みエラーです。</value>
   </data>
   <data name="AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted" xml:space="preserve">
 <value>次の修飾を解釈できませんでした。</value>
   </data>
   <data name="Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations" xml:space="preserve">
-<value>注釈を結合しようとした際に「{0}」の注釈の競合が見つかりました。</value>
+<value>注釈をマージしようとした際に「{0}」の注釈の競合がおきました。</value>
   </data>
   <data name="DocNodeParent_GetPathTo_Index__0__exceeds_length__1__" xml:space="preserve">
 <value>インデックス{0}の長さが {1} を超えています</value>
@@ -2066,7 +2072,7 @@
 <value>ノードは深度 {1} で {0} 個の派生ノードを報告しましたが、{2} 個しか見つかりませんでした。</value>
   </data>
   <data name="ExportProperties_ExportFile_Unrecognized_instrument_type__0__" xml:space="preserve">
-<value>認識されていない測定器タイプ{0}です。</value>
+<value>装置タイプ{0}が認識できません。</value>
   </data>
   <data name="ExportOptimize_NONE_None" xml:space="preserve">
 <value>なし</value>
@@ -2114,13 +2120,13 @@
 <value>見つかった列数が少なすぎます</value>
   </data>
   <data name="FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence" xml:space="preserve">
-<value>最後の列には有効なタンパク質シークエンスがありません</value>
+<value>最後の列には有効なタンパク質配列がありません</value>
   </data>
   <data name="MassListImporter_Import_Empty_transition_list" xml:space="preserve">
-<value>空の遷移リストです。</value>
+<value>空のトランジションリストです。</value>
   </data>
   <data name="MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence" xml:space="preserve">
-<value>無効な遷移リストです。遷移リストには少なくとも前駆体m/z、プロダクトm/z、ペプチドシークエンスが必要です。</value>
+<value>無効なトランジションリストです。トランジションリストには少なくともプリカーサーm/z、プロダクトm/z、ペプチド配列が必要です。</value>
   </data>
   <data name="MassListImporter_Import_Failed_to_find_peptide_column" xml:space="preserve">
 <value>ペプチド列が見つかりませんでした。</value>
@@ -2129,31 +2135,31 @@
 <value>{0}のインポート中</value>
   </data>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
-<value>無効なペプチドシークエンス{0}が見つかりました</value>
+<value>無効なペプチド配列{0}が見つかりました</value>
   </data>
   <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
-<value>同位体標識エントリで一致する設定のないものが見つかりました</value>
+<value>同位体標識エントリでマッチする設定のないものが見つかりました</value>
   </data>
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
-<value>[遷移設定] の [修飾] タブを確認してください。</value>
+<value>[トランジション設定] の [修飾] タブを確認してください。</value>
   </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__" xml:space="preserve">
-<value>前駆体m/z{0}が最も近い値 {1} (delta = {2}) に一致しません</value>
+<value>プリカーサーm/z{0}が最も近い値 {1} (delta = {2}) に一致しません</value>
   </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-<value>前駆体m/z{0}が測定器設定の範囲外です</value>
+<value>プリカーサーm/z{0}が装置設定の範囲外です</value>
   </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings" xml:space="preserve">
-<value>[遷移設定] の [測定器] タブを確認してください。</value>
+<value>[トランジション設定] の [装置] タブを確認してください。</value>
   </data>
   <data name="MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__has_no_matching_product_ion" xml:space="preserve">
 <value>プロダクトm/z値{0}には一致するプロダクトイオンがありません</value>
   </data>
   <data name="MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-<value>プロダクトm/z{0}が測定器設定の範囲外です</value>
+<value>プロダクトm/z{0}が装置設定の範囲外です</value>
   </data>
   <data name="GeneralRowReader_Create_No_valid_precursor_m_z_column_found" xml:space="preserve">
-<value>有効な前駆体m/z列が見つかりません。</value>
+<value>有効なプリカーサーm/z列が見つかりません。</value>
   </data>
   <data name="GeneralRowReader_Create_No_valid_product_m_z_column_found" xml:space="preserve">
 <value>有効なプロダクトm/z列が見つかりません。</value>
@@ -2163,19 +2169,19 @@
     <comment>Protein or peptide sequence</comment>
   </data>
   <data name="ExPeptideRowReader_Create_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
-<value>同位体標識エントリで一致する設定のないものが見つかりました。</value>
+<value>同位体標識エントリでマッチする設定のないものが見つかりました</value>
   </data>
   <data name="MzMatchException_suggestion" xml:space="preserve">
-<value>[ペプチド設定] の [修飾] タブ、[予測] タブのm/zタイプ、または [遷移設定] の「測定器」タブのm/z一致許容範囲をチェックします。</value>
+<value>[ペプチド設定] の [修飾] タブ、[予測] タブのm/zタイプ、または [トランジション設定] の「装置」タブのm/z一致許容範囲をチェックします。</value>
   </data>
   <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications" xml:space="preserve">
-<value>単一の修飾セットを持つ{0}m/z{1}のすべての遷移を説明できませんでした</value>
+<value>単一の修飾セットを持つ{0}m/z{1}のすべてのトランジションを説明できませんでした</value>
   </data>
   <data name="PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__" xml:space="preserve">
-<value>ペプチド{0}がシークエンス{1}で見つかりませんでした。</value>
+<value>ペプチド{0}が配列{1}で見つかりませんでした。</value>
   </data>
   <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0__with_a_single_precursor" xml:space="preserve">
-<value>単一前駆体を持つm/z{0}のすべての遷移を説明できませんでした</value>
+<value>単一プリカーサーを持つm/z{0}のすべてのトランジションを説明できませんでした</value>
   </data>
   <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
 <value>ペプチド修飾を解釈できません</value>
@@ -2187,19 +2193,19 @@
 <value>次の修飾にUnimod定義を使用しますか？</value>
   </data>
   <data name="PasteDlg_AddPeptides_This_peptide_sequence_was_not_found_in_the_protein_sequence" xml:space="preserve">
-<value>このペプチドシークエンスがタンパク質シークエンスで見つかりませんでした</value>
+<value>このペプチド配列がタンパク質配列で見つかりませんでした</value>
   </data>
   <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
-<value>ペプチドシークエスは空欄にできません。</value>
+<value>ペプチド配列は空欄にできません。</value>
   </data>
   <data name="PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters" xml:space="preserve">
-<value>このペプチドシークエンスには無効な文字が含まれています。</value>
+<value>このペプチド配列には無効な文字が含まれています。</value>
   </data>
   <data name="PasteDlg_AddProteins_Invalid_protein_sequence__0__" xml:space="preserve">
-<value>無効なタンパク質シークエンス： {0}</value>
+<value>無効なタンパク質配列： {0}</value>
   </data>
   <data name="PasteDlg_AddProteins_Missing_protein_sequence" xml:space="preserve">
-<value>タンパク質シークエンスがありません</value>
+<value>タンパク質配列がありません</value>
   </data>
   <data name="PasteDlg_AddProteins_This_protein_was_not_found_in_the_background_proteome_database" xml:space="preserve">
 <value>このタンパク質がバックグラウンドプロテオームデータベースで見つかりませんでした。</value>
@@ -2221,10 +2227,10 @@
     <comment>Message (Error Type)</comment>
   </data>
   <data name="PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
-<value>このタンパク質にはシークエンスがありません。</value>
+<value>このタンパク質には配列がありません。</value>
   </data>
   <data name="PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number" xml:space="preserve">
-<value>前駆体m/zは数字ではありません。</value>
+<value>プリカーサーm/zは数字ではありません。</value>
   </data>
   <data name="PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number" xml:space="preserve">
 <value>プロダクトm/zは数字ではありません。</value>
@@ -2233,28 +2239,28 @@
 <value>クリップボードからデータを取得できませんでした。</value>
   </data>
   <data name="Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties" xml:space="preserve">
-<value>タンパク質シークエンスのないペプチドは開始および終了プロパティをサポートしません。</value>
+<value>タンパク質配列のないペプチドは開始および終了プロパティをサポートしません。</value>
   </data>
   <data name="Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values" xml:space="preserve">
-<value>タンパク質シークエンスのペプチドには、開始値と終了値が要です。</value>
+<value>タンパク質配列のペプチドには、開始値と終了値が要です。</value>
   </data>
   <data name="Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence" xml:space="preserve">
-<value>ペプチドシークエンスがタンパク質シークエンスの境界を超えています。</value>
+<value>ペプチド配列がタンパク質配列の境界を超えています。</value>
   </data>
   <data name="Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__" xml:space="preserve">
-<value>({2}:{3}) でペプチドシークエンス{0}がタンパク質シークエンス{1}と一致しません。</value>
+<value>({2}:{3}) でペプチド配列{0}がタンパク質配列{1}と一致しません。</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
-<value>タンパク質シークエンスは空欄にできません。</value>
+<value>タンパク質配列は空欄にできません。</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__" xml:space="preserve">
-<value>タンパク質シークエンスでは、{1}で文字「{0}」を含むことができません。</value>
+<value>タンパク質配列では、{1}で文字「{0}」を含むことができません。</value>
   </data>
   <data name="FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared" xml:space="preserve">
-<value>FASTAシークエンス情報のないペプチドは比較できません。</value>
+<value>FASTA配列情報のないペプチドは比較できません。</value>
   </data>
   <data name="FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared" xml:space="preserve">
-<value>異なるFASTAシークエンス内のペプチドは比較できません。</value>
+<value>異なるFASTA配列内のペプチドは比較できません。</value>
   </data>
   <data name="PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded" xml:space="preserve">
 <value>ドキュメントサイズ制限を超えました。</value>
@@ -2263,10 +2269,10 @@
 <value>ランダム質量シフト</value>
   </data>
   <data name="DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence" xml:space="preserve">
-<value>シャッフルシークエンス</value>
+<value>シャッフル配列</value>
   </data>
   <data name="DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence" xml:space="preserve">
-<value>逆シークエンス</value>
+<value>逆配列</value>
   </data>
   <data name="GenerateDecoysDlg_GenerateDecoysDlg_All" xml:space="preserve">
 <value>すべて</value>
@@ -2281,7 +2287,7 @@
 <value>式「{0}」は有効な化学式ではありません。</value>
   </data>
   <data name="SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__" xml:space="preserve">
-<value>前駆体同位体{0}は同位体分布 {1} から {2} の範囲外です。</value>
+<value>プリカーサー同位体{0}は同位体分布 {1} から {2} の範囲外です。</value>
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
 <value>ユーザー修飾のあるペプチド{0}が複数回見つかりました。</value>
@@ -2299,13 +2305,13 @@
 <value>ファイル{0}は繰り返し測定{1}にありませんでした。</value>
   </data>
   <data name="SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__" xml:space="preserve">
-<value>繰り返し測定{1}には前駆体{0}の結果がありません</value>
+<value>繰り返し測定{1}にはプリカーサー{0}の結果がありません</value>
   </data>
   <data name="SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
-<value>ファイル{1}には前駆体{0}の結果がありません</value>
+<value>ファイル{1}にはプリカーサー{0}の結果がありません</value>
   </data>
   <data name="SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift" xml:space="preserve">
-<value>デコイ前駆体のすべての遷移には、デコイ質量シフトが必要です。</value>
+<value>デコイプリカーサーのすべてのトランジションには、デコイ質量シフトが必要です。</value>
   </data>
   <data name="SrmDocument_ReadAnnotations_Annotation_found_without_name" xml:space="preserve">
 <value>名前のない注釈が見つかりました。</value>
@@ -2350,37 +2356,37 @@
 <value>{0}の圧縮中</value>
   </data>
   <data name="Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>前駆体電荷{0}は {1} から {2} まででなければなりません。</value>
+<value>プリカーサー電荷{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__" xml:space="preserve">
 <value>プロダクトイオン電荷{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__" xml:space="preserve">
-<value>断片序数{0}は 1 未満にはできません。</value>
+<value>フラグメント序数{0}は 1 未満にはできません。</value>
   </data>
   <data name="Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide" xml:space="preserve">
-<value>前駆体序数はペプチドの長さである必要があります。</value>
+<value>プリカーサー序数はペプチドの長さである必要があります。</value>
   </data>
   <data name="Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__" xml:space="preserve">
-<value>断片序数{0}がペプチド{2}の最大数 {1} を超えています。</value>
+<value>フラグメント序数{0}がペプチド{2}の最大数 {1} を超えています。</value>
   </data>
   <data name="Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>断片デコイ質量シフト{0}は {1} から {2} まででなければなりません。</value>
+<value>フラグメントデコイ質量シフト{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="Transition_ToString_precursor" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>前駆体電荷{0}は {1} から {2} まででなければなりません。</value>
+<value>プリカーサー電荷{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>前駆体デコイ質量シフト{0}は {1} から {2} まででなければなりません。</value>
+<value>プリカーサーデコイ質量シフト{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
-<value>欠如しているファイルの統合情報を追加しようとしています。</value>
+<value>欠損しているファイルの積分情報を追加しようとしています。</value>
   </data>
   <data name="TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__" xml:space="preserve">
-<value>ファイル{0}からの遷移をファイル{1}と統合中</value>
+<value>ファイル{0}からのトランジションをファイル{1}と積分中</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__" xml:space="preserve">
 <value>{0:F01} にはピークが見つかりませんでした。</value>
@@ -2407,7 +2413,7 @@
 <value>追加するiRTカルキュレータを選択してください。</value>
   </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database" xml:space="preserve">
-<value>iRTデータベースには、新しいペプチドは追加されません。</value>
+<value>新しいペプチドはiRTデータベースに追加されません。</value>
   </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database" xml:space="preserve">
 <value>iRTデータベースに 1 個の新しいペプチドが追加されます。</value>
@@ -2422,13 +2428,13 @@
 <value>既存のスペクトルライブラリのパスを指定してください。</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_Please_choose_a_non_redundant_library" xml:space="preserve">
-<value>非冗長ライブラリを選択してください。</value>
+<value>無重複ライブラリを選択してください。</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
-<value>ファイル{0}は冗長ライブラリのようです。</value>
+<value>ファイル{0}は重複許容ライブラリのようです。</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention_time_information_to_support_this_operation" xml:space="preserve">
-<value>この操作をサポートするのに十分な保持時間情報を含むのはBiblioSpecライブラリだけです。</value>
+<value>この操作に必要な保持時間情報を含むのはBiblioSpecライブラリだけです。</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library" xml:space="preserve">
 <value>ファイル{0}はBiblioSpecライブラリではありません。</value>
@@ -2443,19 +2449,19 @@
 <value>標準には 2 つの固定点が必要です。</value>
   </data>
   <data name="CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard" xml:space="preserve">
-<value>このドキュメントは、標準を校正する結果を含んでいる必要があります。</value>
+<value>ドキュメントには、標準を校正する結果を含んでいる必要があります。</value>
   </data>
   <data name="ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database" xml:space="preserve">
-<value>シークエンス「{0}」は現在データベースにありません。</value>
+<value>配列「{0}」は現在データベースにありません。</value>
   </data>
   <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database" xml:space="preserve">
-<value>次のシークエンスは現在データベースにありません：</value>
+<value>次の配列は現在データベースにありません：</value>
   </data>
   <data name="ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database" xml:space="preserve">
 <value>データベースには標準ペプチドが存在する必要があります。</value>
   </data>
   <data name="EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost" xml:space="preserve">
-<value>新しいデータベースファイルを作成しますか？現在のカﾙキュレータへの変更はすべて失われます。</value>
+<value>新しいデータベースファイルを作成しますか？現在のカルキュレータへの変更はすべて失われます。</value>
   </data>
   <data name="EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database" xml:space="preserve">
 <value>iRTデータベースの作成</value>
@@ -2476,16 +2482,19 @@
 <value>{0}ファイルは作成できませんでした。</value>
   </data>
   <data name="EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost" xml:space="preserve">
-<value>新しいデータベースファイルを開きますか？現在のカﾙキュレータへの変更はすべて失われます。</value>
+<value>新しいデータベースファイルを開きますか？現在のカルキュレータへの変更はすべて失われます。</value>
   </data>
   <data name="EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database" xml:space="preserve">
 <value>iRTデータベースを開く</value>
+  </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file" xml:space="preserve">
+<value>ファイル{0}がありません。[作成] ボタンをクリックして新しいデータベースを作成するか、[開く] ボタンをクリックして欠損しているファイルを検索します。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator" xml:space="preserve">
 <value>iRTカルキュレータの名前を入力してください。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it" xml:space="preserve">
-<value>{0}という名前のカﾙキュレータが既にあります。上書きしますか？</value>
+<value>{0}という名前のカルキュレータが既にあります。上書きしますか？</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_choose_a_database_file_for_the_iRT_calculator" xml:space="preserve">
 <value>iRTカルキュレータのデータベースファイルを選択してください。</value>
@@ -2500,7 +2509,7 @@
 <value>{0} 個未満の標準ペプチドの使用は推奨されません。{1} 個だけで続行しますか？</value>
   </data>
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence" xml:space="preserve">
-<value>値 {0} は有効な修飾ペプチドシークエンスではありません。</value>
+<value>値 {0} は有効な修飾ペプチド配列ではありません。</value>
   </data>
   <data name="EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once" xml:space="preserve">
 <value>{1}表でぺプチド{0}が複数回繰り返されています。</value>
@@ -2629,7 +2638,7 @@
 <value>研究室管轄者名{0}が無効です。これはインターネットサーバーアドレス (mylab.myu.edu など) のようなもので、他の研究室で使用される可能性は低いものの、実際のサーバーアドレスである必要はありません。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes" xml:space="preserve">
-<value>ライブラリID {0} は無効です。この識別子は、英数字または下線で始まり、英数字、下線、ハイフンのみを含みます。</value>
+<value>ライブラリID {0} が無効です。IDは英数字または下線で始まり、英数字、下線、ハイフンのみを含みます。</value>
     <comment>Letters restricted to English alphabet</comment>
   </data>
   <data name="BuildLibraryDlg_OkWizardPage_Finish" xml:space="preserve">
@@ -2672,16 +2681,16 @@
 <value>ペプチド</value>
   </data>
   <data name="ColumnSet_GetTransitionsTable_Precursor" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="ColumnSet_GetTransitionsTable_Precursors" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="ColumnSet_GetTransitionsTable_Transition" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="ColumnSet_GetTransitionsTable_Transitions" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="EnzymeList_Title_Edit_Enzymes" xml:space="preserve">
 <value>酵素を編集</value>
@@ -2720,10 +2729,10 @@
 <value>同位体修飾を編集</value>
   </data>
   <data name="CollisionEnergyList_Title_Edit_Collision_Energy_Regressions" xml:space="preserve">
-<value>衝突エネルギー回帰を編集</value>
+<value>コリジョンエネルギー回帰を編集</value>
   </data>
   <data name="CollisionEnergyList_Label_Collision_Energy_Regression" xml:space="preserve">
-<value>衝突エネルギー回帰(&amp;C)：</value>
+<value>コリジョンエネルギー回帰(&amp;C)：</value>
   </data>
   <data name="DeclusterPotentialList_Title_Edit_Declustering_Potential_Regressions" xml:space="preserve">
 <value>デクラスタリングポテンシャル回帰を編集</value>
@@ -2750,10 +2759,10 @@
 <value>保持時間回帰(&amp;R)：</value>
   </data>
   <data name="MeasuredIonList_Title_Edit_Special_Ions" xml:space="preserve">
-<value>特殊イオンを編集</value>
+<value>特別イオンを編集</value>
   </data>
   <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
-<value>特殊イオン(&amp;S)：</value>
+<value>特別イオン(&amp;S)：</value>
   </data>
   <data name="IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments" xml:space="preserve">
 <value>同位体標識濃縮を編集</value>
@@ -2768,7 +2777,7 @@
 <value>単離スキーム(&amp;I)：</value>
   </data>
   <data name="SrmSettingsList_DEFAULT_m_z_precursor" xml:space="preserve">
-<value>m/z &gt;前駆体</value>
+<value>m/z &gt;プリカーサー</value>
   </data>
   <data name="SrmSettingsList_DEFAULT_3_ions" xml:space="preserve">
 <value>3 個のイオン</value>
@@ -2789,7 +2798,7 @@
 <value>ペプチドRT結果</value>
   </data>
   <data name="ReportSpecList_GetDefaults_Transition_Results" xml:space="preserve">
-<value>遷移結果</value>
+<value>トランジション結果</value>
   </data>
   <data name="ReportSpecList_EditItem_An_unexpected_error_occurred_while_analyzing_the_current_document" xml:space="preserve">
 <value>現在のドキュメントを分析中に予期しないエラーが発生しました。</value>
@@ -2810,7 +2819,7 @@
 <value>ペプチド</value>
   </data>
   <data name="SrmDocument_GetPeptideGroupId_sequence" xml:space="preserve">
-<value>シークエンス</value>
+<value>配列</value>
   </data>
   <data name="BuildLibraryNotification_BuildLibraryNotification_Library__0__" xml:space="preserve">
 <value>ライブラリ{0}</value>
@@ -2834,7 +2843,7 @@
 <value>生成されたウィンドウの数をスキャンごとのウィンドウ数の倍数に調整できませんでした。スキャンごとのウィンドウ数または終了値を変更してみてください。</value>
   </data>
   <data name="CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization" xml:space="preserve">
-<value>ウィンドウの最適化は、重複する単離ウィンドウには適用できません。[OK] をクリックして重複を削除するか、[キャンセル] をクリックして最適化をキャンセルします。</value>
+<value>ウィンドウの最適化は、オーバーラップする単離ウィンドウには適用できません。[OK] をクリックしてオーバーラップを削除するか、[キャンセル] をクリックして最適化をキャンセルしてください。</value>
   </data>
   <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
 <value>「{0}」という名前の注釈が既に定義されています。</value>
@@ -2843,13 +2852,13 @@
 <value>この注釈を適用するタイプを 1 つ以上選択してください。</value>
   </data>
   <data name="EditCEDlg_OkDialog_The_collision_energy_regression__0__already_exists" xml:space="preserve">
-<value>衝突エネルギー回帰「{0}」が既にあります。</value>
+<value>コリジョンエネルギー回帰「{0}」が既にあります。</value>
   </data>
   <data name="EditCEDlg_OkDialog_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
-<value>衝突エネルギー回帰には、1 つ以上の回帰関数が必要です。</value>
+<value>コリジョンエネルギー回帰には、1 つ以上の回帰関数が必要です。</value>
   </data>
   <data name="EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5" xml:space="preserve">
-<value>エネルギー「{0}」は有効な電荷ではありません。前駆体電荷は 1 から 5 まででなければなりません。</value>
+<value>「{0}」は有効な価数ではありません。プリカーサー電荷は 1 から 5 まででなければなりません。</value>
   </data>
   <data name="EditCEDlg_ValidateCell_The_entry__0__is_not_valid" xml:space="preserve">
 <value>入力値{0}は無効です。</value>
@@ -2871,16 +2880,16 @@
 <value>新しい回帰を計算するのに十分なデータが見つかりませんでした。</value>
   </data>
   <data name="EditCEDlg_ShowGraph_Collision_Energy_Regression_Charge__0__" xml:space="preserve">
-<value>衝突エネルギー回帰電荷{0}</value>
+<value>コリジョンエネルギー回帰電荷{0}</value>
   </data>
   <data name="EditCEDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
-<value>前駆体m/z</value>
+<value>プリカーサーm/z</value>
   </data>
   <data name="EditCEDlg_ShowGraph_Collision_Energy" xml:space="preserve">
-<value>衝突エネルギー</value>
+<value>コリジョンエネルギー</value>
   </data>
   <data name="EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression" xml:space="preserve">
-<value>測定結果を完全に読み込まなければ、測定結果を使用して衝突エネルギー回帰を作成することはできません。</value>
+<value>コリジョンエネルギー回帰を作成する前に、測定結果を完全に読み込む必要があります。</value>
   </data>
   <data name="EditDPDlg_OkDialog_The_declustering_potential_regression__0__already_exists" xml:space="preserve">
 <value>デクラスタリングポテンシャル回帰「{0}」が既にあります。</value>
@@ -2892,13 +2901,13 @@
 <value>デクラスタリングポテンシャル回帰</value>
   </data>
   <data name="EditDPDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
-<value>前駆体m/z</value>
+<value>プリカーサーm/z</value>
   </data>
   <data name="EditDPDlg_ShowGraph_Declustering_Potential" xml:space="preserve">
 <value>デクラスタリングポテンシャル</value>
   </data>
   <data name="EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression" xml:space="preserve">
-<value>測定結果を完全に読み込まなければ、測定結果を使用してデクラスタリングポテンシャル回帰を作成することはできません。</value>
+<value>デクラスタリングポテンシャル回帰を作成する前に測定結果を完全に読み込む必要があります。</value>
   </data>
   <data name="EditEnzymeDlg_OnClosing_The_enzyme__0__already_exists" xml:space="preserve">
 <value>「{0}」という酵素が既にあります。</value>
@@ -2961,17 +2970,17 @@
 <value>{0}は有効な数値でなければなりません。</value>
   </data>
   <data name="GridViewDriver_GetValue_An_invalid_number__0__was_specified_for__1__2__" xml:space="preserve">
-<value>{1} {2}に対して無効な数値(「{0}」)が指定されました。</value>
+<value>{1} {2}に対して無効な数値 ("{0}") が指定されました。</value>
   </data>
   <data name="GridViewDriver_ValidateRow_On_line__0__1__" xml:space="preserve">
 <value>{0} 行、{1}</value>
     <comment>Line refers to line of document</comment>
   </data>
   <data name="EditIsotopeEnrichmentDlg_OkDialog_The_isotope_enrichments_named__0__already_exist" xml:space="preserve">
-<value>「{0}」という名前の同位体濃縮が既にあります。</value>
+<value>「{0}」という名前の同位体濃縮率が既にあります。</value>
   </data>
   <data name="EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__" xml:space="preserve">
-<value>濃縮{0}は {1} から {2} まででなければなりません。</value>
+<value>同位体濃縮率{0}は {1} から {2} まででなければなりません。</value>
   </data>
   <data name="EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid" xml:space="preserve">
 <value>入力値{0}は無効です。</value>
@@ -2995,19 +3004,19 @@
 <value>パス{0}はディレクトリです。</value>
   </data>
   <data name="EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library" xml:space="preserve">
-<value>非冗長ライブラリを選択してください。</value>
+<value>無重複ライブラリを選択してください。</value>
   </data>
   <data name="EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
-<value>ファイル{0}は冗長ライブラリのようです。</value>
+<value>ファイル{0}は重複許容ライブラリのようです。</value>
   </data>
   <data name="EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format" xml:space="preserve">
 <value>{0}ファイルはサポートされているスペクトルライブラリファイル形式ではありません。</value>
   </data>
   <data name="EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue" xml:space="preserve">
-<value>これはリストをデフォルト値にリセットします。続行しますか？</value>
+<value>リストをデフォルト値にリセットします。続行しますか？</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_The_special_ion__0__already_exists" xml:space="preserve">
-<value>特殊イオン「{0}」が既にあります。</value>
+<value>特別イオン「{0}」が既にあります。</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
 <value>レポーターイオン質量は {0} 以上でなければなりません。</value>
@@ -3043,7 +3052,7 @@
 <value>初期化中</value>
   </data>
   <data name="EditRTDlg_ShowGraph_Initializing__0__calculator" xml:space="preserve">
-<value>{0}カﾙキュレータの初期化中</value>
+<value>{0}カルキュレータの初期化中</value>
   </data>
   <data name="EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__" xml:space="preserve">
 <value>カルキュレータ{0}を初期化しようとしてエラーが発生しました。</value>
@@ -3055,31 +3064,31 @@
 <value>測定時間</value>
   </data>
   <data name="EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings" xml:space="preserve">
-<value>カルキュレータはペプチドのスコアには使用できません。設定を確認してください。</value>
+<value>カルキュレータはペプチドのスコアリングには使用できません。設定を確認してください。</value>
   </data>
   <data name="EditRTDlg_UpdateCalculator_The__0__calculator_cannot_score_any_of_the_peptides" xml:space="preserve">
-<value>{0}カﾙキュレータでは、どのペプチドもスコアできません。</value>
+<value>{0}カルキュレータでは、どのペプチドもスコアできません。</value>
   </data>
   <data name="EditRTDlg_RecalcRegression__0__peptides_R__1__" xml:space="preserve">
 <value>({0} ペプチド、R = {1})</value>
   </data>
   <data name="MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry" xml:space="preserve">
-<value>各エントリには修飾ペプチドシークエンスが必要です。</value>
+<value>各エントリには修飾ペプチド配列が必要です。</value>
   </data>
   <data name="MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence" xml:space="preserve">
-<value>シークエンス「{0}」は有効な修飾ペプチドシークエンスではありません。</value>
+<value>配列「{0}」は有効な修飾ペプチド配列ではありません。</value>
   </data>
   <data name="MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers" xml:space="preserve">
 <value>測定した保持時間は有効な十進数である必要があります。</value>
   </data>
   <data name="MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero" xml:space="preserve">
-<value>測定保持時間は正の値でなければなりません。</value>
+<value>測定された保持時間は正の値でなければなりません。</value>
   </data>
   <data name="AreaPeptideGraphPane_UpdateAxes_Peak_Area" xml:space="preserve">
 <value>ピーク面積</value>
   </data>
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="StatementCompletionTextBox_CreateListViewItems_Descriptions" xml:space="preserve">
 <value>説明：</value>
@@ -3088,7 +3097,7 @@
 <value>別名：</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text" xml:space="preserve">
-<value>スケジュールメソッドは選択した測定器ではサポートされていません。</value>
+<value>選択した装置はスケジュールメソッドをサポートしていません。</value>
   </data>
   <data name="FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__" xml:space="preserve">
 <value>{0} (読み込みに失敗しました：{1})</value>
@@ -3103,7 +3112,7 @@
 <value>M/Z</value>
   </data>
   <data name="TransitionGroupTreeNode_Title" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="TransitionGroupTreeNode_GetChoices_Invalid_attempt_to_get_choices_for_a_node_that_has_not_been_added_to_the_tree_yet" xml:space="preserve">
 <value>まだツリーに追加されていないノードの選択は取得できません。</value>
@@ -3115,13 +3124,13 @@
 <value>修飾</value>
   </data>
   <data name="TransitionGroupTreeNode_RenderTip_Precursor_charge" xml:space="preserve">
-<value>前駆体電荷</value>
+<value>プリカーサー電荷</value>
   </data>
   <data name="TransitionGroupTreeNode_RenderTip_Precursor_mz" xml:space="preserve">
-<value>前駆体m/z</value>
+<value>プリカーサーm/z</value>
   </data>
   <data name="TransitionGroupTreeNode_RenderTip_Precursor_mh" xml:space="preserve">
-<value>前駆体m+h</value>
+<value>プリカーサーm+h</value>
   </data>
   <data name="TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift" xml:space="preserve">
 <value>デコイ質量シフト</value>
@@ -3139,13 +3148,13 @@
 <value>エラーなし</value>
   </data>
   <data name="RefineListDlg_OkDialog_The_following_sequences_are_not_valid_peptides" xml:space="preserve">
-<value>次のシークエンスは有効なペプチドではありません:</value>
+<value>次の配列は有効なペプチドではありません:</value>
   </data>
   <data name="RefineListDlg_OkDialog_The_following_peptides_are_not_in_the_document" xml:space="preserve">
 <value>次のペプチドはドキュメント内にありません。</value>
   </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Transition_List" xml:space="preserve">
-<value>遷移リストをエクスポート</value>
+<value>トランジションリストをエクスポート</value>
   </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
 <value>単離リストをエクスポート</value>
@@ -3169,10 +3178,10 @@
 <value>{0}は十進数値でなければなりません。</value>
   </data>
   <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__has__2__transitions_which_exceeds_the_current_maximum__3__" xml:space="preserve">
-<value>ペプチド{1}の前駆体{0}には {2} 個の遷移がありますが、これは現在の最大{3}を超えています。</value>
+<value>ペプチド{1}のプリカーサー{0}には {2} 個のトランジションがありますが、これは現在の最大{3}を超えています。</value>
   </data>
   <data name="ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__requires__2__transitions_to_optimize_which_exceeds_the_current_maximum__3__" xml:space="preserve">
-<value>ペプチド{1}の前駆体{0}では 最適化に {2} 個の遷移が必要ですが、これは現在の最大{3}を超えています。</value>
+<value>ペプチド{1}のプリカーサー{0}では 最適化に {2} 個のトランジションが必要ですが、これは現在の最大{3}を超えています。</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings" xml:space="preserve">
 <value>カルキュレータ設定を確認してください。</value>
@@ -3222,7 +3231,7 @@
 <value>可変修飾では、アミノ酸または末端を指定する必要があります。</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable" xml:space="preserve">
-<value>可変チェックボックスは前駆体修飾のみに適用されます。プロダクトイオンロスは、本質的に可変です。</value>
+<value>可変チェックボックスはプリカーサー修飾のみに適用されます。プロダクトイオンロスは、本質的に可変です。</value>
   </data>
   <data name="EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid" xml:space="preserve">
 <value>末端修飾上の標識原子は無効です。</value>
@@ -3270,7 +3279,7 @@
 <value>追加されたリストには、{1}リストに既に表示されているペプチドが {0} 個含まれています。</value>
   </data>
   <data name="PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list" xml:space="preserve">
-<value>シークエンス「{0}」は既にリストにあります。</value>
+<value>配列「{0}」は既にリストにあります。</value>
   </data>
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__1__may_not_be_a_valid_proteome_file" xml:space="preserve">
 <value>ファイル{1}は有効なプロテオームファイルではない可能性があります。</value>
@@ -3330,16 +3339,16 @@
 <value>結果 {0:0.##}、{1:0.##} m/z</value>
   </data>
   <data name="TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th" xml:space="preserve">
-<value>結果 {0:0.##} m/z</value>
+<value>結果 {0:0.##} m/z      </value>
   </data>
   <data name="BiblioSpecLiteLibraryLoadLoading__0__library" xml:space="preserve">
 <value>{0}ライブラリの読み込み中、</value>
   </data>
   <data name="AbstractModificationMatcherFoundMatches__0__equals__1__" xml:space="preserve">
-    <value>{0} = {1}</value>
+<value>{0} = {1}</value>
   </data>
   <data name="ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
-<value>[遷移設定] の [修飾] タブを確認してください。</value>
+<value>[トランジション設定] の [修飾] タブを確認してください。</value>
   </data>
   <data name="PeptideDocNodeToString__0__rank__1__" xml:space="preserve">
 <value>{0} (ランク {1})</value>
@@ -3354,7 +3363,7 @@
 <value>ファイル{0}がありません。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor" xml:space="preserve">
-<value>イオンタイプには、イオンタイプa、b、c、x、y、z 、p (前駆体用)のカンマ区切りリストを含む必要があります。</value>
+<value>イオンタイプには、イオンタイプa、b、c、x、y、z 、p (プリカーサー用)のカンマ区切りリストを含む必要があります。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart" xml:space="preserve">
 <value>許容保持時間範囲 {0} から {1} までの間隔は {2} 分以上でなければなりません。</value>
@@ -3363,16 +3372,16 @@
 <value>QIT質量アナライザーによるMS1 フィルタリングでは、同位体ピークは 1 つしかサポートされません。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
-<value>高分解能MS1 フィルタリングでは、モノアイソトピック前駆体質量を使用する必要があります。</value>
+<value>高分解能MS1 フィルタリングでは、モノアイソトピックプリカーサー質量を使用する必要があります。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers" xml:space="preserve">
 <value>高分解能質量分析計でのMS1 フィルタリングには、同位体濃縮設定が必要です。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_An_isolation_scheme_is_required_to_match_multiple_precursors" xml:space="preserve">
-<value>複数の前駆体を一致させるには単離スキームが必要です。</value>
+<value>複数のプリカーサーを一致させるには単離スキームが必要です。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified" xml:space="preserve">
-<value>測定器のファームウェア包含制限を指定しなければ、多重化DIAスキャンは実行できません。</value>
+<value>装置のファームウェア包含制限を指定しなければ、多重化DIAスキャンは実行できません。</value>
   </data>
   <data name="TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes" xml:space="preserve">
 <value>これは有効な時間 (分) ではありません。</value>
@@ -3437,7 +3446,7 @@
 <value>このペプチドの修飾は現在のドキュメント設定に一致しません。</value>
   </data>
   <data name="ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document" xml:space="preserve">
-<value>電荷{1}を持つペプチド{0}が既に現在のドキュメントにあります。</value>
+<value>{1} 価のペプチド{0}が既に現在のドキュメントにあります。</value>
   </data>
   <data name="ViewLibraryDlg_AddPeptide_Add_library_peptide__0__" xml:space="preserve">
 <value>ライブラリペプチド{0}を追加</value>
@@ -3467,7 +3476,7 @@
 <value>現在のドキュメントには既にすべてのライブラリペプチドがあります。</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
-<value>この操作では、{0} {1} 個のペプチド、{2} 個の前駆体、{3} 個の遷移がドキュメントに追加されます。 </value>
+<value>この操作では、{0} {1} 個のペプチド、{2} 個のプリカーサー、{3} 個のトランジションがドキュメントに追加されます。 </value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
 <value>{0}既存の</value>
@@ -3497,7 +3506,7 @@
 <value>この操作を再試行してください。</value>
   </data>
   <data name="ViewLibSpectrumGraphItem_Title__0__1__Charge__2__" xml:space="preserve">
-<value>{0}{1}、電荷 {2}</value>
+<value>{0}{1}、価数 {2}</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides__0__proteins" xml:space="preserve">
 <value>{0} 個のタンパク質、</value>
@@ -3518,7 +3527,7 @@
 <value>ClipboardEx実装上の問題</value>
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-<value>ファイル{0}から試料情報を読み込もうとしてエラーが発生しました。</value>
+<value>ファイル{0}からサンプル情報を読み込もうとしてエラーが発生しました。</value>
   </data>
   <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
 <value>ファイルが壊れているか、ファイルがないか、または正しいライブラリがインストールされていない可能性があります。</value>
@@ -3581,7 +3590,7 @@
 <value>プロセス「{0}」(ID = {1}) によりクリップボードが開かれました。</value>
   </data>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
-<value>要素が欠如しているリストをシリアル化しようとしました。</value>
+<value>要素が欠損しているリストをシリアル化しようとしました。</value>
   </data>
   <data name="XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__" xml:space="preserve">
 <value>値「{0}」は属性{1}に対して有効ではありません。</value>
@@ -3638,7 +3647,7 @@
 <value>[OK] をクリックしてドキュメントを開きます。</value>
   </data>
   <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
-<value>データファイル「{0}」がなく、測定器からの以下の元の出力が見つかりませんでした。</value>
+<value>データファイル「{0}」がなく、装置からの以下の元の出力が見つかりませんでした。</value>
   </data>
   <data name="SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes" xml:space="preserve">
 <value>変更を保存しますか？</value>
@@ -3701,7 +3710,7 @@
 <value>先頭行にデータ列がありません。</value>
   </data>
   <data name="SkylineWindow_importMassListMenuItem_Click_Import_transition_list" xml:space="preserve">
-<value>遷移リストをインポート</value>
+<value>トランジションリストをインポート</value>
   </data>
   <data name="SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document" xml:space="preserve">
 <value>Skylineドキュメントをインポート</value>
@@ -3719,7 +3728,7 @@
 <value>結果をインポートする前にこのドキュメントを保存する必要があります。</value>
   </data>
   <data name="SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential" xml:space="preserve">
-<value>[遷移設定] の [予測] タブででクラスタリングポテンシャルの回帰を選択しなければ、でクラスタリングポテンシャルの最適化データはインポートできません。</value>
+<value>[トランジション設定] の [予測] タブででクラスタリングポテンシャルの回帰を選択しなければ、でクラスタリングポテンシャルの最適化データはインポートできません。</value>
   </data>
   <data name="SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results" xml:space="preserve">
 <value>結果を再インポートしようとしてエラーが発生しました。</value>
@@ -3764,7 +3773,7 @@
 <value>作業中...</value>
   </data>
   <data name="AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__" xml:space="preserve">
-<value>単離リストのエクスポート中 ({0} / {0} サイクル)</value>
+<value>単離リストのエクスポート中 ({0} サイクル中 {0} サイクル目)</value>
   </data>
   <data name="ExportReportDlg_ShowPreview_An_unexpected_error_occurred_attempting_to_display_the_report___0___" xml:space="preserve">
 <value>レポート「{0}」を表示しようとして予期しないエラーが発生しました。</value>
@@ -3777,7 +3786,7 @@
 <value>ファイルが壊れているか、ファイルがないか、または正しいライブラリがインストールされていない可能性があります。</value>
   </data>
   <data name="ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-<value>ファイル{0}から試料情報を読み込もうとしてエラーが発生しました。</value>
+<value>ファイル{0}からサンプル情報を読み込もうとしてエラーが発生しました。</value>
   </data>
   <data name="ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document" xml:space="preserve">
 <value>以下のファイルが元の場所または現在のドキュメントフォルダで見つかりません。</value>
@@ -3804,10 +3813,10 @@
 <value>続行しますか？</value>
   </data>
   <data name="SkylineWindow_Paste_Protein_sequence_not_found" xml:space="preserve">
-<value>タンパク質シークエンスが見つかりませんでした。</value>
+<value>タンパク質配列が見つかりませんでした。</value>
   </data>
   <data name="SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line" xml:space="preserve">
-<value>タンパク質シークエンスは各行の最後の値でなければなりません。</value>
+<value>タンパク質配列は各行の最後の値でなければなりません。</value>
   </data>
   <data name="SkylineWindow_ShowUniquePeptidesDlg_Inspecting_peptide_uniqueness_requires_a_background_proteome" xml:space="preserve">
 <value>ペプチドの一意性の検査にはバックグラウンドプロテオームが必要です。</value>
@@ -3837,7 +3846,7 @@
 <value>メソッドファイル</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Transition_List" xml:space="preserve">
-<value>遷移リスト</value>
+<value>トランジションリスト</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Isolation_List" xml:space="preserve">
 <value>単離リスト</value>
@@ -3873,28 +3882,28 @@
 <value>6 個のイオン</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor" xml:space="preserve">
-<value>m/z &gt;前駆体</value>
+<value>m/z &gt;プリカーサー</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1" xml:space="preserve">
-<value>(m/z &gt; 前駆体) - 1</value>
+<value>(m/z &gt; プリカーサー) - 1</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2" xml:space="preserve">
-<value>(m/z &gt; 前駆体) - 2</value>
+<value>(m/z &gt; プリカーサー) - 2</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1" xml:space="preserve">
-<value>(m/z &gt; 前駆体) + 1</value>
+<value>(m/z &gt; プリカーサー) + 1</value>
   </data>
   <data name="TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2" xml:space="preserve">
-<value>(m/z &gt; 前駆体) + 2</value>
+<value>(m/z &gt; プリカーサー) + 2</value>
   </data>
   <data name="TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__" xml:space="preserve">
-<value>遷移設定「{0}」に不明な断片名があります</value>
+<value>トランジション設定「{0}」に不明なフラグメント名があります</value>
   </data>
   <data name="ExportOptimize_CE_Collision_Energy" xml:space="preserve">
-<value>衝突エネルギー</value>
+<value>コリジョンエネルギー</value>
   </data>
   <data name="Peptide_ToString__missed__5__" xml:space="preserve">
-<value>(欠如数 {5})</value>
+<value>(ミス {5})</value>
   </data>
   <data name="BackgroundProteomeSpec_Digest_Digesting__0__" xml:space="preserve">
 <value>{0}の消化中</value>
@@ -3939,13 +3948,13 @@
 <value>iRTデータベースファイル</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab" xml:space="preserve">
-<value>[遷移設定] の [フルスキャン] タブで前駆体質量アナライザータイプが{0}に設定されていません。</value>
+<value>[トランジション設定] の [フルスキャン] タブでプリカーサー質量アナライザータイプが{0}に設定されていません。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab" xml:space="preserve">
-<value>[遷移設定] の [フルスキャン] タブでプロダクト質量アナライザータイプが{0}に設定されていません。</value>
+<value>[トランジション設定] の [フルスキャン] タブでプロダクト質量アナライザータイプが{0}に設定されていません。</value>
   </data>
   <data name="Peptide_ToString_missed__0__" xml:space="preserve">
-<value>(欠如数 {0})</value>
+<value>(ミス {0})</value>
   </data>
   <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides" xml:space="preserve">
 <value>ライブラリペプチド</value>
@@ -3996,7 +4005,7 @@
 <value>レガシーライブラリ</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
-<value>保持時間予測カルキュレータはスコアできません。</value>
+<value>保持時間予測カルキュレータでスコアリングできません。</value>
   </data>
   <data name="GridViewDriver_GetValue_on_line__0__" xml:space="preserve">
 <value>{0} 行上</value>
@@ -4053,10 +4062,10 @@
 <value>なし</value>
   </data>
   <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="FullScanAcquisitionExtension_LOCALIZED_VALUES_None" xml:space="preserve">
 <value>なし</value>
@@ -4089,7 +4098,7 @@
 <value>不明</value>
   </data>
   <data name="IonTypeExtension_LOCALIZED_VALUES_precursor" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="GridColumnsExtension_getDefaultLanguageValues_none" xml:space="preserve">
 <value>なし</value>
@@ -4158,7 +4167,7 @@
 <value>スペクトルライブラリ</value>
   </data>
   <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator" xml:space="preserve">
-<value>iRTカﾙキュレータ</value>
+<value>iRTカルキュレータ</value>
   </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
 <value>バックグラウンドプロテオーム</value>
@@ -4236,7 +4245,7 @@
 <value>ペプチドの受け入れ</value>
   </data>
   <data name="SkylineWindow_RemoveMissingResults_Remove_missing_results" xml:space="preserve">
-<value>欠如している結果を削除</value>
+<value>欠損している結果を削除</value>
   </data>
   <data name="SkylineWindow_SaveSettings_Name_settings" xml:space="preserve">
 <value>名前の設定</value>
@@ -4245,10 +4254,10 @@
 <value>設定を変更</value>
   </data>
   <data name="SkylineWindow_IntegrateAll_Set_integrate_all" xml:space="preserve">
-<value>すべての統合を設定</value>
+<value>すべての積分を設定</value>
   </data>
   <data name="SkylineWindow_IntegrateAll_Clear_integrate_all" xml:space="preserve">
-<value>すべての統合をクリア</value>
+<value>すべての積分をクリア</value>
   </data>
   <data name="SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__" xml:space="preserve">
 <value>{0}を追加</value>
@@ -4296,7 +4305,7 @@
 <value>ペプチドリストを挿入</value>
   </data>
   <data name="PasteDlg_Description_Insert_transition_list" xml:space="preserve">
-<value>遷移リストを挿入</value>
+<value>トランジションリストを挿入</value>
   </data>
   <data name="PasteDlg_Description_Insert" xml:space="preserve">
 <value>挿入</value>
@@ -4320,7 +4329,7 @@
 <value>{0}カルキュレータを更新</value>
   </data>
   <data name="SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers" xml:space="preserve">
-<value>保持時間の異常値を削除</value>
+<value>保持時間の外れ値を削除</value>
   </data>
   <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_" xml:space="preserve">
 <value>ピークの開始を {0:F01} に変更</value>
@@ -4392,16 +4401,16 @@
 <value>このツールを実行する前にタンパク質を選択してください。</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run" xml:space="preserve">
-<value>このツールを実行するには選択したペプチドシークエンスが必要です。</value>
+<value>このツールを実行するには選択したペプチド配列が必要です。</value>
   </data>
   <data name="ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_" xml:space="preserve">
-<value>このツールを実行する前にペプチドシークエンスを選択してください。</value>
+<value>このツールを実行する前にペプチド配列を選択してください。</value>
   </data>
   <data name="ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run" xml:space="preserve">
-<value>このツールを実行するには選択した前駆体が必要です。</value>
+<value>このツールを実行するには選択したプリカーサーが必要です。</value>
   </data>
   <data name="ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_" xml:space="preserve">
-<value>このツールを実行する前に前駆体を選択してください。</value>
+<value>このツールを実行する前にプリカーサーを選択してください。</value>
   </data>
   <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
 <value>このツールを実行するにはアクティブな繰り返し測定名が必要です。</value>
@@ -4446,10 +4455,10 @@
 <value>選択したタンパク質名</value>
   </data>
   <data name="ToolMacros__listArguments_Selected_Peptide_Sequence" xml:space="preserve">
-<value>選択したペプチドシークエンス</value>
+<value>選択したペプチド配列</value>
   </data>
   <data name="ToolMacros__listArguments_Selected_Precursor" xml:space="preserve">
-<value>選択した前駆体</value>
+<value>選択したプリカーサー</value>
   </data>
   <data name="ToolMacros__listArguments_Active_Replicate_Name" xml:space="preserve">
 <value>アクティブな繰り返し測定名</value>
@@ -4515,13 +4524,13 @@
 <value>一時掲示データをディスクに保存できません。</value>
   </data>
   <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title" xml:space="preserve">
-<value>遷移リストをインポート</value>
+<value>トランジションリストをインポート</value>
   </data>
   <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List" xml:space="preserve">
-<value>遷移リスト</value>
+<value>トランジションリスト</value>
   </data>
   <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_" xml:space="preserve">
-<value>結果をインポートする前に 1 つ以上のターゲット遷移を追加してください。</value>
+<value>結果をインポートする前に 1 つ以上のターゲットトランジションを追加してください。</value>
   </data>
   <data name="RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__" xml:space="preserve">
 <value>{0}の名前を複数回変更することはできません。{1}または{2}を削除してください。</value>
@@ -4536,10 +4545,10 @@
 <value>タンパク質の名前の変更</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences" xml:space="preserve">
-<value>ドキュメントに名前の競合があります。{0}という名前は、現在複数のタンパク質シークエンスで使用されています。</value>
+<value>ドキュメントに名前の競合があります。{0}という名前は、現在複数のタンパク質配列で使用されています。</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_" xml:space="preserve">
-<value>現在のドキュメントとFASTAファイル{0}の間に一致するタンパク質シークエンスが見つかりません。</value>
+<value>現在のドキュメントとFASTAファイル{0}の間に一致するタンパク質配列が見つかりません。</value>
   </data>
   <data name="SerializableSettingsList_ImportFile_Failure_loading__0__" xml:space="preserve">
 <value>{0}を読み込めません。</value>
@@ -4578,10 +4587,10 @@
 <value>ペプチド</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_PrecursorResults" xml:space="preserve">
-<value>前駆体結果</value>
+<value>プリカーサー結果</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_Precursors" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_Proteins" xml:space="preserve">
 <value>タンパク質</value>
@@ -4590,10 +4599,10 @@
 <value>繰り返し測定</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
-<value>遷移結果</value>
+<value>トランジション結果</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_Transitions" xml:space="preserve">
-<value>遷移</value>
+<value>トランジション</value>
   </data>
   <data name="ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_" xml:space="preserve">
 <value>これまでにインポートされた結果にパス「{0}」はありません。</value>
@@ -4674,7 +4683,7 @@
 <value>ファイル{0}を読み取れませんでした。</value>
   </data>
   <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_" xml:space="preserve">
-<value>ドキュメントに 1 つ以上の前駆体遷移がなければ先に進めません。</value>
+<value>ドキュメントに 1 つ以上のプリカーサートランジションがなければ先に進めません。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_" xml:space="preserve">
 <value>ドキュメントにペプチドがありません。</value>
@@ -4683,13 +4692,13 @@
 <value>FASTAをインポートしてペプチドをドキュメントに追加してください。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
-<value>ドキュメントに前駆体遷移がありません。</value>
+<value>ドキュメントにプリカーサートランジションがありません。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_" xml:space="preserve">
-<value>フルスキャン設定で指定されている前駆体遷移を自動選択するようにドキュメントの設定を変更しますか？</value>
+<value>フルスキャン設定で指定されているプリカーサートランジションを自動選択するようにドキュメントの設定を変更しますか？</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_settings_to_add_precursors" xml:space="preserve">
-<value>設定を変更して前駆体を追加する</value>
+<value>設定を変更してプリカーサーを追加する</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_settings" xml:space="preserve">
 <value>設定を変更</value>
@@ -4740,19 +4749,19 @@
 <value>ファイル「{0}」は有効なライブラリではありません。</value>
   </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
-<value>測定器タイプ{0}はトリガーによる取得に対応していません。</value>
+<value>装置タイプ{0}はトリガーによる取得に対応していません。</value>
   </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
-<value>トリガーによる取得では、遷移をランクするためにスペクトルライブラリまたはインポート結果が必要です。</value>
+<value>トリガーによる取得では、トランジションをランクするためにスペクトルライブラリまたはインポート結果が必要です。</value>
   </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
-<value>現在のドキュメントには、トリガーによる取得の遷移をランクするのに十分な情報のないペプチドが含まれています。</value>
+<value>現在のドキュメントには、トリガーによる取得のトランジションをランクするのに十分な情報のないペプチドが含まれています。</value>
   </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
-<value>{0}測定器は、トリガーによる取得に対する直接メソッドエクスポートをサポートしていません。</value>
+<value>{0}装置は、トリガーによる取得に対する直接メソッドエクスポートをサポートしていません。</value>
   </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_" xml:space="preserve">
-<value>{0}遷移リストをエクスポートし、ベンダーソフトウェアを使用して手動でメソッドファイルにインポートする必要があります。</value>
+<value>{0}トランジションリストをエクスポートし、ベンダーソフトウェアを使用して手動でメソッドファイルにインポートする必要があります。</value>
   </data>
   <data name="AnnotationDef_ValidationErrorMessage_Invalid_value" xml:space="preserve">
 <value>無効な値</value>
@@ -4872,7 +4881,7 @@
 <value>ピークスコアモデル{0}は既にあります</value>
   </data>
   <data name="PeakCalculatorWeight_Validate___0___is_not_a_known_name_for_a_peak_feature_calculator" xml:space="preserve">
-<value>'「{0}」はピーク機能カルキュレータとして知られている名前ではありません</value>
+<value>「{0}」はピーク機能カルキュレータとして知られている名前ではありません</value>
   </data>
   <data name="PeakCalculatorGridViewDriver_ValidateRow_On_line__0____1_" xml:space="preserve">
 <value>{0} 行、{1}</value>
@@ -4893,10 +4902,10 @@
 <value>{0}レポートをエクスポートしています</value>
   </data>
   <data name="Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_" xml:space="preserve">
-<value>C 末端制限を持たせるには、酵素に C 末端開裂が必要です。</value>
+<value>C 末端の制限を設定するには、酵素が C 末端側を切断する必要があります。</value>
   </data>
   <data name="Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_" xml:space="preserve">
-<value>N 末端制限を持たせるには、酵素に N 末端開裂が必要です。</value>
+<value>N 末端の制限を設定するには、酵素が N 末端側を切断する必要があります。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__" xml:space="preserve">
 <value>{0}へ書き込もうとしてアクセス違反になりました。</value>
@@ -4917,7 +4926,7 @@
 <value>{0}スコアを表示</value>
   </data>
   <data name="SkylineWindow_AlignTimesToFileFormat" xml:space="preserve">
-<value>{0}に時間をアラインする</value>
+<value>{0}に時間をアライメントする</value>
   </data>
   <data name="LegacyIdentifiedCountCalc_LegacyIdentifiedCountCalc_Legacy_identified_count" xml:space="preserve">
 <value>同定数</value>
@@ -4974,10 +4983,10 @@
     <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="GenerateDecoysDlg_OkDialog_No_precursor_models_for_decoys_were_found_" xml:space="preserve">
-<value>デコイ用の前駆体モデルが見つかりませんでした。</value>
+<value>デコイ用のプリカーサーモデルが見つかりませんでした。</value>
   </data>
   <data name="GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursor_models_for_decoys__or_use_the___1___decoy_generation_method_" xml:space="preserve">
-<value>{0}をデコイ用の前駆体モデル数より小さくするか、「{1}」デコイ生成メソッドを使用してください。</value>
+<value>{0}をデコイ用のプリカーサーモデル数より小さくするか、「{1}」デコイ生成メソッドを使用してください。</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
 <value>クロマトグラムを結合しています...</value>
@@ -4998,7 +5007,7 @@
 <value>強度</value>
   </data>
   <data name="AsyncChromatogramsGraph_Render__0___sample__1_" xml:space="preserve">
-<value>{0}、試料 {1}</value>
+<value>{0}、サンプル {1}</value>
   </data>
   <data name="ChromGraphItem_Title__0____base_peak" xml:space="preserve">
 <value>{0} - ベースピーク</value>
@@ -5010,10 +5019,10 @@
     <value>..\Resources\AllIonsStatusButton.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
-<value>ペプチド、前駆体、または遷移を選択して、クロマトグラムを表示します</value>
+<value>ペプチド、プリカーサー、またはトランジションを選択して、クロマトグラムを表示します</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found" xml:space="preserve">
-<value>前駆体イオンクロマトグラムが見つかりません</value>
+<value>プリカーサーイオンクロマトグラムが見つかりません</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found" xml:space="preserve">
 <value>プロダクトイオンクロマトグラムが見つかりません</value>
@@ -5034,7 +5043,7 @@
 <value>ドキュメントライブラリからのライブラリランの削除に失敗しました。</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_" xml:space="preserve">
-<value>まだ欠如している結果ファイルがあります。続行しますか？</value>
+<value>まだ欠損している結果ファイルがあります。続行しますか？</value>
   </data>
   <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
 <value>ペプチド検索をインポート</value>
@@ -5062,6 +5071,21 @@
   </data>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_" xml:space="preserve">
 <value>{1} 行目の値「{0}」は有効な終了時間ではありません。</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_" xml:space="preserve">
+<value>{1} 行目の{0}ファイルはこのドキュメントにインポートされていません。</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__" xml:space="preserve">
+<value>{1} 行目の修飾状態{0}は、ペプチド{2}のドキュメントにあるどの修飾状態にも一致しません。</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
+<value>{1} 行目にあるペプチド配列{0}は、ドキュメント内のどのペプチドにも一致しません。</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
+<value>カンマ</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
+<value>セミコロン</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
 <value>OverlapDemultiplexer:InitializeFile が多重化ファイルに重複して不適切に形成されています</value>
@@ -5091,10 +5115,10 @@
 <value>範囲外エラーにより、デコンボリューションマトリックスのスライスを取り出せませんでした。</value>
   </data>
   <data name="OverlapDemultiplexer_the_isolation_window_overlap_scheme_does_not_cover_all_isolation_windows" xml:space="preserve">
-<value>overlapiIsolation ウィンドウスキームに欠如している隣接単離ウィンドウがあります。</value>
+<value>overlapiIsolation ウィンドウスキームに欠損している隣接単離ウィンドウがあります。</value>
   </data>
   <data name="OverlapDemultiplexer_RowStart_Number_of_regions__0__in_overlap_demultiplexer_approximation_must_be_less_than_number_of_scans__1__" xml:space="preserve">
-<value>重複しデマルチプレクサ―の領域数{0}は、スキャン数{1}未満でなければなりません。</value>
+<value>重複したデマルチプレクサ―の領域数{0}は、スキャン数{1}未満でなければなりません。</value>
   </data>
   <data name="ChromLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ChromLib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -5142,7 +5166,7 @@
 <value>参照共溶出</value>
   </data>
   <data name="TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_" xml:space="preserve">
-<value>遷移内に、重複または順序の違うピークがあります{0}</value>
+<value>トランジション内に、重複または順序の違うピークがあります{0}</value>
   </data>
   <data name="PeakBoundaryImporter_Import_Missing_start_time_on_line__0_" xml:space="preserve">
 <value>{0} 行目に開始時間がありません</value>
@@ -5286,7 +5310,7 @@
 <value>一時レポートのファイルパス</value>
   </data>
   <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_" xml:space="preserve">
-<value>インストールされたツール{0}実行中にエラーが発生しました。ファイルが欠如しているようです。ツールを再インストールしてからもう一度お試しください。</value>
+<value>インストールされたツール{0}実行中にエラーが発生しました。ファイルが欠損しているようです。ツールを再インストールしてからもう一度お試しください。</value>
   </data>
   <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again" xml:space="preserve">
 <value>インストールされたツール{0}実行中にエラーが発生しました。ファイルの 1 つにエラーがあるようです。ツールを再インストールしてからもう一度お試しください</value>
@@ -5343,7 +5367,7 @@
 <value>選択したzipファイルはインストール可能なツールではありません。</value>
   </data>
   <data name="PeptideChromInfoCalculator_AddChromInfo_Duplicate_transition___0___found_for_peak_areas" xml:space="preserve">
-<value>ピーク領域で重複遷移「{0}」が見つかりました</value>
+<value>ピーク領域で重複トランジション「{0}」が見つかりました</value>
   </data>
   <data name="RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_" xml:space="preserve">
 <value>ネットワーク接続を確認するか、ツールプロバイダに問い合わせてインストールのサポートを依頼してください。</value>
@@ -5352,10 +5376,10 @@
 <value>パッケージをインストールできませんでした。即時ウィンドウでエラーログが出力されました。</value>
   </data>
   <data name="ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__" xml:space="preserve">
-<value>{0}で欠如している結果ファイルを検索しています。</value>
+<value>{0}で欠損している結果ファイルを検索しています。</value>
   </data>
   <data name="ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__" xml:space="preserve">
-<value>{0}で欠如している結果ファイルを検索しようとしてエラーが発生しました。</value>
+<value>{0}で欠損している結果ファイルを検索しようとしてエラーが発生しました。</value>
   </data>
   <data name="PythonInstaller_PythonInstaller_Load_This_tool_requires_Python__0__and_the_following_packages__Select_packages_to_install_and_then_click_Install_to_begin_the_installation_process_" xml:space="preserve">
 <value>このツールにはPython {0}と以下のパッケージが必要です。インストールするパッケージを選択してから [インストール] をクリックしてインストールプロセスを開始してください。</value>
@@ -5424,7 +5448,7 @@
 <value>プロセス実行エラー</value>
   </data>
   <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
-<value>Skylineで既存のクロマトグラムデータに基づいてピークを再計算し、再スコアする必要があることもあります。クロマトグラムは生データファイルから再インポートされることはありませんが、ピーク統合情報が変更されることがあります。</value>
+<value>既存のクロマトグラムデータに基づいてSkylineでピークを再計算し、再スコアする場合、クロマトグラムが生データファイルから再インポートされることはありませんが、ピークの積分情報は変更されることがあります。</value>
   </data>
   <data name="MProphetFeaturesDlg_OkDialog_Export_mProphet_Features" xml:space="preserve">
 <value>mProphet特長のエクスポート</value>
@@ -5448,7 +5472,7 @@
 <value>ツールを再インストールしてからもう一度お試しください。</value>
   </data>
   <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted" xml:space="preserve">
-<value>このツールでは、欠如しているまたは正しい形式になっていない以下の注釈を使用する必要があります。</value>
+<value>このツールでは、欠損しているまたは正しい形式になっていない以下の注釈を使用する必要があります。</value>
   </data>
   <data name="ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document" xml:space="preserve">
 <value>このツールでは、このドキュメントで有効になっていない以下の注釈を使用する必要があります。</value>
@@ -5463,7 +5487,7 @@
 <value>ペプチド{1}の荷電{0}状態でのクロマトグラムデータが不良です</value>
   </data>
   <data name="ChromatogramExporter_Export_One_or_more_missing_chromatograms_at_charge_state__0__of_peptide__1_" xml:space="preserve">
-<value>ペプチド{1}の荷電{0}状態でのクロマトグラムが 1 つ以上欠如しています。</value>
+<value>ペプチド{1}の荷電{0}状態でのクロマトグラムが 1 つ以上欠損しています。</value>
   </data>
   <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_" xml:space="preserve">
 <value>ドキュメントには、インポートされた結果が必要です。</value>
@@ -5571,7 +5595,7 @@
     <value>..\skyline_daily.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MatchModificationsControl_AddCheckedModifications_Add_checked_modifications" xml:space="preserve">
-<value>チェックされた修飾を追加</value>
+<value>選択した修飾を追加</value>
   </data>
   <data name="SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_" xml:space="preserve">
 <value>この操作では、現在のフィルタ設定に一致するペプチドのない {0} 個のタンパク質が破棄されました。</value>
@@ -5628,7 +5652,7 @@
 <value>ツールはRを使用し、tool-infディレクトリに{0}ファイルのないパッケージを指定します。</value>
   </data>
   <data name="SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
-<value>繰り返し測定{0}には、トリガーによる取得の遷移をランクするために十分な情報のないペプチドが含まれています。</value>
+<value>繰り返し測定{0}には、トリガーによる取得のトランジションをランクするために十分な情報のないペプチドが含まれています。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
 <value>消化設定を変更</value>
@@ -5640,16 +5664,16 @@
 <value>貼り付けたテキストは 2 列でなければなりません。</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_" xml:space="preserve">
-<value>{0} 行目にペプチドシークエンスがありません</value>
+<value>{0} 行目にペプチド配列がありません</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_" xml:space="preserve">
-<value>{1} 行目のテキスト{0}は有効なペプチドシークエンスではありません</value>
+<value>{1} 行目のテキスト{0}は有効なペプチド配列ではありません</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
 <value>{0} 行に値がありません</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_" xml:space="preserve">
-<value>{1} 行目の十進数形式{0}が無効です</value>
+<value>{1} 行目の小数点のフォーマット{0}が無効です</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_" xml:space="preserve">
 <value>{1} 行目の時間{0}は正数でなければなりません。</value>
@@ -5679,31 +5703,31 @@
 <value>比率ドット積</value>
   </data>
   <data name="TransitionFilter_GetStartFragmentNameFromLabel_The_label__0__is_not_a_valid_start_fragment_filter_" xml:space="preserve">
-<value>標識{0}は有効な開始断片フィルタではありません。</value>
+<value>標識{0}は有効な開始フラグメントフィルタではありません。</value>
   </data>
   <data name="TransitionFilter_GetEndFragmentNameFromLabel_The_label__0__is_not_a_valid_end_fragment_filter_" xml:space="preserve">
-<value>標識{0}は有効な終了断片フィルタではありません。</value>
+<value>標識{0}は有効な終了フラグメントフィルタではありません。</value>
   </data>
   <data name="MProphetFeaturesDlg_OkDialog_To_export_MProphet_features_first_train_an_MProphet_model_" xml:space="preserve">
-<value>MProphet特長をエクスポートするには、まずMProphetモデルをトレインします。</value>
+<value>MProphetフィーチャをエクスポートするには、まずMProphetモデルをトレーニングします。</value>
   </data>
   <data name="MProphetFeaturesDlg_OkDialog_Failed_attempting_to_save_mProphet_features_to__0__" xml:space="preserve">
 <value>mProphet特長を{0}に保存できませんでした。</value>
   </data>
   <data name="MProphetFeaturesDlg_OkDialog_mProphet_Feature_Files" xml:space="preserve">
-<value>mProphet特長ファイル</value>
+<value>mProphetフィーチャファイル</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_Reintegrating" xml:space="preserve">
-<value>再統合中</value>
+<value>再積分中</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_" xml:space="preserve">
-<value>ピークを再統合できませんでした。</value>
+<value>ピークを再積分できませんでした。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
 <value>ドキュメントには、インポートされた結果が必要です。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_peptides_in_order_to_reintegrate_chromatograms_" xml:space="preserve">
-<value>クロマトグラムを再統合するには、ドキュメントにペプチドが含まれている必要があります。</value>
+<value>クロマトグラムを再積分するには、ドキュメントにペプチドが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
 <value>操作中に予期しないドキュメントの変更がありました。</value>
@@ -5718,7 +5742,7 @@
 <value>ドキュメントに特長をエクスポートするペプチドが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegration_of_results_requires_a_trained_peak_scoring_model_" xml:space="preserve">
-<value>結果の再統合には、トレインされたピークスコアモデルが必要です。</value>
+<value>結果の再積分には、トレーニングされたピークスコアモデルが必要です。</value>
   </data>
   <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_" xml:space="preserve">
 <value>{0}のピークグループスコアを計算中</value>
@@ -5784,7 +5808,7 @@
 <value>バージョン {0} が現在インストールされています。バージョン {1} は利用可能です。</value>
   </data>
   <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
-<value>現在インストールされてｋん全にアップグレードされています(バージョン:{0})。</value>
+<value>現在インストールされて完全にアップグレードされています (バージョン：{0})。</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
 <value>この識別子のファイルが見つかりません。</value>
@@ -5802,13 +5826,13 @@
 <value>{0}に対するドット積</value>
   </data>
     <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
-<value>デコイか 2 番目に良いピークがなければモデルをトレインできません。</value>
+<value>デコイか 2 番目に良いピークがなければモデルをトレーニングできません。</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_" xml:space="preserve">
 <value>{1} 行目のデコイ値 {0} が無効です。値は 0 または 1 でなければなりません。</value>
   </data>
   <data name="PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__" xml:space="preserve">
-<value>{1} 行目の試料{0}がファイル{2}に一致しません。</value>
+<value>{1} 行目のサンプル{0}がファイル{2}に一致しません。</value>
   </data>
   <data name="PeakBoundaryImporter_Import_The_peptide__0__was_not_present_in_the_file__1__on_line__2__" xml:space="preserve">
 <value>{2} 行目のファイル{1}にペプチド{0}がありませんでした。</value>
@@ -5820,25 +5844,25 @@
 <value>予期しない係数符号</value>
   </data>
   <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
-<value>{1} 個のトレインされたスコアのあるモデルで {0} 個の特長を持つピークをスコアしようとしました。</value>
+<value>{1} 個のトレーニングされたスコアのあるモデルで {0} 個の特長を持つピークをスコアしようとしました。</value>
   </data>
   <data name="NextGenCrossWeightedShapeCalc_NextGenCrossWeightedShapeCalc_Precursor_product_shape_score" xml:space="preserve">
-<value>前駆体-プロダクト形状スコアです。</value>
+<value>プリカーサー-プロダクト形状スコアです。</value>
   </data>
   <data name="NextGenIsotopeDotProductCalc_NextGenIsotopeDotProductCalc_Precursor_isotope_dot_product" xml:space="preserve">
-<value>前駆体同位体ドット積</value>
+<value>プリカーサー同位体ドット積</value>
   </data>
   <data name="NextGenSignalNoiseCalc_NextGenSignalNoiseCalc_Signal_to_noise" xml:space="preserve">
 <value>信号対ノイズ比</value>
   </data>
   <data name="NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error" xml:space="preserve">
-<value>前駆体質量誤差</value>
+<value>プリカーサー質量誤差</value>
   </data>
   <data name="NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error" xml:space="preserve">
 <value>プロダクト質量誤差</value>
   </data>
   <data name="PeptideSettingsUI_comboPeakScoringModel_SelectedIndexChanged_The_document_must_have_imported_results_in_order_to_train_a_model_" xml:space="preserve">
-<value>モデルをトレインするには、ドキュメントにインポートされた結果が含まれている必要があります。</value>
+<value>モデルをトレーニングするには、ドキュメントにインポートされた結果が含まれている必要があります。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
 <value>複合スコア (正規化)</value>
@@ -5847,19 +5871,19 @@
 <value>モデル内のすべてのカルキュレータが不明な値を持っているか、または値を 1 つしか取りません。</value>
   </data>
   <data name="LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
-<value>{1} 個のトレインされたスコアのあるモデルで {0} 個の特長を持つピークをスコアしようとしました。</value>
+<value>{1} 個のトレーニングされたスコアのあるモデルで {0} 個の特長を持つピークをスコアしようとしました。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
-<value>モデルをトレインして複数スコアを確認する</value>
+<value>モデルをトレーニングして複合スコアを確認します</value>
   </data>
   <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
-<value>モデルをトレインできませんでした：</value>
+<value>モデルをトレーニングできませんでした：</value>
   </data>
   <data name="EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_" xml:space="preserve">
 <value>現在のドキュメントにはデコイペプチドがありません。[デコイを使用] ボックスのチェックマークをオフにしてください。</value>
   </data>
   <data name="LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_" xml:space="preserve">
-<value>レガシースコアモデルはトレインされていません。</value>
+<value>レガシースコアモデルはトレーニングされていません。</value>
   </data>
   <data name="LegacyScoringModel_ReadXml_Invalid_legacy_model_" xml:space="preserve">
 <value>無効なレガシーモデルです。</value>
@@ -5868,7 +5892,7 @@
 <value>すべて</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_be_fully_loaded_before_it_can_be_re_integrated_" xml:space="preserve">
-<value>ドキュメントは、完全に読み込まなければ再統合できません。</value>
+<value>ドキュメントは、完全に読み込まなければ再積分できません。</value>
   </data>
   <data name="PeptideSettingsUI_ComboPeakScoringModelSelected_Unrecognized_Model" xml:space="preserve">
 <value>認識されていないモデル</value>
@@ -5877,28 +5901,28 @@
 <value>無効なモデル選択です。</value>
   </data>
   <data name="MissingScoresFinder_Match__0__missing_from_peptide" xml:space="preserve">
-<value>{0}がペプチドから欠如しています</value>
+<value>{0}がペプチドから欠損しています</value>
   </data>
   <data name="MissingScoresFinder_Match__0__missing_from_chromatogram_peak" xml:space="preserve">
-<value>{0}がクロマトグラムピークから欠如しています</value>
+<value>{0}がクロマトグラムピークから欠損しています</value>
   </data>
   <data name="EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_" xml:space="preserve">
-<value>トレインされたモデルは現在のデータセットに適用できません。</value>
+<value>トレーニングされたモデルは現在のデータセットに適用できません。</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_" xml:space="preserve">
-<value>現在のピークスコアモデルは、ドキュメント内の 1 つ以上のペプチドと互換性がありません。新しいモデルをトレインしてください。</value>
+<value>現在のピークスコアモデルは、ドキュメント内の 1 つ以上のペプチドと互換性がありません。新しいモデルをトレーニングしてください。</value>
   </data>
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
 <value>ピーク境界を調整中</value>
   </data>
   <data name="MissingScoresFinder_DisplayName_missing_scores" xml:space="preserve">
-<value>スコアが欠如しているもの</value>
+<value>スコアが欠損しているもの</value>
   </data>
   <data name="MissingAllResultsFinder_DisplayName_Missing_all_results" xml:space="preserve">
-<value>すべての結果が欠如しているもの</value>
+<value>すべての結果が欠損しているもの</value>
   </data>
   <data name="MissingAnyResultsFinder_DisplayName_Missing_any_results" xml:space="preserve">
-<value>一部の結果が欠如しているもの</value>
+<value>一部の結果が欠損しているもの</value>
   </data>
   <data name="MissingLibraryDataFinder_DisplayName_No_matching_library_data" xml:space="preserve">
 <value>一致するライブラリデータがありません</value>
@@ -5928,10 +5952,10 @@
 <value>初期化に成功する前に予期せずiRTカルキュレータが使用されました。</value>
   </data>
   <data name="IncompleteStandardException_ERROR_The_calculator__0__requires_all_of_its_standard_peptides_in_order_to_determine_a_regression_" xml:space="preserve">
-<value>カﾙキュレータ{0}では、すべての標準ペプチドがなければ回帰を決定できません。</value>
+<value>カルキュレータ{0}では、すべての標準ペプチドがなければ回帰を決定できません。</value>
   </data>
   <data name="DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
-<value>カﾙキュレータ{0}のデータベースを開けませんでした。{1}ファイルが移動または削除されていないことを確認してください。</value>
+<value>カルキュレータ{0}のデータベースを開けませんでした。{1}ファイルが移動または削除されていないことを確認してください。</value>
   </data>
   <data name="PeptideDecoyLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptidedecoylib.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -6003,23 +6027,23 @@
 <value>1 つ以上の繰り返し測定を選択してください</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoReplicatesAvailableForPrediction" xml:space="preserve">
-<value>遷移設定フルスキャン保持時間フィルタは予測される保持時間を使用するように設定されていますが、予測アルゴリズムが校正されていません。全勾配クロマトグラムを生成しますか？</value>
+<value>トランジション設定フルスキャン保持時間フィルタは予測される保持時間を使用するように設定されていますが、予測アルゴリズムが校正されていません。全勾配クロマトグラムを生成しますか？</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm" xml:space="preserve">
-<value>遷移設定フルスキャン保持時間フィルタは予測される保持時間を使用するように設定されていますが、予測アルゴリズムが指定されていません。
+<value>トランジション設定フルスキャン保持時間フィルタは予測される保持時間を使用するように設定されていますが、予測アルゴリズムが指定されていません。
 [ペプチド設定] の [予測] タブで指定してください。</value>
   </data>
   <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_" xml:space="preserve">
 <value>このドキュメントにはスペクトルライブラリが含まれていません。</value>
   </data>
   <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_" xml:space="preserve">
-<value>このドキュメントには、このドキュメント内のペプチドの保持時間を含むスペクトルライブラリがありません。</value>
+<value>このドキュメントのスペクトルライブラリに、ドキュメント内のペプチドの保持時間情報がありません。</value>
   </data>
   <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
-<value>全勾配クロマトグラムのインポートには時間がかかり、ディスク容量を消費するうえ、ピークの選択が効果的にできない可能性があります。</value>
+<value>全グラジエントクロマトグラムのインポートには時間がかかり、ディスク容量を消費するうえ、ピークの選択が効果的にできない可能性があります。</value>
   </data>
   <data name="ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_" xml:space="preserve">
-<value>ピークを再統合するには、モデルをトレインして選択する必要があります。</value>
+<value>ピークを再積分するには、モデルをトレーニングして選択する必要があります。</value>
   </data>
   <data name="MProphetResultsHandler_Q_VALUE_ANNOTATION_Q_Value" xml:space="preserve">
 <value>Q値</value>
@@ -6028,10 +6052,10 @@
 <value>ターゲットペプチドのQ値</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution" xml:space="preserve">
-<value>Q値分布が表示されるようにモデルをトレインする</value>
+<value>Q値分布が表示されるようにモデルをトレーニングする</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution" xml:space="preserve">
-<value>P値分布が表示されるようにモデルをトレインする</value>
+<value>P値分布が表示されるようにモデルをトレーニングする</value>
   </data>
   <data name="EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides" xml:space="preserve">
 <value>ターゲットペプチドのP値</value>
@@ -6043,7 +6067,7 @@
 <value>Q値</value>
   </data>
   <data name="EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_" xml:space="preserve">
-<value>パイゼロ (予測null値)</value>
+<value>Pi zero (予測null値)</value>
   </data>
   <data name="DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX" xml:space="preserve">
 <value>オーバーラップとMSX</value>
@@ -6070,7 +6094,7 @@
 <value>{1} 行目で認識されていない修飾{0}がペプチドにあります。</value>
   </data>
   <data name="ModificationMatcher_EnumerateSequenceInfos_Unrecognized_Unimod_id__0__in_modified_peptide_sequence_" xml:space="preserve">
-<value>認識されていないUnimod id {0} が修飾されたペプチドシークエンスにあります。</value>
+<value>認識されていないUnimod id {0} が修飾されたペプチド配列にあります。</value>
   </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Reintegrate_peaks" xml:space="preserve">
 <value>ピークを再統合</value>

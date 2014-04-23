@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -187,8 +187,8 @@
     <value>13</value>
   </data>
   <data name="comboStandardType.ToolTip" xml:space="preserve">
-<value>内部標準として、またはピーク面積比の
-分母として使用するタイプです。</value>
+<value>内部標準として使用するタイプ。またはピーク面積比の計算の際に
+分母として使用する同位体タイプです。</value>
   </data>
   <data name="&gt;&gt;comboStandardType.Name" xml:space="preserve">
     <value>comboStandardType</value>
@@ -212,8 +212,8 @@
     <value>8</value>
   </data>
   <data name="comboLabelType.ToolTip" xml:space="preserve">
-<value>同位体修飾が選択されている現在アクティブな
-同位体標識タイプです。</value>
+<value>同位体修飾として選択確定した
+同位体の種類です。</value>
   </data>
   <data name="&gt;&gt;comboLabelType.Name" xml:space="preserve">
     <value>comboLabelType</value>
@@ -237,9 +237,9 @@
     <value>10</value>
   </data>
   <data name="listHeavyMods.ToolTip" xml:space="preserve">
-<value>あらゆる形態の重いペプチドに適用される修飾で、
-通常は同位体分子組成に対する変化ですが、
-構造には影響しません。</value>
+<value>Heavyペプチドに適用される修飾で、
+同位体組成が変化しますが、
+分子構造には影響しません。</value>
   </data>
   <data name="&gt;&gt;listHeavyMods.Name" xml:space="preserve">
     <value>listHeavyMods</value>
@@ -263,9 +263,9 @@
     <value>1</value>
   </data>
   <data name="listStaticMods.ToolTip" xml:space="preserve">
-<value>軽い形態のペプチドに適用される修飾で、
-通常はペプチドの分子構造での
-変化によるものです。</value>
+<value>Lightペプチドに適用される修飾です。
+通常、修飾はペプチドの分子構造
+変化に起因します。</value>
   </data>
   <data name="&gt;&gt;listStaticMods.Name" xml:space="preserve">
     <value>listStaticMods</value>
@@ -289,7 +289,7 @@
     <value>14</value>
   </data>
   <data name="listStandardTypes.ToolTip" xml:space="preserve">
-<value>内部標準としてするタイプ、または他のタイプに対して
+<value>内部標準として使用するタイプ、または他のタイプに対して
 計算されるピーク面積比の分母です。</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Name" xml:space="preserve">
@@ -315,7 +315,7 @@
   </data>
   <data name="textMaxVariableMods.ToolTip" xml:space="preserve">
 <value>どのペプチドインスタンスにおける組み合わせでも発生可能な
-最大可変修飾数です。</value>
+最大修飾数です。</value>
   </data>
   <data name="&gt;&gt;textMaxVariableMods.Name" xml:space="preserve">
     <value>textMaxVariableMods</value>
@@ -339,7 +339,7 @@
     <value>6</value>
   </data>
   <data name="textMaxNeutralLosses.ToolTip" xml:space="preserve">
-<value>どの断片インスタンスにおける組み合わせでも発生可能な
+<value>どのフラグメントインスタンスにおける組み合わせでも発生可能な
 最大ニュートラルロスイベント数です。</value>
   </data>
   <data name="&gt;&gt;textMaxNeutralLosses.Name" xml:space="preserve">
@@ -364,8 +364,8 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-<value>タンパク質の分解を考慮したときにペプチド内で可能な
-最大欠如開裂数です。</value>
+<value>タンパク質分解後、ペプチド内で可能な
+最大未切断サイト数。</value>
   </data>
   <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -415,9 +415,9 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-<value>質量分析計に注入される試料マトリックスに
-存在可能なタンパク質のフルセットを
-指定する処理済みFASTAシークエンス情報です。</value>
+<value>質量分析計に注入するサンプルマトリックス内に
+存在し得る全てのタンパク質を
+指定する処理済みFASTA配列情報です。</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -469,7 +469,7 @@
     <value>3</value>
   </data>
   <data name="cbUseMeasuredRT.Text" xml:space="preserve">
-<value>&amp;測定された保持時間があれば使用する</value>
+<value>&amp;保持時間の実測値があれば使用する</value>
   </data>
   <data name="cbUseMeasuredRT.ToolTip" xml:space="preserve">
 <value>チェックマークをオンにすると、以前に測定された保持時間を使って
@@ -582,11 +582,11 @@
     <value>8</value>
   </data>
   <data name="cbRaggedEnds.Text" xml:space="preserve">
-<value>不規則になる可能性のある末端を除外(&amp;R)</value>
+<value>不揃いなペプチド末端を除外(&amp;R)</value>
   </data>
   <data name="cbRaggedEnds.ToolTip" xml:space="preserve">
-<value>開裂部位のすぐ前後の開裂部位からの
-ペプチドを除外します。例：トリプシンのRR、KK、RK、KR</value>
+<value>切断部位の直前直後にある別の切断部位からの
+類似ペプチドを除外します。例：トリプシンのRR、KK、RK、KR</value>
   </data>
   <data name="&gt;&gt;cbRaggedEnds.Name" xml:space="preserve">
     <value>cbRaggedEnds</value>
@@ -613,7 +613,7 @@
 <value>リストを編集(&amp;D)...</value>
   </data>
   <data name="btnEditExlusions.ToolTip" xml:space="preserve">
-<value>利用可能なペプチド除外のリストを編集します</value>
+<value>ペプチド除外の条件を指定するリストを編集します</value>
   </data>
   <data name="&gt;&gt;btnEditExlusions.Name" xml:space="preserve">
     <value>btnEditExlusions</value>
@@ -637,7 +637,7 @@
     <value>10</value>
   </data>
   <data name="listboxExclusions.ToolTip" xml:space="preserve">
-<value>特定のペプチドを除外するのに使用可能な正規表現パターンです</value>
+<value>除外したいペプチドに現れる正規表現パターン</value>
   </data>
   <data name="&gt;&gt;listboxExclusions.Name" xml:space="preserve">
     <value>listboxExclusions</value>
@@ -661,8 +661,8 @@
     <value>3</value>
   </data>
   <data name="textMaxLength.ToolTip" xml:space="preserve">
-<value>このフィルタに一致するペプチドに含むことができる
-最大アミノ酸数です</value>
+<value>このフィルタに一致する最長ペプチドの
+アミノ酸残基数です</value>
   </data>
   <data name="&gt;&gt;textMaxLength.Name" xml:space="preserve">
     <value>textMaxLength</value>
@@ -686,8 +686,8 @@
     <value>1</value>
   </data>
   <data name="textMinLength.ToolTip" xml:space="preserve">
-<value>このフィルタに一致するペプチドに含むことができる
-最小アミノ酸数です</value>
+<value>このフィルタに一致する最短ペプチドの
+アミノ酸残基数です</value>
   </data>
   <data name="&gt;&gt;textMinLength.Name" xml:space="preserve">
     <value>textMinLength</value>
@@ -714,7 +714,7 @@
 <value>エクスプローラー(&amp;E)...</value>
   </data>
   <data name="btnExplore.ToolTip" xml:space="preserve">
-<value>MS/MSスペクトルライブラリエクスプローラーを開きます</value>
+<value>MS/MSスペクトルライブラリエクスプローラーを開きます。</value>
   </data>
   <data name="&gt;&gt;btnExplore.Name" xml:space="preserve">
     <value>btnExplore</value>
@@ -738,10 +738,10 @@
     <value>4</value>
   </data>
   <data name="btnBuildLibrary.Text" xml:space="preserve">
-<value>構築(&amp;B)...</value>
+<value>作成(&amp;B)...</value>
   </data>
   <data name="btnBuildLibrary.ToolTip" xml:space="preserve">
-<value>さまざまなペプチド検索エンジンのペプチド検索結果から
+<value>ペプチド検索エンジンのペプチド検索結果から
 MS/MSスペクトルライブラリを構築します。</value>
   </data>
   <data name="&gt;&gt;btnBuildLibrary.Name" xml:space="preserve">
@@ -859,7 +859,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>4</value>
   </data>
   <data name="cbLimitPeptides.Text" xml:space="preserve">
-<value>タンパク質あたりのペプチド数制限(&amp;L)：</value>
+<value>タンパク質あたりの生成ペプチド数の制限(&amp;L)：</value>
   </data>
   <data name="cbLimitPeptides.ToolTip" xml:space="preserve">
 <value>チェックマークをオンにすると、指定した数のトップランクペプチドだけが
@@ -914,13 +914,14 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>1</value>
   </data>
   <data name="listLibraries.ToolTip" xml:space="preserve">
-<value>現在のドキュメント内のペプチドと遷移に一致するMS/MSスペクトルライブラリの
-セットです。これらのライブラリを使用すると、ドキュメント内でペプチドと
-遷移の両方をランクしたり選択したりできます。
+<value>現在使用中ドキュメントのペプチドとトランジションを照合する
+MS/MSスペクトルライブラリです。これらのライブラリを使用して、
+ドキュメントにあるペプチドとトランジションの両方の選択やランク付けができます。
 
-ライブラリスペクトルは、このリストでの表示順で自動的に一致されます。
-まず軽いスペクトルとの一致、続いて同位体標識スペクトルが、[修飾] タブでの
-標識タイプリスト順に一致されます。</value>
+このリストでの表示順に従い、ライブラリスペクトルを自動的に照合します。
+まずLightスペクトル同士の照合、続いて同位体
+標識されたスペクトルを、[修飾] タブでの標識タイプ
+リスト順に照合します。</value>
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
@@ -999,7 +1000,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>最大欠如開裂数(&amp;M)：</value>
+<value>最大未切断サイト数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1107,7 +1108,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>6</value>
   </data>
   <data name="label14.Text" xml:space="preserve">
-<value>最小</value>
+<value>分</value>
   </data>
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
@@ -1212,7 +1213,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>Ｎ末端AAを除外(&amp;Ｎ)：</value>
+<value>除外するＮ末端残基数(&amp;Ｎ)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -1239,7 +1240,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>9</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-<value>次を含むペプチドを除外(&amp;E)：</value>
+<value>以下を含むペプチドを除外(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -1401,7 +1402,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>2</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-<value>ペプチドを次の順でランク(&amp;R)：</value>
+<value>ペプチドのランク付け法(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -1500,7 +1501,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>5</value>
   </data>
   <data name="label18.Text" xml:space="preserve">
-<value>最大ニュートラルロス(&amp;N)：</value>
+<value>最大ニュートラルロス数(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
@@ -1527,7 +1528,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>3</value>
   </data>
   <data name="label17.Text" xml:space="preserve">
-<value>最大可変修飾数(&amp;M)：</value>
+<value>最大修飾数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -1581,7 +1582,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>7</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-<value>同位体標識タイプ(&amp;T)：</value>
+<value>同位体標識の種類(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -1764,7 +1765,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>5</value>
   </data>
   <data name="tabIntegration.Text" xml:space="preserve">
-<value>統合</value>
+<value>積分</value>
   </data>
   <data name="&gt;&gt;tabIntegration.Name" xml:space="preserve">
     <value>tabIntegration</value>

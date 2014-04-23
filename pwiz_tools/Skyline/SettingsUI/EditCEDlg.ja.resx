@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-<value>遷移設定フォームでこの式の表示に使用する名前です</value>
+<value>トランジション設定フォームでこの式の表示に使用する名前です</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -258,12 +258,12 @@
     <value>3</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-<value>勾配と切片値は、フォームに記載されている次の式を使って前駆体m/z から
-予測される最適衝突エネルギーの計算に使用します。
+<value>勾配と切片値は、フォームに記載されている次の式を使ってプリカーサーm/z から
+予測される最適コリジョンエネルギーの計算に使用します。
 
-CE = 勾配 * 前駆体m/z + 切片
+CE = 勾配 * プリカーサーm/z + 切片
 
-複数前駆体荷電状態の式が使用できます。前駆体
+複数プリカーサー荷電状態の式が使用できます。プリカーサー
 荷電状態がこのリストにない場合は、最も近いものを使用します。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
@@ -534,7 +534,7 @@ CE = 勾配 * 前駆体m/z + 切片
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>衝突エネルギー方程式を編集</value>
+<value>コリジョンエネルギー計算式を編集</value>
   </data>
   <data name="&gt;&gt;Charge.Name" xml:space="preserve">
     <value>Charge</value>

@@ -285,10 +285,10 @@
     <value>6</value>
   </data>
   <data name="radioSequence.Text" xml:space="preserve">
-<value>アミノ酸シークエンス(&amp;A)</value>
+<value>アミノ酸配列(&amp;A)</value>
   </data>
   <data name="radioSequence.ToolTip" xml:space="preserve">
-<value>修飾に関係なく、PEPMICERのように単純なアミノ酸シークエンスを
+<value>修飾に関係なく、PEPMICERのように単純なアミノ酸配列を
 一致させます。</value>
   </data>
   <data name="&gt;&gt;radioSequence.Name" xml:space="preserve">
@@ -316,10 +316,10 @@
     <value>7</value>
   </data>
   <data name="radioModSequence.Text" xml:space="preserve">
-<value>軽修飾シークエンス(&amp;L)</value>
+<value>軽修飾配列(&amp;L)</value>
   </data>
   <data name="radioModSequence.ToolTip" xml:space="preserve">
-<value>PEPM[+12]IC[+58]ERのような軽修飾ペプチドシークエンスを
+<value>PEPM[+12]IC[+58]ERのような軽修飾ペプチド配列を
 一致させます</value>
   </data>
   <data name="&gt;&gt;radioModSequence.Name" xml:space="preserve">
@@ -374,7 +374,7 @@
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-<value>ペプチドを除外(&amp;X)：</value>
+<value>除外するペプチド(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -401,7 +401,7 @@
     <value>9</value>
   </data>
   <data name="radioMatching.Text" xml:space="preserve">
-<value>一致する式(&amp;M)</value>
+<value>正規表現が一致するとき(&amp;M)</value>
   </data>
   <data name="&gt;&gt;radioMatching.Name" xml:space="preserve">
     <value>radioMatching</value>
@@ -428,7 +428,7 @@
     <value>10</value>
   </data>
   <data name="radioNotMatching.Text" xml:space="preserve">
-<value>一致しない式(&amp;O)</value>
+<value>正規表現がマッチしないとき(&amp;O)</value>
   </data>
   <data name="&gt;&gt;radioNotMatching.Name" xml:space="preserve">
     <value>radioNotMatching</value>
@@ -455,7 +455,7 @@
     <value>5</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>一致の適用先(&amp;A)：</value>
+<value>適用先(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

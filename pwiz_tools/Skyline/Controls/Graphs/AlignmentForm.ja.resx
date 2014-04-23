@@ -133,7 +133,7 @@
     <value>2</value>
   </data>
   <data name="lblFormDescription.Text" xml:space="preserve">
-<value>Skyline では、繰り返し測定時間を正規化できるようにスペクトルライブラリのペプチド同定保持時間を使用します。2 つの繰り返し測定をアラインする際には、両方の繰り返し測定に存在するペプチドの時間に線形回帰を実施します。Skylineは、.99 より大きい相関係数 (R) を用いて線形回帰を試み、目的の相関が達成されるまで異常値を除外して回帰を改善します。</value>
+<value>Skyline では、スペクトルライブラリに登録されたペプチドの保持時間情報を使用して、繰り返し測定の保持時間を正規化 (補正) します。2 回の繰り返し測定をアラインする場合は、両方の繰り返し測定から共通して検出されたペプチドの保持時間を用いて線形回帰を行います。相関係数 (R) が 0.99 以上になるまで、外れ値の除外を繰り返して線形回帰を改善 (リファイン) します。</value>
   </data>
   <data name="&gt;&gt;lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>
@@ -181,7 +181,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>繰り返し測定のアライン基準：</value>
+<value>次に対してアラインする：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -253,7 +253,7 @@
     <value>True</value>
   </metadata>
   <data name="colOutlierCount.HeaderText" xml:space="preserve">
-<value>異常値数</value>
+<value>外れ値数</value>
   </data>
   <metadata name="colUnrefinedSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -435,7 +435,7 @@
     <value>50, 23</value>
   </data>
   <data name="bindingNavigatorPositionItem.Text" xml:space="preserve">
-    <value>0</value>
+<value>0</value>
   </data>
   <data name="bindingNavigatorPositionItem.ToolTipText" xml:space="preserve">
 <value>現在位置</value>

@@ -220,7 +220,7 @@
     <value>293, 34</value>
   </data>
   <data name="cbCaseSensitive.Text" xml:space="preserve">
-<value>大文字と小文字を区別する</value>
+<value>文字形式の一致</value>
     </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -340,7 +340,7 @@
     <value>6</value>
   </data>
   <data name="radioDown.Text" xml:space="preserve">
-<value>下(&amp;D)</value>
+<value>下へ(&amp;D)</value>
     </data>
   <data name="radioUp.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 18</value>
@@ -400,7 +400,7 @@
 <value>次も検索：</value>
     </data>
   <data name="radioUp.Text" xml:space="preserve">
-<value>上(&amp;U)</value>
+<value>上へ(&amp;U)</value>
     </data>
   <data name="radioDown.Size" type="System.Drawing.Size, System.Drawing">
     <value>53, 17</value>

@@ -298,7 +298,7 @@
     <value>4</value>
   </data>
   <data name="checkBoxPrecursors.Text" xml:space="preserve">
-<value>前駆体(&amp;P)</value>
+<value>プリカーサー(&amp;P)</value>
   </data>
   <data name="&gt;&gt;checkBoxPrecursors.Name" xml:space="preserve">
     <value>checkBoxPrecursors</value>

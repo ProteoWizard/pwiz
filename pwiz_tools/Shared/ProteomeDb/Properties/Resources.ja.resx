@@ -104,10 +104,10 @@
 <value xml:space="preserve">{0} 個のタンパク質をインポートしました</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_existing_peptides" xml:space="preserve">
-<value xml:space="preserve">既存のペプチドをリスト表示中</value>
+<value xml:space="preserve">既存のペプチドのリストを表示中</value>
   </data>
   <data name="ProteomeDb_Digest_Listing_proteins" xml:space="preserve">
-<value xml:space="preserve">タンパク質をリスト表示中</value>
+<value xml:space="preserve">タンパク質のリストを表示中</value>
   </data>
   <data name="ProteomeDb_Digest_Digesting__0__proteins" xml:space="preserve">
 <value xml:space="preserve">{0} 個のタンパク質の消化中</value>

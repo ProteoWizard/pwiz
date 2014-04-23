@@ -502,7 +502,7 @@
     <value>5</value>
   </data>
   <data name="labelEnrichments.Text" xml:space="preserve">
-<value>同位体標識濃縮(&amp;B)：</value>
+<value>同位体標識濃縮度(&amp;B)：</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>
@@ -532,7 +532,7 @@
     <value>4</value>
   </data>
   <data name="labelPrecursorIsotopeFilterPercent.Text" xml:space="preserve">
-    <value>%</value>
+<value>%</value>
   </data>
   <data name="labelPrecursorIsotopeFilterPercent.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -826,7 +826,7 @@
     <value>7</value>
   </data>
   <data name="label32.Text" xml:space="preserve">
-<value>前駆体質量分析器(&amp;P)：</value>
+<value>プリカーサーイオンの分析装置タイプ(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label32.Name" xml:space="preserve">
     <value>label32</value>
@@ -1060,7 +1060,7 @@
     <value>7</value>
   </data>
   <data name="label22.Text" xml:space="preserve">
-<value>プロダクト質量分析器(&amp;M)：</value>
+<value>プロダクトイオンの分析装置タイプ(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
@@ -1192,7 +1192,7 @@
     <value>0</value>
   </data>
   <data name="lblPrecursorCharges.Text" xml:space="preserve">
-<value>前駆体電荷：</value>
+<value>プリカーサー電荷：</value>
   </data>
   <data name="lblPrecursorCharges.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

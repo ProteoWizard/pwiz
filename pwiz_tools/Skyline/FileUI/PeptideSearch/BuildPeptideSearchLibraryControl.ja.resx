@@ -205,7 +205,7 @@
     <value>2</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
-<value>ドキュメントペプチドのフィルタ(&amp;F)</value>
+<value>ドキュメント内のペプチドのフィルタ(&amp;F)</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>

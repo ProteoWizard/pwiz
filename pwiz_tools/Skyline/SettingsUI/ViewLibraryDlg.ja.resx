@@ -439,7 +439,7 @@
     <value>5</value>
   </data>
   <data name="btnLibDetails.Text" xml:space="preserve">
-    <value>...</value>
+<value>...</value>
   </data>
   <data name="&gt;&gt;btnLibDetails.Name" xml:space="preserve">
     <value>btnLibDetails</value>
@@ -667,7 +667,7 @@
     <value>29, 20</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
-<value>1 個のイオンを荷電</value>
+<value>1 価のイオン</value>
   </data>
   <data name="charge2Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -676,7 +676,7 @@
     <value>29, 20</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
-<value>2 個のイオンを荷電</value>
+<value>2 価のイオン</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>29, 6</value>
@@ -1078,7 +1078,7 @@
     <value>193, 22</value>
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
-<value>前駆体</value>
+<value>プリカーサー</value>
   </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -1087,25 +1087,25 @@
     <value>80, 22</value>
   </data>
   <data name="charge1ContextMenuItem.Text" xml:space="preserve">
-    <value>1</value>
+<value>1</value>
   </data>
   <data name="charge2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge2ContextMenuItem.Text" xml:space="preserve">
-    <value>2</value>
+<value>2</value>
   </data>
   <data name="charge3ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge3ContextMenuItem.Text" xml:space="preserve">
-    <value>3</value>
+<value>3</value>
   </data>
   <data name="charge4ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
   </data>
   <data name="charge4ContextMenuItem.Text" xml:space="preserve">
-    <value>4</value>
+<value>4</value>
   </data>
   <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>

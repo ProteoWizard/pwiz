@@ -235,7 +235,7 @@
     <value>5</value>
   </data>
   <data name="cbDecimalCvs.Text" xml:space="preserve">
-<value>十進CV値を表示(&amp;D)</value>
+<value>CV値を (小数で) 表示(&amp;D)</value>
   </data>
   <data name="&gt;&gt;cbDecimalCvs.Name" xml:space="preserve">
     <value>cbDecimalCvs</value>
@@ -262,7 +262,7 @@
     <value>4</value>
   </data>
   <data name="labelCvPercent.Text" xml:space="preserve">
-    <value>%</value>
+<value>%</value>
   </data>
   <data name="&gt;&gt;labelCvPercent.Name" xml:space="preserve">
     <value>labelCvPercent</value>

@@ -253,7 +253,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>16</value>
   </data>
   <data name="btnInitialDirectory.Text" xml:space="preserve">
-    <value>...</value>
+<value>...</value>
   </data>
   <data name="btnInitialDirectory.ToolTip" xml:space="preserve">
 <value>参照</value>
@@ -283,7 +283,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>10</value>
   </data>
   <data name="btnFindCommand.Text" xml:space="preserve">
-    <value>...</value>
+<value>...</value>
   </data>
   <data name="btnFindCommand.ToolTip" xml:space="preserve">
 <value>参照</value>
@@ -313,9 +313,9 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>15</value>
   </data>
   <data name="textInitialDirectory.ToolTip" xml:space="preserve">
-<value>ツールの作業ディレクトリを入力するか、矢印ボタンを選択して 
-事前に定義されたディレクトリの場所を選択するか、
-[参照] ボタンを選択してディレクトリを選択します。</value>
+<value>ツールの作業ディレクトリを入力してください。あるいは矢印ボタンで 
+既存のディレクトリの場所を選択するか、 
+[参照] ボタンでディレクトリを選択してください。</value>
   </data>
   <data name="&gt;&gt;textInitialDirectory.Name" xml:space="preserve">
     <value>textInitialDirectory</value>
@@ -400,7 +400,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>7</value>
   </data>
   <data name="textTitle.ToolTip" xml:space="preserve">
-<value>[ツール] メニューに表示されるツールの名前を入力します</value>
+<value>[ツール] メニューに表示するツール名を入力してください。</value>
   </data>
   <data name="&gt;&gt;textTitle.Name" xml:space="preserve">
     <value>textTitle</value>

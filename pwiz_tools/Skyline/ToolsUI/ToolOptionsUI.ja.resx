@@ -241,7 +241,7 @@
     <value>4</value>
   </data>
   <data name="labelDisplayLanguage.Text" xml:space="preserve">
-<value>表示言語を選択 (Skylineを再起動したときに有効になる)</value>
+<value>表示言語の選択 (Skylineを再起動後より有効)</value>
   </data>
   <data name="&gt;&gt;labelDisplayLanguage.Name" xml:space="preserve">
     <value>labelDisplayLanguage</value>

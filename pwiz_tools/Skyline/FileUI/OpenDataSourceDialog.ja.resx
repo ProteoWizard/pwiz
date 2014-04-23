@@ -446,7 +446,7 @@
     <value>23, 22</value>
   </data>
   <data name="upOneLevelButton.Text" xml:space="preserve">
-<value>上</value>
+<value>上へ</value>
   </data>
   <data name="upOneLevelButton.ToolTipText" xml:space="preserve">
 <value>1 つ上のレベルに移動</value>

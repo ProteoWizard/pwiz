@@ -247,7 +247,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-<value>FASTAレコードは「&gt;」で始まり、タンパク質の名前にタンパク質の説明（省略可）が続きます。 </value>
+<value>FASTAレコードは「&gt;」で始まり、タンパク質名とタンパク質の説明 (省略可) が続きます。  </value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -304,7 +304,7 @@
     <value>True</value>
   </metadata>
   <data name="colProteinSequence.HeaderText" xml:space="preserve">
-<value>シークエンス</value>
+<value>配列</value>
   </data>
   <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -361,7 +361,7 @@
     <value>True</value>
   </metadata>
   <data name="colPeptideSequence.HeaderText" xml:space="preserve">
-<value>ペプチドシークエンス</value>
+<value>ペプチド配列</value>
   </data>
   <metadata name="colPeptideProtein.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -436,7 +436,7 @@
     <value>True</value>
   </metadata>
   <data name="colTransitionPrecursorMz.HeaderText" xml:space="preserve">
-<value>前駆体m/z</value>
+<value>プリカーサーm/z</value>
   </data>
   <metadata name="colTransitionProductMz.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -493,7 +493,7 @@
     <value>3</value>
   </data>
   <data name="tabPageTransitionList.Text" xml:space="preserve">
-<value>遷移リスト</value>
+<value>トランジションリスト</value>
   </data>
   <data name="&gt;&gt;tabPageTransitionList.Name" xml:space="preserve">
     <value>tabPageTransitionList</value>

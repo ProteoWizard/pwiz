@@ -159,7 +159,7 @@
     <value>1</value>
   </data>
   <data name="radioProtein.Text" xml:space="preserve">
-    <value>&amp;single protein sequence.</value>
+    <value>&amp;single protein sequence</value>
   </data>
   <data name="&gt;&gt;radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>

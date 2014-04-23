@@ -532,7 +532,7 @@
     <value>True</value>
   </metadata>
   <data name="columnStandardSequence.HeaderText" xml:space="preserve">
-<value>修飾シークエンス</value>
+<value>修飾配列</value>
   </data>
   <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -577,7 +577,7 @@
     <value>True</value>
   </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
-<value>修飾シークエンス</value>
+<value>修飾配列</value>
   </data>
   <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

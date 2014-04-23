@@ -6995,6 +6995,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invariant.
+        /// </summary>
+        public static string ExportLiveReportDlg_ExportLiveReportDlg_Invariant {
+            get {
+                return ResourceManager.GetString("ExportLiveReportDlg_ExportLiveReportDlg_Invariant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Preview: .
         /// </summary>
         public static string ExportLiveReportDlg_ShowPreview_Preview__ {

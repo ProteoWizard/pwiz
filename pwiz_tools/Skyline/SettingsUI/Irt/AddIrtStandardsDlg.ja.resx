@@ -129,7 +129,7 @@
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-<value>現在のドキュメントには保持時間が測定されているペプチドが {0} 個あります。iRT標準には、単一注入で簡単に測定できる少数のペプチドの使用が推奨されます。使用したいペプチドのみを含むようにドキュメントを編集するか、ペプチド数を選択してSkylineが現在のドキュメントから自動選択するようにしてください。</value>
+<value>現在のドキュメントでは {0} 個のペプチドの保持時間が測定されています。iRT標準には、1 回のインジェクションで簡単に測定できる少数のペプチドの使用が推奨されます。使用したいペプチドのみを含むようにドキュメントを編集するか、ペプチド数を選択してSkylineが現在のドキュメントから自動選択するようにしてください。</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>

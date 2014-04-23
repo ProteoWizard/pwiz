@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -250,7 +250,7 @@
     <value>7</value>
   </data>
   <data name="lblReportError.Text" xml:space="preserve">
-<value>以下のような予期しないエラーが発生しました。
+<value>次の予期しないエラーが発生しました。
 エラーを報告して、Skylineの改善にご協力ください。</value>
   </data>
   <data name="&gt;&gt;lblReportError.Name" xml:space="preserve">
@@ -425,7 +425,7 @@
     <value>9</value>
   </data>
   <data name="tbErrorDescription.Text" xml:space="preserve">
-    <value>1
+<value>1
 2
 </value>
   </data>

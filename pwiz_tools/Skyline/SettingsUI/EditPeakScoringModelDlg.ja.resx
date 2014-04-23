@@ -160,7 +160,7 @@
     <value>2</value>
   </data>
   <data name="btnTrainModel.Text" xml:space="preserve">
-<value>モデルのトレイン(&amp;R)</value>
+<value>モデルのトレーニング(&amp;R)</value>
   </data>
   <data name="btnTrainModel.ToolTip" xml:space="preserve">
 <value>クリックして現在インポートされている結果データをこのドキュメント内のペプチドで使用し、
@@ -683,7 +683,7 @@
     <value>4</value>
   </data>
   <data name="groupBox2.Text" xml:space="preserve">
-<value>トレイン</value>
+<value>トレーニング</value>
   </data>
   <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
     <value>groupBox2</value>

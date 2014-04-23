@@ -133,7 +133,7 @@
     <value>0</value>
   </data>
   <data name="btnFilter.Text" xml:space="preserve">
-<value>フィルタ(&amp;F)</value>
+<value>除く(&amp;F)</value>
   </data>
   <data name="&gt;&gt;btnFilter.Name" xml:space="preserve">
     <value>btnFilter</value>
@@ -244,7 +244,7 @@
     <value>4</value>
   </data>
   <data name="labelQuestion.Text" xml:space="preserve">
-<value>貼り付けたリストからフィルタしますか？</value>
+<value>貼り付けたリストから除きますか？</value>
   </data>
   <data name="&gt;&gt;labelQuestion.Name" xml:space="preserve">
     <value>labelQuestion</value>
@@ -328,7 +328,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>ペプチドを貼り付ける</value>
+<value>ペプチドの貼り付け</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PasteFilteredPeptidesDlg</value>

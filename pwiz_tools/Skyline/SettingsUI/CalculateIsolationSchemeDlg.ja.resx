@@ -717,7 +717,7 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-<value>ウィンドウの幅(&amp;W)：</value>
+<value>ウィンドウ幅(&amp;W)：</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
 <value>マージンの幅(&amp;G)：</value>
@@ -924,7 +924,7 @@
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>%</value>
+<value>%</value>
   </data>
   <data name="&gt;&gt;labelWindowsPerScan.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -1083,7 +1083,7 @@
     <value>textMarginLeft</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-<value>単離スキームを計算</value>
+<value>単離スキームの作成</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>108, 13</value>
