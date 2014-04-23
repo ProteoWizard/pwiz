@@ -224,7 +224,6 @@ namespace SkylineTester
 
             _updateTimer = new Timer {Interval = 300};
             _updateTimer.Tick += (s, a) => RunUI(UpdateNightly);
-            _updateTimer.Start();
 
             _stopTimer = new Timer {Interval = (int) MainWindow.NightlyDuration.Value*60*60*1000};
             _stopTimer.Tick += (s, a) => RunUI(() =>
@@ -233,7 +232,6 @@ namespace SkylineTester
                 _stopTimer = null;
                 MainWindow.Stop();
             });
-            _stopTimer.Start();
 
             _architecture = (MainWindow.NightlyBuildType.SelectedIndex == 0)
                 ? 32
@@ -248,6 +246,9 @@ namespace SkylineTester
             MainWindow.CommandShell.Add("# Nightly finished.");
 
             MainWindow.RunCommands();
+
+            _updateTimer.Start();
+            _stopTimer.Start();
         }
 
         private int _architecture;
