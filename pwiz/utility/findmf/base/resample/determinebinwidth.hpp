@@ -34,47 +34,52 @@
 
 namespace ralab
 {
-  namespace base
-  {
-    namespace resample
-    {
-		template<typename TReal>
-	  struct SquareRoot{
-		TReal operator()(TReal x) const{
-			return(sqrt(x));
+	namespace base
+	{
+		namespace resample
+		{
+			template<typename TReal>
+			struct SquareRoot{
+				TReal operator()(TReal x) const{
+					return(sqrt(x));
+				}
+			};
+
+			struct SamplingWith{
+				std::vector<double> diff_;
+				std::vector<double> summ_;
+				std::vector<double> am_;
+
+				//expects a sorted sequence
+				template<typename TRealI>
+				double operator()(TRealI begin, TRealI end)
+				{
+					//BOOST_ASSERT(!boost::range::is_sorted(begin,end));
+					typedef typename std::iterator_traits<TRealI>::value_type TReal;
+					std::size_t N = std::distance(begin,end);
+					double am;
+					if(N > 1){
+						diff_.resize(N-1);
+						summ_.resize(N-1);
+						am_.resize(N-1);
+						ralab::base::base::diff(begin,end,diff_.begin(),1);
+
+						utilities::summ( begin , end, summ_.begin(),1);
+						//square the sum
+						//std::transform(summ_.begin(),summ_.end(),summ_.begin(),boost::bind(sqrt,_1));
+						std::transform(summ_.begin(),summ_.end(),summ_.begin(),SquareRoot<TReal>());
+						std::transform(diff_.begin(),diff_.end(),summ_.begin(),am_.begin(),std::divides<double>());
+						std::sort(am_.begin(),am_.end());
+						am = utilities::determine(am_.begin(),am_.end());
+					}else{
+						am = 0.;
+					}
+					return am;
+				}
+			};
+
 		}
-	  };
-
-      struct SamplingWith{
-        std::vector<double> diff_;
-        std::vector<double> summ_;
-        std::vector<double> am_;
-
-        //expects a sorted sequence
-        template<typename TRealI>
-        double operator()(TRealI begin, TRealI end)
-        {
-          //BOOST_ASSERT(!boost::range::is_sorted(begin,end));
-          typedef typename std::iterator_traits<TRealI>::value_type TReal;
-			std::size_t N = std::distance(begin,end);
-          diff_.resize(N-1);
-          summ_.resize(N-1);
-          am_.resize(N-1);
-          ralab::base::base::diff(begin,end,diff_.begin(),1);
-		  
-          utilities::summ( begin , end, summ_.begin(),1);
-          //square the sum
-          //std::transform(summ_.begin(),summ_.end(),summ_.begin(),boost::bind(sqrt,_1));
-          std::transform(summ_.begin(),summ_.end(),summ_.begin(),SquareRoot<TReal>());
-		  std::transform(diff_.begin(),diff_.end(),summ_.begin(),am_.begin(),std::divides<double>());
-          std::sort(am_.begin(),am_.end());
-          double am = utilities::determine(am_.begin(),am_.end());
-          return am;
-        }
-      };
-
-    }
-  }
+	}
 }
 
 
