@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
-            IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-2_5.pdf";
             
