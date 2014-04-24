@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Util.Extensions
         {
             var listFilters = filters.ToList();
             listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, ".*")); // Not L10N
-            return string.Join("|", listFilters);
+            return string.Join("|", listFilters); // Not L10N
         }
     }
 
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Util.Extensions
                 // replace with made up column names
                 for (int i = 0; i < fields.Length; ++i)
                 {
-                    fields[i] = String.Format("{0}", i );
+                    fields[i] = String.Format("{0}", i ); // Not L10N
                 }
             }
             for (int i = 0; i < fields.Length; ++i)

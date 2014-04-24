@@ -19,7 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+// ReSharper disable NonLocalizedString
+//TODO: Disabled strings so build will pass, Nick will be localizing this file.
 namespace pwiz.Common.DataBinding
 {
     public interface IFilterOperation

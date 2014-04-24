@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Util
         /// <param name="postData">Report text</param>
         public static void PostToLink(string link, string postData)
         {
-            string filePath = Path.GetTempFileName() + ".html";
+            string filePath = Path.GetTempFileName() + ".html"; // Not L10N
 
             string javaScript = string.Format(
 
@@ -287,7 +287,7 @@ window.onload = submitForm;
 </script>
 <form id=""my_form"" action=""{0}"" method=""post"" style=""visibility: hidden;"">
 <textarea name=""SkylineReport"">{1}</textarea>
-</form>",
+</form>", // Not L10N
 
                 link, WebUtility.HtmlEncode(postData));
 

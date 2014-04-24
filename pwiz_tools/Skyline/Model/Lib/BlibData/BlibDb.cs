@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 session.Flush();
                 session.Clear();
                 // Simulate ctime(d), which is what BlibBuild uses.
-                string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now);
+                string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // Not L10N? different date/time format in different countries
                 DbLibInfo libInfo = new DbLibInfo
                 {
                     LibLSID = libLsid,
@@ -412,7 +412,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     }
 
                     // Simulate ctime(d), which is what BlibBuild uses.
-                    string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now);
+                    string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // Not L10N? different date/time format in different countries
                     DbLibInfo libInfo = new DbLibInfo
                                             {
                                                 LibLSID = libLsid,
@@ -430,12 +430,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                     if (redundantTransaction != null)
                     {
-                        var scoreType = new DbScoreTypes {Id = 0, ScoreType = "UNKNOWN"};
+                        var scoreType = new DbScoreTypes {Id = 0, ScoreType = "UNKNOWN"}; // Not L10N
                         redundantSession.Save(scoreType);
 
                         libInfo = new DbLibInfo
                                       {
-                                          LibLSID = libLsid.Replace(":nr:", ":redundant:"),
+                                          LibLSID = libLsid.Replace(":nr:", ":redundant:"), // Not L10N
                                           CreateTime = createTime,
                                           NumSpecs = redundantSpectraCount,
                                           MajorVersion = majorVer,

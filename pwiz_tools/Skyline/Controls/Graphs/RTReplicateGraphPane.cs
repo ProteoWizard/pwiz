@@ -252,13 +252,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private bool IsMissingAlignment(ChromInfoData chromInfoData)
             {
-                Assume.IsNotNull(RetentionTimeTransform, "RetentionTimeTransform");
+                Assume.IsNotNull(RetentionTimeTransform, "RetentionTimeTransform"); // Not L10N
                 if (null == RetentionTimeTransform.RtTransformOp)
                 {
                     return false;
                 }
-                Assume.IsNotNull(chromInfoData, "chromInfoData");
-                Assume.IsNotNull(chromInfoData.ChromFileInfo, "chromInfoData.ChromFileInfo");
+                Assume.IsNotNull(chromInfoData, "chromInfoData"); // Not L10N
+                Assume.IsNotNull(chromInfoData.ChromFileInfo, "chromInfoData.ChromFileInfo"); // Not L10N
                 IRegressionFunction regressionFunction;
                 return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
             }

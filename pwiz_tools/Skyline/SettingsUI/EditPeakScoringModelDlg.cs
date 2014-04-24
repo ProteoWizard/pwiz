@@ -269,7 +269,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     new MissingScoresFinder(calculatorName, selectedCalculatorIndex, featureDictionary)
                 };
-            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText("");
+            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText(string.Empty);
             Program.MainWindow.FindAll(this, findOptions);
         }
 
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private static void InitGraphPane(GraphPane graphPane, string titleName = null, string xAxis = null)
         {
-            graphPane.Title.Text = titleName ?? "";
+            graphPane.Title.Text = titleName ?? string.Empty;
             graphPane.XAxis.Title.Text = xAxis ?? Resources.EditPeakScoringModelDlg_InitGraphPane_Score;
             graphPane.YAxis.Title.Text = Resources.EditPeakScoringModelDlg_InitGraphPane_Peak_count;
             graphPane.XAxis.MinSpace = 50;

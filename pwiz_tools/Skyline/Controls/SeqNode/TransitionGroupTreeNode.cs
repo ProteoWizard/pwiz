@@ -597,7 +597,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                           RenderTools rt)
         {
             double mz = SequenceMassCalc.GetMZ(massH, charge);
-            CellDesc cell = CreateData(string.Format("{0:F02}", mz), rt);
+            CellDesc cell = CreateData(string.Format("{0:F02}", mz), rt); // Not L10N
 
             foreach (TransitionDocNode nodeTran in choices)
             {

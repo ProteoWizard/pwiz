@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenIsotopeDotProductCalc : SummaryPeakFeatureCalculator
     {
-        public NextGenIsotopeDotProductCalc() : base("Precursor isotope dot product") { }
+        public NextGenIsotopeDotProductCalc() : base("Precursor isotope dot product") { } // Not L10N?
 
         public override string Name
         {
@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class NextGenCrossWeightedShapeCalc : MQuestWeightedShapeCalc
     {
-        public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { }
+        public NextGenCrossWeightedShapeCalc() : base("Precursor-product shape score") { } // Not L10N?
 
         public override string Name
         {

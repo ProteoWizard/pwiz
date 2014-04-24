@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Util
                         ? string.Format("http://proteome.gs.washington.edu/software/Skyline/install.html?majorVer={0}&minorVer={1}", MajorVersion, MinorVersion) // Not L10N
                         : (Type == InstallType.daily)
                               ? "http://proteome.gs.washington.edu/software/Skyline/install-daily.html" // Not L10N
-                              : "";
+                              : string.Empty;
             }
         }
 

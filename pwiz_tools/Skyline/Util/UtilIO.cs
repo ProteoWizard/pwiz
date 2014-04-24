@@ -1167,16 +1167,16 @@ namespace pwiz.Skyline.Util
         public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
         {
             // create GUID
-            string guidSuffix = string.Format("-{0}", Guid.NewGuid());
+            string guidSuffix = string.Format("-{0}", Guid.NewGuid()); // Not L10N
 
             var startInfo = new ProcessStartInfo
                 {
                     FileName = "SkylineProcessRunner.exe", // Not L10N
-                    Arguments = guidSuffix + " " + arguments,
+                    Arguments = guidSuffix + " " + arguments, // Not L10N
                 };
                 
             if (runAsAdministrator)
-                startInfo.Verb = "runas";
+                startInfo.Verb = "runas"; // Not L10N
 
             var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
 
@@ -1209,7 +1209,7 @@ namespace pwiz.Skyline.Util
                 }
                 else
                 {
-                    throw new IOException("Error running process"); // TODO: localize
+                    throw new IOException("Error running process"); // Not L10N? Does user see this?
                 }
             }
         }

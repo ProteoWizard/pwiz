@@ -320,7 +320,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("RT: {0} Area: {1}", BestRetentionTime, TotalArea);
+            return string.Format("RT: {0} Area: {1}", BestRetentionTime, TotalArea); // Not L10N?
         }
     }
 }

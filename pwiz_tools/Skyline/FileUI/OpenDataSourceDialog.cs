@@ -147,7 +147,7 @@ namespace pwiz.Skyline.FileUI
                 if (Equals(item.Text, fileName))
                     listView.SelectedIndices.Add(item.Index);
             }
-            if (0 == listView.SelectedIndices.Count && fileName.Contains("\\"))
+            if (0 == listView.SelectedIndices.Count && fileName.Contains("\\")) // Not L10N
             {
                 // mimic the action of user pasting an entire path into the textbox
                 sourcePathTextBox.Text = fileName;
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     catch (Exception)
                     {
-                        label += string.Format(" ({0})", Resources.OpenDataSourceDialog_populateListViewFromDirectory_access_failure);
+                        label += string.Format(" ({0})", Resources.OpenDataSourceDialog_populateListViewFromDirectory_access_failure); // Not L10N
                     }
 
                     string name = driveInfo.Name;

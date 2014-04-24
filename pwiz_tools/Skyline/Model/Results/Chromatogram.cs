@@ -584,7 +584,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new ArgumentOutOfRangeException("ordinalIndex", // Not L10N
                                                       Resources.ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found);
 
-            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
+            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex); // Not L10N
         }
 
         public string GetFileSaveId(ChromFileInfoId fileId)

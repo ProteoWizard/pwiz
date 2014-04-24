@@ -1191,7 +1191,7 @@ namespace pwiz.Skyline.Model.Results
             if (0 >= numWindows || numWindows > _deconvTransitions.Length)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format("TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}",
+                    string.Format("TransitionBinner: MaxTransitions asked for transitions from too many precursors: {0}", // Not L10N?  Will users see this?
                                   numWindows));
             }
             var transNumsSorted = from prec in _deconvTransitions

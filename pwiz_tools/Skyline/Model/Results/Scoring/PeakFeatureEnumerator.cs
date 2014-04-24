@@ -500,11 +500,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             var sb = new StringBuilder();
             if (NodePep.IsDecoy)
-                sb.Append("DECOY_");
+                sb.Append("DECOY_"); // Not L10N
             sb.Append(NodePep.ModifiedSequence);
             if (!LabelType.IsLight)
-                sb.Append("_").Append(LabelType);
-            sb.Append("_run").Append(Run);
+                sb.Append("_").Append(LabelType); // Not L10N
+            sb.Append("_run").Append(Run); // Not L10N
             return sb.ToString();
         }
     }

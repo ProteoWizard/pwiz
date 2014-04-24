@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.V01
             if (Alternatives != null)
             {
                 foreach (XmlAlternativeProtein alternative in Alternatives)
-                    descriptions.Add(alternative.Name + " " + alternative.Description);
+                    descriptions.Add(alternative.Name + " " + alternative.Description); // Not L10N
             }
             seqBuilder.Descriptions = descriptions.ToArray();
             string sequence = Sequence.Trim();

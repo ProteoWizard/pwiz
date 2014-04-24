@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Util
                 }
                 using (var reader = new StringReader(clipboardText))
                 {
-                    using (var undoTransaction = SkylineWindow.BeginUndo("Paste"))
+                    using (var undoTransaction = SkylineWindow.BeginUndo("Paste")) // Not L10N? Does user see this
                     {
                         if (Paste(reader))
                         {
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception exception)
             {
-                string message = string.Format("Error converting '{0}' to required type: {1}", strValue,
+                string message = string.Format(Resources.DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_, strValue,
                                                exception.Message);
                 MessageBox.Show(DataGridView, message, Program.Name);
                 convertedValue = null;

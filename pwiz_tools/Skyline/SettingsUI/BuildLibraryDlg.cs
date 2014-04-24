@@ -366,7 +366,7 @@ namespace pwiz.Skyline.SettingsUI
                     Multiselect = true,
                     DefaultExt = BiblioSpecLibSpec.EXT,
                     Filter = TextUtil.FileDialogFiltersAll(
-                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" +
+                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" + // Not L10N
                         string.Join(";", wildExts), // Not L10N
                         BiblioSpecLiteSpec.FILTER_BLIB)
                 })

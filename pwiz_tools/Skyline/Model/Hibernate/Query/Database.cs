@@ -102,11 +102,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 catch (Exception x)
                 {
                     var parts = column.Column.Parts;
-                    throw new ArgumentException(string.Format("Failed to find the column {0}", parts[parts.Count - 1]), x);
+                    throw new ArgumentException(string.Format("Failed to find the column {0}", parts[parts.Count - 1]), x); // Not L10N? Does user see this?
                 }
 
                 hql.Append(comma);
-                comma = ", ";
+                comma = ", "; // Not L10N? comma different in different countries
                 hql.Append(column.GetHql(dictTableAlias));
 
                 columnInfos.Add(columnInfo);
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             foreach (ChromatogramSet chromatogramSet in docInfo.MeasuredResults.Chromatograms)
             {
-                DbReplicate dbReplicate = new DbReplicate {Replicate = chromatogramSet.Name, ReplicatePath = "/"};
+                DbReplicate dbReplicate = new DbReplicate {Replicate = chromatogramSet.Name, ReplicatePath = "/"}; // Not L10N
                 session.Save(dbReplicate);
 
                 var replicateResultFileMap = new ReplicateResultFileMap(chromatogramSet, new MappedList<int, ResultFileAndIndex>());

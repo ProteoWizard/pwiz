@@ -46,7 +46,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     if (!_eventHandlers.Add(value))
                     {
-                        throw new InvalidOperationException("Listener already added");
+                        throw new InvalidOperationException("Listener already added"); // Not L10N
                     }
                 }
             } 
@@ -56,7 +56,7 @@ namespace pwiz.Common.DataBinding.Internal
                 {
                     if (_eventHandlers == null || !_eventHandlers.Remove(value))
                     {
-                        throw new InvalidOperationException("Listener has not been added");
+                        throw new InvalidOperationException("Listener has not been added"); // Not L10N
                     }
                     if (0 == _eventHandlers.Count)
                     {

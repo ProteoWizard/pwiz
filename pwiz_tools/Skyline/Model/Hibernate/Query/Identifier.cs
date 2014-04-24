@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public override String ToString()
         {
-            return String.Join(".", Parts.ToArray());
+            return String.Join(".", Parts.ToArray()); // Not L10N
         }
 
         public static Identifier Parse(String str)

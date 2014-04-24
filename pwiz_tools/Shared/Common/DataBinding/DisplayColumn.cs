@@ -90,7 +90,7 @@ namespace pwiz.Common.DataBinding
             }
             if (ColumnDescriptor == null)
             {
-                return "#COLUMN " + PropertyPath + " NOT FOUND#";
+                return "#COLUMN " + PropertyPath + " NOT FOUND#"; // Not L10N
             }
             return ColumnDescriptor.GetPropertyValue(rowItem, pivotKey);
         }

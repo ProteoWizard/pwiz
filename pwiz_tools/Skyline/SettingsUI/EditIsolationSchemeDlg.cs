@@ -702,7 +702,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 // Set the format.
-                GridView.Columns[columnIndex].DefaultCellStyle.Format = "N" + decimalPlaces;
+                GridView.Columns[columnIndex].DefaultCellStyle.Format = "N" + decimalPlaces; // Not L10N
             }
 
             private EditIsolationWindow CreateEditIsolationWindow(IList<object> values, int lineNumber = -1)

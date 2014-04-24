@@ -40,9 +40,9 @@ namespace pwiz.Skyline.Model.DocSettings
             public static string NONE { get { return "None"; } }    // Not L10N : Used only in XML and in memory
             public const string MULTIPLEXED = "Multiplexed";  // Not L10N : Used only in XML and in memory
             public const string MS_E = "MSe"; // Not L10N : This is a Waters trademark, and probably not localizable
-            public const string ALL_IONS = "All Ions";    // TODO: Need to come up with a way of localizing XmlNamedElement names that appear in UI
-            public const string OVERLAP = "Overlap";
-            public const string OVERLAP_MULTIPLEXED = "Overlap Multiplexed";
+            public const string ALL_IONS = "All Ions";    // Not L10N?
+            public const string OVERLAP = "Overlap"; // Not L10N?
+            public const string OVERLAP_MULTIPLEXED = "Overlap Multiplexed"; // Not L10N?
 
             public static void Validate(string specialHandling)
             {

@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Hibernate
             if (standardType == null)
             {
                 prefix = RATIO_GS_PREFIX;
-                key = "TotalAreaRatioToGlobalStandards";
+                key = "TotalAreaRatioToGlobalStandards"; // Not L10N
                 header = Resources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards;
             }
             else
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Hibernate
             if (standardType == null)
             {
                 prefix = RATIO_GS_PREFIX;
-                key = "AreaRatioToGlobalStandards";
+                key = "AreaRatioToGlobalStandards"; // Not L10N
                 header = Resources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards;
             }
             else
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 return propertyName.Substring(RATIO_PREFIX.Length);
             if (propertyName.StartsWith(RDOTP_PREFIX))
                 return propertyName.Substring(RDOTP_PREFIX.Length);
-            throw new ArgumentException(string.Format("Invalid ratio column '{0}'", propertyName));
+            throw new ArgumentException(string.Format("Invalid ratio column '{0}'", propertyName)); // Not L10N? Does user see this?
         }
 
         public IGetter GetGetter(Type theClass, string propertyName)

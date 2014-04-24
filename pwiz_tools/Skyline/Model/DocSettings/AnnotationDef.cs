@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             protected override IEnumerable<AnnotationTarget> ParseElements(string stringValue)
             {
-                if ("none" == stringValue)
+                if ("none" == stringValue) // Not L10N
                 {
                     // AnnotationTarget used to have the [Flags] attribute, and "none" is what
                     // was written out for an empty set.  Handle "none" here just in case
@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 case AnnotationTarget.transition_result:
                     return Resources.AnnotationDef_AnnotationTarget_TransitionResults;
                 default:
-                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), "annotationTarget");
+                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), "annotationTarget"); // Not L10N?
             }
         }
 

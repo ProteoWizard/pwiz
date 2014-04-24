@@ -140,7 +140,7 @@ namespace pwiz.Common.DataBinding
                 if (genericTypeDefinition == typeof(Nullable<>)
                     || genericTypeDefinition == typeof(LinkValue<>))
                 {
-                    return TypeDescriptor.GetProperties(type).Find("Value", false);
+                    return TypeDescriptor.GetProperties(type).Find("Value", false); // Not L10N
                 }
 
             }
@@ -233,11 +233,11 @@ namespace pwiz.Common.DataBinding
                 var oneToManyAttribute = oneToManyColumn.GetAttributes().OfType<OneToManyAttribute>().FirstOrDefault();
                 if (oneToManyAttribute != null)
                 {
-                    if ("Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null)
+                    if ("Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null) // Not L10N
                     {
                         return oneToManyAttribute.IndexDisplayName;
                     }
-                    if ("Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null)
+                    if ("Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null) // Not L10N
                     {
                         return oneToManyAttribute.ItemDisplayName;
                     }

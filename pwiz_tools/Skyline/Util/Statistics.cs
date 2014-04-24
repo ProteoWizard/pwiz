@@ -1015,7 +1015,7 @@ namespace pwiz.Skyline.Util
         public static double ATerm3(Statistics y, Statistics x)
         {
             if (x.Length < 3)
-                throw new InvalidOperationException("Insufficient pairs of co-ordinates");
+                throw new InvalidOperationException("Insufficient pairs of co-ordinates"); // Not L10N
 
             //notation sjk to mean the sum of x_i^j*y_i^k. 
             double s40 = x._list.Sum(v => v*v*v*v); //sum of x^4
@@ -1061,7 +1061,7 @@ namespace pwiz.Skyline.Util
         public static double BTerm3(Statistics y, Statistics x)
         {
             if (x.Length < 3)
-                throw new InvalidOperationException("Insufficient pairs of co-ordinates");
+                throw new InvalidOperationException("Insufficient pairs of co-ordinates"); // Not L10N
 
             //notation sjk to mean the sum of x_i^j*y_i^k.
             double s40 = x._list.Sum(v => v*v*v*v); //sum of x^4
@@ -1107,7 +1107,7 @@ namespace pwiz.Skyline.Util
         public static double CTerm3(Statistics y, Statistics x)
         {
             if (x.Length < 3)
-                throw new InvalidOperationException("Insufficient pairs of co-ordinates");
+                throw new InvalidOperationException("Insufficient pairs of co-ordinates"); // Not L10N
 
             //notation sjk to mean the sum of x_i^j*y_i^k.
             double s40 = x._list.Sum(v => v*v*v*v); //sum of x^4

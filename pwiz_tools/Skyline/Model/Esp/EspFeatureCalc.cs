@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Esp
 
         public static void WriteFeatures(TextWriter writer, IEnumerable<string> seqs, CultureInfo cultureInfo)
         {
-            WriteRow(writer, "sequence", EspFeatureDb.AllFeatures.Cast<object>(),
+            WriteRow(writer, "sequence", EspFeatureDb.AllFeatures.Cast<object>(), // Not L10N
                      cultureInfo);
             foreach (var seq in seqs)
                 WriteRow(writer, seq, CalculateAllFeatures(seq).Cast<object>(), cultureInfo);

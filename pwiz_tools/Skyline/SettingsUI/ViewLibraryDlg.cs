@@ -724,7 +724,7 @@ namespace pwiz.Skyline.SettingsUI
                                 }
                                 else
                                 {
-                                    curve.Label.Text = chromData.Mz.ToString("0.####");
+                                    curve.Label.Text = chromData.Mz.ToString("0.####"); // Not L10N? international # formats
                                 }
                                 curve.Line.Width = Settings.Default.ChromatogramLineWidth;
                                 curve.Color = color;

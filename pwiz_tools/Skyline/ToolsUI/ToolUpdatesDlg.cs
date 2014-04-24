@@ -264,7 +264,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string FormatFailureMessage(string toolName, string errorMsg)
         {
-            return string.Format("{0}: {1}", toolName, errorMsg);
+            return string.Format("{0}: {1}", toolName, errorMsg); // Not L10N
         }
 
         #region Functional test support

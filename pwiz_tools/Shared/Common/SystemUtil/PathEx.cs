@@ -76,7 +76,7 @@ namespace pwiz.Common.SystemUtil
             if (parts.Count < 2)
                 return string.Empty;
 
-            int iElipsis = parts.IndexOf("...");
+            int iElipsis = parts.IndexOf("..."); // Not L10N
             int iStart = (iElipsis != -1 ? iElipsis : parts.Count - 2);
             int iRemove = iStart - 1;
             if (iRemove < 1)

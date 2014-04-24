@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format("RT: {0} Area: {1}", RetentionTime, Area);
+            return string.Format("RT: {0} Area: {1}", RetentionTime, Area); // Not L10N?
         }
     }
 }

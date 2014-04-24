@@ -32,7 +32,7 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public partial class NavBar : UserControl
     {
-        private const string DefaultWaitingMessage = "Waiting for data...";
+        private const string DefaultWaitingMessage = "Waiting for data..."; // Not L10N?
         private BindingListSource _bindingListSource;
         private string _waitingMsg = DefaultWaitingMessage;
         public NavBar()

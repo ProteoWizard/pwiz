@@ -56,11 +56,11 @@ namespace pwiz.Skyline.Model.Databinding
             string title;
             if (string.IsNullOrEmpty(viewInfo.Name))
             {
-                title = "Preview New Report";
+                title = Resources.DocumentGridViewContext_Preview_Preview_New_Report;
             }
             else
             {
-                title = string.Format("Preview: {0}", viewInfo.Name);
+                title = string.Format(Resources.DocumentGridViewContext_Preview_Preview___0_, viewInfo.Name);
             }
             var dialog = new DocumentGridForm(this)
             {

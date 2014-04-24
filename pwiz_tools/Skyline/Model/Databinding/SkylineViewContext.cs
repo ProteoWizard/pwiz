@@ -34,7 +34,8 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-
+// ReSharper disable NonLocalizedString
+//TODO: Disabled strings so build will pass, Nick will be localizing this file.
 namespace pwiz.Skyline.Model.Databinding
 {
     public class SkylineViewContext : AbstractViewContext

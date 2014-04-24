@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model.Results
             if (min > value || value > max)
             {
                 if (!allowNegativeOne || value != -1)
-                    throw new ArgumentOutOfRangeException(string.Format("The value {0} must be between {1} and {2}.", value, min, max));
+                    throw new ArgumentOutOfRangeException(string.Format("The value {0} must be between {1} and {2}.", value, min, max)); // Not L10N?  Does user see this?
             }
             return value;
         }

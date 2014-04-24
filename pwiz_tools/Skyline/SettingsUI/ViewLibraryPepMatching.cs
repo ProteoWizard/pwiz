@@ -711,7 +711,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), 
                                                           Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides,
-                                                          "", listPeptides.ToArray());
+                                                          string.Empty, listPeptides.ToArray());
                 if (hasVariable)
                     nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
                 IdentityPath nextAdd;

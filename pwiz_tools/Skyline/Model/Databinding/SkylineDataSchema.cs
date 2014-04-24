@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Databinding
                 bool firstListener = _documentChangedEventHandlers.Count == 0;
                 if (!_documentChangedEventHandlers.Add(listener))
                 {
-                    throw new ArgumentException("Listener already added");
+                    throw new ArgumentException("Listener already added"); // Not L10N
                 }
                 if (firstListener)
                 {
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (!_documentChangedEventHandlers.Remove(listener))
                 {
-                    throw new ArgumentException("Listener not added");
+                    throw new ArgumentException("Listener not added"); // Not L10N
                 }
                 if (_documentChangedEventHandlers.Count == 0)
                 {

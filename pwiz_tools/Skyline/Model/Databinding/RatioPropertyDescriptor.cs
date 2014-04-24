@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Databinding
                         return null;
                     }
                     getterFunc = precursorResult => RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[precursorResult.ChromInfo.Ratios.Count - 1]);
-                    displayName = "TotalAreaRatioToGlobalStandards";
+                    displayName = "TotalAreaRatioToGlobalStandards"; // Not L10N
                 }
                 else if (parts.Count != 1)
                 {
@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.Databinding
                             }
                             return RatioValue.GetRatio(precursorResult.ChromInfo.Ratios[ratioIndex]);
                         };
-                        displayName = string.Format("TotalAreaRatioTo{0}", labelColumnPart);
+                        displayName = string.Format("TotalAreaRatioTo{0}", labelColumnPart); // Not L10N
                     }
                     else if (prefix == RDOTP_PREFIX)
                     {
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.Databinding
                             }
                             return RatioValue.GetDotProduct(precursorResult.ChromInfo.Ratios[ratioIndex]);
                         };
-                        displayName = string.Format("DotProductTo{0}", labelColumnPart);
+                        displayName = string.Format("DotProductTo{0}", labelColumnPart); // Not L10N
                     }
                     else
                     {
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Databinding
                     }
 
                     getterFunc = transitionResult => transitionResult.ChromInfo.Ratios[transitionResult.ChromInfo.Ratios.Count - 1];
-                    displayName = "AreaRatioToGlobalStandards";
+                    displayName = "AreaRatioToGlobalStandards"; // Not L10N
                 }
                 else if (prefix != RATIO_PREFIX || parts.Count != 1)
                 {
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Databinding
                         }
                         return transitionResult.ChromInfo.Ratios[ratioIndex];
                     };
-                    displayName = string.Format("AreaRatioTo{0}", labelColumnPart);
+                    displayName = string.Format("AreaRatioTo{0}", labelColumnPart); // Not L10N
                 }
                 return MakeRatioProperty(propertyName, displayName, getterFunc);
             }

@@ -247,7 +247,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (!File.Exists(path))
             {
-                MessageDlg.Show(this, String.Format("The file {0} does not exist. Click the Create button to create a new database or the Open button to find the missing file.",
+                MessageDlg.Show(this, String.Format(Resources.EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file_,
                                                     path));
                 return;
             }

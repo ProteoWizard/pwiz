@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     catch (Exception exception)
                     {
-                        Trace.TraceWarning("Unable to read chromatogram {0}", exception);
+                        Trace.TraceWarning("Unable to read chromatogram {0}", exception); // Not L10N
                     }
                 }
                 MinimizedChromGroup minimizedChromGroup = MinimizeChromGroup(settings,
@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (hasOrphanFiles)
                 {
-                    _replicates[results.Chromatograms.Count].Name = "<Unmatched Files>"; //TODO: L10N. Function invoke uses?
+                    _replicates[results.Chromatograms.Count].Name = "<Unmatched Files>"; // Not L10N? Function invoke uses?
                 }
                 foreach (var chromHeaderInfo in ChromCacheMinimizer.ChromGroupHeaderInfos)
                 {

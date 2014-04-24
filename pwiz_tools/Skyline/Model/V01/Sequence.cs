@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Model.V01
 
         public override string ToString()
         {
-            return string.Format("{0} {1}{2} - {3:F04}", AA, IType.ToString().ToLower(),
+            return string.Format("{0} {1}{2} - {3:F04}", AA, IType.ToString().ToLower(), // Not L10N
                                  Ordinal, MassH);
         }
 

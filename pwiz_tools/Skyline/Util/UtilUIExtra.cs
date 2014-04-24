@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Util
         public static string ClipBoardText(string htmlFragment, string title, Uri sourceUrl)
         {
             if (title == null)
-                title = "From Clipboard"; // TODO: L10N? This is a title for an HTML page. I think the encodings different.
+                title = "From Clipboard"; // Not L10N? This is a title for an HTML page. I think the encodings different.
 
             StringBuilder sb = new StringBuilder();
 

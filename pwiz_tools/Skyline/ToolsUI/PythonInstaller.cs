@@ -430,7 +430,7 @@ namespace pwiz.Skyline.ToolsUI
             argumentBuilder.Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(SetupToolsPath)
-                           .Append(" & ")
+                           .Append(" & ") // Not L10N
                            .Append(pythonPath)
                            .Append(TextUtil.SEPARATOR_SPACE)
                            .Append(PipPath); // Not L10N
@@ -505,7 +505,7 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetProgramPath(string version)
         {
             RegistryKey pythonKey = GetPythonKey(version);
-            return (pythonKey != null) ? pythonKey.GetValue(null) + ("python.exe") : null;
+            return (pythonKey != null) ? pythonKey.GetValue(null) + ("python.exe") : null; // Not L10N
         }
 
         /// <summary>

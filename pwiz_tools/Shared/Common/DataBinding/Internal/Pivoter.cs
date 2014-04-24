@@ -247,7 +247,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     else
                     {
-                        Trace.TraceWarning("Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath);
+                        Trace.TraceWarning("Unable to pivot on column {0} because it is already pivoted.", pivotColumn.PropertyPath); // Not L10N
                     }
                 }
                 var pivotOnKey = PivotKey.GetPivotKey(allPivotKeys, pivotOnKeyValues);
@@ -405,7 +405,7 @@ namespace pwiz.Common.DataBinding.Internal
         }
         private string MakeUniqueName(HashSet<string> columnNames, PropertyPath propertyPath)
         {
-            return MakeUniqueName(columnNames, "COLUMN_" + propertyPath);
+            return MakeUniqueName(columnNames, "COLUMN_" + propertyPath); // Not L10N
         }
 
         private string MakeUniqueName(HashSet<string> existingNames, string baseName)
@@ -442,7 +442,7 @@ namespace pwiz.Common.DataBinding.Internal
                 CancellationToken.ThrowIfCancellationRequested();
                 if (Interlocked.Increment(ref _tickCount) >= MaxTickCount)
                 {
-                    throw new OperationCanceledException(string.Format("Number of steps exceeded {0}", MaxTickCount));
+                    throw new OperationCanceledException(string.Format("Number of steps exceeded {0}", MaxTickCount)); // Not L10N
                 }
             }
             public long MaxTickCount { get; private set; }

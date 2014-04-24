@@ -335,7 +335,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return Peak == null ? Data.Key.ToString() :
                 String.Format("{0} - area = {1:F0}{2}, start = {3}, end = {4}, rt = {5}-{6}",  // Not L10N : For debugging
-                    Data.Key, Peak.Area, Peak.Identified ? "*" : string.Empty,
+                    Data.Key, Peak.Area, Peak.Identified ? "*" : string.Empty, // Not L10N
                     Peak.StartIndex, Peak.EndIndex,
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex]);
         }

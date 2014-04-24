@@ -546,7 +546,7 @@ namespace pwiz.Skyline.Model.Results
             var isolationScheme = _fullScan.IsolationScheme;
             if (isolationScheme == null)
             {                
-                throw new InvalidOperationException("Unexpected attempt to calculate DIA isolation window without an isolation scheme");
+                throw new InvalidOperationException("Unexpected attempt to calculate DIA isolation window without an isolation scheme"); // Not L10N? Does user see this?
             }
 
                 // Calculate window for a simple isolation scheme.

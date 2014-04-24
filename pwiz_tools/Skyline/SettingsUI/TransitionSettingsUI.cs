@@ -95,8 +95,8 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Initialize filter settings
-            textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
-            textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", ");
+            textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
+            textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
             textIonTypes.Text = Filter.ToStringIonTypes(true);
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.Label;
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.Label;

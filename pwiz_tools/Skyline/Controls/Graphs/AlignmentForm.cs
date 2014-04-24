@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem("Peptides", points, Color.Black, SymbolType.Diamond)
+            var goodPointsLineItem = new LineItem("Peptides", points, Color.Black, SymbolType.Diamond) // Not L10N?
                 {
                     Symbol = {Size = 8f},
                     Line = {IsVisible = false}
@@ -298,13 +298,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocumentRetentionTimes = settings.DocumentRetentionTimes;
                 Target = target;
                 Source = timesToAlign;
-                Assume.IsNotNull(target, "target");
-                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, "DocumentRetentionTimes.FileAlignments");
+                Assume.IsNotNull(target, "target"); // Not L10N
+                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, "DocumentRetentionTimes.FileAlignments"); // Not L10N
                 var fileAlignment = DocumentRetentionTimes.FileAlignments.Find(target.Name);
                 if (fileAlignment != null)
                 {
-                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, "fileAlignment.RetentionTimeAlignments");
-                    Assume.IsNotNull(Source, "Source");
+                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, "fileAlignment.RetentionTimeAlignments"); // Not L10N
+                    Assume.IsNotNull(Source, "Source"); // Not L10N
                     Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
                 }
                 TargetTimes = settings.GetRetentionTimes(target.Name).GetFirstRetentionTimes();

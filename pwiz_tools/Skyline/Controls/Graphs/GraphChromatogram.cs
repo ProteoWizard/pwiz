@@ -603,8 +603,8 @@ namespace pwiz.Skyline.Controls.Graphs
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
-                Assume.IsNotNull(chromatograms, "chromatograms");
-                Assume.IsNotNull(ChromGroupInfos, "ChromGroupInfos");
+                Assume.IsNotNull(chromatograms, "chromatograms"); // Not L10N
+                Assume.IsNotNull(ChromGroupInfos, "ChromGroupInfos"); // Not L10N
                 if (ChromGroupInfos != null && ChromGroupInfos.Length > 0 && null != ChromGroupInfos[0])
                 {
                     retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);

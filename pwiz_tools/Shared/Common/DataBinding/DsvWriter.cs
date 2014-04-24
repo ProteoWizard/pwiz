@@ -117,7 +117,7 @@ namespace pwiz.Common.DataBinding
                 return string.Empty;
             if (text.IndexOfAny(new[] { '"', Separator, '\r', '\n' }) == -1)
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"';
+            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
         }
     }
 }
