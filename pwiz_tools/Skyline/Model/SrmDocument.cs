@@ -828,7 +828,7 @@ namespace pwiz.Skyline.Model
                 to, out firstAdded, out nextAdd);
         }
 
-        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting)
+        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgressMonitor progressMonitor)
         {
             var retentionTimeRegression = Settings.PeptideSettings.Prediction.RetentionTime;
             if (retentionTimeRegression == null || retentionTimeRegression.Calculator as RCalcIrt == null)
@@ -840,7 +840,9 @@ namespace pwiz.Skyline.Model
             IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
             var oldPeptides = db.GetPeptides().Select(p => new DbIrtPeptide(p)).ToList();
             IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
-            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, out conflicts);
+            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out conflicts);
+            if (peptidesCombined == null)
+                return null;
             foreach (var conflict in conflicts)
             {
                 // If old and new peptides are a library entry and a standards entry, throw an error

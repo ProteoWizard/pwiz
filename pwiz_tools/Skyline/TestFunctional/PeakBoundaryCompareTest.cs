@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -43,10 +44,18 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        protected string GetLocalizedFile(string fileName)
+        {
+            return (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
+                ? TestFilesDir.GetTestPath(fileName)
+                : TestFilesDir.GetTestPath(Path.GetFileNameWithoutExtension(fileName) + "_intl" + Path.GetExtension(fileName));
+
+        }
+
         protected override void DoTest()
         {
             var documentBase = TestFilesDir.GetTestPath("AQUA4_Human_picked_napedro2_short.sky");
-            var peakBoundariesFile = TestFilesDir.GetTestPath("OpenSwathPeaks.csv");
+            var peakBoundariesFile = GetLocalizedFile("OpenSwathPeaks.csv");
             RunUI(() => SkylineWindow.OpenFile(documentBase));
             WaitForDocumentLoaded();
             AddTrainedModels();
@@ -162,7 +171,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Q value missing ok but causes 1 of the Q value graphs to not be drawn
-            var peakBoundariesFileNoQ = TestFilesDir.GetTestPath("OpenSwathPeaksMissingQ.csv");
+            var peakBoundariesFileNoQ = GetLocalizedFile("OpenSwathPeaksMissingQ.csv");
             AddFile(comparePeakPickingDlg, "OpenSwathBadQ", peakBoundariesFileNoQ);
             CheckNumberComparisons(comparePeakPickingDlg, 3, 2, 3, 3);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
@@ -171,7 +180,7 @@ namespace pwiz.SkylineTestFunctional
             CheckNumberResults(comparePeakPickingDlg, numberResults);
             
             // Score missing ok
-            var peakBoundariesFileNoScore = TestFilesDir.GetTestPath("OpenSwathPeaksMissingScores.csv");
+            var peakBoundariesFileNoScore = GetLocalizedFile("OpenSwathPeaksMissingScores.csv");
             AddFile(comparePeakPickingDlg, "OpenSwathBadScore", peakBoundariesFileNoScore);
             CheckNumberComparisons(comparePeakPickingDlg, 3, 3, 3, 3);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
@@ -180,7 +189,7 @@ namespace pwiz.SkylineTestFunctional
             CheckNumberResults(comparePeakPickingDlg, numberResults);
 
             // If file does not contain peak boundaries for every result in the document, missing results get filled in with a notification
-            var peakBoundariesFileFillInCancel = TestFilesDir.GetTestPath("OpenSwathPeaksFillIn.csv");
+            var peakBoundariesFileFillInCancel = GetLocalizedFile("OpenSwathPeaksFillIn.csv");
             var addPeakCompareDlgFillInCancel = ShowDialog<AddPeakCompareDlg>(comparePeakPickingDlg.Add);
             RunUI(() =>
             {
@@ -198,7 +207,7 @@ namespace pwiz.SkylineTestFunctional
             CheckNumberResults(comparePeakPickingDlg, numberResults);
 
             // Try again
-            var peakBoundariesFileFillIn = TestFilesDir.GetTestPath("OpenSwathPeaksFillIn.csv");
+            var peakBoundariesFileFillIn = GetLocalizedFile("OpenSwathPeaksFillIn.csv");
             var addPeakCompareDlgFillIn = ShowDialog<AddPeakCompareDlg>(comparePeakPickingDlg.Add);
             RunUI(() =>
             {
@@ -227,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
             CheckNumberResults(comparePeakPickingDlg, numberResults);
 
             // Null q values and scores are OK when the peak boundaries are null too
-            var peakBoundariesFileNull = TestFilesDir.GetTestPath("OpenSwathPeaksNullPeaks.csv");
+            var peakBoundariesFileNull = GetLocalizedFile("OpenSwathPeaksNullPeaks.csv");
             var addPeakCompareDlgNull = ShowDialog<AddPeakCompareDlg>(comparePeakPickingDlg.Add);
             RunUI(() =>
             {
@@ -246,7 +255,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Unrecognized peptide leads to message box warning, but otherwise ok
-            var peakBoundariesFilePeptide = TestFilesDir.GetTestPath("OpenSwathPeaksBadPeptide.csv");
+            var peakBoundariesFilePeptide = GetLocalizedFile("OpenSwathPeaksBadPeptide.csv");
             var addPeakComparePeptide = ShowDialog<AddPeakCompareDlg>(comparePeakPickingDlg.Add);
             RunUI(() =>
             {
@@ -272,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Unrecognized file leads to message box warning, but otherwise ok
-            var peakBoundariesFileFile = TestFilesDir.GetTestPath("OpenSwathPeaksBadFile.csv");
+            var peakBoundariesFileFile = GetLocalizedFile("OpenSwathPeaksBadFile.csv");
             var addPeakCompareFile = ShowDialog<AddPeakCompareDlg>(comparePeakPickingDlg.Add);
             RunUI(() =>
             {
@@ -298,7 +307,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Import based on peak apex rather than boundaries works OK
-            var peakBoundariesApex = TestFilesDir.GetTestPath("OpenSwathPeaksApex.csv");
+            var peakBoundariesApex = GetLocalizedFile("OpenSwathPeaksApex.csv");
             AddFile(comparePeakPickingDlg, "OpenSwathApex", peakBoundariesApex);
             CheckNumberComparisons(comparePeakPickingDlg, 7, 7, 7, 7);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
@@ -338,7 +347,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => addPeakCompareDlg.PeakScoringModelSelected = "untrained");
             MessageDlgError(addPeakCompareDlg.OkDialog, Resources.AddPeakCompareDlg_OkDialog_Model_must_be_trained_before_it_can_be_used_for_peak_boundary_comparison_);
             // 7. File with unreadable q value produces error
-            var peakBoundariesBadQ = TestFilesDir.GetTestPath("OpenSwathPeaksBadQ.csv");
+            var peakBoundariesBadQ = GetLocalizedFile("OpenSwathPeaksBadQ.csv");
             RunUI(() => addPeakCompareDlg.IsModel = false);
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathBad");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesBadQ);
@@ -347,7 +356,7 @@ namespace pwiz.SkylineTestFunctional
                                                                                     "APIPTALDTDSSK",
                                                                                     "napedro_L120420_007_SW")));
             // 8. File with unreadable score produces error
-            var peakBoundariesBadScore = TestFilesDir.GetTestPath("OpenSwathPeaksBadScore.csv");
+            var peakBoundariesBadScore = GetLocalizedFile("OpenSwathPeaksBadScore.csv");
             RunUI(() => addPeakCompareDlg.IsModel = false);
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathBad");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesBadScore);
@@ -356,7 +365,7 @@ namespace pwiz.SkylineTestFunctional
                                                                                     "APIPTALDTDSSK",
                                                                                     "napedro_L120420_007_SW")));
             // 9. File with missing q value column and score column produces error
-            var peakBoundariesMissing = TestFilesDir.GetTestPath("OpenSwathPeaksMissingQScores.csv");
+            var peakBoundariesMissing = GetLocalizedFile("OpenSwathPeaksMissingQScores.csv");
             RunUI(() => addPeakCompareDlg.IsModel = false);
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathMissing");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesMissing);
@@ -364,7 +373,7 @@ namespace pwiz.SkylineTestFunctional
             MessageDlgError(addPeakCompareDlg.OkDialog, string.Format(Resources.AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_,
                                                                       Resources.AddPeakCompareDlg_OkDialog_The_current_file_or_model_has_no_q_values_or_scores_to_analyze___Either_q_values_or_scores_are_necessary_to_compare_peak_picking_tools_));
             // 10. Empty file leads to error
-            var peakBoundariesEmpty = TestFilesDir.GetTestPath("OpenSwathPeaksEmpty.csv");
+            var peakBoundariesEmpty = GetLocalizedFile("OpenSwathPeaksEmpty.csv");
             RunUI(() => addPeakCompareDlg.IsModel = false);
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathEmpty");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesEmpty);
@@ -372,7 +381,7 @@ namespace pwiz.SkylineTestFunctional
                                                                       Resources.AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_));
 
             // 11. Apex-based file with bad apex entry leads to error
-            var peakBoundariesApex = TestFilesDir.GetTestPath("OpenSwathPeaksBadApex.csv");
+            var peakBoundariesApex = GetLocalizedFile("OpenSwathPeaksBadApex.csv");
             RunUI(() => addPeakCompareDlg.IsModel = false);
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathBadApex");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesApex);

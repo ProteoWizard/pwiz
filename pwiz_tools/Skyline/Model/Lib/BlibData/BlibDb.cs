@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Properties;
@@ -118,10 +119,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// </summary>
         /// <param name="librarySpec">Library spec for which the new library is created</param>
         /// <param name="listSpectra">List of existing spectra, by LibKey</param>
-        /// /// <param name="libraryName">Name of the library to be created</param>
+        /// <param name="libraryName">Name of the library to be created</param>
+        /// <param name="progressMonitor">Progress monitor to display progress in creating library</param>
         /// <returns>A library of type <see cref="BiblioSpecLiteLibrary"/></returns>
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
-            List<SpectrumMzInfo> listSpectra, string libraryName)
+                                                              List<SpectrumMzInfo> listSpectra,
+                                                              string libraryName,
+                                                              IProgressMonitor progressMonitor)
         {
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
             const int majorVer = 1;
@@ -136,8 +140,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             using (ISession session = OpenWriteSession())
             using (ITransaction transaction = session.BeginTransaction())
             {
+                int progressPercent = 0;
+                int i = 0;
+                var status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_);
                 foreach (var spectrum in listSpectra)
                 {
+                    ++i;
                     var dbRefSpectrum = RefSpectrumFromPeaks(spectrum);
                     session.Save(dbRefSpectrum);
                     dictLibrary.Add(spectrum.Key,
@@ -145,6 +153,17 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                                 dbRefSpectrum.NumPeaks,
                                                                 (int)(dbRefSpectrum.Id ?? 0),
                                                                 default(IndexedRetentionTimes)));
+                    if (progressMonitor != null)
+                    {
+                        if (progressMonitor.IsCanceled)
+                            return null;
+                        int progressNew = (i * 100 / listSpectra.Count);
+                        if (progressPercent != progressNew)
+                        {
+                            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
+                            progressPercent = progressNew;
+                        }
+                    }
                 }
 
                 session.Flush();

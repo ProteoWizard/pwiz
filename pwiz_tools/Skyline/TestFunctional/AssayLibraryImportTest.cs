@@ -146,6 +146,7 @@ namespace pwiz.SkylineTestFunctional
                               string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
                                             "GTFIIDPGGVIR"))));
             OkDialog(messageDlgStandard, messageDlgStandard.OkDialog);
+            WaitForDocumentLoaded();
             Assert.AreSame(docOldStandard, SkylineWindow.Document);
 
             // 8. Mass list contains different iRT times on same peptide
@@ -162,7 +163,23 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(messageDlg.Message, expectedMessage);
                 messageDlg.OkDialog();
             });
+            WaitForDocumentLoaded();
             Assert.AreSame(docOldIrt, SkylineWindow.Document);
+
+            // 8.1 Mass list contains different iRT values on two non-contiguous lines of the same transition group
+            string textIrtGroupConflict = TestFilesDir.GetTestPath("InterleavedInconsistentIrt.csv");
+            RunDlg<MessageDlg>(() => SkylineWindow.ImportMassList(textIrtGroupConflict), messageDlg =>
+            {
+                var expectedMessage = string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
+                                              textIrtGroupConflict,
+                                              string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                                                            "AAAAAAAAAAAAAAAGAAGK", 53, 54));
+                Assert.AreEqual(messageDlg.Message, expectedMessage);
+                messageDlg.OkDialog();
+            });
+            WaitForDocumentLoaded();
+            Assert.AreSame(docOldIrt, SkylineWindow.Document);
+
 
             // 9. iRT not a number leads to error
             LoadDocument(documentExisting);
@@ -175,6 +192,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(messageDlg.Message, string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_, 2, 1));
                 messageDlg.OkDialog();
             });
+            WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 10. iRT blank leads to error
@@ -185,6 +203,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(messageDlg.Message, string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_, 2, 1));
                 messageDlg.OkDialog();
             });
+            WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 11. Library not a number leads to error
@@ -195,6 +214,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(messageDlg.Message, string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_, 3, 1));
                 messageDlg.OkDialog();
             });
+            WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 12. Library blank leads to error
@@ -205,6 +225,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(messageDlg.Message, string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_, 3, 1));
                 messageDlg.OkDialog();
             });
+            WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 13. Title column missing causes iRT's and library to be skipped
@@ -213,6 +234,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.Paste();
+                WaitForDocumentLoaded();
                 // Transition gets added but not iRT
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 11, 355, 10);
             });
@@ -401,6 +423,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 355);
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
@@ -465,6 +488,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryDlgYes, libraryDlgYes.Btn0Click);
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteYes.Btn0Click);
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 345);
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -532,6 +556,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryDlgYesNew, libraryDlgYesNew.Btn0Click);
             var libraryDlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwrite.Btn0Click);
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 345);
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -570,6 +595,7 @@ namespace pwiz.SkylineTestFunctional
 
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 690);
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 690, 355, 10);
@@ -634,6 +660,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryDlgCancelNew, libraryDlgCancelNew.Btn0Click);
             var libraryDlgOverwriteCancel = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(libraryDlgOverwriteCancel, libraryDlgOverwriteCancel.BtnCancelClick);
+            WaitForDocumentLoaded();
             Assert.AreSame(SkylineWindow.Document, docCancel);
 
             // 32. Start with blank document, skip iRT's, decline to overwrite, only document should have changed
@@ -667,9 +694,11 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryInterleaved, libraryInterleaved.Btn0Click);
-            var docInterleaved = SkylineWindow.Document; // WaitForDocumentLoaded();    TODO: Fix loading with iRT calc but no iRT peptides
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 6);
+            // WaitForDocumentLoaded();    TODO: Fix loading with iRT calc but no iRT peptides
             RunUI(() =>
             {
+                var docInterleaved = SkylineWindow.DocumentUI;
                 Assert.AreEqual(6, docInterleaved.PeptideCount);
                 Assert.AreEqual(60, docInterleaved.TransitionCount);
                 var libraries = docInterleaved.Settings.PeptideSettings.Libraries;
@@ -680,16 +709,101 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Consensus_Dario_iRT_new_blank-assay", libraries.LibrarySpecs[0].Name);
                 var library = libraries.Libraries[0];
                 Assert.AreEqual(12, library.SpectrumCount);
-            });
-            foreach (var groupNode in docInterleaved.TransitionGroups)
-            {
-                Assert.IsTrue(groupNode.HasLibInfo);
-                Assert.IsTrue(groupNode.HasLibRanks);
-                foreach (var transition in groupNode.Transitions)
+                foreach (var groupNode in docInterleaved.TransitionGroups)
                 {
-                    Assert.IsTrue(transition.HasLibInfo);
+                    Assert.IsTrue(groupNode.HasLibInfo);
+                    Assert.IsTrue(groupNode.HasLibRanks);
+                    foreach (var transition in groupNode.Transitions)
+                    {
+                        Assert.IsTrue(transition.HasLibInfo);
+                    }
                 }
-            }
+            });
+
+            // 34. Interleaved transition groups within a peptide can have different iRT's, and they will be averaged together
+            var documentInterleavedIrt = TestFilesDir.GetTestPath("Consensus_Dario_iRT_new_blank.sky");
+            var textInterleavedIrt = TestFilesDir.GetTestPath("InterleavedDiffIrt.csv");
+            RunUI(() => SkylineWindow.OpenFile(documentInterleavedIrt));
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleavedIrt), addIrtDlg => addIrtDlg.Btn0Click());
+            var irtOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(irtOverwrite, irtOverwrite.Btn1Click);
+            var libraryInterleavedIrt = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(libraryInterleavedIrt, libraryInterleavedIrt.Btn0Click);
+            var libraryDlgOverwriteIrt = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(libraryDlgOverwriteIrt.Btn0Click);
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 6);
+            var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence("AAAAAAAAAAAAAAAGAAGK");
+            Assert.IsNotNull(irtValue);
+            Assert.AreEqual(irtValue.Value, 52.407, 1e-3);
+
+            TestModificationMatcher();
+        }
+
+        public void TestModificationMatcher()
+        {
+            var documentModMatcher = TestFilesDir.GetTestPath("ETH_Ludo_Heavy.sky");
+            LoadDocument(documentModMatcher);
+            var docModMatcher = SkylineWindow.Document;
+
+            // If the modifications are readable but don't match the precursor mass, throw an error
+            const string textModWrongMatch = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1005.9\t868.39\tPVIC[+57.0]ATQM[+16.0]LESMTYNPR\t1/YAL038W\n";
+            RunUI(() => ClipboardEx.SetText(textModWrongMatch));
+            RunDlg<MessageDlg>(() => SkylineWindow.Paste(), messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, TextUtil.LineSeparate(string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__,
+                                                                                       string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__,
+                                                                                       1005.9, 1013.9734, 8.0734), 1, 1),
+                                                                                       Resources.MzMatchException_suggestion));
+                messageDlg.OkDialog();
+            });
+            WaitForDocumentLoaded();
+            Assert.AreSame(docModMatcher, SkylineWindow.Document);
+
+            // When mods are unreadable, default to the approach of deducing modified state from precursor mz
+            const string textModUnreadMod = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVIC[CAM]ATQM[bad_mod_&^$]LESMTYNPR\t1/YAL038W\n";
+            RunUI(() => ClipboardEx.SetText(textModUnreadMod));
+            RunUI(() =>
+            {
+                SkylineWindow.Paste();
+                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
+                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR");
+            });
+
+            // When there are no mods, default to the approach of deducing modified state from precursor mz
+            LoadDocument(documentModMatcher);
+            const string textModNone = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVICATQMLESMTYNPR\t1/YAL038W\n";
+            RunUI(() => ClipboardEx.SetText(textModNone));
+            RunUI(() =>
+            {
+                SkylineWindow.Paste();
+                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
+                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR");
+            });
+
+            // By specifying mods explicitly, we can distinguish between oxidations at two different sites
+            LoadDocument(documentModMatcher);
+            const string textModFirst = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVIC[+57.0]ATQM[+16.0]LESMTYNPR\t1/YAL038W\n";
+            RunUI(() => ClipboardEx.SetText(textModFirst));
+            RunUI(() =>
+            {
+                SkylineWindow.Paste();
+                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
+                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR");
+            });
+
+            LoadDocument(documentModMatcher);
+            const string textModSecond = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVIC[+57.0]ATQMLESM[+16.0]TYNPR\t1/YAL038W\n";
+            RunUI(() => ClipboardEx.SetText(textModSecond));
+            RunUI(() =>
+            {
+                SkylineWindow.Paste();
+                WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+                var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
+                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQMLESM[+16.0]TYNPR");
+            });
         }
 
         public static RCalcIrt ValidateDocAndIrt(SrmDocument doc, int peptides, int irtTotal, int irtStandards)

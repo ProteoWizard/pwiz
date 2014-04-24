@@ -157,6 +157,8 @@ namespace pwiz.Skyline.Model
                         var pickedGroup = pickedGroups[k];
                         var trueResults = trueGroup.Results[i];
                         var pickedResults = pickedGroup.Results[i];
+                        if (trueResults == null)
+                            continue;
                         int nChromInfos = trueResults.Count;
                         for (int m = 0; m < nChromInfos; m++)
                         {

@@ -6985,4 +6985,22 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>&amp;Servers</value>
   </data>
+  <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0_" xml:space="preserve">
+    <value>Missing iRT value for peptide {0}</value>
+  </data>
+  <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_" xml:space="preserve">
+    <value>Creating spectral library for imported mass list</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
+    <value>Creating Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
+    <value>Adding iRT values</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Finishing_up_import" xml:space="preserve">
+    <value>Finishing up import</value>
+  </data>
+  <data name="DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides" xml:space="preserve">
+    <value>Adding iRT values for imported peptides</value>
+  </data>
 </root>

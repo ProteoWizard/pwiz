@@ -19,8 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Irt
 {
@@ -79,14 +81,35 @@ namespace pwiz.Skyline.Model.Irt
             TimeSource = timeSource;
         }
 
-        public static List<DbIrtPeptide> FindNonConflicts(IList<DbIrtPeptide> oldPeptides, IList<DbIrtPeptide> newPeptides, out IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts)
+        public static List<DbIrtPeptide> MakeUnique(List<DbIrtPeptide> irtPeptides)
         {
+            var uniqueIrtPeptidesDict = new Dictionary<string, DbIrtPeptide>();
+            foreach (var irtPeptide in irtPeptides)
+            {
+                DbIrtPeptide duplicateIrtPeptide;
+                if (irtPeptide.Standard || !uniqueIrtPeptidesDict.TryGetValue(irtPeptide.PeptideModSeq, out duplicateIrtPeptide))
+                {
+                    uniqueIrtPeptidesDict[irtPeptide.PeptideModSeq] = irtPeptide;
+                }
+            }
+            return uniqueIrtPeptidesDict.Values.ToList();
+        }
+
+        public static List<DbIrtPeptide> FindNonConflicts(IList<DbIrtPeptide> oldPeptides, 
+                                                          IList<DbIrtPeptide> newPeptides, 
+                                                          IProgressMonitor progressMonitor,
+                                                          out IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts)
+        {
+            int progressPercent = 0;
+            int i = 0;
+            var status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Tuple<DbIrtPeptide, DbIrtPeptide>>();
             var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
             var dictNew = newPeptides.ToDictionary(pep => pep.PeptideModSeq);
             foreach (var newPeptide in newPeptides)
             {
+                ++i;
                 DbIrtPeptide oldPeptide;
                 // A conflict occurs only when there is another peptide of the same sequence, and different iRT
                 if (!dictOld.TryGetValue(newPeptide.PeptideModSeq, out oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
@@ -96,6 +119,17 @@ namespace pwiz.Skyline.Model.Irt
                 else
                 {
                     conflicts.Add(new Tuple<DbIrtPeptide, DbIrtPeptide>(newPeptide, oldPeptide));
+                }
+                if (progressMonitor != null)
+                {
+                    if (progressMonitor.IsCanceled)
+                        return null;
+                    int progressNew = (i * 100 / newPeptides.Count);
+                    if (progressPercent != progressNew)
+                    {
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
+                        progressPercent = progressNew;
+                    }
                 }
             }
             foreach (var oldPeptide in oldPeptides)

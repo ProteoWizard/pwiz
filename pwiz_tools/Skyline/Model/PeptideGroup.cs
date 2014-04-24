@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model
     public class FastaSequence : PeptideGroup
     {
         public const string PEPTIDE_SEQUENCE_SEPARATOR = "::"; // Not L10N
-        private static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))"); // Not L10N
+        public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))"); // Not L10N
         public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]"); // Not L10N
         public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}"); // Not L10N
 

@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+            IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-2_5.pdf";
             
@@ -213,6 +213,7 @@ namespace pwiz.SkylineTestTutorial
                             SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
             }
 
+            PauseForScreenShot();
             using (new CheckDocumentState(35, 47, 47, 223, 2, true))    // Wait for change loaded, and expect 2 document revisions.
             {
                 RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI2 =>

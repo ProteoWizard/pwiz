@@ -1306,18 +1306,25 @@ namespace pwiz.Skyline
         private void ImportMassList(string inputString, IFormatProvider provider, char separator, string description)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
-            IdentityPath selectPath;
-            List<KeyValuePair<string, double>> irtPeptides;
-            List<SpectrumMzInfo> librarySpectra;
+            IdentityPath selectPath = null;
+            List<KeyValuePair<string, double>> irtPeptides = null;
+            List<SpectrumMzInfo> librarySpectra = null;
+            RetentionTimeRegression retentionTimeRegressionStore = null;
             bool irtsImported = false;
             var docCurrent = DocumentUI;
-            SrmDocument docNew;
+            SrmDocument docNew = null;
             var retentionTimeRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
-            bool calculatorMissing = retentionTimeRegression == null || retentionTimeRegression.Calculator as RCalcIrt == null;
+            bool calculatorMissing = retentionTimeRegression == null ||
+                                     retentionTimeRegression.Calculator as RCalcIrt == null;
+            long countLines = Helpers.CountLinesInString(inputString);
             using (var reader = new StringReader(inputString))
+            using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
-                docNew = docCurrent.ImportMassList(reader, provider, separator,
-                    nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra);
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                {
+                    docNew = docCurrent.ImportMassList(reader, longWaitBroker, countLines, provider, separator,
+                        nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra);
+                });
             }
             var dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, false, TimeSource.scan)).ToList();
             var dbIrtPeptidesFilter = new List<DbIrtPeptide>();
@@ -1373,7 +1380,8 @@ namespace pwiz.Skyline
                     IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
                     var oldPeptides = db.GetPeptides().ToList();
                     IList<Tuple<DbIrtPeptide, DbIrtPeptide>> conflicts;
-                    DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, out conflicts);
+                    dbIrtPeptidesFilter = DbIrtPeptide.MakeUnique(dbIrtPeptidesFilter);
+                    DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, null, out conflicts);
                     // Ask whether to keep or overwrite peptides that are present in the import and already in the database
                     if (conflicts.Any())
                     {
@@ -1390,7 +1398,14 @@ namespace pwiz.Skyline
                         }
                         overwriteExisting = overwriteResult == DialogResult.No;
                     }
-                    docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, overwriteExisting);
+                    using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Adding_iRT_values_})
+                    {
+                        longWaitDlg.PerformWork(this, 100, progressMonitor => 
+                            docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, overwriteExisting, progressMonitor));
+                    }
+                    if (docNew == null)
+                        return;
+                    retentionTimeRegressionStore = docNew.Settings.PeptideSettings.Prediction.RetentionTime;
                     irtsImported = true;
                 }
             }
@@ -1453,10 +1468,23 @@ namespace pwiz.Skyline
                         using (var blibDb = BlibDb.CreateBlibDb(outputPath))
                         {
                             docLibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
-                            docLibrary = blibDb.CreateLibraryFromSpectra(docLibrarySpec, librarySpectra, name);
+                            using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Creating_Spectral_Library })
+                            {
+                                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                                {
+                                    docLibrary = blibDb.CreateLibraryFromSpectra(docLibrarySpec, librarySpectra, name, progressMonitor);
+                                    if (docLibrary == null)
+                                        return;
+                                    var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
+                                    var status = new ProgressStatus(Resources.SkylineWindow_ImportMassList_Finishing_up_import);
+                                    progressMonitor.UpdateProgress(status);
+                                    progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+                                    docNew = docNew.ChangeSettings(newSettings);
+                                });
+                                if (docLibrary == null)
+                                    return;
+                            }
                         }
-                        var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
-                        docNew = docNew.ChangeSettings(newSettings);
                     }
                 }
             }
@@ -1491,18 +1519,19 @@ namespace pwiz.Skyline
                             doc = doc.ImportMassList(readerList, providerIrt, sep, null, out selectPath);
                         }
                     }
-                    if (calculatorMissing)
-                    {
-                        doc = doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(prediction =>
-                            prediction.ChangeRetentionTime(retentionTimeRegression)));
-                    }
+                    var newSettings = doc.Settings;
                     if (dbIrtPeptidesFilter.Any() && irtsImported)
-                        doc = doc.AddIrtPeptides(dbIrtPeptidesFilter, overwriteExisting);
+                    {
+                        newSettings = newSettings.ChangePeptidePrediction(prediction => 
+                            prediction.ChangeRetentionTime(retentionTimeRegressionStore));
+                    }
                     if (librarySpectra.Any() && addLibrary)
                     {
-                        var newSettings = doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
-                        doc = doc.ChangeSettings(newSettings);
+                        newSettings = newSettings.ChangePeptideLibraries(libs => 
+                            libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
                     }
+                    if (!ReferenceEquals(doc.Settings, newSettings))
+                        doc = doc.ChangeSettings(newSettings);
                 }
                 catch (Exception x)
                 {
