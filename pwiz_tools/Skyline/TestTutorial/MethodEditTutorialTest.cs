@@ -213,7 +213,6 @@ namespace pwiz.SkylineTestTutorial
                             SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
             }
 
-            PauseForScreenShot();
             using (new CheckDocumentState(35, 47, 47, 223, 2, true))    // Wait for change loaded, and expect 2 document revisions.
             {
                 RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI2 =>
