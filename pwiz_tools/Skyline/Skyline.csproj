@@ -110,6 +110,12 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Condition="'$(Platform)' == 'x86'" Include="MethodConverter">
+      <HintPath>Method\Shimadzu\x86\MethodConverter.dll</HintPath>
+    </Reference>
+    <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
+      <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>

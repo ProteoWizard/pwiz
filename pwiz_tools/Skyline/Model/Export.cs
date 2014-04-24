@@ -35,6 +35,8 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Shimadzu.LabSolutions.MethodConverter;
+
 // ReSharper disable NonLocalizedString
 namespace pwiz.Skyline.Model
 {
@@ -221,6 +223,11 @@ namespace pwiz.Skyline.Model
                                        {WATERS_XEVO, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
+        }
+
+        public static string TransitionListExtention(string instrument)
+        {
+            return (Equals(instrument, SHIMADZU) ? TextUtil.EXT_TSV : TextUtil.EXT_CSV);
         }
 
         /// <summary>
@@ -493,10 +500,10 @@ namespace pwiz.Skyline.Model
 
         public AbstractMassListExporter ExportShimadzuCsv(SrmDocument document, string fileName)
         {
-            var exporter = InitExporter(new ShimadzuMassListExporter(document));
+            var exporter = InitExporter(new ShimadzuNativeMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
-            exporter.Export(fileName);
+            PerformLongExport(m => exporter.ExportNativeList(fileName, m));
 
             return exporter;
         }
@@ -987,6 +994,53 @@ namespace pwiz.Skyline.Model
 
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.WriteLine();
+        }
+    }
+
+    public class ShimadzuNativeMassListExporter : ShimadzuMassListExporter
+    {
+        public const string EXE_BUILD_TSQ_METHOD = @"Method\Thermo\BuildTSQEZMethod"; // Not L10N
+
+        public ShimadzuNativeMassListExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportNativeList(string fileName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
+                                           Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
+            string ext = Path.GetExtension(fileName);
+
+            var methodConverter = new MassMethodConverter();
+            foreach (KeyValuePair<string, StringBuilder> pair in MemoryOutput)
+            {
+                string suffix = pair.Key.Substring(MEMORY_KEY_ROOT.Length);
+                suffix = Path.GetFileNameWithoutExtension(suffix);
+                string methodName = baseName + suffix + ext;
+
+                using (var fs = new FileSaver(methodName))
+                {
+                    string tranList = pair.Value.ToString();
+                    var result = methodConverter.ConvertMethod(fs.SafeName, tranList);
+                    switch (result)
+                    {
+                        case ConverterResult.CannotOpenOutputFile:
+                            throw new IOException(string.Format("Failure attempting to save to the temporary file {0}", fs.SafeName));
+                        case ConverterResult.MaxTransitionError:
+                            throw new ArgumentException(string.Format("The transition count {0} exceeds the maximum allowed for this instrument type", tranList.Split('\n').Length));
+                        case ConverterResult.InputCannotBeParsed:
+                        case ConverterResult.InputIsEmpty:
+                        case ConverterResult.InvalidParameter:
+                            Assume.Fail(string.Format("Unexpected response {0} from Shimadzu method converter", result));   // Not L10N
+                            break;
+                    }
+                    fs.Commit();
+                }
+            }
         }
     }
 
