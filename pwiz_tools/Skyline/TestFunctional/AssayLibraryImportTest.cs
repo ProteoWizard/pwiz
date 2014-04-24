@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var expectedMessage = string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__, 
                                               textIrtConflict,
-                                              string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                                              string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                             "YVPIHTIDDGYSVIK", 49.8, 50.2));
                 expectedMessage = string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, expectedMessage, 1361);
                 Assert.AreEqual(messageDlg.Message, expectedMessage);
@@ -172,8 +172,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 var expectedMessage = string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
                                               textIrtGroupConflict,
-                                              string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                            "AAAAAAAAAAAAAAAGAAGK", 54, 53));
+                                              string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                                                            "AAAAAAAAAAAAAAAGAAGK", 53, 54));
                 Assert.AreEqual(messageDlg.Message, expectedMessage);
                 messageDlg.OkDialog();
             });

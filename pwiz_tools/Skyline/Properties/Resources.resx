@@ -6191,10 +6191,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_" xml:space="preserve">
     <value>Imported peptide {0} with iRT library value is already being used as an iRT standard.</value>
   </data>
-  <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
-    <value>Two transitions of the same peptide, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list.</value>
-  </data>
-  <data name="SkylineWindow_Paste_Could_not_perform_transition_list_paste___0_" xml:space="preserve">
+    <data name="SkylineWindow_Paste_Could_not_perform_transition_list_paste___0_" xml:space="preserve">
     <value>Could not perform transition list paste: {0}</value>
   </data>
   <data name="MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_" xml:space="preserve">
@@ -7017,5 +7014,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides" xml:space="preserve">
     <value>Adding iRT values for imported peptides</value>
+  </data>
+    <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
+    <value>Two transitions of the same precursor, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list.</value>
   </data>
 </root>

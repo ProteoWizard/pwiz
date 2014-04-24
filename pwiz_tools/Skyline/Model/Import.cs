@@ -1784,7 +1784,7 @@ namespace pwiz.Skyline.Model
             
             if (_irtValue.HasValue && (irt == null || Math.Abs(_irtValue.Value - irt.Value) > DbIrtPeptide.IRT_MIN_DIFF))
             {
-                throw new InvalidDataException(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                throw new InvalidDataException(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                     _activePeptide, _irtValue, irt));
             }
             _irtValue = irt;
@@ -1867,20 +1867,21 @@ namespace pwiz.Skyline.Model
         private TransitionGroupLibraryIrtTriple[] FinalizeTransitionGroups(IList<TransitionGroupLibraryIrtTriple> groupTriples)
         {
             var finalTriples = new List<TransitionGroupLibraryIrtTriple>();
-            foreach (var groupPair in groupTriples)
+            foreach (var groupTriple in groupTriples)
             {
                 int iGroup = finalTriples.Count - 1;
-                if (iGroup == -1 || !Equals(finalTriples[iGroup].NodeGroup.TransitionGroup, groupPair.NodeGroup.TransitionGroup))
-                    finalTriples.Add(groupPair);
+                if (iGroup == -1 || !Equals(finalTriples[iGroup].NodeGroup.TransitionGroup, groupTriple.NodeGroup.TransitionGroup))
+                    finalTriples.Add(groupTriple);
                 else
                 {
                     // Found repeated group, so merge transitions
-                    foreach (var nodeTran in groupPair.NodeGroup.Children)
-                        finalTriples[iGroup].NodeGroup = (TransitionGroupDocNode)finalTriples[iGroup].NodeGroup.Add(nodeTran);
-                    finalTriples[iGroup].SpectrumInfo = finalTriples[iGroup].SpectrumInfo == null ? groupPair.SpectrumInfo 
-                        : finalTriples[iGroup].SpectrumInfo.CombineSpectrumInfo(groupPair.SpectrumInfo);
+                    finalTriples[iGroup].NodeGroup = (TransitionGroupDocNode)finalTriples[iGroup].NodeGroup.AddAll(groupTriple.NodeGroup.Children);
+                    finalTriples[iGroup].SpectrumInfo = finalTriples[iGroup].SpectrumInfo == null ? groupTriple.SpectrumInfo 
+                        : finalTriples[iGroup].SpectrumInfo.CombineSpectrumInfo(groupTriple.SpectrumInfo);
+
+                    // Check for consistent iRT values
                     double? irt1 = finalTriples[iGroup].Irt;
-                    double? irt2 = groupPair.Irt;
+                    double? irt2 = groupTriple.Irt;
                     if (irt1 == null && irt2 == null)
                         continue;
                     if (irt1 == null || irt2 == null)
@@ -1890,7 +1891,10 @@ namespace pwiz.Skyline.Model
                     }
                     else if (Math.Abs(irt1.Value - irt2.Value) > DbIrtPeptide.IRT_MIN_DIFF)
                     {
-                        throw new InvalidDataException(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                        // Make sure iRT values are reported in a deterministic order for testing
+                        if (irt1.Value > irt2.Value)
+                            Helpers.Swap(ref irt1, ref irt2);
+                        throw new InvalidDataException(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                                                                      _activePeptide.Sequence, irt1.Value, irt2.Value));
                     }
                 }

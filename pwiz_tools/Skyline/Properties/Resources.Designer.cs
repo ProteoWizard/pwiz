@@ -12797,13 +12797,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Two transitions of the same peptide, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list..
+        ///   Looks up a localized string similar to Two transitions of the same precursor, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list..
         /// </summary>
-        public static string PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_ {
+        public static string PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_ {
             get {
-                return ResourceManager.GetString("PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_peptide___0____h" +
-                        "ave_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_" +
-                        "in_an_imported_transition_list_", resourceCulture);
+                return ResourceManager.GetString("PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0___" +
+                        "_have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistentl" +
+                        "y_in_an_imported_transition_list_", resourceCulture);
             }
         }
         
