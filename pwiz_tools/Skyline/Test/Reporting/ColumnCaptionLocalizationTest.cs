@@ -30,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Reporting
 {
@@ -38,7 +39,7 @@ namespace pwiz.SkylineTest.Reporting
     /// that can possibly appear in Skyline Live Reports.
     /// </summary>
     [TestClass]
-    public class ColumnCaptionLocalizationTest
+    public class ColumnCaptionLocalizationTest : AbstractUnitTest
     {
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".

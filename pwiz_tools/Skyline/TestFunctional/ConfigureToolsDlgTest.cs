@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -306,17 +307,25 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("ImWindowTestWithMacro", SkylineWindow.GetToolText(1)); // Not L10N
                     SkylineWindow.RunTool(0);                                               
                 });
-            const string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
-                //.Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
+            string reportText =
+                "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
+            if (!Settings.Default.EnableLiveReports)
+                reportText = reportText.Replace(',', TextUtil.CsvSeparator);
             WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
-            WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
+            WaitForConditionUI(() =>
+            {
+                Trace.WriteLine(SkylineWindow.ImmediateWindow.TextContent);
+                return SkylineWindow.ImmediateWindow.TextContent.Contains(reportText);
+            });
             RunUI(() =>
             {
                 SkylineWindow.ImmediateWindow.Clear();
                 SkylineWindow.RunTool(1);
             });
-            const string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; //Not L10N
-                //.Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
+            string reportText1 =
+                "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; // Not L10N
+            if (!Settings.Default.EnableLiveReports)
+                reportText1 = reportText1.Replace(',', TextUtil.CsvSeparator);
             WaitForConditionUI(() => SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));
             // Make sure the running EXE does not cause test to fail, because it is locked.
             WaitForCondition(() =>
