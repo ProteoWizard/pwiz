@@ -269,6 +269,7 @@ namespace pwiz.Skyline.Model.Results
                     var key = new ChromKey(collector.ModifiedSequence,
                         collector.PrecursorMz,
                         pairProduct.Key.ProductMz,
+                        0,
                         pairProduct.Key.ExtractionWidth,
                         source,
                         modSeq.Extractor,

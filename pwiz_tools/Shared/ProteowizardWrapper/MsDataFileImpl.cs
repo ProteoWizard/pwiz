@@ -334,6 +334,11 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_format)); }
         }
 
+        public bool IsShimadzuFile
+        {
+            get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Shimadzu_Biotech_nativeID_format)); }
+        }
+
         public bool IsMsx
         {
             get { return _isMsx; }

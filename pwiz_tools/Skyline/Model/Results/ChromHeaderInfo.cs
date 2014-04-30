@@ -1277,7 +1277,7 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromKey : IComparable<ChromKey>
     {
-        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0,
+        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0, 0,
             ChromSource.unknown, ChromExtractor.summed, false);
 
         public ChromKey(byte[] seqBytes,
@@ -1292,6 +1292,7 @@ namespace pwiz.Skyline.Model.Results
             : this(seqIndex != -1 ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
                    precursor,
                    product,
+                   0,
                    extractionWidth,
                    source,
                    extractor,
@@ -1302,6 +1303,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromKey(string modifiedSequence,
                         double precursor,
                         double product,
+                        double ceValue,
                         double extractionWidth,
                         ChromSource source,
                         ChromExtractor extractor,
@@ -1311,6 +1313,7 @@ namespace pwiz.Skyline.Model.Results
             ModifiedSequence = modifiedSequence;
             Precursor = precursor;
             Product = product;
+            CollisionEnergy = (float) ceValue;
             ExtractionWidth = (float) extractionWidth;
             Source = source;
             Extractor = extractor;
@@ -1320,10 +1323,29 @@ namespace pwiz.Skyline.Model.Results
         public string ModifiedSequence { get; private set; }
         public double Precursor { get; private set; }
         public double Product { get; private set; }
+        public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
         public ChromSource Source { get; private set; }
         public ChromExtractor Extractor { get; private set; }
         public bool HasCalculatedMzs { get; private set; }
+
+        /// <summary>
+        /// Adjust the product m/z to look like it does for vendors that allow
+        /// product m/z shifting for parameter optimization.
+        /// </summary>
+        /// <param name="step">The step from the central predicted parameter value</param>
+        /// <returns>A new ChromKey with adjusted product m/z and cleared CE value</returns>
+        public ChromKey ChangeOptimizationStep(int step)
+        {
+            return new ChromKey(ModifiedSequence,
+                                Precursor,
+                                Product + step*ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
+                                0,  // Avoid ever thinking this needs to be done again by clearing the CE field
+                                ExtractionWidth,
+                                Source,
+                                Extractor,
+                                HasCalculatedMzs);
+        }
 
         /// <summary>
         /// For debugging only
@@ -1356,6 +1378,9 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
             c = compareMz(Product, key.Product);
+            if (c != 0)
+                return c;
+            c = CollisionEnergy.CompareTo(key.CollisionEnergy);
             if (c != 0)
                 return c;
             return ExtractionWidth.CompareTo(key.ExtractionWidth);
@@ -1413,6 +1438,7 @@ namespace pwiz.Skyline.Model.Results
         private const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
         private const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
         private const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
+        private const string SUFFIX_CE = "CE=";
 
         private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) "); // Not L10N
 
@@ -1421,7 +1447,7 @@ namespace pwiz.Skyline.Model.Results
             return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
         }
 
-        public static ChromKey FromId(string id)
+        public static ChromKey FromId(string id, bool parseCE)
         {
             try
             {
@@ -1467,7 +1493,19 @@ namespace pwiz.Skyline.Model.Results
                 {
                     throw new ArgumentException(string.Format(Resources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
                 }
-                return new ChromKey(null, precursor, product, 0, ChromSource.fragment, ChromExtractor.summed, false);
+                float ceValue = 0;
+                if (parseCE)
+                {
+                    int ceIndex = id.LastIndexOf(SUFFIX_CE, StringComparison.Ordinal);
+                    float ceParsed;
+                    if (ceIndex != -1 && float.TryParse(id.Substring(ceIndex + SUFFIX_CE.Length),
+                                                        NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,
+                                                        out ceParsed))
+                    {
+                        ceValue = ceParsed;
+                    }
+                }
+                return new ChromKey(null, precursor, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false);
             }
             catch (FormatException)
             {
