@@ -134,7 +134,7 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
         throw runtime_error("no analysis software specified");
 
     // determine analysis software used
-    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
+    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_custom_unreleased_software_tool);
     if (!searchEngine.empty())
         analysis.softwareName = searchEngine.value.empty() ? searchEngine.name() : searchEngine.value;
     else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
