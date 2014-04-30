@@ -134,13 +134,21 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
         throw runtime_error("no analysis software specified");
 
     // determine analysis software used
-    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_custom_unreleased_software_tool);
+    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
     if (!searchEngine.empty())
         analysis.softwareName = searchEngine.value.empty() ? searchEngine.name() : searchEngine.value;
     else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
         analysis.softwareName = sip.analysisSoftwarePtr->softwareName.userParams[0].name;
     else
-        throw runtime_error("[Parser::parseAnalysis()] analysis software could not be determined");
+    {
+		searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_custom_unreleased_software_tool);
+		if (!searchEngine.empty())
+			analysis.softwareName = searchEngine.value.empty() ? searchEngine.name() : searchEngine.value;
+		else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
+			analysis.softwareName = sip.analysisSoftwarePtr->softwareName.userParams[0].name;
+		else
+			throw runtime_error("[Parser::parseAnalysis()] analysis software could not be determined");
+	}
 
     if (si.searchDatabase.size() > 1)
         throw runtime_error("[Parser::parseAnalysis()] multi-database protocols are not supported");
