@@ -245,11 +245,11 @@ struct Qonverter
     void qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor = ProgressMonitor());
     void qonvert(sqlite3* idpDb, const ProgressMonitor& progressMonitor = ProgressMonitor());
 
-    void reset(const string& idpDbFilepath);
-    void reset(sqlite3* idpDb);
+    static void reset(const string& idpDbFilepath);
+    static void reset(sqlite3* idpDb);
 
-    void dropFilters(const string& idpFilepath);
-    void dropFilters(sqlite3* idpDb);
+    static void dropFilters(const string& idpFilepath);
+    static void dropFilters(sqlite3* idpDb);
 };
 
 

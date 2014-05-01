@@ -46,7 +46,7 @@
                 error = errorBuf; \
                 sqlite3_free(errorBuf); \
             } \
-            throw runtime_error(string("[SQLite (") + __FILE__ + ":" + lexical_cast<string>(__LINE__) + ")] " + error); \
+            throw sqlite3pp::database_error(string("[SQLite (") + __FILE__ + ":" + lexical_cast<string>(__LINE__) + ")] " + error); \
         } \
     }
 
@@ -625,7 +625,7 @@ void Qonverter::dropFilters(sqlite3* idpDb)
                                         "ALTER TABLE UnfilteredSpectrum RENAME TO Spectrum;";
         CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, renameUnfilteredTables.c_str(), NULL, NULL, &errorBuf));
     }
-    catch (runtime_error&)
+    catch (sqlite::database_error&)
     {
     }
 }

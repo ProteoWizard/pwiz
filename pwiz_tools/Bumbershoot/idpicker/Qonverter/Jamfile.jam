@@ -73,7 +73,18 @@ lib Parser
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
     ;
 
+lib Merger
+    : # sources
+        Merger.cpp SchemaUpdater
+    : # requirements
+        <library>Qonverter
+    : # default-build
+    : # usage-requirements
+        <library>Qonverter
+    ;
+
 exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
+exe idpAssemble : idpAssemble.cpp Merger ;
 exe idpQuery : idpQuery.cpp SchemaUpdater /ext/boost//regex ;
 
 import testing ;

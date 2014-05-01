@@ -407,5 +407,32 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
 }
 
 
+bool isValidFile(const string& idpDbFilepath)
+{
+    try
+    {
+        string uncCompatiblePath = getSQLiteUncCompatiblePath(idpDbFilepath);
+        sqlite::database db(uncCompatiblePath);
+
+        // in a valid file, this will throw "already exists"
+        db.execute("CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY)");
+    }
+    catch (sqlite3pp::database_error& e)
+    {
+        if (bal::contains(e.what(), "already exists"))
+            return true;
+    }
+
+    // creating the table or any other exception indicates an invalid file
+    return false;
+}
+
+
+string getSQLiteUncCompatiblePath(const string& path)
+{
+    return bal::starts_with(path, "\\\\") ? "\\" + path : path;
+}
+
+
 } // namespace SchemaUpdater
 END_IDPICKER_NAMESPACE

@@ -52,8 +52,17 @@ namespace SchemaUpdater {
 
 
 /// update IDPicker database to the current schema version, or throw an exception if updating is impossible;
-/// returns true if the database schema was updated
+/// returns true iff the database schema was updated
 bool update(const std::string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
+
+
+/// returns true iff the idpDB has an IntegerSet table (which is the last table to be created)
+bool isValidFile(const std::string& idpDbFilepath);
+
+
+/// If necessary, adds a third backslash to UNC paths to work around a "working as designed" issue in System.Data.SQLite:
+/// http://system.data.sqlite.org/index.html/tktview/01a6c83d51a203ff?plaintext
+std::string getSQLiteUncCompatiblePath(const std::string& path);
 
 
 } // namespace SchemaUpdater
