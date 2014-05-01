@@ -227,7 +227,9 @@ namespace pwiz.Skyline.Model
 
         public static string TransitionListExtention(string instrument)
         {
-            return (Equals(instrument, SHIMADZU) ? TextUtil.EXT_TSV : TextUtil.EXT_CSV);
+            return (Equals(instrument, SHIMADZU)
+                ? ShimadzuNativeMassListExporter.EXT_SHIMADZU_TRANSITION_LIST
+                : TextUtil.EXT_CSV);
         }
 
         /// <summary>
@@ -999,6 +1001,7 @@ namespace pwiz.Skyline.Model
 
     public class ShimadzuNativeMassListExporter : ShimadzuMassListExporter
     {
+        public const string EXT_SHIMADZU_TRANSITION_LIST = ".txt";
         public const string EXE_BUILD_TSQ_METHOD = @"Method\Thermo\BuildTSQEZMethod"; // Not L10N
 
         public ShimadzuNativeMassListExporter(SrmDocument document)
