@@ -675,6 +675,7 @@ install install
     : # sources
         Qonverter//idpQonvert
         Qonverter//idpQuery
+        Qonverter//idpAssemble
     : # requirements
         <conditional>@dotNET-dependencies
         <conditional>@install-location
