@@ -14,6 +14,9 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 #include "SHA1.h"
+#include <boost/nowide/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 #ifdef SHA1_UTILITY_FUNCTIONS
 #define SHA1_MAX_FILE_BUFFER 8000
@@ -145,15 +148,14 @@ bool CSHA1::HashFile(const TCHAR* tszFileName)
 {
 	if(tszFileName == NULL) return false;
 
-	FILE* fpIn = _tfopen(tszFileName, _T("rb"));
-	if(fpIn == NULL) return false;
+	using namespace boost::nowide;
 
-	_fseeki64(fpIn, 0, SEEK_END);
-	const INT_64 lFileSize = _ftelli64(fpIn);
-	_fseeki64(fpIn, 0, SEEK_SET);
+	ifstream fpIn(tszFileName, std::ios::binary);
+	if (!fpIn) return false;
 
+	const INT_64 lFileSize = boost::filesystem::file_size(boost::filesystem::path(tszFileName, boost::filesystem::detail::utf8_codecvt_facet()));
 	const INT_64 lMaxBuf = SHA1_MAX_FILE_BUFFER;
-	UINT_8 vData[SHA1_MAX_FILE_BUFFER];
+	char vData[SHA1_MAX_FILE_BUFFER];
 	INT_64 lRemaining = lFileSize;
 
 	while(lRemaining > 0)
@@ -161,19 +163,16 @@ bool CSHA1::HashFile(const TCHAR* tszFileName)
 		const size_t uMaxRead = static_cast<size_t>((lRemaining > lMaxBuf) ?
 			lMaxBuf : lRemaining);
 
-		const size_t uRead = fread(vData, 1, uMaxRead, fpIn);
+		fpIn.read(vData, uMaxRead);
+		const size_t uRead = fpIn ? uMaxRead : fpIn.gcount();
 		if(uRead == 0)
-		{
-			fclose(fpIn);
 			return false;
-		}
 
-		Update(vData, static_cast<UINT_32>(uRead));
+		Update(reinterpret_cast<unsigned char*>(vData), static_cast<UINT_32>(uRead));
 
 		lRemaining -= static_cast<INT_64>(uRead);
 	}
 
-	fclose(fpIn);
 	return (lRemaining == 0);
 }
 #endif

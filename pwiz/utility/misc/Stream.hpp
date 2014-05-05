@@ -27,8 +27,12 @@
 #include <iomanip>
 #include <boost/iostreams/operations.hpp>
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
+#include <boost/nowide/fstream.hpp>
+#include <boost/nowide/iostream.hpp>
+#include <boost/nowide/args.hpp>
 
 namespace bio = boost::iostreams;
+namespace bnw = boost::nowide;
 
 using std::ios;
 using std::iostream;
@@ -38,20 +42,13 @@ using std::ostream;
 using std::istream_iterator;
 using std::ostream_iterator;
 
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
+using bnw::fstream;
+using bnw::ifstream;
+using bnw::ofstream;
 
 using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
-
-#ifndef BOOST_NO_STD_WSTRING
-// these cause trouble on mingw gcc - libstdc++ widechar not fully there yet
-using std::wstringstream;
-using std::wistringstream;
-using std::wostringstream;
-#endif
 
 using std::getline;
 
@@ -59,11 +56,15 @@ using std::streampos;
 using std::streamoff;
 using std::streamsize;
 
-using std::cin;
-using std::cout;
-using std::cerr;
+using bnw::cin;
+using bnw::cout;
+using bnw::cerr;
 using std::endl;
 using std::flush;
+
+using std::wcin;
+using std::wcout;
+using std::wcerr;
 
 using std::setprecision;
 using std::setw;

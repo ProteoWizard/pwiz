@@ -40,7 +40,7 @@ static array<System::String^>^ vectorToStringArray(const std::vector<std::string
 {
     array<System::String^>^ idStrings = gcnew array<System::String^>(v.size());
     for (size_t i = 0; i < v.size(); i++)
-        idStrings[i] = gcnew System::String(v[i].c_str());
+        idStrings[i] = ToSystemString(v[i]);
     return idStrings;
 }
 
@@ -66,12 +66,12 @@ void Reader::read(System::String^ filename, System::String^ head, TraDataList^ r
 
 System::String^ ReaderList::identify(System::String^ filename)
 {    
-    try {return gcnew System::String(base_->identify(ToStdString(filename)).c_str());} CATCH_AND_FORWARD
+    try {return ToSystemString(base_->identify(ToStdString(filename)));} CATCH_AND_FORWARD
 }
 
 System::String^ ReaderList::identify(System::String^ filename, System::String^ head)
 {    
-    try {return gcnew System::String(base_->identify(ToStdString(filename), ToStdString(head)).c_str());} CATCH_AND_FORWARD
+    try {return ToSystemString(base_->identify(ToStdString(filename), ToStdString(head)));} CATCH_AND_FORWARD
 }
 
 void ReaderList::read(System::String^ filename, System::String^ head, TraData^ result)

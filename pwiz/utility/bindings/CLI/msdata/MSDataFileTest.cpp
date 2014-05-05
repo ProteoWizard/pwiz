@@ -83,8 +83,10 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
 
     //if (os_) *os_ << "validateWriteRead()\n  " << writeConfig << endl; 
 
-    String^ filename1 = filenameBase_ + ".1";
-    String^ filename2 = filenameBase_ + ".2";
+    String^ filename1 = filenameBase_ + "_CLI.1";
+    String^ filename2 = filenameBase_ + "_CLI.2";
+    String^ filename3 = filenameBase_ + ToSystemString("_CLI.\xE4\xB8\x80\xE4\xB8\xAA\xE8\xAF\x95.4");
+    // FIXME: 4-byte UTF-8 not working: String^ filename4 = filenameBase_ + "_CLI.\x01\x04\xA4\x01\x04\xA2.5";
 
     {
         // create MSData object in memory
@@ -103,6 +105,7 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
         if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
         unit_assert(!(bool)diff);
 
+
         // write to file #2 (member)
         msd1->write(filename2, %writeConfig, ilr);
 
@@ -115,13 +118,44 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
         if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
         unit_assert(!(bool)diff);
 
+
+        // write to file #3 (testing conversion of .NET UTF-16 to 2-byte UTF-8)
+        msd1->write(filename3, %writeConfig);
+
+        // read back into another MSDataFile object
+        MSDataFile^ msd3 = gcnew MSDataFile(filename3);
+        hackInMemoryMSData(msd3);
+
+        // compare
+        diff.apply(%tiny, msd3);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
+        unit_assert(!(bool)diff);
+
+
+        // write to file #4 (testing conversion of .NET UTF-16 to 4-byte UTF-8)
+        /*msd1->write(filename4, %writeConfig, ilr);
+
+        // read back into another MSDataFile object
+        MSDataFile^ msd4 = gcnew MSDataFile(filename4, ilr);
+        hackInMemoryMSData(msd4);
+
+        // compare
+        diff.apply(%tiny, msd4);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((String^)diff);
+        unit_assert(!(bool)diff);*/
+
+
         delete msd1; // calls Dispose()
         delete msd2;
+        delete msd3;
+        //delete msd4;
     }
 
     // remove temp files
     System::IO::File::Delete(filename1);
     System::IO::File::Delete(filename2);
+    System::IO::File::Delete(filename3);
+    //System::IO::File::Delete(filename4);
 
     unit_assert(IterationListenerCollector::updateMessages->Count == 12); // 14 iterations, 2 iterations between updates (or index+1==count)
     unit_assert(IterationListenerCollector::updateMessages[0]->iterationCount == 5); // 5 spectra
@@ -157,6 +191,8 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
     // remove temp files
     System::IO::File::Delete(filename1);
     System::IO::File::Delete(filename2);
+    System::IO::File::Delete(filename3);
+    //System::IO::File::Delete(filename4);
 }
 
 

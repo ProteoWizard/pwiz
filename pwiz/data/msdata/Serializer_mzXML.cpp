@@ -778,7 +778,7 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
 
     stream_offset indexOffset = xmlWriter.positionNext();
 
-    if (config_.indexed && msd.run.spectrumListPtr->size() > 0)
+    if (config_.indexed && msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
     {
         write_index(xmlWriter, index);
 

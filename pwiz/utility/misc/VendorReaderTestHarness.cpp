@@ -117,15 +117,16 @@ void manglePwizSoftware(MSData& msd)
 void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 {
     const string uriPrefix = "file://";
-    BOOST_FOREACH(SourceFilePtr sourceFile, sourceFiles)
+    bfs::detail::utf8_codecvt_facet utf8;
+    BOOST_FOREACH(const SourceFilePtr& sourceFile, sourceFiles)
     {
         if (!bal::istarts_with(sourceFile->location, uriPrefix)) return;
         string location = sourceFile->location.substr(uriPrefix.size());
         bal::trim_if(location, bal::is_any_of("/"));
-        bfs::path p(location);
-        p /= sourceFile->name;
+        bfs::path p(location, utf8);
+        p /= bfs::path(sourceFile->name, utf8);
 
-        string sha1 = SHA1Calculator::hashFile(p.string());
+        string sha1 = SHA1Calculator::hashFile(p.string(utf8));
         sourceFile->set(MS_SHA_1, sha1);
     }
 }
@@ -234,7 +235,8 @@ void testRead(const Reader& reader, const string& rawpath)
 
     string sourceName = BFS_STRING(bfs::path(rawpath).filename());
 
-    for (size_t i=0; i < msds.size(); ++i)
+    size_t msdCount = msds.size();
+    for (size_t i=0; i < msdCount; ++i)
     {
         MSData& msd = *msds[i];
         calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
@@ -281,55 +283,66 @@ void testRead(const Reader& reader, const string& rawpath)
             bal::contains(fileType, "T2D"))
             diffConfig_non_mzML.ignoreIdentity = true;
 
-        // mzML <-> mzXML
-        MSData msd_mzXML;
-        Serializer_mzXML::Config config;
-        if (os_)
+        if (msd.run.spectrumListPtr)
         {
-            config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-            config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
-        }
-        Serializer_mzXML serializer_mzXML(config);
-        serializer_mzXML.write(*stringstreamPtr, msd);
-        if (os_) *os_ << "mzXML:\n" << stringstreamPtr->str() << endl;
-        serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
+            // mzML <-> mzXML
+            MSData msd_mzXML;
+            Serializer_mzXML::Config config;
+            if (os_)
+            {
+                config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+                config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
+            }
+            Serializer_mzXML serializer_mzXML(config);
+            serializer_mzXML.write(*stringstreamPtr, msd);
+            if (os_) *os_ << "mzXML:\n" << stringstreamPtr->str() << endl;
+            serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
 
-        Diff<MSData, DiffConfig> diff_mzXML(msd, msd_mzXML, diffConfig_non_mzML);
-        if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
-        if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
-        unit_assert(!diff_mzXML);
+            Diff<MSData, DiffConfig> diff_mzXML(msd, msd_mzXML, diffConfig_non_mzML);
+            if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
+            if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
+            unit_assert(!diff_mzXML);
+        }
 
         stringstreamPtr->str(" ");
         stringstreamPtr->clear();
         stringstreamPtr->seekp(0);
 
-        // mzML <-> MGF
-        msd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(msd.run.spectrumListPtr));
-        MSData msd_MGF;
-        Serializer_MGF serializer_MGF;
-        serializer_MGF.write(*stringstreamPtr, msd);
-        if (os_) *os_ << "MGF:\n" << stringstreamPtr->str() << endl;
-        serializer_MGF.read(serializedStreamPtr, msd_MGF);
+        if (msd.run.spectrumListPtr)
+        {
+            // mzML <-> MGF
+            msd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(msd.run.spectrumListPtr));
+            MSData msd_MGF;
+            Serializer_MGF serializer_MGF;
+            serializer_MGF.write(*stringstreamPtr, msd);
+            if (os_) *os_ << "MGF:\n" << stringstreamPtr->str() << endl;
+            serializer_MGF.read(serializedStreamPtr, msd_MGF);
 
-        diffConfig_non_mzML.ignoreIdentity = true;
-        Diff<MSData, DiffConfig> diff_MGF(msd, msd_MGF, diffConfig_non_mzML);
-        if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
-        if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
-        unit_assert(!diff_MGF);
+            diffConfig_non_mzML.ignoreIdentity = true;
+            Diff<MSData, DiffConfig> diff_MGF(msd, msd_MGF, diffConfig_non_mzML);
+            if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
+            if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
+            unit_assert(!diff_MGF);
+        }
+    }
 
-        // test reverse iteration of metadata on a fresh document;
-        // this tests that caching optimization for forward iteration doesn't hide problems;
-        // i.e. SpectrumList_Thermo::findPrecursorSpectrumIndex()
+    msds.clear();
+
+    // test reverse iteration of metadata on a fresh document;
+    // this tests that caching optimization for forward iteration doesn't hide problems;
+    // i.e. SpectrumList_Thermo::findPrecursorSpectrumIndex()
+    for (size_t i = 0; i < msdCount; ++i)
+    {
         MSData msd_reverse;
         reader.read(rawpath, rawheader, msd_reverse, i);
 
         if (msd_reverse.run.spectrumListPtr.get())
             for (size_t j = 0, end = msd_reverse.run.spectrumListPtr->size(); j < end; ++j)
-                msd_reverse.run.spectrumListPtr->spectrum(end-j-1);
+                msd_reverse.run.spectrumListPtr->spectrum(end - j - 1);
 
         if (msd_reverse.run.chromatogramListPtr.get())
             for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
-                msd_reverse.run.chromatogramListPtr->chromatogram(end-j-1);
+                msd_reverse.run.chromatogramListPtr->chromatogram(end - j - 1);
     }
 }
 
@@ -418,10 +431,14 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
         throw runtime_error(string("Invalid arguments: ") + bal::join(args, " ") +
                             "\nUsage: " + args[0] + " [-v] [--generate-mzML] <source path 1> [source path 2] ..."); 
 
-    for (size_t i=0; i < rawpaths.size(); ++i)
-        for (bfs::directory_iterator itr(rawpaths[i]); itr != bfs::directory_iterator(); ++itr)
+    bfs::detail::utf8_codecvt_facet utf8;
+    for (size_t i = 0; i < rawpaths.size(); ++i)
+    {
+        vector<bfs::path> filepaths;
+        expand_pathmask(bfs::path(rawpaths[i] + "/*", utf8), filepaths);
+        BOOST_FOREACH(const bfs::path& filepath, filepaths)
         {
-            string rawpath = itr->path().string();
+            string rawpath = filepath.string(utf8);
             if (!isPathTestable(rawpath))
                 continue;
             else if (generateMzML && !testAcceptOnly)
@@ -450,6 +467,7 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                 }
             }
         }
+    }
 
     return 0;
 }

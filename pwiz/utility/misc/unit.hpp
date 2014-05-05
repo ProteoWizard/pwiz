@@ -32,6 +32,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 
 namespace pwiz {
@@ -145,6 +146,10 @@ inline std::string escape_teamcity_string(const std::string& str)
 }
 
 #define TEST_PROLOG_EX(argc, argv, suffix) \
+    bnw::args args(argc, argv); \
+    std::locale global_loc = std::locale(); \
+    std::locale loc(global_loc, new boost::filesystem::detail::utf8_codecvt_facet); \
+    bfs::path::imbue(loc); \
     bfs::path testName = bfs::change_extension(bfs::basename(argv[0]), (suffix)); \
     string teamcityTestName = pwiz::util::escape_teamcity_string(testName.string()); \
     bpt::ptime testStartTime; \

@@ -1,4 +1,4 @@
-//
+﻿//
 // $Id$
 //
 //
@@ -71,7 +71,8 @@ class ShimadzuReaderImpl : public ShimadzuReader
         try
         {
             reader_ = gcnew ShimadzuAPI::MassDataReader();
-            ReaderResult result = reader_->OpenDataFile(ToSystemString(filepath));
+            String^ systemFilepath = ToSystemString(filepath);
+            ReaderResult result = reader_->OpenDataFile(systemFilepath);
             if (result != ReaderResult::OK)
                 throw runtime_error("[ShimadzuReader::ctor] " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
         }

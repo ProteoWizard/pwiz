@@ -17,7 +17,7 @@
 #include <iostream>
 using namespace std;
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     cerr << "This is a test of the emergency test failure system." << endl;
     cout << "DON'T PANIC!" << endl;

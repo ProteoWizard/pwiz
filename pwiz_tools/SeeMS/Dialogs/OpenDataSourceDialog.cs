@@ -472,7 +472,7 @@ namespace seems
             try
             {
                 return ReaderList.FullReaderList.identify( fileInfo.FullName );
-            } catch
+            } catch (Exception)
             {
                 return "";
             }
@@ -685,19 +685,74 @@ namespace seems
             lookInComboBox.ResumeLayout();
         }
 
+        // Credit to: http://stackoverflow.com/a/14247337/638445
+        public static List<string> SplitOnSpacesWithQuoteEscaping(string input)
+        {
+            List<string> split = new List<string>();
+            StringBuilder sb = new StringBuilder();
+            bool splitOnQuote = false;
+            char quote = '"';
+            char space = ' ';
+            foreach (char c in input.ToCharArray())
+            {
+                if (splitOnQuote)
+                {
+                    if (c == quote)
+                    {
+                        if (sb.Length > 0)
+                        {
+                            split.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                        splitOnQuote = false;
+                    }
+                    else { sb.Append(c); }
+                }
+                else
+                {
+                    if (c == space)
+                    {
+                        if (sb.Length > 0)
+                        {
+                            split.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                    }
+                    else if (c == quote)
+                    {
+                        if (sb.Length > 0)
+                        {
+                            split.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                        splitOnQuote = true;
+                    }
+                    else { sb.Append(c); }
+                }
+            }
+            if (sb.Length > 0) split.Add(sb.ToString());
+            return split;
+        }
+
         private void sourcePathTextBox_KeyUp( object sender, KeyEventArgs e )
         {
+            // if sourcePathTextBox.Text as a whole is a file or directory, treat it as a single path;
+            // otherwise split it up by spaces with quote escaping
+            List<string> sourcePaths = File.Exists(sourcePathTextBox.Text) || Directory.Exists(sourcePathTextBox.Text) ?
+                                       new List<string> { sourcePathTextBox.Text } :
+                                       SplitOnSpacesWithQuoteEscaping(sourcePathTextBox.Text);
             switch( e.KeyCode )
             {
                 case Keys.Enter:
-                    if( Directory.Exists( sourcePathTextBox.Text ) )
-                        CurrentDirectory = sourcePathTextBox.Text;
-                    else if( Directory.Exists( Path.Combine( CurrentDirectory, sourcePathTextBox.Text ) ) )
-                        CurrentDirectory = Path.Combine( CurrentDirectory, sourcePathTextBox.Text );
+                    if( sourcePaths.Count == 0 )
+                        return;
+                    else if( sourcePaths.Count == 1 && Directory.Exists(sourcePaths[0]) )
+                        CurrentDirectory = sourcePaths[0];
+                    else if( sourcePaths.Count == 1 && Directory.Exists( Path.Combine( CurrentDirectory, sourcePaths[0] ) ) )
+                        CurrentDirectory = Path.Combine( CurrentDirectory, sourcePaths[0] );
                     else
                     {
                         // check that all manually-entered paths are valid
-                        string[] sourcePaths = sourcePathTextBox.Text.Split( " ".ToCharArray() );
                         List<string> invalidPaths = new List<string>();
                         foreach( string path in sourcePaths )
                             if( !File.Exists( path ) && !File.Exists( Path.Combine( CurrentDirectory, path ) ) )
@@ -705,7 +760,7 @@ namespace seems
 
                         if( invalidPaths.Count == 0 )
                         {
-                            dataSources = sourcePaths;
+                            dataSources = sourcePaths.ToArray();
                             DialogResult = DialogResult.OK;
                             Close();
                         } else
@@ -787,27 +842,29 @@ namespace seems
                 if( !String.IsNullOrEmpty( sourceType ) &&
                     sourceType != "File Folder" )
                 {
-                    MSDataFile msData = new MSDataFile( sourcePath );
-                    ChromatogramList cl = msData.run.chromatogramList;
-                    if( cl != null && !cl.empty() && cl.find( "TIC" ) != cl.size() )
+                    using (MSDataFile msData = new MSDataFile( sourcePath ))
+                    using (ChromatogramList cl = msData.run.chromatogramList)
                     {
-                        ticGraphControl.Visible = true;
-                        pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( cl.find( "TIC" ), true );
-                        Map<double, double> sortedFullPointList = new Map<double, double>();
-                        IList<double> timeList = tic.binaryDataArrays[0].data;
-                        IList<double> intensityList = tic.binaryDataArrays[1].data;
-                        int arrayLength = timeList.Count;
-                        for( int i = 0; i < arrayLength; ++i )
-                            sortedFullPointList[timeList[i]] = intensityList[i];
-                        ZedGraph.PointPairList points = new ZedGraph.PointPairList(
-                            new List<double>( sortedFullPointList.Keys ).ToArray(),
-                            new List<double>( sortedFullPointList.Values ).ToArray() );
-                        ZedGraph.LineItem item = ticGraphControl.GraphPane.AddCurve( "TIC", points, Color.Black, ZedGraph.SymbolType.None );
-                        item.Line.IsAntiAlias = true;
-                        ticGraphControl.AxisChange();
-                        ticGraphControl.Refresh();
-                    } else
-                        ticGraphControl.Visible = false;
+                        if( cl != null && !cl.empty() && cl.find( "TIC" ) != cl.size() )
+                        {
+                            ticGraphControl.Visible = true;
+                            pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( cl.find( "TIC" ), true );
+                            Map<double, double> sortedFullPointList = new Map<double, double>();
+                            IList<double> timeList = tic.binaryDataArrays[0].data;
+                            IList<double> intensityList = tic.binaryDataArrays[1].data;
+                            int arrayLength = timeList.Count;
+                            for( int i = 0; i < arrayLength; ++i )
+                                sortedFullPointList[timeList[i]] = intensityList[i];
+                            ZedGraph.PointPairList points = new ZedGraph.PointPairList(
+                                new List<double>( sortedFullPointList.Keys ).ToArray(),
+                                new List<double>( sortedFullPointList.Values ).ToArray() );
+                            ZedGraph.LineItem item = ticGraphControl.GraphPane.AddCurve( "TIC", points, Color.Black, ZedGraph.SymbolType.None );
+                            item.Line.IsAntiAlias = true;
+                            ticGraphControl.AxisChange();
+                            ticGraphControl.Refresh();
+                        } else
+                            ticGraphControl.Visible = false;
+                    }
                 } else
                     ticGraphControl.Visible = false;
             } else

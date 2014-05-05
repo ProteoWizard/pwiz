@@ -25,6 +25,7 @@
 #include "Reader_Shimadzu.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_Shimadzu::identify(const std::string& filename, const std::string& head) const
@@ -88,19 +89,20 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
 
     msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
-    bfs::path p(rawpath);
+    boost::filesystem::detail::utf8_codecvt_facet utf8;
+    bfs::path p(rawpath, utf8);
 
     SourceFilePtr sourceFile(new SourceFile);
-    sourceFile->id = BFS_STRING(p.leaf());
-    sourceFile->name = BFS_STRING(p.leaf());
-    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(p.branch_path()));
+    sourceFile->id = p.filename().string(utf8);
+    sourceFile->name = p.filename().string(utf8);
+    sourceFile->location = "file:///" + bfs::system_complete(p.branch_path()).string(utf8);
     sourceFile->set(MS_Shimadzu_Biotech_nativeID_format);
     sourceFile->set(MS_mass_spectrometer_file_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.run.defaultSourceFilePtr = sourceFile;
 
-    msd.id = bfs::basename(p);
+    msd.id = p.filename().replace_extension("").string(utf8);
 
     /*SoftwarePtr softwareMassHunter(new Software);
     softwareMassHunter->id = "MassHunter";

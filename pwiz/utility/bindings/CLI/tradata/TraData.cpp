@@ -46,8 +46,8 @@ public ref class Version
     static int Major() {return pwiz::tradata::Version::Major();}
     static int Minor() {return pwiz::tradata::Version::Minor();}
     static int Revision() {return pwiz::tradata::Version::Revision();}
-    static System::String^ LastModified() {return gcnew System::String(pwiz::tradata::Version::LastModified().c_str());}
-    static System::String^ ToString() {return gcnew System::String(pwiz::tradata::Version::str().c_str());}
+    static System::String^ LastModified() {return ToSystemString(pwiz::tradata::Version::LastModified());}
+    static System::String^ ToString() {return ToSystemString(pwiz::tradata::Version::str());}
 };
 
 Contact::Contact()
@@ -58,7 +58,7 @@ Contact::Contact(System::String^ id)
 : ParamContainer(new b::Contact(ToStdString(id)))
 {base_ = new boost::shared_ptr<b::Contact>(static_cast<b::Contact*>(ParamContainer::base_));}
 
-System::String^ Contact::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Contact::id::get() {return ToSystemString((*base_)->id);}
 void Contact::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 bool Contact::empty()
@@ -70,7 +70,7 @@ Publication::Publication()
 : ParamContainer(new b::Publication())
 {owner_ = nullptr; base_ = static_cast<b::Publication*>(ParamContainer::base_);}
 
-System::String^ Publication::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ Publication::id::get() {return ToSystemString(base_->id);}
 void Publication::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
 bool Publication::empty()
@@ -90,10 +90,10 @@ Software::Software(System::String^ _id, CVParam^ param, System::String^ version)
 : ParamContainer(new b::Software(ToStdString(_id), param->base(), ToStdString(version)))
 {base_ = new boost::shared_ptr<b::Software>(static_cast<b::Software*>(ParamContainer::base_));}
 
-System::String^ Software::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Software::id::get() {return ToSystemString((*base_)->id);}
 void Software::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Software::version::get() {return gcnew System::String((*base_)->version.c_str());}
+System::String^ Software::version::get() {return ToSystemString((*base_)->version);}
 void Software::version::set(System::String^ value) {(*base_)->version = ToStdString(value);}
 
 bool Software::empty()
@@ -150,7 +150,7 @@ Instrument::Instrument(System::String^ id)
 : ParamContainer(new b::Instrument(ToStdString(id)))
 {base_ = new boost::shared_ptr<b::Instrument>(static_cast<b::Instrument*>(ParamContainer::base_));}
 
-System::String^ Instrument::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Instrument::id::get() {return ToSystemString((*base_)->id);}
 void Instrument::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 bool Instrument::empty()
@@ -188,10 +188,10 @@ Protein::Protein(System::String^ id)
 : ParamContainer(new b::Protein(ToStdString(id)))
 {base_ = new boost::shared_ptr<b::Protein>(static_cast<b::Protein*>(ParamContainer::base_));}
 
-System::String^ Protein::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Protein::id::get() {return ToSystemString((*base_)->id);}
 void Protein::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Protein::sequence::get() {return gcnew System::String((*base_)->sequence.c_str());}
+System::String^ Protein::sequence::get() {return ToSystemString((*base_)->sequence);}
 void Protein::sequence::set(System::String^ value) {(*base_)->sequence = ToStdString(value);}
 
 bool Protein::empty()
@@ -225,10 +225,10 @@ Peptide::Peptide(System::String^ id)
 : ParamContainer(new b::Peptide(ToStdString(id)))
 {base_ = new boost::shared_ptr<b::Peptide>(static_cast<b::Peptide*>(ParamContainer::base_));}
 
-System::String^ Peptide::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Peptide::id::get() {return ToSystemString((*base_)->id);}
 void Peptide::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Peptide::sequence::get() {return gcnew System::String((*base_)->sequence.c_str());}
+System::String^ Peptide::sequence::get() {return ToSystemString((*base_)->sequence);}
 void Peptide::sequence::set(System::String^ value) {(*base_)->sequence = ToStdString(value);}
 
 ModificationList^ Peptide::modifications::get() {return gcnew ModificationList(&(*base_)->modifications, this);}
@@ -249,7 +249,7 @@ Compound::Compound(System::String^ id)
 : ParamContainer(new b::Compound(ToStdString(id)))
 {base_ = new boost::shared_ptr<b::Compound>(static_cast<b::Compound*>(ParamContainer::base_));}
 
-System::String^ Compound::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Compound::id::get() {return ToSystemString((*base_)->id);}
 void Compound::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 RetentionTimeList^ Compound::retentionTimes::get() {return gcnew RetentionTimeList(&(*base_)->retentionTimes, this);}
@@ -281,7 +281,7 @@ Transition::Transition()
 : ParamContainer(new b::Transition())
 {owner_ = nullptr; base_ = static_cast<b::Transition*>(ParamContainer::base_);}
 
-System::String^ Transition::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ Transition::id::get() {return ToSystemString(base_->id);}
 void Transition::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
 Peptide^ Transition::peptide::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::tradata::PeptidePtr, Peptide, base_->peptidePtr);}
@@ -302,7 +302,7 @@ Target::Target()
 : ParamContainer(new b::Target())
 {owner_ = nullptr; base_ = static_cast<b::Target*>(ParamContainer::base_);}
 
-System::String^ Target::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ Target::id::get() {return ToSystemString(base_->id);}
 void Target::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
 Peptide^ Target::peptide::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::tradata::PeptidePtr, Peptide, base_->peptidePtr);}
@@ -333,7 +333,7 @@ TraData::TraData()
 {
 }
 
-System::String^ TraData::id::get() {return gcnew System::String(base().id.c_str());}
+System::String^ TraData::id::get() {return ToSystemString(base().id);}
 void TraData::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 CVList^ TraData::cvs::get() {return gcnew CVList(&base().cvs, this);}
@@ -369,7 +369,7 @@ void TraData::targets::set(TargetList^ value) {base().targets = *value->base_;}
 
 
 bool TraData::empty() {return base().empty();}
-System::String^ TraData::version() {return gcnew System::String(base().version().c_str());}
+System::String^ TraData::version() {return ToSystemString(base().version());}
 
 } // namespace tradata
 } // namespace CLI

@@ -137,7 +137,7 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
     xmlConfig.outputObserver = &sha1OutputObserver;
     XMLWriter xmlWriter(os, xmlConfig);
 
-    string xmlData = "version=\"1.0\" encoding=\"ISO-8859-1\"";
+    string xmlData = "version=\"1.0\" encoding=\"utf-8\"";
     xmlWriter.processingInstruction("xml", xmlData);
 
     // <indexedmzML> start

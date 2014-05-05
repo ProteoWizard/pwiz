@@ -101,7 +101,7 @@ Diff::operator System::String^ (Diff^ diff)
 {
     std::ostringstream oss;
     oss << *diff->base_;
-    return gcnew System::String(oss.str().c_str());
+    return ToSystemString(oss.str());
 }
 
 
@@ -109,7 +109,7 @@ Diff::operator System::String^ (Diff% diff)
 {
     std::ostringstream oss;
     oss << *diff.base_;
-    return gcnew System::String(oss.str().c_str());
+    return ToSystemString(oss.str());
 }
 
 

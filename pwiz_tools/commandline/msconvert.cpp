@@ -35,6 +35,7 @@
 #include "boost/format.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 using namespace pwiz::cv;
 using namespace pwiz::data;
@@ -141,7 +142,7 @@ static double string_to_double( const std::string& str )
 /// Parses command line arguments to setup execution parameters, and
 /// contructs help text. Inputs are the arguments to main. A filled
 /// Config object is returned.
-Config parseCommandLine(int argc, const char* argv[])
+Config parseCommandLine(int argc, char** argv)
 {
     namespace po = boost::program_options;
 
@@ -818,8 +819,14 @@ int go(const Config& config)
 }
 
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
+    bnw::args args(argc, argv);
+
+    std::locale global_loc = std::locale();
+    std::locale loc(global_loc, new bfs::detail::utf8_codecvt_facet);
+    bfs::path::imbue(loc);
+
     try
     {
         Config config = parseCommandLine(argc, argv);

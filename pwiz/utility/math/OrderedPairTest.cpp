@@ -22,15 +22,11 @@
 
 
 #include "OrderedPair.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/static_assert.hpp"
-#include <iostream>
-#include <algorithm>
-#include <iterator>
-#include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::math;
 

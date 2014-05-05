@@ -36,16 +36,16 @@ CV::CV()
 : base_(new b::CV()), owner_(nullptr)
 {}
 
-System::String^ CV::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ CV::id::get() {return ToSystemString(base_->id);}
 void CV::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
-System::String^ CV::URI::get() {return gcnew System::String(base_->URI.c_str());}
+System::String^ CV::URI::get() {return ToSystemString(base_->URI);}
 void CV::URI::set(System::String^ value) {base_->URI = ToStdString(value);}
 
-System::String^ CV::fullName::get() {return gcnew System::String(base_->fullName.c_str());}
+System::String^ CV::fullName::get() {return ToSystemString(base_->fullName);}
 void CV::fullName::set(System::String^ value) {base_->fullName = ToStdString(value);}
 
-System::String^ CV::version::get() {return gcnew System::String(base_->version.c_str());}
+System::String^ CV::version::get() {return ToSystemString(base_->version);}
 void CV::version::set(System::String^ value) {base_->version = ToStdString(value);}
 
 bool CV::empty()
@@ -232,10 +232,10 @@ UserParam::UserParam(System::String^ _name, System::String^ _value, System::Stri
 : base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (pwiz::cv::CVID) _units))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
-System::String^ UserParam::name::get() {return gcnew System::String((*base_)->name.c_str());}
+System::String^ UserParam::name::get() {return ToSystemString((*base_)->name);}
 void UserParam::name::set(System::String^ value) {(*base_)->name = ToStdString(value);}
 
-System::String^ UserParam::type::get() {return gcnew System::String((*base_)->type.c_str());}
+System::String^ UserParam::type::get() {return ToSystemString((*base_)->type);}
 void UserParam::type::set(System::String^ value) {(*base_)->type = ToStdString(value);}
 
 CVID UserParam::units::get() {return (CVID) (*base_)->units;}
@@ -331,7 +331,7 @@ ParamGroup::ParamGroup(System::String^ _id)
 : ParamContainer(new b::ParamGroup(ToStdString(_id)))
 {base_ = new boost::shared_ptr<b::ParamGroup>(static_cast<b::ParamGroup*>(ParamContainer::base_));}
 
-System::String^ ParamGroup::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ ParamGroup::id::get() {return ToSystemString((*base_)->id);}
 void ParamGroup::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 bool ParamGroup::empty()

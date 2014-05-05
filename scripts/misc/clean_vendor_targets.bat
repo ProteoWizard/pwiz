@@ -28,6 +28,7 @@ del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
+REM del /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 rmdir /s /q  pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul 2>&1
@@ -46,6 +47,7 @@ rmdir /s /q pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul 2>&1
 rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data > nul 2>&1
 rmdir /s /q pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul 2>&1
 rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul 2>&1
+REM rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Shimadzu_Test.data > nul 2>&1
 
 
 popd

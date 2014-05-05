@@ -48,8 +48,8 @@ public ref class Version
     static int Major() {return pwiz::msdata::Version::Major();}
     static int Minor() {return pwiz::msdata::Version::Minor();}
     static int Revision() {return pwiz::msdata::Version::Revision();}
-    static System::String^ LastModified() {return gcnew System::String(pwiz::msdata::Version::LastModified().c_str());}
-    static System::String^ ToString() {return gcnew System::String(pwiz::msdata::Version::str().c_str());}
+    static System::String^ LastModified() {return ToSystemString(pwiz::msdata::Version::LastModified());}
+    static System::String^ ToString() {return ToSystemString(pwiz::msdata::Version::str());}
 };
 
 
@@ -74,13 +74,13 @@ SourceFile::SourceFile(System::String^ _id, System::String^ _name, System::Strin
 : ParamContainer(new b::SourceFile(ToStdString(_id), ToStdString(_name), ToStdString(_location)))
 {base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ SourceFile::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ SourceFile::id::get() {return ToSystemString((*base_)->id);}
 void SourceFile::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ SourceFile::name::get() {return gcnew System::String((*base_)->name.c_str());}
+System::String^ SourceFile::name::get() {return ToSystemString((*base_)->name);}
 void SourceFile::name::set(System::String^ value) {(*base_)->name = ToStdString(value);}
 
-System::String^ SourceFile::location::get() {return gcnew System::String((*base_)->location.c_str());}
+System::String^ SourceFile::location::get() {return ToSystemString((*base_)->location);}
 void SourceFile::location::set(System::String^ value) {(*base_)->location = ToStdString(value);}
 
 bool SourceFile::empty()
@@ -120,10 +120,10 @@ Sample::Sample(System::String^ _id, System::String^ _name)
 : ParamContainer(new b::Sample(ToStdString(_id), ToStdString(_name)))
 {base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ Sample::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Sample::id::get() {return ToSystemString((*base_)->id);}
 void Sample::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Sample::name::get() {return gcnew System::String((*base_)->name.c_str());}
+System::String^ Sample::name::get() {return ToSystemString((*base_)->name);}
 void Sample::name::set(System::String^ value) {(*base_)->name = ToStdString(value);}
 
 bool Sample::empty()
@@ -193,10 +193,10 @@ Software::Software(System::String^ _id, CVParam^ _softwareParam, System::String^
 : base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id), _softwareParam->base(), ToStdString(_softwareParamVersion))))
 {LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ Software::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Software::id::get() {return ToSystemString((*base_)->id);}
 void Software::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Software::version::get() {return gcnew System::String((*base_)->version.c_str());}
+System::String^ Software::version::get() {return ToSystemString((*base_)->version);}
 void Software::version::set(System::String^ value) {(*base_)->version = ToStdString(value);}
 
 bool Software::empty()
@@ -213,7 +213,7 @@ InstrumentConfiguration::InstrumentConfiguration(System::String^ _id)
 : ParamContainer(new b::InstrumentConfiguration(ToStdString(_id)))
 {base_ = new boost::shared_ptr<b::InstrumentConfiguration>(static_cast<b::InstrumentConfiguration*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ InstrumentConfiguration::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ InstrumentConfiguration::id::get() {return ToSystemString((*base_)->id);}
 void InstrumentConfiguration::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 ComponentList^ InstrumentConfiguration::componentList::get() {return gcnew ComponentList(&(*base_)->componentList, this);}
@@ -247,7 +247,7 @@ DataProcessing::DataProcessing(System::String^ _id)
 : base_(new boost::shared_ptr<b::DataProcessing>(new b::DataProcessing(ToStdString(_id))))
 {LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ DataProcessing::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ DataProcessing::id::get() {return ToSystemString((*base_)->id);}
 void DataProcessing::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 ProcessingMethodList^ DataProcessing::processingMethods::get() {return gcnew ProcessingMethodList(&(*base_)->processingMethods, this);}
@@ -271,7 +271,7 @@ ScanSettings::ScanSettings(System::String^ _id)
 : base_(new boost::shared_ptr<b::ScanSettings>(new b::ScanSettings(ToStdString(_id))))
 {LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ ScanSettings::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ ScanSettings::id::get() {return ToSystemString((*base_)->id);}
 void ScanSettings::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 SourceFileList^ ScanSettings::sourceFiles::get() {return gcnew SourceFileList(&(*base_)->sourceFilePtrs, this);}
@@ -303,10 +303,10 @@ Scan::Scan()
 SourceFile^ Scan::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
 void Scan::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
-System::String^ Scan::spectrumID::get() {return gcnew System::String(base_->spectrumID.c_str());}
+System::String^ Scan::spectrumID::get() {return ToSystemString(base_->spectrumID);}
 void Scan::spectrumID::set(System::String^ value) {base_->spectrumID = ToStdString(value);}
 
-System::String^ Scan::externalSpectrumID::get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
+System::String^ Scan::externalSpectrumID::get() {return ToSystemString(base_->externalSpectrumID);}
 void Scan::externalSpectrumID::set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
 
 InstrumentConfiguration^ Scan::instrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, base_->instrumentConfigurationPtr);}
@@ -352,10 +352,10 @@ Precursor::Precursor()
 SourceFile^ Precursor::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
 void Precursor::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
 
-System::String^ Precursor::spectrumID::get() {return gcnew System::String(base_->spectrumID.c_str());}
+System::String^ Precursor::spectrumID::get() {return ToSystemString(base_->spectrumID);}
 void Precursor::spectrumID::set(System::String^ value) {base_->spectrumID = ToStdString(value);}
 
-System::String^ Precursor::externalSpectrumID::get() {return gcnew System::String(base_->externalSpectrumID.c_str());}
+System::String^ Precursor::externalSpectrumID::get() {return ToSystemString(base_->externalSpectrumID);}
 void Precursor::externalSpectrumID::set(System::String^ value) {base_->externalSpectrumID = ToStdString(value);}
 
 IsolationWindow^ Precursor::isolationWindow::get() {return gcnew IsolationWindow(&base_->isolationWindow, this);}
@@ -433,10 +433,10 @@ SpectrumIdentity::SpectrumIdentity()
 int SpectrumIdentity::index::get() {return (int) base_->index;}
 void SpectrumIdentity::index::set(int value) {base_->index = (size_t) value;}
 
-System::String^ SpectrumIdentity::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ SpectrumIdentity::id::get() {return ToSystemString(base_->id);}
 void SpectrumIdentity::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
-System::String^ SpectrumIdentity::spotID::get() {return gcnew System::String(base_->spotID.c_str());}
+System::String^ SpectrumIdentity::spotID::get() {return ToSystemString(base_->spotID);}
 void SpectrumIdentity::spotID::set(System::String^ value) {base_->spotID = ToStdString(value);}
 
 System::UInt64 SpectrumIdentity::sourceFilePosition::get() {return (System::UInt64) base_->sourceFilePosition;}
@@ -449,7 +449,7 @@ ChromatogramIdentity::ChromatogramIdentity()
 int ChromatogramIdentity::index::get() {return (int) base_->index;}
 void ChromatogramIdentity::index::set(int value) {base_->index = (size_t) value;}
 
-System::String^ ChromatogramIdentity::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ ChromatogramIdentity::id::get() {return ToSystemString(base_->id);}
 void ChromatogramIdentity::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
 System::UInt64 ChromatogramIdentity::sourceFilePosition::get() {return (System::UInt64) base_->sourceFilePosition;}
@@ -463,10 +463,10 @@ Spectrum::Spectrum()
 int Spectrum::index::get() {return (int) (*base_)->index;}
 void Spectrum::index::set(int value) {(*base_)->index = (size_t) value;}
 
-System::String^ Spectrum::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Spectrum::id::get() {return ToSystemString((*base_)->id);}
 void Spectrum::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
-System::String^ Spectrum::spotID::get() {return gcnew System::String((*base_)->spotID.c_str());}
+System::String^ Spectrum::spotID::get() {return ToSystemString((*base_)->spotID);}
 void Spectrum::spotID::set(System::String^ value) {(*base_)->spotID = ToStdString(value);}
 
 System::UInt64 Spectrum::sourceFilePosition::get() {return (System::UInt64) (*base_)->sourceFilePosition;}
@@ -563,7 +563,7 @@ Chromatogram::Chromatogram()
 int Chromatogram::index::get() {return (int) (*base_)->index;}
 void Chromatogram::index::set(int value) {(*base_)->index = (size_t) value;}
 
-System::String^ Chromatogram::id::get() {return gcnew System::String((*base_)->id.c_str());}
+System::String^ Chromatogram::id::get() {return ToSystemString((*base_)->id);}
 void Chromatogram::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
 
 System::UInt64 Chromatogram::sourceFilePosition::get() {return (System::UInt64) (*base_)->sourceFilePosition;}
@@ -786,7 +786,7 @@ Run::Run()
 : ParamContainer(new b::Run())
 {owner_ = nullptr; base_ = static_cast<b::Run*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ Run::id::get() {return gcnew System::String(base_->id.c_str());}
+System::String^ Run::id::get() {return ToSystemString(base_->id);}
 void Run::id::set(System::String^ value) {base_->id = ToStdString(value);}
 
 InstrumentConfiguration^ Run::defaultInstrumentConfiguration::get() {return NATIVE_SHARED_PTR_TO_CLI(b::InstrumentConfigurationPtr, InstrumentConfiguration, base_->defaultInstrumentConfigurationPtr);}
@@ -795,7 +795,7 @@ void Run::defaultInstrumentConfiguration::set(InstrumentConfiguration^ value) {b
 Sample^ Run::sample::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SamplePtr, Sample, base_->samplePtr);}
 void Run::sample::set(Sample^ value) {base_->samplePtr = CLI_TO_NATIVE_SHARED_PTR(b::SamplePtr, value);}
 
-System::String^ Run::startTimeStamp::get() {return gcnew System::String(base_->startTimeStamp.c_str());}
+System::String^ Run::startTimeStamp::get() {return ToSystemString(base_->startTimeStamp);}
 void Run::startTimeStamp::set(System::String^ value) {base_->startTimeStamp = ToStdString(value);}
 
 SourceFile^ Run::defaultSourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->defaultSourceFilePtr);}
@@ -833,10 +833,10 @@ MSData::MSData()
 : base_(new boost::shared_ptr<b::MSData>(new b::MSData))
 {LOG_CONSTRUCT(__FUNCTION__)}
 
-System::String^ MSData::accession::get() {return gcnew System::String(base().accession.c_str());}
+System::String^ MSData::accession::get() {return ToSystemString(base().accession);}
 void MSData::accession::set(System::String^ value) {base().accession = ToStdString(value);}
 
-System::String^ MSData::id::get() {return gcnew System::String(base().id.c_str());}
+System::String^ MSData::id::get() {return ToSystemString(base().id);}
 void MSData::id::set(System::String^ value) {base().id = ToStdString(value);}
 
 CVList^ MSData::cvs::get() {return gcnew CVList(&base().cvs, this);}
@@ -867,7 +867,7 @@ Run^ MSData::run::get()  {return gcnew Run(&base().run, this);}
 //void set(Run^ value) {(*base_)->run = *value->base_;}
 
 bool MSData::empty() {return base().empty();}
-System::String^ MSData::version() {return gcnew System::String(base().version().c_str());}
+System::String^ MSData::version() {return ToSystemString(base().version());}
 
 
 

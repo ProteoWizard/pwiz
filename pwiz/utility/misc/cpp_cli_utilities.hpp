@@ -43,24 +43,29 @@ inline std::string ToStdString(System::String^ source)
     if (System::String::IsNullOrEmpty(source))
         return std::string();
 
-	int len = (( source->Length+1) * 2);
-	char *ch = new char[ len ];
-	bool result ;
-	{
-		pin_ptr<const wchar_t> wch = PtrToStringChars( source );
-		result = wcstombs( ch, wch, len ) != -1;
-	}
-	std::string target = ch;
-	delete ch;
-	if(!result)
-        throw gcnew System::Exception("error converting System::String to std::string");
+    System::Text::Encoding^ encoding = System::Text::Encoding::UTF8;
+    array<System::Byte>^ encodedBytes = encoding->GetBytes(source);
+
+    std::string target("", encodedBytes->Length);
+    char* buffer = &target[0];
+    unsigned char* unsignedBuffer = reinterpret_cast<unsigned char*>(buffer);
+    System::Runtime::InteropServices::Marshal::Copy(encodedBytes, 0, (System::IntPtr) unsignedBuffer, encodedBytes->Length);
 	return target;
 }
 
 
-inline System::String^ ToSystemString(const std::string& source)
+inline System::String^ ToSystemString(const std::string& source, bool utf8=true)
 {
-    return gcnew System::String(source.c_str());
+    if (utf8)
+    {
+        System::Text::Encoding^ encoding = System::Text::Encoding::UTF8;
+        int length = source.length();
+        array<System::Byte>^ buffer = gcnew array<System::Byte>(length);
+        System::Runtime::InteropServices::Marshal::Copy((System::IntPtr) const_cast<char*>(source.c_str()), buffer, 0, length);
+        return encoding->GetString(buffer);
+    }
+    else
+        return gcnew System::String(source.c_str());
 }
 
 

@@ -901,6 +901,9 @@ struct HasCommand
 PWIZ_API_DECL
 void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
 {
+    if (!msd.run.spectrumListPtr)
+        return;
+
     // split wrapper string into command + arg
 
     istringstream iss(wrapper);

@@ -39,7 +39,7 @@ ostream* os_ = 0;
 
 FeaturePtr getFeature(const string& filename)
 {
-    ifstream is(filename.c_str());
+    std::ifstream is(filename.c_str());
     if (!is) throw runtime_error(("Unable to open file " + filename).c_str());
 
     FeaturePtr feature(new Feature);

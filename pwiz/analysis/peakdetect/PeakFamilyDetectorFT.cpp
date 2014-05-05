@@ -70,8 +70,6 @@ namespace {
 
 void readSecretConfigFile(PeakDetectorMatchedFilter::Config& config)
 {
-    using namespace std;
-
     ifstream is("secret_config.txt");
     if (!is) return;
 

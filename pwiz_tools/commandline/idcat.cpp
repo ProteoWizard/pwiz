@@ -33,7 +33,6 @@
 #include "pwiz/Version.hpp"
 #include <boost/program_options.hpp>
 
-using namespace std;
 using namespace pwiz::identdata;
 using namespace pwiz::util;
 

@@ -59,6 +59,7 @@ lib pwiz_utility_misc
         <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
         <library>/ext/boost//date_time
+        <library>/ext/boost//nowide
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
@@ -66,6 +67,7 @@ lib pwiz_utility_misc
         <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
         <library>/ext/boost//date_time
+        <library>/ext/boost//nowide
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32

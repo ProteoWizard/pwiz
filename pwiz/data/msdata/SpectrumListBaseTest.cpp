@@ -50,7 +50,7 @@ void test()
 }
 
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     TEST_PROLOG(argc, argv)
 

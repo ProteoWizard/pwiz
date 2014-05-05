@@ -106,6 +106,8 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
     string filename1 = filenameBase_ + ".1";
     string filename2 = filenameBase_ + ".2";
     string filename3 = filenameBase_ + ".3";
+    string filename4 = filenameBase_ + ".\xE4\xB8\x80\xE4\xB8\xAA\xE8\xAF\x95.4";
+    // FIXME: 4-byte UTF-8 not working: string filename5 = filenameBase_ + ".\x01\x04\xA4\x01\x04\xA2.5";
 
     {
         // create MSData object in memory
@@ -183,6 +185,32 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         diff(tiny, msd4);
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
+
+
+        // write to file #4 (testing two byte UTF-8 code points)
+        msd1.write(filename4, writeConfig);
+
+        // read back into another MSDataFile object
+        MSDataFile msd5(filename4);
+        hackInMemoryMSData(msd5);
+
+        // compare
+        diff(tiny, msd5);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
+
+
+        // write to file #5 (testing four byte UTF-8 code points)
+        /*msd1.write(filename5, writeConfig);
+
+        // read back into another MSDataFile object
+        MSDataFile msd6(filename5);
+        hackInMemoryMSData(msd6);
+
+        // compare
+        diff(tiny, msd6);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);*/
 	}
 
     // remove temp files
@@ -190,6 +218,8 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
     boost::filesystem::remove(filename2);
     boost::filesystem::remove(filename1 + ".gz");
     boost::filesystem::remove(filename3);
+    boost::filesystem::remove(filename4);
+    //boost::filesystem::remove(filename5);
 }
 
 void test()

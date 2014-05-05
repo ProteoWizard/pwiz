@@ -71,8 +71,8 @@ public ref class Version
     static int Major() {return b::Version::Major();}
     static int Minor() {return b::Version::Minor();}
     static int Revision() {return b::Version::Revision();}
-    static System::String^ LastModified() {return gcnew System::String(b::Version::LastModified().c_str());}
-    static System::String^ ToString() {return gcnew System::String(b::Version::str().c_str());}
+    static System::String^ LastModified() {return ToSystemString(b::Version::LastModified());}
+    static System::String^ ToString() {return ToSystemString(b::Version::str());}
 };
 
 

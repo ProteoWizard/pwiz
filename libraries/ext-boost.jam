@@ -250,6 +250,22 @@ rule init ( version : location : options * )
             :   <define>BOOST_PROGRAM_OPTIONS_NO_LIB=1
                 <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK=1
             ;
+            
+        lib shell32 : : <name>shell32 ; # for CommandLineToArgW
+        lib nowide
+            :   [ path.glob $(location)/../boost_aux/libs/nowide/src : *.cpp ]
+            :   $(requirements)
+                <location-prefix>program_options-$(version-tokens:J=_)
+                <use>boost
+                <threading>multi
+                <link>shared:<define>BOOST_NOWIDE_DYN_LINK=1
+                <define>BOOST_NOWIDE_NO_LIB=1
+                <toolset>msvc:<library>shell32
+            :
+            :   <define>BOOST_NOWIDE_NO_LIB=1
+                <link>shared:<define>BOOST_NOWIDE_DYN_LINK=1
+                <toolset>msvc:<library>shell32
+            ;
 
         lib iostreams
             :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp ]
