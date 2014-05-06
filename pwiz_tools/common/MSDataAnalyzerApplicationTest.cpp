@@ -58,7 +58,7 @@ void test()
 
     if (os_) *os_ << "test()\n\n"; 
 
-    char* argv[] = 
+    const char* argv[] = 
     {
         "executable_name",
         "file0",
