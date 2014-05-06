@@ -19,15 +19,9 @@
 // limitations under the License.
 //
 
-#include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 #include <stdlib.h>
-#include <vector>
 
-using namespace std;
 
 // Allowed tolerance on one column of a tab-delimited file
 struct CompareDetails

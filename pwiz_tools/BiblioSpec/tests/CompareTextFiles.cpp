@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include "Compare.h"
 
-using namespace std;
 
 // Take as input two text files and report if the differ.  Optionally
 // take a list of lines to be skipped and/or fields that don't require
@@ -110,7 +109,7 @@ int test (const vector<string>& args)
 }
 
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {  
     TEST_PROLOG(argc, argv)
     if (teamcityTestDecoration)

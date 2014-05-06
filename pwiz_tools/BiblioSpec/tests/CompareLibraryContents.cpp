@@ -26,7 +26,6 @@
 #include "smart_stmt.h"
 #include "Compare.h"
 
-using namespace std;
 using namespace BiblioSpec;
 
 // Information for replacing part of a string.
@@ -315,7 +314,7 @@ int test (const vector<string>& args)
 }
 
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {  
     TEST_PROLOG(argc, argv)
     if (teamcityTestDecoration)
