@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -178,8 +180,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
                 Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Prediction.UseMeasuredRTs);
-                var chooseSchedulingReplicatesDlg = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(chooseSchedulingReplicatesDlg.OkDialog);
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
                 RunUI(() => openDataSourceDialog.SelectFile("8fmol" + extension));
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
@@ -187,24 +188,36 @@ namespace pwiz.SkylineTestFunctional
                 var document = WaitForDocumentLoaded();
                 var chromatogramSet = document.Settings.MeasuredResults.Chromatograms.First(cs => cs.Name == "8fmol");
                 
-                // Verify that the only ChromatogramSet that was use for retention time filtering was the one we said to use.
-                CollectionAssert.AreEqual(new[]{chromSetForScheduling.Name}, document.Settings.MeasuredResults
-                    .Chromatograms.Where(chromatogram=>chromatogram.UseForRetentionTimeFilter)
-                    .Select(chromatogram=>chromatogram.Name).ToArray());
                 var regressionLine =
                     document.Settings.PeptideSettings.Prediction.RetentionTime.GetConversion(
-                        chromSetForScheduling.MSDataFileInfos.First().FileId);
+                        chromatogramSet.MSDataFileInfos.First().FileId);
                 var calculator = document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
+                double fullGradientStartTime;
+                double fullGradientEndTime;
+                using (var msDataFile = new MsDataFileImpl(TestFilesDir.GetTestPath("8fmol" + extension)))
+                {
+                    fullGradientStartTime = msDataFile.GetSpectrum(0).RetentionTime.Value;
+                    fullGradientEndTime = msDataFile.GetSpectrum(msDataFile.SpectrumCount - 1).RetentionTime.Value;
+                }
 
                 foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                 {
-                    double? score =
-                        calculator.ScoreSequence(document.Settings.GetModifiedSequence(tuple.Item1.Peptide.Sequence,
-                            tuple.Item2.TransitionGroup.LabelType, tuple.Item1.ExplicitMods));
-                    if (score.HasValue)
+                    if (tuple.Item1.GlobalStandardType != PeptideDocNode.STANDARD_TYPE_IRT)
                     {
-                        double? predictedRt = regressionLine.GetY(score.Value);
-                        AssertChromatogramWindow(document, chromatogramSet, predictedRt.Value - FILTER_LENGTH, predictedRt.Value + FILTER_LENGTH, tuple.Item3);
+                        double? score =
+                            calculator.ScoreSequence(document.Settings.GetModifiedSequence(tuple.Item1.Peptide.Sequence,
+                                tuple.Item2.TransitionGroup.LabelType, tuple.Item1.ExplicitMods));
+                        if (score.HasValue)
+                        {
+                            double? predictedRt = regressionLine.GetY(score.Value);
+                            AssertChromatogramWindow(document, chromatogramSet, predictedRt.Value - FILTER_LENGTH,
+                                predictedRt.Value + FILTER_LENGTH, tuple.Item3);
+                        }
+                    }
+                    else
+                    {
+                        // IRT Standards get extracted for the full gradient
+                        AssertChromatogramWindow(document, chromatogramSet, fullGradientStartTime, fullGradientEndTime, tuple.Item3);
                     }
                 }
             }

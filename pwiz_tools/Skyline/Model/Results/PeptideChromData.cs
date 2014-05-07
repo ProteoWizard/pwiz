@@ -685,6 +685,17 @@ namespace pwiz.Skyline.Model.Results
             }
             return allPeaks;
         }
+
+        public void TruncateChromatograms(double startTime, double endTime)
+        {
+            foreach (var dataSet in DataSets)
+            {
+                if (IsComparable(dataSet))
+                {
+                    dataSet.Truncate(startTime, endTime);
+                }
+            }
+        }
     }
 
     /// <summary>

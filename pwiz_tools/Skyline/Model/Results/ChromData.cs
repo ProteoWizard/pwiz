@@ -63,6 +63,57 @@ namespace pwiz.Skyline.Model.Results
             RawMassErrors = massErrors;
         }
 
+        public ChromData Truncate(double minTime, double maxTime)
+        {
+            if (!ReferenceEquals(Times, RawTimes))
+            {
+                throw new InvalidOperationException("Cannot truncate data set after interpolation"); // Not L10N
+            }
+            if (Peaks.Count > 0)
+            {
+                throw new InvalidOperationException("Cannot truncate after peak detection"); // Not L10N
+            }
+            int firstIndex = Array.BinarySearch(Times, (float) minTime);
+            if (firstIndex < 0)
+            {
+                firstIndex = ~firstIndex;
+                firstIndex = Math.Max(firstIndex, 0);
+            }
+            int lastIndex = Array.BinarySearch(Times, (float) maxTime);
+            if (lastIndex < 0)
+            {
+                lastIndex = ~lastIndex + 1;
+                lastIndex = Math.Min(lastIndex, Times.Length - 1);
+            }
+            if (firstIndex >= lastIndex)
+            {
+                return this;
+            }
+            if (firstIndex == 0 && lastIndex == Times.Length - 1)
+            {
+                return this;
+            }
+            var newChromData = new ChromData(Key, ProviderId)
+            {
+                Extra = Extra,
+            };
+            newChromData.Times = newChromData.RawTimes = SubArray(RawTimes, firstIndex, lastIndex);
+            newChromData.Intensities = newChromData.RawIntensities = SubArray(RawIntensities, firstIndex, lastIndex);
+            newChromData.RawMassErrors = SubArray(RawMassErrors, firstIndex, lastIndex);
+            return newChromData;
+        }
+
+        private T[] SubArray<T>(T[] array, int firstIndex, int lastIndex)
+        {
+            if (null == array)
+            {
+                return null;
+            }
+            T[] result = new T[lastIndex - firstIndex + 1];
+            Array.Copy(array, firstIndex, result, 0, result.Length);
+            return result;
+        }
+
         public void FindPeaks(double[] retentionTimes, bool requireDocNode)
         {
             Finder = new CrawdadPeakFinder();

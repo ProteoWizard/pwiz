@@ -1104,5 +1104,14 @@ namespace pwiz.Skyline.Model.Results
         {
             return Count > 0 ? _listChromData[0].ToString() : Resources.ChromDataSet_ToString_empty;
         }
+
+        public void Truncate(double startTime, double endTime)
+        {
+            for (int i = 0; i < _listChromData.Count; i++)
+            {
+                var chromData = _listChromData[i];
+                _listChromData[i] = chromData.Truncate(startTime, endTime);
+            }
+        }
     }
 }

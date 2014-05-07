@@ -1809,6 +1809,10 @@ namespace pwiz.Skyline
                 return true;
             }
             var prediction = settings.PeptideSettings.Prediction;
+            if (prediction.RetentionTime != null && prediction.RetentionTime.IsAutoCalculated)
+            {
+                return true;
+            }
             bool anyImportedResults = settings.HasResults && settings.MeasuredResults.Chromatograms.Any();
             bool canChooseReplicatesForCalibration = anyImportedResults &&
                                                         (prediction.UseMeasuredRTs ||

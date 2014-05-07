@@ -563,7 +563,9 @@ namespace pwiz.Skyline.Model.Results
             if (nodePep == null)
                 return;
 
-            peptideChromDataSets.PredictedRetentionTime = _retentionTimePredictor.GetPredictedRetentionTime(nodePep);
+            var predictedRetentionTime = _retentionTimePredictor.GetPredictedRetentionTime(nodePep);
+            TruncateChromatograms(peptideChromDataSets, predictedRetentionTime);
+            peptideChromDataSets.PredictedRetentionTime = predictedRetentionTime;
 
             string filePath = SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]);
             double[] retentionTimes = _document.Settings.GetRetentionTimes(filePath,
@@ -587,6 +589,29 @@ namespace pwiz.Skyline.Model.Results
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
+        }
+
+        private void TruncateChromatograms(PeptideChromDataSets peptideChromDataSets, double? predictedRetentionTime)
+        {
+            if (!predictedRetentionTime.HasValue)
+            {
+                return;
+            }
+            var fullScan = _document.Settings.TransitionSettings.FullScan;
+            if (fullScan.RetentionTimeFilterType != RetentionTimeFilterType.scheduling_windows)
+            {
+                return;
+            }
+            if (!_document.Settings.PeptideSettings.Prediction.RetentionTime.IsAutoCalculated)
+            {
+                return;
+            }
+            double startTime = predictedRetentionTime.Value - fullScan.RetentionTimeFilterLength;
+            double endTime = predictedRetentionTime.Value + fullScan.RetentionTimeFilterLength;
+            foreach (var chromDataSet in peptideChromDataSets.DataSets)
+            {
+                chromDataSet.Truncate(startTime, endTime);
+            }
         }
 
         /// <summary>

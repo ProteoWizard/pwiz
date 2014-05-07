@@ -115,19 +115,23 @@ namespace pwiz.Skyline.Model.Results
                         {
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {
-                                double windowRT;
-                                double? centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
-                                    document, nodePep, nodeGroup, out windowRT);
-                                if (_fullScan.RetentionTimeFilterLength != 0)
+                                var prediction = document.Settings.PeptideSettings.Prediction;
+                                if (prediction.RetentionTime == null || !prediction.RetentionTime.IsAutoCalculated)
                                 {
-                                    windowRT = _fullScan.RetentionTimeFilterLength * 2;
-                                }
-                                if (centerTime != null)
-                                {
-                                    double startTime = centerTime.Value - windowRT / 2;
-                                    double endTime = startTime + windowRT;
-                                    minTime = Math.Max(minTime ?? 0, startTime);
-                                    maxTime = Math.Min(maxTime ?? double.MaxValue, endTime);
+                                    double windowRT;
+                                    double? centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
+                                        document, nodePep, nodeGroup, out windowRT);
+                                    if (_fullScan.RetentionTimeFilterLength != 0)
+                                    {
+                                        windowRT = _fullScan.RetentionTimeFilterLength * 2;
+                                    }
+                                    if (centerTime != null)
+                                    {
+                                        double startTime = centerTime.Value - windowRT / 2;
+                                        double endTime = startTime + windowRT;
+                                        minTime = Math.Max(minTime ?? 0, startTime);
+                                        maxTime = Math.Min(maxTime ?? double.MaxValue, endTime);
+                                    }
                                 }
                             }
                             else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
