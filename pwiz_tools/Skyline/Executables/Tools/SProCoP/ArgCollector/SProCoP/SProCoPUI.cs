@@ -1,5 +1,7 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Windows.Forms;
+using SProCoP.Properties;
 
 namespace SProCoP
 {
@@ -35,10 +37,10 @@ namespace SProCoP
 
         private bool VerifyArguments()
         {
-            double mma;
-            if (!double.TryParse(textBoxMMAValue.Text, out mma))
+            decimal mma;
+            if (!Decimal.TryParse(textBoxMMAValue.Text, NumberStyles.Number, CultureInfo.InvariantCulture.NumberFormat, out mma))
             {
-                MessageBox.Show("MMA Value must be a numeric value.");
+                MessageBox.Show(Resources.SProCoPUI_VerifyArguments_MMA_Value_must_be_a_numeric_value_);
                 textBoxMMAValue.Focus();
                 return false;
             }
