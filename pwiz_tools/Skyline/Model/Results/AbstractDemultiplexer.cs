@@ -512,7 +512,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetDeconvIndices(IList<int> deconvIndices)
         {
             DeconvIndices = deconvIndices;
-            Solution.SetNumCols(deconvIndices.Count);
+            Solution.SetNumRows(deconvIndices.Count);
         }
 
         public void AddScan(double[] mask, IEnumerable<double> data, int scanNum, double? scanTime)
