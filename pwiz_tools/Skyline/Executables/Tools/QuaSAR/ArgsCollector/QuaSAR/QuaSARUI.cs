@@ -29,13 +29,19 @@ namespace QuaSAR
 // ReSharper restore InconsistentNaming
     {
         public string[] Arguments { get; private set; }
-        private IEnumerable<string> Areas { get; set; } 
-        
+        private IEnumerable<string> Areas { get; set; }
+
         public QuaSARUI(string[] oldArguments, IEnumerable<string> areas)
         {
             Arguments = oldArguments;
             Areas = areas;
             InitializeComponent();
+            RestoreValues();
+        }
+
+        private void RestoreValues()
+        {
+            numberTransitions.SelectedIndex = Defaults.NUMBER_TRANSITIONS - 1;
         }
 
         private void QuaSAR_Load(object sender, EventArgs e)
@@ -131,13 +137,13 @@ namespace QuaSAR
                 tboxAuDITCVThreshold.Text =
                     Arguments[(int) ArgumentIndices.audit_threshold].Equals(Constants.NULL_STRING)
                         ? Defaults.AUDIT_CV_THRESHOLD.ToString(CultureInfo.CurrentCulture)
-                        : Arguments[(int) ArgumentIndices.audit_threshold];
+                        : InvariantDecimalToLocal(Arguments[(int) ArgumentIndices.audit_threshold]);
 
                 // endogenous estimation
                 cboxEndogenousCalc.Checked = Arguments[(int)ArgumentIndices.perform_endocalc].Equals(Constants.TRUE_STRING);
                 tboxEndoConf.Text = Arguments[(int) ArgumentIndices.endo_ci].Equals(Constants.NULL_STRING)
                                         ? Defaults.ENDOGENOUS_CI.ToString(CultureInfo.CurrentCulture)
-                                        : Arguments[(int) ArgumentIndices.endo_ci];
+                                        : InvariantDecimalToLocal(Arguments[(int) ArgumentIndices.endo_ci]);
             }
         }
 
@@ -159,41 +165,41 @@ namespace QuaSAR
         {
             if (string.IsNullOrWhiteSpace(tboxTitle.Text))
             {
-                MessageBox.Show(this, "Please enter a title");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_Please_enter_a_title);
                 return false;
             } else if (comboBoxAnalyte.SelectedItem.ToString().Equals(comboBoxStandard.SelectedItem.ToString()))
             {
-                MessageBox.Show(this, "The analyte and standard cannot be the same");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_The_analyte_and_standard_cannot_be_the_same);
                 return false;
             }
             else if (string.IsNullOrWhiteSpace(tboxUnits.Text))
             {
-                MessageBox.Show(this, "Please enter the units label");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_Please_enter_the_units_label);
                 return false;
             }
             else if (string.IsNullOrWhiteSpace(tboxLinearScale.Text))
             {
-                MessageBox.Show(this, "Please enter a value for the maximum linear scale");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_maximum_linear_scale);
                 return false;
             }
             else if (string.IsNullOrWhiteSpace(tboxLogScale.Text))
             {
-                MessageBox.Show(this, "Please enter a value for the maximum log scale");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_maximum_log_scale);
                 return false;
             }
             else if (cboxAuDIT.Checked && string.IsNullOrWhiteSpace(tboxAuDITCVThreshold.Text))
             {
-                MessageBox.Show(this, "Please enter a value for the AuDIT CV threshold");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_AuDIT_CV_threshold);
                 return false;
             }
             else if (cboxEndogenousCalc.Checked && string.IsNullOrWhiteSpace(tboxEndoConf.Text))
             {
-                MessageBox.Show(this, "Please enter a value for the endogenous confidence level");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_endogenous_confidence_level);
                 return false;
             }
-            else if (double.Parse(tboxEndoConf.Text) < 0 || (double.Parse(tboxEndoConf.Text) > 1))
+            else if (Decimal.Parse(tboxEndoConf.Text, NumberStyles.Float, CultureInfo.CurrentCulture) < 0 || (Decimal.Parse(tboxEndoConf.Text, NumberStyles.Float, CultureInfo.CurrentCulture) > 1))
             {
-                MessageBox.Show(this, "The endogenous confidence interval must be between 0 and 1");
+                MessageBox.Show(this, QuaSARResources.QuaSARUI_VerifyArguments_The_endogenous_confidence_interval_must_be_between_0_and_1);
                 return false;
             }
             return true;
@@ -219,11 +225,21 @@ namespace QuaSAR
             Arguments[(int) ArgumentIndices.max_linear] = tboxLinearScale.Text;
             Arguments[(int) ArgumentIndices.max_log] = tboxLogScale.Text;
             Arguments[(int) ArgumentIndices.perform_audit] = cboxAuDIT.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.audit_threshold] = cboxAuDIT.Checked ? tboxAuDITCVThreshold.Text : Constants.NULL_STRING;
+            Arguments[(int)ArgumentIndices.audit_threshold] = cboxAuDIT.Checked ? Decimal.Parse(tboxAuDITCVThreshold.Text, CultureInfo.CurrentCulture).ToString(CultureInfo.InvariantCulture) : Constants.NULL_STRING;
             Arguments[(int) ArgumentIndices.perform_endocalc] = cboxEndogenousCalc.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
-            Arguments[(int) ArgumentIndices.endo_ci] = cboxEndogenousCalc.Checked ? tboxEndoConf.Text : Constants.NULL_STRING;
+            Arguments[(int)ArgumentIndices.endo_ci] = cboxEndogenousCalc.Checked ? Decimal.Parse(tboxEndoConf.Text.ToString(CultureInfo.InvariantCulture)).ToString(CultureInfo.InvariantCulture) : Constants.NULL_STRING;
             Arguments[(int) ArgumentIndices.output_prefix] = tboxTitle.Text;
             Arguments[(int)ArgumentIndices.create_individual_plots] = cboxGraphPlot.Checked ? Constants.TRUE_STRING : Constants.FALSE_STRING;
+        }
+
+        private string LocalDecimalToInvariant(string text)
+        {
+            return Decimal.Parse(text, CultureInfo.CurrentCulture).ToString(CultureInfo.InvariantCulture);
+        }
+
+        private string InvariantDecimalToLocal(string text)
+        {
+            return Decimal.Parse(text, CultureInfo.InvariantCulture).ToString(CultureInfo.CurrentCulture);
         }
         
         private void btnDefault_Click(object sender, EventArgs e)
@@ -270,7 +286,7 @@ namespace QuaSAR
             if (e.KeyChar == '.')
             {
                 var source = (TextBox)sender;
-                if (source.Text.Contains("."))
+                if (source.Text.Contains(".")) // Not L10N
                     e.Handled = true;
             }
         }
@@ -307,19 +323,19 @@ namespace QuaSAR
             string[] lines = report.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             if (lines.Length < 2)
             {
-                MessageBox.Show("QuaSAR requires peak area values.  The document must have imported data.");
+                MessageBox.Show(QuaSARResources.QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___The_document_must_have_imported_data_);
                 return null;
             }
             var fields = lines[0].ParseCsvFields().ToList();
-            var areas = fields.Where(s => s.EndsWith("Area")).ToList();
+            var areas = fields.Where(s => s.EndsWith("Area")).ToList(); // Not L10N
             if (areas.Count == 0)
             {
-                MessageBox.Show("QuaSAR requires peak area values.  Input report format may be incorrect.");
+                MessageBox.Show(QuaSARResources.QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___Input_report_format_may_be_incorrect_);
                 return null;
             }
             if (areas.Count < 2)
             {
-                MessageBox.Show("QuaSAR requires peak areas for multiple label types.");
+                MessageBox.Show(QuaSARResources.QuaSARCollector_CollectArgs_QuaSAR_requires_peak_areas_for_multiple_label_types_);
                 return null;
             }
 

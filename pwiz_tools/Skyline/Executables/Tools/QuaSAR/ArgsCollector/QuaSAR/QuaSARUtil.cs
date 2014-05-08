@@ -130,14 +130,15 @@ namespace QuaSAR
         public const int MAX_LINEAR = 150;
         public const int MAX_LOG = 150;
         public const bool PERFORM_AUDIT = true;
-        public const double AUDIT_CV_THRESHOLD = 0.2;
+        public const decimal AUDIT_CV_THRESHOLD = 0.2m;
         public const bool PERFORM_ENDOCALC = false;
-        public const double ENDOGENOUS_CI = 0.95;
+        public const decimal ENDOGENOUS_CI = 0.95m;
     }
 
     public static class TextUtil
     {
         public const char SEPARATOR_CSV = ','; // Not L10N
+        public const char SEPARATOR_DSV = ';'; // Not L10N
 
         /// <summary>
         /// Splits a line of text in comma-separated value format into an array of fields.
