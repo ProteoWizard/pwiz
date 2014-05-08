@@ -95,7 +95,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
 		echo Running Code inspections
-		$(SKYLINE_PATH)\Executables\LocalizationHelper\Localizer.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH)
+		$(SKYLINE_PATH)\Executables\LocalizationHelper\Localizer.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
     }
 
     rule do_skyline_test ( targets + : sources * : properties * )
