@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
+        public const int FORMAT_VERSION_CACHE_7 = 7;
         public const int FORMAT_VERSION_CACHE_6 = 6;
         public const int FORMAT_VERSION_CACHE_5 = 5;
         public const int FORMAT_VERSION_CACHE_4 = 4;
@@ -45,8 +46,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int FORMAT_VERSION_CACHE
         {
-            // TODO: Switch to FORMAT_VERSION_5 after mProphet scores are integrated.
-            get { return FORMAT_VERSION_CACHE_6; }
+            get { return FORMAT_VERSION_CACHE_7; }
         }
 
         /// <summary>
@@ -154,7 +154,8 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsVersionCurrent(int version)
         {
-            return (version == FORMAT_VERSION_CACHE_6 ||
+            return (version == FORMAT_VERSION_CACHE_7 ||
+                    version == FORMAT_VERSION_CACHE_6 ||
                     version == FORMAT_VERSION_CACHE_5 ||
                     version == FORMAT_VERSION_CACHE_4 ||
                     version == FORMAT_VERSION_CACHE_3);
@@ -598,7 +599,10 @@ namespace pwiz.Skyline.Model.Results
                 long modifiedBinary = BitConverter.ToInt64(fileHeader, ((int)FileHeader.modified_lo) * 4);
                 int lenPath = GetInt32(fileHeader, (int)FileHeader.len_path);
                 ReadComplete(stream, filePathBuffer, lenPath);
-                string filePath = Encoding.Default.GetString(filePathBuffer, 0, lenPath);
+
+                string filePath = formatVersion > FORMAT_VERSION_CACHE_6
+                                      ? Encoding.UTF8.GetString(filePathBuffer, 0, lenPath)
+                                      : Encoding.Default.GetString(filePathBuffer, 0, lenPath);
                 long runstartBinary = (IsVersionCurrent(formatVersion)
                                            ? BitConverter.ToInt64(fileHeader, ((int)FileHeader.runstart_lo) * 4)
                                            : 0);
@@ -865,8 +869,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 long time = cachedFile.FileWriteTime.ToBinary();
                 outStream.Write(BitConverter.GetBytes(time), 0, sizeof(long));
-                int len = cachedFile.FilePath.Length;
-                Encoding.Default.GetBytes(cachedFile.FilePath, 0, len, pathBuffer, 0);
+                int len = Encoding.UTF8.GetByteCount(cachedFile.FilePath);
+                Encoding.UTF8.GetBytes(cachedFile.FilePath, 0, cachedFile.FilePath.Length, pathBuffer, 0);
                 outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
                 // Version 3 write modified time
                 var runStartTime = cachedFile.RunStartTime;
