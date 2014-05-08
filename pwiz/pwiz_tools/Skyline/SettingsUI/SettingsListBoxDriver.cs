@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -48,14 +49,15 @@ namespace pwiz.Skyline.SettingsUI
             List<TItem> listChosen = new List<TItem>();
             for (int i = 0; i < CheckedListBox.Items.Count; i++)
             {
+                TItem item;
                 bool checkItem = CheckedListBox.GetItemChecked(i);
 
                 // If event refers to this item, then use the check state in the event.
                 if (e != null && e.Index == i)
                     checkItem = (e.NewValue == CheckState.Checked);
 
-                if (checkItem)
-                    listChosen.Add(List[i]);
+                if (checkItem && List.TryGetValue(CheckedListBox.Items[i].ToString(), out item))
+                    listChosen.Add(item);
             }
             return listChosen.ToArray();                            
         }
@@ -80,7 +82,14 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (TItem item in List)
             {
-                string name = List.GetDisplayName(item);
+                string name = item.GetKey();
+
+                // "GetChosen(ItemCheckEventArgs)" assumes that the strings in the
+                // ListBox are the same as the Keys of the items.
+                // Assert that the List does not want to use a different string as the 
+                // display name for an item: that is not supported by this SettingsListBoxDriver.
+                Debug.Assert(name == List.GetDisplayName(item));
+
                 int i = ListBox.Items.Add(name);
 
                 if (CheckedListBox != null)
