@@ -15,6 +15,6 @@ if not exist %LocalAPPDATA%/JetBrains/commandline/InspectCode.exe (
 echo %LocalAPPDATA%\JetBrains\commandline\inspectcode.exe /profile=%1\pwiz_tools\Skyline\Skyline.sln.DotSettings /plugin=%1\pwiz_tools\Skyline\Executables\LocalizationHelper\Localizer\plugins\LocalizationHelper.dll /o="%2\InspectCodeOutput.xml" /properties=%3 %1\pwiz_tools\Skyline\Skyline.sln
 
 %LocalAPPDATA%\JetBrains\commandline\inspectcode.exe /profile=%1\pwiz_tools\Skyline\Skyline.sln.DotSettings /plugin=%1\pwiz_tools\Skyline\Executables\LocalizationHelper\Localizer\plugins\LocalizationHelper.dll /o="%2\InspectCodeOutput.xml" /properties=%3 %1\pwiz_tools\Skyline\Skyline.sln
-findstr NonLocalizedString %2\InspectCodeOutput.xml
-if ERRORLEVEL 1 exit /b 0
-exit /b 1
+%1\pwiz_tools\Skyline\Executables\LocalizationHelper\OutputParser.exe %2\InspectCodeOutput.xml
+if ERRORLEVEL 1 exit /b 1
+exit /b 0
