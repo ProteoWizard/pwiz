@@ -30,39 +30,39 @@ namespace QuaSAR
         public const int ARGUMENT_COUNT = 21;
     }
 
-    static class ArgumentDocumentation
+    class ArgumentDocumentation
     {
          // titles
 
-        public const string TITLE = "The title to be displayed on each calibration plot";
+        public static readonly string TITLE = QuaSARResources.ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot;
 
         // things to generate
 
-        public const string CVTABLE = "If checked then QuaSAR generates a CV (coefficient of variation) table";
-        public const string CALCURVES = "If checked then QuaSAR generates calibration curves";
-        public const string LODLOQTABLE = "If checked then QuaSAR generates a LOD/LOQ table";
-        public const string PEAKAREAPLOTS =
-            "If checked then QuaSAR generates peak area plots with Peak Area units on the y-axis and analyte concentration on the x-axis";
+        public static readonly string CVTABLE = QuaSARResources.ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table;
+        public static readonly string CALCURVES = QuaSARResources.ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curves;
+        public static readonly string LODLOQTABLE = QuaSARResources.ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_table;
+        public static readonly string PEAKAREAPLOTS =
+            QuaSARResources.ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_plots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis;
 
-        public const string LODLOQCOMP = "If checked then QuaSAR generates a table comparing multiple methods of calculating LOD/LOQ";
+        public static string LODLOQCOMP = QuaSARResources.ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_comparing_multiple_methods_of_calculating_LOD_LOQ;
 
         // settings
 
-        public const string ANALYTE = "";
-        public const string STANDARD = "";
-        public const string UNITS = "";
-        public const string NUMBER_TRANSITIONS = "Max number of transitions to be plotted on the calibration curves";
-        public const string PAR =
-            "If checked then use peak area ratio (PAR) for analysis (instead of concentration) with PAR on the y-axis and analyte concentration on the x-axis";
+        public static readonly string ANALYTE = string.Empty;
+        public static readonly string STANDARD = string.Empty;
+        public static readonly string UNITS = string.Empty;
+        public static readonly string NUMBER_TRANSITIONS = QuaSARResources.ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves;
+        public static readonly string PAR =
+            QuaSARResources.ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis;
 
-        public const string REVERSE_CURVES = "";
+        public static readonly string REVERSE_CURVES = string.Empty;
 
-        public const string MAXLINEAR = "The maximum value for linear scale in fmols/ul";
-        public const string MAXLOG = "The maximum value for log scale in fmols/ul";
-        public const string AUDIT = "If checked then QuaSAR will perform AuDIT for interference detection";
-        public const string AUDITCVTHRESHOLD = "For AuDIT the threshold for coefficient of variation below which transition is quantification-worthy";
-        public const string PERFORMENDOCALC = "If checked then QuaSAR will determine if the peptide has endogenous levels and will provide an estimate.";
-        public const string ENDOCONF = "Confidence level for endogenous determination (between 0 and 1, typically 0.95 or 0.99)";
+        public static readonly string MAXLINEAR = QuaSARResources.ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul;
+        public static readonly string MAXLOG = QuaSARResources.ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul;
+        public static readonly string AUDIT = QuaSARResources.ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interference_detection;
+        public static readonly string AUDITCVTHRESHOLD = QuaSARResources.ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of_variation_below_which_transition_is_quantification_worthy;
+        public static readonly string PERFORMENDOCALC = QuaSARResources.ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_the_peptide_has_endogenous_levels_and_will_provide_an_estimate_;
+        public static readonly string ENDOCONF = QuaSARResources.ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__between_0_and_1__typically_0_95_or_0_99_;
     }
 
     /*  The arguments generated for QuaSAR consists of the following, in the specified order:

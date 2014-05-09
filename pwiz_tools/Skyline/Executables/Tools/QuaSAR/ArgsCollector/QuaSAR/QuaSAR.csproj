@@ -62,11 +62,6 @@
       <DependentUpon>QuaSARUI.cs</DependentUpon>
     </Compile>
     <Compile Include="QuaSARUtil.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="QuaSARResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>QuaSARResources.Designer.cs</LastGenOutput>
@@ -74,10 +69,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="QuaSARUI.resx">
       <DependentUpon>QuaSARUI.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

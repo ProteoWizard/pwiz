@@ -61,6 +61,144 @@ namespace QuaSAR {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR will perform AuDIT for interference detection.
+        /// </summary>
+        internal static string ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interference_detection {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interfe" +
+                        "rence_detection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For AuDIT the threshold for coefficient of variation below which transition is quantification-worthy.
+        /// </summary>
+        internal static string ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of_variation_below_which_transition_is_quantification_worthy {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of" +
+                        "_variation_below_which_transition_is_quantification_worthy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR generates calibration curves.
+        /// </summary>
+        internal static string ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curves {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curv" +
+                        "es", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR generates a CV (coefficient of variation) table.
+        /// </summary>
+        internal static string ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_" +
+                        "of_variation__table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confidence level for endogenous determination (between 0 and 1, typically 0.95 or 0.99).
+        /// </summary>
+        internal static string ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__between_0_and_1__typically_0_95_or_0_99_ {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__bet" +
+                        "ween_0_and_1__typically_0_95_or_0_99_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR generates a table comparing multiple methods of calculating LOD/LOQ.
+        /// </summary>
+        internal static string ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_comparing_multiple_methods_of_calculating_LOD_LOQ {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_compari" +
+                        "ng_multiple_methods_of_calculating_LOD_LOQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR generates a LOD/LOQ table.
+        /// </summary>
+        internal static string ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_table {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_tabl" +
+                        "e", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum value for linear scale in fmols/ul.
+        /// </summary>
+        internal static string ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum value for log scale in fmols/ul.
+        /// </summary>
+        internal static string ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max number of transitions to be plotted on the calibration curves.
+        /// </summary>
+        internal static string ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_" +
+                        "on_the_calibration_curves", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then use peak area ratio (PAR) for analysis (instead of concentration) with PAR on the y-axis and analyte concentration on the x-axis.
+        /// </summary>
+        internal static string ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis_" +
+                        "_instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_t" +
+                        "he_x_axis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR generates peak area plots with Peak Area units on the y-axis and analyte concentration on the x-axis.
+        /// </summary>
+        internal static string ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_plots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_pl" +
+                        "ots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If checked then QuaSAR will determine if the peptide has endogenous levels and will provide an estimate..
+        /// </summary>
+        internal static string ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_the_peptide_has_endogenous_levels_and_will_provide_an_estimate_ {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_th" +
+                        "e_peptide_has_endogenous_levels_and_will_provide_an_estimate_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The title to be displayed on each calibration plot.
+        /// </summary>
+        internal static string ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot {
+            get {
+                return ResourceManager.GetString("ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to QuaSAR requires peak area values.  Input report format may be incorrect..
         /// </summary>
         internal static string QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___Input_report_format_may_be_incorrect_ {
