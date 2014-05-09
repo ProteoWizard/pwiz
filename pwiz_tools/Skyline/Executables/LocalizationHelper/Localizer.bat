@@ -4,7 +4,7 @@ if exist %LocalAPPDATA%/JetBrains/commandline/ (
     Echo "InspectCode command line package already installed."
  ) ELSE (
  	Echo "Installing ReSharper Command Line Tools."
-    %1\scripts\misc\wget http://www.yuvalboss.com/jb-commandline-8.2.0.2151.zip
+    %1\scripts\misc\wget http://skyline.gs.washington.edu/downloads/jb-commandline-8.2.0.2151.zip
     move %1\jb-commandline-8.2.0.2151.zip %LocalAPPDATA%/JetBrains/
 	%1\libraries\7za.exe x  %LocalAPPDATA%/JetBrains/jb-commandline-8.2.0.2151.zip -o%LocalAPPDATA%/JetBrains/commandline/
 )
