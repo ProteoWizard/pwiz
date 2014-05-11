@@ -999,7 +999,7 @@ namespace pwiz.Skyline
         private class ValueMissingException : UsageException
         {
             public ValueMissingException(string name)
-                : base(string.Format(Resources.ValueMissingException_ValueMissingException_,  name))
+                : base(string.Format(Resources.ValueMissingException_ValueMissingException_,  "--" + name)) // Not L10N
             {
             }
         }
@@ -1007,7 +1007,7 @@ namespace pwiz.Skyline
         private class ValueUnexpectedException : UsageException
         {
             public ValueUnexpectedException(string name)
-                : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified, name))
+                : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified, "--" + name)) // Not L10N
             {
             }
         }

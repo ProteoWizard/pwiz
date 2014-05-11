@@ -1486,27 +1486,25 @@ namespace pwiz.Skyline.Model
 
     public class MzMatchException : LineColNumberedIoException
     {
-        private static readonly string SUGGESTION = TextUtil.LineSeparate(string.Empty, Resources.MzMatchException_suggestion);
-
-        public MzMatchException(string message, long lineNum, int colNum) : base(message, SUGGESTION, lineNum, colNum) { }
+        public MzMatchException(string message, long lineNum, int colNum)
+            : base(message, TextUtil.LineSeparate(string.Empty, Resources.MzMatchException_suggestion), lineNum, colNum)
+        { }
     }
 
     public class LineColNumberedIoException : IOException
     {
-        private const string END_SENTENCE = ".";    // Not L10N (CONSIDER: Is this international?
-
         public LineColNumberedIoException(string message, long lineNum, int colIndex)
             : base(FormatMessage(message, lineNum, colIndex))
         {
-            PlainMessage = message + END_SENTENCE;
+            PlainMessage = message;
             LineNumber = lineNum;
             ColumnIndex = colIndex;
         }
 
         public LineColNumberedIoException(string message, string suggestion, long lineNum, int colIndex)
-            : base(TextUtil.LineSeparate(FormatMessage(message, lineNum, colIndex), suggestion)) // Not L10N
+            : base(TextUtil.LineSeparate(FormatMessage(message, lineNum, colIndex), suggestion))
         {
-            PlainMessage = TextUtil.LineSeparate(message + END_SENTENCE, suggestion); // Not L10N
+            PlainMessage = TextUtil.LineSeparate(message, suggestion);
             LineNumber = lineNum;
             ColumnIndex = colIndex;
         }
@@ -1514,7 +1512,7 @@ namespace pwiz.Skyline.Model
         public LineColNumberedIoException(string message, long lineNum, int colIndex, Exception inner)
             : base(FormatMessage(message, lineNum, colIndex), inner)
         {
-            PlainMessage = message + END_SENTENCE; // Not L10N
+            PlainMessage = message;
             LineNumber = lineNum;
             ColumnIndex = colIndex;
         }

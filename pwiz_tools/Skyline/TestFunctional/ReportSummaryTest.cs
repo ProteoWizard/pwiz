@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -185,7 +186,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => exportLiveReportDlg.ReportName = precursorReportName);
             string precursorReport = TestFilesDir.GetTestPath("PrecursorRTSummary.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(precursorReport, ','));
-            VerifyReportFile(precursorReport, docFinal.TransitionGroupCount, precursorColumnNames);
+            VerifyReportFile(precursorReport, docFinal.TransitionGroupCount, precursorColumnNames, true);
 
             exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
 
@@ -198,11 +199,12 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(transitionReport, ','));
             VerifyReportFile(transitionReport,
                 docFinal.TransitionCount * docFinal.Settings.MeasuredResults.Chromatograms.Count,
-                transitionColumnNames);
+                transitionColumnNames, true);
         }
 
 
-        private void DoCustomReportsTest() {
+        private void DoCustomReportsTest()
+        {
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
@@ -326,8 +328,9 @@ namespace pwiz.SkylineTestFunctional
                              transitionColumnNames);
         }
 
-        private static void VerifyReportFile(string fileName, int rowCount, IList<string> columnNames)
+        private static void VerifyReportFile(string fileName, int rowCount, IList<string> columnNames, bool invariantFormat = false)
         {
+            var formatProvider = invariantFormat ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
             string[] lines = File.ReadAllLines(fileName);
             Assert.AreEqual(rowCount, lines.Length - 1);
             string[] columnHeaderNames = lines[0].ParseCsvFields();
@@ -346,12 +349,12 @@ namespace pwiz.SkylineTestFunctional
                     else if (columnName.StartsWith("Cv"))
                     {
                         Assert.IsTrue(value.EndsWith("%"));
-                        Assert.IsTrue(double.Parse(value.Substring(0, value.Length - 1)) > 0);
+                        Assert.IsTrue(double.Parse(value.Substring(0, value.Length - 1), NumberStyles.Float, formatProvider) > 0);
                     }
                     else if (!columnName.Equals("ProteinName"))
                     {
                         double valueParsed;
-                        if (!double.TryParse(value, out valueParsed))
+                        if (!double.TryParse(value, NumberStyles.Float, formatProvider, out valueParsed))
                             Assert.Fail("Failed parsing {0} as a double", value);
                         Assert.IsTrue(valueParsed > 0);
                     }

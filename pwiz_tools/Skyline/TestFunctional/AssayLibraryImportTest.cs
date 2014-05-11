@@ -746,56 +746,60 @@ namespace pwiz.SkylineTestFunctional
             var docModMatcher = SkylineWindow.Document;
 
             // If the modifications are readable but don't match the precursor mass, throw an error
-            const string textModWrongMatch = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1005.9\t868.39\tPVIC[+57.0]ATQM[+16.0]LESMTYNPR\t1/YAL038W\n";
+            string textModWrongMatch = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n" + 1005.9 + "\t" + 868.39 + "\tPVIC[+57]ATQM[+16]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModWrongMatch));
             RunDlg<MessageDlg>(() => SkylineWindow.Paste(), messageDlg =>
             {
-                Assert.AreEqual(messageDlg.Message, TextUtil.LineSeparate(string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__,
-                                                                                       string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__,
-                                                                                       1005.9, 1013.9734, 8.0734), 1, 1),
-                                                                                       Resources.MzMatchException_suggestion));
+                string expectedMessage = TextUtil.LineSeparate(
+                    string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__,
+                                  string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__,
+                                                1005.9, 1013.9734, 8.0734), 1, 1),
+                                  Resources.MzMatchException_suggestion);
+                Assert.AreEqual(expectedMessage, messageDlg.Message);
                 messageDlg.OkDialog();
             });
             WaitForDocumentLoaded();
             Assert.AreSame(docModMatcher, SkylineWindow.Document);
 
             // When mods are unreadable, default to the approach of deducing modified state from precursor mz
-            const string textModUnreadMod = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVIC[CAM]ATQM[bad_mod_&^$]LESMTYNPR\t1/YAL038W\n";
+            const string textModifiedSeqExpected = "PVIC[+57.0]ATQM[+16.0]LESMTYNPR";
+            string textModPrefix = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n" + 1013.9 + "\t" + 868.39 + "\t";
+            string textModUnreadMod = textModPrefix + "PVIC[CAM]ATQM[bad_mod_&^$]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModUnreadMod));
             RunUI(() =>
             {
                 SkylineWindow.Paste();
                 WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
                 var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR");
+                Assert.AreEqual(peptideNode.ModifiedSequence, textModifiedSeqExpected);
             });
 
             // When there are no mods, default to the approach of deducing modified state from precursor mz
             LoadDocument(documentModMatcher);
-            const string textModNone = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVICATQMLESMTYNPR\t1/YAL038W\n";
+            string textModNone = textModPrefix + "PVICATQMLESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModNone));
             RunUI(() =>
             {
                 SkylineWindow.Paste();
                 WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
                 var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR");
+                Assert.AreEqual(peptideNode.ModifiedSequence, textModifiedSeqExpected);
             });
 
             // By specifying mods explicitly, we can distinguish between oxidations at two different sites
             LoadDocument(documentModMatcher);
-            const string textModFirst = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVIC[+57.0]ATQM[+16.0]LESMTYNPR\t1/YAL038W\n";
+            string textModFirst = textModPrefix + "PVIC[+57]ATQM[+16]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModFirst));
             RunUI(() =>
             {
                 SkylineWindow.Paste();
                 WaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
                 var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
-                Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR");
+                Assert.AreEqual(peptideNode.ModifiedSequence, textModifiedSeqExpected);
             });
 
             LoadDocument(documentModMatcher);
-            const string textModSecond = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n1013.9\t868.39\tPVIC[+57.0]ATQMLESM[+16.0]TYNPR\t1/YAL038W\n";
+            string textModSecond = textModPrefix + "PVIC[+" + string.Format("{0:F01}", 57) + "]ATQMLESM[+" + string.Format("{0:F01}", 16) + "]TYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModSecond));
             RunUI(() =>
             {

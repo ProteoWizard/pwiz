@@ -155,7 +155,9 @@ namespace pwiz.SkylineTestA
 
             // 2. No separator in first line
             ImportThrowsException(docResults, "No-valid-separators",
-                "The first line does not contain any of the possible separators {0}, tab or space");
+                TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV
+                    ? Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_comma__tab_or_space_
+                    : Resources.PeakBoundaryImporter_DetermineCorrectSeparator_The_first_line_does_not_contain_any_of_the_possible_separators_semicolon__tab_or_space_);
             
             // 3. Missing field names
             string csvSep = TextUtil.CsvSeparator.ToString(cultI);

@@ -20,6 +20,8 @@ for /d /r Topograph %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r SeeMS %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r MSConvertGUI %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 
+IF EXIST Shared\CommonTest rmdir /s/q Shared\CommonTest
+
 IF EXIST SeeMS\CleanSeeMS.bat call SeeMS\CleanSeeMS.bat
 IF EXIST Skyline\CleanSkyline.bat call Skyline\CleanSkyline.bat
 IF EXIST Topograph\CleanTopograph.bat call Topograph\CleanTopograph.bat

@@ -29,6 +29,7 @@ IF EXIST TestTutorial\obj rmdir /s /q TestTutorial\obj
 IF EXIST TestUtil\bin rmdir /s /q TestUtil\bin
 IF EXIST TestUtil\obj rmdir /s /q TestUtil\obj
 IF EXIST TestResults rmdir /s /q TestResults
+IF EXIST "SkylineTester Results" rmdir /s /q "SkylineTester Results"
 IF EXIST ..\Shared\ProteomeDb\bin rmdir /s /q ..\Shared\ProteomeDb\bin
 IF EXIST ..\Shared\ProteomeDb\obj rmdir /s /q ..\Shared\ProteomeDb\obj
 IF EXIST ..\Shared\ProteowizardWrapper\Interop.EDAL.SxS.manifest del /q ..\Shared\ProteowizardWrapper\Interop.EDAL.SxS.manifest
