@@ -1438,7 +1438,7 @@ namespace pwiz.Skyline.Model.Results
         private const string PREFIX_TOTAL = "SRM TIC "; // Not L10N
         private const string PREFIX_SINGLE = "SRM SIC "; // Not L10N
         private const string PREFIX_PRECURSOR = "SIM SIC "; // Not L10N
-        private const string SUFFIX_CE = "CE=";
+        private const string SUFFIX_CE = "CE="; // Not L10N
 
         private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) "); // Not L10N
 

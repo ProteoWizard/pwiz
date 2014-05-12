@@ -1483,12 +1483,6 @@
   <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
 <value>イオン 4</value>
   </data>
-  <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
-<value>フラグメントイオンのないペプチドでフラグメントを見つけようとする無効な試みです。</value>
-  </data>
-  <data name="MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array" xml:space="preserve">
-<value>質量配列でイオンタイプ{0}が見つかりません</value>
-  </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__" xml:space="preserve">
 <value>ライブラリイオン一致許容値{0}は {1} から {2} まででなければなりません。</value>
   </data>
@@ -2486,9 +2480,6 @@
   </data>
   <data name="EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database" xml:space="preserve">
 <value>iRTデータベースを開く</value>
-  </data>
-  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file" xml:space="preserve">
-<value>ファイル{0}がありません。[作成] ボタンをクリックして新しいデータベースを作成するか、[開く] ボタンをクリックして欠損しているファイルを検索します。</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator" xml:space="preserve">
 <value>iRTカルキュレータの名前を入力してください。</value>
@@ -5071,21 +5062,6 @@
   </data>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_" xml:space="preserve">
 <value>{1} 行目の値「{0}」は有効な終了時間ではありません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_" xml:space="preserve">
-<value>{1} 行目の{0}ファイルはこのドキュメントにインポートされていません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__" xml:space="preserve">
-<value>{1} 行目の修飾状態{0}は、ペプチド{2}のドキュメントにあるどの修飾状態にも一致しません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
-<value>{1} 行目にあるペプチド配列{0}は、ドキュメント内のどのペプチドにも一致しません。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
-<value>カンマ</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
-<value>セミコロン</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
 <value>OverlapDemultiplexer:InitializeFile が多重化ファイルに重複して不適切に形成されています</value>

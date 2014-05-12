@@ -2481,9 +2481,6 @@
   <data name="EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database" xml:space="preserve">
     <value>打开 iRT 数据库</value>
   </data>
-  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file" xml:space="preserve">
-    <value>文件{0}不存在。单击“创建”按钮来创建一个新数据库或单击“打开”按钮来发现丢失的文件。</value>
-  </data>
   <data name="EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator" xml:space="preserve">
     <value>请针对 iRT 计算器输入一个名称。</value>
   </data>
@@ -4538,9 +4535,6 @@
   <data name="SkylineWindow_ShowRenameProteinsDlg_Rename_proteins" xml:space="preserve">
     <value>重新命名蛋白质</value>
   </data>
-  <data name="PeptideGroupTreeNode_RenderTip_Original_name__0__" xml:space="preserve">
-    <value>初始名称：{0}</value>
-  </data>
   <data name="RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences" xml:space="preserve">
     <value>文档包含一个命名冲突。名称{0}当前被多个蛋白质序列使用。</value>
   </data>
@@ -5054,9 +5048,6 @@
   <data name="PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file" xml:space="preserve">
     <value>读取文件第一行失败</value>
   </data>
-  <data name="PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space" xml:space="preserve">
-    <value>第一行不包含任何可能的分隔符{0}、标记或空格</value>
-  </data>
   <data name="PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line" xml:space="preserve">
     <value>未能在第一行发现必要的标题{0}</value>
   </data>
@@ -5071,12 +5062,6 @@
   </data>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_" xml:space="preserve">
     <value>第{1}行上的值“{0}”不是有效的结束时间。</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
-    <value>逗号</value>
-  </data>
-  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
-    <value>分号</value>
   </data>
   <data name="OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file" xml:space="preserve">
     <value>重叠多路输出选择器：错误地初始化文件形成了重叠多路复用文件</value>
@@ -5251,9 +5236,6 @@
   </data>
   <data name="ToolMacros__listArguments_Tool_Directory" xml:space="preserve">
     <value>工具目录</value>
-  </data>
-  <data name="ToolMacros__listArguments_This_tool_is_not_an_istalled_toolso $(ToolDir) cannot be used as a macro. Please edit the tool." xml:space="preserve">
-    <value>本工具不是已安装的工具，因此 $(ToolDir) 无法用作宏。请编辑此工具。</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_" xml:space="preserve">
     <value>本工具不是已安装的工具，因此 $(ToolDir) 无法用作宏。请编辑此工具。</value>
