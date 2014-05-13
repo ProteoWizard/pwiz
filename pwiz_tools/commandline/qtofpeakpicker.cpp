@@ -41,6 +41,7 @@ struct PPParams
   boost::uint32_t integrationwidth_;
   bool area_;
   double threshold_;
+  boost::uint32_t numberofpeaks_;
 
   std::string filestem_;
   b_fs::path outdir_;
@@ -52,6 +53,7 @@ struct PPParams
     integrationwidth_(4) ,
     area_(false),
     threshold_(10.),
+    numberofpeaks_(0),
     filestem_(),
     outdir_(){
   }
@@ -98,9 +100,11 @@ inline int defineParameters(
          "instrument resolution.")
         ("area", b_po::value<bool>()->default_value(true),"default area, otherwise store intensity (0).")
         ("threshold", b_po::value<double>()->default_value(10.),"removes peaks less than threshold times smallest intensity in spectrum")
+	("numberofpeaks", b_po::value<uint32_t>()->default_value(0),"maximum number of peaks per spectrum (0 = no limit)")
         ;
 	b_po::options_description advancedprocessing("Advanced Processing Options:");
-    advancedprocessing.add_options()("widthint,i", b_po::value<int>()->default_value(2),"peak apex +- integration width")
+      advancedprocessing.add_options()
+	("widthint,i", b_po::value<int>()->default_value(2),"peak apex +- integration width")
 		 ("smoothwidth",b_po::value<double>()->default_value(1.),"smoothing width")
         ;
        
@@ -183,6 +187,7 @@ inline void analysisParameters(PPParams & ap,b_po::variables_map & vmgeneral){
   ap.integrationwidth_ = 2*vmgeneral["widthint"].as<int>();
   ap.area_ = vmgeneral["area"].as<bool>(); //do you want to store areas
   ap.threshold_ = vmgeneral["threshold"].as<double>();
+  ap.numberofpeaks_ = vmgeneral["numberofpeaks"].as<uint32_t>();
 }
 
 int main(int argc, char *argv[])
@@ -202,7 +207,8 @@ int main(int argc, char *argv[])
                                         aparam.smoothwidth_,
                                         aparam.integrationwidth_,
                                         aparam.threshold_,
-                                        aparam.area_
+                                        aparam.area_,
+					aparam.numberofpeaks_
                                         )
         );
   msdataptr_->run.spectrumListPtr = mp;

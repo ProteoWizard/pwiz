@@ -41,20 +41,22 @@ typedef boost::uint32_t uint32_t;
     uint32_t integrationWidth_;
     double intensityThreshold_;
     bool area_; // should area or intensities be determined
+	uint32_t maxnumberofpeaks_;
 
     QTOFPeakPickerFilter(
         const pwiz::msdata::SpectrumListPtr & inner, //!< spectrum list
         double resolution, //!< instrument resolution
         double smoothwidth = 2., //!< smoothwidth
-        uint32_t integrationWidth = 4, //! integration width
+        double integrationWidth = 4, //! integration width
         double intensityThreshold = 10.,
-        bool area = true //!< do you want to store are or intensity
+        bool area = true, //!< do you want to store are or intensity
+	uint32_t maxnumberofpeaks = 0 //!< max number of peaks returned by picker
         ):SpectrumListWrapper(inner),
       resolution_(resolution),
       smoothwidth_(smoothwidth),
       integrationWidth_(integrationWidth),
       intensityThreshold_(intensityThreshold),
-      area_(area)
+      area_(area),maxnumberofpeaks_(maxnumberofpeaks)
     {
       // add processing methods to the copy of the inner SpectrumList's data processing
       pwiz::msdata::ProcessingMethod method;
@@ -101,7 +103,8 @@ typedef boost::uint32_t uint32_t;
               smoothwidth_,
               integrationWidth_,
               intensityThreshold_,
-              area_
+              area_,
+	 maxnumberofpeaks_
               );
 
         pp( mzs.begin(), mzs.end(), intensities.begin());

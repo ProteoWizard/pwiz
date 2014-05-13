@@ -172,13 +172,15 @@ namespace ralab{
         PeakIntegrator integrator_;
         TReal intensitythreshold_;
         bool area_;
+        uint32_t maxnumbersofpeaks_;
 
         PeakPicker(TReal resolution, //!< instrument resolution
                    std::pair<TReal, TReal> & massrange, //!< mass range of spectrum
                    TReal width = 2., //!< smooth width
                    TReal intwidth = 2., //!< integration width used for area compuation
                    TReal intensitythreshold = 10., // intensity threshold
-                   bool area = true
+                   bool area = true,
+		   uint32_t maxnumberofpeaks = 0 //!< maximum of peaks returned by picker
             ): resolution_(resolution),smoothwith_(width),
           integrationWidth_(intwidth),sw_(),integrator_(integrationWidth_),
           intensitythreshold_(intensitythreshold),area_(area)
@@ -193,8 +195,7 @@ namespace ralab{
         void operator()(Tmass begmz, Tmass endmz, Tintensity begint )
         {
           typename std::iterator_traits<Tintensity>::value_type minint = *std::upper_bound(begint,begint+std::distance(begmz,endmz),0.1);
-          TReal threshold = static_cast<TReal>(minint) * intensitythreshold_;
-
+          
           //determine sampling with
           double a = sw_(begmz,endmz);
           //resmpale the spectrum
@@ -225,12 +226,35 @@ namespace ralab{
                                                     zerocross_.begin(),  zerocross_.begin()+nrzerocross ,
                                                     peakarea_.begin());
             }
+
+          TReal threshold = static_cast<TReal>(minint) * intensitythreshold_;
+
+          if(maxnumbersofpeaks_ > 0){
+            double threshmax = getNToppeaks();
+            if(threshmax > threshold)
+              threshold = threshmax;
+          }
+
+
           if(threshold > 0.01){
               filter(threshold);
             }
         }
 
-        //clean the masses using the threshold
+	/// get min instensity of peak to qualify for max-intensity;
+        TReal getNToppeaks(){
+          TReal intthres  = 0.;
+          if(maxnumbersofpeaks_ < peakarea_.size())
+          {
+            std::vector<TReal> tmparea( peakarea_.begin() , peakarea_.end() );
+            std::nth_element(tmparea.begin(),tmparea.end() - maxnumbersofpeaks_ , tmparea.end());
+            intthres = *(tmparea.end() - maxnumbersofpeaks_);
+          }
+          return intthres;
+        }
+
+
+        /// clean the masses using the threshold
         void filter(TReal threshold){
           typename std::vector<TReal>::iterator a = ralab::base::utils::copy_if(peakarea_.begin(),peakarea_.end(),peakmass_.begin(),
                                                                                 peakmass_.begin(),boost::bind(std::greater<TReal>(),_1,threshold));
