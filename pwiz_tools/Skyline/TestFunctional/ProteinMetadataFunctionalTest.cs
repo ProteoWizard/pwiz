@@ -218,6 +218,24 @@ namespace pwiz.SkylineTestFunctional
             nodeProt = doc.PeptideGroups.First(pg => Equals(uniRef100A5Di11, pg.Name));
             Assert.AreEqual(a5Di11, nodeProt.ProteinMetadata.Accession);
 
+            // See what happens when you paste in a gene name shared by a couple of proteins
+            const string dupeGene = "Apoa2";
+            const string ipi00197700 = "IPI:IPI00197700.1";
+            SetClipboardTextUI(dupeGene);
+            PasteDlg pasteProteinsDlgB = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteProteinsDlg);
+            RunUI(() =>
+            {
+                var selectedNode = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
+                SkylineWindow.SequenceTree.SelectedNode = selectedNode;
+                pasteProteinsDlgB.SelectedPath = SkylineWindow.SequenceTree.SelectedPath;
+                pasteProteinsDlgB.PasteProteins();
+            });
+            OkDialog(pasteProteinsDlgB, pasteProteinsDlgB.OkDialog);
+            WaitForCondition(() => SkylineWindow.Document.PeptideGroups.Any(pg => Equals(ipi00197700, pg.Name)));
+            doc = WaitForDocumentChange(doc);
+            nodeProt = doc.PeptideGroups.First(pg => Equals(ipi00197700, pg.Name));
+            Assert.AreEqual(dupeGene, nodeProt.ProteinMetadata.Gene);
+
             // Test for pasting in protein PasteDlg with sequence and metadata - metadata values are same as DocumentGrid column names
             const string pasteProteinName = "Protein";
             const string pasteProteinDescription = "Description";

@@ -416,15 +416,19 @@ namespace pwiz.ProteomeDatabase.API
         /// <param name="name">name or accession value</param>
         public Protein GetProteinByName(String name)
         {
-            using (ISession session = OpenSession())
+            if (!String.IsNullOrEmpty(name))
             {
-                var proteinName = GetProteinName(session, name, "Name", "Accession", "Gene", "PreferredName"); // Not L10N
-                if (proteinName == null)
+                using (ISession session = OpenSession())
                 {
-                    return null;
+                    var proteinName = GetProteinName(session, name);
+                    if (proteinName == null)
+                    {
+                        return null;
+                    }
+                    return new Protein(ProteomeDbPath, proteinName.Protein, proteinName);
                 }
-                return new Protein(ProteomeDbPath, proteinName.Protein, proteinName);
             }
+            return null;
         }
 
         /// <summary>
@@ -433,28 +437,39 @@ namespace pwiz.ProteomeDatabase.API
         /// <param name="name">name or accession value</param>
         public ProteinMetadata GetProteinMetadataByName(String name)
         {
-            using (ISession session = OpenSession())
+            if (!String.IsNullOrEmpty(name))
             {
-                var proteinName = GetProteinName(session, name, "Name", "Accession", "Gene", "PreferredName"); // Not L10N
-                if (proteinName == null)
+                using (ISession session = OpenSession())
                 {
-                    return null;
+                    var proteinName = GetProteinName(session, name);
+                    if (proteinName == null)
+                    {
+                        return null;
+                    }
+                    return proteinName.GetProteinMetadata();
                 }
-                return proteinName.GetProteinMetadata();
-            }
-        }
-
-        private static DbProteinName GetProteinName(ISession session, string searchName, params string[] names)
-        {
-            foreach (var name in names)
-            {
-                ICriteria criteria = session.CreateCriteria(typeof(DbProteinName))
-                    .Add(Restrictions.Eq(name, searchName));
-                DbProteinName proteinName = (DbProteinName)criteria.UniqueResult();
-                if (proteinName != null)
-                    return proteinName;
             }
             return null;
+        }
+
+        private static DbProteinName GetProteinName(ISession session, string searchName)
+        {
+            ICriteria criteriaName = session.CreateCriteria(typeof(DbProteinName))
+                .Add(Restrictions.Eq("Name", searchName)); // Not L10N
+            DbProteinName proteinName = (DbProteinName)criteriaName.UniqueResult();
+            if (proteinName != null)
+                return proteinName;
+            string[] hints = {"Accession", "Gene", "PreferredName"}; // Not L10N
+            var criterion = Restrictions.Disjunction();
+            foreach (var name in hints)
+            {
+                criterion.Add(Restrictions.Eq(name, searchName));
+            }
+            List<DbProteinName> proteinNames = new List<DbProteinName>();
+            ICriteria criteria = session.CreateCriteria(typeof(DbProteinName))
+                .Add(criterion).SetMaxResults(1);
+            criteria.List(proteinNames);
+            return proteinNames.Any() ? proteinNames[0] : null;
         }
 
         public Digestion Digest(IProtease protease, ProgressMonitor progressMonitor)
