@@ -543,7 +543,7 @@ namespace pwiz.Skyline.Model.Results
             return filterPairs;
         }
 
-        private void CalcDiaIsolationValues(ref double isolationTargetMz,
+        public void CalcDiaIsolationValues(ref double isolationTargetMz,
                                             ref double? isolationWidth)
         {
             double isolationWidthValue;

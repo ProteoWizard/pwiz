@@ -41,17 +41,24 @@ namespace pwiz.SkylineTestA.Results
         public void TestDemux()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("MsxTest.sky");
+            string docPathMsx = testFilesDir.GetTestPath("MsxTest.sky");
             string dataPathMsx = testFilesDir.GetTestPath("MsxTest.mzML");
-            string dataPathOverlap = testFilesDir.GetTestPath("OverlapTest.mzML");
-            string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
-            FileEx.SafeDelete(cachePath);
-            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
-            Assert.IsTrue(fullScanInitial.IsEnabledMsMs);
+            string cachePathMsx = ChromatogramCache.FinalPathForName(docPathMsx, null);
+            FileEx.SafeDelete(cachePathMsx);
+            SrmDocument docMsx = ResultsUtil.DeserializeDocument(docPathMsx);
+            var fullScanInitialMsx = docMsx.Settings.TransitionSettings.FullScan;
+            Assert.IsTrue(fullScanInitialMsx.IsEnabledMsMs);
             
-            TestMsx(doc,dataPathMsx);
-            TestOverlap(doc,dataPathOverlap);
+            TestMsx(docMsx, dataPathMsx);
+
+            string docPathOverlap = testFilesDir.GetTestPath("OverlapTest.sky");
+            string dataPathOverlap = testFilesDir.GetTestPath("OverlapTest.mzML");
+            string cachePathOverlap = ChromatogramCache.FinalPathForName(docPathOverlap, null);
+            FileEx.SafeDelete(cachePathOverlap);
+            SrmDocument docOverlap = ResultsUtil.DeserializeDocument(docPathOverlap);
+            var fullScanInitialOverlap = docMsx.Settings.TransitionSettings.FullScan;
+            Assert.IsTrue(fullScanInitialOverlap.IsEnabledMsMs);
+            TestOverlap(docOverlap,dataPathOverlap);
         }
 
         public void TestOverlap(SrmDocument doc, string dataPath)

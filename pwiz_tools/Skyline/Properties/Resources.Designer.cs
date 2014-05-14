@@ -154,6 +154,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scan in imported file appears to be missing an isolation window center..
+        /// </summary>
+        public static string AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_ {
+            get {
+                return ResourceManager.GetString("AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolat" +
+                        "ion_window_center_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The isolation width for a scan in the imported file could not be determined..
+        /// </summary>
+        public static string AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_ {
+            get {
+                return ResourceManager.GetString("AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_c" +
+                        "ould_not_be_determined_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tried to get a window mask for {0}, a spectrum with previously unobserved isolation windows. Demultiplexing requires a repeating cycle of isolation windows..
         /// </summary>
         public static string AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_ {

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
     {
         int NumWindows { get; }
         int NumDeconvRegions { get; }
-        int Add(IEnumerable<MsPrecursor> precursors);
+        int Add(IEnumerable<MsPrecursor> precursors, SpectrumFilter filter);
         bool TryGetWindowIndex(double isolationWindow, out int index);
         IsoWin GetIsolationWindow(int isoIndex);
         MsPrecursor GetPrecursor(int isoIndex);

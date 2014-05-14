@@ -7018,4 +7018,10 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
     <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
     <value>Two transitions of the same precursor, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list.</value>
   </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
+    <value>Scan in imported file appears to be missing an isolation window center.</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_" xml:space="preserve">
+    <value>The isolation width for a scan in the imported file could not be determined.</value>
+  </data>
 </root>

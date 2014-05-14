@@ -95,7 +95,6 @@ namespace pwiz.Skyline.Model.Results
                     _msMsSpectra.Add(i);
                 }
             }
-            double? nIsolationWindowWidth = null;
             int? nIsoWindowsPerScan = null;
 
             int previousNumWindows = _isoMapper.NumWindows;
@@ -114,33 +113,13 @@ namespace pwiz.Skyline.Model.Results
                 }
                 var scanNumber = _msMsSpectra[i];
                 MsPrecursor[] precs = _file.GetPrecursors(scanNumber);
-                // If the precursor values are null, fill in with the specified window sizes
-                //foreach (MsPrecursor prec in precs)
-                //{
-                //    if (prec.IsolationWidth == null ||
-                //        prec.IsolationWindowLower == null ||
-                //        prec.IsolationWindowUpper == null ||
-                //        prec.IsolationWindowTargetMz == null)
-                //    {
-                //        prec.IsolationWidth = _filter
-                //    }
-                //}
-                // Add these precursors to the isolation window mapper
-                _isoMapper.Add(precs);
-                if (!nIsolationWindowWidth.HasValue)
-                {
-                    foreach (var prec in precs.Where(p => p.IsolationWidth.HasValue))
-                    {
-                        nIsolationWindowWidth = prec.IsolationWidth;
-                        break;
-                    }
-                }
+                _isoMapper.Add(precs, _filter);
                 if (!nIsoWindowsPerScan.HasValue)
                 {
                     nIsoWindowsPerScan = precs.Length;
                 }
             }
-            if (!nIsoWindowsPerScan.HasValue || !nIsolationWindowWidth.HasValue)
+            if (!nIsoWindowsPerScan.HasValue)
                 return false;
             IsoWindowsPerScan = nIsoWindowsPerScan.Value;
             NumIsoWindows = _isoMapper.NumWindows;
@@ -640,35 +619,32 @@ namespace pwiz.Skyline.Model.Results
             _deconvRegionsUpdated = false;
         }
 
-        public int Add(IEnumerable<MsPrecursor> precursors)
+        public int Add(IEnumerable<MsPrecursor> precursors, SpectrumFilter filter)
         {
             int countAdded = 0;
             foreach (var precursor in precursors)
             {
-                double? isolationCenter = precursor.IsolationMz;
-                double? isolationLower = precursor.IsolationWindowLower;
-                double? isolationUpper = precursor.IsolationWindowUpper;
+                if (!precursor.IsolationMz.HasValue)
+                {
+                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_);
+                }
 
-                if (!isolationCenter.HasValue)
+                // use the Skyline document isolation scheme to determine the boundaries of the isolation window
+                double isolationCenter = precursor.IsolationMz.Value;
+                double? isolationWidth = null;
+                filter.CalcDiaIsolationValues(ref isolationCenter, ref isolationWidth);
+                if (!isolationWidth.HasValue)
                 {
-                    throw new ArgumentException("Scan in imported file appears to be missing an isolation window center."); // Not L10N
+                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_);
                 }
-                if (!isolationLower.HasValue)
-                {
-                    throw new ArgumentException("Scan in imported file appears to be missing an isolation window lower boundary."); // Not L10N
-                }
-                if (!isolationUpper.HasValue)
-                {
-                    throw new ArgumentException("Scan in imported file appears to be missing an isolation window upper boundary."); // Not L10N
-                }
-                   
-                long hash = IsoWindowHasher.Hash(isolationCenter.Value);
+
+                double isoMzLeft = isolationCenter - isolationWidth.Value / 2.0;
+                double isoMzRight = isoMzLeft + isolationWidth.Value;
+
+                long hash = IsoWindowHasher.Hash(isolationCenter);
                 if (_isolationWindowD.ContainsKey(hash))
                     continue;
-                var isoMz = isolationCenter.Value;
-                var isoMzLeft = isoMz - isolationLower.Value;
-                var isoMzRight = isoMz + isolationUpper.Value;
-                _isolationWindows.Add(new IsoWin(isoMzLeft, isoMzRight, isoMz));
+                _isolationWindows.Add(new IsoWin(isoMzLeft, isoMzRight));
                 _isolationWindowD[hash] = _isolationWindows.Count - 1;
                 _precursors.Add(precursor);
                 countAdded++;
@@ -819,17 +795,15 @@ namespace pwiz.Skyline.Model.Results
     {
         public long Start { get; private set; }
         public long Stop { get; private set; }
-        public double Center { get; private set; }
         public List<DeconvolutionRegion> DeconvRegions { get; private set; }
 
         public double StartMz { get { return IsoWindowHasher.UnHash(Start); } }
         public double StopMz { get { return IsoWindowHasher.UnHash(Stop); } }
 
-        public IsoWin(double start, double end, double center)
+        public IsoWin(double start, double end)
         {
             Start = IsoWindowHasher.Hash(start);
             Stop = IsoWindowHasher.Hash(end);
-            Center = center;
             DeconvRegions = new List<DeconvolutionRegion>();
         }
 
