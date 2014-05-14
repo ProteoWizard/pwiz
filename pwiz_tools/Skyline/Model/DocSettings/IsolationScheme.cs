@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsInRangeMz(double mz)
         {
-            return FromResults || PrespecifiedIsolationWindows.Select(window => window.Contains(mz)).Any();
+            return FromResults || PrespecifiedIsolationWindows.Any(window => window.Contains(mz));
         }
 
         /// <summary>

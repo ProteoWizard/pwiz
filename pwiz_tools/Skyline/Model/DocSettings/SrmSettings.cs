@@ -1667,7 +1667,8 @@ namespace pwiz.Skyline.Model.DocSettings
             bool diffInstrumentRange = newTran.Instrument.MinMz != oldTran.Instrument.MinMz ||
                                        newTran.Instrument.MaxMz != oldTran.Instrument.MaxMz ||
                                        !Equals(isolationRangesNew, isolationRangesOld);
-            DiffTransitionGroups = precursorsDiff || diffHeavyMods || diffInstrumentRange;                
+            bool diffIsolationScheme = !Equals(newTran.FullScan.IsolationScheme, oldTran.FullScan.IsolationScheme);
+            DiffTransitionGroups = precursorsDiff || diffHeavyMods || diffInstrumentRange || diffIsolationScheme;                
 
             // If libraries changed, then transition groups should change whenever
             // peptides change also.
