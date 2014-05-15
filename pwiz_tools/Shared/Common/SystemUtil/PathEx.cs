@@ -47,7 +47,15 @@ namespace pwiz.Common.SystemUtil
             string rootPath = string.Empty;
             foreach (string path in paths)
             {
-                string dirName = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
+                string dirName = Path.GetDirectoryName(path);
+                if (string.IsNullOrEmpty(dirName))
+                {
+                    return string.Empty;
+                }
+                if (dirName[dirName.Length - 1] != Path.DirectorySeparatorChar)
+                {
+                    dirName += Path.DirectorySeparatorChar;
+                }
                 rootPath = string.IsNullOrEmpty(rootPath)
                     ? dirName
                     : GetCommonRoot(rootPath, dirName);
