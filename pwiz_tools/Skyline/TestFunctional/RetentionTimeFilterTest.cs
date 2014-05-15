@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;

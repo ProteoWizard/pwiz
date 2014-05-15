@@ -78,7 +78,10 @@ namespace pwiz.Skyline.Util
                 _undisposedForms.Add(this);
 
             if (ShowFormNames)
-                Text += "  (" + GetType().Name + ")"; // Not L10N
+            {
+                string textAppend = "  (" + GetType().Name + ")"; // Not L10N
+                Text += textAppend;
+            }
         }
 
         protected override bool ShowWithoutActivation

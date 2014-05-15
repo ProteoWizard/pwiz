@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {

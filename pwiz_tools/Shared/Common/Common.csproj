@@ -289,6 +289,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NavBar.zh-CHS.resx">
       <DependentUpon>NavBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>
