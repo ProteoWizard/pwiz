@@ -126,8 +126,8 @@
             // comboOptimizing
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            resources.ApplyResources(this.comboOptimizing, "comboOptimizing");
             this.comboOptimizing.FormattingEnabled = true;
+            resources.ApplyResources(this.comboOptimizing, "comboOptimizing");
             this.comboOptimizing.Name = "comboOptimizing";
             // 
             // labelOptimizing

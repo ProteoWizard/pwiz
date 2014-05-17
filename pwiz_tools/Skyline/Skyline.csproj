@@ -1544,12 +1544,6 @@
     <EmbeddedResource Include="FileUI\ExportReportDlg.zh-CHS.resx">
       <DependentUpon>ExportReportDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ImportResultsDlg.ja.resx">
-      <DependentUpon>ImportResultsDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\ImportResultsDlg.zh-CHS.resx">
-      <DependentUpon>ImportResultsDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsNameDlg.ja.resx">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </EmbeddedResource>

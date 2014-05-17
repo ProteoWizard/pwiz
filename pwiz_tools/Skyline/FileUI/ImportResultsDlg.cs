@@ -68,6 +68,7 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.Items.Add(ExportOptimize.CE);
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
+            comboOptimizing.SelectedIndex = 0;
 
             cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
         }
@@ -470,7 +471,11 @@ namespace pwiz.Skyline.FileUI
         private void radioCreateNew_CheckedChanged(object sender, EventArgs e)
         {
             if (radioCreateNew.Checked)
+            {
                 UpdateRadioSelection();
+                textName.Focus();
+                textName.SelectAll();
+            }
         }
 
         private void radioAddExisting_CheckedChanged(object sender, EventArgs e)
@@ -499,44 +504,59 @@ namespace pwiz.Skyline.FileUI
                 textName.Text = multiple ? string.Empty : DefaultNewName;
             }
 
-            if (radioCreateMultipleMulti.Checked)
+            // If comboOptimizing is not supposed to be below radioCreateMulti and it is
+            if (!radioCreateMultiple.Checked && !radioAddExisting.Checked  && comboOptimizing.Top < radioCreateMultipleMulti.Top)
             {
-                if (comboOptimizing.Top > radioCreateNew.Top)
-                {
-                    int shiftHeight = radioAddExisting.Top - labelOptimizing.Top;
-                    textName.Top += shiftHeight;
-                    labelNameNew.Top += shiftHeight;
-                    radioCreateNew.Top += shiftHeight;
-                    shiftHeight = radioCreateNew.Top - labelOptimizing.Top - shiftHeight;
-                    labelOptimizing.Top += shiftHeight;
-                    comboOptimizing.Top += shiftHeight;
-                    comboOptimizing.Enabled = labelOptimizing.Enabled = true;
-                    comboOptimizing.SelectedIndex = 0;
-                }
+                // Move it to below radioCreateMultipleMulti
+                radioCreateMultipleMulti.Top = radioCreateMultiple.Top + (radioCreateNew.Top - radioCreateMultipleMulti.Top);
+                int shiftHeight = radioCreateMultipleMulti.Top - radioCreateMultiple.Top;
+                labelOptimizing.Top += shiftHeight;
+                comboOptimizing.Top += shiftHeight;
+            }
+            // If comboOptimizing is not supposed to be below radioCreateNew and it is
+            if (!radioCreateNew.Checked && comboOptimizing.Top > radioCreateNew.Top)
+            {
+                // Move it to below radioCreateMultipleMulti
+                int shiftHeight = radioAddExisting.Top - labelOptimizing.Top;
+                textName.Top += shiftHeight;
+                labelNameNew.Top += shiftHeight;
+                radioCreateNew.Top += shiftHeight;
+                shiftHeight = radioCreateNew.Top - labelOptimizing.Top - shiftHeight;
+                labelOptimizing.Top += shiftHeight;
+                comboOptimizing.Top += shiftHeight;
+            }
+            // If comboOptimizing is supposed to be below radioCreateNew, but it is not
+            if (radioCreateNew.Checked && comboOptimizing.Top < radioCreateNew.Top)
+            {
+                // Move it to below radioCreateNew, starting from being below radioCreateMultipleMulti
+                int shiftHeight = radioCreateNew.Top - labelOptimizing.Top;
+                radioCreateNew.Top -= shiftHeight;
+                labelNameNew.Top -= shiftHeight;
+                textName.Top -= shiftHeight;
+                shiftHeight = radioAddExisting.Top - labelOptimizing.Top - shiftHeight;
+                labelOptimizing.Top += shiftHeight;
+                comboOptimizing.Top += shiftHeight;
+            }
+            // If comboOptimizing is supposed to be below radioCreateMultiple, but it is not
+            if ((radioCreateMultiple.Checked || radioAddExisting.Checked) &&
+                comboOptimizing.Top > radioCreateMultipleMulti.Top)
+            {
+                // Move it to below radioCreateMultiple, starting from being below radioCreateMultipleMulti
+                int shiftHeight = radioCreateMultipleMulti.Top - labelOptimizing.Top;
+                labelOptimizing.Top += shiftHeight;
+                comboOptimizing.Top += shiftHeight;
+                radioCreateMultipleMulti.Top = radioCreateNew.Top - (radioCreateMultipleMulti.Top - radioCreateMultiple.Top);
+            }
+
+            if (radioAddExisting.Checked)
+            {
+                comboOptimizing.Enabled = labelOptimizing.Enabled = false;
+                comboOptimizing.SelectedIndex = -1;
             }
             else
             {
-                // Make sure optimizing combo is below radioCreateNew
-                if (comboOptimizing.Top < radioCreateNew.Top)
-                {
-                    int shiftHeight = radioCreateNew.Top - labelOptimizing.Top;
-                    radioCreateNew.Top -= shiftHeight;
-                    labelNameNew.Top -= shiftHeight;
-                    textName.Top -= shiftHeight;
-                    shiftHeight = radioAddExisting.Top - labelOptimizing.Top - shiftHeight;
-                    labelOptimizing.Top += shiftHeight;
-                    comboOptimizing.Top += shiftHeight;
-                }
-                if (radioCreateNew.Checked)
-                {
-                    comboOptimizing.Enabled = labelOptimizing.Enabled = true;
-                    comboOptimizing.SelectedIndex = 0;
-                }
-                else
-                {
-                    comboOptimizing.Enabled = labelOptimizing.Enabled = false;
-                    comboOptimizing.SelectedIndex = -1;
-                }
+                comboOptimizing.Enabled = labelOptimizing.Enabled = true;
+                comboOptimizing.SelectedIndex = 0;
             }
         }
 
