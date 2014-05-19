@@ -297,6 +297,7 @@ namespace BumberDash.Forms
             this.confiToolStripMenuItem.Name = "confiToolStripMenuItem";
             this.confiToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.confiToolStripMenuItem.Text = "Instrument Template Editor";
+            this.confiToolStripMenuItem.Visible = false;
             this.confiToolStripMenuItem.Click += new System.EventHandler(this.confiToolStripMenuItem_Click);
             // 
             // toolStripSeparator3

@@ -340,6 +340,10 @@ namespace BumberDash.Forms
             PepFragmentMzToleranceUnitsList.Text = "mz";
             PepModTypeList.Text = "Static";
             PepOutputFormatBox.Text = "pepXML";
+            CometInstrumentBox.Text = "High Resolution";
+            CometActivationBox.Text = "CID";
+            MSGFInstrumentBox.Text = "High Resolution LTQ";
+            MSGFFragmentMethodBox.Text = "CID";
 
             MyriAvgPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
             MyriMonoPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
@@ -361,6 +365,7 @@ namespace BumberDash.Forms
         {
             var unclamedControlList = new List<Control>();
             var unclamedLabelList = new List<Control>();
+            var uniModSuggestions = new List<string>();
             string prefix;
             string program;
 
@@ -385,8 +390,13 @@ namespace BumberDash.Forms
                 program = "Pepitome";
             }
 
+            foreach (var item in Util.UnimodLookup.FullUnimodList)
+                uniModSuggestions.Add(item.MonoMass + "     " + item.Name);
+
             foreach (Control item in container.Controls)
             {
+                if (!item.Name.StartsWith(prefix))
+                    continue;
                 var isDual = GetDualDependenceValue(item);
 
                 //If control is container call functiontion recursively
@@ -445,6 +455,22 @@ namespace BumberDash.Forms
                     item.Click += OpenHelpFile;
                     item.MouseEnter += Info_MouseEnter;
                     item.MouseLeave += Info_MouseLeave;
+                }
+                else if (item.Name.EndsWith("ModMassText"))
+                {
+                    var box = (TextBox) item;
+                    var source = new AutoCompleteStringCollection();
+                    source.AddRange(uniModSuggestions.ToArray());
+
+                    box.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    box.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    box.AutoCompleteCustomSource = source;
+
+                    box.TextChanged += (x, y) =>
+                        {
+                            if (box.Text.Contains("     "))
+                                box.Text = box.Text.Remove(box.Text.IndexOf(' '));
+                        };
                 }
             }
         }
@@ -1219,7 +1245,7 @@ namespace BumberDash.Forms
             switch (ProgramModeBox.Text)
             {
                 case "MyriMatch":
-                    Size = new Size(540, 620);
+                    Size = new Size(540, 645);
                     MyriGenPanel.Visible = true;
                     MyriAdvPanel.Visible = true;
                     break;
@@ -1689,6 +1715,22 @@ namespace BumberDash.Forms
 
                 if (result != DialogResult.Cancel)
                 {
+                    if (MyriInstrumentList.Text.Contains("Ion"))
+                    {
+                        CometInstrumentBox.Text = "Ion Trap";
+                        MSGFInstrumentBox.Text = "Low Resolution LTQ";
+                    }
+                    else if (MyriInstrumentList.Text.Contains("TOF"))
+                    {
+                        CometInstrumentBox.Text = "High Resolution";
+                        MSGFInstrumentBox.Text = "TOF";
+                    }
+                    else
+                    {
+                        CometInstrumentBox.Text = "High Resolution";
+                        MSGFInstrumentBox.Text = "High Resolution LTQ";
+                    }
+
                     IList<ConfigFile> currentlist;
                     if (ProgramModeBox.Text == "MyriMatch")
                         currentlist = _myriTemplateList;
@@ -1715,7 +1757,7 @@ namespace BumberDash.Forms
 
         private void SaveTemplateButton_Click(object sender, EventArgs e)
         {
-            var parameterType = lib.Util.parameterTypes;
+            var parameterType = Util.parameterTypes;
             string prefix;
 
             var newTemplate = false;
@@ -1957,7 +1999,7 @@ namespace BumberDash.Forms
 
         private void importInstrumentTemplatesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var folderDialog = new OpenFileDialog { Filter = "Database Files(.db)|*.db|All files|*.*" };
+            var folderDialog = new OpenFileDialog { Filter = "Myrimatch Files(.db)|*.db|All files|*.*" };
             string importFile;
             if (folderDialog.ShowDialog() == DialogResult.OK)
                 importFile = folderDialog.FileName;

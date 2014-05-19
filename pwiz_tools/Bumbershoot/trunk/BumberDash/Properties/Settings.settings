@@ -20,5 +20,14 @@
     <Setting Name="DatabaseFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="CometVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">2014.01 rev. 0</Value>
+    </Setting>
+    <Setting Name="MSGFVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">v9979</Value>
+    </Setting>
+    <Setting Name="LibraryFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

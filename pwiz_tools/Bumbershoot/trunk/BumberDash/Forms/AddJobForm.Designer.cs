@@ -73,30 +73,6 @@ namespace BumberDash.Forms
             this.label5 = new System.Windows.Forms.Label();
             this.InitialDirectoryButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
-            this.PepPanel = new System.Windows.Forms.Panel();
-            this.SpecLibBox = new System.Windows.Forms.ComboBox();
-            this.SpecLibBrowse = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
-            this.PepConfigGB = new System.Windows.Forms.GroupBox();
-            this.PepConfigBox = new System.Windows.Forms.ComboBox();
-            this.PepEditButton = new System.Windows.Forms.Button();
-            this.PepConfigBrowse = new System.Windows.Forms.Button();
-            this.label8 = new System.Windows.Forms.Label();
-            this.ConfigGB = new System.Windows.Forms.GroupBox();
-            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
-            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
-            this.MyriEditButton = new System.Windows.Forms.Button();
-            this.MyriConfigButton = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
-            this.ConfigTagPanel = new System.Windows.Forms.Panel();
-            this.DTConfigBox = new System.Windows.Forms.ComboBox();
-            this.TRConfigBox = new System.Windows.Forms.ComboBox();
-            this.TREditButton = new System.Windows.Forms.Button();
-            this.TRConfigButton = new System.Windows.Forms.Button();
-            this.label12 = new System.Windows.Forms.Label();
-            this.DTEditButton = new System.Windows.Forms.Button();
-            this.DTConfigButton = new System.Windows.Forms.Button();
-            this.label11 = new System.Windows.Forms.Label();
             this.FileMaskPanel = new System.Windows.Forms.Panel();
             this.MaskMessageLabel = new System.Windows.Forms.Label();
             this.FileMaskBox = new System.Windows.Forms.ComboBox();
@@ -109,6 +85,40 @@ namespace BumberDash.Forms
             this.FileNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AddDataFilesButton = new System.Windows.Forms.Button();
             this.RemoveDataFilesButton = new System.Windows.Forms.Button();
+            this.ConfigGB = new System.Windows.Forms.GroupBox();
+            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.MyriTab = new System.Windows.Forms.TabPage();
+            this.label13 = new System.Windows.Forms.Label();
+            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
+            this.MyriConfigButton = new System.Windows.Forms.Button();
+            this.MyriEditButton = new System.Windows.Forms.Button();
+            this.CometTab = new System.Windows.Forms.TabPage();
+            this.label14 = new System.Windows.Forms.Label();
+            this.CometConfigBox = new System.Windows.Forms.ComboBox();
+            this.CometConfigBrowse = new System.Windows.Forms.Button();
+            this.MSGFTab = new System.Windows.Forms.TabPage();
+            this.label15 = new System.Windows.Forms.Label();
+            this.MSGFConfigBox = new System.Windows.Forms.ComboBox();
+            this.MSGFConfigBrowse = new System.Windows.Forms.Button();
+            this.ConfigTagPanel = new System.Windows.Forms.Panel();
+            this.DTConfigBox = new System.Windows.Forms.ComboBox();
+            this.TRConfigBox = new System.Windows.Forms.ComboBox();
+            this.TREditButton = new System.Windows.Forms.Button();
+            this.TRConfigButton = new System.Windows.Forms.Button();
+            this.label12 = new System.Windows.Forms.Label();
+            this.DTEditButton = new System.Windows.Forms.Button();
+            this.DTConfigButton = new System.Windows.Forms.Button();
+            this.label11 = new System.Windows.Forms.Label();
+            this.PepPanel = new System.Windows.Forms.Panel();
+            this.SpecLibBox = new System.Windows.Forms.ComboBox();
+            this.SpecLibBrowse = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
+            this.PepConfigGB = new System.Windows.Forms.GroupBox();
+            this.PepConfigBox = new System.Windows.Forms.ComboBox();
+            this.PepEditButton = new System.Windows.Forms.Button();
+            this.PepConfigBrowse = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
             this.TagReconInfoBox = new System.Windows.Forms.TextBox();
             this.TagReconInfoLabel = new System.Windows.Forms.Label();
             this.DirecTagInfoLabel = new System.Windows.Forms.Label();
@@ -124,14 +134,18 @@ namespace BumberDash.Forms
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FolderPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
-            this.PepPanel.SuspendLayout();
-            this.PepConfigGB.SuspendLayout();
-            this.ConfigGB.SuspendLayout();
-            this.ConfigDatabasePanel.SuspendLayout();
-            this.ConfigTagPanel.SuspendLayout();
             this.FileMaskPanel.SuspendLayout();
             this.FileListPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).BeginInit();
+            this.ConfigGB.SuspendLayout();
+            this.ConfigDatabasePanel.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.MyriTab.SuspendLayout();
+            this.CometTab.SuspendLayout();
+            this.MSGFTab.SuspendLayout();
+            this.ConfigTagPanel.SuspendLayout();
+            this.PepPanel.SuspendLayout();
+            this.PepConfigGB.SuspendLayout();
             this.TagConfigInfoPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -164,10 +178,10 @@ namespace BumberDash.Forms
             this.FolderPanel.Controls.Add(this.label5);
             this.FolderPanel.Controls.Add(this.InitialDirectoryButton);
             this.FolderPanel.Controls.Add(this.label4);
-            this.FolderPanel.Controls.Add(this.PepPanel);
-            this.FolderPanel.Controls.Add(this.ConfigGB);
-            this.FolderPanel.Controls.Add(this.FileMaskPanel);
             this.FolderPanel.Controls.Add(this.FileListPanel);
+            this.FolderPanel.Controls.Add(this.ConfigGB);
+            this.FolderPanel.Controls.Add(this.PepPanel);
+            this.FolderPanel.Controls.Add(this.FileMaskPanel);
             this.FolderPanel.Location = new System.Drawing.Point(0, 0);
             this.FolderPanel.Name = "FolderPanel";
             this.FolderPanel.Size = new System.Drawing.Size(435, 497);
@@ -191,7 +205,7 @@ namespace BumberDash.Forms
             this.SearchTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.SearchTypeBox.FormattingEnabled = true;
             this.SearchTypeBox.Items.AddRange(new object[] {
-            "MyriMatch- Database Searching",
+            "MyriMatch- Myrimatch Searching",
             "DirecTag / TagRecon- Sequence Tagging",
             "Pepitome- Spectral Library"});
             this.SearchTypeBox.Location = new System.Drawing.Point(167, 27);
@@ -349,7 +363,7 @@ namespace BumberDash.Forms
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(120, 18);
             this.label5.TabIndex = 6;
-            this.label5.Text = "FASTA Database:";
+            this.label5.Text = "FASTA Myrimatch:";
             // 
             // InitialDirectoryButton
             // 
@@ -372,273 +386,6 @@ namespace BumberDash.Forms
             this.label4.Size = new System.Drawing.Size(122, 18);
             this.label4.TabIndex = 2;
             this.label4.Text = "Output Directory:";
-            // 
-            // PepPanel
-            // 
-            this.PepPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.PepPanel.Controls.Add(this.SpecLibBox);
-            this.PepPanel.Controls.Add(this.SpecLibBrowse);
-            this.PepPanel.Controls.Add(this.label6);
-            this.PepPanel.Controls.Add(this.PepConfigGB);
-            this.PepPanel.Location = new System.Drawing.Point(9, 346);
-            this.PepPanel.Name = "PepPanel";
-            this.PepPanel.Size = new System.Drawing.Size(405, 118);
-            this.PepPanel.TabIndex = 36;
-            this.PepPanel.Visible = false;
-            // 
-            // SpecLibBox
-            // 
-            this.SpecLibBox.FormattingEnabled = true;
-            this.SpecLibBox.Location = new System.Drawing.Point(19, 21);
-            this.SpecLibBox.Name = "SpecLibBox";
-            this.SpecLibBox.Size = new System.Drawing.Size(306, 21);
-            this.SpecLibBox.TabIndex = 30;
-            // 
-            // SpecLibBrowse
-            // 
-            this.SpecLibBrowse.Location = new System.Drawing.Point(331, 20);
-            this.SpecLibBrowse.Name = "SpecLibBrowse";
-            this.SpecLibBrowse.Size = new System.Drawing.Size(55, 21);
-            this.SpecLibBrowse.TabIndex = 29;
-            this.SpecLibBrowse.Text = "Browse";
-            this.SpecLibBrowse.UseVisualStyleBackColor = true;
-            this.SpecLibBrowse.Click += new System.EventHandler(this.SpecLibBrowse_Click);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(16, 1);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(114, 18);
-            this.label6.TabIndex = 28;
-            this.label6.Text = "Spectral Library:";
-            // 
-            // PepConfigGB
-            // 
-            this.PepConfigGB.Controls.Add(this.PepConfigBox);
-            this.PepConfigGB.Controls.Add(this.PepEditButton);
-            this.PepConfigGB.Controls.Add(this.PepConfigBrowse);
-            this.PepConfigGB.Controls.Add(this.label8);
-            this.PepConfigGB.Location = new System.Drawing.Point(3, 43);
-            this.PepConfigGB.Name = "PepConfigGB";
-            this.PepConfigGB.Size = new System.Drawing.Size(398, 70);
-            this.PepConfigGB.TabIndex = 27;
-            this.PepConfigGB.TabStop = false;
-            this.PepConfigGB.Text = "Configuration";
-            // 
-            // PepConfigBox
-            // 
-            this.PepConfigBox.FormattingEnabled = true;
-            this.PepConfigBox.Items.AddRange(new object[] {
-            ""});
-            this.PepConfigBox.Location = new System.Drawing.Point(9, 37);
-            this.PepConfigBox.Name = "PepConfigBox";
-            this.PepConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.PepConfigBox.TabIndex = 32;
-            this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
-            this.PepConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
-            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            // 
-            // PepEditButton
-            // 
-            this.PepEditButton.Location = new System.Drawing.Point(321, 36);
-            this.PepEditButton.Name = "PepEditButton";
-            this.PepEditButton.Size = new System.Drawing.Size(55, 21);
-            this.PepEditButton.TabIndex = 31;
-            this.PepEditButton.Text = "New";
-            this.PepEditButton.UseVisualStyleBackColor = true;
-            this.PepEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
-            // 
-            // PepConfigBrowse
-            // 
-            this.PepConfigBrowse.Location = new System.Drawing.Point(260, 36);
-            this.PepConfigBrowse.Name = "PepConfigBrowse";
-            this.PepConfigBrowse.Size = new System.Drawing.Size(55, 21);
-            this.PepConfigBrowse.TabIndex = 30;
-            this.PepConfigBrowse.Text = "Browse";
-            this.PepConfigBrowse.UseVisualStyleBackColor = true;
-            this.PepConfigBrowse.Click += new System.EventHandler(this.PepConfigBrowse_Click);
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(6, 16);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(118, 18);
-            this.label8.TabIndex = 29;
-            this.label8.Text = "Pepitome Config:";
-            // 
-            // ConfigGB
-            // 
-            this.ConfigGB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ConfigGB.Controls.Add(this.ConfigDatabasePanel);
-            this.ConfigGB.Controls.Add(this.ConfigTagPanel);
-            this.ConfigGB.Location = new System.Drawing.Point(12, 347);
-            this.ConfigGB.Name = "ConfigGB";
-            this.ConfigGB.Size = new System.Drawing.Size(398, 112);
-            this.ConfigGB.TabIndex = 26;
-            this.ConfigGB.TabStop = false;
-            this.ConfigGB.Text = "Configuration";
-            this.ConfigGB.Visible = false;
-            // 
-            // ConfigDatabasePanel
-            // 
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
-            this.ConfigDatabasePanel.Controls.Add(this.label13);
-            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
-            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
-            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
-            this.ConfigDatabasePanel.TabIndex = 17;
-            this.ConfigDatabasePanel.Visible = false;
-            // 
-            // MyriConfigBox
-            // 
-            this.MyriConfigBox.FormattingEnabled = true;
-            this.MyriConfigBox.Items.AddRange(new object[] {
-            ""});
-            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
-            this.MyriConfigBox.Name = "MyriConfigBox";
-            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.MyriConfigBox.TabIndex = 26;
-            this.MyriConfigBox.SelectedIndexChanged += new System.EventHandler(this.MyriConfigBox_SelectedIndexChanged);
-            this.MyriConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
-            this.MyriConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            // 
-            // MyriEditButton
-            // 
-            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
-            this.MyriEditButton.Name = "MyriEditButton";
-            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriEditButton.TabIndex = 16;
-            this.MyriEditButton.Text = "New";
-            this.MyriEditButton.UseVisualStyleBackColor = true;
-            this.MyriEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
-            // 
-            // MyriConfigButton
-            // 
-            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
-            this.MyriConfigButton.Name = "MyriConfigButton";
-            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriConfigButton.TabIndex = 15;
-            this.MyriConfigButton.Text = "Browse";
-            this.MyriConfigButton.UseVisualStyleBackColor = true;
-            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(3, 5);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(129, 18);
-            this.label13.TabIndex = 13;
-            this.label13.Text = "MyriMatch Config:";
-            // 
-            // ConfigTagPanel
-            // 
-            this.ConfigTagPanel.Controls.Add(this.DTConfigBox);
-            this.ConfigTagPanel.Controls.Add(this.TRConfigBox);
-            this.ConfigTagPanel.Controls.Add(this.TREditButton);
-            this.ConfigTagPanel.Controls.Add(this.TRConfigButton);
-            this.ConfigTagPanel.Controls.Add(this.label12);
-            this.ConfigTagPanel.Controls.Add(this.DTEditButton);
-            this.ConfigTagPanel.Controls.Add(this.DTConfigButton);
-            this.ConfigTagPanel.Controls.Add(this.label11);
-            this.ConfigTagPanel.Location = new System.Drawing.Point(10, 14);
-            this.ConfigTagPanel.Name = "ConfigTagPanel";
-            this.ConfigTagPanel.Size = new System.Drawing.Size(379, 94);
-            this.ConfigTagPanel.TabIndex = 11;
-            this.ConfigTagPanel.Visible = false;
-            // 
-            // DTConfigBox
-            // 
-            this.DTConfigBox.FormattingEnabled = true;
-            this.DTConfigBox.Items.AddRange(new object[] {
-            ""});
-            this.DTConfigBox.Location = new System.Drawing.Point(6, 20);
-            this.DTConfigBox.Name = "DTConfigBox";
-            this.DTConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.DTConfigBox.TabIndex = 27;
-            this.DTConfigBox.SelectedIndexChanged += new System.EventHandler(this.DTConfigBox_SelectedIndexChanged);
-            this.DTConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
-            this.DTConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            // 
-            // TRConfigBox
-            // 
-            this.TRConfigBox.FormattingEnabled = true;
-            this.TRConfigBox.Items.AddRange(new object[] {
-            ""});
-            this.TRConfigBox.Location = new System.Drawing.Point(6, 65);
-            this.TRConfigBox.Name = "TRConfigBox";
-            this.TRConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.TRConfigBox.TabIndex = 28;
-            this.TRConfigBox.SelectedIndexChanged += new System.EventHandler(this.TRConfigBox_SelectedIndexChanged);
-            this.TRConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
-            this.TRConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            // 
-            // TREditButton
-            // 
-            this.TREditButton.Location = new System.Drawing.Point(318, 64);
-            this.TREditButton.Name = "TREditButton";
-            this.TREditButton.Size = new System.Drawing.Size(55, 21);
-            this.TREditButton.TabIndex = 16;
-            this.TREditButton.Text = "New";
-            this.TREditButton.UseVisualStyleBackColor = true;
-            this.TREditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
-            // 
-            // TRConfigButton
-            // 
-            this.TRConfigButton.Location = new System.Drawing.Point(257, 64);
-            this.TRConfigButton.Name = "TRConfigButton";
-            this.TRConfigButton.Size = new System.Drawing.Size(55, 21);
-            this.TRConfigButton.TabIndex = 15;
-            this.TRConfigButton.Text = "Browse";
-            this.TRConfigButton.UseVisualStyleBackColor = true;
-            this.TRConfigButton.Click += new System.EventHandler(this.TRConfigButton_Click);
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(3, 44);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(121, 18);
-            this.label12.TabIndex = 13;
-            this.label12.Text = "TagRecon Config:";
-            // 
-            // DTEditButton
-            // 
-            this.DTEditButton.Location = new System.Drawing.Point(318, 20);
-            this.DTEditButton.Name = "DTEditButton";
-            this.DTEditButton.Size = new System.Drawing.Size(55, 21);
-            this.DTEditButton.TabIndex = 12;
-            this.DTEditButton.Text = "New";
-            this.DTEditButton.UseVisualStyleBackColor = true;
-            this.DTEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
-            // 
-            // DTConfigButton
-            // 
-            this.DTConfigButton.Location = new System.Drawing.Point(257, 20);
-            this.DTConfigButton.Name = "DTConfigButton";
-            this.DTConfigButton.Size = new System.Drawing.Size(55, 21);
-            this.DTConfigButton.TabIndex = 11;
-            this.DTConfigButton.Text = "Browse";
-            this.DTConfigButton.UseVisualStyleBackColor = true;
-            this.DTConfigButton.Click += new System.EventHandler(this.DTConfigButton_Click);
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(3, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(117, 18);
-            this.label11.TabIndex = 9;
-            this.label11.Text = "DirecTag Config:";
             // 
             // FileMaskPanel
             // 
@@ -815,6 +562,381 @@ namespace BumberDash.Forms
             this.RemoveDataFilesButton.UseVisualStyleBackColor = true;
             this.RemoveDataFilesButton.Click += new System.EventHandler(this.RemoveDataFilesButton_Click);
             // 
+            // ConfigGB
+            // 
+            this.ConfigGB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.ConfigGB.Controls.Add(this.ConfigDatabasePanel);
+            this.ConfigGB.Controls.Add(this.ConfigTagPanel);
+            this.ConfigGB.Location = new System.Drawing.Point(12, 347);
+            this.ConfigGB.Name = "ConfigGB";
+            this.ConfigGB.Size = new System.Drawing.Size(398, 112);
+            this.ConfigGB.TabIndex = 26;
+            this.ConfigGB.TabStop = false;
+            this.ConfigGB.Text = "Configuration";
+            this.ConfigGB.Visible = false;
+            // 
+            // ConfigDatabasePanel
+            // 
+            this.ConfigDatabasePanel.Controls.Add(this.tabControl1);
+            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
+            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
+            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 94);
+            this.ConfigDatabasePanel.TabIndex = 17;
+            this.ConfigDatabasePanel.Visible = false;
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.MyriTab);
+            this.tabControl1.Controls.Add(this.CometTab);
+            this.tabControl1.Controls.Add(this.MSGFTab);
+            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(379, 92);
+            this.tabControl1.TabIndex = 27;
+            // 
+            // MyriTab
+            // 
+            this.MyriTab.BackColor = System.Drawing.SystemColors.Control;
+            this.MyriTab.Controls.Add(this.label13);
+            this.MyriTab.Controls.Add(this.MyriConfigBox);
+            this.MyriTab.Controls.Add(this.MyriConfigButton);
+            this.MyriTab.Controls.Add(this.MyriEditButton);
+            this.MyriTab.Location = new System.Drawing.Point(4, 22);
+            this.MyriTab.Name = "MyriTab";
+            this.MyriTab.Padding = new System.Windows.Forms.Padding(3);
+            this.MyriTab.Size = new System.Drawing.Size(371, 66);
+            this.MyriTab.TabIndex = 0;
+            this.MyriTab.Text = "MyriMatch";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(0, 1);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(129, 18);
+            this.label13.TabIndex = 13;
+            this.label13.Text = "MyriMatch Config:";
+            // 
+            // MyriConfigBox
+            // 
+            this.MyriConfigBox.FormattingEnabled = true;
+            this.MyriConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.MyriConfigBox.Location = new System.Drawing.Point(3, 22);
+            this.MyriConfigBox.Name = "MyriConfigBox";
+            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.MyriConfigBox.TabIndex = 26;
+            this.MyriConfigBox.SelectedIndexChanged += new System.EventHandler(this.MyriConfigBox_SelectedIndexChanged);
+            this.MyriConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.MyriConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
+            // 
+            // MyriConfigButton
+            // 
+            this.MyriConfigButton.Location = new System.Drawing.Point(254, 21);
+            this.MyriConfigButton.Name = "MyriConfigButton";
+            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriConfigButton.TabIndex = 15;
+            this.MyriConfigButton.Text = "Browse";
+            this.MyriConfigButton.UseVisualStyleBackColor = true;
+            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
+            // 
+            // MyriEditButton
+            // 
+            this.MyriEditButton.Location = new System.Drawing.Point(315, 21);
+            this.MyriEditButton.Name = "MyriEditButton";
+            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriEditButton.TabIndex = 16;
+            this.MyriEditButton.Text = "New";
+            this.MyriEditButton.UseVisualStyleBackColor = true;
+            this.MyriEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
+            // 
+            // CometTab
+            // 
+            this.CometTab.BackColor = System.Drawing.SystemColors.Control;
+            this.CometTab.Controls.Add(this.label14);
+            this.CometTab.Controls.Add(this.CometConfigBox);
+            this.CometTab.Controls.Add(this.CometConfigBrowse);
+            this.CometTab.Location = new System.Drawing.Point(4, 22);
+            this.CometTab.Name = "CometTab";
+            this.CometTab.Padding = new System.Windows.Forms.Padding(3);
+            this.CometTab.Size = new System.Drawing.Size(371, 66);
+            this.CometTab.TabIndex = 1;
+            this.CometTab.Text = "Comet";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label14.Location = new System.Drawing.Point(0, 1);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(101, 18);
+            this.label14.TabIndex = 27;
+            this.label14.Text = "Comet Config:";
+            // 
+            // CometConfigBox
+            // 
+            this.CometConfigBox.FormattingEnabled = true;
+            this.CometConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.CometConfigBox.Location = new System.Drawing.Point(3, 22);
+            this.CometConfigBox.Name = "CometConfigBox";
+            this.CometConfigBox.Size = new System.Drawing.Size(306, 21);
+            this.CometConfigBox.TabIndex = 30;
+            // 
+            // CometConfigBrowse
+            // 
+            this.CometConfigBrowse.Location = new System.Drawing.Point(315, 21);
+            this.CometConfigBrowse.Name = "CometConfigBrowse";
+            this.CometConfigBrowse.Size = new System.Drawing.Size(55, 21);
+            this.CometConfigBrowse.TabIndex = 28;
+            this.CometConfigBrowse.Text = "Browse";
+            this.CometConfigBrowse.UseVisualStyleBackColor = true;
+            this.CometConfigBrowse.Click += new System.EventHandler(this.CometConfigBrowse_Click);
+            // 
+            // MSGFTab
+            // 
+            this.MSGFTab.BackColor = System.Drawing.SystemColors.Control;
+            this.MSGFTab.Controls.Add(this.label15);
+            this.MSGFTab.Controls.Add(this.MSGFConfigBox);
+            this.MSGFTab.Controls.Add(this.MSGFConfigBrowse);
+            this.MSGFTab.Location = new System.Drawing.Point(4, 22);
+            this.MSGFTab.Name = "MSGFTab";
+            this.MSGFTab.Padding = new System.Windows.Forms.Padding(3);
+            this.MSGFTab.Size = new System.Drawing.Size(371, 66);
+            this.MSGFTab.TabIndex = 2;
+            this.MSGFTab.Text = "MS-GF+";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(0, 1);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(111, 18);
+            this.label15.TabIndex = 31;
+            this.label15.Text = "MS-GF+ Config:";
+            // 
+            // MSGFConfigBox
+            // 
+            this.MSGFConfigBox.FormattingEnabled = true;
+            this.MSGFConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.MSGFConfigBox.Location = new System.Drawing.Point(3, 22);
+            this.MSGFConfigBox.Name = "MSGFConfigBox";
+            this.MSGFConfigBox.Size = new System.Drawing.Size(306, 21);
+            this.MSGFConfigBox.TabIndex = 33;
+            // 
+            // MSGFConfigBrowse
+            // 
+            this.MSGFConfigBrowse.Location = new System.Drawing.Point(315, 21);
+            this.MSGFConfigBrowse.Name = "MSGFConfigBrowse";
+            this.MSGFConfigBrowse.Size = new System.Drawing.Size(55, 21);
+            this.MSGFConfigBrowse.TabIndex = 32;
+            this.MSGFConfigBrowse.Text = "Browse";
+            this.MSGFConfigBrowse.UseVisualStyleBackColor = true;
+            this.MSGFConfigBrowse.Click += new System.EventHandler(this.MSGFConfigBrowse_Click);
+            // 
+            // ConfigTagPanel
+            // 
+            this.ConfigTagPanel.Controls.Add(this.DTConfigBox);
+            this.ConfigTagPanel.Controls.Add(this.TRConfigBox);
+            this.ConfigTagPanel.Controls.Add(this.TREditButton);
+            this.ConfigTagPanel.Controls.Add(this.TRConfigButton);
+            this.ConfigTagPanel.Controls.Add(this.label12);
+            this.ConfigTagPanel.Controls.Add(this.DTEditButton);
+            this.ConfigTagPanel.Controls.Add(this.DTConfigButton);
+            this.ConfigTagPanel.Controls.Add(this.label11);
+            this.ConfigTagPanel.Location = new System.Drawing.Point(10, 14);
+            this.ConfigTagPanel.Name = "ConfigTagPanel";
+            this.ConfigTagPanel.Size = new System.Drawing.Size(379, 94);
+            this.ConfigTagPanel.TabIndex = 11;
+            this.ConfigTagPanel.Visible = false;
+            // 
+            // DTConfigBox
+            // 
+            this.DTConfigBox.FormattingEnabled = true;
+            this.DTConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.DTConfigBox.Location = new System.Drawing.Point(6, 20);
+            this.DTConfigBox.Name = "DTConfigBox";
+            this.DTConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.DTConfigBox.TabIndex = 27;
+            this.DTConfigBox.SelectedIndexChanged += new System.EventHandler(this.DTConfigBox_SelectedIndexChanged);
+            this.DTConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.DTConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
+            // 
+            // TRConfigBox
+            // 
+            this.TRConfigBox.FormattingEnabled = true;
+            this.TRConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.TRConfigBox.Location = new System.Drawing.Point(6, 65);
+            this.TRConfigBox.Name = "TRConfigBox";
+            this.TRConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.TRConfigBox.TabIndex = 28;
+            this.TRConfigBox.SelectedIndexChanged += new System.EventHandler(this.TRConfigBox_SelectedIndexChanged);
+            this.TRConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.TRConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
+            // 
+            // TREditButton
+            // 
+            this.TREditButton.Location = new System.Drawing.Point(318, 64);
+            this.TREditButton.Name = "TREditButton";
+            this.TREditButton.Size = new System.Drawing.Size(55, 21);
+            this.TREditButton.TabIndex = 16;
+            this.TREditButton.Text = "New";
+            this.TREditButton.UseVisualStyleBackColor = true;
+            this.TREditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
+            // 
+            // TRConfigButton
+            // 
+            this.TRConfigButton.Location = new System.Drawing.Point(257, 64);
+            this.TRConfigButton.Name = "TRConfigButton";
+            this.TRConfigButton.Size = new System.Drawing.Size(55, 21);
+            this.TRConfigButton.TabIndex = 15;
+            this.TRConfigButton.Text = "Browse";
+            this.TRConfigButton.UseVisualStyleBackColor = true;
+            this.TRConfigButton.Click += new System.EventHandler(this.TRConfigButton_Click);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label12.Location = new System.Drawing.Point(3, 44);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(121, 18);
+            this.label12.TabIndex = 13;
+            this.label12.Text = "TagRecon Config:";
+            // 
+            // DTEditButton
+            // 
+            this.DTEditButton.Location = new System.Drawing.Point(318, 20);
+            this.DTEditButton.Name = "DTEditButton";
+            this.DTEditButton.Size = new System.Drawing.Size(55, 21);
+            this.DTEditButton.TabIndex = 12;
+            this.DTEditButton.Text = "New";
+            this.DTEditButton.UseVisualStyleBackColor = true;
+            this.DTEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
+            // 
+            // DTConfigButton
+            // 
+            this.DTConfigButton.Location = new System.Drawing.Point(257, 20);
+            this.DTConfigButton.Name = "DTConfigButton";
+            this.DTConfigButton.Size = new System.Drawing.Size(55, 21);
+            this.DTConfigButton.TabIndex = 11;
+            this.DTConfigButton.Text = "Browse";
+            this.DTConfigButton.UseVisualStyleBackColor = true;
+            this.DTConfigButton.Click += new System.EventHandler(this.DTConfigButton_Click);
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label11.Location = new System.Drawing.Point(3, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(117, 18);
+            this.label11.TabIndex = 9;
+            this.label11.Text = "DirecTag Config:";
+            // 
+            // PepPanel
+            // 
+            this.PepPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.PepPanel.Controls.Add(this.SpecLibBox);
+            this.PepPanel.Controls.Add(this.SpecLibBrowse);
+            this.PepPanel.Controls.Add(this.label6);
+            this.PepPanel.Controls.Add(this.PepConfigGB);
+            this.PepPanel.Location = new System.Drawing.Point(9, 346);
+            this.PepPanel.Name = "PepPanel";
+            this.PepPanel.Size = new System.Drawing.Size(405, 118);
+            this.PepPanel.TabIndex = 36;
+            this.PepPanel.Visible = false;
+            // 
+            // SpecLibBox
+            // 
+            this.SpecLibBox.FormattingEnabled = true;
+            this.SpecLibBox.Location = new System.Drawing.Point(19, 21);
+            this.SpecLibBox.Name = "SpecLibBox";
+            this.SpecLibBox.Size = new System.Drawing.Size(306, 21);
+            this.SpecLibBox.TabIndex = 30;
+            // 
+            // SpecLibBrowse
+            // 
+            this.SpecLibBrowse.Location = new System.Drawing.Point(331, 20);
+            this.SpecLibBrowse.Name = "SpecLibBrowse";
+            this.SpecLibBrowse.Size = new System.Drawing.Size(55, 21);
+            this.SpecLibBrowse.TabIndex = 29;
+            this.SpecLibBrowse.Text = "Browse";
+            this.SpecLibBrowse.UseVisualStyleBackColor = true;
+            this.SpecLibBrowse.Click += new System.EventHandler(this.SpecLibBrowse_Click);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Location = new System.Drawing.Point(16, 1);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(114, 18);
+            this.label6.TabIndex = 28;
+            this.label6.Text = "Spectral Library:";
+            // 
+            // PepConfigGB
+            // 
+            this.PepConfigGB.Controls.Add(this.PepConfigBox);
+            this.PepConfigGB.Controls.Add(this.PepEditButton);
+            this.PepConfigGB.Controls.Add(this.PepConfigBrowse);
+            this.PepConfigGB.Controls.Add(this.label8);
+            this.PepConfigGB.Location = new System.Drawing.Point(3, 43);
+            this.PepConfigGB.Name = "PepConfigGB";
+            this.PepConfigGB.Size = new System.Drawing.Size(398, 70);
+            this.PepConfigGB.TabIndex = 27;
+            this.PepConfigGB.TabStop = false;
+            this.PepConfigGB.Text = "Configuration";
+            // 
+            // PepConfigBox
+            // 
+            this.PepConfigBox.FormattingEnabled = true;
+            this.PepConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.PepConfigBox.Location = new System.Drawing.Point(9, 37);
+            this.PepConfigBox.Name = "PepConfigBox";
+            this.PepConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.PepConfigBox.TabIndex = 32;
+            this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
+            this.PepConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
+            // 
+            // PepEditButton
+            // 
+            this.PepEditButton.Location = new System.Drawing.Point(321, 36);
+            this.PepEditButton.Name = "PepEditButton";
+            this.PepEditButton.Size = new System.Drawing.Size(55, 21);
+            this.PepEditButton.TabIndex = 31;
+            this.PepEditButton.Text = "New";
+            this.PepEditButton.UseVisualStyleBackColor = true;
+            this.PepEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
+            // 
+            // PepConfigBrowse
+            // 
+            this.PepConfigBrowse.Location = new System.Drawing.Point(260, 36);
+            this.PepConfigBrowse.Name = "PepConfigBrowse";
+            this.PepConfigBrowse.Size = new System.Drawing.Size(55, 21);
+            this.PepConfigBrowse.TabIndex = 30;
+            this.PepConfigBrowse.Text = "Browse";
+            this.PepConfigBrowse.UseVisualStyleBackColor = true;
+            this.PepConfigBrowse.Click += new System.EventHandler(this.PepConfigBrowse_Click);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(6, 16);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(118, 18);
+            this.label8.TabIndex = 29;
+            this.label8.Text = "Pepitome Config:";
+            // 
             // TagReconInfoBox
             // 
             this.TagReconInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -988,19 +1110,25 @@ namespace BumberDash.Forms
             this.FolderPanel.ResumeLayout(false);
             this.FolderPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
-            this.PepPanel.ResumeLayout(false);
-            this.PepPanel.PerformLayout();
-            this.PepConfigGB.ResumeLayout(false);
-            this.PepConfigGB.PerformLayout();
-            this.ConfigGB.ResumeLayout(false);
-            this.ConfigDatabasePanel.ResumeLayout(false);
-            this.ConfigDatabasePanel.PerformLayout();
-            this.ConfigTagPanel.ResumeLayout(false);
-            this.ConfigTagPanel.PerformLayout();
             this.FileMaskPanel.ResumeLayout(false);
             this.FileMaskPanel.PerformLayout();
             this.FileListPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).EndInit();
+            this.ConfigGB.ResumeLayout(false);
+            this.ConfigDatabasePanel.ResumeLayout(false);
+            this.tabControl1.ResumeLayout(false);
+            this.MyriTab.ResumeLayout(false);
+            this.MyriTab.PerformLayout();
+            this.CometTab.ResumeLayout(false);
+            this.CometTab.PerformLayout();
+            this.MSGFTab.ResumeLayout(false);
+            this.MSGFTab.PerformLayout();
+            this.ConfigTagPanel.ResumeLayout(false);
+            this.ConfigTagPanel.PerformLayout();
+            this.PepPanel.ResumeLayout(false);
+            this.PepPanel.PerformLayout();
+            this.PepConfigGB.ResumeLayout(false);
+            this.PepConfigGB.PerformLayout();
             this.TagConfigInfoPanel.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
@@ -1087,6 +1215,16 @@ namespace BumberDash.Forms
         private System.Windows.Forms.Button InputDirectoryButton;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label MaskMessageLabel;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage MyriTab;
+        private System.Windows.Forms.TabPage CometTab;
+        private System.Windows.Forms.Label label14;
+        internal System.Windows.Forms.ComboBox CometConfigBox;
+        private System.Windows.Forms.Button CometConfigBrowse;
+        private System.Windows.Forms.TabPage MSGFTab;
+        private System.Windows.Forms.Label label15;
+        internal System.Windows.Forms.ComboBox MSGFConfigBox;
+        private System.Windows.Forms.Button MSGFConfigBrowse;
 
     }
 }

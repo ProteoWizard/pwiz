@@ -27,9 +27,11 @@ namespace BumberDash.Model
     //Utility Classes
     public static class JobType
     {
-        public const string Database = "MyriMatch- Database Searching";
-        public const string Tag = "DirecTag / TagRecon- Sequence Tagging";
-        public const string Library = "Pepitome- Spectral Library";
+        public const string Myrimatch = "MyriMatch: Database Searching";
+        public const string Tag = "DirecTag / TagRecon: Sequence Tagging";
+        public const string Library = "Pepitome: Spectral Library";
+        public const string Comet = "Comet: Database Searching";
+        public const string MSGF = "MS-GF+: Database Searching";
     }
 
     //Mapped Classes

@@ -49,7 +49,7 @@ namespace BumberDash.Forms
         public AddJobForm(IEnumerable<HistoryItem> oldFiles, IList<ConfigFile> templates)
         {
             InitializeComponent();
-            SearchTypeBox.Text = JobType.Database;
+            SearchTypeBox.Text = JobType.Myrimatch;
             InputMethodBox.Text = "File List";
             SetDropDownItems(oldFiles);
             _templateList = templates;
@@ -65,7 +65,7 @@ namespace BumberDash.Forms
         public AddJobForm(IEnumerable<HistoryItem> oldFiles, HistoryItem hi, bool editMode, IList<ConfigFile> templates)
         {
             InitializeComponent();
-            SearchTypeBox.Text = JobType.Database;
+            SearchTypeBox.Text = JobType.Myrimatch;
             SetDropDownItems(oldFiles);
             SetHistoryItem(hi);
             if (editMode)
@@ -100,7 +100,7 @@ namespace BumberDash.Forms
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   Multiselect = false,
-                                  Title = "Database Location"                                  
+                                  Title = "Myrimatch Location"                                  
                               };
             if (fileLoc.ShowDialog() == DialogResult.OK)
             {
@@ -635,7 +635,7 @@ namespace BumberDash.Forms
                 OutputDirectoryBox.BackColor = Color.LightPink;
             }
 
-            // Validate Database Location
+            // Validate Myrimatch Location
             if (File.Exists(DatabaseLocBox.Text) &&
                 (Path.GetExtension(DatabaseLocBox.Text) ?? string.Empty).ToLower() == (".fasta"))
                 DatabaseLocBox.BackColor = Color.White;
@@ -646,8 +646,8 @@ namespace BumberDash.Forms
             }
 
             // Validate Config Files
-            //If Database Search
-            if (SearchTypeBox.Text == JobType.Database)
+            //If Myrimatch Search
+            if (SearchTypeBox.Text == JobType.Myrimatch)
             {
                 if (MyriConfigBox.Text.Length > 0 && !MyriConfigBox.Text.Contains(" / "))
                     MyriConfigBox.BackColor = Color.White;
@@ -893,7 +893,7 @@ namespace BumberDash.Forms
                 MyriMatchInfoBox.Clear();
                 foreach (var property in hi.InitialConfigFile.PropertyList)
                     MyriMatchInfoBox.Text += string.Format("{0} = {1}{2}", property.Name, property.Value, Environment.NewLine);
-                SearchTypeBox.Text = JobType.Database;
+                SearchTypeBox.Text = JobType.Myrimatch;
             }
         }
 
@@ -919,7 +919,7 @@ namespace BumberDash.Forms
                              EndTime = null,
                              RowNumber = 0,
                              InitialConfigFile = GetConfigFile(
-                                 SearchTypeBox.Text == JobType.Database
+                                 SearchTypeBox.Text == JobType.Myrimatch
                                      ? "MyriMatch"
                                      : (SearchTypeBox.Text == JobType.Tag
                                             ? "DirecTag"
@@ -944,7 +944,7 @@ namespace BumberDash.Forms
 
         private ConfigFile GetConfigFile(string destinationProgram)
         {
-            var parameterType = lib.Util.parameterTypes;
+            var parameterType = Util.parameterTypes;
 
             var configBox = destinationProgram == "MyriMatch"
                                 ? MyriConfigBox
@@ -1003,7 +1003,7 @@ namespace BumberDash.Forms
 
         public static string PepXMLtoEntireFileString(string file)
         {
-            var parameterTypes = lib.Util.parameterTypes;
+            var parameterTypes = Util.parameterTypes;
             var cutFile = string.Empty;
             var fileStream = new StreamReader(file);
 
@@ -1065,7 +1065,7 @@ namespace BumberDash.Forms
 
         public static string TagsFileToEntireFileString(string file)
         {
-            var parameterTypes = lib.Util.parameterTypes;
+            var parameterTypes = Util.parameterTypes;
 
             var cutFile = string.Empty;
             var fileStream = new StreamReader(file);
@@ -1135,7 +1135,7 @@ namespace BumberDash.Forms
         {
             switch (SearchTypeBox.Text)
             {
-                case JobType.Database:
+                case JobType.Myrimatch:
                     ConfigGB.Visible = true;
                     PepPanel.Visible = false;
                     ConfigDatabasePanel.Visible = true;
@@ -1181,7 +1181,7 @@ namespace BumberDash.Forms
             }
             else
             {
-                return new List<string>(){"!" + Path.Combine(InputDirectoryBox.Text, FileMaskBox.Text)};
+                return new List<string>{"!" + Path.Combine(InputDirectoryBox.Text, FileMaskBox.Text)};
             }
         }
 
@@ -1243,6 +1243,38 @@ namespace BumberDash.Forms
                 e.Handled = true;
                 CountMaskedFiles(sender, e);
             }
+        }
+
+        private void CometConfigBrowse_Click(object sender, EventArgs e)
+        {
+            var fileLoc = new OpenFileDialog
+            {
+                InitialDirectory = OutputDirectoryBox.Text,
+                RestoreDirectory = true,
+                Filter = "Config Files|*.params|All files|*.*",
+                CheckFileExists = true,
+                CheckPathExists = true,
+                Multiselect = false,
+                Title = "Comet config file location"
+            };
+            if (fileLoc.ShowDialog() == DialogResult.OK)
+                CometConfigBox.Text = fileLoc.FileName;
+        }
+
+        private void MSGFConfigBrowse_Click(object sender, EventArgs e)
+        {
+            var fileLoc = new OpenFileDialog
+            {
+                InitialDirectory = OutputDirectoryBox.Text,
+                RestoreDirectory = true,
+                Filter = "Text Files|*.txt|All files|*.*",
+                CheckFileExists = true,
+                CheckPathExists = true,
+                Multiselect = false,
+                Title = "Comet config file location"
+            };
+            if (fileLoc.ShowDialog() == DialogResult.OK)
+                MSGFConfigBox.Text = fileLoc.FileName;
         }
     }
 }

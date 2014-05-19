@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using BumberDash;
 using BumberDash.lib;
 using BumberDash.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -208,7 +209,7 @@ namespace Tests
             Assert.IsTrue(File.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "mzXMLTest.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "mzXMLTest.pepXML"));
@@ -224,7 +225,7 @@ namespace Tests
             Assert.IsTrue(File.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "mzMLTest.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "mzMLTest.pepXML"));
@@ -240,7 +241,7 @@ namespace Tests
             Assert.IsTrue(File.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "mz5Test.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "mz5Test.pepXML"));
@@ -256,7 +257,7 @@ namespace Tests
             Assert.IsTrue(File.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "ThermoTest.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "ThermoTest.pepXML"));
@@ -272,7 +273,7 @@ namespace Tests
             Assert.IsTrue(Directory.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "AgilentTest.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "AgilentTest.pepXML"));
@@ -288,7 +289,7 @@ namespace Tests
             Assert.IsTrue(Directory.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "BrukerTest.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "BrukerTest.pepXML"));
@@ -304,7 +305,7 @@ namespace Tests
             Assert.IsTrue(Directory.Exists(neededFile), "Test file not found");
             Assert.IsTrue(File.Exists(neededDB), "Test database not found");
 
-            RunFile(neededFile, neededDB, JobType.Database);
+            RunFile(neededFile, neededDB, JobType.Myrimatch);
 
             if (File.Exists(Path.Combine(_outputDirectory, "WatersTest.pepXML")))
                 File.Delete(Path.Combine(_outputDirectory, "WatersTest.pepXML"));

@@ -114,9 +114,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\Nhibernate\NHibernate.ByteCode.Castle.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    <Reference Include="pwiz_bindings_cli">
+      <HintPath>..\build-nt-x86\msvc-release\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -145,6 +144,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CometHandler.cs" />
     <Compile Include="Forms\AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -162,6 +162,12 @@
     </Compile>
     <Compile Include="Forms\ConfigForm.Designer.cs">
       <DependentUpon>ConfigForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ConfigWizard.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ConfigWizard.Designer.cs">
+      <DependentUpon>ConfigWizard.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ImportTemplateForm.cs">
       <SubType>Form</SubType>
@@ -181,13 +187,14 @@
     <Compile Include="Forms\LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="lib\Util.cs" />
+    <Compile Include="MSGFHandler.cs" />
+    <Compile Include="Util.cs" />
     <Compile Include="Model\DataModel.cs" />
     <Compile Include="Model\SessionManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="lib\DataGridViewProgressBar.cs">
     </Compile>
-    <Compile Include="lib\ProgramHandler.cs">
+    <Compile Include="ProgramHandler.cs">
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Forms\AboutForm.resx">
@@ -197,6 +204,9 @@
     <EmbeddedResource Include="Forms\AddJobForm.resx">
       <DependentUpon>AddJobForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ConfigWizard.resx">
+      <DependentUpon>ConfigWizard.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
@@ -288,8 +298,14 @@
     <Content Include="lib\BumberDash Help 2_files\props0019.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="lib\comet.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\DirecTag.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\MSGFPlus.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Myrimatch.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -350,21 +366,21 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <NativeReference Condition=" '$(Platform)' == 'x86' " Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
       <Name>Interop.EDAL.SxS.manifest</Name>
-      <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\Interop.EDAL.SxS.manifest</HintPath>
+      <HintPath>..\build-nt-x86\msvc-release\Interop.EDAL.SxS.manifest</HintPath>
     </NativeReference>
-    <NativeReference Condition=" '$(Platform)' == 'x86' " Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
+    <NativeReference Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
       <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
-      <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\Interop.HSREADWRITELib.SxS.manifest</HintPath>
-    </NativeReference>
-    <NativeReference Condition=" '$(Platform)' == 'x86' " Include="MSFileReader.XRawfile2.SxS, Version=2.2.0.0, Type=win32">
-      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+      <HintPath>..\build-nt-x86\msvc-release\Interop.HSREADWRITELib.SxS.manifest</HintPath>
     </NativeReference>
     <NativeReference Condition=" '$(Platform)' == 'x64' " Include="MSFileReader.XRawfile2.SxS, Version=2.2.0.0, Type=x64">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>..\build-nt-x86\obj\$(Platform)\$(Configuration)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.62.0, Type=win32">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\build-nt-x86\msvc-release\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
   </ItemGroup>
   <ItemGroup>

@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using BumberDash.lib;
 using BumberDash.Model;
 using CustomDataSourceDialog;
 using CustomProgressCell;
@@ -738,11 +737,13 @@ namespace BumberDash.Forms
         {
             var oldconfigs = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Desc.List();
             var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
-            var addJob = new AddJobForm(oldconfigs, templateList);
+            var addJob = new ConfigWizard(); //new AddJobForm(oldconfigs, templateList);
             if (addJob.ShowDialog() == DialogResult.OK)
             {
                 _programmaticallyPaused = true;
-                InsertRowFromHistoryItem(addJob.GetHistoryItem(), JobQueueDGV.Rows.Count - 1);
+                var items = addJob.GetHistoryItems();
+                foreach (var hi in items)
+                    InsertRowFromHistoryItem(hi, JobQueueDGV.Rows.Count - 1);
                 _programmaticallyPaused = false;
             }
 
@@ -755,13 +756,14 @@ namespace BumberDash.Forms
         /// <param name="oldHi"></param>
         private void ShowCloneBox(HistoryItem oldHi)
         {
-            var oldconfigs = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Desc.List();
-            var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
-            var addJob = new AddJobForm(oldconfigs, oldHi, false, templateList);
+            var addJob = new ConfigWizard(oldHi, false);
             if (addJob.ShowDialog() == DialogResult.OK)
             {
+                var newHi = addJob.GetHistoryItems().FirstOrDefault();
+                if (newHi == null)
+                    return;
                 _programmaticallyPaused = true;
-                InsertRowFromHistoryItem(addJob.GetHistoryItem(), JobQueueDGV.Rows.Count - 1);
+                InsertRowFromHistoryItem(newHi, JobQueueDGV.Rows.Count - 1);
                 _programmaticallyPaused = false;
             }
 
@@ -776,16 +778,17 @@ namespace BumberDash.Forms
         {
             var locked = (string)JobQueueDGV.Rows[row].Tag == "Locked";
             JobQueueDGV.Rows[row].Tag = "Editing";
-            var oldconfigs = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Desc.List();
             var oldHi = (HistoryItem) JobQueueDGV[0, row].Tag;
-            var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
-            var addJob = new AddJobForm(oldconfigs, oldHi, true, templateList);
+            var addJob = new ConfigWizard(oldHi, true);
             if (addJob.ShowDialog() == DialogResult.OK)
             {
+                var newHi = addJob.GetHistoryItems().FirstOrDefault();
+                if (newHi == null)
+                    return;
                 _programmaticallyPaused = true;
                 _session.Delete(oldHi);
                 JobQueueDGV.Rows.RemoveAt(row);
-                InsertRowFromHistoryItem(addJob.GetHistoryItem(), row);
+                InsertRowFromHistoryItem(newHi, row);
                 _programmaticallyPaused = false;
             }
             JobQueueDGV.Rows[row].Tag = locked ? "Locked" : string.Empty;
@@ -846,7 +849,7 @@ namespace BumberDash.Forms
             if (!hi.OutputDirectory.EndsWith("+") || !Directory.Exists(hi.OutputDirectory.TrimEnd('*')))
                 Directory.CreateDirectory(hi.OutputDirectory.TrimEnd('+').TrimEnd('*'));
 
-            // Validate Database Location
+            // Validate Myrimatch Location
             if (File.Exists(hi.ProteinDatabase))
                 JobQueueDGV.Rows[row].Cells[2].Style.BackColor = Color.White;
             else
@@ -877,7 +880,7 @@ namespace BumberDash.Forms
         #endregion
 
 
-        #region Database Manipulation
+        #region Myrimatch Manipulation
 
         /// <summary>
         /// Returns properties from the given config file (newline seperated, in format "Property = Value")
@@ -1294,7 +1297,7 @@ namespace BumberDash.Forms
             //Fill in job type if needed
             if (hi.JobType == null)
             {
-                hi.JobType = hi.TagConfigFile == null ? JobType.Database : JobType.Tag;
+                hi.JobType = hi.TagConfigFile == null ? JobType.Myrimatch : JobType.Tag;
                 lock (_session)
                 {
                     _session.Save(hi);
@@ -1442,7 +1445,7 @@ namespace BumberDash.Forms
             //Add full output directory to tooltip
             JobQueueDGV.Rows[row].Cells[1].ToolTipText = hi.OutputDirectory;
 
-            //Database File Name
+            //Myrimatch File Name
             JobQueueDGV.Rows[row].Cells[2].ToolTipText = hi.ProteinDatabase +
                                                          (hi.SpectralLibrary == null
                                                               ? string.Empty
@@ -1550,6 +1553,8 @@ namespace BumberDash.Forms
                 _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);
                 _session.Flush();
             }
+            else if (!Directory.Exists(hi.OutputDirectory))
+                Directory.CreateDirectory(hi.OutputDirectory);
 
             hi.StartTime = DateTime.Now;
             _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);
