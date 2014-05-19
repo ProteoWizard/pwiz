@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -60,45 +60,45 @@
             : and then encoded with base64 encoding.
     -->
   <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element msdata:IsDataSet="true" name="root">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+                <xsd:element minOccurs="0" name="value" type="xsd:string" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
-                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string" />
+                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string" />
               </xsd:sequence>
-              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
-              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
-              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required" />
+              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string" />
+              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Blank" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\blank.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -346,10 +346,10 @@
   <data name="SkylineWindow_Copy_Failed_setting_data_to_the_clipboard" xml:space="preserve">
 <value>データをクリップボードに設定できませんでした。</value>
     </data>
-    <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+  <data name="SkylineWindow_Paste_Failed_getting_data_from_the_clipboard" xml:space="preserve">
 <value>クリップボードからデータを取得できませんでした。</value>
     </data>
-    <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
+  <data name="SkylineWindow_Paste_proteins" xml:space="preserve">
 <value>タンパク質</value>
     </data>
   <data name="SkylineWindow_Paste_Empty_sequence_found_at_line__0__" xml:space="preserve">
@@ -1208,7 +1208,7 @@
 <value>酵素には 1 つ以上の切断点が必要です。</value>
       </data>
   <data name="SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling" xml:space="preserve">
-<value>&quot;{0}&quot;はフルスキャン特別処理に有効な設定ではありません</value>
+<value>"{0}"はフルスキャン特別処理に有効な設定ではありません</value>
   </data>
   <data name="SpecialHandlingType_Validate_None" xml:space="preserve">
 <value>なし</value>
@@ -3427,7 +3427,7 @@
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
 <value>ファイル</value>
       </data>
-    <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
+  <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
 <value>RT</value>
       </data>
   <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
@@ -4470,7 +4470,7 @@
 <value>コマンドを使ってリンクを貼る場合、必ずhttp:// またはhttps:// を含むようにしてください</value>
       </data>
   <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__" xml:space="preserve">
-<value>{0}のコマンドはその場所にない可能性があります。編集しますか？ </value>
+<value>{0}のコマンドはその場所にない可能性があります。編集しますか？  </value>
       </data>
   <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
 <value>注：コマンドを使ってリンクを貼る場合、必ずhttp:// またはhttps:// を含むようにしてください</value>
@@ -5801,7 +5801,7 @@
   <data name="RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_" xml:space="preserve">
 <value>{0}に対するドット積</value>
       </data>
-    <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Cannot_train_model_without_either_decoys_or_second_best_peaks_included_" xml:space="preserve">
 <value>デコイか 2 番目に良いピークがなければモデルをトレーニングできません。</value>
       </data>
   <data name="PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_" xml:space="preserve">
@@ -6078,34 +6078,34 @@
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
 <value>レポートを編集</value>
       </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
 <value>URL(&amp;R)：</value>
       </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
 <value>クエリーパラメータ(&amp;Q)：</value>
       </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
 <value>コマンド(&amp;C)：</value>
       </data>
-    <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
 <value>引数(&amp;R)：</value>
       </data>
-    <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
 <value>iRTカルキュレータの標準ペプチドは、iRTカルキュレータエディタでしか設定できません。</value>
       </data>
-    <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
+  <data name="SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_" xml:space="preserve">
 <value>[ペプチド設定] の [予測] タブで、カルキュレータボタンをクリックして現在のiRTカルキュレータを編集します。</value>
       </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
 <value>デコイ正規分布</value>
       </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
 <value>2 番目に良いピーク</value>
       </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
 <value>複合正規分布</value>
       </data>
-    <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
 <value>2 番目に良いピークの正規分布</value>
       </data>
   <data name="MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared" xml:space="preserve">
@@ -6114,5 +6114,62 @@
   <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
 <value>デフォルト ({0})</value>
     <comment>Example: Default (English)</comment>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_" xml:space="preserve">
+    <value>インポートされたファイルのスキャンに単離ウィンドウの中心がないようです。</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_lower_boundary_" xml:space="preserve">
+    <value>インポートされたファイルのスキャンに単離ウィンドウの下方境界がないようです。</value>
+  </data>
+  <data name="AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_upper_boundary_" xml:space="preserve">
+    <value>インポートされたファイルのスキャンに単離ウィンドウの上方境界がないようです。</value>
+  </data>
+  <data name="CustomTip_Alpha_Alpha_must_be_between_0_and_255" xml:space="preserve">
+    <value>アルファは 0 ～ 255 でなければなりません。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file" xml:space="preserve">
+    <value>ファイル{0}がありません。[作成] ボタンをクリックして新しいデータベースを作成するか、[開く] ボタンをクリックして欠損しているファイルを検索します。</value>
+  </data>
+  <data name="FileSize_CompareTo_Must_be_FileSize" xml:space="preserve">
+    <value>FileSizeでなければなりません</value>
+  </data>
+  <data name="FullScanSettingsControl_SetRetentionTimeFilter_Invalid_RetentionTimeFilterType" xml:space="preserve">
+    <value>無効な RetentionTimeFilterType</value>
+  </data>
+  <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
+    <value>フラグメントイオンのないペプチドでフラグメントを見つけようとする無効な試みです。</value>
+  </data>
+  <data name="MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array" xml:space="preserve">
+    <value>質量配列でイオンタイプ{0}が見つかりません</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_comma" xml:space="preserve">
+    <value>カンマ</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_semicolon" xml:space="preserve">
+    <value>セミコロン</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_file__0__on_line__1__has_not_been_imported_into_this_document_" xml:space="preserve">
+    <value>{1} 行目の{0}ファイルはこのドキュメントにインポートされていません。</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_first_line_does_not_contain_any_of_the_possible_separators__0___tab_or_space" xml:space="preserve">
+    <value>先頭行に使用可能な分離記号{0}、タブ、空白文字がいずれもありません</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_modified_state__0__on_line__1__does_not_match_any_modified_state_in_the_document_for_the_peptide__2__" xml:space="preserve">
+    <value>{1} 行目の修飾状態{0}は、ペプチド{2}のドキュメントにあるどの修飾状態にも一致しません。</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_peptide_sequence__0__on_line__1__does_not_match_any_of_the_peptides_in_the_document_" xml:space="preserve">
+    <value>{1} 行目にあるペプチド配列{0}は、ドキュメント内のどのペプチドにも一致しません。</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Original_name__0__" xml:space="preserve">
+    <value>元の名前： {0}</value>
+  </data>
+  <data name="PopupPickList_PopupPickList_Choices_must_be_unique" xml:space="preserve">
+    <value>選択は一意でなければなりません</value>
+  </data>
+  <data name="SequenceMassCalc_GetTermMass_Invalid_ion_type" xml:space="preserve">
+    <value>無効なイオンタイプ</value>
+  </data>
+  <data name="ToolMacros__listArguments_This_tool_is_not_an_istalled_toolso $(ToolDir) cannot be used as a macro. Please edit the tool." xml:space="preserve">
+    <value>このツールはインストールされたツールではないため、$ (ToolDir) はマクロとして使用できません。ツールを編集してください。</value>
   </data>
 </root>

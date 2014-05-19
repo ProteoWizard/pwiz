@@ -66,28 +66,33 @@
             // 
             resources.ApplyResources(this.labelNameNew, "labelNameNew");
             this.labelNameNew.Name = "labelNameNew";
+            this.helpTip.SetToolTip(this.labelNameNew, resources.GetString("labelNameNew.ToolTip"));
             // 
             // textName
             // 
             resources.ApplyResources(this.textName, "textName");
             this.textName.Name = "textName";
+            this.helpTip.SetToolTip(this.textName, resources.GetString("textName.ToolTip"));
             // 
             // labelNameAdd
             // 
             resources.ApplyResources(this.labelNameAdd, "labelNameAdd");
             this.labelNameAdd.Name = "labelNameAdd";
+            this.helpTip.SetToolTip(this.labelNameAdd, resources.GetString("labelNameAdd.ToolTip"));
             // 
             // comboName
             // 
-            this.comboName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             resources.ApplyResources(this.comboName, "comboName");
+            this.comboName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboName.FormattingEnabled = true;
             this.comboName.Name = "comboName";
+            this.helpTip.SetToolTip(this.comboName, resources.GetString("comboName.ToolTip"));
             // 
             // btnOk
             // 
             resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
+            this.helpTip.SetToolTip(this.btnOk, resources.GetString("btnOk.ToolTip"));
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
@@ -96,6 +101,7 @@
             resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
+            this.helpTip.SetToolTip(this.btnCancel, resources.GetString("btnCancel.ToolTip"));
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // radioCreateMultiple
@@ -125,20 +131,23 @@
             // 
             // comboOptimizing
             // 
+            resources.ApplyResources(this.comboOptimizing, "comboOptimizing");
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboOptimizing.FormattingEnabled = true;
-            resources.ApplyResources(this.comboOptimizing, "comboOptimizing");
             this.comboOptimizing.Name = "comboOptimizing";
+            this.helpTip.SetToolTip(this.comboOptimizing, resources.GetString("comboOptimizing.ToolTip"));
             // 
             // labelOptimizing
             // 
             resources.ApplyResources(this.labelOptimizing, "labelOptimizing");
             this.labelOptimizing.Name = "labelOptimizing";
+            this.helpTip.SetToolTip(this.labelOptimizing, resources.GetString("labelOptimizing.ToolTip"));
             // 
             // cbShowAllChromatograms
             // 
             resources.ApplyResources(this.cbShowAllChromatograms, "cbShowAllChromatograms");
             this.cbShowAllChromatograms.Name = "cbShowAllChromatograms";
+            this.helpTip.SetToolTip(this.cbShowAllChromatograms, resources.GetString("cbShowAllChromatograms.ToolTip"));
             this.cbShowAllChromatograms.UseVisualStyleBackColor = true;
             this.cbShowAllChromatograms.CheckedChanged += new System.EventHandler(this.cbShowAllChromatograms_CheckedChanged);
             // 
@@ -166,6 +175,7 @@
             this.MinimizeBox = false;
             this.Name = "ImportResultsDlg";
             this.ShowInTaskbar = false;
+            this.helpTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             this.ResumeLayout(false);
             this.PerformLayout();
 
