@@ -859,7 +859,7 @@
     <value>运行时间(&amp;D)（分钟）：</value>
   </data>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
-    <value>驻留时间(&amp;D)（毫秒）：</value>
+    <value>驻留时间（毫秒）(&amp;D)：</value>
   </data>
   <data name="ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen" xml:space="preserve">
     <value>未选择任何结果文件。</value>

@@ -151,7 +151,7 @@
     <value>63, 22</value>
   </data>
   <data name="labelResults.Text" xml:space="preserve">
-    <value>重复测定（&amp;R）：</value>
+    <value>重复测定(&amp;R)：</value>
   </data>
   <data name="comboResults.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>

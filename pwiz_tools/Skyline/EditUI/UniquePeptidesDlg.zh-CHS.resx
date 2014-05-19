@@ -250,7 +250,7 @@
     <value>1</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>蛋白质名称（&amp;P）：</value>
+    <value>蛋白质名称(&amp;P)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -328,7 +328,7 @@
     <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>描述（&amp;D）：</value>
+    <value>描述(&amp;D)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -358,7 +358,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>序列（&amp;S）：</value>
+    <value>序列(&amp;S)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>

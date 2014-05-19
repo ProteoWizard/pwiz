@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -175,7 +175,7 @@
     <value>320, 30</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-    <value>选择/取消选择全部（&amp;A）</value>
+    <value>选择/取消选择全部(&amp;A)</value>
   </data>
   <data name="cbSelectAll.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 17</value>

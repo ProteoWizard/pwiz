@@ -133,7 +133,7 @@
     <value>4</value>
   </data>
   <data name="btnUpdate.Text" xml:space="preserve">
-    <value>更新（&amp;U）</value>
+    <value>更新(&amp;U)</value>
   </data>
   <data name=">>btnUpdate.Name" xml:space="preserve">
     <value>btnUpdate</value>

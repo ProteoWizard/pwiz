@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>线宽（&amp;L）：</value>
+    <value>线宽(&amp;L)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -256,7 +256,7 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>字体大小（&amp;F）：</value>
+    <value>字体大小(&amp;F)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -133,7 +133,7 @@
     <value>0</value>
   </data>
   <data name="btnMinimal.Text" xml:space="preserve">
-    <value>最小（&amp;M）</value>
+    <value>最小(&amp;M)</value>
   </data>
   <data name=">>btnMinimal.Name" xml:space="preserve">
     <value>btnMinimal</value>
@@ -212,7 +212,7 @@
     <value>3</value>
   </data>
   <data name="btnComplete.Text" xml:space="preserve">
-    <value>完成（&amp;C）</value>
+    <value>完成(&amp;C)</value>
   </data>
   <data name=">>btnComplete.Name" xml:space="preserve">
     <value>btnComplete</value>

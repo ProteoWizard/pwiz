@@ -584,7 +584,7 @@
     <value>19</value>
   </data>
   <data name="label21.Text" xml:space="preserve">
-    <value>固件和包含限制（&amp;I）：</value>
+    <value>固件和包含限制(&amp;I)：</value>
   </data>
   <data name=">>label21.Name" xml:space="preserve">
     <value>label21</value>
@@ -665,7 +665,7 @@
     <value>16</value>
   </data>
   <data name="label33.Text" xml:space="preserve">
-    <value>最大时间（&amp;A）：</value>
+    <value>最大时间(&amp;A)：</value>
   </data>
   <data name=">>label33.Name" xml:space="preserve">
     <value>label33</value>
@@ -692,7 +692,7 @@
     <value>12</value>
   </data>
   <data name="label34.Text" xml:space="preserve">
-    <value>最小时间（&amp;N）：</value>
+    <value>最小时间(&amp;N)：</value>
   </data>
   <data name=">>label34.Name" xml:space="preserve">
     <value>label34</value>
@@ -852,7 +852,7 @@
     <value>3</value>
   </data>
   <data name="cbDynamicMinimum.Text" xml:space="preserve">
-    <value>动态最少子离子质核比（&amp;D）</value>
+    <value>动态最少子离子质核比(&amp;D)</value>
   </data>
   <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
     <value>如果被选，子离子的最小质核比值
@@ -909,7 +909,7 @@
     <value>10</value>
   </data>
   <data name="label17.Text" xml:space="preserve">
-    <value>固件离子对限制（&amp;F）：</value>
+    <value>固件离子对限制(&amp;F)：</value>
   </data>
   <data name=">>label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -962,7 +962,7 @@
     <value>7</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-    <value>方法匹配耐受性质核比（&amp;T）：</value>
+    <value>方法匹配耐受性质核比(&amp;T)：</value>
   </data>
   <data name=">>label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -989,7 +989,7 @@
     <value>4</value>
   </data>
   <data name="label10.Text" xml:space="preserve">
-    <value>最大质核比（&amp;X）：</value>
+    <value>最大质核比(&amp;X)：</value>
   </data>
   <data name=">>label10.Name" xml:space="preserve">
     <value>label10</value>
@@ -1016,7 +1016,7 @@
     <value>0</value>
   </data>
   <data name="label11.Text" xml:space="preserve">
-    <value>最小质核比（&amp;M）：</value>
+    <value>最小质核比(&amp;M)：</value>
   </data>
   <data name=">>label11.Name" xml:space="preserve">
     <value>label11</value>
@@ -1163,7 +1163,7 @@
     <value>9</value>
   </data>
   <data name="labelOptimizeType.Text" xml:space="preserve">
-    <value>优化依据（&amp;O）：</value>
+    <value>优化依据(&amp;O)：</value>
   </data>
   <data name="labelOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1230,7 +1230,7 @@
     <value>8</value>
   </data>
   <data name="cbUseOptimized.Text" xml:space="preserve">
-    <value>在最优化值存在时使用该值（&amp;U）</value>
+    <value>在最优化值存在时使用该值(&amp;U)</value>
   </data>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
     <value>如果被选，任何已测量的 CE 或 DP 最优化值将
@@ -1342,7 +1342,7 @@
     <value>4</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>碰撞能量（&amp;C）：</value>
+    <value>碰撞能量(&amp;C)：</value>
   </data>
   <data name=">>label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -1400,7 +1400,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>子离子质量（&amp;D）：</value>
+    <value>子离子质量(&amp;D)：</value>
   </data>
   <data name=">>label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1458,7 +1458,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>母离子质量（&amp;P）：</value>
+    <value>母离子质量(&amp;P)：</value>
   </data>
   <data name=">>label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -1510,7 +1510,7 @@
     <value>4</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-    <value>离子类型（&amp;T）：</value>
+    <value>离子类型(&amp;T)：</value>
   </data>
   <data name=">>label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -1537,7 +1537,7 @@
     <value>7</value>
   </data>
   <data name="cbAutoSelect.Text" xml:space="preserve">
-    <value>自动选择所有匹配的离子对（&amp;A）</value>
+    <value>自动选择所有匹配的离子对(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
     <value>如果被选，那么离子对将针对使用
@@ -1820,7 +1820,7 @@
     <value>4</value>
   </data>
   <data name="label18.Text" xml:space="preserve">
-    <value>始终添加（&amp;W）：</value>
+    <value>始终添加(&amp;W)：</value>
   </data>
   <data name=">>label18.Name" xml:space="preserve">
     <value>label18</value>
@@ -1896,7 +1896,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>从（&amp;F）：</value>
+    <value>从(&amp;F)：</value>
   </data>
   <data name=">>label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -1947,7 +1947,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>至（&amp;O）：</value>
+    <value>至(&amp;O)：</value>
   </data>
   <data name=">>label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -2024,7 +2024,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>离子电荷（&amp;I）：</value>
+    <value>离子电荷(&amp;I)：</value>
   </data>
   <data name=">>label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -2051,7 +2051,7 @@
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>母离子电荷（&amp;P）：</value>
+    <value>母离子电荷(&amp;P)：</value>
   </data>
   <data name=">>label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -2078,7 +2078,7 @@
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-    <value>离子匹配耐受性（&amp;I）：</value>
+    <value>离子匹配耐受性(&amp;I)：</value>
   </data>
   <data name=">>label9.Name" xml:space="preserve">
     <value>label9</value>
@@ -2198,7 +2198,7 @@
     <value>4</value>
   </data>
   <data name="radioAllAndFiltered.Text" xml:space="preserve">
-    <value>从已过滤的子离子和类型以及过滤的子离子（&amp;U）</value>
+    <value>从已过滤的子离子和类型以及过滤的子离子(&amp;U)</value>
   </data>
   <data name="radioAllAndFiltered.ToolTip" xml:space="preserve">
     <value>从过滤器标签到
@@ -2231,7 +2231,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型，�
     <value>5</value>
   </data>
   <data name="radioFiltered.Text" xml:space="preserve">
-    <value>从已过滤的子离子（&amp;D）</value>
+    <value>从已过滤的子离子(&amp;D)</value>
   </data>
   <data name="radioFiltered.ToolTip" xml:space="preserve">
     <value>从过滤器标签到 MS/MS
@@ -2262,7 +2262,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型，�
     <value>3</value>
   </data>
   <data name="radioAll.Text" xml:space="preserve">
-    <value>从已过滤的离子电荷和类型（&amp;C）</value>
+    <value>从已过滤的离子电荷和类型(&amp;C)</value>
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
     <value>从过滤器标签到
@@ -2293,7 +2293,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>0</value>
   </data>
   <data name="label14.Text" xml:space="preserve">
-    <value>选择（&amp;P）：</value>
+    <value>选择(&amp;P)：</value>
   </data>
   <data name=">>label14.Name" xml:space="preserve">
     <value>label14</value>
@@ -2397,7 +2397,7 @@ MS/MS 峰值匹配离子针对排名的选择仅应用离子电荷和类型</val
     <value>3</value>
   </data>
   <data name="cbLibraryPick.Text" xml:space="preserve">
-    <value>如果库谱图可用，则选择其最强的离子（&amp;S）</value>
+    <value>如果库谱图可用，则选择其最强的离子(&amp;S)</value>
   </data>
   <data name="cbLibraryPick.ToolTip" xml:space="preserve">
     <value>如果被选，那么无论何时当肽段与库谱图匹配时，

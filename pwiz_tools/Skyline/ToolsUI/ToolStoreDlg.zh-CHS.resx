@@ -316,7 +316,7 @@
     <value>15</value>
   </data>
   <data name="buttonExit.Text" xml:space="preserve">
-    <value>关闭（&amp;C）</value>
+    <value>关闭(&amp;C)</value>
   </data>
   <data name=">>buttonExit.Name" xml:space="preserve">
     <value>buttonExit</value>
@@ -346,7 +346,7 @@
     <value>14</value>
   </data>
   <data name="buttonInstallUpdate.Text" xml:space="preserve">
-    <value>安装（&amp;N）</value>
+    <value>安装(&amp;N)</value>
   </data>
   <data name=">>buttonInstallUpdate.Name" xml:space="preserve">
     <value>buttonInstallUpdate</value>
@@ -619,7 +619,7 @@
     <value>13</value>
   </data>
   <data name="buttonToolStore.Text" xml:space="preserve">
-    <value>工具商店（&amp;T）……</value>
+    <value>工具商店(&amp;T)……</value>
   </data>
   <data name=">>buttonToolStore.Name" xml:space="preserve">
     <value>buttonToolStore</value>
