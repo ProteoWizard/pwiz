@@ -152,7 +152,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     new BiblioLiteSpectrumInfo(spectrum.Key, dbRefSpectrum.Copies,
                                                                 dbRefSpectrum.NumPeaks,
                                                                 (int)(dbRefSpectrum.Id ?? 0),
-                                                                default(IndexedRetentionTimes)));
+                                                                default(IndexedRetentionTimes),
+                                                                default(IndexedIonMobilities)));
                     if (progressMonitor != null)
                     {
                         if (progressMonitor.IsCanceled)
@@ -349,7 +350,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                     new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
                                                                                refSpectra.NumPeaks,
                                                                                (int) (refSpectra.Id ?? 0),
-                                                                               default(IndexedRetentionTimes)));
+                                                                               default(IndexedRetentionTimes),
+                                                                               default(IndexedIonMobilities)));
                                 }
 
                                 session.Flush();
@@ -385,12 +387,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                                 // TODO(nicksh): preserve retention time information.
                                 var retentionTimesByFileId = default(IndexedRetentionTimes);
+                                var driftTimesByFileId = default(IndexedIonMobilities);
                                 dictLibrary.Add(libKey,
                                                 new BiblioLiteSpectrumInfo(libKey,
                                                                            refSpectra.Copies,
                                                                            refSpectra.NumPeaks,
                                                                            (int) (refSpectra.Id ?? 0), 
-                                                                           retentionTimesByFileId));
+                                                                           retentionTimesByFileId,
+                                                                           driftTimesByFileId));
 
                                 // Save entries in the redundant library.
                                 if (saveRedundantLib && redundantSpectraKeys.Count > 0)

@@ -48,7 +48,6 @@ namespace pwiz.SkylineTest.Results
             string docPath;
             SrmDocument document = InitAgilentMseDocument(testFilesDir, out docPath);
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
-
             var doc = docContainer.Document;
             var listChromatograms = new List<ChromatogramSet>();
             const string path = @"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML";
@@ -76,8 +75,8 @@ namespace pwiz.SkylineTest.Results
                 // expecting just one peptide result in this small data set
                 if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
                 {
-                    Assert.AreEqual((double)nodePep.GetMeasuredRetentionTime(0), 0.2520333, .0001);
-                    Assert.AreEqual((double) nodePep.GetPeakCountRatio(0), 0.3333, 0.0001);
+                    Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs");
+                    Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
                     nPeptides++;
                 }
             }

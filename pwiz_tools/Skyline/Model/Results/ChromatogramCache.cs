@@ -34,7 +34,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const int FORMAT_VERSION_CACHE_7 = 7;
+        public const int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
+        public const int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support
         public const int FORMAT_VERSION_CACHE_6 = 6;
         public const int FORMAT_VERSION_CACHE_5 = 5;
         public const int FORMAT_VERSION_CACHE_4 = 4;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static int FORMAT_VERSION_CACHE
         {
-            get { return FORMAT_VERSION_CACHE_7; }
+            get { return FORMAT_VERSION_CACHE_8; }
         }
 
         /// <summary>
@@ -82,7 +83,13 @@ namespace pwiz.Skyline.Model.Results
             // If the data file is not in the same directory as the document, add a checksum
             // of the data directory.
             if (!Equals(dirData, dirDocument))
-                sbName.Append('_').Append(AdlerChecksum.MakeForString(dirData));
+            {
+                // Perhaps one of these hasn't a path at all - are both in the current working directory?
+                string fullDocDirPath = String.IsNullOrEmpty(dirDocument) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirDocument));
+                string fullFileDirPath = String.IsNullOrEmpty(dirData) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirData));
+                if (!Equals(fullDocDirPath, fullFileDirPath))
+                    sbName.Append('_').Append(AdlerChecksum.MakeForString(fullFileDirPath));
+            }
             // If it has a sample name, append the index to differentiate this name from
             // the other samples in the multi-sample file
             if (SampleHelp.HasSamplePart(dataFilePath))
@@ -99,7 +106,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly ReadOnlyCollection<ChromCachedFile> _cachedFiles;
         // ReadOnlyCollection is not fast enough for use with these arrays
         private readonly ChromGroupHeaderInfo5[] _chromatogramEntries;
-        private readonly ChromTransition5[] _chromTransitions;
+        private readonly ChromTransition[] _chromTransitions;
         private readonly BlockedArray<ChromPeak> _chromatogramPeaks;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
         private readonly float[] _scores;
@@ -154,11 +161,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsVersionCurrent(int version)
         {
-            return (version == FORMAT_VERSION_CACHE_7 ||
-                    version == FORMAT_VERSION_CACHE_6 ||
-                    version == FORMAT_VERSION_CACHE_5 ||
-                    version == FORMAT_VERSION_CACHE_4 ||
-                    version == FORMAT_VERSION_CACHE_3);
+            return (version >= FORMAT_VERSION_CACHE_3 && FORMAT_VERSION_CACHE >= version);
         }
 
         public bool IsCurrentDisk
@@ -166,7 +169,7 @@ namespace pwiz.Skyline.Model.Results
             get { return CachedFiles.IndexOf(cachedFile => !cachedFile.IsCurrent) == -1; }
         }
 
-        public ChromTransition5 GetTransition(int index)
+        public ChromTransition GetTransition(int index)
         {
             return _chromTransitions[index];
         }
@@ -433,7 +436,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     ChromCacheFiles = new ChromCachedFile[0],
                     ChromatogramEntries = new ChromGroupHeaderInfo5[0],
-                    ChromTransitions = new ChromTransition5[0],
+                    ChromTransitions = new ChromTransition[0],
                     ChromatogramPeaks = new BlockedArray<ChromPeak>(),
                     ScoreTypes = new Type[0],
                     Scores = new float[0],
@@ -442,7 +445,7 @@ namespace pwiz.Skyline.Model.Results
             public int FormatVersion { get; set; }
             public ChromCachedFile[] ChromCacheFiles { get; set; }
             public ChromGroupHeaderInfo5[] ChromatogramEntries { get; set; }
-            public ChromTransition5[] ChromTransitions { get; set; }
+            public ChromTransition[] ChromTransitions { get; set; }
             public BlockedArray<ChromPeak> ChromatogramPeaks { get; set; }
             public Type[] ScoreTypes { get; set; }
             public float[] Scores { get; set; }
@@ -671,7 +674,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Read list of transitions
             stream.Seek(locationTrans, SeekOrigin.Begin);
-            raw.ChromTransitions = ChromTransition5.ReadArray(stream, numTrans, formatVersion);
+            raw.ChromTransitions = ChromTransition.ReadArray(stream, numTrans, formatVersion);
 
             // Read list of peaks
             stream.Seek(locationPeaks, SeekOrigin.Begin);
@@ -733,7 +736,7 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStreamPeaks,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         List<ChromGroupHeaderInfo5> chromatogramEntries,
-                                        ICollection<ChromTransition5> chromTransitions,
+                                        ICollection<ChromTransition> chromTransitions,
                                         ICollection<Type> scoreTypes,
                                         float[] scores,
                                         int peakCount,
@@ -754,7 +757,7 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStreamPeaks,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         List<ChromGroupHeaderInfo5> chromatogramEntries,
-                                        ICollection<ChromTransition5> chromTransitions,
+                                        ICollection<ChromTransition> chromTransitions,
                                         ICollection<byte> seqBytes,
                                         ICollection<Type> scoreTypes,
                                         float[] scores,
@@ -773,6 +776,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     outStream.Write(BitConverter.GetBytes(tran.Product), 0, sizeof(double));
                     outStream.Write(BitConverter.GetBytes(tran.ExtractionWidth), 0, sizeof(float));
+                    if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_7)
+                    {
+                        outStream.Write(BitConverter.GetBytes(tran.IonMobilityValue), 0, sizeof(float));
+                        outStream.Write(BitConverter.GetBytes(tran.IonMobilityExtractionWidth), 0, sizeof(float));
+                    }
                     outStream.Write(BitConverter.GetBytes(tran.FlagBits), 0, sizeof(ushort));
                     outStream.Write(BitConverter.GetBytes(tran.Align1), 0, sizeof(ushort));
                 }
@@ -1025,7 +1033,7 @@ namespace pwiz.Skyline.Model.Results
                     float extractionWidth = tranInfo.ExtractionWidth;
                     ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_seqBytes, groupInfo.SeqIndex, groupInfo.SeqLen,
-                        groupInfo.Precursor, product, extractionWidth, source, groupInfo.Extractor, true);
+                        groupInfo.Precursor, product, extractionWidth, tranInfo.IonMobilityValue, tranInfo.IonMobilityExtractionWidth,  source, groupInfo.Extractor, true);
 
                     int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
                     int rank = groupInfo.HasStatusRank ? groupInfo.StatusRank : -1;
@@ -1070,7 +1078,7 @@ namespace pwiz.Skyline.Model.Results
 
             var listKeepEntries = new List<ChromGroupHeaderInfo5>();
             var listKeepCachedFiles = new List<ChromCachedFile>();
-            var listKeepTransitions = new List<ChromTransition5>();
+            var listKeepTransitions = new List<ChromTransition>();
             var listKeepSeqBytes = new List<byte>();
             var dictKeepSeqIndices = new Dictionary<int, int>();
             var listKeepScores = new List<float>();

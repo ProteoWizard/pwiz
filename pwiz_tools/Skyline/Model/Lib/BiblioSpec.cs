@@ -549,6 +549,25 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        // No ion mobility data in BiblioSpec libs (those are ancient - try BiblioSpecLite instead)
+        public override bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
+        public override bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
+        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // This base class only handles best match spectra

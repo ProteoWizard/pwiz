@@ -772,7 +772,7 @@ namespace pwiz.Skyline.Controls.Graphs
             chromatogramInfo = new ChromatogramInfo(header,
                     new Dictionary<Type, int>(), 0,
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition5(chromData.Mz, 0, ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, 0, 0, ChromSource.unknown), },
                     peaks, null,
                     chromGroup.Times, new[] { chromData.Intensities }, null);
             

@@ -157,6 +157,7 @@
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
     <Compile Include="InstallToolsTest.cs" />
+    <Compile Include="IonMobilityTest.cs" />
     <Compile Include="IrtTest.cs" />
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
@@ -256,6 +257,7 @@
     <None Include="ImportPeptideSearchTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />
+    <None Include="IonMobilityTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />

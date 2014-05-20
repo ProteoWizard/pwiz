@@ -234,7 +234,6 @@ namespace pwiz.Skyline.Model.Irt
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ DatabasePath.GetHashCode();
-                // TODO: Get the code for getting a reference equality hashcode from Nick
                 result = (result*397) ^ (_database != null ? _database.GetHashCode() : 0);
                 return result;
             }

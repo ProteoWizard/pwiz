@@ -230,8 +230,9 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_3 = 1.3;
         public const double FORMAT_VERSION_1_4 = 1.4;
         public const double FORMAT_VERSION_1_5 = 1.5;
-        public const double FORMAT_VERSION_1_6 = 1.6;   // adds richer protein metadata
-        public const double FORMAT_VERSION = FORMAT_VERSION_1_6;
+        public const double FORMAT_VERSION_1_6 = 1.6;   // Adds richer protein metadata
+        public const double FORMAT_VERSION_1_7 = 1.7;   // Adds Ion Mobility handling
+        public const double FORMAT_VERSION = FORMAT_VERSION_1_7;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;

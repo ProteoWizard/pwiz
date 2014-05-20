@@ -479,9 +479,9 @@ namespace pwiz.Skyline.Model.Results
     }
 
 
-    public struct ChromTransition
+    public struct ChromTransition4
     {
-        public ChromTransition(float product) : this()
+        public ChromTransition4(float product) : this()
         {
             Product = product;
         }
@@ -501,7 +501,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="stream">Stream to from which to read the elements</param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition[] ReadArray(Stream stream, int count)
+        public static unsafe ChromTransition4[] ReadArray(Stream stream, int count)
         {
             // Use fast version, if this is a file
             var fileStream = stream as FileStream;
@@ -519,8 +519,8 @@ namespace pwiz.Skyline.Model.Results
 
             // CONSIDER: Probably faster in this case to read the entire block,
             //           and convert from bytes to single float values.
-            ChromTransition[] results = new ChromTransition[count];
-            int size = sizeof (ChromTransition);
+            ChromTransition4[] results = new ChromTransition4[count];
+            int size = sizeof (ChromTransition4);
             byte[] buffer = new byte[size];
             for (int i = 0; i < count; ++i)
             {
@@ -529,7 +529,7 @@ namespace pwiz.Skyline.Model.Results
 
                 fixed (byte* pBuffer = buffer)
                 {
-                    results[i] = *(ChromTransition*) pBuffer;
+                    results[i] = *(ChromTransition4*) pBuffer;
                 }
             }
 
@@ -548,12 +548,12 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="count">Number of elements to read</param>
         /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
+        public static unsafe ChromTransition4[] ReadArray(SafeHandle file, int count)
         {
-            ChromTransition[] results = new ChromTransition[count];
-            fixed (ChromTransition* p = results)
+            ChromTransition4[] results = new ChromTransition4[count];
+            fixed (ChromTransition4* p = results)
             {
-                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition) * count);
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition4) * count);
             }
 
             return results;
@@ -566,11 +566,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
         /// <param name="setHeaders">The array to write</param>
-        public static unsafe void WriteArray(SafeHandle file, ChromTransition[] setHeaders)
+        public static unsafe void WriteArray(SafeHandle file, ChromTransition4[] setHeaders)
         {
-            fixed (ChromTransition* p = &setHeaders[0])
+            fixed (ChromTransition4* p = &setHeaders[0])
             {
-                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromTransition) * setHeaders.Length);
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromTransition4) * setHeaders.Length);
             }
         }
 
@@ -603,8 +603,8 @@ namespace pwiz.Skyline.Model.Results
             Align1 = 0;
         }
 
-        public ChromTransition5(ChromTransition chromTransition)
-            : this(chromTransition.Product, 0, ChromSource.unknown)
+        public ChromTransition5(ChromTransition4 chromTransition4)
+            : this(chromTransition4.Product, 0, ChromSource.unknown)
         {            
         }
 
@@ -661,7 +661,7 @@ namespace pwiz.Skyline.Model.Results
             if (formatVersion > ChromatogramCache.FORMAT_VERSION_CACHE_4)
                 return ReadArray(stream, count);
 
-            var chrom4Transitions = ChromTransition.ReadArray(stream, count);
+            var chrom4Transitions = ChromTransition4.ReadArray(stream, count);
             var chromTransitions = new ChromTransition5[chrom4Transitions.Length];
             for (int i = 0; i < chrom4Transitions.Length; i++)
             {
@@ -770,8 +770,194 @@ namespace pwiz.Skyline.Model.Results
 
         public static unsafe int DeltaSize5
         {
-            get { return sizeof(ChromTransition5) - sizeof(ChromTransition); }
+            get { return sizeof(ChromTransition5) - sizeof(ChromTransition4); }
         }
+    }
+
+    /// <summary>
+    /// Version 8 of ChromTransition adds ion mobility information
+    /// </summary>
+    public struct ChromTransition 
+    {
+        [Flags]
+        public enum FlagValues
+        {
+            source1 =       0x01,   // unknown = 00, fragment = 01
+            source2 =       0x02,   // ms1     = 10, sim      = 11
+        }
+
+        public ChromTransition(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
+        {
+            Product = product;
+            ExtractionWidth = extractionWidth;
+            IonMobilityValue = ionMobilityValue;
+            IonMobilityExtractionWidth = ionMobilityExtractionWidth;
+            Source = source;
+            Align1 = 0;
+        }
+
+        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product, 
+            chromTransition5.ExtractionWidth, 0, 0, chromTransition5.Source)
+        {            
+        }
+
+        public ChromTransition(ChromTransition4 chromTransition4)
+            : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown)
+        {            
+        }
+
+        public double Product { get; private set; }
+        public float ExtractionWidth { get; private set; }  // In m/z
+        public float IonMobilityValue { get; private set; } // Get the units (msec or area) from the source files
+        public float IonMobilityExtractionWidth { get; private set; } // Get the units (msec or area) from the source files
+        public ushort FlagBits { get; private set; }
+        public ushort Align1 { get; private set; }  // Explicitly declaring alignment padding the compiler will add anyway
+
+        public FlagValues Flags { get { return (FlagValues) FlagBits; } }
+
+        public ChromSource Source
+        {
+            get
+            {
+                // CONSIDER: Could just mask and cast
+                switch (Flags & (FlagValues.source1 | FlagValues.source2))
+                {
+                    case 0:
+                        return ChromSource.unknown;
+                    case FlagValues.source2:
+                        return ChromSource.fragment;
+                    case FlagValues.source1:
+                        return ChromSource.ms1;
+                    default:
+                        return ChromSource.sim;
+                }
+            }
+            set
+            {
+                FlagBits = (ushort) GetFlags(value);
+            }
+        }
+
+        public FlagValues GetFlags(ChromSource source)
+        {
+            // CONSIDER: Could just cast
+            switch (source)
+            {
+                case ChromSource.unknown:
+                    return 0;
+                case ChromSource.fragment:
+                    return FlagValues.source2;
+                case ChromSource.ms1:
+                    return FlagValues.source1;
+                default:
+                    return FlagValues.source1 | FlagValues.source2;
+            }
+        }
+
+        #region Fast file I/O
+
+        public static ChromTransition[] ReadArray(Stream stream, int count, int formatVersion)
+        {
+            if (formatVersion > ChromatogramCache.FORMAT_VERSION_CACHE_6)
+                return ReadArray(stream, count);
+
+            var chrom5Transitions = ChromTransition5.ReadArray(stream, count, formatVersion); // Falls through to v4 reader as needed
+            var chromTransitions = new ChromTransition[chrom5Transitions.Length];
+            for (int i = 0; i < chrom5Transitions.Length; i++)
+            {
+                chromTransitions[i] = new ChromTransition(chrom5Transitions[i]);
+            }
+            return chromTransitions;
+        }
+
+        /// <summary>
+        /// A 2x slower version of ReadArray than <see cref="ReadArray(SafeHandle,int)"/>
+        /// that does not require a file handle.  This one is covered in Randy Kern's blog,
+        /// but is originally from Eric Gunnerson:
+        /// <para>
+        /// http://blogs.msdn.com/ericgu/archive/2004/04/13/112297.aspx
+        /// </para>
+        /// </summary>
+        /// <param name="stream">Stream to from which to read the elements</param>
+        /// <param name="count">Number of elements to read</param>
+        /// <returns>New array of elements</returns>
+        public static unsafe ChromTransition[] ReadArray(Stream stream, int count)
+        {
+            // Use fast version, if this is a file
+            var fileStream = stream as FileStream;
+            if (fileStream != null)
+            {
+                try
+                {
+                    return ReadArray(fileStream.SafeFileHandle, count);
+                }
+                catch (BulkReadException)
+                {
+                    // Fall through and attempt to read the slow way
+                }
+            }
+
+            // CONSIDER: Probably faster in this case to read the entire block,
+            //           and convert from bytes to single float values.
+            ChromTransition[] results = new ChromTransition[count];
+            int size = sizeof (ChromTransition);
+            byte[] buffer = new byte[size];
+            for (int i = 0; i < count; ++i)
+            {
+                if (stream.Read(buffer, 0, size) != size)
+                    throw new InvalidDataException();
+
+                fixed (byte* pBuffer = buffer)
+                {
+                    results[i] = *(ChromTransition*) pBuffer;
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
+        /// to coexist with FileStream reading that the write version, but its use case
+        /// is tightly limited.
+        /// <para>
+        /// Contributed by Randy Kern.  See:
+        /// http://randy.teamkern.net/2009/02/reading-arrays-from-files-in-c-without-extra-copy.html
+        /// </para>
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="count">Number of elements to read</param>
+        /// <returns>New array of elements</returns>
+        public static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
+        {
+            ChromTransition[] results = new ChromTransition[count];
+            fixed (ChromTransition* p = results)
+            {
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition) * count);
+            }
+
+            return results;
+        }
+
+        ///
+        /// NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
+        /// added here need to be added there - and in the proper order!
+        /// 
+
+        #endregion
+
+        #region object overrides
+
+        /// <summary>
+        /// For debugging only
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format("{0:F04} {1:F04} - {2}", Product, IonMobilityValue, Source); // Not L10N
+        }
+
+        #endregion
+
     }
 
     public struct ChromPeak : ISummaryPeakData
@@ -1277,8 +1463,8 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromKey : IComparable<ChromKey>
     {
-        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0, 0,
-            ChromSource.unknown, ChromExtractor.summed, false);
+        public static readonly ChromKey EMPTY = new ChromKey(null, 0, 0, 0,
+            0, 0, 0, ChromSource.unknown, ChromExtractor.summed, false);
 
         public ChromKey(byte[] seqBytes,
                         int seqIndex,
@@ -1286,32 +1472,28 @@ namespace pwiz.Skyline.Model.Results
                         double precursor,
                         double product,
                         double extractionWidth,
+                        double ionMobilityValue,
+                        double ionMobilityExtractionWidth,
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs)
             : this(seqIndex != -1 ? Encoding.Default.GetString(seqBytes, seqIndex, seqLen) : null,
                    precursor,
+                   ionMobilityValue,
+                   ionMobilityExtractionWidth,
                    product,
                    0,
-                   extractionWidth,
-                   source,
-                   extractor,
-                   calculatedMzs)
+                   extractionWidth, source, extractor, calculatedMzs)
         {
         }
 
-        public ChromKey(string modifiedSequence,
-                        double precursor,
-                        double product,
-                        double ceValue,
-                        double extractionWidth,
-                        ChromSource source,
-                        ChromExtractor extractor,
-                        bool calculatedMzs)
+        public ChromKey(string modifiedSequence, double precursor, double? ionMobilityValue, double ionMobilityExtractionWidth, double product, double ceValue, double extractionWidth, ChromSource source, ChromExtractor extractor, bool calculatedMzs)
             : this()
         {
             ModifiedSequence = modifiedSequence;
             Precursor = precursor;
+            IonMobilityValue = (float)(ionMobilityValue ?? 0);
+            IonMobilityExtractionWidth = (float)ionMobilityExtractionWidth;
             Product = product;
             CollisionEnergy = (float) ceValue;
             ExtractionWidth = (float) extractionWidth;
@@ -1322,6 +1504,8 @@ namespace pwiz.Skyline.Model.Results
 
         public string ModifiedSequence { get; private set; }
         public double Precursor { get; private set; }
+        public float IonMobilityValue { get; private set; } // Dimensionless here - depends on source files
+        public float IonMobilityExtractionWidth { get; private set; } // Dimensionless here - depends on source files
         public double Product { get; private set; }
         public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
@@ -1339,12 +1523,11 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromKey(ModifiedSequence,
                                 Precursor,
+                                IonMobilityValue,
+                                IonMobilityExtractionWidth,
                                 Product + step*ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
-                                0,  // Avoid ever thinking this needs to be done again by clearing the CE field
-                                ExtractionWidth,
-                                Source,
-                                Extractor,
-                                HasCalculatedMzs);
+                                0,
+                                ExtractionWidth, Source, Extractor, HasCalculatedMzs);
         }
 
         /// <summary>
@@ -1353,8 +1536,8 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             if (ModifiedSequence != null)
-                return string.Format("{0:F04}, {1:F04} - {2} - {3}", Precursor, Product, Source, ModifiedSequence); // Not L10N
-            return string.Format("{0:F04}, {1:F04} - {2}", Precursor, Product, Source); // Not L10N
+                return string.Format("{0:F04}, {1:F04} im{4:F04} - {2} - {3}", Precursor, Product, Source, ModifiedSequence, IonMobilityValue); // Not L10N
+            return string.Format("{0:F04}, {1:F04} im{3:F04} - {2}", Precursor, Product, Source, IonMobilityValue); // Not L10N
         }
 
         public int CompareTo(ChromKey key)
@@ -1505,7 +1688,7 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = ceParsed;
                     }
                 }
-                return new ChromKey(null, precursor, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false);
+                return new ChromKey(null, precursor, 0, 0, product, ceValue, 0, ChromSource.fragment, ChromExtractor.summed, false);
             }
             catch (FormatException)
             {
@@ -1535,14 +1718,14 @@ namespace pwiz.Skyline.Model.Results
         protected readonly ChromGroupHeaderInfo5 _groupHeaderInfo;
         protected readonly IDictionary<Type, int> _scoreTypeIndices;
         protected readonly IList<ChromCachedFile> _allFiles;
-        protected readonly ChromTransition5[] _allTransitions;
+        protected readonly ChromTransition[] _allTransitions;
         protected readonly BlockedArray<ChromPeak> _allPeaks;
         protected readonly float[] _allScores;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo5 groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
                                      IList<ChromCachedFile> allFiles,
-                                     ChromTransition5[] allTransitions,
+                                     ChromTransition[] allTransitions,
                                      BlockedArray<ChromPeak> allPeaks,
                                      float[] allScores)
         {
@@ -1789,7 +1972,7 @@ namespace pwiz.Skyline.Model.Results
                                 IDictionary<Type, int> scoreTypeIndices,
                                 int transitionIndex,
                                 IList<ChromCachedFile> allFiles,
-                                ChromTransition5[] allTransitions,
+                                ChromTransition[] allTransitions,
                                 BlockedArray<ChromPeak> allPeaks,
                                 float[] allScores,
                                 float[] times,

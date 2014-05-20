@@ -466,6 +466,35 @@ namespace pwiz.Skyline.Model.Lib
             return new double[0];
         }
 
+
+        /// <summary>
+        /// Attempts to get ion mobility information for a specific
+        /// (sequence, charge) pair and file.
+        /// </summary>
+        /// <param name="key">A sequence, charge pair</param>
+        /// <param name="filePath">A file for which the ion mobility information is requested</param>
+        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
+        /// <returns>True if retention time information was retrieved successfully</returns>
+        public abstract bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities);
+
+        /// <summary>
+        /// Attempts to get ion mobility information for all of the
+        /// (sequence, charge) pairs identified from a specific file.
+        /// </summary>
+        /// <param name="filePath">A file for which the ion mobility information is requested</param>
+        /// <param name="ionMobilities"></param>
+        /// <returns>True if ion mobility information was retrieved successfully</returns>
+        public abstract bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities);
+
+        /// <summary>
+        /// Attempts to get ion mobility information for all of the
+        /// (sequence, charge) pairs identified from a specific file by index.
+        /// </summary>
+        /// <param name="fileIndex">Index of a file for which the ion mobility information is requested</param>
+        /// <param name="ionMobilities"></param>
+        /// <returns>True if ion mobility information was retrieved successfully</returns>
+        public abstract bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities);
+
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
         /// may include redundant spectra.  The spectrum points themselves are only loaded as it they
@@ -706,6 +735,27 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities)
+        {
+            // By default, no ion mobility information is available
+            ionMobilities = null;
+            return false;
+        }
+
+        public override bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        {
+            // By default, no ion mobility information is available
+            ionMobilities = null;
+            return false;
+        }
+
+        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        {
+            // By default, no ion mobility information is available
+            ionMobilities = null;
+            return false;
+        }
+
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // This base class only handles best match spectra
@@ -853,6 +903,41 @@ namespace pwiz.Skyline.Model.Lib
                 dict.Add(entry.Key, entry.Value.Min());
             }
             return dict;
+        }
+    }
+
+    public sealed class LibraryIonMobilityInfo : IIonMobilityInfoProvider
+    {
+        private readonly IDictionary<LibKey, IonMobilityInfo[]> _dictChargedPeptideIonMobilities;
+
+        public LibraryIonMobilityInfo(string path, IDictionary<LibKey, IonMobilityInfo[]> dictChargedPeptideIonMobilities)
+        {
+            Name = path;
+            _dictChargedPeptideIonMobilities = dictChargedPeptideIonMobilities;
+        }
+
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// Return the average ion mobility for spectra that were identified with a
+        /// specific modified peptide sequence and charge state.  TODO - outlier detection as in RT code?
+        /// </summary>
+        public IonMobilityInfo GetIonMobilityInfo(LibKey chargedPeptide)
+        {
+            IonMobilityInfo[] ionMobilities;
+            if ((!_dictChargedPeptideIonMobilities.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
+                return null;
+            if (ionMobilities.Length == 1)
+                return ionMobilities[0];
+            if ((ionMobilities[0].IsCollisionalCrossSection && ionMobilities.Any(dt => !dt.IsCollisionalCrossSection))
+               || (!ionMobilities[0].IsCollisionalCrossSection) && ionMobilities.Any(dt => dt.IsCollisionalCrossSection))
+                return ionMobilities[0];
+            return new IonMobilityInfo(ionMobilities.Select(dt => dt.Value).Average(), ionMobilities[0].IsCollisionalCrossSection);
+        }
+
+        public IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict()
+        {
+            return _dictChargedPeptideIonMobilities;
         }
     }
 
@@ -1257,23 +1342,39 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     /// <summary>
+    /// Information about ion mobility - either an actual collisional cross sectopm,
+    /// or a drift time needing translation to collisional cross section 
+    /// </summary>
+    public class IonMobilityInfo
+    {
+        public IonMobilityInfo(double value, bool isCollisionalCrossSection)
+        {
+            Value = value;
+            IsCollisionalCrossSection = isCollisionalCrossSection;
+        }
+        public double Value { get; private set; }
+        public bool IsCollisionalCrossSection { get; private set; }
+    }
+
+    /// <summary>
     /// Information required for spectrum display in a list.
     /// </summary>
     public class SpectrumInfo
     {
         public SpectrumInfo(Library library, IsotopeLabelType labelType, object spectrumKey)
-            : this(library, labelType, null, null, true, spectrumKey)
+            : this(library, labelType, null, null, null, true, spectrumKey)
         {
         }
 
         public SpectrumInfo(Library library, IsotopeLabelType labelType,
-            string filePath, double? retentionTime, bool isBest, object spectrumKey)
+            string filePath, double? retentionTime, IonMobilityInfo ionMobilityInfo, bool isBest, object spectrumKey)
         {
             Library = library;
             LabelType = labelType;
             SpectrumKey = spectrumKey;
             FilePath = filePath;
             RetentionTime = retentionTime;
+            IonMobilityInfo = ionMobilityInfo;
             IsBest = isBest;
         }
 
@@ -1298,6 +1399,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
         public double? RetentionTime { get; private set; }
+        public IonMobilityInfo IonMobilityInfo { get; private set; }
         public bool IsBest { get; private set; }
 
         public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
@@ -1317,6 +1419,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public class ChromData
         {
+            public IonMobilityInfo IonMobilityInfo { get; set; }  // TODO bspratt - I think this goes here, since it's also per-charge
             public double Mz { get; set; }
             public double Height { get; set; }
             public float[] Intensities { get; set; }

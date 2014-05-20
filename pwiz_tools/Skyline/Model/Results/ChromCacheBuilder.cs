@@ -1143,9 +1143,11 @@ namespace pwiz.Skyline.Model.Results
                         int? transitionPeakCount = null;
                         foreach (var chromData in chromDataSet.Chromatograms)
                         {
-                            var chromTran = new ChromTransition5(chromData.Key.Product,
-                                                                 chromData.Key.ExtractionWidth,
-                                                                 chromData.Key.Source);
+                            var chromTran = new ChromTransition(chromData.Key.Product,
+                                                                chromData.Key.ExtractionWidth,
+                                                                chromData.Key.IonMobilityValue,
+                                                                chromData.Key.IonMobilityExtractionWidth,
+                                                                chromData.Key.Source);
                             _listTransitions.Add(chromTran);
 
                             // Make sure all transitions have the same number of peaks, as this is a cache requirement

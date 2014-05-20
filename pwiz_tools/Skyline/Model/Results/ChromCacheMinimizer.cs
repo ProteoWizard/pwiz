@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results
 
             static unsafe MinStatisticsCollector()
             {
-                CHROM_GROUP_HEADER_INFO_SIZE = sizeof(ChromGroupHeaderInfo);
+                CHROM_GROUP_HEADER_INFO_SIZE = sizeof(ChromGroupHeaderInfo5);
                 PEAK_SIZE = sizeof(ChromPeak);
                 TRANSITION_SIZE = sizeof(ChromTransition);
             }
@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly FileStream _outputStreamPeaks;
             private int _peakCount;
             private readonly List<ChromGroupHeaderInfo5> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo5>();
-            private readonly List<ChromTransition5> _transitions = new List<ChromTransition5>();
+            private readonly List<ChromTransition> _transitions = new List<ChromTransition>();
             private readonly List<Type> _scoreTypes;
             private readonly List<float> _scores = new List<float>();
 

@@ -67,6 +67,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<Enzyme> _driverEnzyme;
         private readonly SettingsListComboDriver<RetentionTimeRegression> _driverRT;
+        private readonly SettingsListComboDriver<DriftTimePredictor> _driverDT;
         private readonly SettingsListBoxDriver<PeptideExcludeRegex> _driverExclusion;
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
@@ -100,6 +101,13 @@ namespace pwiz.Skyline.SettingsUI
             cbUseMeasuredRT.Checked = textMeasureRTWindow.Enabled = Prediction.UseMeasuredRTs;
             if (Prediction.MeasuredRTWindow.HasValue)
                 textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.Value.ToString(LocalizationHelper.CurrentCulture);
+
+            _driverDT = new SettingsListComboDriver<DriftTimePredictor>(comboDriftTimePredictor, Settings.Default.DriftTimePredictorList);
+            string selDT = (Prediction.DriftTimePredictor == null ? null : Prediction.DriftTimePredictor.Name);
+            _driverDT.LoadList(selDT);
+            cbUseSpectralLibraryDriftTimes.Checked = textMeasureRTWindow.Enabled = Prediction.UseLibraryDriftTimes;
+            if (Prediction.LibraryDriftTimesResolvingPower.HasValue)
+                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryDriftTimesResolvingPower.Value.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize filter settings
             _driverExclusion = new SettingsListBoxDriver<PeptideExcludeRegex>(listboxExclusions, Settings.Default.PeptideExcludeList);
@@ -226,7 +234,35 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 measuredRTWindow = measuredRTWindowOut;
             }
-            PeptidePrediction prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
+
+            string nameDt = comboDriftTimePredictor.SelectedItem.ToString();
+            DriftTimePredictor driftTimePredictor =
+                Settings.Default.GetDriftTimePredictorByName(nameDt);
+            if (driftTimePredictor != null && driftTimePredictor.IonMobilityLibrary != null)
+            {
+                IonMobilityLibrarySpec ionMobilityLibrary =
+                    Settings.Default.GetIonMobilityLibraryByName(driftTimePredictor.IonMobilityLibrary.Name);
+                // Just in case the library in use in the current documet got removed,
+                // never set the library to null.  Just keep using the one we have.
+                if (ionMobilityLibrary != null && !ReferenceEquals(ionMobilityLibrary, driftTimePredictor.IonMobilityLibrary))
+                    driftTimePredictor = driftTimePredictor.ChangeLibrary(ionMobilityLibrary);
+            }
+            bool useLibraryDriftTime = cbUseSpectralLibraryDriftTimes.Checked;
+            double? libraryDTResolvingPower = null;
+            if (!string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+            {
+                double libraryDTWindowOut;
+                const double minWindow = 0;
+                const double maxWindow = double.MaxValue;
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Prediction,
+                        textMeasureRTWindow, minWindow, maxWindow, out libraryDTWindowOut))
+                    return null;
+                libraryDTResolvingPower = libraryDTWindowOut;
+            }
+
+
+
+            PeptidePrediction prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDTResolvingPower);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and hold filter settings
@@ -424,6 +460,72 @@ namespace pwiz.Skyline.SettingsUI
             {
                 list.Clear();
                 list.AddRange(listNew);
+            }
+        }
+
+        private void comboDriftTime_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverDT.SelectedIndexChangedEvent(sender, e);
+        }
+
+        public void AddDriftTimePredictor()
+        {
+            CheckDisposed();
+            _driverDT.AddItem();
+        }
+
+        private void btnUpdateIonMobilityLibrary_Click(object sender, EventArgs e)
+        {
+            // Enable Update Ion Mobility Library button based on whether the selected predictor
+            // supports editing.
+            var driftTimePredictor = _driverDT.SelectedItem;
+            editIonMobilityLibraryCurrentContextMenuItem.Visible = driftTimePredictor != null &&
+                Settings.Default.IonMobilityLibraryList.CanEditItem(driftTimePredictor.IonMobilityLibrary);
+
+            contextMenuIonMobilityLibraries.Show(btnUpdateIonMobilityLibraries.Parent,
+                btnUpdateIonMobilityLibraries.Left, btnUpdateIonMobilityLibraries.Bottom + 1);
+        }
+
+        private void addIonMobilityLibraryContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AddIonMobilityLibrary();
+        }
+
+        public void AddIonMobilityLibrary()
+        {
+            CheckDisposed();
+            var list = Settings.Default.IonMobilityLibraryList;
+            var libNew = list.EditItem(this, null, list, null);
+            if (libNew != null)
+                list.SetValue(libNew);
+        }
+
+        private void editIonMobilityLibraryCurrentContextMenuItem_Click(object sender, EventArgs e)
+        {
+            EditIonMobilityLibrary();
+        }
+
+        public void EditIonMobilityLibrary()
+        {
+            var list = Settings.Default.DriftTimePredictorList;
+            var calcNew = list.EditItem(this, _driverDT.SelectedItem, list, null);
+            if (calcNew != null)
+                list.SetValue(calcNew);
+        }
+
+        private void editIonMobilityLibraryListContextMenuItem_Click(object sender, EventArgs e)
+        {
+            EditIonMobilityLibraryList();
+        }
+
+        public void EditIonMobilityLibraryList()
+        {
+            var dtllist = Settings.Default.IonMobilityLibraryList;
+            var dtllistNew = dtllist.EditList(this, null);
+            if (dtllistNew != null)
+            {
+                dtllist.Clear();
+                dtllist.AddRange(dtllistNew);
             }
         }
 

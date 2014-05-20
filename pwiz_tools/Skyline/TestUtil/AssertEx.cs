@@ -64,8 +64,9 @@ namespace pwiz.SkylineTestUtil
             {
                 if (message != null)
                     AreComparableStrings(message, x.Message);
-            }            
+            }
         }
+
 
         public static void NoExceptionThrown<TEx>(Action throwEx)
             where TEx : Exception
@@ -119,17 +120,17 @@ namespace pwiz.SkylineTestUtil
             DeserializeError<TObj, Exception>(s, roundTrip ? DeserializeType.roundtrip : DeserializeType.no_error);
         }
 
-        public static void DeserializeError<TObj>(string s)
+        public static void DeserializeError<TObj>(string s, string expectedExceptionText = null)
             where TObj : class
         {
-            DeserializeError<TObj, InvalidDataException>(s);
+            DeserializeError<TObj, InvalidDataException>(s, expectedExceptionText);
         }
 
-        public static void DeserializeError<TObj, TEx>(string s)
+        public static void DeserializeError<TObj, TEx>(string s, string expectedExceptionText = null)
             where TEx : Exception
             where TObj : class
         {
-            DeserializeError<TObj, TEx>(s, DeserializeType.error);
+            DeserializeError<TObj, TEx>(s, DeserializeType.error, expectedExceptionText);
         }
 
         private enum DeserializeType
@@ -137,7 +138,7 @@ namespace pwiz.SkylineTestUtil
             error, no_error, roundtrip
         }
 
-        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType)
+        private static void DeserializeError<TObj, TEx>(string s, DeserializeType deserializeType, string expectedExceptionText = null)
             where TEx : Exception
             where TObj : class
         {
@@ -146,6 +147,7 @@ namespace pwiz.SkylineTestUtil
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
             {
+                String message = null;
                 try
                 {
                     TObj obj = (TObj) ser.Deserialize(reader);
@@ -161,6 +163,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (InvalidOperationException x)
                 {
+                    message = GetMessageStack(x, null);
                     if (deserializeType == DeserializeType.error)
                     {
                         // Make sure the XML parsing exception was thrown
@@ -169,16 +172,22 @@ namespace pwiz.SkylineTestUtil
                     }
                     else
                     {
-                        String message = GetMessageStack(x, null);
                         Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
                     }
                 }
                 catch (TEx x)
                 {
+                    message = GetMessageStack(x, null);
                     if (deserializeType != DeserializeType.error)
                     {
-                        String message = GetMessageStack(x, null);
                         Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
+                    }
+                }
+                if (expectedExceptionText != null)
+                {
+                    if ((message == null) || !message.Contains(expectedExceptionText))
+                    {
+                        Assert.Fail("Unexpected exception message for {0}: expected to contain\r\n{1}\r\nactual\r\n{2}", typeof(TEx), expectedExceptionText, message ?? "<none>");
                     }
                 }
             }
@@ -561,6 +570,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.PeptideSettings.Filter, copy.PeptideSettings.Filter);
             Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries);
             Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications);
+            Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction);
             Cloned(target.PeptideSettings, copy.PeptideSettings);
             Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction);
             Cloned(target.TransitionSettings.Filter, copy.TransitionSettings.Filter);

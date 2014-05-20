@@ -642,6 +642,11 @@
     <Compile Include="Model\Find\MissingLibraryDataFinder.cs" />
     <Compile Include="Model\Find\MissingAllResultsFinder.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
+    <Compile Include="Model\IonMobility\DbIonMobilityPeptide.cs" />
+    <Compile Include="Model\IonMobility\DbVersionInfo.cs" />
+    <Compile Include="Model\IonMobility\IonMobilityLibraryManager.cs" />
+    <Compile Include="Model\IonMobility\IonMobilityDb.cs" />
+    <Compile Include="Model\IonMobility\IonMobilityLibrary.cs" />
     <Compile Include="Model\Lib\AlignedRetentionTimes.cs" />
     <Compile Include="Model\Lib\BlibData\DbModificationRedundant.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraRedundantPeaks.cs" />
@@ -945,6 +950,24 @@
     <Compile Include="SettingsUI\AddPathsDlg.Designer.cs">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\IonMobility\AddDriftTimeSpectralLibrary.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\AddDriftTimeSpectralLibrary.designer.cs">
+      <DependentUpon>AddDriftTimeSpectralLibrary.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.designer.cs">
+      <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.designer.cs">
+      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditPeakScoringModelDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1173,6 +1196,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.ja.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.zh-CHS.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
@@ -1263,9 +1287,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.ja.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\DataboundGridForm.resx">
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -1665,6 +1691,9 @@
     <EmbeddedResource Include="Resources\PeptideQc.bmp" />
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
     <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
+    <EmbeddedResource Include="Model\IonMobility\mapping.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1738,6 +1767,17 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditDPDlg.zh-CHS.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\AddDriftTimeSpectralLibrary.resx">
+      <DependentUpon>AddDriftTimeSpectralLibrary.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.resx">
+      <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.resx">
+      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.ja.resx">
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>

@@ -120,6 +120,8 @@ namespace pwiz.Skyline.Model
 
         public double PrecursorMz { get; private set; }
 
+        public int PrecursorCharge { get { return TransitionGroup.PrecursorCharge; } }
+
         public bool IsDecoy { get { return TransitionGroup.DecoyMassShift.HasValue; } }
 
         public IsotopeDistInfo IsotopeDist { get; private set; }

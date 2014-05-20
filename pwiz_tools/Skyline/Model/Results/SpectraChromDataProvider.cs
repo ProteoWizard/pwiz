@@ -45,6 +45,93 @@ namespace pwiz.Skyline.Model.Results
         private readonly ChromCollector.Allocator _allocator;
 
         /// <summary>
+        /// Helper class for lookahead necessary for ion mobility and 
+        /// Agilent Mse data
+        /// </summary>
+        private struct LookaheadContext
+        {
+            public LookaheadContext(SpectrumFilter filter, MsDataFileImpl dataFile)
+            {
+                _lookAheadIndex = 0;
+                _filter = filter;
+                _dataFile = dataFile;
+                _rt = null;
+                _previousDriftTime = 0;
+                _lenSpectra = dataFile.SpectrumCount;
+            }
+
+            private int _lookAheadIndex;
+            private double? _rt;
+            private readonly SpectrumFilter _filter;
+            private readonly MsDataFileImpl _dataFile;
+            private readonly int _lenSpectra;
+            private double _previousDriftTime;
+
+            public int NextIndex(int proposed)
+            {
+                if (_lookAheadIndex <= proposed)
+                    _lookAheadIndex = proposed + 1;
+                return _lookAheadIndex;
+            }
+
+            private bool NextSpectrumIsDriftScanForCurrentRetentionTime(MsDataSpectrum nextSpectrum)
+            {
+                bool result = ((_rt ?? 0) == (nextSpectrum.RetentionTime ?? -1)) &&
+                              ((nextSpectrum.DriftTimeMsec ?? 0) > _previousDriftTime);
+                _previousDriftTime = nextSpectrum.DriftTimeMsec ?? 0;
+                return result;
+            }
+
+            private bool NextSpectrumIsAgilentMse(int listLevel, MsDataSpectrum nextSpectrum)
+            {
+                return (_filter.IsAgilentMse && (listLevel == 2) && (nextSpectrum.Level == 2));
+            }
+
+            // Deal with ion mobility data - look ahead for a run of scans all
+            // with the same retention time.  For non-IMS data we'll just get
+            // a single "drift bin" with no drift time.
+            //
+            // Also for Agilent ramped-CE msE, gather MS2 scans together
+            // so they get averaged.
+            public MsDataSpectrum[] Lookahead(MsDataSpectrum dataSpectrum, out double? rt)
+            {
+                var spectrumList = new List<MsDataSpectrum>();
+                int listLevel = dataSpectrum.Level;
+                _previousDriftTime = -1;
+                double rtTotal = 0;
+                double? rtFirst = null;
+                while (_lookAheadIndex++ < _lenSpectra)
+                {
+                    _rt = dataSpectrum.RetentionTime;
+                    if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                    {
+                        spectrumList.Add(dataSpectrum);
+                        rtTotal += dataSpectrum.RetentionTime.Value;
+                        if (!rtFirst.HasValue)
+                            rtFirst = dataSpectrum.RetentionTime;
+                    }
+                    if (_lookAheadIndex < _lenSpectra)
+                    {
+                        dataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
+                        // Reasons to keep adding to the list:
+                        //   Retention time hasn't changed but drift time has increased, or
+                        //   Agilent ramped-CE data - MS2 scans get averaged
+                        if (!(NextSpectrumIsDriftScanForCurrentRetentionTime(dataSpectrum) ||
+                              NextSpectrumIsAgilentMse(listLevel, dataSpectrum)))
+                            break;
+                    }
+                }
+                if (spectrumList.Any()) // Should have at least one non-empty scan at this drift time
+                    _rt = _filter.IsAgilentMse ? (rtTotal/spectrumList.Count()) : rtFirst;
+                else
+                    _rt = null;
+                rt = _rt;
+                return spectrumList.ToArray();
+            }
+
+        }
+
+        /// <summary>
         /// The number of chromatograms read so far.
         /// </summary>
         private int _readChromatograms;
@@ -131,7 +218,12 @@ namespace pwiz.Skyline.Model.Results
                         demultiplexer = new MsxOverlapDemultiplexer(dataFile, filter);
                         break;
                 }
-                for (int i = 0; i < lenSpectra; i++)
+
+                var lookaheadContext = new LookaheadContext(filter, dataFile);
+
+                // CONSIDER: could we get a performance boost by determining the min and max
+                // retention times of interest, and entering and exiting this loop based on that?
+                for (int i = 0; i < lenSpectra; i = lookaheadContext.NextIndex(i))
                 {
                     // Update progress indicator
                     int currentPercent = i*BUILD_PERCENT/lenSpectra;
@@ -176,6 +268,7 @@ namespace pwiz.Skyline.Model.Results
                             filterIndex,
                             dataSpectrum.Mzs,
                             dataSpectrum.Intensities,
+                            0, 0, // ion mobility unknown
                             chromMap);
                     }
 
@@ -201,6 +294,15 @@ namespace pwiz.Skyline.Model.Results
                         if (allChromData != null)
                             allChromData.CurrentTime = (float)rt.Value;
 
+                        // Deal with ion mobility data - look ahead for a run of scans all 
+                        // with the same retention time.  For non-IMS data we'll just get
+                        // a single "drift bin" with no drift time.
+                        //
+                        // Also for Agilent ramped-CE msE, gather MS2 scans together
+                        // so they get averaged.
+                        //
+                        var spectra = lookaheadContext.Lookahead(dataSpectrum, out rt);
+
                         if (filter.IsMsSpectrum(dataSpectrum))
                         {
                             var chromMapMs = filter.IsSimSpectrum(dataSpectrum) ? chromMapSim : chromMapMs1;
@@ -213,7 +315,7 @@ namespace pwiz.Skyline.Model.Results
                                 chromMapMs.AddSharedTime((float)rt.Value);
                             }
                             foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt, dataSpectrum.Precursors,
-                                dataSpectrum.Mzs, dataSpectrum.Intensities))
+                                spectra))
                             {
                                 chromMapMs.ProcessExtractedSpectrum(rt.Value, spectrum);
                             }
@@ -223,16 +325,21 @@ namespace pwiz.Skyline.Model.Results
                             // Process all SRM spectra that can be generated by filtering this full-scan MS/MS
                             if (demultiplexer == null)
                             {
-                                ProcessSpectrum(dataSpectrum, chromMap, rt.Value, filter);
+                                ProcessSpectrumList(spectra, chromMap, rt.Value, filter);
                             }
                             else
                             {
-                                foreach (var deconvSpectrum in demultiplexer.GetDeconvolvedSpectra(i,dataSpectrum))
+                                foreach (var deconvSpectrum in demultiplexer.GetDeconvolvedSpectra(i, dataSpectrum))
                                 {
-                                    ProcessSpectrum(deconvSpectrum, chromMap, rt.Value, filter);
+                                    ProcessSpectrumList(new [] { deconvSpectrum }, chromMap, rt.Value, filter);
                                 }
                             }
                         }
+                        if (filter.GetMseLevel() > 2)
+                        {
+                            // We're into the Waters function 3 in Mse data - leave this loop
+                            lookaheadContext.NextIndex(lenSpectra);
+                        }        
                     }
                 }
 
@@ -268,12 +375,11 @@ namespace pwiz.Skyline.Model.Results
                         chromCollector.TimesCollector = timesCollector;
                     var key = new ChromKey(collector.ModifiedSequence,
                         collector.PrecursorMz,
+                        collector.IonMobilityValue,
+                        collector.IonMobilityExtractionWidth,
                         pairProduct.Key.ProductMz,
                         0,
-                        pairProduct.Key.ExtractionWidth,
-                        source,
-                        modSeq.Extractor,
-                        true);
+                        pairProduct.Key.ExtractionWidth, source, modSeq.Extractor, true);
                     _chromatograms.Add(new ChromKeyAndCollector
                         {
                             Key = key,
@@ -284,12 +390,17 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void ProcessSpectrum(MsDataSpectrum dataSpectrum,
+        /// <summary>
+        /// Process a list of spectra - typically of length one,
+        /// but possibly a set of drift bins all with same retention time,
+        /// or a set of Agilent ramped-CE Mse scans to be averaged
+        /// </summary>
+        private void ProcessSpectrumList(MsDataSpectrum[] spectra,
                                      ChromDataCollectorSet chromMap,
                                      double rt,
                                      SpectrumFilter filter)
         {
-            foreach (var spectrum in filter.Extract(rt, dataSpectrum))
+            foreach (var spectrum in filter.Extract(rt, spectra))
             {
                 if (_loader.IsCanceled)
                     throw new LoadCanceledException(Status);
@@ -304,13 +415,15 @@ namespace pwiz.Skyline.Model.Results
                                                int filterIndex,
                                                double[] mzs,
                                                double[] intensities,
+                                               double ionMobilityValue,
+                                               double ionMobilityExtractionWidth,
                                                ChromDataCollectorSet chromMap)
         {
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
-            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ChromExtractor.summed, filterIndex,
-                mzs, null, intensityFloats, null);
+            var spectrum = new ExtractedSpectrum(modifiedSequence, precursorMz, ionMobilityValue, ionMobilityExtractionWidth,
+                ChromExtractor.summed, filterIndex, mzs, null, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, spectrum);
         }
 
@@ -414,6 +527,8 @@ namespace pwiz.Skyline.Model.Results
         public void ProcessExtractedSpectrum(double time, ExtractedSpectrum spectrum)
         {
             double precursorMz = spectrum.PrecursorMz;
+            double? ionMobilityValue = spectrum.IonMobilityValue;
+            double ionMobilityExtractionWidth = spectrum.IonMobilityExtractionWidth;
             string modifiedSequence = spectrum.ModifiedSequence;
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.Mzs.Length;
@@ -426,7 +541,7 @@ namespace pwiz.Skyline.Model.Results
                 collector = PrecursorCollectorMap[index].Item2;
             else
             {
-                collector = new ChromDataCollector(modifiedSequence, precursorMz, index, IsGroupedTime);
+                collector = new ChromDataCollector(modifiedSequence, precursorMz, ionMobilityValue, ionMobilityExtractionWidth, index, IsGroupedTime);
                 PrecursorCollectorMap[index] = new Tuple<PrecursorModSeq, ChromDataCollector>(key, collector);
             }
 
@@ -497,10 +612,12 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(string modifiedSequence, double precursorMz, int statusId, bool isGroupedTime)
+        public ChromDataCollector(string modifiedSequence, double precursorMz, double ? ionMobilityValue, double ionMobilityExtractionWidth, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
+            IonMobilityValue = ionMobilityValue;
+            IonMobilityExtractionWidth = ionMobilityExtractionWidth;
             StatusId = statusId;
             ProductIntensityMap = new Dictionary<ProductExtractionWidth, ChromCollector>();
             if (isGroupedTime)
@@ -509,6 +626,8 @@ namespace pwiz.Skyline.Model.Results
 
         public string ModifiedSequence { get; private set; }
         public double PrecursorMz { get; private set; }
+        public double? IonMobilityValue { get; private set; }
+        public double IonMobilityExtractionWidth { get; private set; }
         public int StatusId { get; private set; }
         public Dictionary<ProductExtractionWidth, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly ChromCollector GroupedTimesCollector;

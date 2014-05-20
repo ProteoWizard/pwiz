@@ -1025,6 +1025,29 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<Server>("<server uri=\"http://\" />");
         }
 
+        /// <summary>
+        /// Test serialization of ion mobility data
+        /// </summary>
+        [TestMethod]
+        public void SerializeIonMobilityTest()
+        {
+
+            const string predictor = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
+                                     "<regression_dt charge=\"1\" slope=\"1\" intercept=\"0\"/></predict_drift_time>";
+            const string predictorNoRegression = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/></predict_drift_time>";
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor);
+            var pred = AssertEx.Deserialize<DriftTimePredictor>(predictor);
+            Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
+            Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
+            Assert.AreEqual(100, pred.ResolvingPower);
+            Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
+            Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("db.imdb", ""), Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_library_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictorNoRegression,Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regression_values_);
+
+        }
+
         private const string VALID_ISOTOPE_ENRICHMENT_XML =
             "<isotope_enrichments name=\"Cambridge Isotope Labs\">" +
             "<atom_percent_enrichment symbol=\"H&apos;\">0.9</atom_percent_enrichment>" +

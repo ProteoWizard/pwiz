@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly Action<ChromatogramCache, Exception> _completed;
 
         protected readonly List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
-        protected readonly List<ChromTransition5> _listTransitions = new List<ChromTransition5>();
+        protected readonly List<ChromTransition> _listTransitions = new List<ChromTransition>();
         protected readonly List<ChromGroupHeaderInfo5> _listGroups = new List<ChromGroupHeaderInfo5>();
         protected readonly List<byte> _listSeqBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();

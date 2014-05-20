@@ -202,6 +202,8 @@ namespace pwiz.Skyline.Model
                 zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, string.Empty);
             if (Document.Settings.HasRTCalcPersisted)
                 zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath, string.Empty);
+            if (Document.Settings.HasIonMobilityLibraryPersisted)
+                zip.AddFile(pepSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath, string.Empty);
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
                 zip.AddFile(librarySpec.FilePath, string.Empty);

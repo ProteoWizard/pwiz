@@ -318,6 +318,86 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please choose the library you would like to add..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_" +
+                        "add_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only BiblioSpec libraries contain enough ion mobility information to support this operation..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries" +
+                        "_contain_enough_ion_mobility_information_to_support_this_operation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please choose a non redundant library..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redun" +
+                        "dant_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please specify a path to an existing spectral library..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_" +
+                        "an_existing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please specify a path to an existing spectral library..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_" +
+                        "an_existing_spectral_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} appears to be a redundant library..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_b" +
+                        "e_a_redundant_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exi" +
+                        "st_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a BiblioSpec library..
+        /// </summary>
+        public static string AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_ {
+            get {
+                return ResourceManager.GetString("AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_Bib" +
+                        "lioSpec_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please choose the iRT calculator you would like to add..
         /// </summary>
         public static string AddIrtCalculatorDlg_OkDialog_Please_choose_the_iRT_calculator_you_would_like_to_add {
@@ -2746,6 +2826,136 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Collapse", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding ion mobility data from {0}.
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data" +
+                        "_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding Spectral Library.
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred attempting to load the library file {0}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_An_error_occurred_attemp" +
+                        "ting_to_load_the_library_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The library {0} does not contain ion mobility information..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_ion_mobility_information_ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not" +
+                        "_contain_ion_mobility_information_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading ion mobility data from {0}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data" +
+                        "_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot import measured drift time for sequence {0}: no regression was provided for charge state {1}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_meas" +
+                        "ured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1" +
+                        "__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sequence {0} is already present in the list..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_DoRowValidating_The_sequence__0__is_already_present_in_the_list_ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_DoRowValidating_The_sequence__0__is_alr" +
+                        "eady_present_in_the_list_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid number format {0} for collisional cross section on line {1}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_collisional_cross_section_on_line__1__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__f" +
+                        "or_collisional_cross_section_on_line__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing collisional cross section value on line {0}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_s" +
+                        "ection_value_on_line__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing peptide sequence on line {0}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on" +
+                        "_line__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The collisional cross section {0} must be greater than zero on line {1}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_secti" +
+                        "on__0__must_be_greater_than_zero_on_line__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The pasted text must have two columns..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_two_columns_ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_t" +
+                        "wo_columns_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text {0} is not a valid peptide sequence on line {1}..
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid" +
+                        "_peptide_sequence_on_line__1__", resourceCulture);
             }
         }
         
@@ -5486,6 +5696,53 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Drift time predictor must include per-charge regression values..
+        /// </summary>
+        public static string DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regression_values_ {
+            get {
+                return ResourceManager.GetString("DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regressi" +
+                        "on_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift time predictor must specify an ion mobility library..
+        /// </summary>
+        public static string DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_library_ {
+            get {
+                return ResourceManager.GetString("DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_lib" +
+                        "rary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolving power must be greater than 0..
+        /// </summary>
+        public static string DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_ {
+            get {
+                return ResourceManager.GetString("DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time Predictor:.
+        /// </summary>
+        public static string DriftTimePredictorList_Label_Drift_Time_Predictor_ {
+            get {
+                return ResourceManager.GetString("DriftTimePredictorList_Label_Drift_Time_Predictor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Drift Time Predictors.
+        /// </summary>
+        public static string DriftTimePredictorList_Title_Edit_Drift_Time_Predictors {
+            get {
+                return ResourceManager.GetString("DriftTimePredictorList_Title_Edit_Drift_Time_Predictors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap DropImage {
@@ -5710,6 +5967,112 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A drift time predictor with the name {0} already exists..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__alrea" +
+                        "dy_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to change it?.
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift time prediction requires an ion mobility library..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility" +
+                        "_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A value is required..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The entry {0} is not valid..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The entry {0} is not a valid charge. Precursor charges must be integer values between 1 and {1}..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Pre" +
+                        "cursor_charges_must_be_integer_values_between_1_and__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On line {0} {1}.
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateRegressionCellValues_On_line__0___1_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateRegressionCellValues_On_line__0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value {0} is not a valid charge. Charges must be integer values between 1 and {1}..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_val" +
+                        "id_charge__Charges_must_be_integer_values_between_1_and__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value {0} is not a valid intercept..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_val" +
+                        "id_intercept_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the value {0} is not a valid slope..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_val" +
+                        "id_slope_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolving power must be greater than 0..
+        /// </summary>
+        public static string EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_ {
+            get {
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_" +
+                        "than_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The enzyme &apos;{0}&apos; already exists..
         /// </summary>
         public static string EditEnzymeDlg_OnClosing_The_enzyme__0__already_exists {
@@ -5798,6 +6161,183 @@ namespace pwiz.Skyline.Properties {
         public static string EditFragmentLossDlg_OkDialog_The_loss__0__already_exists {
             get {
                 return ResourceManager.GetString("EditFragmentLossDlg_OkDialog_The_loss__0__already_exists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to open a new database file?  Any changes to the current library will be lost..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file___Any_changes_to_the_current_library_will_be_lost_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_d" +
+                        "atabase_file___Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Ion Mobility Database.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Database {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to create a new ion mobility database file?  Any changes to the current library will be lost..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_database_file___Any_changes_to_the_current_library_will_be_lost_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new" +
+                        "_ion_mobility_database_file___Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create Ion Mobility Database.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Database {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ion mobility database file {0} could not be created..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_database_file__0__could_not_be_created {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_database_file__0__could" +
+                        "_not_be_created", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An ion mobility library with the name {0} already exists. Do you want to overwrite it?.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__alre" +
+                        "ady_exists__Do_you_want_to_overwrite_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click the Create button to create a new database or the Open button to open an existing database file..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_databa" +
+                        "se_or_the_Open_button_to_open_an_existing_database_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure updating peptides in the ion mobility database. The database may be out of synch..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_database__The_database_may_be_out_of_synch_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_" +
+                        "database__The_database_may_be_out_of_synch_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please choose a database file for the ion mobility database..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_database_file_for_the_ion_mobility_database {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_database_file_for_the_ion_mobi" +
+                        "lity_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a name for the ion mobility ibrary..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_ibrary_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_ibrar" +
+                        "y_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please use a full path to a database file for the ion mobility database..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_ion_mobility_database_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_" +
+                        "the_ion_mobility_database_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist. Click the Create button to create a new ion mobility database or click the Open button to find the missing file..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_database_or_click_the_Open_button_to_find_the_missing_file_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Cre" +
+                        "ate_button_to_create_a_new_ion_mobility_database_or_click_the_Open_button_to_fin" +
+                        "d_the_missing_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Peptide.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptide {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Peptides.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptides {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value {0} is not a valid modified peptide sequence..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modifi" +
+                        "ed_peptide_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The added list contains {0} charged peptides with inconsistent ion mobility values..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_added_list_contains__0__charged_peptides_with_inconsistent_ion_mobility_values_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_added_list_contains__" +
+                        "0__charged_peptides_with_inconsistent_ion_mobility_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following peptides appear in the added list with inconsistent ion mobility values..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_following_peptides_appear_in_the_added_list_with_inconsistent_ion_mobility_values_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_following_peptides_ap" +
+                        "pear_in_the_added_list_with_inconsistent_ion_mobility_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The peptide {0} has inconsistent ion mobility values in the added list..
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_peptide__0__has_inconsistent_ion_mobility_values_in_the_added_list_ {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_peptide__0__has_incon" +
+                        "sistent_ion_mobility_values_in_the_added_list_", resourceCulture);
             }
         }
         
@@ -9456,6 +9996,111 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Database Files.
+        /// </summary>
+        public static string IonMobilityDb_FILTER_IONMOBILITYDB_Ion_Mobility_Database_Files {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_FILTER_IONMOBILITYDB_Ion_Mobility_Database_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading ion mobility database {0}.
+        /// </summary>
+        public static string IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_database__0_ {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_database__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide a path to an existing ion mobility database..
+        /// </summary>
+        public static string IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_database_ {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_" +
+                        "database_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a valid ion mobility database file..
+        /// </summary>
+        public static string IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_file_ {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_" +
+                        "file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ion mobility database file {0} could not be found. Perhaps you did not have sufficient privileges to create it?.
+        /// </summary>
+        public static string IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_ {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_fo" +
+                        "und__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The path containing ion mobility database {0} does not exist..
+        /// </summary>
+        public static string IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_database__0__does_not_exist {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_database__0__does" +
+                        "_not_exist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have privileges to access the ion mobility database file {0}.
+        /// </summary>
+        public static string IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_database_file__0_ {
+            get {
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobil" +
+                        "ity_database_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The drift time predictors:.
+        /// </summary>
+        public static string IonMobilityLibraryList_AcceptList_The_drift_time_predictors_ {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryList_AcceptList_The_drift_time_predictors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to will be deleted because the libraries they depend on have changed. Do you want to continue?.
+        /// </summary>
+        public static string IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depend_on_have_changed__Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depe" +
+                        "nd_on_have_changed__Do_you_want_to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Libraries:.
+        /// </summary>
+        public static string IonMobilityLibraryList_Label_Ion_Mobility_Libraries_ {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryList_Label_Ion_Mobility_Libraries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Ion Mobility Libraries.
+        /// </summary>
+        public static string IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Ions_1 {
@@ -10592,6 +11237,26 @@ namespace pwiz.Skyline.Properties {
         public static string MatchModificationsControl_AddModification_Add__0__modification__1_ {
             get {
                 return ResourceManager.GetString("MatchModificationsControl_AddModification_Add__0__modification__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Charge state values must be greater than 0..
+        /// </summary>
+        public static string MeasuredCollisionalCrossSection_Validate_Charge_state_values_must_be_greater_than_0_ {
+            get {
+                return ResourceManager.GetString("MeasuredCollisionalCrossSection_Validate_Charge_state_values_must_be_greater_than" +
+                        "_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collisional cross section values must be greater than 0..
+        /// </summary>
+        public static string MeasuredCollisionalCrossSection_Validate_Collisional_cross_section_values_must_be_greater_than_0_ {
+            get {
+                return ResourceManager.GetString("MeasuredCollisionalCrossSection_Validate_Collisional_cross_section_values_must_be" +
+                        "_greater_than_0_", resourceCulture);
             }
         }
         
@@ -20624,7 +21289,37 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The argument {0} requires a value and must be specified in the format --name=value.
+        ///   Looks up a localized string similar to Measured collisional cross section values must be valid decimal numbers greater than zero..
+        /// </summary>
+        public static string ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_ {
+            get {
+                return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional" +
+                        "_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A modified peptide sequence is required for each entry..
+        /// </summary>
+        public static string ValidatingIonMobilityPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry_ {
+            get {
+                return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateSequence_A_modified_peptide_sequence_is_requ" +
+                        "ired_for_each_entry_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sequence {0} is not a valid modified peptide sequence..
+        /// </summary>
+        public static string ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence_ {
+            get {
+                return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_mod" +
+                        "ified_peptide_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The argument --{0} requires a value and must be specified in the format --name=value.
         /// </summary>
         public static string ValueMissingException_ValueMissingException_ {
             get {
@@ -20633,7 +21328,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The argument {0} should not have a value specified.
+        ///   Looks up a localized string similar to The argument --{0} should not have a value specified.
         /// </summary>
         public static string ValueUnexpectedException_ValueUnexpectedException_The_argument____0__should_not_have_a_value_specified {
             get {

@@ -68,6 +68,8 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailStartTime = DetailLevel.InstantMetadata;
 
+        private DetailLevel _detailDriftTime = DetailLevel.InstantMetadata;
+
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
             return binaryDataArray.data.ToArray();
@@ -601,6 +603,7 @@ namespace pwiz.ProteowizardWrapper
                                    Level = GetMsLevel(spectrum) ?? 0,
                                    Index = spectrum.index,
                                    RetentionTime = GetStartTime(spectrum),
+                                   DriftTimeMsec = GetDriftTimeMsec(spectrum),
                                    Precursors = GetPrecursors(spectrum),
                                    Centroided = IsCentroided(spectrum),
                                    Mzs = ToArray(spectrum.getMZArray()),
@@ -782,6 +785,34 @@ namespace pwiz.ProteowizardWrapper
             return (int) param.value;
         }
 
+        public double? GetDriftTimeMsec(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailDriftTime))
+            {
+                double? driftTime = GetDriftTimeMsec(spectrum);
+                if (driftTime.HasValue || _detailDriftTime >= DetailLevel.FullMetadata)
+                    return driftTime ?? 0;
+
+                // If level is not found with faster metadata methods, try the slower ones.
+                if (_detailDriftTime == DetailLevel.InstantMetadata)
+                    _detailDriftTime = DetailLevel.FastMetadata;
+                else if (_detailDriftTime == DetailLevel.FastMetadata)
+                    _detailDriftTime = DetailLevel.FullMetadata;
+                return GetDriftTimeMsec(scanIndex);
+            }
+        }
+
+        private static double? GetDriftTimeMsec(Spectrum spectrum)
+        {
+            if (spectrum.scanList.scans.Count == 0)
+                return null;
+            var scan = spectrum.scanList.scans[0];
+            UserParam param = scan.userParam(USERPARAM_DRIFT_TIME);  // CONSIDER: this will eventually be a proper CVParam
+            if (param.empty())
+                return null;
+            return param.timeInSeconds() * 1000.0;
+        }
+
         public double? GetStartTime(int scanIndex)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, _detailStartTime))
@@ -825,6 +856,7 @@ namespace pwiz.ProteowizardWrapper
                 new MsPrecursor
                     {
                         PrecursorMz = GetPrecursorMz(p),
+                        PrecursorDriftTimeMsec = GetPrecursorDriftTimeMsec(p),
                         PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
                         IsolationWindowTargetMz = GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
@@ -855,6 +887,16 @@ namespace pwiz.ProteowizardWrapper
             if (selectedIon == null)
                 return null;
             return selectedIon.cvParam(CVID.MS_selected_ion_m_z).value;
+        }
+
+        private const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
+
+        private static double? GetPrecursorDriftTimeMsec(Precursor precursor)
+        {
+            UserParam param = precursor.userParam(USERPARAM_DRIFT_TIME);  //   CONSIDER: this will eventually be a proper CVParam
+            if (param.empty())
+                return null;
+            return param.timeInSeconds() * 1000.0;
         }
 
         private static double? GetPrecursorCollisionEnergy(Precursor precursor)
@@ -909,6 +951,7 @@ namespace pwiz.ProteowizardWrapper
     public struct MsPrecursor
     {
         public double? PrecursorMz { get; set; }
+        public double? PrecursorDriftTimeMsec { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
         public double? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; }
@@ -946,6 +989,7 @@ namespace pwiz.ProteowizardWrapper
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
+        public double? DriftTimeMsec { get; set; }
         public MsPrecursor[] Precursors { get; set; }
         public bool Centroided { get; set; }
         public double[] Mzs { get; set; }

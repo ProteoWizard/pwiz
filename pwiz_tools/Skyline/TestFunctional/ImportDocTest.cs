@@ -430,10 +430,15 @@ namespace pwiz.SkylineTestFunctional
                 const int headerScoreSize = sizeof(int) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(long);
                 cacheSize += groupHeadersSize + fileFlagsSize + transitionFlagsSize + headerScoreSize;
             }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_5)
             {
                 // Cache version 6 adds status graph dimensions for every file
-                cacheSize += sizeof(float)*2*fileCachedCount;
+                cacheSize += sizeof(float) * 2 * fileCachedCount;
+            }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_6)
+            {
+                // Cache version 7 adds ion mobility information
+                cacheSize += sizeof(float) * 2 * dataTranCount;
             }
             return cacheSize;
         }

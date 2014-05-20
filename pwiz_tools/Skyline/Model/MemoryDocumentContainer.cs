@@ -20,6 +20,7 @@
 using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -144,6 +145,10 @@ namespace pwiz.Skyline.Model
             RetentionTimeManager = new RetentionTimeManager();
             RetentionTimeManager.Register(this);
             Register(RetentionTimeManager);
+
+            IonMobilityManager = new IonMobilityLibraryManager();
+            IonMobilityManager.Register(this);
+            Register(IonMobilityManager);
         }
 
         public ChromatogramManager ChromatogramManager { get; private set; }
@@ -151,6 +156,8 @@ namespace pwiz.Skyline.Model
         public LibraryManager LibraryManager { get; private set; }
 
         public RetentionTimeManager RetentionTimeManager { get; private set; }
+
+        public IonMobilityLibraryManager IonMobilityManager { get; private set; }
 
         protected override bool IsComplete(SrmDocument docNew)
         {

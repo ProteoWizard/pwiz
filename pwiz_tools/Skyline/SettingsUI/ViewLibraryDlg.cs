@@ -692,6 +692,12 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt;
                             }
+                            IonMobilityInfo dt = bestSpectrum.IonMobilityInfo;
+                            if (dt != null)
+                            {
+                                var dtText = ( dt.IsCollisionalCrossSection ? "CCS" : "DT" ) + COLON_SEP + String.Format("{0:F4}",dt.Value); // Not L10N
+                                labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
+                            }
                         }
                         if (null == libraryChromGroup)
                         {

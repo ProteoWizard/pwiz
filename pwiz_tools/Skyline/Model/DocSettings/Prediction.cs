@@ -26,10 +26,13 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -1456,6 +1459,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return RegressionLine.GetY(x);
         }
 
+        public double GetX(double y)
+        {
+            return RegressionLine.GetX(y);
+        }
+
         public int CompareTo(ChargeRegressionLine other)
         {
             return Charge - other.Charge;
@@ -1902,7 +1910,18 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <returns></returns>
         public double GetY(double x)
         {
-            return Slope*x + Intercept;
+            return Slope * x + Intercept;
+        }
+
+        /// <summary>
+        /// Use the y = m*x + b formula to calculate the desired x
+        /// for a given y.
+        /// </summary>
+        /// <param name="y">Value in y dimension</param>
+        /// <returns></returns>
+        public double GetX(double y)
+        {
+            return  (y - Intercept) / Slope;
         }
 
         #region IXmlSerializable helpers
@@ -1968,4 +1987,311 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
     }
+
+    public interface IIonMobilityInfoProvider
+    {
+        string Name { get; }
+
+        IonMobilityInfo GetIonMobilityInfo(LibKey peptide);
+
+        IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict();
+
+    }
+
+    public interface IIonMobilityLibrary
+    {
+        string Name { get; }
+
+        double? GetDriftTimeMsec(String peptide, ChargeRegressionLine regressionLine);
+
+    }
+
+    public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
+    {
+        protected IonMobilityLibrarySpec(string name)
+            : base(name)
+        {
+        }
+
+        /// <summary>
+        /// Get the drift time for the charged peptide.
+        /// </summary>
+        /// <param name="peptide"></param>
+        /// <param name="regressionLine"></param>
+        /// <returns>drift time, or null</returns>
+        public abstract double? GetDriftTimeMsec(String peptide, ChargeRegressionLine regressionLine);
+
+        public virtual bool IsUsable { get { return true; } }
+
+        public virtual bool IsNone { get { return false; } }
+
+        public virtual IonMobilityLibrarySpec Initialize(IProgressMonitor loadMonitor)
+        {
+            return this;
+        }
+
+        public virtual string PersistencePath { get { return null; } }
+
+        public virtual string PersistMinimized(string pathDestDir, SrmDocument document)
+        {
+            return null;
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For XML serialization
+        /// </summary>
+        protected IonMobilityLibrarySpec()
+        {
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Describes a slope and intercept for converting from a
+    /// collisional cross section value to a predicted drift time in milliseconds.
+    /// </summary>
+    [XmlRoot("predict_drift_time")]
+    public sealed class DriftTimePredictor : XmlNamedElement
+    {
+        public static double? GetDriftTimeDisplay(double? dtMsec)
+        {
+            if (!dtMsec.HasValue)
+                return null;
+            return Math.Round(dtMsec.Value, 4);
+        }
+
+        private ReadOnlyCollection<ChargeRegressionLine> _chargeRegressionLines;
+
+        public DriftTimePredictor(string name,
+                                    IonMobilityLibrarySpec ionMobilityLibrary,
+                                    IList<ChargeRegressionLine> chargeSlopeIntercepts,
+                                    double resolvingPower)
+            : base(name)
+        {
+            ResolvingPower = resolvingPower;
+            ChargeRegressionLines = (chargeSlopeIntercepts == null) ? null : chargeSlopeIntercepts.ToArray();
+            IonMobilityLibrary = ionMobilityLibrary; // Actual loading happens in background
+            Validate();
+        }
+
+        public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
+
+        public double ResolvingPower { get; private set; }
+
+        public double InverseResolvingPowerTimesTwo { get; private set; } // Cached 2.0/resolving_power for faster window size calcs
+
+        public IList<ChargeRegressionLine> ChargeRegressionLines
+        {
+            get { return _chargeRegressionLines; }
+            private set
+            {
+                ChargeRegressionLine[] chargeRegressionLines;
+                if ((value != null) && value.Any())
+                {
+                    int maxcharge = value.Max(obj => obj.Charge);
+                    chargeRegressionLines = new ChargeRegressionLine[maxcharge+1];
+                    for (int charge = 0; charge <= maxcharge; charge++)
+                    {
+                        int charge1 = charge;
+                        var match = (from val in value where (val.Charge == charge1) select val).ToArray();
+                        if (match.Any())
+                            chargeRegressionLines[charge] = match.First();
+                        else
+                            chargeRegressionLines[charge] = null;
+                   }
+                }
+                else
+                {
+                    chargeRegressionLines = new ChargeRegressionLine[0];
+                }
+                _chargeRegressionLines = MakeReadOnly(chargeRegressionLines);
+            }
+        }
+
+        public bool IsUsable { get { return ChargeRegressionLines != null && ChargeRegressionLines.Any() && IonMobilityLibrary.IsUsable; } }
+
+        #region Property change methods
+
+        public DriftTimePredictor ChangeLibrary(IonMobilityLibrarySpec prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
+        }
+
+        #endregion
+
+        public ChargeRegressionLine GetRegressionLine(int charge)
+        {
+            // These should be very short lists (maximum 5 elements).
+            // A simple sparse lookup table used over a map
+            // for ease of persistence to XML.
+            if ((charge > 0) && (charge < ChargeRegressionLines.Count()))
+                return ChargeRegressionLines[charge];
+            return null;
+        }
+
+        public double? GetDriftTimeMsec(LibKey peptide)
+        {
+            ChargeRegressionLine regressionLine = GetRegressionLine(peptide.Charge); 
+            if (regressionLine != null)
+            {
+                if (!IonMobilityLibrary.IsUsable)
+                {
+                    // First access?  Load the library.
+                    IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
+                }
+                return IonMobilityLibrary.GetDriftTimeMsec(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Get the drift time in msec for the charged peptide, and the width of the window
+        /// centered on that based on the drift time predictor's claimed resolving power
+        /// </summary>
+        /// <param name="peptide"></param>
+        /// <param name="dtWindowWidthMsec"></param>
+        /// <returns></returns>
+        public double? GetDriftTimeAndWindow(LibKey peptide, out double dtWindowWidthMsec)
+        {
+            double? driftTime = GetDriftTimeMsec(peptide);
+            if (driftTime.HasValue)
+                dtWindowWidthMsec = InverseResolvingPowerTimesTwo * driftTime.Value; // 2.0*driftTime/resolvingPower
+            else
+                dtWindowWidthMsec = 0;
+            return driftTime;
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private DriftTimePredictor()
+        {
+        }
+
+        private enum ATTR
+        {
+            resolving_power
+        }
+
+        private enum EL
+        {
+            regression_dt
+        }
+
+        private void Validate()
+        {
+            InverseResolvingPowerTimesTwo = (ResolvingPower > 0) ? 2.0 / ResolvingPower : double.MaxValue; // Set cache value
+
+            if (ChargeRegressionLines.Any() || ResolvingPower != 0 || ((IonMobilityLibrary != null) && !IonMobilityLibrary.IsNone))
+            {
+                var messages = new List<string>();
+                if ((IonMobilityLibrary == null) || IonMobilityLibrary.IsNone || String.IsNullOrEmpty(IonMobilityLibrary.PersistencePath))
+                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_library_);
+                if (ResolvingPower <= 0)
+                    messages.Add(Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+                if (!ChargeRegressionLines.Any())
+                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regression_values_);
+                if (messages.Any())
+                    throw new InvalidDataException(TextUtil.LineSeparate(messages));
+            }
+        }
+
+        public static DriftTimePredictor Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new DriftTimePredictor());
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            // Read start tag attributes
+            base.ReadXml(reader);
+            ResolvingPower = reader.GetDoubleAttribute(ATTR.resolving_power);
+
+            // Consume start tag
+            reader.ReadStartElement();
+            var readHelper = new XmlElementHelper<IonMobilityLibrary>();
+            if (reader.IsStartElement(readHelper.ElementNames))
+            {
+                IonMobilityLibrary = readHelper.Deserialize(reader);
+            }
+
+            // Read all per-charge regressions
+            var list = new List<ChargeRegressionLine>();
+            while (reader.IsStartElement(EL.regression_dt))
+            {
+                list.Add(ChargeRegressionLine.Deserialize(reader));
+            }
+            ChargeRegressionLines = list.ToArray();
+            reader.Read();             // Consume end tag
+
+            Validate();
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            // Write attributes
+            base.WriteXml(writer);
+            writer.WriteAttribute(ATTR.resolving_power, ResolvingPower);
+
+            // Write collisional cross sections
+            if (IonMobilityLibrary != null)
+            {
+                var imCalc = IonMobilityLibrary as IonMobilityLibrary;
+                if (imCalc != null)
+                    writer.WriteElement(imCalc);
+            }
+
+            // Write all per-charge regressions
+            foreach (ChargeRegressionLine line in ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
+            {
+                writer.WriteStartElement(EL.regression_dt);
+                line.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+
+
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(DriftTimePredictor obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return base.Equals(obj) &&
+                   Equals(obj.IonMobilityLibrary, IonMobilityLibrary) &&
+                   ArrayUtil.EqualsDeep(obj.ChargeRegressionLines, ChargeRegressionLines) &&
+                   obj.ResolvingPower == ResolvingPower;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as DriftTimePredictor);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode();
+                result = (result * 397) ^ IonMobilityLibrary.GetHashCode();
+                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(ChargeRegressionLines);
+                result = (result * 397) ^ ResolvingPower.GetHashCode();
+                return result;
+            }
+        }
+
+        #endregion
+
+    }
+
 }

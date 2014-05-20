@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestFunctional
                 var chromatogramSet = document.Settings.MeasuredResults.Chromatograms.First(cs => cs.Name == "40fmol");
                 foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                 {
-                    var prediction = new PeptidePrediction(null, true, 1);
+                    var prediction = new PeptidePrediction(null, null, true, 1, false, 0);
                     double windowRtIgnored;
 
                     var schedulingPeptide =

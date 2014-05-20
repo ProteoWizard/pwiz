@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -38,6 +39,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -617,6 +619,75 @@ namespace pwiz.Skyline.Properties
                 this[typeof(RTScoreCalculatorList).Name] = value;
             }
         }
+        
+        public DriftTimePredictor GetDriftTimePredictorByName(string name)
+        {
+            // Null return is valid for this list, and means no drift time
+            // calculation should be applied.
+            DriftTimePredictor predictor;
+            if (DriftTimePredictorList.TryGetValue(name, out predictor))
+            {
+                if (predictor.GetKey() == DriftTimePredictorList.GetDefault().GetKey())
+                    predictor = null;
+            }
+            return predictor;
+        }
+
+        [UserScopedSettingAttribute]
+        public DriftTimePredictorList DriftTimePredictorList
+        {
+            get
+            {
+                DriftTimePredictorList list = (DriftTimePredictorList)this[typeof(DriftTimePredictorList).Name];
+                if (list == null)
+                {
+                    list = new DriftTimePredictorList();
+                    list.AddDefaults();
+                    DriftTimePredictorList = list;
+                }
+                else
+                {
+                    list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(DriftTimePredictorList).Name] = value;
+            }
+        }
+
+        public IonMobilityLibrarySpec GetIonMobilityLibraryByName(string name)
+        {
+            IonMobilityLibrarySpec dtLib;
+            return !IonMobilityLibraryList.TryGetValue(name, out dtLib) ? null : dtLib;
+        }
+
+        [UserScopedSettingAttribute]
+        public IonMobilityLibraryList IonMobilityLibraryList
+        {
+            get
+            {
+                IonMobilityLibraryList list = (IonMobilityLibraryList)this[typeof(IonMobilityLibraryList).Name];
+
+                if (list == null)
+                {
+                    list = new IonMobilityLibraryList();
+                    list.AddDefaults();
+                    IonMobilityLibraryList = list;
+                }
+                else
+                {
+                    list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(IonMobilityLibraryList).Name] = value;
+            }
+        }
+
         
         public PeakScoringModelSpec GetScoringModelByName(string name)
         {
@@ -1566,6 +1637,118 @@ namespace pwiz.Skyline.Properties
         }
     }
     
+    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrarySpec>
+    {
+        /// <summary>
+        /// <see cref="DriftTimePredictor"/> objects depend on ion mobility libraries. If a user deletes or changes a library,
+        /// the <see cref="DriftTimePredictor"/> objects that depend on it may need to be removed.
+        /// </summary>
+        public override bool AcceptList(Control owner, IList<IonMobilityLibrarySpec> listNew)
+        {
+            var listMissingLib = new List<DriftTimePredictor>();
+            var listChangedLib = new List<DriftTimePredictor>();
+            foreach (var driftTimePredictor in Settings.Default.DriftTimePredictorList.ToArray())
+            {
+                var predictor = driftTimePredictor;
+
+                //There is a dummy predictor called "None" with a null library
+                if (predictor.IonMobilityLibrary == null)
+                    continue;
+
+                if (listNew.Contains(calc => Equals(calc, predictor.IonMobilityLibrary)))
+                {
+                    var libChanged = listNew.FirstOrDefault(calc =>
+                        Equals(calc, predictor.IonMobilityLibrary.ChangeName(calc.Name)));
+
+                    if (libChanged == null)
+                        listMissingLib.Add(predictor);
+                    else
+                        listChangedLib.Add(predictor.ChangeLibrary(libChanged));
+                }
+            }
+
+            if (listMissingLib.Count > 0)
+            {
+                var message = TextUtil.LineSeparate(Resources.IonMobilityLibraryList_AcceptList_The_drift_time_predictors_,
+                                                    TextUtil.LineSeparate(listMissingLib.Select(reg => reg.Name)),
+                                                    Resources.IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depend_on_have_changed__Do_you_want_to_continue_);
+                if (DialogResult.Yes != MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                {
+                    return false;
+                }
+            }
+
+            foreach (var predictor in listChangedLib)
+            {
+                Settings.Default.DriftTimePredictorList.SetValue(predictor);
+            }
+
+            return true;
+        }
+
+        public override IonMobilityLibrarySpec EditItem(Control owner, IonMobilityLibrarySpec item,
+            IEnumerable<IonMobilityLibrarySpec> existing, object tag)
+        {
+            var calc = item as IonMobilityLibrary;
+            if (item == null || calc != null)
+            {
+                using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(calc, existing))
+                {
+                    if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
+                    {
+                        return editIonMobilityLibraryDlg.IonMobilityLibrary;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public override IonMobilityLibrarySpec CopyItem(IonMobilityLibrarySpec item)
+        {
+            return (IonMobilityLibrarySpec)item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<IonMobilityLibrarySpec> GetDefaults(int revisionIndex)
+        {
+            return new IonMobilityLibrarySpec[0]; // No defaults
+        }
+
+        public void EnsureDefault()
+        {
+            // Make sure the default predictors are present.
+            var defaultPredictors = GetDefaults().ToArray();
+            int len = defaultPredictors.Length;
+            if (Count < len || !ArrayUtil.ReferencesEqual(defaultPredictors, this.Take(len).ToArray()))
+            {
+                foreach (var predictor in defaultPredictors)
+                    Remove(predictor);
+                foreach (var predictor in defaultPredictors.Reverse())
+                    Insert(0, predictor);
+            }
+        }
+
+        private static readonly IXmlElementHelper<IonMobilityLibrarySpec>[] DRIFT_TIME_HELPERS =
+        {
+            new XmlElementHelperSuper<IonMobilityLibrary, IonMobilityLibrarySpec>(),
+        };
+
+
+        protected override IXmlElementHelper<IonMobilityLibrarySpec>[] GetXmlElementHelpers()
+        {
+            return DRIFT_TIME_HELPERS;
+        }
+
+        public override string Title { get { return Resources.IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries; } }
+
+        public override string Label { get { return Resources.IonMobilityLibraryList_Label_Ion_Mobility_Libraries_; } }
+
+        public bool CanEditItem(IonMobilityLibrarySpec item)
+        {
+            return item != null && !GetDefaults().Contains(item);
+        }
+    }
+
     public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
@@ -1676,6 +1859,59 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return Resources.RetentionTimeList_Title_Edit_Retention_Time_Regressions; } }
 
         public override string Label { get { return Resources.RetentionTimeList_Label_Retention_Time_Regression; } }
+
+        public override int ExcludeDefaults { get { return 1; } }
+    }
+
+    public sealed class DriftTimePredictorList : SettingsList<DriftTimePredictor>
+    {
+        private static readonly DriftTimePredictor NONE =
+            new DriftTimePredictor(ELEMENT_NONE, null, null, 0);
+
+        public override string GetDisplayName(DriftTimePredictor item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
+        public static DriftTimePredictor GetDefault()
+        {
+            return NONE;
+        }
+
+        public override IEnumerable<DriftTimePredictor> GetDefaults(int revisionIndex)
+        {
+            return new[] { GetDefault() };
+        }
+
+        public void EnsureDefault()
+        {
+            // Make sure the choice of no Drift time regression is present.
+            DriftTimePredictor defaultElement = GetDefault();
+            if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
+                Insert(0, defaultElement);
+        }
+
+        public override DriftTimePredictor EditItem(Control owner, DriftTimePredictor item,
+            IEnumerable<DriftTimePredictor> existing, object tag)
+        {
+            using (EditDriftTimePredictorDlg editDT = new EditDriftTimePredictorDlg(existing ?? this) { Predictor = item })
+            {
+                if (editDT.ShowDialog(owner) == DialogResult.OK)
+                    return editDT.Predictor;
+            }
+
+            return null;
+        }
+
+        public override DriftTimePredictor CopyItem(DriftTimePredictor item)
+        {
+            return (DriftTimePredictor)item.ChangeName(string.Empty);
+        }
+
+        public override string Title { get { return Resources.DriftTimePredictorList_Title_Edit_Drift_Time_Predictors; } }
+
+        public override string Label { get { return Resources.DriftTimePredictorList_Label_Drift_Time_Predictor_; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }
@@ -1794,7 +2030,7 @@ namespace pwiz.Skyline.Properties
                 (
                     EnzymeList.GetDefault(),
                     new DigestSettings(0, false),
-                    new PeptidePrediction(null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW),
+                    new PeptidePrediction(null, null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW, false, null),
                     new PeptideFilter
                     (
                         25,  // ExcludeNTermAAs

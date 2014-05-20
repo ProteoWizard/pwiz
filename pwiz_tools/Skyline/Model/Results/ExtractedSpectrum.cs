@@ -23,6 +23,8 @@ namespace pwiz.Skyline.Model.Results
     {
         public ExtractedSpectrum(string modifiedSequence,
                                  double precursorMz,
+                                 double ionMobilityValue,
+                                 double ionMobilityExtractionWidth,
                                  ChromExtractor chromExtractor,
                                  int filterIndex,
                                  double[] mzs,
@@ -32,6 +34,8 @@ namespace pwiz.Skyline.Model.Results
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
+            IonMobilityValue = ionMobilityValue;
+            IonMobilityExtractionWidth = ionMobilityExtractionWidth;
             Extractor = chromExtractor;
             FilterIndex = filterIndex;
             Mzs = mzs;
@@ -42,6 +46,8 @@ namespace pwiz.Skyline.Model.Results
 
         public string ModifiedSequence { get; private set; }
         public double PrecursorMz { get; private set; }
+        public double IonMobilityValue { get; private set; }
+        public double IonMobilityExtractionWidth { get; private set; }
         public int FilterIndex { get; private set; }
         public double[] Mzs { get; private set; }
         public double[] ExtractionWidths { get; private set; }

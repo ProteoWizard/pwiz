@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -231,25 +232,35 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MAX_MEASURED_RT_WINDOW = 30.0;
         public const double DEFAULT_MEASURED_RT_WINDOW = 2.0;
 
-        public PeptidePrediction(RetentionTimeRegression retentionTime)
-            : this(retentionTime, true, DEFAULT_MEASURED_RT_WINDOW)
+        public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor = null)
+            : this(retentionTime, driftTimePredictor, true, DEFAULT_MEASURED_RT_WINDOW, false, null)
         {            
         }
 
-        public PeptidePrediction(RetentionTimeRegression retentionTime, bool useMeasuredRTs, double? measuredRTWindow)
+        public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor, bool useMeasuredRTs, double? measuredRTWindow,
+            bool useLibraryDriftTimes, double? libraryDriftTimesResolvingPower)
         {
             RetentionTime = retentionTime;
+            DriftTimePredictor = driftTimePredictor;
             UseMeasuredRTs = useMeasuredRTs;
             MeasuredRTWindow = measuredRTWindow;
+            UseLibraryDriftTimes = useLibraryDriftTimes;
+            LibraryDriftTimesResolvingPower = libraryDriftTimesResolvingPower;
 
             DoValidate();
         }
 
         public RetentionTimeRegression RetentionTime { get; private set; }
 
+        public DriftTimePredictor DriftTimePredictor { get; private set; }
+
         public bool UseMeasuredRTs { get; private set; }
 
         public double? MeasuredRTWindow { get; private set; }
+
+        public bool UseLibraryDriftTimes { get; private set; }
+
+        public double? LibraryDriftTimesResolvingPower { get; private set; }
 
         public int CalcMaxTrendReplicates(SrmDocument document)
         {
@@ -289,6 +300,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, replicateNum, algorithm,
                 singleWindow, null, out windowRT);
+        }
+
+        public double? PredictDriftTime(PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            out double windowDtMsec)
+        {
+            int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+            return GetDriftTime(new LibKey(nodePep.ModifiedSequence, charge), out windowDtMsec);
         }
 
         public double? PredictRetentionTimeForChromImport(SrmDocument document, PeptideDocNode nodePep,
@@ -387,6 +406,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return predictedRT;
         }
 
+        public double? GetDriftTime(LibKey key, out double windowDtMsec)
+        {
+            if (DriftTimePredictor != null)
+            {
+                return DriftTimePredictor.GetDriftTimeAndWindow(key, out windowDtMsec);
+            }
+            windowDtMsec = 0;
+            return null;
+        }
+
         /// <summary>
         /// Used to help make sure that all precursors with matching retention time for
         /// a peptide get the same scheduling time when using measured results, which
@@ -470,6 +499,21 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MeasuredRTWindow = prop);
         }
 
+        public PeptidePrediction ChangeUseLibraryDriftTimes(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.UseLibraryDriftTimes = prop);
+        }
+
+        public PeptidePrediction ChangeLibraryDriftTimesResolvingPower(double? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.LibraryDriftTimesResolvingPower = prop);
+        }
+
+        public PeptidePrediction ChangeDriftTimePredictor(DriftTimePredictor prop)
+        {
+            return ChangeProp(ImClone(this), im => im.DriftTimePredictor = prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -484,7 +528,9 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum ATTR
         {
             use_measured_rts,
-            measured_rt_window
+            measured_rt_window,
+            use_spectral_library_drift_times,
+            spectral_library_drift_times_resolving_power
         }
 
         void IValidating.Validate()
@@ -506,6 +552,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            if (UseLibraryDriftTimes)
+            {
+                if (!LibraryDriftTimesResolvingPower.HasValue)
+                    LibraryDriftTimesResolvingPower = 0;
+                string errmsg = EditDriftTimePredictorDlg.ValidateResolvingPower(LibraryDriftTimesResolvingPower.Value);
+                if (errmsg != null)
+                {
+                    throw new InvalidDataException(errmsg);
+                }
+            }
+
             // Defer further validation to the SrmSettings object
         }
 
@@ -523,6 +580,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             bool? useMeasuredRTs = reader.GetNullableBoolAttribute(ATTR.use_measured_rts);
             MeasuredRTWindow = reader.GetNullableDoubleAttribute(ATTR.measured_rt_window);
+            bool? useLibraryDriftTimes = reader.GetNullableBoolAttribute(ATTR.use_spectral_library_drift_times);
+            LibraryDriftTimesResolvingPower = reader.GetNullableDoubleAttribute(ATTR.spectral_library_drift_times_resolving_power);
             // Keep XML values, if written by v0.5 or later 
             if (useMeasuredRTs.HasValue)
                 UseMeasuredRTs = useMeasuredRTs.Value;
@@ -534,14 +593,23 @@ namespace pwiz.Skyline.Model.DocSettings
                     MeasuredRTWindow = DEFAULT_MEASURED_RT_WINDOW;
             }
 
+            if (useLibraryDriftTimes.HasValue)
+                UseLibraryDriftTimes = useLibraryDriftTimes.Value;
+            else
+            {
+                UseLibraryDriftTimes = false;
+                LibraryDriftTimesResolvingPower = null;
+            }
+
             // Consume tag
             if (reader.IsEmptyElement)
                 reader.Read();
             else
             {
                 reader.ReadStartElement();
-                // Read child element
+                // Read child elements
                 RetentionTime = reader.DeserializeElement<RetentionTimeRegression>();
+                DriftTimePredictor = reader.DeserializeElement<DriftTimePredictor>();
                 reader.ReadEndElement();                
             }
 
@@ -555,9 +623,14 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.use_measured_rts, UseMeasuredRTs, !UseMeasuredRTs);
             writer.WriteAttributeNullable(ATTR.measured_rt_window, MeasuredRTWindow);
 
+            writer.WriteAttribute(ATTR.use_spectral_library_drift_times, UseLibraryDriftTimes, !UseLibraryDriftTimes);
+            writer.WriteAttributeNullable(ATTR.spectral_library_drift_times_resolving_power, LibraryDriftTimesResolvingPower);
+
             // Write child elements
             if (RetentionTime != null)
                 writer.WriteElement(RetentionTime);
+            if (DriftTimePredictor != null)
+                writer.WriteElement(DriftTimePredictor);
         }
 
         #endregion
@@ -569,6 +642,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.RetentionTime, RetentionTime) &&
+                Equals(other.DriftTimePredictor, DriftTimePredictor) &&
+                Equals(other.UseLibraryDriftTimes, UseLibraryDriftTimes) &&
+                Equals(other.LibraryDriftTimesResolvingPower, LibraryDriftTimesResolvingPower) &&
                 other.UseMeasuredRTs.Equals(UseMeasuredRTs) &&
                 other.MeasuredRTWindow.Equals(MeasuredRTWindow);
         }
@@ -586,8 +662,11 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = (RetentionTime != null ? RetentionTime.GetHashCode() : 0);
-                result = (result*397) ^ UseMeasuredRTs.GetHashCode();
-                result = (result*397) ^ (MeasuredRTWindow.HasValue ? MeasuredRTWindow.Value.GetHashCode() : 0);
+                result = (result * 397) ^ (DriftTimePredictor != null ? DriftTimePredictor.GetHashCode() : 0);
+                result = (result * 397) ^ UseLibraryDriftTimes.GetHashCode();
+                result = (result * 397) ^ (LibraryDriftTimesResolvingPower.HasValue ? LibraryDriftTimesResolvingPower.Value.GetHashCode() : 0);
+                result = (result * 397) ^ UseMeasuredRTs.GetHashCode();
+                result = (result * 397) ^ (MeasuredRTWindow.HasValue ? MeasuredRTWindow.Value.GetHashCode() : 0);
                 return result;
             }
         }
@@ -1660,6 +1739,23 @@ namespace pwiz.Skyline.Model.DocSettings
             retentionTimes = null;
             return false;
         }
+
+        public bool TryGetDriftTimes(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        {
+            Assume.IsTrue(IsLoaded);
+
+            foreach (Library lib in _libraries)
+            {
+                // Only one of the available libraries may claim ownership of the file
+                // in question.
+                if (lib != null && lib.TryGetIonMobilities(filePath, out ionMobilities))
+                    return true;
+            }
+            ionMobilities = null;
+            return false;
+        }
+
+
 
         /// <summary>
         /// Loads all the spectra found in all the loaded libraries with the

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
@@ -38,17 +39,15 @@ namespace pwiz.Skyline.Model.Results
         private readonly double? _maxTime;
         private readonly SpectrumFilterPair[] _filterMzValues;
         private readonly bool _isWatersMse;
-        private readonly MsDataFileImpl _dataFile;
+        private readonly bool _isAgilentMse;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
-        private List<KeyValuePair<double, double>> _mseAccumulatorSpectrum; // for averaging Agilent stepped CE spectra
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
         public SpectrumFilter(SrmDocument document, MsDataFileImpl dataFile)
         {
-            _dataFile = dataFile; // useful for lookahead in averaging Agilent ramped CE scans
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
             _acquisitionMethod = _fullScan.AcquisitionMethod;
@@ -65,10 +64,10 @@ namespace pwiz.Skyline.Model.Results
 
                     var key = new PrecursorModSeq(0, null, ChromExtractor.summed);  // TIC
                     dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
-                        _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                        _instrument.MinTime, _instrument.MaxTime, null, null, _isHighAccMsFilter, _isHighAccProductFilter));
                     key = new PrecursorModSeq(0, null, ChromExtractor.base_peak);   // BPC
                     dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count,
-                        _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                        _instrument.MinTime, _instrument.MaxTime, null, null, _isHighAccMsFilter, _isHighAccProductFilter));
                 }
                 if (EnabledMsMs)
                 {
@@ -79,6 +78,7 @@ namespace pwiz.Skyline.Model.Results
                         _fullScan.IsolationScheme.IsAllIons)
                     {
                         _isWatersMse = dataFile.IsWatersFile;
+                        _isAgilentMse = dataFile.IsAgilentFile;
                         _mseLevel = 1;
                     }
                 }
@@ -111,6 +111,16 @@ namespace pwiz.Skyline.Model.Results
                             continue;
 
                         double? minTime = _minTime, maxTime = _maxTime;
+                        double? startDriftTimeMsec = null, endDriftTimeMsec = null;
+                        double windowDT;
+                        double? centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
+                            new LibKey(nodePep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), out windowDT);
+                        if (centerDriftTime.HasValue)
+                        {
+                            startDriftTimeMsec = centerDriftTime.Value - windowDT / 2;
+                            endDriftTimeMsec = startDriftTimeMsec + windowDT;
+                        }
+
                         if (canSchedule)
                         {
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
@@ -165,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
                         var key = new PrecursorModSeq(mz, seq, ChromExtractor.summed);
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
-                            filter = new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count, minTime, maxTime,
+                            filter = new SpectrumFilterPair(key, dictPrecursorMzToFilter.Count, minTime, maxTime, startDriftTimeMsec, endDriftTimeMsec, 
                                 _isHighAccMsFilter, _isHighAccProductFilter);
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
@@ -231,6 +241,8 @@ namespace pwiz.Skyline.Model.Results
         public bool EnabledMsMs { get { return _acquisitionMethod != FullScanAcquisitionMethod.None; } }
         public bool IsHighAccProductFilter { get { return _isHighAccProductFilter; } }
         public bool IsSharedTime { get { return _isSharedTime; } }
+        public bool IsAgilentMse { get { return _isAgilentMse; } }
+
 
         public bool ContainsTime(double time)
         {
@@ -273,85 +285,52 @@ namespace pwiz.Skyline.Model.Results
             return dataSpectrum.Level == 2;
         }
 
+        public int GetMseLevel()
+        {
+            return _mseLevel;
+        }
+
         private int UpdateMseLevel(MsDataSpectrum dataSpectrum)
         {
-            int returnval; // normally returns 1 or 2, but for Agilent ramped-CE averaging may return 0 when in midst of building the averaged spectrum
-            if (_mseLastSpectrum != null && !ReferenceEquals(dataSpectrum, _mseLastSpectrum)) // is this the same one we were just asked about?
+            int returnval; 
+            if ((_mseLastSpectrum == null) || !ReferenceEquals(dataSpectrum, _mseLastSpectrum)) // is this the same one we were just asked about?
             {
-                // Waters MSe is enumerated in two separate runs, first MS1 and then MS/MS
+                // Waters MSe is enumerated in two separate runs ("functions" in the raw data), first MS1 and then MS/MS
                 // Bruker MSe is enumerated in interleaved MS1 and MS/MS scans
                 // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...)
-                if (_dataFile.IsAgilentFile)
+                if (_isAgilentMse)
                 {
                     if (1 == dataSpectrum.Level)
                     {
-                        _mseLevel = 1; // expecting a series of scans
-                        returnval = 1; // report as MS1
+                        _mseLevel = 1; // Expecting a series of MS2 scans to follow after this
+                        returnval = 1; // Report as MS1
                     }
-                    else // build a list of ramping-CE MS2 scans to be eventually returned as a single averaged MS2 scan
+                    else if ((2 == dataSpectrum.Level) && 
+                        (_mseLastSpectrum != null)) // Sometimes the file doesn't contain that leading MS1 scan
                     {
-                        if (1 == _mseLevel) // then we're just starting a CE step up sequence
-                        {
-                            _mseAccumulatorSpectrum = new List<KeyValuePair<double, double>>(dataSpectrum.Mzs.Length); // reset
-                        }
-                        _mseLevel++; // this will grow with each ramping-CE MS2 Scan we hold for averaging
-                        for (int i = 0; i < dataSpectrum.Mzs.Length; i++)
-                        {
-                            if (dataSpectrum.Intensities[i] > 0) // add this to the aggregate scan mz-intensity list
-                            {
-                                _mseAccumulatorSpectrum.Add(new KeyValuePair<double, double>(dataSpectrum.Mzs[i],dataSpectrum.Intensities[i])); // we'll sort on mz later
-                            }
-                        }
-                        // are we expecting another MS2 scan?  if so don't claim we're MS2 yet.  Otherwise combine the mse scans and return as MS2.
-                        if ((dataSpectrum.Index==(_dataFile.SpectrumCount-1))||(1==_dataFile.GetMsLevel(dataSpectrum.Index+1)))
-                        {
-                            int nSteps = _mseLevel - 1; // _mseLevel has been counting up with each MS2 scan in the sequence
-                            if ((nSteps > 1) && (_mseAccumulatorSpectrum.Count > 0))
-                            {
-                                // replace current scan's mz-intensity info with averaged (no need if we had just one mse scan)
-                                _mseAccumulatorSpectrum.Sort((a,b) => a.Key.CompareTo(b.Key)); // sort on m/z
-                                var mzList = new List<double>(_mseAccumulatorSpectrum.Count);
-                                var intensityList = new List<double>(_mseAccumulatorSpectrum.Count);
-                                double scale = 1.0 / nSteps;  // scale by number of CE levels  
-                                mzList.Add(_mseAccumulatorSpectrum[0].Key);
-                                intensityList.Add(_mseAccumulatorSpectrum[0].Value*scale);
-                                for (int i = 1; i < _mseAccumulatorSpectrum.Count; i++)
-                                {
-                                    if (_mseAccumulatorSpectrum[i - 1].Key == _mseAccumulatorSpectrum[i].Key) // mz match
-                                    {
-                                        intensityList[intensityList.Count-1] += _mseAccumulatorSpectrum[i - 1].Value*scale;
-                                    }
-                                    else
-                                    {
-                                        mzList.Add(_mseAccumulatorSpectrum[i].Key);
-                                        intensityList.Add(_mseAccumulatorSpectrum[i].Value*scale);
-                                    }
-                                }
-                                dataSpectrum.Mzs = mzList.ToArray();
-                                dataSpectrum.Intensities = intensityList.ToArray();
-                            }
-                            returnval = 2;  // ready for caller to process, report as MS2
-                        }
-                        else
-                        {
-                            returnval = 0;  // still aggregating, report as neither MS1 nor MS2
-                        }
+                        _mseLevel = 2; 
+                        returnval = 2; 
+                    }
+                    else
+                    {
+                        returnval = 0; // Not useful - probably the file started off mid-cycle, with MS2 CE>0
                     }
                 }
                 else if (!_isWatersMse)
                 {
-                    // Alternate between 1 and 2
+                    // Bruker - Alternate between 1 and 2
                     _mseLevel = (_mseLevel % 2) + 1;
                     returnval = _mseLevel;
                 }
-                else if ((dataSpectrum.RetentionTime ?? 0) < (_mseLastSpectrum.RetentionTime ?? 0))
+                else if ((dataSpectrum.RetentionTime ?? 0) < ((_mseLastSpectrum==null) ? 0 :(_mseLastSpectrum.RetentionTime ?? 0)))
                 {
-                    // level 1 followed by level 2, followed by data that should be ignored
+                    // Waters - level 1 in raw data "function 1", followed by level 2 in raw data "function 2", followed by data that should be ignored
                     _mseLevel++;
                     returnval = _mseLevel;
                 }
                 else
                 {
+                    // Waters - still in the same raw data function
                     returnval = _mseLevel; 
                 }
                 _mseLastSpectrumLevel = returnval;
@@ -364,37 +343,35 @@ namespace pwiz.Skyline.Model.Results
             return returnval;
         }
 
-        public IEnumerable<ExtractedSpectrum> SrmSpectraFromMs1Scan(double? time,
-                                                                    IList<MsPrecursor> precursors, double[] mzArray, double[] intensityArray)
+        public IEnumerable<ExtractedSpectrum> SrmSpectraFromMs1Scan(double? retentionTime,
+                                                                    IList<MsPrecursor> precursors, MsDataSpectrum[] spectra)
         {
-            if (!EnabledMs || !time.HasValue || mzArray == null || intensityArray == null)
+            if (!EnabledMs || !retentionTime.HasValue || spectra == null)
                 yield break;
 
             // All filter pairs have a shot at filtering the MS1 scans
             foreach (var filterPair in FindMs1FilterPairs(precursors))
             {
-                if (!filterPair.ContainsTime(time.Value))
+                if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
-                var filteredSrmSpectrum = filterPair.FilterQ1Spectrum(mzArray, intensityArray);
+                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
             }
         }
 
-        public IEnumerable<ExtractedSpectrum> Extract(double? time, MsDataSpectrum dataSpectrum)
+        public IEnumerable<ExtractedSpectrum> Extract(double? retentionTime, MsDataSpectrum[] spectra)
         {
-            double[] mzArray = dataSpectrum.Mzs;
-            double[] intensityArray = dataSpectrum.Intensities;
-            if (!EnabledMsMs || !time.HasValue || mzArray == null || intensityArray == null)
+            if (!EnabledMsMs || !retentionTime.HasValue || !spectra.Any())
                 yield break;
 
-            foreach (var isoWin in GetIsolationWindows(dataSpectrum.Precursors))
+            foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors))
             {
                 foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod))
                 {
-                    if (!filterPair.ContainsTime(time.Value))
+                    if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
-                    var filteredSrmSpectrum = filterPair.FilterQ3Spectrum(mzArray, intensityArray);
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra);
                     if (filteredSrmSpectrum != null)
                         yield return filteredSrmSpectrum;
                 }
@@ -550,7 +527,7 @@ namespace pwiz.Skyline.Model.Results
             var isolationScheme = _fullScan.IsolationScheme;
             if (isolationScheme == null)
             {                
-                throw new InvalidOperationException("Unexpected attempt to calculate DIA isolation window without an isolation scheme"); // Not L10N? Does user see this?
+                throw new InvalidOperationException("Unexpected attempt to calculate DIA isolation window without an isolation scheme"); // Not L10N - for developers
             }
 
                 // Calculate window for a simple isolation scheme.

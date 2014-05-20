@@ -95,6 +95,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public bool HasDriftTimePrediction { get { return PeptideSettings.Prediction.DriftTimePredictor != null; } }
+
+        public bool HasIonMobilityLibraryPersisted
+        {
+            get
+            {
+                return HasDriftTimePrediction && PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath != null;
+            }
+        }
+
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
         public RelativeRT GetRelativeRT(IsotopeLabelType labelType, string seq, ExplicitMods mods)
@@ -753,6 +763,15 @@ namespace pwiz.Skyline.Model.DocSettings
             LibraryRetentionTimes retentionTimes;
             if (libraries.TryGetRetentionTimes(filePath, out retentionTimes))
                 return retentionTimes;
+            return null;
+        }
+
+        public LibraryIonMobilityInfo GetDriftTimes(string filePath)
+        {
+            var libraries = PeptideSettings.Libraries;
+            LibraryIonMobilityInfo ionMobilities;
+            if (libraries.TryGetDriftTimes(filePath, out ionMobilities))
+                return ionMobilities;
             return null;
         }
 
