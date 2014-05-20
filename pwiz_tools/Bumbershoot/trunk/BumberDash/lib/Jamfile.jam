@@ -47,9 +47,11 @@ import feature ;
 import modules os tar ;
 using tar ;
 
+path-constant BUMBERDASH_LIB_PATH : . ;
+
 rule extract_binary_tarball ( filemask : destination )
 {
-    local tarballs = [ SORT [ glob $(filemask) ] ] ;
+    local tarballs = [ SORT [ path.glob $(BUMBERDASH_LIB_PATH) : $(filemask) ] ] ;
     if ! $(tarballs)
     {
         errors.user-error "Unable to find tarball for $(destination) with filemask \"$(filemask)\"; download a matching tarball to the BumberDash/lib directory." ;
