@@ -357,6 +357,11 @@ public ref class UserParam
     bool empty();
 
     /// <summary>
+    /// convenience function to return time in seconds (throws if units not a time unit)
+    /// </summary>
+    double timeInSeconds();
+
+    /// <summary>
     /// returns true iff name, value, type, and units are all pairwise equal
     /// </summary>
     bool operator==(UserParam^ that);
@@ -365,6 +370,7 @@ public ref class UserParam
     /// returns !(this==that)
     /// </summary>
     bool operator!=(UserParam^ that);
+
 };
 
 

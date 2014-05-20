@@ -248,6 +248,12 @@ bool UserParam::empty()
     return (*base_)->empty();
 }
 
+double UserParam::timeInSeconds()
+{
+    try { return (*base_)->timeInSeconds(); }
+    CATCH_AND_FORWARD_CAST(value, "double")
+}
+
 bool UserParam::operator==(UserParam^ that) {return (*base_) == *that->base_;}
 bool UserParam::operator!=(UserParam^ that) {return (*base_) != *that->base_;}
 

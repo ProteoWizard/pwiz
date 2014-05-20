@@ -206,6 +206,9 @@ struct PWIZ_API_DECL UserParam
     UserParam(const UserParam& other);
     UserParam& operator=(const UserParam& rhs);
 
+    /// convenience function to return time in seconds (throws if units not a time unit)
+    double timeInSeconds() const;
+
     /// Templated value access with type conversion
     template<typename value_type>
     value_type valueAs() const
