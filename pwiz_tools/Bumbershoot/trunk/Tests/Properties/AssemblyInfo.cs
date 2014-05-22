@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("Tests")]
 [assembly: AssemblyCopyright("Copyright ©  2011")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyCulture("en")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM componenets.  If you need to access a type in this assembly from 
