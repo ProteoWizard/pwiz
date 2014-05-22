@@ -127,6 +127,26 @@ project bumberdash
 
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+	  
+	  # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
+      # warning: '__cur' might be used uninitialized in this function 
+      <toolset>gcc:<cxxflags>-Wno-uninitialized
+
+      # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
+      <toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
+	  
+	  # special Cygwin gcc-3.4.4 hack
+      # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
+      <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
+      <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
+
+      # allow "long long" even with -pedantic
+      <toolset>gcc:<cxxflags>-Wno-long-long
+      <toolset>darwin:<cxxflags>-Wno-long-long
+
+      # don't call 'strip' -- causes 'Bus error' in some cases
+      #  e.g. find_if with inline predicate
+      <toolset>darwin:<debug-symbols>on
 
       <threading>multi
 
@@ -407,7 +427,7 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ path.make $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ] ;
     if <link>shared in $(properties) { location = $(location)-shared ; }
     if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
 
@@ -507,6 +527,7 @@ tar.extract
         pwiz_aux/Jamfile.jam
         pwiz_tools/common
         pwiz_tools/Shared/MSGraph
+		pwiz_tools/Shared/zedgraph
         pwiz_tools/Shared/Lib
         pwiz_tools/Shared/Common
 
@@ -663,10 +684,7 @@ tar.create $(application-name:L)-src.tar.bz2
     $(ROOT_PATH)/freicore/ext
 
     $(ROOT_PATH)/Jamroot.jam
-    $(ROOT_PATH)/quickbuild.bat
-    $(ROOT_PATH)/quickbuild.sh
     $(ROOT_PATH)/clean.bat
-    $(ROOT_PATH)/clean.sh
     #$(ROOT_PATH)/LICENSE
 
     $(LIBRARIES_PATH)/boost-build
