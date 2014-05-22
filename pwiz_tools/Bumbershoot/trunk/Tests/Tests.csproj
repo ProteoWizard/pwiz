@@ -128,8 +128,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\BumberDash\lib\Nhibernate\NHibernate.ByteCode.Castle.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_bindings_cli">
-      <HintPath>..\build-nt-x86\msvc-release\pwiz_bindings_cli.dll</HintPath>
+    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -397,6 +398,20 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.EDAL.SxS.manifest</Name>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\Interop.EDAL.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\Interop.HSREADWRITELib.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=win32">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\freicore\pwiz_src\build-nt-x86\pwiz\utility\bindings\CLI\msvc-9.0\release\threading-multi\using-clr-true\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
+  </ItemGroup>
+  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
@@ -417,20 +432,6 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
-      <Name>Interop.EDAL.SxS.manifest</Name>
-      <HintPath>..\build-nt-x86\msvc-release\Interop.EDAL.SxS.manifest</HintPath>
-    </NativeReference>
-    <NativeReference Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
-      <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
-      <HintPath>..\build-nt-x86\msvc-release\Interop.HSREADWRITELib.SxS.manifest</HintPath>
-    </NativeReference>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.62.0, Type=win32">
-      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>..\build-nt-x86\msvc-release\MSFileReader.XRawfile2.SxS.manifest</HintPath>
-    </NativeReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
