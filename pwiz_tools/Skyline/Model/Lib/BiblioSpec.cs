@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -531,13 +532,13 @@ namespace pwiz.Skyline.Model.Lib
             return new SpectrumPeaksInfo(ReadSpectrum(_dictLibrary[(LibKey)spectrumKey]));
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
+        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             retentionTimes = null;
             return false;
         }
 
-        public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
             retentionTimes = null;
             return false;
@@ -550,13 +551,13 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // No ion mobility data in BiblioSpec libs (those are ancient - try BiblioSpecLite instead)
-        public override bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities)
+        public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;

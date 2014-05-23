@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return default(T);
             }
-            string name = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(chromFileInfo.FilePath));
+            string name = chromFileInfo.FilePath.GetFileNameWithoutExtension();
             return Find(name);
         }
 

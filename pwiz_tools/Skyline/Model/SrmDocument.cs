@@ -1042,7 +1042,7 @@ namespace pwiz.Skyline.Model
             return (SrmDocument) ReplaceChild(groupPath.Parent, groupNodeNew);
         }
 
-        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
+        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
             Identity tranId, double retentionTime, UserSet userSet)
         {
             return ChangePeak(groupPath, nameSet, filePath, false,
@@ -1050,7 +1050,7 @@ namespace pwiz.Skyline.Model
                     node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime, userSet));
         }
 
-        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
+        public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
             Transition transition, double? startTime, double? endTime, UserSet userSet, PeakIdentification? identified, bool preserveMissingPeaks)
         {
             // If start or end time is null, just assign an arbitrary value to identified -- peak will be deleted anyway
@@ -1098,7 +1098,7 @@ namespace pwiz.Skyline.Model
             ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet,
             ChromFileInfoId indexFile, OptimizableRegression regression);
 
-        private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath, bool loadPoints,
+        private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, bool loadPoints,
             ChangeNodePeak change)
         {
             var groupId = groupPath.Child;

@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Results
             get { return Caches.Select(cache => cache.CachePath); }
         }
 
-        public IEnumerable<string> CachedFilePaths
+        public IEnumerable<MsDataFileUri> CachedFilePaths
         {
             get { return Caches.SelectMany(cache => cache.CachedFilePaths); }
         }
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Results
             get { return Caches.SelectMany(cache => cache.CachedFiles); }
         }
 
-        public bool IsCachedFile(string filePath)
+        public bool IsCachedFile(MsDataFileUri filePath)
         {
             return CachedFilePaths.Contains(filePath);
         }
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Results
         /// The unique set of file paths represented in all replicates,
         /// in the order they appear.
         /// </summary>
-        public IEnumerable<string> MSDataFilePaths
+        public IEnumerable<MsDataFileUri> MSDataFilePaths
         {
             get { return Chromatograms.SelectMany(chromSet => chromSet.MSDataFilePaths).Distinct(); }
         }
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public ChromFileInfo GetChromFileInfo(string filePath)
+        public ChromFileInfo GetChromFileInfo(MsDataFileUri filePath)
         {
             return Chromatograms.Select(chromatogramSet => chromatogramSet.GetFileInfo(filePath))
                                 .FirstOrDefault(fileInfo => fileInfo != null);
@@ -197,13 +197,13 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public ChromSetFileMatch FindMatchingMSDataFile(string filePathFind)
+        public ChromSetFileMatch FindMatchingMSDataFile(MsDataFileUri filePathFind)
         {
             // First look for an exact match
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
-                foreach (string filePath in chromSet.MSDataFilePaths)
+                foreach (var filePath in chromSet.MSDataFilePaths)
                 {
                     if (Equals(filePath, filePathFind))
                         return new ChromSetFileMatch(chromSet, filePath, fileOrder);
@@ -214,11 +214,10 @@ namespace pwiz.Skyline.Model.Results
             fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
-                string fileBasename = Path.GetFileNameWithoutExtension(filePathFind);
-                foreach (string filePath in chromSet.MSDataFilePaths)
+                string fileBasename = filePathFind.GetFileNameWithoutExtension();
+                foreach (var filePath in chromSet.MSDataFilePaths)
                 {
-                    string filePathPart = SampleHelp.GetPathFilePart(filePath);
-                    if (IsBaseNameMatch(Path.GetFileNameWithoutExtension(filePathPart), fileBasename))
+                    if (IsBaseNameMatch(filePath.GetFileNameWithoutExtension(), fileBasename))
                         return new ChromSetFileMatch(chromSet, filePath, fileOrder);
                     fileOrder++;
                 }
@@ -331,7 +330,7 @@ namespace pwiz.Skyline.Model.Results
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
             var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
             var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
-            var enumCachedNames = cachedFiles.Select(cachedFile => SampleHelp.GetFileName(cachedFile.FilePath));
+            var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
             var setCachedFileNames = new HashSet<string>(enumCachedNames);
             var chromatogramSets = new List<ChromatogramSet>();
             foreach (var chromSet in results.Chromatograms)
@@ -495,8 +494,8 @@ namespace pwiz.Skyline.Model.Results
                 var listChromFinal = new List<ChromatogramGroupInfo>();
                 foreach (var chromInfo in listChrom)
                 {
-                    string filePath = chromInfo.FilePath;
-                    int fileIndex = listChromFinal.IndexOf(info => ReferenceEquals(filePath, info.FilePath));
+                    var filePath = chromInfo.FilePath;
+                    int fileIndex = listChromFinal.IndexOf(info => Equals(filePath, info.FilePath));
                     if (fileIndex == -1)
                         listChromFinal.Add(chromInfo);
                     // Use the entry with the m/z closest to the target
@@ -1007,7 +1006,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Create a set of the paths for which existing caches contain results
-                var cachedPaths = new HashSet<string>();
+                var cachedPaths = new HashSet<MsDataFileUri>();
                 if (_resultsClone._listPartialCaches != null)
                 {
                     // Check that all partial caches are valid
@@ -1032,23 +1031,23 @@ namespace pwiz.Skyline.Model.Results
 
                 // Keep a record of files which have been found in a new location
                 // on the local system, and need to be updated in these results.
-                Dictionary<string, string> dictReplace = null;
+                Dictionary<MsDataFileUri, MsDataFileUri> dictReplace = null;
                 // Find the next file not represented in the list of partial caches
                 var uncachedPaths = new List<KeyValuePair<string, string>>();
                 var msDataFilePaths = _resultsClone.MSDataFilePaths.ToArray();
-                foreach (string path in msDataFilePaths)
+                foreach (var path in msDataFilePaths)
                 {
                     if (!cachedPaths.Contains(path))
                     {
                         // First make sure the file wasn't found and loaded locally
-                        if (cachedPaths.Count > 0)
+                        if (cachedPaths.Count > 0 && path is MsDataFilePath)
                         {
                             string dataFilePathPart;
-                            string dataFilePath = ChromatogramSet.GetExistingDataFilePath(cachePath, path, out dataFilePathPart);
+                            var dataFilePath = ChromatogramSet.GetExistingDataFilePath(cachePath, (MsDataFilePath) path, out dataFilePathPart);
                             if (cachedPaths.Contains(dataFilePath))
                             {
                                 if (dictReplace == null)
-                                    dictReplace = new Dictionary<string, string>();
+                                    dictReplace = new Dictionary<MsDataFileUri, MsDataFileUri>();
                                 dictReplace.Add(path, dataFilePath);
                                 continue;
                             }
@@ -1085,7 +1084,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                             }
                         }
-                        uncachedPaths.Add(new KeyValuePair<string, string>(path, partPath));
+                        uncachedPaths.Add(new KeyValuePair<string, string>(path.ToString(), partPath));
                     }
                 }
 
@@ -1115,7 +1114,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromatogramCache.Build(_document,
                                             _resultsClone._cacheRecalc,
                                             uncached.Value,
-                                            new[] {uncached.Key},
+                                            new[] {MsDataFileUri.Parse(uncached.Key)},
                                             _status,
                                             _loader,
                                             FinishCacheBuild);
@@ -1259,7 +1258,7 @@ namespace pwiz.Skyline.Model.Results
 
     public sealed class ChromSetFileMatch
     {
-        public ChromSetFileMatch(ChromatogramSet chromatograms, string filePath, int fileOrder)
+        public ChromSetFileMatch(ChromatogramSet chromatograms, MsDataFileUri filePath, int fileOrder)
         {
             Chromatograms = chromatograms;
             FilePath = filePath;
@@ -1267,7 +1266,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromatogramSet Chromatograms { get; private set; }
-        public string FilePath { get; private set; }
+        public MsDataFileUri FilePath { get; private set; }
         public int FileOrder { get; private set; }
     }
 }

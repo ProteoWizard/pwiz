@@ -829,7 +829,7 @@ namespace TestPerf
                                 var fileId = chromInfo.FileId;
                                 var fileInfo = chromatogramSet.GetFileInfo(fileId);
                                 var filePath = fileInfo.FilePath;
-                                var fileName = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
+                                var fileName = filePath.GetFileNameWithoutExtension();
                                 string qValueString = chromInfo.Annotations.GetAnnotation(MProphetResultsHandler.AnnotationName);
                                 string scoreString = chromInfo.Annotations.GetAnnotation(MProphetResultsHandler.MAnnotationName);
                                 var qValue = GetDoubleAnnotation(qValueString);

@@ -21,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -280,7 +279,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool SpectrumMatches(SpectrumDisplayInfo spectrumDisplayInfo, SpectrumIdentifier spectrumIdentifier)
         {
-            if (string.Compare(spectrumDisplayInfo.FilePath, spectrumIdentifier.SourceFile, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!string.Equals(spectrumDisplayInfo.FilePath.ToString(), spectrumIdentifier.SourceFile.ToString(), StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -640,7 +639,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
                 foreach (var spectrumInfo in settings.GetRedundantSpectra(sequence, charge, group.LabelType, mods))
                 {
-                    var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(spectrumInfo.FilePath);
+                    var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)
                         continue;
 
@@ -914,7 +913,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, string replicateName,
-            string filePath, int fileOrder, double? retentionTime, bool isBest)
+            MsDataFileUri filePath, int fileOrder, double? retentionTime, bool isBest)
         {
             _spectrumInfo = spectrumInfo;
 
@@ -930,8 +929,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public IsotopeLabelType LabelType { get { return _spectrumInfo.LabelType; } }
         public string ReplicateName { get; private set; }
         public bool IsReplicateUnique { get; set; }
-        public string FilePath { get; private set; }
-        public string FileName { get { return Path.GetFileName(FilePath); } }
+        public MsDataFileUri FilePath { get; private set; }
+        public string FileName { get { return FilePath.GetFileName(); } }
         public int FileOrder { get; private set; }
         public double? RetentionTime { get; private set; }
         public bool IsBest { get; private set; }
@@ -973,12 +972,17 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class SpectrumIdentifier
     {
         public SpectrumIdentifier(string sourceFile, double retentionTime)
+            : this(MsDataFileUri.Parse(sourceFile), retentionTime)
+        {
+            
+        }
+        public SpectrumIdentifier(MsDataFileUri sourceFile, double retentionTime)
         {
             SourceFile = sourceFile;
             RetentionTime = retentionTime;
         }
 
-        public string SourceFile { get; private set; }
+        public MsDataFileUri SourceFile { get; private set; }
         public double RetentionTime { get; private set; }
     }
 

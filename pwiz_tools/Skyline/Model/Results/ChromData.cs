@@ -52,15 +52,16 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public void Load(ChromDataProvider provider)
+        public bool Load(ChromDataProvider provider)
         {
             ChromExtra extra;
             float[] times, intensities, massErrors;
-            provider.GetChromatogram(ProviderId, out extra, out times, out intensities, out massErrors);
+            bool result = provider.GetChromatogram(ProviderId, out extra, out times, out intensities, out massErrors);
             Extra = extra;
             RawTimes = Times = times;
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
+            return result;
         }
 
         public ChromData Truncate(double minTime, double maxTime)

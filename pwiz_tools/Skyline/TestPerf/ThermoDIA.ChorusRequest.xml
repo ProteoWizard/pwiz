@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ChromatogramRequestDocument xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" MinMz="50" MaxMz="2000" MzMatchTolerance="0" Ms2FullScanAcquisitionMethod="DIA">
+  <IsolationScheme PrecursorFilter="20" SpecialHandling="None" />
+  <ChromatogramGroup Extractor="Summed" Source="Ms1">
+    <Chromatogram />
+  </ChromatogramGroup>
+  <ChromatogramGroup Extractor="BasePeak" Source="Ms1">
+    <Chromatogram />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="504.7716565025" ModifiedSequence="ELVYETVR" MinTime="36.190834045410156" MaxTime="46.190834045410156" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="504.27017871700576" MzWindow="0.045755350045860226" />
+    <Chromatogram ProductMz="504.7716565025" MzWindow="0.045823619981889781" />
+    <Chromatogram ProductMz="505.2731342879942" MzWindow="0.045891923838569056" />
+    <Chromatogram ProductMz="505.77446501106459" MzWindow="0.045960241553490759" />
+    <Chromatogram ProductMz="506.2757534153273" MzWindow="0.046028587364357734" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="504.7716565025" ModifiedSequence="ELVYETVR" MinTime="36.190834045410156" MaxTime="46.190834045410156" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="375.23504419999995" MzWindow="0.058739742238903082" />
+    <Chromatogram ProductMz="504.27763733499995" MzWindow="0.0915127303898831" />
+    <Chromatogram ProductMz="505.26567566999995" MzWindow="0.091781815375937922" />
+    <Chromatogram ProductMz="667.34096590999991" MzWindow="0.13931524003413984" />
+    <Chromatogram ProductMz="766.40937985499988" MzWindow="0.17146211090063698" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="508.26601568333336" ModifiedSequence="LSAYYNLLHC[+57.0]LR" MinTime="58.316333770751953" MaxTime="68.316333770751953" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="507.93172798109424" MzWindow="0.046254603910254426" />
+    <Chromatogram ProductMz="508.26601568333336" MzWindow="0.046300274090535394" />
+    <Chromatogram ProductMz="508.60030329723907" MzWindow="0.046345959279903065" />
+    <Chromatogram ProductMz="508.93421634438806" MzWindow="0.046391608270348134" />
+    <Chromatogram ProductMz="509.26805122357638" MzWindow="0.046437261546921495" />
+    <Chromatogram ProductMz="509.60189128579214" MzWindow="0.046482930498391591" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="508.26601568333336" ModifiedSequence="LSAYYNLLHC[+57.0]LR" MinTime="58.316333770751953" MaxTime="68.316333770751953" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="448.23366426999996" MzWindow="0.076689102524568911" />
+    <Chromatogram ProductMz="585.292576145" MzWindow="0.11442909744644361" />
+    <Chromatogram ProductMz="698.37664016" MzWindow="0.14914596403577743" />
+    <Chromatogram ProductMz="811.46070417499993" MzWindow="0.18680056669582226" />
+    <Chromatogram ProductMz="925.50363164499993" MzWindow="0.22753286746686185" />
+    <Chromatogram ProductMz="1088.5669602199998" MzWindow="0.29024160842106556" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="510.22876723" ModifiedSequence="YGGFMTSEK" MinTime="32.365501403808594" MaxTime="42.365501403808594" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="509.72729813745838" MzWindow="0.046500089883051487" />
+    <Chromatogram ProductMz="510.22876723" MzWindow="0.046568726854717371" />
+    <Chromatogram ProductMz="510.73023632254166" MzWindow="0.046637397563977785" />
+    <Chromatogram ProductMz="511.23059682503305" MzWindow="0.04670595007325419" />
+    <Chromatogram ProductMz="511.731171223951" MzWindow="0.046774565464858565" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="510.22876723" ModifiedSequence="YGGFMTSEK" MinTime="32.365501403808594" MaxTime="42.365501403808594" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="278.11353204499994" MzWindow="0.037480910304563832" />
+    <Chromatogram ProductMz="278.6148533175" MzWindow="0.037582299344681484" />
+    <Chromatogram ProductMz="363.18742532" MzWindow="0.055933649207024753" />
+    <Chromatogram ProductMz="464.235103825" MzWindow="0.08083210988304218" />
+    <Chromatogram ProductMz="595.27558847" MzWindow="0.11736917683587157" />
+    <Chromatogram ProductMz="799.36546615" MzWindow="0.18263963153926235" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="523.7718534825" ModifiedSequence="AVEIEEQTK" MinTime="22.121999740600586" MaxTime="32.121999740600586" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="523.27037752431374" MzWindow="0.048365555292996604" />
+    <Chromatogram ProductMz="523.7718534825" MzWindow="0.048435098614068854" />
+    <Chromatogram ProductMz="524.27332944068644" MzWindow="0.048504675234616955" />
+    <Chromatogram ProductMz="524.77463150213885" MzWindow="0.048574260994329523" />
+    <Chromatogram ProductMz="525.2759042362286" MzWindow="0.048643875924769327" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="523.7718534825" ModifiedSequence="AVEIEEQTK" MinTime="22.121999740600586" MaxTime="32.121999740600586" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="300.155396885" MzWindow="0.042023883507474789" />
+    <Chromatogram ProductMz="376.21905979499996" MzWindow="0.058970952120334652" />
+    <Chromatogram ProductMz="505.26165292999997" MzWindow="0.091780719278391015" />
+    <Chromatogram ProductMz="634.30424606499992" MzWindow="0.12909914827508864" />
+    <Chromatogram ProductMz="747.38831007999988" MzWindow="0.16511875306549362" />
+    <Chromatogram ProductMz="876.430903215" MzWindow="0.20967829327529275" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="528.73200839750007" ModifiedSequence="SYSMEHFR" MinTime="30.167499542236328" MaxTime="40.167499542236328" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="528.23059280072823" MzWindow="0.049054886875231192" />
+    <Chromatogram ProductMz="528.73200839750007" MzWindow="0.049124750459012857" />
+    <Chromatogram ProductMz="529.2334239942719" MzWindow="0.0491946471777291" />
+    <Chromatogram ProductMz="529.73381743085338" MzWindow="0.049264434426610382" />
+    <Chromatogram ProductMz="530.2343562902463" MzWindow="0.049334274939979564" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="528.73200839750007" ModifiedSequence="SYSMEHFR" MinTime="30.167499542236328" MaxTime="40.167499542236328" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="338.134661445" MzWindow="0.050247156110902344" />
+    <Chromatogram ProductMz="403.6843298925" MzWindow="0.065545032971560932" />
+    <Chromatogram ProductMz="459.24627756999996" MzWindow="0.0795326432472677" />
+    <Chromatogram ProductMz="588.28887070499991" MzWindow="0.11530891822774662" />
+    <Chromatogram ProductMz="719.3293553499999" MzWindow="0.15590808063873585" />
+    <Chromatogram ProductMz="806.36138378499993" MzWindow="0.18504251876902542" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="534.94846374000008" ModifiedSequence="GVDPVVSFPVALSC[+57.0]R" MinTime="62.319664001464844" MaxTime="72.502166748046875" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="534.61416987331529" MzWindow="0.049946798011676306" />
+    <Chromatogram ProductMz="534.94846374000008" MzWindow="0.049993652881167826" />
+    <Chromatogram ProductMz="535.28275751835133" MzWindow="0.050040522380564952" />
+    <Chromatogram ProductMz="535.61668953227172" MzWindow="0.050087355772914004" />
+    <Chromatogram ProductMz="535.95054912868886" MzWindow="0.050134193605577151" />
+    <Chromatogram ProductMz="536.28441004579588" MzWindow="0.05018104621422402" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="534.94846374000008" ModifiedSequence="GVDPVVSFPVALSC[+57.0]R" MinTime="62.319664001464844" MaxTime="72.502166748046875" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="422.18162869" MzWindow="0.070101279623096285" />
+    <Chromatogram ProductMz="534.7898492575" MzWindow="0.099942839070178827" />
+    <Chromatogram ProductMz="535.265692705" MzWindow="0.10007625892398182" />
+    <Chromatogram ProductMz="606.30280651" MzWindow="0.12064555259184773" />
+    <Chromatogram ProductMz="705.371220455" MzWindow="0.15139221861175045" />
+    <Chromatogram ProductMz="802.42398432999994" MzWindow="0.18368885242059166" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="567.331881265" ModifiedSequence="SQTPLVTLFK" MinTime="59.228836059570313" MaxTime="69.228836059570313" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="566.83038756382462" MzWindow="0.054528887881510217" />
+    <Chromatogram ProductMz="567.331881265" MzWindow="0.054601269166905345" />
+    <Chromatogram ProductMz="567.83337496617537" MzWindow="0.0546736824501365" />
+    <Chromatogram ProductMz="568.33475188958994" MzWindow="0.054746110843753047" />
+    <Chromatogram ProductMz="568.83608010816863" MzWindow="0.054818564151568681" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="567.331881265" ModifiedSequence="SQTPLVTLFK" MinTime="59.228836059570313" MaxTime="69.228836059570313" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="317.14556048" MzWindow="0.0456420249127485" />
+    <Chromatogram ProductMz="409.262739025" MzWindow="0.066908340573115746" />
+    <Chromatogram ProductMz="508.312960215" MzWindow="0.092613377653061893" />
+    <Chromatogram ProductMz="607.38137416" MzWindow="0.12096762493425685" />
+    <Chromatogram ProductMz="817.5182020499999" MzWindow="0.1888961453253733" />
+    <Chromatogram ProductMz="918.56588055499992" MzWindow="0.22497922370381249" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="575.9117495733334" ModifiedSequence="C[+57.0]NTDYSDC[+57.0]IHEAIK" MinTime="38.564167022705078" MaxTime="48.719833374023438" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="575.577476291484" MzWindow="0.055795945246613271" />
+    <Chromatogram ProductMz="575.9117495733334" MzWindow="0.05584455851467212" />
+    <Chromatogram ProductMz="576.24602267851594" MzWindow="0.055893185867240743" />
+    <Chromatogram ProductMz="576.57969430958485" MzWindow="0.055941739790269382" />
+    <Chromatogram ProductMz="576.91339692019562" MzWindow="0.055990312274534569" />
+    <Chromatogram ProductMz="577.24706690850792" MzWindow="0.05603889405822593" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="575.9117495733334" ModifiedSequence="C[+57.0]NTDYSDC[+57.0]IHEAIK" MinTime="38.564167022705078" MaxTime="48.719833374023438" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="460.276574705" MzWindow="0.079800434843074156" />
+    <Chromatogram ProductMz="536.7582233" MzWindow="0.10049512834339963" />
+    <Chromatogram ProductMz="597.33548658" MzWindow="0.11797892192968486" />
+    <Chromatogram ProductMz="618.28988758750006" MzWindow="0.12424106466442908" />
+    <Chromatogram ProductMz="985.477142165" MzWindow="0.25000389921906385" />
+    <Chromatogram ProductMz="1072.5091706" MzWindow="0.283843184531694" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="601.82240900749991" ModifiedSequence="AVEIEEQTKR" MinTime="19.915666580200195" MaxTime="29.915666580200195" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="601.32097654457561" MzWindow="0.059580821176010539" />
+    <Chromatogram ProductMz="601.82240900749991" MzWindow="0.059655362028004408" />
+    <Chromatogram ProductMz="602.32384147042444" MzWindow="0.059729933939819568" />
+    <Chromatogram ProductMz="602.825143804453" MzWindow="0.059804517533963493" />
+    <Chromatogram ProductMz="603.32641197945736" MzWindow="0.059879127060641926" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="601.82240900749991" ModifiedSequence="AVEIEEQTKR" MinTime="19.915666580200195" MaxTime="29.915666580200195" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="300.155396885" MzWindow="0.042023883507474789" />
+    <Chromatogram ProductMz="516.7696451325" MzWindow="0.0949341447608318" />
+    <Chromatogram ProductMz="661.36276398" MzWindow="0.1374474093673394" />
+    <Chromatogram ProductMz="790.405357115" MzWindow="0.1795774340840301" />
+    <Chromatogram ProductMz="903.48942113" MzWindow="0.21946312394547446" />
+    <Chromatogram ProductMz="1032.532014265" MzWindow="0.26812186913177249" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="603.2922332925001" ModifiedSequence="NYGLLYC[+57.0]FR" MinTime="60.060165405273438" MaxTime="70.060165405273437" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="602.7907861050644" MzWindow="0.059799404816671259" />
+    <Chromatogram ProductMz="603.2922332925001" MzWindow="0.05987403886730297" />
+    <Chromatogram ProductMz="603.79368034743584" MzWindow="0.059948703921985452" />
+    <Chromatogram ProductMz="604.29433065152182" MzWindow="0.060023281278139114" />
+    <Chromatogram ProductMz="604.79494613906331" MzWindow="0.060097884344369724" />
+    <Chromatogram ProductMz="605.295633139193" MzWindow="0.060172528956734854" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="603.2922332925001" ModifiedSequence="NYGLLYC[+57.0]FR" MinTime="60.060165405273438" MaxTime="70.060165405273437" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="335.13499578" MzWindow="0.049580011128035284" />
+    <Chromatogram ProductMz="482.21801419999997" MzWindow="0.085574051581843488" />
+    <Chromatogram ProductMz="645.281342775" MzWindow="0.13246483770788439" />
+    <Chromatogram ProductMz="758.36540679" MzWindow="0.16876979407441162" />
+    <Chromatogram ProductMz="871.44947080499992" MzWindow="0.20789319077460444" />
+    <Chromatogram ProductMz="928.47093453999992" MzWindow="0.22862800062924638" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="627.31336256" ModifiedSequence="DMDKVETFLR" MinTime="48.017166137695313" MaxTime="58.017166137695312" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="626.81191847283094" MzWindow="0.063409280029642023" />
+    <Chromatogram ProductMz="627.31336256" MzWindow="0.063485385554912635" />
+    <Chromatogram ProductMz="627.814806647169" MzWindow="0.0635615215038107" />
+    <Chromatogram ProductMz="628.31542211675958" MzWindow="0.06363756197704655" />
+    <Chromatogram ProductMz="628.816070744995" MzWindow="0.063713637788863714" />
+    <Chromatogram ProductMz="629.316774435178" MzWindow="0.063789752263509469" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="627.31336256" ModifiedSequence="DMDKVETFLR" MinTime="48.017166137695313" MaxTime="58.017166137695312" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="446.76617717249997" MzWindow="0.076312798439951673" />
+    <Chromatogram ProductMz="536.319108215" MzWindow="0.10037183288647933" />
+    <Chromatogram ProductMz="665.36170135" MzWindow="0.13869590784538804" />
+    <Chromatogram ProductMz="764.430115295" MzWindow="0.17079833442372003" />
+    <Chromatogram ProductMz="892.52507834499988" MzWindow="0.21548030962594575" />
+    <Chromatogram ProductMz="1007.55202141" MzWindow="0.25845097039807718" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="637.32560539166661" ModifiedSequence="DMDKVETFLRIVQC[+57.0]R" MinTime="64.3048324584961" MaxTime="74.3048324584961" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="636.99133457096889" MzWindow="0.064960183051928438" />
+    <Chromatogram ProductMz="637.32560539166661" MzWindow="0.065011323014906516" />
+    <Chromatogram ProductMz="637.659876124031" MzWindow="0.065062476377320461" />
+    <Chromatogram ProductMz="637.99366544258078" MzWindow="0.065113569449584185" />
+    <Chromatogram ProductMz="638.3274013546752" MzWindow="0.0651646677110608" />
+    <Chromatogram ProductMz="638.66111050384018" MzWindow="0.0652157752328284" />
+    <Chromatogram ProductMz="638.9948244116747" MzWindow="0.065266896837605073" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="637.32560539166661" ModifiedSequence="DMDKVETFLRIVQC[+57.0]R" MinTime="64.3048324584961" MaxTime="74.3048324584961" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="596.834599635" MzWindow="0.11783055879058299" />
+    <Chromatogram ProductMz="661.3558962025" MzWindow="0.1374452684338919" />
+    <Chromatogram ProductMz="675.36065575499993" MzWindow="0.14183407604811948" />
+    <Chromatogram ProductMz="710.890103175" MzWindow="0.15317244731208471" />
+    <Chromatogram ProductMz="774.9375847" MzWindow="0.17433196941018234" />
+    <Chromatogram ProductMz="832.4510562325" MzWindow="0.19409529689800664" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="637.326469945" ModifiedSequence="GMQEAPEAILSK" MinTime="43.735000610351563" MaxTime="53.735000610351562" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="636.82502401861359" MzWindow="0.064934744263035374" />
+    <Chromatogram ProductMz="637.326469945" MzWindow="0.065011455299976983" />
+    <Chromatogram ProductMz="637.82791587138638" MzWindow="0.065088196520826758" />
+    <Chromatogram ProductMz="638.32853436887035" MzWindow="0.0651648412094712" />
+    <Chromatogram ProductMz="638.82919535051622" MzWindow="0.06524152246702225" />
+    <Chromatogram ProductMz="639.32990523322246" MzWindow="0.065318241272738622" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="637.326469945" ModifiedSequence="GMQEAPEAILSK" MinTime="43.735000610351563" MaxTime="53.735000610351562" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="317.12780191999997" MzWindow="0.045638191379858549" />
+    <Chromatogram ProductMz="347.2288962" MzWindow="0.05228784447884393" />
+    <Chromatogram ProductMz="379.226353515" MzWindow="0.059679436558359979" />
+    <Chromatogram ProductMz="757.44543103" MzWindow="0.16846278437804849" />
+    <Chromatogram ProductMz="828.482544835" MzWindow="0.19270899801112426" />
+    <Chromatogram ProductMz="957.52513797000006" MzWindow="0.23944304438142111" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="638.38718782500007" ModifiedSequence="DFLSLIVSILR" MinTime="95.0443344116211" MaxTime="105.04433441162109" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="637.88569987919675" MzWindow="0.065097041717025753" />
+    <Chromatogram ProductMz="638.38718782500007" MzWindow="0.065173823020752461" />
+    <Chromatogram ProductMz="638.88867577080339" MzWindow="0.065250634488355344" />
+    <Chromatogram ProductMz="639.39006583278126" MzWindow="0.065327461106582843" />
+    <Chromatogram ProductMz="639.891408425059" MzWindow="0.06540431057532696" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="638.38718782500007" ModifiedSequence="DFLSLIVSILR" MinTime="95.0443344116211" MaxTime="105.04433441162109" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="488.319108215" MzWindow="0.087203221147003129" />
+    <Chromatogram ProductMz="587.38752216" MzWindow="0.11504401340762339" />
+    <Chromatogram ProductMz="700.471586175" MzWindow="0.14981756498932949" />
+    <Chromatogram ProductMz="813.55565018999994" MzWindow="0.1875244272057166" />
+    <Chromatogram ProductMz="900.587678625" MzWindow="0.21840669672776503" />
+    <Chromatogram ProductMz="1013.6717426399999" MzWindow="0.26080923146743895" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="641.6800425716666" ModifiedSequence="LLEGMELIVSQVHPETK" MinTime="64.78466796875" MaxTime="74.78466796875" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="641.34573391383242" MzWindow="0.065627410573723968" />
+    <Chromatogram ProductMz="641.6800425716666" MzWindow="0.065678730795947188" />
+    <Chromatogram ProductMz="642.01435122950079" MzWindow="0.065730064388564421" />
+    <Chromatogram ProductMz="642.34838069903617" MzWindow="0.065781368461575923" />
+    <Chromatogram ProductMz="642.68232541541374" MzWindow="0.065832672853275251" />
+    <Chromatogram ProductMz="643.01624944454943" MzWindow="0.0658839873964178" />
+    <Chromatogram ProductMz="643.35018262019048" MzWindow="0.065935316671441951" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="641.6800425716666" ModifiedSequence="LLEGMELIVSQVHPETK" MinTime="64.78466796875" MaxTime="74.78466796875" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="474.25583926499996" MzWindow="0.083463382138783668" />
+    <Chromatogram ProductMz="611.31475114" MzWindow="0.12214459741566516" />
+    <Chromatogram ProductMz="710.383165085" MzWindow="0.15300863485438262" />
+    <Chromatogram ProductMz="925.47377106" MzWindow="0.22752185582493975" />
+    <Chromatogram ProductMz="1024.542185005" MzWindow="0.26501576926758247" />
+    <Chromatogram ProductMz="1137.62624902" MzWindow="0.31008185641662456" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="651.36424403500007" ModifiedSequence="DLVYKDPARPK" MinTime="25.59666633605957" MaxTime="35.59666633605957" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="650.86279067649059" MzWindow="0.067093603748772573" />
+    <Chromatogram ProductMz="651.36424403500007" MzWindow="0.067171156482274008" />
+    <Chromatogram ProductMz="651.86569739350955" MzWindow="0.067248739073545172" />
+    <Chromatogram ProductMz="652.36705429200072" MzWindow="0.067326336578632157" />
+    <Chromatogram ProductMz="652.868365212453" MzWindow="0.067403956786702357" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="651.36424403500007" ModifiedSequence="DLVYKDPARPK" MinTime="25.59666633605957" MaxTime="35.59666633605957" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="200.63697733749999" MzWindow="0.022966425870359835" />
+    <Chromatogram ProductMz="328.186697025" MzWindow="0.04804612963175571" />
+    <Chromatogram ProductMz="568.356556355" MzWindow="0.10949852283903083" />
+    <Chromatogram ProductMz="683.38349941999991" MzWindow="0.14436891138894947" />
+    <Chromatogram ProductMz="811.47846246999984" MzWindow="0.18680669874454886" />
+    <Chromatogram ProductMz="974.54179104499985" MzWindow="0.24585421057236159" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="651.70452255666669" ModifiedSequence="VLQAVLPPLPQVVC[+57.0]TYR" MinTime="69.308502197265625" MaxTime="79.308502197265625" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="651.37021955829516" MzWindow="0.067172080812403917" />
+    <Chromatogram ProductMz="651.70452255666669" MzWindow="0.067223799577758286" />
+    <Chromatogram ProductMz="652.03882546670491" MzWindow="0.067275531596156665" />
+    <Chromatogram ProductMz="652.37287991984067" MzWindow="0.0673272384153829" />
+    <Chromatogram ProductMz="652.70683658024086" MzWindow="0.067378943332096652" />
+    <Chromatogram ProductMz="653.04076517119745" MzWindow="0.06743065713035605" />
+    <Chromatogram ProductMz="653.374695163426" MzWindow="0.067482384369171977" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="651.70452255666669" ModifiedSequence="VLQAVLPPLPQVVC[+57.0]TYR" MinTime="69.308502197265625" MaxTime="79.308502197265625" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="511.32385924999994" MzWindow="0.093437462635399759" />
+    <Chromatogram ProductMz="511.75802632" MzWindow="0.093556495061504624" />
+    <Chromatogram ProductMz="665.3528222025" MzWindow="0.13869313154196011" />
+    <Chromatogram ProductMz="698.32902128" MzWindow="0.14913070999743616" />
+    <Chromatogram ProductMz="797.397435225" MzWindow="0.18196556104361528" />
+    <Chromatogram ProductMz="1022.50877664" MzWindow="0.26422719586359816" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="654.99625369000012" ModifiedSequence="DHPLTC[+57.0]DHPQLSGLLFL" MinTime="74.693496704101562" MaxTime="84.693496704101563" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="654.66195533141661" MzWindow="0.067681910363875747" />
+    <Chromatogram ProductMz="654.99625369000012" MzWindow="0.067733758893230564" />
+    <Chromatogram ProductMz="655.33055196025009" MzWindow="0.0677856206418492" />
+    <Chromatogram ProductMz="655.66459150875562" MzWindow="0.067837455467604349" />
+    <Chromatogram ProductMz="655.99854144237645" MzWindow="0.067889289587744178" />
+    <Chromatogram ProductMz="656.33246713101346" MzWindow="0.067941133138563453" />
+    <Chromatogram ProductMz="656.666396101376" MzWindow="0.06799299038911541" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="654.99625369000012" ModifiedSequence="DHPLTC[+57.0]DHPQLSGLLFL" MinTime="74.693496704101562" MaxTime="84.693496704101563" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="253.17286134499997" MzWindow="0.0325538736957045" />
+    <Chromatogram ProductMz="601.25637909750014" MzWindow="0.11914244129770964" />
+    <Chromatogram ProductMz="729.82515719000014" MzWindow="0.15933280190464158" />
+    <Chromatogram ProductMz="786.36718919750012" MzWindow="0.17820300609500261" />
+    <Chromatogram ProductMz="842.90922120500011" MzWindow="0.1977644184600757" />
+    <Chromatogram ProductMz="976.39414078000016" MzWindow="0.24655550063569495" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="667.33971481750007" ModifiedSequence="NYGLLYC[+57.0]FRK" MinTime="51.077831268310547" MaxTime="61.077831268310547" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="666.83827180207891" MzWindow="0.069578927380579955" />
+    <Chromatogram ProductMz="667.33971481750007" MzWindow="0.069657424132006138" />
+    <Chromatogram ProductMz="667.84115770042126" MzWindow="0.06973595035968369" />
+    <Chromatogram ProductMz="668.34192434349188" MzWindow="0.069814400114132161" />
+    <Chromatogram ProductMz="668.8426001720934" MzWindow="0.069892865029073423" />
+    <Chromatogram ProductMz="669.34331852719743" MzWindow="0.069971365986183837" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="667.33971481750007" ModifiedSequence="NYGLLYC[+57.0]FRK" MinTime="51.077831268310547" MaxTime="61.077831268310547" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="335.13499578" MzWindow="0.049580011128035284" />
+    <Chromatogram ProductMz="610.31297725" MzWindow="0.12184447920586988" />
+    <Chromatogram ProductMz="773.376305825" MzWindow="0.17380539084055197" />
+    <Chromatogram ProductMz="886.46036984" MzWindow="0.21328776152631684" />
+    <Chromatogram ProductMz="999.544433855" MzWindow="0.2553760155700931" />
+    <Chromatogram ProductMz="1056.56589759" MzWindow="0.27753760270640976" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="688.31917635749994" ModifiedSequence="YALSQDVC[+57.0]TYR" MinTime="40.467498779296875" MaxTime="50.467498779296875" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="687.81774279111278" MzWindow="0.0728881647666025" />
+    <Chromatogram ProductMz="688.31917635749994" MzWindow="0.072967884793781274" />
+    <Chromatogram ProductMz="688.82060979138714" MzWindow="0.073047633842791337" />
+    <Chromatogram ProductMz="689.32132420343942" MzWindow="0.0731272975069355" />
+    <Chromatogram ProductMz="689.82201937809816" MzWindow="0.07320698704734549" />
+    <Chromatogram ProductMz="690.32274976637427" MzWindow="0.0732867111212043" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="688.31917635749994" ModifiedSequence="YALSQDVC[+57.0]TYR" MinTime="40.467498779296875" MaxTime="50.467498779296875" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="599.260607335" MzWindow="0.11854972319895973" />
+    <Chromatogram ProductMz="698.32902128" MzWindow="0.14913070999743616" />
+    <Chromatogram ProductMz="813.35596434500007" MzWindow="0.18745539011678602" />
+    <Chromatogram ProductMz="941.41454188500006" MzWindow="0.23342550277097707" />
+    <Chromatogram ProductMz="1028.44657032" MzWindow="0.26653211802913773" />
+    <Chromatogram ProductMz="1141.530634335" MzWindow="0.31167954796610042" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="689.96898052166671" ModifiedSequence="EDVSAGEDC[+57.0]GPLPEGGPEPR" MinTime="37.277999877929687" MaxTime="47.277999877929688" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="689.63469475447391" MzWindow="0.073177169485979993" />
+    <Chromatogram ProductMz="689.96898052166671" MzWindow="0.073230382550574374" />
+    <Chromatogram ProductMz="690.3032662005262" MzWindow="0.073283608493367028" />
+    <Chromatogram ProductMz="690.63727483235368" MzWindow="0.073336803197039419" />
+    <Chromatogram ProductMz="690.971219220232" MzWindow="0.073390000530083654" />
+    <Chromatogram ProductMz="691.30514512856962" MzWindow="0.073443207774882557" />
+    <Chromatogram ProductMz="691.63907468169793" MzWindow="0.073496428452731424" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="689.96898052166671" ModifiedSequence="EDVSAGEDC[+57.0]GPLPEGGPEPR" MinTime="37.277999877929687" MaxTime="47.277999877929688" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="419.70631655750003" MzWindow="0.069485663238634435" />
+    <Chromatogram ProductMz="612.310000105" MzWindow="0.12244300445213184" />
+    <Chromatogram ProductMz="741.35259324" MzWindow="0.16312261153499211" />
+    <Chromatogram ProductMz="838.405357115" MzWindow="0.19618148431779159" />
+    <Chromatogram ProductMz="1020.3574805600001" MzWindow="0.26339375777571067" />
+    <Chromatogram ProductMz="1048.542185005" MzWindow="0.27438212213590346" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="691.36084408499994" ModifiedSequence="KDMDKVETFLR" MinTime="39.135501861572266" MaxTime="49.135501861572266" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="690.85940396479282" MzWindow="0.073372186930689157" />
+    <Chromatogram ProductMz="691.36084408499994" MzWindow="0.073452084012363666" />
+    <Chromatogram ProductMz="691.86228420520729" MzWindow="0.07353201007374581" />
+    <Chromatogram ProductMz="692.36302001753916" MzWindow="0.073611852781563333" />
+    <Chromatogram ProductMz="692.86371649407818" MzWindow="0.073691718091290617" />
+    <Chromatogram ProductMz="693.36444996292732" MzWindow="0.07377161816726488" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="691.36084408499994" ModifiedSequence="KDMDKVETFLR" MinTime="39.135501861572266" MaxTime="49.135501861572266" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="490.196609825" MzWindow="0.087706625961696663" />
+    <Chromatogram ProductMz="665.36170135" MzWindow="0.13869590784538804" />
+    <Chromatogram ProductMz="764.430115295" MzWindow="0.17079833442372003" />
+    <Chromatogram ProductMz="892.52507834499988" MzWindow="0.21548030962594575" />
+    <Chromatogram ProductMz="1007.55202141" MzWindow="0.25845097039807718" />
+    <Chromatogram ProductMz="1138.5925060549998" MzWindow="0.31047699812640644" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="715.05421438" ModifiedSequence="EPLRPWC[+57.0]HPINAILAVEK" MinTime="58.40966796875" MaxTime="68.40966796875" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="714.71992328148178" MzWindow="0.077205952670674982" />
+    <Chromatogram ProductMz="715.05421438" MzWindow="0.077260125528221438" />
+    <Chromatogram ProductMz="715.38850539018483" MzWindow="0.077314311035957359" />
+    <Chromatogram ProductMz="715.72258531431862" MzWindow="0.07736847497813347" />
+    <Chromatogram ProductMz="716.0565701767556" MzWindow="0.077422636145291823" />
+    <Chromatogram ProductMz="716.39052045761355" MzWindow="0.077476804334979124" />
+    <Chromatogram ProductMz="716.7244680494224" MzWindow="0.077530984715244042" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="715.05421438" ModifiedSequence="EPLRPWC[+57.0]HPINAILAVEK" MinTime="58.40966796875" MaxTime="68.40966796875" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="736.3667952374999" MzWindow="0.16147981541138276" />
+    <Chromatogram ProductMz="792.90882724499988" MzWindow="0.18043127926251007" />
+    <Chromatogram ProductMz="849.45085925249987" MzWindow="0.20007109042348151" />
+    <Chromatogram ProductMz="857.50909393999984" MzWindow="0.20292476459735018" />
+    <Chromatogram ProductMz="1067.64592183" MzWindow="0.28191476187189152" />
+    <Chromatogram ProductMz="1076.5094453099998" MzWindow="0.28543269375765917" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="742.00268420500015" ModifiedSequence="REDVSAGEDC[+57.0]GPLPEGGPEPR" MinTime="34.763832092285156" MaxTime="44.763832092285156" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="741.6684121017438" MzWindow="0.081613429430589357" />
+    <Chromatogram ProductMz="742.00268420500015" MzWindow="0.081668610760852092" />
+    <Chromatogram ProductMz="742.3369562199232" MzWindow="0.081723804507518927" />
+    <Chromatogram ProductMz="742.67098767840923" MzWindow="0.081778970949178728" />
+    <Chromatogram ProductMz="743.00494806988036" MzWindow="0.081834138057430783" />
+    <Chromatogram ProductMz="743.33888529840181" MzWindow="0.081889313737538313" />
+    <Chromatogram ProductMz="743.67282155835574" MzWindow="0.081944501652499016" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="742.00268420500015" ModifiedSequence="REDVSAGEDC[+57.0]GPLPEGGPEPR" MinTime="34.763832092285156" MaxTime="44.763832092285156" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="419.70631655750003" MzWindow="0.069485663238634435" />
+    <Chromatogram ProductMz="612.310000105" MzWindow="0.12244300445213184" />
+    <Chromatogram ProductMz="838.405357115" MzWindow="0.19618148431779159" />
+    <Chromatogram ProductMz="959.40647936999994" MzWindow="0.240149075943111" />
+    <Chromatogram ProductMz="1048.542185005" MzWindow="0.27438212213590346" />
+    <Chromatogram ProductMz="1176.45859161" MzWindow="0.3260933314881308" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="749.8424928125" ModifiedSequence="IVQC[+57.0]RSVEGSC[+57.0]GF" MinTime="35.313167572021484" MaxTime="45.313167572021484" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="749.34110814506676" MzWindow="0.08288315813464521" />
+    <Chromatogram ProductMz="749.8424928125" MzWindow="0.082966357817930936" />
+    <Chromatogram ProductMz="750.3438772149334" MzWindow="0.083049585277744364" />
+    <Chromatogram ProductMz="750.84418568306955" MzWindow="0.083132661859256954" />
+    <Chromatogram ProductMz="751.34464036851693" MzWindow="0.083215790415132163" />
+    <Chromatogram ProductMz="751.84504119588269" MzWindow="0.083298937710077986" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="749.8424928125" ModifiedSequence="IVQC[+57.0]RSVEGSC[+57.0]GF" MinTime="35.313167572021484" MaxTime="45.313167572021484" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="383.138366885" MzWindow="0.060605273401962589" />
+    <Chromatogram ProductMz="843.450533435" MzWindow="0.19795495407344155" />
+    <Chromatogram ProductMz="972.49312657" MzWindow="0.24507937259819032" />
+    <Chromatogram ProductMz="1029.514590305" MzWindow="0.26694740774067766" />
+    <Chromatogram ProductMz="1116.54661874" MzWindow="0.30150341822680005" />
+    <Chromatogram ProductMz="1286.5252316649999" MzWindow="0.3729103277689137" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="781.3367088275" ModifiedSequence="GLGPSYC[+57.0]SFGEMKE" MinTime="49.003665924072266" MaxTime="59.003665924072266" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="780.83526207414" MzWindow="0.088162943157217621" />
+    <Chromatogram ProductMz="781.3367088275" MzWindow="0.088247883196453922" />
+    <Chromatogram ProductMz="781.83815544836011" MzWindow="0.088332850474045585" />
+    <Chromatogram ProductMz="782.33859474254382" MzWindow="0.08841767423585746" />
+    <Chromatogram ProductMz="782.83911674369529" MzWindow="0.088502539157101115" />
+    <Chromatogram ProductMz="783.33958924588649" MzWindow="0.088587422815911976" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="781.3367088275" ModifiedSequence="GLGPSYC[+57.0]SFGEMKE" MinTime="49.003665924072266" MaxTime="59.003665924072266" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="593.2599384" MzWindow="0.11677354983043038" />
+    <Chromatogram ProductMz="667.77321308500007" MzWindow="0.139450616937624" />
+    <Chromatogram ProductMz="827.36038078" MzWindow="0.19231759954093161" />
+    <Chromatogram ProductMz="987.39102928500006" MzWindow="0.25073254850939353" />
+    <Chromatogram ProductMz="1150.45435786" MzWindow="0.31534143487169619" />
+    <Chromatogram ProductMz="1237.486386295" MzWindow="0.35179332436490035" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="801.9190576100001" ModifiedSequence="GVDPVVSFPVALSC[+57.0]R" MinTime="62.319664001464844" MaxTime="72.502166748046875" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="801.4176168099732" MzWindow="0.091671699080511149" />
+    <Chromatogram ProductMz="801.9190576100001" MzWindow="0.0917577499462345" />
+    <Chromatogram ProductMz="802.4204982775268" MzWindow="0.0918438276972635" />
+    <Chromatogram ProductMz="802.9213962984079" MzWindow="0.09192983915307143" />
+    <Chromatogram ProductMz="803.42218569303338" MzWindow="0.092015858780516976" />
+    <Chromatogram ProductMz="803.92297706869408" MzWindow="0.092101905561471534" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="801.9190576100001" ModifiedSequence="GVDPVVSFPVALSC[+57.0]R" MinTime="62.319664001464844" MaxTime="72.502166748046875" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="468.24527456499993" MzWindow="0.0818817383254953" />
+    <Chromatogram ProductMz="567.31368850999991" MzWindow="0.10919728564354982" />
+    <Chromatogram ProductMz="802.42398432999994" MzWindow="0.18368885242059166" />
+    <Chromatogram ProductMz="949.49239827499991" MzWindow="0.23643631787442621" />
+    <Chromatogram ProductMz="1036.52442671" MzWindow="0.26967846083957514" />
+    <Chromatogram ProductMz="1135.592840655" MzWindow="0.30925086134346674" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="850.73208238333336" ModifiedSequence="ENEIYPVWSGLPSLQMADEESR" MinTime="74.341667175292969" MaxTime="84.341667175292969" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="850.39777647160213" MzWindow="0.10020286231943723" />
+    <Chromatogram ProductMz="850.73208238333336" MzWindow="0.10026195531477969" />
+    <Chromatogram ProductMz="851.0663882950646" MzWindow="0.10032105992193237" />
+    <Chromatogram ProductMz="851.4005111853337" MzWindow="0.10038014377125952" />
+    <Chromatogram ProductMz="851.73455361342769" MzWindow="0.10043922498260156" />
+    <Chromatogram ProductMz="852.06855997750711" MzWindow="0.10049831140020839" />
+    <Chromatogram ProductMz="852.40255561192987" MzWindow="0.10055740750107529" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="850.73208238333336" ModifiedSequence="ENEIYPVWSGLPSLQMADEESR" MinTime="74.341667175292969" MaxTime="84.341667175292969" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="520.236166455" MzWindow="0.095890980699860878" />
+    <Chromatogram ProductMz="631.7877089175" MzWindow="0.12833162932147454" />
+    <Chromatogram ProductMz="706.30022332499993" MzWindow="0.15169140172221057" />
+    <Chromatogram ProductMz="837.34070796999993" MzWindow="0.19580792135013775" />
+    <Chromatogram ProductMz="965.39928550999991" MzWindow="0.24240267534827598" />
+    <Chromatogram ProductMz="1262.568141835" MzWindow="0.36254272031358037" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="863.36398636" ModifiedSequence="C[+57.0]NTDYSDC[+57.0]IHEAIK" MinTime="38.564167022705078" MaxTime="48.719833374023438" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="862.86257643722615" MzWindow="0.10241401765208202" />
+    <Chromatogram ProductMz="863.36398636" MzWindow="0.10250329988330482" />
+    <Chromatogram ProductMz="863.865396017774" MzWindow="0.10259260799699778" />
+    <Chromatogram ProductMz="864.3659034643772" MzWindow="0.10268178126639485" />
+    <Chromatogram ProductMz="864.86645738029335" MzWindow="0.10277098864006889" />
+    <Chromatogram ProductMz="865.36696236276191" MzWindow="0.10286021310793245" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="863.36398636" ModifiedSequence="C[+57.0]NTDYSDC[+57.0]IHEAIK" MinTime="38.564167022705078" MaxTime="48.719833374023438" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="460.276574705" MzWindow="0.079800434843074156" />
+    <Chromatogram ProductMz="491.155473545" MzWindow="0.0879640935139963" />
+    <Chromatogram ProductMz="597.33548658" MzWindow="0.11797892192968486" />
+    <Chromatogram ProductMz="1072.5091706" MzWindow="0.283843184531694" />
+    <Chromatogram ProductMz="1235.572499175" MzWindow="0.35097751864126991" />
+    <Chromatogram ProductMz="1350.5994422400001" MzWindow="0.40111305595066704" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="891.75863157666663" ModifiedSequence="YSFLQNPQTSLC[+57.0]FSESIPTPSNR" MinTime="70.690834045410156" MaxTime="80.690834045410156" Extractor="Summed" Source="Ms1" MassErrors="true">
+    <Chromatogram ProductMz="891.42433298216383" MzWindow="0.10754090343218235" />
+    <Chromatogram ProductMz="891.75863157666663" MzWindow="0.10760140348001403" />
+    <Chromatogram ProductMz="892.09293008283612" MzWindow="0.10766191485291531" />
+    <Chromatogram ProductMz="892.427064356016" MzWindow="0.10772240782857809" />
+    <Chromatogram ProductMz="892.76111904980826" MzWindow="0.10778289771850172" />
+    <Chromatogram ProductMz="893.09513563795372" MzWindow="0.10784339202455989" />
+    <Chromatogram ProductMz="893.42913904424654" MzWindow="0.10790389525602045" />
+  </ChromatogramGroup>
+  <ChromatogramGroup PrecursorMz="891.75863157666663" ModifiedSequence="YSFLQNPQTSLC[+57.0]FSESIPTPSNR" MinTime="70.690834045410156" MaxTime="80.690834045410156" Extractor="Summed" Source="Ms2" MassErrors="true">
+    <Chromatogram ProductMz="473.24667152999996" MzWindow="0.083197121646006136" />
+    <Chromatogram ProductMz="671.34711391" MzWindow="0.14057161633579979" />
+    <Chromatogram ProductMz="753.3566159799999" MzWindow="0.16710054218829071" />
+    <Chromatogram ProductMz="784.43117792499993" MzWindow="0.17754531602450935" />
+    <Chromatogram ProductMz="871.46320636" MzWindow="0.20789810592982058" />
+    <Chromatogram ProductMz="1087.53782793" MzWindow="0.28983011365712408" />
+  </ChromatogramGroup>
+</ChromatogramRequestDocument>

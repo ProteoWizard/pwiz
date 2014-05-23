@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     foreach (var dataFile in documentLibrary.LibraryDetails.DataFiles)
                     {
                         if (!doc.Settings.HasResults ||
-                                doc.Settings.MeasuredResults.FindMatchingMSDataFile(dataFile) == null)
+                                doc.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) == null)
                             return true;
                     }
                 }

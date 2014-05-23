@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     // If a matching file is already in the document, then don't include
                     // this library spectrum source in the set of files to find.
-                    if (measuredResults != null && measuredResults.FindMatchingMSDataFile(dataFile) != null)
+                    if (measuredResults != null && measuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) != null)
                         continue;
 
                     if (File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // We've found the dataFile in the exact location
                         // specified in the document library, so just add it
                         // to the "FOUND" list.
-                        AddFoundResultsFile(dataFile);
+                        AddFoundResultsFile(new MsDataFilePath(dataFile));
                     }
                     else
                     {
@@ -99,12 +99,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void GetPeptideSearchChromatograms()
         {
             SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-               doc => SkylineWindow.ImportResults(doc, FoundResultsFiles.ToArray(), ExportOptimize.NONE));
+                doc =>
+                {
+                    KeyValuePair<string, MsDataFileUri[]>[] namedResults =
+                        FoundResultsFiles.Select(kvp =>
+                            new KeyValuePair<string, MsDataFileUri[]>(kvp.Key,
+                                kvp.Value.Select(path => (MsDataFileUri) new MsDataFilePath(path)).ToArray()))
+                        .ToArray();
+
+                    return SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE);
+                });
         }
 
         private void browseToResultsFileButton_Click(object sender, EventArgs e)
         {
-            OpenDataSourceDialog dlgOpen = new OpenDataSourceDialog
+            OpenDataSourceDialog dlgOpen = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
                                                {
                                                    Text =
                                                        Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search
@@ -113,7 +122,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // The dialog expects null to mean no directory was supplied, so don't assign
             // an empty string.
             string initialDir = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
-            dlgOpen.InitialDirectory = initialDir;
+            dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
 
             // Use saved source type, if there is one.
             string sourceType = Settings.Default.SrmResultsSourceType;
@@ -123,7 +132,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                 return;
 
-            string[] dataSources = dlgOpen.DataSources;
+            var dataSources = dlgOpen.DataSources;
 
             if (dataSources == null || dataSources.Length == 0)
             {
@@ -134,12 +143,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             foreach (var dataSource in dataSources)
             {
-                string dataSourceFileName = Path.GetFileName(dataSource);
+                string dataSourceFileName = dataSource.GetFileName();
                 foreach (var item in MissingResultsFiles)
                 {
                     if (null != item)
                     {
-                        if (Equals(item, dataSource) ||
+                        if (Equals(item, dataSource.ToString()) ||
                             MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
                                                             Path.GetFileNameWithoutExtension(dataSourceFileName)))
                         {
@@ -189,7 +198,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Dictionary<string, ResultsFileFindInfo> missingFiles = new Dictionary<string, ResultsFileFindInfo>();
             foreach (var item in MissingResultsFiles)
             {
-                missingFiles.Add(item, new ResultsFileFindInfo(string.Empty, false));
+                missingFiles.Add(item, new ResultsFileFindInfo(null, false));
             }
 
             // Add files that were found to the "found results files" list,
@@ -289,7 +298,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                                         Path.GetFileNameWithoutExtension(file)))
                     {
                         missingFiles[item].Found = true;
-                        missingFiles[item].Path = file;
+                        missingFiles[item].Path = new MsDataFilePath(file);
                         numMissingFiles--;
                         if (numMissingFiles == 0)
                         {
@@ -327,18 +336,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private void AddFoundResultsFile(string path)
+        private void AddFoundResultsFile(MsDataFileUri path)
         {
             FoundResultsFiles.Add(new KeyValuePair<string, string[]>(
-                Path.GetFileNameWithoutExtension(path), new[] { path }));
+                path.GetFileNameWithoutExtension(), new[] { path.ToString() }));
         }
 
         public class ResultsFileFindInfo
         {
-            public string Path { get; set; }
+            public MsDataFileUri Path { get; set; }
             public bool Found { get; set; }
 
-            public ResultsFileFindInfo(string path, bool found)
+            public ResultsFileFindInfo(MsDataFileUri path, bool found)
             {
                 Path = path;
                 Found = found;

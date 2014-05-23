@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
@@ -883,6 +884,26 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this["ServerList"] = value; // Not L10N
+            }
+        }
+
+        [UserScopedSetting]
+        public ChorusAccountList ChorusAccountList
+        {
+            get 
+            { 
+                var list = (ChorusAccountList) this["ChorusAccountList"]; // Not L10N
+                if (list == null)
+                {
+                    list = new ChorusAccountList();
+                    list.AddDefaults();
+                    ChorusAccountList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this["ChorusAccountList"] = value; // Not L10N
             }
         }
     }

@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
                 foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
                 {
-                    string filePath = fileInfo.FilePath;
+                    string filePath = fileInfo.FilePath.ToString();
                     DbResultFile dbResultFile = new DbResultFile
                                                     {
                                                         Replicate = dbReplicate,

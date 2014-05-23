@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -533,7 +534,7 @@ namespace pwiz.SkylineTestTutorial
             // Try to import a file to show it fails.
             ImportResultsDlg importResultsDlg3 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
-                new[] { GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw) }));
+                new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
             var messageDlg = ShowDialog<MessageDlg>(importResultsDlg3.OkDialog);
             RunUI(() => AssertEx.AreComparableStrings(Resources.NoFullScanFilteringException_NoFullScanFilteringException_To_extract_chromatograms_from__0__full_scan_settings_must_be_enabled_,
                                                       messageDlg.Message, 1));
@@ -607,7 +608,7 @@ namespace pwiz.SkylineTestTutorial
                     {
                         GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)
                     };
-                importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths);
+                importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
                 importResultsDlg2.OkDialog();
             });
 
@@ -664,7 +665,7 @@ namespace pwiz.SkylineTestTutorial
                         GetTestPath(@"TOF\4-BSA-10fmol"  + ExtAgilentRaw),
                         GetTestPath(@"TOF\5-BSA-100fmol" + ExtAgilentRaw),
                     };
-                importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths);
+                importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
                 importResultsDlg2.OkDialog();
             });
             //Give the Raw files some time to be processed.

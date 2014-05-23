@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public partial class AllChromatogramsGraph : FormEx
     {
-        private string _currentFilePath;
+        private MsDataFileUri _currentFilePath;
         private readonly int _adjustLayoutForMultifile;
 
         //private static readonly Log LOG = new Log<AllChromatogramsGraph>();
@@ -142,11 +142,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressBarFile.Value = status.ZoomedPercentComplete;
 
                 // Clear graph when a new file starts loading.
-                if (!string.IsNullOrEmpty(status.FilePath) && _currentFilePath != status.FilePath)
+                if (null != status.FilePath && _currentFilePath != status.FilePath)
                 {
                     _currentFilePath = status.FilePath;
 //                    LOG.Info("Showing " + _currentFilePath);    // Not L10N
-                    lblFileName.Text = SampleHelp.GetFileName(status.FilePath) + SampleHelp.GetPathSampleNamePart(status.FilePath);
+                    lblFileName.Text = status.FilePath.GetFileName() + status.FilePath.GetSampleName();
                     asyncGraph.ClearGraph(status);
                 }
 

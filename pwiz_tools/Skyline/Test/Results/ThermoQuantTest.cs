@@ -109,7 +109,7 @@ namespace pwiz.SkylineTest.Results
                     FileEx.SafeDelete(path);
             }
             string name = Path.GetFileNameWithoutExtension(resultsPath);
-            var listChromatograms = new List<ChromatogramSet> {new ChromatogramSet(name, new[] {resultsPath})};
+            var listChromatograms = new List<ChromatogramSet> {new ChromatogramSet(name, new[] {MsDataFileUri.Parse(resultsPath)})};
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             // Start cache load, but don't wait for completion
             Assert.IsTrue(docContainer.SetDocument(docResults, doc));
@@ -158,13 +158,13 @@ namespace pwiz.SkylineTest.Results
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 testFilesDir.GetTestPath(
-                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + extRaw)
+                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                             new ChromatogramSet("rep05", new[]
                                                                              {
-                                                                                 testFilesDir.GetTestPath(
-                                                                                     "Site20_STUDY9P_PHASEII_QC_05" + extRaw)
+                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                     "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
                                                                              })
                                         };
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
@@ -305,8 +305,8 @@ namespace pwiz.SkylineTest.Results
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 testFilesDir.GetTestPath(
-                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + extRaw)
+                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                         };
 

@@ -182,10 +182,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public void Load(ChromDataProvider provider)
+        public bool Load(ChromDataProvider provider)
         {
-            foreach (var chromData in Chromatograms)
-                chromData.Load(provider);
+            foreach (var chromData in _listChromData.ToArray())
+            {
+                if (!chromData.Load(provider))
+                    _listChromData.Remove(chromData);
+            }
+            return _listChromData.Count > 0;
         }
 
         private float MinRawTime

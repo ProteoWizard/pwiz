@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Create a spectrum filter data structure, in case it is needed
                 // This could be done lazily, but does not seem worth it, given the file reading
-                var filter = new SpectrumFilter(document, dataFile);
+                var filter = new SpectrumFilter(document, fileInfo.FilePath, dataFile);
 
                 // Get data object used to graph all of the chromatograms.
                 ChromatogramLoadingStatus.TransitionData allChromData = null;
@@ -436,7 +436,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override void GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
         {
             var keyAndCollector = _chromatograms[id];
             keyAndCollector.Collector.ReleaseChromatogram(out times, out intensities, out massErrors);
@@ -449,6 +449,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (_readChromatograms < _chromatograms.Count)
                 SetPercentComplete(LOAD_PERCENT + BUILD_PERCENT + _readChromatograms * READ_PERCENT / _chromatograms.Count);
+            return true;
         }
 
         public override double? MaxRetentionTime

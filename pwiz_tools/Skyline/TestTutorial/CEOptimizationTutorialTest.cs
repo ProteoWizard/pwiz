@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -118,11 +119,11 @@ namespace pwiz.SkylineTestTutorial
             {
                 importResultsDlg.RadioAddNewChecked = true;
                 var path =
-                    new[] {new KeyValuePair<string, string[]>(unscheduledName,
+                    new[] {new KeyValuePair<string, MsDataFileUri[]>(unscheduledName,
                         // This is not actually a valid file path (missing OptimizeCE)
                         // but Skyline should correctly find the file in the same folder
                         // as the document.
-                        new[] { GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})}; // Not L10N
+                        new[] { MsDataFileUri.Parse(GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw))})}; // Not L10N
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
@@ -175,7 +176,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets[0] =
-                     new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value.Take(5).ToArray()); // Not L10N
+                     new KeyValuePair<string, MsDataFileUri[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value.Take(5).ToArray()); // Not L10N
                 importResultsDlg.OkDialog();
             });
             RunUI(() => 

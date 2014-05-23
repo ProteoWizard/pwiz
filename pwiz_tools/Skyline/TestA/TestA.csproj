@@ -161,6 +161,7 @@
     <Compile Include="Results\MsxTest.cs" />
     <Compile Include="Results\MultiLabelRatioTest.cs" />
     <Compile Include="Results\NumericsLsSolverTest.cs" />
+    <Compile Include="Results\RemoteApi\ChromTaskListTest.cs" />
     <Compile Include="Results\RestultNameMapTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
@@ -264,6 +265,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Results\RemoteApi\DdaSmall.ChorusRequest.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

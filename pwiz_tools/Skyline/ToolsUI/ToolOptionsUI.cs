@@ -20,6 +20,7 @@
 using System;
 using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -29,6 +30,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class ToolOptionsUI : FormEx
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
+        private readonly SettingsListBoxDriver<ChorusAccount> _driverChorusAccounts;
 
         public ToolOptionsUI()
         {
@@ -38,6 +40,9 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
+            _driverChorusAccounts = new SettingsListBoxDriver<ChorusAccount>(listBoxChorusAccounts, Settings.Default.ChorusAccountList);
+            _driverChorusAccounts.LoadList();
+
             checkBoxLiveReports.Checked = Settings.Default.EnableLiveReports;
 
             // Hide ability to turn off live reports
@@ -69,6 +74,16 @@ namespace pwiz.Skyline.ToolsUI
         public void EditServers()
         {
             _driverServers.EditList();
+        }
+
+        private void btnEditChorusAccountList_Click(object sender, EventArgs e)
+        {
+            EditChorusAccounts();
+        }
+
+        public void EditChorusAccounts()
+        {
+            _driverChorusAccounts.EditList();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -104,5 +119,6 @@ namespace pwiz.Skyline.ToolsUI
                 return DisplayName;
             }
         }
+
     }
 }

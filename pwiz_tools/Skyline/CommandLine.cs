@@ -1095,7 +1095,7 @@ namespace pwiz.Skyline
                 if (commandArgs.ImportingReplicateFile)
                 {
                     // If expected results are not imported successfully, terminate
-                    if (!ImportResultsFile(commandArgs.ReplicateFile,
+                    if (!ImportResultsFile(MsDataFileUri.Parse(commandArgs.ReplicateFile),
                                            commandArgs.ReplicateName,
                                            optimize,
                                            commandArgs.ImportAppend))
@@ -1334,18 +1334,17 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            foreach (KeyValuePair<string, string[]> namedPaths in listNamedPaths)
+            foreach (var namedPaths in listNamedPaths)
             {
                 string replicateName = namedPaths.Key;
-                string[] files = namedPaths.Value;
+                var files = namedPaths.Value;
                 foreach (var file in files)
                 {
                     // Skip if file write time is after importBefore or before importAfter
                     try
                     {
-                        var fileInfo = new FileInfo(file);
-                        if ((importBefore != null && importBefore < fileInfo.LastWriteTime) ||
-                            (importOnOrAfter != null && importOnOrAfter >= fileInfo.LastWriteTime))
+                        if ((importBefore != null && importBefore < file.GetFileLastWriteTime()) ||
+                            (importOnOrAfter != null && importOnOrAfter >= file.GetFileLastWriteTime()))
                             continue;
                     }
                     catch (Exception e)
@@ -1362,10 +1361,10 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private IEnumerable<KeyValuePair<string, string[]>> GetDataSources(string sourceDir, Regex namingPattern)
+        private IEnumerable<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern)
         {   
             // get all the valid data sources (files and sub directories) in this directory.
-            IList<KeyValuePair<string, string[]>> listNamedPaths;
+            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
             try
             {
                 listNamedPaths = DataSourceUtil.GetDataSources(sourceDir).ToArray();
@@ -1385,7 +1384,7 @@ namespace pwiz.Skyline
             // If we were given a regular expression apply it to the replicate names
             if(namingPattern != null)
             {
-                List<KeyValuePair<string, string[]>> listRenamedPaths;
+                List<KeyValuePair<string, MsDataFileUri[]>> listRenamedPaths;
                 if(!ApplyNamingPattern(listNamedPaths, namingPattern, out listRenamedPaths))
                 {
                     return null;
@@ -1400,7 +1399,7 @@ namespace pwiz.Skyline
             }
 
             // remove replicates and/or files that have already been imported into the document
-            List<KeyValuePair<string, string[]>> listNewPaths;
+            List<KeyValuePair<string, MsDataFileUri[]>> listNewPaths;
             if(!RemoveImportedFiles(listNamedPaths, out listNewPaths))
             {
                 return null;
@@ -1408,10 +1407,10 @@ namespace pwiz.Skyline
             return listNewPaths;
         }
 
-        private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths, Regex namingPattern, 
-                                        out List<KeyValuePair<string, string[]>> listRenamedPaths)
+        private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, Regex namingPattern, 
+                                        out List<KeyValuePair<string, MsDataFileUri[]>> listRenamedPaths)
         {
-            listRenamedPaths = new List<KeyValuePair<string, string[]>>();
+            listRenamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
             var uniqNames = new HashSet<string>();
 
@@ -1434,7 +1433,7 @@ namespace pwiz.Skyline
                         return false;
                     }
                     uniqNames.Add(replNameNew);
-                    listRenamedPaths.Add(new KeyValuePair<string, string[]>(replNameNew, namedPaths.Value));
+                    listRenamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(replNameNew, namedPaths.Value));
                 }
                 else
                 {
@@ -1446,7 +1445,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool CheckReplicateFiles(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths)
+        private bool CheckReplicateFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths)
         {
             if (!_doc.Settings.HasResults)
             {
@@ -1468,7 +1467,7 @@ namespace pwiz.Skyline
                 {
                     // and whether the files it contains match what is expected
                     // compare case-insensitive on Windows
-                    var filePaths = new HashSet<string>(namedPaths.Value.Select(path => path.ToLower()));
+                    var filePaths = new HashSet<MsDataFileUri>(namedPaths.Value.Select(path => path.ToLower()));
                     foreach (var dataFilePath in chromatogram.MSDataFilePaths)
                     {
                         if (!filePaths.Contains(dataFilePath.ToLower()))
@@ -1485,10 +1484,10 @@ namespace pwiz.Skyline
             return true;
         }
         
-        private bool RemoveImportedFiles(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths,
-                                         out List<KeyValuePair<string, string[]>> listNewNamedPaths)
+        private bool RemoveImportedFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths,
+                                         out List<KeyValuePair<string, MsDataFileUri[]>> listNewNamedPaths)
         {
-            listNewNamedPaths = new List<KeyValuePair<string, string[]>>();
+            listNewNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
             if(!_doc.Settings.HasResults)
             {
@@ -1512,10 +1511,10 @@ namespace pwiz.Skyline
                 {   
                     // We are appending to an existing replicate in the document.
                     // Remove files that are already associated with the replicate
-                    var chromatFilePaths = new HashSet<string>(chromatogram.MSDataFilePaths.Select(path => path.ToLower()));
+                    var chromatFilePaths = new HashSet<MsDataFileUri>(chromatogram.MSDataFilePaths.Select(path => path.ToLower()));
 
                     var filePaths = namedPaths.Value;
-                    var filePathsNotInRepl = new List<string>(filePaths.Length);
+                    var filePathsNotInRepl = new List<MsDataFileUri>(filePaths.Length);
                     foreach (var fpath in filePaths)
                     {
                         if (chromatFilePaths.Contains(fpath.ToLower()))
@@ -1530,7 +1529,7 @@ namespace pwiz.Skyline
 
                     if (filePathsNotInRepl.Count > 0)
                     {
-                        listNewNamedPaths.Add(new KeyValuePair<string, string[]>(replicateName,
+                        listNewNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(replicateName,
                                                                                  filePathsNotInRepl.ToArray()));
                     }
                 }
@@ -1538,10 +1537,10 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool ImportResultsFile(string replicateFile, string replicateName, OptimizableRegression optimize, bool append)
+        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize, bool append)
         {
             if (string.IsNullOrEmpty(replicateName))
-                replicateName = Path.GetFileNameWithoutExtension(replicateFile);
+                replicateName = replicateFile.GetFileNameWithoutExtension();
 
             if(_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName))
             {
@@ -1560,7 +1559,8 @@ namespace pwiz.Skyline
                 int index;
                 _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
 
-                if (chromatogram.MSDataFilePaths.Contains(replicateFile, StringComparer.OrdinalIgnoreCase))
+                string replicateFileString = replicateFile.ToString();
+                if (chromatogram.MSDataFilePaths.Any(filePath=>StringComparer.OrdinalIgnoreCase.Equals(filePath, replicateFileString)))
                 {
                     _out.WriteLine(Resources.CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, replicateFile);
                     return true;
@@ -1570,7 +1570,7 @@ namespace pwiz.Skyline
             return ImportResultsFile(replicateFile, replicateName, optimize);
         }
 
-        public bool ImportResultsFile(string replicateFile, string replicateName, OptimizableRegression optimize)
+        public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, OptimizableRegression optimize)
         {
             _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
 
@@ -1618,7 +1618,7 @@ namespace pwiz.Skyline
 
             _doc = newDoc;
 
-            _out.WriteLine(Resources.CommandLine_ImportResultsFile_Results_added_from__0__to_replicate__1__, Path.GetFileName(replicateFile), replicateName);
+            _out.WriteLine(Resources.CommandLine_ImportResultsFile_Results_added_from__0__to_replicate__1__, replicateFile.GetFileName(), replicateName);
             //the file was imported successfully
             return true;
         }
@@ -1731,8 +1731,14 @@ namespace pwiz.Skyline
 		// This is a hack for un-readable RAW files from Thermo instruments.
         // These files are usually 78KB.  Presumably they are
         // temporary files that, for some reason, do not get deleted.
-        private bool CanReadFile(string replicatePath)
+        private bool CanReadFile(MsDataFileUri msDataFileUri)
         {
+            MsDataFilePath msDataFilePath = msDataFileUri as MsDataFilePath;
+            if (null == msDataFilePath)
+            {
+                return true;
+            }
+            string replicatePath = msDataFilePath.FilePath;
             if (!File.Exists(replicatePath) && !Directory.Exists(replicatePath))
             {
                 _out.WriteLine(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,replicatePath);
@@ -2509,7 +2515,7 @@ namespace pwiz.Skyline
         /// This function will add the given replicate, from dataFile, to the given document. If the replicate
         /// does not exist, it will be added. If it does exist, it will be appended to.
         /// </summary>
-        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile,
+        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, MsDataFileUri dataFile,
                                                 OptimizableRegression optimize, IProgressMonitor progressMonitor, out ProgressStatus status)
         {
             var docContainer = new ResultsMemoryDocumentContainer(null, docPath) {ProgressMonitor = progressMonitor};
@@ -2539,9 +2545,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    string dataFileNormalized = Path.GetFullPath(dataFile);
-
-                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFileNormalized }, Annotations.EMPTY, optimize));
+                    listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile.Normalize()}, Annotations.EMPTY, optimize));
                 }
 
                 var results = doc.Settings.HasResults

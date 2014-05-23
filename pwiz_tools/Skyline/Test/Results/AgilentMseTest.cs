@@ -50,9 +50,9 @@ namespace pwiz.SkylineTest.Results
             var docContainer = new ResultsTestDocumentContainer(document, docPath);
             var doc = docContainer.Document;
             var listChromatograms = new List<ChromatogramSet>();
-            const string path = @"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML";
+            var path = MsDataFileUri.Parse(@"AgilentMse\BSA-AI-0-10-25-41_first_100_scans.mzML");
             listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
-                    new ChromatogramSet(Path.GetFileName(path).Replace('.', '_'), new[] { path }));
+                    new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
             docContainer.AssertComplete();

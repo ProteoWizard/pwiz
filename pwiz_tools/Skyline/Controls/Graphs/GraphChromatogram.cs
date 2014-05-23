@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (PickedPeak != null)
             {
-                string filePath = FilePath;
+                var filePath = FilePath;
                 if (filePath == null)
                     return;
 
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (ChangedPeakBounds != null)
             {
-                string filePath = FilePath;
+                var filePath = FilePath;
                 if (filePath == null)
                     return;
 
@@ -544,7 +544,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>
-        private string FilePath
+        private MsDataFileUri FilePath
         {
             get
             {
@@ -1763,7 +1763,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var peptideDocNode = peptideDocNodes[displayPeptides[i].PeptideIndex];
 
                 // Intersect best peak with summed transition.
-                if (bestPeakInfo != null)
+                if (bestPeakInfo != null && sumInfo.Times.Length > 0)
                 {
                     float startRetentionTime = Math.Max(bestPeakInfo.StartRetentionTime, sumInfo.Times[0]);
                     float endRetentionTime = Math.Min(bestPeakInfo.EndRetentionTime, sumInfo.Times[sumInfo.Times.Length - 1]);
@@ -1989,7 +1989,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             name = SampleHelp.GetPathSampleNamePart(info.FilePath);
                             if (string.IsNullOrEmpty(name))
-                                name = Path.GetFileName(info.FilePath);
+                                name = info.FilePath.GetFileName();
                             break;
                         }
                     }
@@ -2078,7 +2078,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Get chromatogram sets for all transition groups, recording unique
                 // file paths in the process.
                 var listArrayChromInfo = new List<ChromatogramGroupInfo[]>();
-                var listFiles = new List<string>();
+                var listFiles = new List<MsDataFileUri>();
                 ChromatogramGroupInfo[] arrayAllIonsChromInfo;
                 if (!results.TryLoadAllIonsChromatogram(chromatograms, extractor, true,
                                                         out arrayAllIonsChromInfo))
@@ -2090,7 +2090,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     listArrayChromInfo.Add(arrayAllIonsChromInfo);
                     foreach (var chromInfo in arrayAllIonsChromInfo)
                     {
-                        string filePath = chromInfo.FilePath;
+                        var filePath = chromInfo.FilePath;
                         if (!listFiles.Contains(filePath))
                             listFiles.Add(filePath);
                     }
@@ -2147,7 +2147,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Get chromatogram sets for all transition groups, recording unique
                 // file paths in the process.
                 var listArrayChromInfo = new List<ChromatogramGroupInfo[]>();
-                var listFiles = new List<string>();
+                var listFiles = new List<MsDataFileUri>();
                 for (int i = 0; i < nodeGroups.Length; i++)
                 {
                     ChromatogramGroupInfo[] arrayChromInfo;
@@ -2166,7 +2166,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     listArrayChromInfo.Add(arrayChromInfo);
                     foreach (var chromInfo in arrayChromInfo)
                     {
-                        string filePath = chromInfo.FilePath;
+                        var filePath = chromInfo.FilePath;
                         if (!listFiles.Contains(filePath))
                             listFiles.Add(filePath);
                     }
@@ -3093,7 +3093,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public abstract class PeakEventArgs : EventArgs
     {
-        protected PeakEventArgs(IdentityPath groupPath, string nameSet, string filePath)
+        protected PeakEventArgs(IdentityPath groupPath, string nameSet, MsDataFileUri filePath)
         {
             GroupPath = groupPath;
             NameSet = nameSet;
@@ -3102,13 +3102,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IdentityPath GroupPath { get; private set; }
         public string NameSet { get; private set; }
-        public string FilePath { get; private set; }
+        public MsDataFileUri FilePath { get; private set; }
     }
 
     public sealed class PickedPeakEventArgs : PeakEventArgs
     {
         public PickedPeakEventArgs(IdentityPath groupPath, Identity transitionId,
-                                   string nameSet, string filePath, ScaledRetentionTime retentionTime)
+                                   string nameSet, MsDataFileUri filePath, ScaledRetentionTime retentionTime)
             : base(groupPath, nameSet, filePath)
         {
             TransitionId = transitionId;
@@ -3124,7 +3124,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ChangedPeakBoundsEventArgs(IdentityPath groupPath,
                                           Transition transition,
                                           string nameSet,
-                                          string filePath,
+                                          MsDataFileUri filePath,
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
                                           PeakIdentification identified,

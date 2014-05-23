@@ -1654,7 +1654,7 @@ namespace pwiz.Skyline
             if (chromInfo == null)
                 return;
 
-            string filePath;
+            MsDataFileUri filePath;
             string name = GetGraphChromStrings(iResults, chromInfo.FileId, out filePath);
             if (name == null)
                 return;
@@ -1952,12 +1952,12 @@ namespace pwiz.Skyline
         {
             get
             {
-                string temp;
+                MsDataFileUri temp;
                 return GetGraphChromStrings(SelectedResultsIndex, null, out temp);
             }
         }
 
-        private string GetGraphChromStrings(int iResult, ChromFileInfoId fileId, out string filePath)
+        private string GetGraphChromStrings(int iResult, ChromFileInfoId fileId, out MsDataFileUri filePath)
         {
             filePath = null;
             if (iResult != -1)
@@ -2121,7 +2121,7 @@ namespace pwiz.Skyline
         /// Finds the TransitionGroupChromInfo that matches the specified ChromatogramSet name and file path.
         /// </summary>
         private static TransitionGroupChromInfo FindChromInfo(SrmDocument document,
-            TransitionGroupDocNode transitionGroupDocNode, string nameChromatogramSet, string filePath)
+            TransitionGroupDocNode transitionGroupDocNode, string nameChromatogramSet, MsDataFileUri filePath)
         {
             ChromatogramSet chromatogramSet;
             int indexSet;

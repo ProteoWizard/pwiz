@@ -32,6 +32,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -147,8 +148,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 var rawFiles = DataSourceUtil.GetDataSources(TestFilesDirs[0].FullPath).First().Value.Skip(1);
                 var namedPathSets = from rawFile in rawFiles
-                                    select new KeyValuePair<string, string[]>(
-                                        Path.GetFileNameWithoutExtension(rawFile), new[] { rawFile });
+                                    select new KeyValuePair<string, MsDataFileUri[]>(
+                                        rawFile.GetFileNameWithoutExtension(), new[] { rawFile });
                 importResultsDlg.NamedPathSets = namedPathSets.ToArray();
             });
             RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog,
@@ -176,8 +177,8 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var rawFiles = DataSourceUtil.GetDataSources(TestFilesDirs[0].FullPath).First().Value.Take(1);
                     var namedPathSets = from rawFile in rawFiles
-                                        select new KeyValuePair<string, string[]>(
-                                            Path.GetFileNameWithoutExtension(rawFile), new[] { rawFile });
+                                        select new KeyValuePair<string, MsDataFileUri[]>(
+                                            rawFile.GetFileNameWithoutExtension(), new[] { rawFile });
                     importResultsDlg1.NamedPathSets = namedPathSets.ToArray();
                     importResultsDlg1.OkDialog();
                 });

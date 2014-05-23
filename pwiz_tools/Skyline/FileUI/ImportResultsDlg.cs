@@ -95,7 +95,7 @@ namespace pwiz.Skyline.FileUI
 
         private bool IsOptimizing { get { return comboOptimizing.SelectedIndex != -1; } }
 
-        public KeyValuePair<string, string[]>[] NamedPathSets { get; set; }
+        public KeyValuePair<string, MsDataFileUri[]>[] NamedPathSets { get; set; }
 
         public string OptimizationName
         {
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.FileUI
                             for (int i = 0; i < NamedPathSets.Length; i++)
                             {
                                 var namedSet = NamedPathSets[i];
-                                NamedPathSets[i] = new KeyValuePair<string, string[]>(
+                                NamedPathSets[i] = new KeyValuePair<string, MsDataFileUri[]>(
                                     namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
                             }
                         }
@@ -240,10 +240,10 @@ namespace pwiz.Skyline.FileUI
             return true;
         }
 
-        public KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
+        public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsFile(string name)
         {
             CheckDisposed();
-            using (var dlgOpen = new OpenDataSourceDialog
+            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
                 {
                     Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
                 })
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.FileUI
                 // The dialog expects null to mean no directory was supplied, so don't assign
                 // an empty string.
                 string initialDir = Path.GetDirectoryName(_documentSavedPath);
-                dlgOpen.InitialDirectory = initialDir;
+                dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
                 // Use saved source type, if there is one.
                 string sourceType = Settings.Default.SrmResultsSourceType;
                 if (!string.IsNullOrEmpty(sourceType))
@@ -260,12 +260,12 @@ namespace pwiz.Skyline.FileUI
                 if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                     return null;
 
-                Settings.Default.SrmResultsDirectory = !Equals(_documentSavedPath, dlgOpen.CurrentDirectory)
-                                                           ? dlgOpen.CurrentDirectory
+                Settings.Default.SrmResultsDirectory = !Equals(new MsDataFilePath(_documentSavedPath), dlgOpen.CurrentDirectory)
+                                                           ? dlgOpen.CurrentDirectory.ToString()
                                                            : string.Empty;
                 Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
 
-                string[] dataSources = dlgOpen.DataSources;
+                var dataSources = dlgOpen.DataSources;
 
                 if (dataSources == null || dataSources.Length == 0)
                 {
@@ -280,16 +280,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public KeyValuePair<string, string[]>[] GetDataSourcePathsFileSingle(string name, IEnumerable<string> dataSources)
+        public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsFileSingle(string name, IEnumerable<MsDataFileUri> dataSources)
         {
-            var listPaths = new List<string>();
-            foreach (string dataSource in dataSources)
+            var listPaths = new List<MsDataFileUri>();
+            foreach (var dataSource in dataSources)
             {
+                MsDataFilePath msDataFilePath = dataSource as MsDataFilePath;
                 // Only .wiff files currently support multiple samples per file.
                 // Keep from doing the extra work on other types.
-                if (DataSourceUtil.IsWiffFile(dataSource))
+                if (null != msDataFilePath && DataSourceUtil.IsWiffFile(msDataFilePath.FilePath))
                 {
-                    string[] paths = GetWiffSubPaths(dataSource);
+                    var paths = GetWiffSubPaths(msDataFilePath.FilePath);
                     if (paths == null)
                         return null;    // An error or user cancelation occurred
                     listPaths.AddRange(paths);
@@ -297,42 +298,43 @@ namespace pwiz.Skyline.FileUI
                 else
                     listPaths.Add(dataSource);
             }
-            return new[] { new KeyValuePair<string, string[]>(name, listPaths.ToArray()) };
+            return new[] { new KeyValuePair<string, MsDataFileUri[]>(name, listPaths.ToArray()) };
         }
 
-        public KeyValuePair<string, string[]>[] GetDataSourcePathsFileReplicates(IEnumerable<string> dataSources)
+        public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsFileReplicates(IEnumerable<MsDataFileUri> dataSources)
         {
-            var listNamedPaths = new List<KeyValuePair<string, string[]>>();
-            foreach (string dataSource in dataSources)
+            var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
+            foreach (var dataSource in dataSources)
             {
+                MsDataFilePath msDataFilePath = dataSource as MsDataFilePath;
                 // Only .wiff files currently support multiple samples per file.
                 // Keep from doing the extra work on other types.
-                if (DataSourceUtil.IsWiffFile(dataSource))
+                if (null != msDataFilePath && DataSourceUtil.IsWiffFile(msDataFilePath.FilePath))
                 {
-                    string[] paths = GetWiffSubPaths(dataSource);
+                    var paths = GetWiffSubPaths(msDataFilePath.FilePath);
                     if (paths == null)
                         return null;    // An error or user cancelation occurred
                     // Multiple paths then add as samples
                     if (paths.Length > 1 ||
                         // If just one, make sure it has a sample part.  Otherwise,
                         // drop through to add the entire file.
-                        (paths.Length == 1 && SampleHelp.GetPathSampleNamePart(paths[0]) != null))
+                        (paths.Length == 1 && paths[0].SampleName != null))
                     {
-                        foreach (string path in paths)
+                        foreach (var path in paths)
                         {
-                            listNamedPaths.Add(new KeyValuePair<string, string[]>(
-                                                   SampleHelp.GetPathSampleNamePart(path), new[] { path }));                            
+                            listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
+                                                   path.SampleName, new MsDataFileUri[]{ path }));                            
                         }
                         continue;
                     }
                 }
-                listNamedPaths.Add(new KeyValuePair<string, string[]>(
-                                       Path.GetFileNameWithoutExtension(dataSource), new[] { dataSource }));
+                listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
+                                       dataSource.GetFileNameWithoutExtension(), new[] { dataSource }));
             }
             return listNamedPaths.ToArray();
         }
 
-        private string[] GetWiffSubPaths(string filePath)
+        private MsDataFilePath[] GetWiffSubPaths(string filePath)
         {
             using (var longWaitDlg = new LongWaitDlg
                 {
@@ -369,7 +371,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public KeyValuePair<string, string[]>[] GetDataSourcePathsDir()
+        public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
             using (FolderBrowserDialog dlg = new FolderBrowserDialog
@@ -386,7 +388,7 @@ namespace pwiz.Skyline.FileUI
 
                 Settings.Default.SrmResultsDirectory = dirRoot;
 
-                KeyValuePair<string, string[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
+                KeyValuePair<string, MsDataFileUri[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
                 if (namedPaths.Length == 0)
                 {
                     MessageBox.Show(this,
@@ -450,7 +452,7 @@ namespace pwiz.Skyline.FileUI
                     name = baseName + suffix;
                 // If a change was made, update the named path sets
                 if (!Equals(name, baseName))
-                    NamedPathSets[i] = new KeyValuePair<string, string[]>(name, namedPathSet.Value);
+                    NamedPathSets[i] = new KeyValuePair<string, MsDataFileUri[]>(name, namedPathSet.Value);
                 // Add this name to the used set
                 setUsedNames.Add(name);
             }

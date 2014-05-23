@@ -223,14 +223,14 @@ namespace pwiz.Skyline.Model
         public TransitionGroupChromInfo ChromInfoTrue { get; private set; }
         public TransitionGroupChromInfo ChromInfoPicked { get; private set; }
         public MatchKey Key { get; private set; }
-        public string FilePath { get; private set; }
+        public MsDataFileUri FilePath { get; private set; }
         public TransitionGroupDocNode NodeGroup { get; private set; }
 
         public double? QValue { get; private set; }
         public double? Score { get; private set; }
         public double? PickedApex { get; set; }
 
-        public string FileName { get { return Path.GetFileNameWithoutExtension(FilePath); } }
+        public string FileName { get { return FilePath.GetFileNameWithoutExtension(); } }
         public string Sequence { get { return NodeGroup.TransitionGroup.Peptide.Sequence; }}
         public int Charge { get { return NodeGroup.TransitionGroup.PrecursorCharge; } } 
         public double? TrueStartBoundary { get { return ChromInfoTrue.StartRetentionTime; } }
@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Model
         public PeakBoundsMatch(TransitionGroupChromInfo chromInfoTrue, 
                                TransitionGroupChromInfo chromInfoPicked, 
                                MatchKey key, 
-                               string filePath, 
+                               MsDataFileUri filePath, 
                                TransitionGroupDocNode nodeGroup, 
                                bool hasNoQValues, 
                                bool hasNoScores,

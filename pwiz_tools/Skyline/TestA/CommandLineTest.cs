@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestA
 
             //Attach replicate
             ProgressStatus status;
-            doc = CommandLine.ImportResults(doc, docPath, replicate, rawPath, null, null, out status);
+            doc = CommandLine.ImportResults(doc, docPath, replicate, MsDataFileUri.Parse(rawPath), null, null, out status);
             Assert.IsNull(status);
 
             string programmaticReport;
@@ -1051,7 +1051,7 @@ namespace pwiz.SkylineTestA
             var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
             FileEx.SafeDelete(outPath3);
 
-            var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw);
+            var rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
             
             // Test: Cannot use --import-file and --import-all options simultaneously
             var msg = RunCommand("--in=" + docPath,
@@ -1155,7 +1155,7 @@ namespace pwiz.SkylineTestA
             }
 
             // Import another single file. 
-            var rawPath2 = testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML");
+            var rawPath2 = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
             msg = RunCommand("--in=" + outPath2,
                        "--import-file=" + rawPath2,
                        "--import-replicate-name=160109_Mix1_calcurve_070",
@@ -1179,7 +1179,7 @@ namespace pwiz.SkylineTestA
                              "--save");
             // ExtensionTestContext.ExtThermo raw uses different case from file on disk
             // which happens to make a good test case.
-            string rawPathDisk = GetThermoDiskPath(rawPath);
+            MsDataFilePath rawPathDisk = GetThermoDiskPath(rawPath);
 
             // These messages are due to files that were already in the document.
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, "REP01", rawPathDisk)), msg);
@@ -1207,11 +1207,10 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 2);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(rawPath));
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
-                testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
-                extRaw)));
-            Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
-                GetThermoDiskPath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" +
+                new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
                 extRaw))));
+            Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
+                GetThermoDiskPath(new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw)))));
 
            
 
@@ -1732,10 +1731,10 @@ namespace pwiz.SkylineTestA
 
         }
 
-        private static string GetThermoDiskPath(string pathToRaw)
+        private static MsDataFilePath GetThermoDiskPath(MsDataFilePath pathToRaw)
         {
             return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw
-                ? Path.ChangeExtension(pathToRaw, "raw")
+                ? pathToRaw.SetFilePath(Path.ChangeExtension(pathToRaw.FilePath, "raw"))
                 : pathToRaw;
         }
 

@@ -113,10 +113,14 @@ namespace pwiz.Skyline.Model.Results
 
         private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; } 
 
-        public void Load(ChromDataProvider provider)
+        public bool Load(ChromDataProvider provider)
         {
-            foreach (var set in _dataSets)
-                set.Load(provider);
+            foreach (var set in _dataSets.ToArray())
+            {
+                if (!set.Load(provider))
+                    _dataSets.Remove(set);
+            }
+            return _dataSets.Count > 0;
         }
 
         public void PickChromatogramPeaks()

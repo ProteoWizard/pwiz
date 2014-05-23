@@ -84,15 +84,15 @@ namespace pwiz.SkylineTest.Results
                     if (!Equals(nameSample, "test") && listChromatograms.Count == 0)
                         continue;
                     string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i);
-                    listChromatograms.Add(new ChromatogramSet(nameSample, new[] { pathSample }));
+                    listChromatograms.Add(new ChromatogramSet(nameSample, new[] { MsDataFileUri.Parse(pathSample) }));
                 }
             }
             else
             {
                 listChromatograms.Add(new ChromatogramSet("test",
-                    new[] { testFilesDir.GetTestPath("051309_digestion-test.mzML") }));
+                    new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-test.mzML")) }));
                 listChromatograms.Add(new ChromatogramSet("rfp9,before,h,1",
-                    new[] { testFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML") }));
+                    new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML")) }));
             }
 
             // Should have added test and one after
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTest.Results
             AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 8, 27);
 
             // Add mzXML version of test sample
-            listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { testFilesDir.GetTestPath("051309_digestion-s3.mzXML") }));
+            listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")) }));
 
             var docMzxml = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docMzxml, docResults, true));

@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestA.Results
             // Import the first RAW file (or mzML for international)
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                                                       ExtensionTestContext.ExtThermoRaw);
-            var measuredResults = new MeasuredResults(new[] {new ChromatogramSet("Single", new[] {rawPath})});
+            var measuredResults = new MeasuredResults(new[] {new ChromatogramSet("Single", new[] {MsDataFileUri.Parse(rawPath)})});
 
             SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
 

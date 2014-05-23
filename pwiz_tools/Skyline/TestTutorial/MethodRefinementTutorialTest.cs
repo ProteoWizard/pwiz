@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -141,7 +142,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.RadioAddNewChecked = true;
                 var namedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets =
-                    new[] {new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
+                    new[] {new KeyValuePair<string, MsDataFileUri[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
             });
             WaitForOpenForm<AllChromatogramsGraph>();   // To make the AllChromatogramsGraph form accessible to the SkylineTester forms tab
@@ -156,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.RadioAddExistingChecked = true;
                 var namedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets =
-                    new[] { new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Skip(15).ToArray()) };
+                    new[] { new KeyValuePair<string, MsDataFileUri[]>(replicateName, namedPathSets[0].Value.Skip(15).ToArray()) };
                 importResultsDlg.OkDialog();
             });
             WaitForCondition(20*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes

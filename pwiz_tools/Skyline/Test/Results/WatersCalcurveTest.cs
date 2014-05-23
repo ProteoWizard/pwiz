@@ -106,7 +106,7 @@ namespace pwiz.SkylineTest.Results
                 string name = Path.GetFileNameWithoutExtension(path);
                 if (name != null)
                     name = name.Substring(name.Length - 12);
-                listChromatograms.Add(new ChromatogramSet(name, new[] {path}));
+                listChromatograms.Add(new ChromatogramSet(name, new[] {MsDataFileUri.Parse(path)}));
                 int len = listChromatograms.Count;
 
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
@@ -291,13 +291,13 @@ namespace pwiz.SkylineTest.Results
             {
                 new ChromatogramSet("double", new[]
                     {
-                        testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
-                        testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")
+                        MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML")),
+                        MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"))
                     }),
                 new ChromatogramSet("trouble", new[]
                     {
-                        testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),                                                                        
-                        testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
+                        MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)),
+                        MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML"))
                     })
             };
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
@@ -442,9 +442,9 @@ namespace pwiz.SkylineTest.Results
             var listChromatograms = new List<ChromatogramSet>(docCached.Settings.MeasuredResults.Chromatograms)
                 {
                     new ChromatogramSet("extra1",
-                                        new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw) }),
+                                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw)) }),
                     new ChromatogramSet("extra2",
-                                        new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML") })
+                                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")) })
                 };
 
             // Adding a new file should cause the cache to grow.
@@ -532,7 +532,7 @@ namespace pwiz.SkylineTest.Results
 
             docCached = InitWatersDocument(testFilesDir, "160109_Mix1_calcurve_file.sky", out docPath);
             // Make sure cache files exactly match the names the loader will look for
-            var listResultsFiles = new List<string>();
+            var listResultsFiles = new List<MsDataFileUri>();
             foreach (var chromatogram in docCached.Settings.MeasuredResults.Chromatograms)
                 listResultsFiles.AddRange(chromatogram.MSDataFilePaths);
             for (int i = 0; i < fileCacheNames.Length; i++)

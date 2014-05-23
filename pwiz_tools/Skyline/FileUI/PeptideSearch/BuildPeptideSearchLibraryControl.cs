@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -303,7 +304,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             foreach (var resultsFile in resultsFiles)
             {
                 LibraryRetentionTimes retentionTimes;
-                if (DocLib.TryGetRetentionTimes(resultsFile, out retentionTimes))
+                if (DocLib.TryGetRetentionTimes(MsDataFileUri.Parse(resultsFile), out retentionTimes))
                 {
                     if (retentionTimes.PeptideRetentionTimes.Any(t => t.RetentionTime <= 0))
                     {

@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model
                 ChromSetFileMatch fileMatch;
                 if (!fileNameToFileMatch.TryGetValue(fileName, out fileMatch))
                 {
-                    fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(fileName);
+                    fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(fileName));
                     fileNameToFileMatch.Add(fileName, fileMatch);
                 }
                 if (fileMatch == null)
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var sampleFile = chromSet.MSDataFileInfos.FirstOrDefault(info => Equals(sampleName, SampleHelp.GetPathSampleNamePart(info.FilePath)));
+                    var sampleFile = chromSet.MSDataFileInfos.FirstOrDefault(info => Equals(sampleName, info.FilePath.GetSampleName()));
                     if (sampleFile == null)
                     {
                         throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__, sampleName, linesRead, fileName));
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model
                                     // Attach annotations
                                     docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
                                     // Change peak
-                                    string filePath = chromSet.GetFileInfo(fileId).FilePath;
+                                    var filePath = chromSet.GetFileInfo(fileId).FilePath;
                                     if (changePeaks)
                                     {
                                         docNew = docNew.ChangePeak(groupPath, nameSet, filePath,

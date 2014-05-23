@@ -1268,9 +1268,9 @@ namespace pwiz.Skyline.Model.Results
             single_match_mz = 0x02,
         }
 
-        public static DateTime GetLastWriteTime(string filePath)
+        public static DateTime GetLastWriteTime(MsDataFileUri filePath)
         {
-            return File.GetLastWriteTime(SampleHelp.GetPathFilePart(filePath));
+            return filePath.GetFileLastWriteTime();
         }
 
         public static bool? IsSingleMatchMzFlags(FlagValues flags)
@@ -1280,7 +1280,7 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.single_match_mz) != 0;            
         }
 
-        public ChromCachedFile(string filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
+        public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
                                float maxRT, float maxIntensity, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
             : this()
         {
@@ -1293,7 +1293,7 @@ namespace pwiz.Skyline.Model.Results
             InstrumentInfoList = instrumentInfoList;
         }
 
-        public string FilePath { get; private set; }
+        public MsDataFileUri FilePath { get; private set; }
         public FlagValues Flags { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
@@ -1440,7 +1440,7 @@ namespace pwiz.Skyline.Model.Results
 
     public interface IPathContainer
     {
-        string FilePath { get; }
+        MsDataFileUri FilePath { get; }
     }
 
     public class PathComparer<TItem> : IEqualityComparer<TItem>
@@ -1743,7 +1743,7 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo5 Header { get { return _groupHeaderInfo; } }
         public double PrecursorMz { get { return _groupHeaderInfo.Precursor; } }
-        public string FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
+        public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
         public DateTime? RunStartTime { get { return _allFiles[_groupHeaderInfo.FileIndex].RunStartTime; } }
         public int NumTransitions { get { return _groupHeaderInfo.NumTransitions; } }

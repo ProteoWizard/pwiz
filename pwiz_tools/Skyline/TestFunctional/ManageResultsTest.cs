@@ -190,7 +190,7 @@ namespace pwiz.SkylineTestFunctional
             var manageResultsDlg2 = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             var missingFileMessage = ShowDialog<MessageDlg>(manageResultsDlg2.ReimportResults);
             Assert.IsTrue(missingFileMessage.Message.Contains(
-                docRename.Settings.MeasuredResults.Chromatograms[0].MSDataFilePaths.ToArray()[0]));
+                docRename.Settings.MeasuredResults.Chromatograms[0].MSDataFilePaths.ToArray()[0].ToString()));
             RunUI(() =>
             {
                 missingFileMessage.OkDialog();
@@ -221,7 +221,7 @@ namespace pwiz.SkylineTestFunctional
                 docReimport.Settings.MeasuredResults.Chromatograms[2]);
             Assert.AreSame(docRename.Settings.MeasuredResults.Chromatograms[3],
                 docReimport.Settings.MeasuredResults.Chromatograms[3]);
-            Assert.AreEqual(TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
+            Assert.AreEqual(new MsDataFilePath(TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")),
                 docReimport.Settings.MeasuredResults.Chromatograms[1].MSDataFilePaths.ToArray()[0]);
 
             // Remove the last 2 replicates

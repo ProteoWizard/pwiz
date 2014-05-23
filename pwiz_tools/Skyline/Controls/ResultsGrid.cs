@@ -1430,7 +1430,7 @@ namespace pwiz.Skyline.Controls
                         continue;
                     var filePath = fileInfo.FilePath;
                     var fileName = SampleHelp.GetFileName(filePath);
-                    var sampleName = SampleHelp.GetFileSampleName(filePath);
+                    var sampleName = filePath.GetSampleOrFileName();
                     foreach (var rowId in optStepRowIds)
                     {
                         var row = _chromInfoRows[rowId];

@@ -29,6 +29,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -441,7 +442,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="filePath">A file for which the retention information is requested</param>
         /// <param name="retentionTimes">A list of retention times, if successful</param>
         /// <returns>True if retention time information was retrieved successfully</returns>
-        public abstract bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes);
+        public abstract bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes);
 
         /// <summary>
         /// Attempts to get retention time information for all of the
@@ -450,7 +451,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="filePath">A file for which the retention time information is requested</param>
         /// <param name="retentionTimes"></param>
         /// <returns>True if retention time information was retrieved successfully</returns>
-        public abstract bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes);
+        public abstract bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes);
 
         /// <summary>
         /// Attempts to get retention time information for all of the
@@ -475,7 +476,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="filePath">A file for which the ion mobility information is requested</param>
         /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
         /// <returns>True if retention time information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities);
+        public abstract bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities);
 
         /// <summary>
         /// Attempts to get ion mobility information for all of the
@@ -484,7 +485,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="filePath">A file for which the ion mobility information is requested</param>
         /// <param name="ionMobilities"></param>
         /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities);
+        public abstract bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities);
 
         /// <summary>
         /// Attempts to get ion mobility information for all of the
@@ -714,14 +715,14 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
+        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             // By default, no retention time information is available
             retentionTimes = null;
             return false;
         }
 
-        public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
             // By default, no retention time information is available
             retentionTimes = null;
@@ -735,14 +736,14 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities)
+        public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
         {
             // By default, no ion mobility information is available
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             // By default, no ion mobility information is available
             ionMobilities = null;

@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Model.Results
             public MinStatisticsCollector(ChromCacheMinimizer chromCacheMinimizer)
             {
                 ChromCacheMinimizer = chromCacheMinimizer;
-                var filePathToReplicateIndex = new Dictionary<string, int>();
+                var filePathToReplicateIndex = new Dictionary<MsDataFileUri, int>();
                 var results = Document.Settings.MeasuredResults;
                 for (int i = 0; i < results.Chromatograms.Count; i++)
                 {

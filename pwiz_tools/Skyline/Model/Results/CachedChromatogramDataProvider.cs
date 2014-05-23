@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Results
 
         public CachedChromatogramDataProvider(ChromatogramCache cache,
                                               SrmDocument document,
-                                              string dataFilePath,
+                                              MsDataFileUri dataFilePath,
                                               ChromFileInfo fileInfo,
                                               bool? singleMatchMz,
                                               ProgressStatus status,
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromKeyIndices.Select((v, i) => new KeyValuePair<ChromKey, int>(v.Key, i)); }
         }
 
-        public override void GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -91,6 +91,7 @@ namespace pwiz.Skyline.Model.Results
                     times,
                     intensities);
             }
+            return true;
         }
 
         public override double? MaxRetentionTime { get { return _maxRetentionTime; } }

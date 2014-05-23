@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest.Results
                 var doc = docContainer.Document;
                 var listChromatograms = new List<ChromatogramSet>();
                 const string path = @"QC_HDMSE_02_UCA168_3495_082213-timerange21.5to22.5.mz5";
-                listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
+                listChromatograms.Add(AssertResult.FindChromatogramSet(doc, new MsDataFilePath(path)) ??
                                       new ChromatogramSet(Path.GetFileName(path).Replace('.', '_'), new[] { path }));
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

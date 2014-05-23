@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
                 {
-                    if (MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(chromFileInfo.FilePath),
+                    if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
                                                         Path.GetFileNameWithoutExtension(dataFile)))
                     {
                         dataFilesToRemove.Add(dataFile);
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             List<string> dataFiles = new List<string>(DocumentLibrary.LibraryDetails.DataFiles);
             string dataFileToRemove = dataFiles[0];
 
-            var matchingFile = SkylineWindow.Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileToRemove);
+            var matchingFile = SkylineWindow.Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFileToRemove));
             Assert.IsNotNull(matchingFile);
 
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

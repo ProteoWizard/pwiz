@@ -1712,7 +1712,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
+        public bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             Assume.IsTrue(IsLoaded);
 
@@ -1725,7 +1725,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        public bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
             Assume.IsTrue(IsLoaded);
 
@@ -1740,7 +1740,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetDriftTimes(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        public bool TryGetDriftTimes(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             Assume.IsTrue(IsLoaded);
 

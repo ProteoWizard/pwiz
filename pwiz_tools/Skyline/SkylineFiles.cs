@@ -476,9 +476,14 @@ namespace pwiz.Skyline
                 var foundFiles = new List<string>();
                 foreach (var chromSet in document.Settings.MeasuredResults.Chromatograms)
                 {
-                    foreach (string pathFileSample in chromSet.MSDataFilePaths)
+                    foreach (var pathFileSample in chromSet.MSDataFilePaths)
                     {
-                        string pathFile = SampleHelp.GetPathFilePart(pathFileSample);
+                        var msDataFilePath = pathFileSample as MsDataFilePath;
+                        if (null == msDataFilePath)
+                        {
+                            continue;
+                        }
+                        string pathFile = msDataFilePath.FilePath;
                         if (missingFiles.Contains(pathFile))
                             continue;
                         string pathPartCache = ChromatogramCache.PartPathForName(path, pathFileSample);
@@ -1847,7 +1852,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, string[]>[] namedResults, string optimize)
+        public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, MsDataFileUri[]>[] namedResults, string optimize)
         {
             OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
@@ -1879,7 +1884,7 @@ namespace pwiz.Skyline
                                                                  new MeasuredResults(arrayChrom) : results.ChangeChromatograms(arrayChrom));
         }
 
-        private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<string> dataSources,
+        private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<MsDataFileUri> dataSources,
             OptimizableRegression optimizationFunction)
         {
             var results = doc.Settings.MeasuredResults;
@@ -1904,7 +1909,7 @@ namespace pwiz.Skyline
             else
             {
                 // Append to an existing chromatogram set
-                var dataFilePaths = new List<string>(chrom.MSDataFilePaths);
+                var dataFilePaths = new List<MsDataFileUri>(chrom.MSDataFilePaths);
                 foreach (var sourcePath in dataSources)
                 {
                     if (!dataFilePaths.Contains(sourcePath))
@@ -2171,6 +2176,15 @@ namespace pwiz.Skyline
                 }
             }
         }
+
+        private void chorusRequestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new ExportChorusRequestDlg(DocumentUI, Path.GetFileNameWithoutExtension(DocumentFilePath)))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
 
         #region Functional Test Support
 

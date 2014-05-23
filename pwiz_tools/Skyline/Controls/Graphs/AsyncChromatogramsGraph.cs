@@ -123,8 +123,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _status = _newStatus;
                     _newStatus = null;
-                    string sampleName = SampleHelp.GetPathSampleNamePart(_status.FilePath);
-                    string filePath = SampleHelp.GetFileName(_status.FilePath);
+                    string sampleName = _status.FilePath.GetSampleName();
+                    string filePath = _status.FilePath.GetFileName();
                     var fileName = !string.IsNullOrEmpty(sampleName)
                             ? string.Format(Resources.AsyncChromatogramsGraph_Render__0___sample__1_, filePath, sampleName)
                             : filePath;

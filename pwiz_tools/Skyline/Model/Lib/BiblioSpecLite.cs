@@ -948,7 +948,7 @@ namespace pwiz.Skyline.Model.Lib
             return arrayMI;
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
+        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             int i = FindEntry(key);
             int j = FindSource(filePath);
@@ -982,10 +982,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
         {
-            return TryGetRetentionTimes(_librarySourceFiles[fileIndex].FilePath, out retentionTimes);
+            return TryGetRetentionTimes(MsDataFileUri.Parse(_librarySourceFiles[fileIndex].FilePath), out retentionTimes);
         }
 
-        public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
             int j = FindSource(filePath);
             if (j != -1)
@@ -1005,7 +1005,7 @@ namespace pwiz.Skyline.Model.Lib
                 var nonEmptyTimesDict = timesDict
                     .Where(kvp => kvp.Value.Length > 0)
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                retentionTimes = new LibraryRetentionTimes(filePath, nonEmptyTimesDict);
+                retentionTimes = new LibraryRetentionTimes(filePath.ToString(), nonEmptyTimesDict);
                 return true;
             }
 
@@ -1015,7 +1015,7 @@ namespace pwiz.Skyline.Model.Lib
         public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)
-                iFile = FindSource(filePath);
+                iFile = FindSource(MsDataFileUri.Parse(filePath));
             if (iFile.Value < 0)
             {
                 return new double[0];
@@ -1042,7 +1042,7 @@ namespace pwiz.Skyline.Model.Lib
             return times.SelectMany(array => array);
         }
 
-        public override bool TryGetIonMobilities(LibKey key, string filePath, out IonMobilityInfo[] ionMobilities)
+        public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
         {
             int i = FindEntry(key);
             int j = FindSource(filePath);
@@ -1055,12 +1055,16 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetIonMobilities(key, filePath, out ionMobilities);
         }
 
-        public override bool TryGetIonMobilities(string filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
-            int j = FindSource(filePath);
-            if (j != -1)
+            return TryGetIonMobilities(FindSource(filePath), out ionMobilities);
+        }
+
+        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        {
+            if (fileIndex != -1)
             {
-                var source = _librarySourceFiles[j];
+                var source = _librarySourceFiles[fileIndex];
                 ILookup<LibKey, IonMobilityInfo[]> timesLookup = _libraryEntries.ToLookup(
                     entry => entry.Key,
                     entry => entry.IonMobilitiesByFileId.GetDriftTimes(source.Id));
@@ -1075,16 +1079,11 @@ namespace pwiz.Skyline.Model.Lib
                 var nonEmptyTimesDict = timesDict
                     .Where(kvp => kvp.Value.Length > 0)
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                ionMobilities = new LibraryIonMobilityInfo(filePath, nonEmptyTimesDict);
+                ionMobilities = new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict);
                 return true;
             }
 
-            return base.TryGetIonMobilities(filePath, out ionMobilities);
-        }
-
-        public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
-        {
-            return TryGetIonMobilities(_librarySourceFiles[fileIndex].FilePath, out ionMobilities);
+            return base.TryGetIonMobilities(fileIndex, out ionMobilities);
         }
 
         /// <summary>
@@ -1128,20 +1127,20 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private int FindSource(string filePath)
+        private int FindSource(MsDataFileUri filePath)
         {
             // First look for an exact path match
-            int i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.FilePath));
+            int i = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
             // Or a straight basename match, which we sometimes use internally
             if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.BaseName));
+                i = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.BaseName));
             // NOTE: We don't expect multi-part wiff files to appear in a library
-            if (i == -1 && !filePath.Contains('|'))
+            if (i == -1 && null == filePath.GetSampleName())
             {
                 try
                 {
                     // Failing an exact path match, look for a basename match
-                    string baseName = Path.GetFileNameWithoutExtension(filePath);
+                    string baseName = filePath.GetFileNameWithoutExtension();
                     i = _librarySourceFiles.IndexOf(info => MeasuredResults.IsBaseNameMatch(baseName, info.BaseName));
                 }
                 catch (ArgumentException)

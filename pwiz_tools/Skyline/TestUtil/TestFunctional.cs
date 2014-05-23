@@ -38,6 +38,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -964,7 +965,7 @@ namespace pwiz.SkylineTestUtil
                 for (int i = 0; i < importResultsDlg.NamedPathSets.Length; i++)
                 {
                     var namedSet = importResultsDlg.NamedPathSets[i];
-                    importResultsDlg.NamedPathSets[i] = new KeyValuePair<string, string[]>(
+                    importResultsDlg.NamedPathSets[i] = new KeyValuePair<string, MsDataFileUri[]>(
                         namedSet.Key.Substring(prefix.Length), namedSet.Value);
                 }
                 importResultsDlg.OkDialog();
@@ -974,7 +975,7 @@ namespace pwiz.SkylineTestUtil
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
         }
 
-        public void ImportResultsFiles(IEnumerable<string> fileNames, int waitForLoadSeconds = 420)
+        public void ImportResultsFiles(IEnumerable<MsDataFileUri> fileNames, int waitForLoadSeconds = 420)
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));

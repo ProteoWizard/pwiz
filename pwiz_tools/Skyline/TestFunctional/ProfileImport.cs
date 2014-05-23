@@ -16,8 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -97,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
                 if (fileName != null)
                     ImportResultsFile(fileName, 60*60);    // Allow 60 minutes for loading.
                 else
-                    ImportResultsFiles((string[])_dataFile, 60*60); // Allow 60 minutes for loading.
+                    ImportResultsFiles(((string[])_dataFile).Select(MsDataFileUri.Parse), 60*60); // Allow 60 minutes for loading.
             }
 
             //PauseAndContinue();

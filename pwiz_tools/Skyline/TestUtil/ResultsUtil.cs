@@ -208,12 +208,18 @@ namespace pwiz.SkylineTestUtil
         public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,
             string path1, string path2, int delta, int missing)
         {
+            MatchChromatograms(docContainer, MsDataFileUri.Parse(path1), MsDataFileUri.Parse(path2), delta, missing);
+        }
+
+        public static void MatchChromatograms(ResultsTestDocumentContainer docContainer,
+            MsDataFileUri path1, MsDataFileUri path2, int delta, int missing)
+        {
             var doc = docContainer.Document;
             var listChromatograms = new List<ChromatogramSet>();
-            foreach (string path in new[] { path1, path2 })
+            foreach (var path in new[] { path1, path2 })
             {
                 listChromatograms.Add(FindChromatogramSet(doc, path) ??
-                    new ChromatogramSet((Path.GetFileName(path) ?? "").Replace('.', '_'), new[] { path }));
+                    new ChromatogramSet((path.GetFileName() ?? "").Replace('.', '_'), new[] { path }));
             }
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
@@ -222,7 +228,7 @@ namespace pwiz.SkylineTestUtil
             MatchChromatograms(docResults, 0, 1, delta, missing);
         }
 
-        public static ChromatogramSet FindChromatogramSet(SrmDocument document, string path)
+        public static ChromatogramSet FindChromatogramSet(SrmDocument document, MsDataFileUri path)
         {
             if (document.Settings.HasResults)
             {

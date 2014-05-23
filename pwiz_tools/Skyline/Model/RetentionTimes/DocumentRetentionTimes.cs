@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
                 LibraryRetentionTimes libraryRetentionTimes;
-                if (!library.TryGetRetentionTimes(source.Value.Name, out libraryRetentionTimes))
+                if (!library.TryGetRetentionTimes(MsDataFileUri.Parse(source.Value.Name), out libraryRetentionTimes))
                 {
                     continue;
                 }

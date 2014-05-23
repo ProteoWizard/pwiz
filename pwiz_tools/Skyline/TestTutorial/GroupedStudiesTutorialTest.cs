@@ -27,6 +27,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -236,7 +237,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null));
             RunUI(() =>
                 {
-                    openDataSourceDialog.CurrentDirectory = dirPath;
+                    openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dirPath);
                     openDataSourceDialog.SelectAllFileType(ext, path => path.Contains(filter));
                     openDataSourceDialog.Open();
                 });

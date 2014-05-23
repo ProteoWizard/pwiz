@@ -27,6 +27,7 @@ using NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -575,7 +576,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 // add it to the redundant library. However, if this is the reference (best) spectrum
                 // we must save its retention time. 
                 var matchingFile = document.Settings.HasResults
-                    ? document.Settings.MeasuredResults.FindMatchingMSDataFile(spectrum.FilePath)
+                    ? document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrum.FilePath))
                     : null;
                 if (!spectrum.IsBest && matchingFile == null)
                     continue;

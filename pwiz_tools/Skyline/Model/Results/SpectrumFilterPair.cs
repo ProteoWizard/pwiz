@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -42,6 +43,42 @@ namespace pwiz.Skyline.Model.Results
             if (Q1 == 0)
             {
                 ArrayQ1 = ArrayQ1Window = new[] {0.0};
+            }
+        }
+
+        public SpectrumFilterPair(ChromatogramRequestDocumentChromatogramGroup requestGroup)
+        {
+            Q1 = requestGroup.PrecursorMz;
+            ModifiedSequence = requestGroup.ModifiedSequence;
+            switch (requestGroup.Extractor)
+            {
+                case RemoteApi.GeneratedCode.ChromExtractor.BasePeak:
+                    Extractor = ChromExtractor.base_peak;
+                    break;
+                case RemoteApi.GeneratedCode.ChromExtractor.Summed:
+                    Extractor = ChromExtractor.summed;
+                    break;
+            }
+            if (requestGroup.MinTimeSpecified)
+            {
+                MinTime = requestGroup.MinTime;
+            }
+            if (requestGroup.MaxTimeSpecified)
+            {
+                MaxTime = requestGroup.MaxTime;
+            }
+            switch (requestGroup.Source)
+            {
+                case RemoteApi.GeneratedCode.ChromSource.Ms1:
+                    ArrayQ1 = requestGroup.Chromatogram.Select(product => product.ProductMz).ToArray();
+                    ArrayQ1Window = requestGroup.Chromatogram.Select(product => product.MzWindow).ToArray();
+                    HighAccQ1 = requestGroup.MassErrors;
+                    break;
+                case RemoteApi.GeneratedCode.ChromSource.Ms2:
+                    ArrayQ3 = requestGroup.Chromatogram.Select(product => product.ProductMz).ToArray();
+                    ArrayQ3Window = requestGroup.Chromatogram.Select(product => product.MzWindow).ToArray();
+                    HighAccQ3 = requestGroup.MassErrors;
+                    break;
             }
         }
 
@@ -264,6 +301,89 @@ namespace pwiz.Skyline.Model.Results
         {
             return (!MinTime.HasValue || MinTime.Value <= retentionTime) &&
                 (!MaxTime.HasValue || MaxTime.Value >= retentionTime);
+        }
+
+        public IEnumerable<ChromatogramRequestDocumentChromatogramGroup> ToChromatogramRequestDocumentChromatogramGroups()
+        {
+            if (null != ArrayQ1)
+            {
+                var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
+                for (int i = 0; i < ArrayQ1.Length; i++)
+                {
+                    var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
+                    {
+                        ProductMz = ArrayQ1[i],
+                        MzWindow = ArrayQ1Window[i],
+                    };
+                    chromatograms.Add(product);
+                }
+                if (chromatograms.Count > 0)
+                {
+                    yield return MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.ms1, HighAccQ1 && 0 != Q1, chromatograms);
+                }
+            }
+            if (null != ArrayQ3)
+            {
+                var chromatograms = new List<ChromatogramRequestDocumentChromatogramGroupChromatogram>();
+                for (int i = 0; i < ArrayQ3.Length; i++)
+                {
+                    var product = new ChromatogramRequestDocumentChromatogramGroupChromatogram
+                    {
+                        ProductMz = ArrayQ3[i],
+                        MzWindow = ArrayQ3Window[i],
+                    };
+                    chromatograms.Add(product);
+                }
+                if (chromatograms.Count > 0)
+                {
+                    yield return
+                        MakeChromatogramRequestDocumentChromatogramGroup(ChromSource.fragment, HighAccQ3, chromatograms);
+                }
+            }
+        }
+
+        private ChromatogramRequestDocumentChromatogramGroup MakeChromatogramRequestDocumentChromatogramGroup(
+            ChromSource chromSource, bool calculateMassErrors, IEnumerable<ChromatogramRequestDocumentChromatogramGroupChromatogram> chromatograms)
+        {
+            ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
+            {
+                ModifiedSequence = ModifiedSequence,
+                PrecursorMz = Q1,
+                MassErrors = calculateMassErrors,
+            };
+            switch (Extractor)
+            {
+                case ChromExtractor.base_peak:
+                    docFilterPair.Extractor = RemoteApi.GeneratedCode.ChromExtractor.BasePeak;
+                    break;
+                case ChromExtractor.summed:
+                    docFilterPair.Extractor = RemoteApi.GeneratedCode.ChromExtractor.Summed;
+                    break;
+            }
+            if (MinTime.HasValue)
+            {
+                docFilterPair.MinTime = MinTime.Value;
+                docFilterPair.MinTimeSpecified = true;
+            }
+            if (MaxTime.HasValue)
+            {
+                docFilterPair.MaxTime = MaxTime.Value;
+                docFilterPair.MaxTimeSpecified = true;
+            }
+            switch (chromSource)
+            {
+                case ChromSource.ms1:
+                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Ms1;
+                    break;
+                case ChromSource.fragment:
+                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Ms2;
+                    break;
+                case ChromSource.sim:
+                    docFilterPair.Source = RemoteApi.GeneratedCode.ChromSource.Sim;
+                    break;
+            }
+            docFilterPair.Chromatogram = chromatograms.ToArray();
+            return docFilterPair;
         }
 
         public bool ContainsDriftTime(double? driftTimeMsec)

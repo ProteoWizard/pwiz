@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (_isSummary)
                 {
-                    string title = SampleHelp.GetFileSampleName(Chromatogram.FilePath);
+                    string title = Chromatogram.FilePath.GetSampleOrFileName();
                     var extractor = Chromatogram.Header.Extractor;
                     return string.Format(extractor == ChromExtractor.base_peak
                                              ? Resources.ChromGraphItem_Title__0____base_peak

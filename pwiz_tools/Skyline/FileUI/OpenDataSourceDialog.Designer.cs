@@ -50,13 +50,12 @@ namespace pwiz.Skyline.FileUI
             this.tilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.specialPlacesImageList = new System.Windows.Forms.ImageList(this.components);
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.recentDocumentsButton = new System.Windows.Forms.Button();
+            this.chorusButton = new System.Windows.Forms.Button();
+            this.lookInImageList = new System.Windows.Forms.ImageList(this.components);
             this.desktopButton = new System.Windows.Forms.Button();
             this.myDocumentsButton = new System.Windows.Forms.Button();
             this.myComputerButton = new System.Windows.Forms.Button();
-            this.lookInImageList = new System.Windows.Forms.ImageList(this.components);
             this.navToolStrip.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -209,62 +208,25 @@ namespace pwiz.Skyline.FileUI
             resources.ApplyResources(this.detailsToolStripMenuItem, "detailsToolStripMenuItem");
             this.detailsToolStripMenuItem.Click += new System.EventHandler(this.detailsToolStripMenuItem_Click);
             // 
-            // specialPlacesImageList
-            // 
-            this.specialPlacesImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("specialPlacesImageList.ImageStream")));
-            this.specialPlacesImageList.TransparentColor = System.Drawing.Color.Transparent;
-            this.specialPlacesImageList.Images.SetKeyName(0, "RecentDocuments.png");
-            this.specialPlacesImageList.Images.SetKeyName(1, "Desktop.png");
-            this.specialPlacesImageList.Images.SetKeyName(2, "MyDocuments.png");
-            this.specialPlacesImageList.Images.SetKeyName(3, "MyComputer.png");
-            this.specialPlacesImageList.Images.SetKeyName(4, "MyNetworkPlaces.png");
-            // 
             // flowLayoutPanel1
             // 
             resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.BackColor = System.Drawing.SystemColors.Window;
             this.flowLayoutPanel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.flowLayoutPanel1.Controls.Add(this.recentDocumentsButton);
+            this.flowLayoutPanel1.Controls.Add(this.chorusButton);
             this.flowLayoutPanel1.Controls.Add(this.desktopButton);
             this.flowLayoutPanel1.Controls.Add(this.myDocumentsButton);
             this.flowLayoutPanel1.Controls.Add(this.myComputerButton);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             // 
-            // recentDocumentsButton
+            // chorusButton
             // 
-            this.recentDocumentsButton.FlatAppearance.BorderSize = 0;
-            resources.ApplyResources(this.recentDocumentsButton, "recentDocumentsButton");
-            this.recentDocumentsButton.ImageList = this.specialPlacesImageList;
-            this.recentDocumentsButton.Name = "recentDocumentsButton";
-            this.recentDocumentsButton.UseVisualStyleBackColor = false;
-            this.recentDocumentsButton.Click += new System.EventHandler(this.recentDocumentsButton_Click);
-            // 
-            // desktopButton
-            // 
-            this.desktopButton.FlatAppearance.BorderSize = 0;
-            resources.ApplyResources(this.desktopButton, "desktopButton");
-            this.desktopButton.ImageList = this.specialPlacesImageList;
-            this.desktopButton.Name = "desktopButton";
-            this.desktopButton.UseVisualStyleBackColor = false;
-            this.desktopButton.Click += new System.EventHandler(this.desktopButton_Click);
-            // 
-            // myDocumentsButton
-            // 
-            this.myDocumentsButton.FlatAppearance.BorderSize = 0;
-            resources.ApplyResources(this.myDocumentsButton, "myDocumentsButton");
-            this.myDocumentsButton.ImageList = this.specialPlacesImageList;
-            this.myDocumentsButton.Name = "myDocumentsButton";
-            this.myDocumentsButton.UseVisualStyleBackColor = false;
-            this.myDocumentsButton.Click += new System.EventHandler(this.myDocumentsButton_Click);
-            // 
-            // myComputerButton
-            // 
-            this.myComputerButton.FlatAppearance.BorderSize = 0;
-            resources.ApplyResources(this.myComputerButton, "myComputerButton");
-            this.myComputerButton.ImageList = this.specialPlacesImageList;
-            this.myComputerButton.Name = "myComputerButton";
-            this.myComputerButton.UseVisualStyleBackColor = false;
-            this.myComputerButton.Click += new System.EventHandler(this.myComputerButton_Click);
+            this.chorusButton.FlatAppearance.BorderSize = 0;
+            resources.ApplyResources(this.chorusButton, "chorusButton");
+            this.chorusButton.ImageList = this.lookInImageList;
+            this.chorusButton.Name = "chorusButton";
+            this.chorusButton.UseVisualStyleBackColor = false;
+            this.chorusButton.Click += new System.EventHandler(this.chorusButton_Click);
             // 
             // lookInImageList
             // 
@@ -279,6 +241,36 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(6, "OpticalDrive.png");
             this.lookInImageList.Images.SetKeyName(7, "NetworkDrive.png");
             this.lookInImageList.Images.SetKeyName(8, "folder.png");
+            this.lookInImageList.Images.SetKeyName(9, "DataProcessing.png");
+            this.lookInImageList.Images.SetKeyName(10, "File.png");
+            this.lookInImageList.Images.SetKeyName(11, "Chorus.png");
+            // 
+            // desktopButton
+            // 
+            this.desktopButton.FlatAppearance.BorderSize = 0;
+            resources.ApplyResources(this.desktopButton, "desktopButton");
+            this.desktopButton.ImageList = this.lookInImageList;
+            this.desktopButton.Name = "desktopButton";
+            this.desktopButton.UseVisualStyleBackColor = false;
+            this.desktopButton.Click += new System.EventHandler(this.desktopButton_Click);
+            // 
+            // myDocumentsButton
+            // 
+            this.myDocumentsButton.FlatAppearance.BorderSize = 0;
+            resources.ApplyResources(this.myDocumentsButton, "myDocumentsButton");
+            this.myDocumentsButton.ImageList = this.lookInImageList;
+            this.myDocumentsButton.Name = "myDocumentsButton";
+            this.myDocumentsButton.UseVisualStyleBackColor = false;
+            this.myDocumentsButton.Click += new System.EventHandler(this.myDocumentsButton_Click);
+            // 
+            // myComputerButton
+            // 
+            this.myComputerButton.FlatAppearance.BorderSize = 0;
+            resources.ApplyResources(this.myComputerButton, "myComputerButton");
+            this.myComputerButton.ImageList = this.lookInImageList;
+            this.myComputerButton.Name = "myComputerButton";
+            this.myComputerButton.UseVisualStyleBackColor = false;
+            this.myComputerButton.Click += new System.EventHandler(this.myComputerButton_Click);
             // 
             // OpenDataSourceDialog
             // 
@@ -333,9 +325,8 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.ToolStripMenuItem tilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detailsToolStripMenuItem;
-        private System.Windows.Forms.ImageList specialPlacesImageList;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Button recentDocumentsButton;
+        private System.Windows.Forms.Button chorusButton;
         private System.Windows.Forms.Button desktopButton;
         private System.Windows.Forms.Button myDocumentsButton;
         private System.Windows.Forms.Button myComputerButton;

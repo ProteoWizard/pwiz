@@ -60,7 +60,7 @@ namespace pwiz.SkylineTest.Results
             var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
-                                        { testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw) }),
+                                        { new MsDataFilePath(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)),  }),
                                 };
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

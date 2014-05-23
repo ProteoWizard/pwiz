@@ -134,6 +134,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Design" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -491,6 +492,12 @@
     </Compile>
     <Compile Include="FileUI\ChooseSchedulingReplicatesDlg.Designer.cs">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\ExportChorusRequestDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ExportChorusRequestDlg.Designer.cs">
+      <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\ExportChromatogramDlg.cs">
       <SubType>Form</SubType>
@@ -891,6 +898,7 @@
     <Compile Include="Model\Results\ExtractedSpectrum.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
+    <Compile Include="Model\Results\MsDataFilePath.cs" />
     <Compile Include="Model\Results\MsxDemultiplexer.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -901,6 +909,18 @@
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\PrecursorModSeq.cs" />
     <Compile Include="Model\Results\RatioValue.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChorusAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChorusContents.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChorusServerException.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChorusItem.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChorusSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChromatogramGeneratorTask.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChromTaskList.cs" />
+    <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequest.cs">
+      <DependentUpon>ChromatogramRequest.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequestExtra.cs" />
+    <Compile Include="Model\Results\RemoteChromDataProvider.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
     <Compile Include="Model\Results\Scoring\NextGenFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
@@ -1546,6 +1566,9 @@
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.ja.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportChorusRequestDlg.resx">
+      <DependentUpon>ExportChorusRequestDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.zh-CHS.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1611,6 +1634,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\OpenDataSourceDialog.zh-CHS.resx">
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
@@ -2109,6 +2133,9 @@
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.zh-CHS.resx">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.resx">
+      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2182,6 +2209,10 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Jamfile.jam" />
+    <None Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequest.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Model\Results\RemoteApi\GeneratedCode\gencodefromxsd.bat" />
     <None Include="Properties\Settings.settings">
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -2224,6 +2255,12 @@
     </Compile>
     <Compile Include="ToolsUI\ConfigureToolsDlg.designer.cs">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditChorusAccountDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditChorusAccountDlg.Designer.cs">
+      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\EditServerDlg.cs">
       <SubType>Form</SubType>

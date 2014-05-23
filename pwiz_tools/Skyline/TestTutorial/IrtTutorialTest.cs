@@ -28,6 +28,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -676,7 +677,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile)
         {
-            var listNamedPathSets = new List<KeyValuePair<string, string[]>>();
+            var listNamedPathSets = new List<KeyValuePair<string, MsDataFileUri[]>>();
             var listPaths = new List<string>();
             foreach (string baseName in baseNames)
             {
@@ -686,11 +687,11 @@ namespace pwiz.SkylineTestTutorial
                 else
                 {
                     string replicateName = suffixLength != -1 ? baseName.Substring(suffixLength) : baseName;
-                    listNamedPathSets.Add(new KeyValuePair<string, string[]>(replicateName, new[] {fileName}));
+                    listNamedPathSets.Add(new KeyValuePair<string, MsDataFileUri[]>(replicateName, new[] { MsDataFileUri.Parse(fileName)}));
                 }
             }
             if (multiFile)
-                listNamedPathSets.Add(new KeyValuePair<string, string[]>(Resources.ImportResultsDlg_DefaultNewName_Default_Name, listPaths.ToArray()));
+                listNamedPathSets.Add(new KeyValuePair<string, MsDataFileUri[]>(Resources.ImportResultsDlg_DefaultNewName_Default_Name, listPaths.Select(MsDataFileUri.Parse).ToArray()));
 
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {

@@ -47,15 +47,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [HideWhen(AncestorOfType = typeof(Replicate))]
         public Replicate Replicate { get; private set; }
         public string FileName {
-            get { return SampleHelp.GetFileName(ChromFileInfo.FilePath); }
+            get { return ChromFileInfo.FilePath.GetFileName(); }
         }
         public string SampleName
         {
-            get { return SampleHelp.GetFileSampleName(ChromFileInfo.FilePath); }
+            get { return ChromFileInfo.FilePath.GetSampleName(); }
         }
         public override string ToString()
         {
-            return ChromFileInfo.FilePath;
+            return ChromFileInfo.FilePath.ToString();
         }
         public DateTime? ModifiedTime { get { return ChromFileInfo.FileWriteTime; } }
         public DateTime? AcquiredTime { get { return ChromFileInfo.RunStartTime; } }

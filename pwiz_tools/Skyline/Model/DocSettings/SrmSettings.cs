@@ -633,7 +633,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetRetentionTimes(string sequence, int charge, ExplicitMods mods, string filePath,
+        public bool TryGetRetentionTimes(string sequence, int charge, ExplicitMods mods, MsDataFileUri filePath,
             out IsotopeLabelType type, out double[] retentionTimes)
         {
             var libraries = PeptideSettings.Libraries;
@@ -652,9 +652,15 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods, RetentionTimeAlignmentIndex alignmentIndex = null)
+        public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods,
+            RetentionTimeAlignmentIndex alignmentIndex = null)
         {
-            string basename = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
+            return GetRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods, alignmentIndex);
+        }
+
+        public double[] GetRetentionTimes(MsDataFileUri filePath, string peptideSequence, ExplicitMods explicitMods, RetentionTimeAlignmentIndex alignmentIndex = null)
+        {
+            string basename = filePath.GetFileNameWithoutExtension();
             var source = DocumentRetentionTimes.RetentionTimeSources.Find(basename);
             if (source == null)
             {
@@ -677,9 +683,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return times;
         }
 
-        public double[] GetAlignedRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
+        public double[] GetAlignedRetentionTimes(MsDataFileUri filePath, string peptideSequence, ExplicitMods explicitMods)
         {
-            string basename = Path.GetFileNameWithoutExtension(SampleHelp.GetPathFilePart(filePath));
+            string basename = filePath.GetFileNameWithoutExtension();
             var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(basename);
 
             return GetAlignedRetentionTimes(new RetentionTimeAlignmentIndices(fileAlignments), peptideSequence, explicitMods);
@@ -692,7 +698,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (var alignmentIndex in alignmentIndices)
                 {
-                    var unalignedTimes = GetRetentionTimes(alignmentIndex.Alignment.Name, peptideSequence, explicitMods, alignmentIndex);
+                    var unalignedTimes = GetRetentionTimes(MsDataFileUri.Parse(alignmentIndex.Alignment.Name), peptideSequence, explicitMods, alignmentIndex);
                     foreach (var unalignedTime in unalignedTimes)
                     {
                         var alignedTime = alignmentIndex.Alignment.RegressionLine.GetY(unalignedTime);
@@ -724,6 +730,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public double[] GetAllRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
+        {
+            return GetAllRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods);
+        }
+
+        public double[] GetAllRetentionTimes(MsDataFileUri filePath, string peptideSequence, ExplicitMods explicitMods)
         {
             var times = new List<double>();
             times.AddRange(GetRetentionTimes(filePath, peptideSequence, explicitMods));
@@ -757,7 +768,7 @@ namespace pwiz.Skyline.Model.DocSettings
             public IsotopeLabelType LabelType { get; private set; }
         }
 
-        public LibraryRetentionTimes GetRetentionTimes(string filePath)
+        public LibraryRetentionTimes GetRetentionTimes(MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
             LibraryRetentionTimes retentionTimes;
@@ -766,11 +777,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
+        public LibraryRetentionTimes GetRetentionTimes(string name)
+        {
+            return GetRetentionTimes(new MsDataFilePath(name));
+        }
+
         public LibraryIonMobilityInfo GetDriftTimes(string filePath)
         {
             var libraries = PeptideSettings.Libraries;
             LibraryIonMobilityInfo ionMobilities;
-            if (libraries.TryGetDriftTimes(filePath, out ionMobilities))
+            if (libraries.TryGetDriftTimes(new MsDataFilePath(filePath), out ionMobilities))
                 return ionMobilities;
             return null;
         }

@@ -59,7 +59,6 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <!-- ReSharper disable NotOverridenInSpecificCulture -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -229,6 +228,117 @@
   <data name="&gt;&gt;tabPanorama.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="listBoxChorusAccounts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listBoxChorusAccounts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 33</value>
+  </data>
+  <data name="listBoxChorusAccounts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>293, 199</value>
+  </data>
+  <data name="listBoxChorusAccounts.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;listBoxChorusAccounts.Name" xml:space="preserve">
+    <value>listBoxChorusAccounts</value>
+  </data>
+  <data name="&gt;&gt;listBoxChorusAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listBoxChorusAccounts.Parent" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name="&gt;&gt;listBoxChorusAccounts.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblChorusAccounts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblChorusAccounts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblChorusAccounts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 17</value>
+  </data>
+  <data name="lblChorusAccounts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>91, 13</value>
+  </data>
+  <data name="lblChorusAccounts.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblChorusAccounts.Text" xml:space="preserve">
+    <value>Chorus Accounts:</value>
+  </data>
+  <data name="&gt;&gt;lblChorusAccounts.Name" xml:space="preserve">
+    <value>lblChorusAccounts</value>
+  </data>
+  <data name="&gt;&gt;lblChorusAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblChorusAccounts.Parent" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name="&gt;&gt;lblChorusAccounts.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnEditChorusAccountList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditChorusAccountList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditChorusAccountList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 33</value>
+  </data>
+  <data name="btnEditChorusAccountList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnEditChorusAccountList.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnEditChorusAccountList.Text" xml:space="preserve">
+    <value>E&amp;dit list...</value>
+  </data>
+  <data name="&gt;&gt;btnEditChorusAccountList.Name" xml:space="preserve">
+    <value>btnEditChorusAccountList</value>
+  </data>
+  <data name="&gt;&gt;btnEditChorusAccountList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditChorusAccountList.Parent" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name="&gt;&gt;btnEditChorusAccountList.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabChorus.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabChorus.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabChorus.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 248</value>
+  </data>
+  <data name="tabChorus.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabChorus.Text" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="&gt;&gt;tabChorus.Name" xml:space="preserve">
+    <value>tabChorus</value>
+  </data>
+  <data name="&gt;&gt;tabChorus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabChorus.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabChorus.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -305,7 +415,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -359,7 +469,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
@@ -458,4 +568,3 @@
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
-<!-- ReSharper restore NotOverridenInSpecificCulture -->

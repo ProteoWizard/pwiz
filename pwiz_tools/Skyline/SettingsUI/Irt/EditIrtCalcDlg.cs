@@ -701,7 +701,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public DocumentRetentionTimeProvider(SrmDocument document, ChromFileInfo fileInfo)
                 {
-                    Name = fileInfo.FilePath;
+                    Name = fileInfo.FilePath.ToString();
 
                     _dictPeptideRetentionTime = new Dictionary<string, double>();
                     foreach (var nodePep in document.Peptides)

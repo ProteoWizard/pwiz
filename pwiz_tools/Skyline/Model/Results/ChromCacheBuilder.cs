@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, IList<string> msDataFilePaths, ILoadMonitor loader, ProgressStatus status,
+            string cachePath, IList<MsDataFileUri> msDataFilePaths, ILoadMonitor loader, ProgressStatus status,
             Action<ChromatogramCache, Exception> complete)
             : base(cachePath, loader, status, complete)
         {
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Results
             _listScoreTypes.AddRange(DetailedPeakFeatureCalculators.Select(c => c.GetType()));
         }
 
-        private IList<string> MSDataFilePaths { get; set; }
+        private IList<MsDataFileUri> MSDataFilePaths { get; set; }
         private IList<RetentionTimeAlignmentIndices> FileAlignmentIndices { get; set; }
 
         private IList<DetailedPeakFeatureCalculator> DetailedPeakFeatureCalculators { get; set; }
@@ -192,18 +192,18 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // If not cancelled, update progress.
-            string dataFilePath = MSDataFilePaths[_currentFileIndex];
+            var dataFilePath = MSDataFilePaths[_currentFileIndex];
             ChromFileInfo fileInfo = _document.Settings.MeasuredResults.GetChromFileInfo(dataFilePath);
             Assume.IsNotNull(fileInfo);
             string dataFilePathPart;
-            string dataFilePathRecalc = GetRecalcDataFilePath(dataFilePath, out dataFilePathPart);
+            MsDataFileUri dataFilePathRecalc = GetRecalcDataFilePath(dataFilePath, out dataFilePathPart);
 
             if (_tempFileSubsitute == null)
             {
                 string format = dataFilePathRecalc == null
                                     ? Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__
                                     : Resources.ChromCacheBuilder_BuildNextFileInner_Recalculating_scores_for__0_;
-                string message = string.Format(format, SampleHelp.GetFileSampleName(dataFilePath));
+                string message = string.Format(format, dataFilePath.GetSampleOrFileName());
                 int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
                 _status = LoadingStatus.ChangeFilePath(dataFilePath).ChangeImporting(true);
@@ -217,14 +217,17 @@ namespace pwiz.Skyline.Model.Results
 
             try
             {
-                dataFilePath =  dataFilePathRecalc ??
-                    ChromatogramSet.GetExistingDataFilePath(CachePath, dataFilePath, out dataFilePathPart);
-                if (dataFilePath == null)
-                    throw new FileNotFoundException(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, dataFilePathPart), dataFilePathPart);
+                var msDataFilePath = dataFilePath as MsDataFilePath;
+                if (msDataFilePath != null)
+                {
+                    dataFilePath = dataFilePathRecalc ?? ChromatogramSet.GetExistingDataFilePath(CachePath, msDataFilePath, out dataFilePathPart);
+                    if (dataFilePath == null)
+                        throw new FileNotFoundException(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, dataFilePathPart), dataFilePathPart);
+                }
                 MSDataFilePaths[_currentFileIndex] = dataFilePath;
 
                 if (_tempFileSubsitute != null)
-                    dataFilePath = dataFilePathPart = _tempFileSubsitute;
+                    dataFilePath = MsDataFileUri.Parse(_tempFileSubsitute);
 
                 // HACK: Force the thread that the writer will use into existence
                 // This allowed teh DACServer Reader_Waters to function normally the first time through.
@@ -236,7 +239,7 @@ namespace pwiz.Skyline.Model.Results
                 ActionUtil.RunAsync(() => WriteLoop(_currentFileIndex, true));
 
                 // Read the instrument data indexes
-                int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
+                int sampleIndex = dataFilePath.GetSampleIndex();
                 if (sampleIndex == -1)
                     sampleIndex = 0;
 
@@ -245,7 +248,8 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataProvider provider = null;
                 try
                 {
-                    if (dataFilePathRecalc == null)
+                    
+                    if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
                         var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabledMs;
                         inFile = GetMsDataFile(dataFilePathPart, sampleIndex, enableSimSpectrum);
@@ -261,7 +265,18 @@ namespace pwiz.Skyline.Model.Results
                     if (_fs.Stream == null)
                         _fs.Stream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
-                    _currentFileInfo = GetRecalcFileBuildInfo(dataFilePathRecalc) ?? new FileBuildInfo(inFile);
+                    _currentFileInfo = GetRecalcFileBuildInfo(dataFilePathRecalc);
+                    if (null == _currentFileInfo)
+                    {
+                        if (null == inFile)
+                        {
+                            _currentFileInfo = new FileBuildInfo(null, DateTime.Now, new MsInstrumentConfigInfo[0], null);
+                        }
+                        else
+                        {
+                            _currentFileInfo = new FileBuildInfo(inFile);
+                        }
+                    }
                     _libraryRetentionTimes = null;
 
                     // Read and write the mass spec data)
@@ -274,19 +289,23 @@ namespace pwiz.Skyline.Model.Results
                         allChromData.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
                         allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                     }
+                    else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
+                    {
+                        provider = new RemoteChromDataProvider(_document, fileInfo, _status, StartPercent, EndPercent, _loader);
+                    }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                         provider = CreateChromatogramProvider(inFile, fileInfo, _tempFileSubsitute == null);
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                     {                            
                         if (_document.Settings.TransitionSettings.FullScan.IsEnabled && _libraryRetentionTimes == null)
-                            _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
+                            _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePath);
 
                         provider = CreateSpectraChromProvider(inFile, fileInfo);
                     }
                     else
                     {
                         throw new InvalidDataException(String.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
-                                                                     SampleHelp.GetFileSampleName(dataFilePath)));
+                                                                     dataFilePath.GetSampleOrFileName()));
                     }
 
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
@@ -336,7 +355,7 @@ namespace pwiz.Skyline.Model.Results
             catch (MissingDataException x)
             {
                 ExitRead(new MissingDataException(x.MessageFormat,
-                                                  SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]), x));
+                                                  MSDataFilePaths[_currentFileIndex].GetSampleOrFileName(), x));
             }
             catch (Exception x)
             {
@@ -348,20 +367,21 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private string GetRecalcDataFilePath(string dataFilePath, out string dataFilePathPart)
+        private MsDataFileUri GetRecalcDataFilePath(MsDataFileUri dataFilePath, out string dataFilePathPart)
         {
             if (_cacheRecalc == null || !_cacheRecalc.CachedFilePaths.Contains(dataFilePath))
             {
                 dataFilePathPart = null;
                 return null;
             }
-            dataFilePathPart = SampleHelp.GetPathFilePart(dataFilePath);
+            var msDataFilePath = dataFilePath as MsDataFilePath;
+            dataFilePathPart = msDataFilePath != null ? msDataFilePath.FilePath : null;
             return dataFilePath;
         }
 
-        private FileBuildInfo GetRecalcFileBuildInfo(string dataFilePathRecalc)
+        private FileBuildInfo GetRecalcFileBuildInfo(MsDataFileUri dataFilePathRecalc)
         {
-            if (_cacheRecalc == null || string.IsNullOrEmpty(dataFilePathRecalc))
+            if (_cacheRecalc == null || dataFilePathRecalc == null)
                 return null;
             int i = _cacheRecalc.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePathRecalc));
             if (i == -1)
@@ -438,7 +458,9 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < listChromData.Count; i++)
             {
                 var pepChromData = listChromData[i];
-                pepChromData.Load(provider);
+                if (!pepChromData.Load(provider))
+                    continue;
+
                 PostChromDataSet(pepChromData, false);
 
                 // Release the reference to the chromatogram data set so that
@@ -498,6 +520,11 @@ namespace pwiz.Skyline.Model.Results
 
         private IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider)
         {
+            return GetChromDataSets(provider, IsTimeNormalArea);
+        }
+
+        public static IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider, bool isTimeNormalArea)
+        {
             var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
             listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
@@ -517,7 +544,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(IsTimeNormalArea, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, chromData);
                 }
                 lastKey = key;
             }
@@ -567,8 +594,7 @@ namespace pwiz.Skyline.Model.Results
             TruncateChromatograms(peptideChromDataSets, predictedRetentionTime);
             peptideChromDataSets.PredictedRetentionTime = predictedRetentionTime;
 
-            string filePath = SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]);
-            double[] retentionTimes = _document.Settings.GetRetentionTimes(filePath,
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePaths[_currentFileIndex],
                                                                            nodePep.Peptide.Sequence,
                                                                            nodePep.ExplicitMods);
             bool isAlignedTimes = (retentionTimes.Length == 0);
@@ -577,7 +603,7 @@ namespace pwiz.Skyline.Model.Results
                 RetentionTimeAlignmentIndices alignmentIndices = FileAlignmentIndices[_currentFileIndex];
                 if (alignmentIndices == null)
                 {
-                    string basename = Path.GetFileNameWithoutExtension(filePath);
+                    string basename = MSDataFilePaths[_currentFileIndex].GetFileNameWithoutExtension();
                     var fileAlignments = _document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
                     alignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
                     FileAlignmentIndices[_currentFileIndex] = alignmentIndices;
@@ -885,7 +911,7 @@ namespace pwiz.Skyline.Model.Results
         private int StartPercent { get { return _currentFileIndex*100/MSDataFilePaths.Count; } }
         private int EndPercent { get { return (_currentFileIndex + 1)*100/MSDataFilePaths.Count; } }
 
-        private ChromDataProvider CreateChromatogramRecalcProvider(string dataFilePathRecalc, ChromFileInfo fileInfo)
+        private ChromDataProvider CreateChromatogramRecalcProvider(MsDataFileUri dataFilePathRecalc, ChromFileInfo fileInfo)
         {
             return new CachedChromatogramDataProvider(_cacheRecalc,
                                                       _document,
@@ -927,7 +953,6 @@ namespace pwiz.Skyline.Model.Results
             // If this is a performance work-around, then make sure the progress indicator
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
-
             return new SpectraChromDataProvider(dataFile, fileInfo, _document, CachePath, _status, startPercent, EndPercent, _loader);
         }
 
@@ -1206,7 +1231,7 @@ namespace pwiz.Skyline.Model.Results
     {
         public FileBuildInfo(MsDataFileImpl file)
             : this(file.RunStartTime,
-                   ChromCachedFile.GetLastWriteTime(file.FilePath),
+                   ChromCachedFile.GetLastWriteTime(new MsDataFilePath(file.FilePath)),
                    file.GetInstrumentConfigInfoList(),
                    null)
         {

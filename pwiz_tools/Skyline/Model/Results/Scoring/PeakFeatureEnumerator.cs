@@ -482,7 +482,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public IsotopeLabelType LabelType { get; private set; }
         public ChromatogramSet ChromatogramSet { get; private set; }
         public ChromFileInfoId FileId { get; private set; }
-        public string FilePath { get; private set; }
+        public MsDataFileUri FilePath { get; private set; }
         public int Run { get; private set; }
 
         /// <summary>

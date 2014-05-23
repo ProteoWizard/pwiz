@@ -35,6 +35,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -123,11 +124,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 importResultsDlg.RadioAddNewChecked = true;
-                var path = new KeyValuePair<string, string[]>[5];
+                var path = new KeyValuePair<string, MsDataFileUri[]>[5];
                 for (int i = 0; i < 5; ++i)
                 {
-                    path[i] = new KeyValuePair<string, string[]>(_importFiles[i],
-                                            new[] { GetTestPath(_importFiles[i] + ExtensionTestContext.ExtAbWiff) });
+                    path[i] = new KeyValuePair<string, MsDataFileUri[]>(_importFiles[i],
+                                            new[] { MsDataFileUri.Parse(GetTestPath(_importFiles[i] + ExtensionTestContext.ExtAbWiff)) });
                 }
 
                 importResultsDlg.NamedPathSets = path;

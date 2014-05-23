@@ -20,9 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
@@ -46,7 +48,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
-        public SpectrumFilter(SrmDocument document, MsDataFileImpl dataFile)
+        public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, MsDataFileImpl dataFile)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -77,8 +79,11 @@ namespace pwiz.Skyline.Model.Results
                     if (_fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
                         _fullScan.IsolationScheme.IsAllIons)
                     {
-                        _isWatersMse = dataFile.IsWatersFile;
-                        _isAgilentMse = dataFile.IsAgilentFile;
+                        if (null != dataFile)
+                        {
+                            _isWatersMse = dataFile.IsWatersFile;
+                            _isAgilentMse = dataFile.IsAgilentFile;
+                        }
                         _mseLevel = 1;
                     }
                 }
@@ -146,12 +151,12 @@ namespace pwiz.Skyline.Model.Results
                             }
                             else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
                             {
-                                var times = document.Settings.GetRetentionTimes(dataFile.FilePath,
+                                var times = document.Settings.GetRetentionTimes(msDataFileUri,
                                     nodePep.Peptide.Sequence,
                                     nodePep.ExplicitMods);
                                 if (times.Length == 0)
                                 {
-                                    times = document.Settings.GetAllRetentionTimes(dataFile.FilePath,
+                                    times = document.Settings.GetAllRetentionTimes(msDataFileUri,
                                         nodePep.Peptide.Sequence,
                                         nodePep.ExplicitMods);
                                 }
@@ -657,5 +662,118 @@ namespace pwiz.Skyline.Model.Results
                 return 0;
             return (mz1 > mz2 ? 1 : -1);
         }
+
+        public ChromatogramRequestDocument ToChromatogramRequestDocument()
+        {
+            var document = new ChromatogramRequestDocument
+            {
+                MaxMz = _instrument.MaxMz,
+                MinMz = _instrument.MinMz,
+            };
+            if (_minTime.HasValue)
+            {
+                document.MinTime = _minTime.Value;
+                document.MinTimeSpecified = true;
+            }
+            if (_maxTime.HasValue)
+            {
+                document.MaxTime = _maxTime.Value;
+                document.MaxTimeSpecified = true;
+            }
+            switch (_acquisitionMethod)
+            {
+                case FullScanAcquisitionMethod.DIA:
+                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.DIA;
+                    break;
+                case FullScanAcquisitionMethod.None:
+                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.None;
+                    break;
+                case FullScanAcquisitionMethod.Targeted:
+                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.Targeted;
+                    break;
+            }
+
+            if (null != _filterMzValues)
+            {
+                var chromatogramGroups = new List<ChromatogramRequestDocumentChromatogramGroup>();
+                var sources = new HashSet<RemoteApi.GeneratedCode.ChromSource>();
+                if (EnabledMs)
+                {
+                    sources.Add(RemoteApi.GeneratedCode.ChromSource.Ms1);
+                }
+                if (EnabledMsMs)
+                {
+                    sources.Add(RemoteApi.GeneratedCode.ChromSource.Ms2);
+                }
+                foreach (var filterPair in _filterMzValues)
+                {
+                    foreach (var chromatogramGroup in filterPair.ToChromatogramRequestDocumentChromatogramGroups())
+                    {
+                        if (chromatogramGroup.PrecursorMz == 0 || sources.Contains(chromatogramGroup.Source))
+                        {
+                            chromatogramGroups.Add(chromatogramGroup);
+                        }
+                    }
+                }
+                document.ChromatogramGroup = chromatogramGroups.ToArray();
+            }
+            var isolationScheme = _fullScan.IsolationScheme;
+            if (null != _fullScan.IsolationScheme)
+            {
+                document.IsolationScheme = new ChromatogramRequestDocumentIsolationScheme();
+                if (_fullScan.IsolationScheme.PrecursorFilter.HasValue)
+                {
+                    document.IsolationScheme.PrecursorFilter = _fullScan.IsolationScheme.PrecursorFilter.Value;
+                    document.IsolationScheme.PrecursorFilterSpecified = true;
+                }
+                if (isolationScheme.PrecursorRightFilter.HasValue)
+                {
+                    document.IsolationScheme.PrecursorRightFilter = isolationScheme.PrecursorRightFilter.Value;
+                    document.IsolationScheme.PrecursorRightFilterSpecified = true;
+                }
+                if (null != isolationScheme.SpecialHandling)
+                {
+                    document.IsolationScheme.SpecialHandling = isolationScheme.SpecialHandling;
+                }
+                if (isolationScheme.WindowsPerScan.HasValue)
+                {
+                    document.IsolationScheme.WindowsPerScan = isolationScheme.WindowsPerScan.Value;
+                    document.IsolationScheme.WindowsPerScanSpecified = true;
+                }
+                document.IsolationScheme.IsolationWindow =
+                    isolationScheme.PrespecifiedIsolationWindows.Select(
+                        isolationWindow =>
+                        {
+                            var result = new ChromatogramRequestDocumentIsolationSchemeIsolationWindow
+                            {
+                                Start = isolationWindow.Start,
+                                End = isolationWindow.End,
+                            };
+                            if (isolationWindow.Target.HasValue)
+                            {
+                                result.Target = isolationWindow.Target.Value;
+                            }
+                            if (isolationWindow.StartMargin.HasValue)
+                            {
+                                result.StartMargin = isolationWindow.StartMargin.Value;
+                            }
+                            if (isolationWindow.EndMargin.HasValue)
+                            {
+                                result.EndMargin = isolationWindow.EndMargin.Value;
+                            }
+                            return result;
+                        }).ToArray();
+            }
+            return document;
+        }
+
+        public string ToChromatogramRequestDocumentXml()
+        {
+            var xmlSerializer = new XmlSerializer(typeof(ChromatogramRequestDocument));
+            StringWriter stringWriter = new StringWriter();
+            xmlSerializer.Serialize(stringWriter, ToChromatogramRequestDocument());
+            return stringWriter.ToString();
+        }
+
     }
 }

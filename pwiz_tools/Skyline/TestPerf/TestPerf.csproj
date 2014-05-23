@@ -130,6 +130,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PerfChorusContentsTest.cs" />
+    <Compile Include="PerfChorusGenerateChromatograms.cs" />
+    <Compile Include="PerfGenerateChorusRequests.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PeakScoreCompareTest.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
@@ -195,6 +198,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ThermoDIA.ChorusRequest.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

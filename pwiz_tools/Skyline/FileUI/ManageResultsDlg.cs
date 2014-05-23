@@ -196,7 +196,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         foreach (var dataFile in DocumentLibrary.LibraryDetails.DataFiles)
                         {
-                            if (MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(chromFileInfo.FilePath),
+                            if (MeasuredResults.IsBaseNameMatch(chromFileInfo.FilePath.GetFileNameWithoutExtension(),
                                                             Path.GetFileNameWithoutExtension(dataFile)))
                             {
                                 int foundIndex = listLibraries.FindString(dataFile);
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.FileUI
                 foreach (var dataFile in LibraryRunsRemovedList)
                 {
                     var matchingFile =
-                        DocumentUIContainer.Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFile);
+                        DocumentUIContainer.Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile));
                     if (null != matchingFile)
                     {
                         int foundIndex = listResults.FindString(matchingFile.Chromatograms.Name);
@@ -490,11 +490,16 @@ namespace pwiz.Skyline.FileUI
             var setPaths = new HashSet<string>();
             foreach (var filePath in chromatogramSets.SelectMany(set => set.MSDataFilePaths))
             {
-                string filePathPart = SampleHelp.GetPathFilePart(filePath);
+                MsDataFilePath msDataFilePath = filePath as MsDataFilePath;
+                if (null == msDataFilePath)
+                {
+                    continue;
+                }
+                string filePathPart = msDataFilePath.FilePath;
                 if (setPaths.Contains(filePathPart))
                     continue;
                 setPaths.Add(filePathPart);
-                if (ChromatogramSet.GetExistingDataFilePath(cachePath, filePath, out filePathPart) != null)
+                if (ChromatogramSet.GetExistingDataFilePath(cachePath, msDataFilePath) != null)
                     continue;
                 listPathsMissing.Add(filePathPart);
             }

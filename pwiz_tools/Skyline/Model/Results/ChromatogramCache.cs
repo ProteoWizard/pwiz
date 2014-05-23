@@ -72,18 +72,17 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="dataFilePath">Results file path</param>
         /// <param name="name">Name of data cache</param>
         /// <returns>A path to the data cache</returns>
-        public static string PartPathForName(string documentPath, string dataFilePath, string name = null)
+        public static string PartPathForName(string documentPath, MsDataFileUri dataFilePath, string name = null)
         {
-            string filePath = SampleHelp.GetPathFilePart(dataFilePath);
-            string dirData = Path.GetDirectoryName(filePath);
             string dirDocument = Path.GetDirectoryName(documentPath) ?? string.Empty;
 
             // Start with the file basename
-            StringBuilder sbName = new StringBuilder(Path.GetFileNameWithoutExtension(filePath));
+            StringBuilder sbName = new StringBuilder(dataFilePath.GetFileNameWithoutExtension());
             // If the data file is not in the same directory as the document, add a checksum
             // of the data directory.
-            if (!Equals(dirData, dirDocument))
+            if (dataFilePath is MsDataFilePath)
             {
+                string dirData = Path.GetDirectoryName(((MsDataFilePath) dataFilePath).FilePath);
                 // Perhaps one of these hasn't a path at all - are both in the current working directory?
                 string fullDocDirPath = String.IsNullOrEmpty(dirDocument) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirDocument));
                 string fullFileDirPath = String.IsNullOrEmpty(dirData) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirData));
@@ -92,12 +91,12 @@ namespace pwiz.Skyline.Model.Results
             }
             // If it has a sample name, append the index to differentiate this name from
             // the other samples in the multi-sample file
-            if (SampleHelp.HasSamplePart(dataFilePath))
-                sbName.Append('_').Append(SampleHelp.GetPathSampleIndexPart(dataFilePath));
+            if (null != dataFilePath.GetSampleName())
+                sbName.Append('_').Append(dataFilePath.GetSampleIndex());
             if (name != null)
                 sbName.Append('_').Append(name);
             // Append the extension to differentiate between different file types (.mzML, .mzXML)
-            sbName.Append(Path.GetExtension(filePath));
+            sbName.Append(dataFilePath.GetExtension());
             sbName.Append(EXT);
 
             return Path.Combine(dirDocument, sbName.ToString());
@@ -133,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
         public IList<ChromCachedFile> CachedFiles { get { return _cachedFiles; } }
         public IPooledStream ReadStream { get; private set; }
 
-        public IEnumerable<string> CachedFilePaths
+        public IEnumerable<MsDataFileUri> CachedFilePaths
         {
             get { return CachedFiles.Select(cachedFile => cachedFile.FilePath); }
         }
@@ -199,7 +198,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Returns true, if a single path can be found in a set of caches.
         /// </summary>
-        private static bool IsCovered(string path, IEnumerable<ChromatogramCache> caches)
+        private static bool IsCovered(MsDataFileUri path, IEnumerable<ChromatogramCache> caches)
         {
             return caches.Any(cache => cache.CachedFilePaths.Contains(path));
         }
@@ -526,7 +525,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void Build(SrmDocument document, ChromatogramCache cacheRecalc,
-            string cachePath, IList<string> listResultPaths, ProgressStatus status, ILoadMonitor loader,
+            string cachePath, IList<MsDataFileUri> listResultPaths, ProgressStatus status, ILoadMonitor loader,
             Action<ChromatogramCache, Exception> complete)
         {
             try
@@ -602,10 +601,10 @@ namespace pwiz.Skyline.Model.Results
                 long modifiedBinary = BitConverter.ToInt64(fileHeader, ((int)FileHeader.modified_lo) * 4);
                 int lenPath = GetInt32(fileHeader, (int)FileHeader.len_path);
                 ReadComplete(stream, filePathBuffer, lenPath);
-
-                string filePath = formatVersion > FORMAT_VERSION_CACHE_6
+                string filePathString = formatVersion > FORMAT_VERSION_CACHE_6
                                       ? Encoding.UTF8.GetString(filePathBuffer, 0, lenPath)
                                       : Encoding.Default.GetString(filePathBuffer, 0, lenPath);
+                var filePath = MsDataFileUri.Parse(filePathString);
                 long runstartBinary = (IsVersionCurrent(formatVersion)
                                            ? BitConverter.ToInt64(fileHeader, ((int)FileHeader.runstart_lo) * 4)
                                            : 0);
@@ -877,8 +876,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 long time = cachedFile.FileWriteTime.ToBinary();
                 outStream.Write(BitConverter.GetBytes(time), 0, sizeof(long));
-                int len = Encoding.UTF8.GetByteCount(cachedFile.FilePath);
-                Encoding.UTF8.GetBytes(cachedFile.FilePath, 0, cachedFile.FilePath.Length, pathBuffer, 0);
+                string filePathString = cachedFile.FilePath.ToString();            
+                int len = Encoding.UTF8.GetByteCount(filePathString);
+                Encoding.UTF8.GetBytes(filePathString, 0, filePathString.Length, pathBuffer, 0);
                 outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
                 // Version 3 write modified time
                 var runStartTime = cachedFile.RunStartTime;
@@ -998,7 +998,7 @@ namespace pwiz.Skyline.Model.Results
             return sizeTotal;
         }
 
-        public void GetStatusDimensions(string msDataFilePath, out float? maxRetentionTime, out float? maxIntensity)
+        public void GetStatusDimensions(MsDataFileUri msDataFilePath, out float? maxRetentionTime, out float? maxIntensity)
         {
             int fileIndex = CachedFiles.IndexOf(f => Equals(f.FilePath, msDataFilePath));
             if (fileIndex == -1)
@@ -1013,7 +1013,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IEnumerable<ChromKeyIndices> GetChromKeys(string msDataFilePath)
+        public IEnumerable<ChromKeyIndices> GetChromKeys(MsDataFileUri msDataFilePath)
         {
             int fileIndex = CachedFiles.IndexOf(f => Equals(f.FilePath, msDataFilePath));
             if (fileIndex == -1)
@@ -1042,11 +1042,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public ChromatogramCache Optimize(string documentPath, IEnumerable<string> msDataFilePaths, IStreamManager streamManager)
+        public ChromatogramCache Optimize(string documentPath, IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager)
         {
             string cachePathOpt = FinalPathForName(documentPath, null);
 
-            var cachedFilePaths = new HashSet<string>(CachedFilePaths);
+            var cachedFilePaths = new HashSet<MsDataFileUri>(CachedFilePaths);
             cachedFilePaths.IntersectWith(msDataFilePaths);
             // If the cache contains only the files in the document, then no
             // further optimization is necessary.

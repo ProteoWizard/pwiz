@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestA.Results
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
             var measuredResults = new MeasuredResults(new[]
-                {new ChromatogramSet("Single", new[] {rawPath})});
+                {new ChromatogramSet("Single", new[] {new MsDataFilePath(rawPath)})});
 
             SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
 

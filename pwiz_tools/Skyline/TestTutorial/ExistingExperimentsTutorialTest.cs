@@ -33,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -288,7 +289,7 @@ namespace pwiz.SkylineTestTutorial
                                                                         importResultsDlg1.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-                openDataSourceDialog1.CurrentDirectory = GetTestPath("Study 7");
+                openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Study 7"));
                 openDataSourceDialog1.SelectAllFileType(ExtensionTestContext.ExtAbWiff);
             });
             if (ExtensionTestContext.CanImportAbWiff)

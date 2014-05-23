@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
 
-        public abstract void GetChromatogram(int id, out ChromExtra extra,
+        public abstract bool GetChromatogram(int id, out ChromExtra extra,
             out float[] times, out float[] intensities, out float[] massErrors);
 
         public abstract double? MaxRetentionTime { get; }
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override void GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
         {
             // No mass errors in SRM
             massErrors = null;
@@ -282,6 +282,7 @@ namespace pwiz.Skyline.Model.Results
                 index, -1,
                 times,
                 intensities);
+            return true;
         }
 
         private double ExpectedReadDurationMinutes

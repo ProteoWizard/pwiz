@@ -24,6 +24,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Results;
 using ZedGraph;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -307,8 +308,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     Assume.IsNotNull(Source, "Source"); // Not L10N
                     Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
                 }
-                TargetTimes = settings.GetRetentionTimes(target.Name).GetFirstRetentionTimes();
-                SourceTimes = settings.GetRetentionTimes(timesToAlign.Name).GetFirstRetentionTimes();
+                TargetTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(target.Name)).GetFirstRetentionTimes();
+                SourceTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(timesToAlign.Name)).GetFirstRetentionTimes();
             }
 
             internal DocumentRetentionTimes DocumentRetentionTimes { get; private set; }
