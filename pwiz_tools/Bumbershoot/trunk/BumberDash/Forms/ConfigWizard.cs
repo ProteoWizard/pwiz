@@ -586,7 +586,9 @@ namespace BumberDash.Forms
             {
                 if (recievedHi.OutputDirectory.EndsWith("+") || recievedHi.OutputDirectory.EndsWith("*"))
                     OutputNewCheckBox.Checked = true;
-                OutputFolderBox.Text = recievedHi.OutputDirectory.TrimEnd('+').TrimEnd('*');
+                OutputFolderBox.Text = recievedHi.OutputDirectory.EndsWith("*")
+                                           ? Path.GetDirectoryName(recievedHi.OutputDirectory.TrimEnd('*'))
+                                           : recievedHi.OutputDirectory.TrimEnd('+');
             }
 
             if (recievedHi.FileList != null)
@@ -831,7 +833,7 @@ namespace BumberDash.Forms
             //generic hi setup
             var initialHi = new HistoryItem
                 {
-                    JobName = OutputNewCheckBox.Checked ? Path.GetFileName(outputDir) : OutputNewFolderBox.Text,
+                    JobName = OutputNewCheckBox.Checked ? OutputNewFolderBox.Text : Path.GetFileName(outputDir),
                     OutputDirectory = OutputNewCheckBox.Checked ? outputDir + "+" : outputDir,
                     ProteinDatabase = DatabaseBox.Text,
                     Cpus = 0,
@@ -943,7 +945,7 @@ namespace BumberDash.Forms
                         Type = "string",
                         ConfigAssociation = config
                     });
-                if (PrecursorToleranceUnitsBox.Text == "mz" && double.Parse(PrecursorToleranceBox.Text) > 0.2)
+                if (!destinationProgram.Contains("Tag") && PrecursorToleranceUnitsBox.Text == "mz" && double.Parse(PrecursorToleranceBox.Text) > 0.2)
                     config.PropertyList.Add(new ConfigProperty
                     {
                         Name = "MonoisotopeAdjustmentSet",
@@ -960,27 +962,31 @@ namespace BumberDash.Forms
                 });
 
                 if (destinationProgram != "DirecTag")
+                {
+                    if (SuffixBox.Checked)
+                        config.PropertyList.Add(new ConfigProperty
+                            {
+                                Name = "OutputSuffix",
+                                Value = "\"" + PrimarySuffixBox.Text + "\"",
+                                Type = "string",
+                                ConfigAssociation = config
+                            });
                     config.PropertyList.Add(new ConfigProperty
                         {
-                            Name = "OutputSuffix",
-                            Value = "\"" + PrimarySuffixBox.Text + "\"",
+                            Name = "CleavageRules",
+                            Value = "\"" + CleavageAgentBox.Text + "\"",
                             Type = "string",
                             ConfigAssociation = config
                         });
-                config.PropertyList.Add(new ConfigProperty
-                    {
-                        Name = "CleavageRules",
-                        Value = "\"" + CleavageAgentBox.Text + "\"",
-                        Type = "string",
-                        ConfigAssociation = config
-                    });
-                config.PropertyList.Add(new ConfigProperty
-                {
-                    Name = "MinTerminiCleavages",
-                    Value = SpecificityBox.SelectedIndex.ToString(),
-                    Type = "int",
-                    ConfigAssociation = config
-                });
+
+                    config.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = "MinTerminiCleavages",
+                            Value = SpecificityBox.SelectedIndex.ToString(),
+                            Type = "int",
+                            ConfigAssociation = config
+                        });
+                }
                 if (destinationProgram == "TagRecon" && BlindModBox.Checked)
                     config.PropertyList.Add(new ConfigProperty
                     {

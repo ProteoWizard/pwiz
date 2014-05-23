@@ -40,7 +40,8 @@ namespace Tests
     [TestClass()]
     public class ProgramHandlerTest
     {
-        private readonly static string _workingDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\Tests");
+        //private readonly static string _workingDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\Tests");
+        private readonly static string _workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
         private readonly static string _outputDirectory = Path.Combine(_workingDirectory, "Data\\Output");
 
         private TestContext testContextInstance;

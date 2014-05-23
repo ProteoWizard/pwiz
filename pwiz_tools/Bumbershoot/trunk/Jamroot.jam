@@ -192,7 +192,7 @@ rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-
     }
 
     # default filepath is "BumberDash/Properties/AssemblyInfo" in the current directory
-    filepath ?= BumberDash\\Properties\\AssemblyInfo.$(extension) ;
+    filepath ?= BumberDash/Properties/AssemblyInfo.$(extension) ;
 
     if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
 
@@ -275,7 +275,7 @@ rule generate-rc ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? 
                    Title Description Company Product : Icons * )
 {
     # default filepath is "Properties/Resources.rc" in the current directory
-    filepath ?= Properties\\Resources.rc ;
+    filepath ?= Properties/Resources.rc ;
 
     if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
 
@@ -364,7 +364,7 @@ END
 
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "BumberDash" ;
     
-generate-rc BumberDash\\Resources\\Resources.rc :
+generate-rc BumberDash/Resources/Resources.rc :
     [ path.glob-tree . : *.jam
                          *.?pp *.h
                          *.cs
@@ -378,7 +378,7 @@ generate-rc BumberDash\\Resources\\Resources.rc :
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "BumberDash" ;
 
 # generate BumberDash version header
-local revision-info = [ generate-AssemblyInfo.cs BumberDash\\Properties\\AssemblyInfo.cs :
+local revision-info = [ generate-AssemblyInfo.cs BumberDash/Properties/AssemblyInfo.cs :
     [ path.glob-tree . : *.jam
                          *.?pp *.h
                          *.cs
