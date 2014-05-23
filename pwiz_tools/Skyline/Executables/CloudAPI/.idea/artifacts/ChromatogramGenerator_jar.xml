@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ChromatogramGenerator:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ChromatogramGenerator_jar</output-path>
+    <root id="archive" name="ChromatogramGenerator.jar">
+      <element id="module-output" name="ChromatogramGenerator" />
+      <element id="dir-copy" path="$PROJECT_DIR$/ChromatogramGenerator/src" />
+    </root>
+  </artifact>
+</component>

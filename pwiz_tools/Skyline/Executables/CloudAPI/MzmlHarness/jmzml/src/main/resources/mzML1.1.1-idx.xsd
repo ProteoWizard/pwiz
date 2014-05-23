@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Liquid XML Studio 1.0.8.0 (http://www.liquid-technologies.com) -->
+<xs:schema xmlns:dx="http://psi.hupo.org/ms/mzml" 
+		   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		   targetNamespace="http://psi.hupo.org/ms/mzml" 
+		   attributeFormDefault="unqualified" 
+		   elementFormDefault="qualified" 
+		   version="1.1.1">
+  <xs:include schemaLocation="mzML1.1.0.xsd" />
+  <xs:complexType name="IndexListType">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="unbounded" name="index" type="dx:IndexType">
+        <xs:annotation>
+          <xs:documentation>Index element containing one or more offsets for random data access for the entity described in the 'name' attribute.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="count" type="xs:nonNegativeInteger" use="required">
+      <xs:annotation>
+        <xs:documentation>Number of indices in this list.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="IndexType">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="offset" type="dx:OffsetType">
+        <xs:annotation>
+          <xs:documentation>File pointer offset (in bytes) of the element identified by the 'id' attribute.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="name" use="required">
+      <xs:annotation>
+        <xs:documentation>The name of the entity the index entries are pointing to.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="spectrum" />
+          <xs:enumeration value="chromatogram" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="OffsetType">
+    <xs:simpleContent>
+      <xs:extension base="xs:long">
+        <xs:attribute name="idRef" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation>Reference to the 'id' attribute of the indexed element.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="spotID" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>The identifier for the spot from which this spectrum was derived, if a MALDI or similar run.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="scanTime" type="xs:double" use="optional">
+          <xs:annotation>
+            <xs:documentation>In the case of a spectrum representing a single scan, this attribute may be used to reference it by the time at which the scan was acquired (a.k.a. scan time or retention time).</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="indexedmzML">
+    <xs:annotation>
+      <xs:documentation>Container element for mzML which allows the addition of an index.</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="dx:mzML" />
+        <xs:element minOccurs="1" name="indexList" type="dx:IndexListType">
+          <xs:annotation>
+            <xs:documentation>List of indices.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="indexListOffset" nillable="true" type="xs:long">
+          <xs:annotation>
+            <xs:documentation>File pointer offset (in bytes) of the 'indexList' element.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="fileChecksum" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>SHA-1 checksum from beginning of file to end of 'fileChecksum' open tag.</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+    <xs:key name="KEY_ID_IDX">
+      <xs:selector xpath=".//dx:indexedmzML/dx:mzML/dx:run/dx:spectrumList/dx:spectrum|.//dx:indexedmzML/dx:mzML/dx:run/dx:chromatogramList/dx:chromatogram" />
+      <xs:field xpath="@id" />
+    </xs:key>
+    <xs:keyref name="FKNID" refer="dx:KEY_ID_IDX">
+      <xs:selector xpath=".//dx:indexedmzML/dx:indexList/dx:index/dx:offset" />
+      <xs:field xpath="@id" />
+    </xs:keyref>
+  </xs:element>
+</xs:schema>

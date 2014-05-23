@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SpectrumFilterDocument xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" EnabledMs="true" IsSharedTime="false" MinMz="50" MaxMz="1500" MzMatchTolerance="0">
+  <FilterPair PrecursorMz="0" Extractor="summed" HighAccQ1="true" HighAccQ3="false">
+    <Q1 Mz="0" MzWindow="0" />
+  </FilterPair>
+  <FilterPair PrecursorMz="0" Extractor="base peak" HighAccQ1="true" HighAccQ3="false">
+    <Q1 Mz="0" MzWindow="0" />
+  </FilterPair>
+  <FilterPair PrecursorMz="308.16752538833327" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="AEFVEVTK" MinTime="0" MaxTime="9.1999998092651367">
+    <Q1 Mz="307.83318915860241" MzWindow="0.061566637831720485" />
+    <Q1 Mz="308.16752538833327" MzWindow="0.061633505077666656" />
+    <Q1 Mz="308.50186161806414" MzWindow="0.061700372323612827" />
+    <Q1 Mz="308.83608614940795" MzWindow="0.061767217229881592" />
+    <Q1 Mz="309.17028273214686" MzWindow="0.061834056546429372" />
+  </FilterPair>
+  <FilterPair PrecursorMz="388.54840590666663" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="LVNELTEFAK" MinTime="0" MaxTime="9.9666671752929688">
+    <Q1 Mz="388.21407678282696" MzWindow="0.077642815356565392" />
+    <Q1 Mz="388.54840590666663" MzWindow="0.077709681181333326" />
+    <Q1 Mz="388.8827350305063" MzWindow="0.07777654700610126" />
+    <Q1 Mz="389.2169778322077" MzWindow="0.077843395566441542" />
+    <Q1 Mz="389.55118940660566" MzWindow="0.077910237881321134" />
+  </FilterPair>
+  <FilterPair PrecursorMz="435.91022623333333" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="HLVDEPQNLIK" MinTime="0" MaxTime="9.5999999046325684">
+    <Q1 Mz="435.57592605130031" MzWindow="0.087115185210260057" />
+    <Q1 Mz="435.91022623333333" MzWindow="0.087182045246666673" />
+    <Q1 Mz="436.24452641536635" MzWindow="0.087248905283073275" />
+    <Q1 Mz="436.57875788450229" MzWindow="0.087315751576900455" />
+    <Q1 Mz="436.91295915540695" MzWindow="0.0873825918310814" />
+  </FilterPair>
+  <FilterPair PrecursorMz="461.74765008249994" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="AEFVEVTK" MinTime="0" MaxTime="9.1999998092651367">
+    <Q1 Mz="461.2461457379037" MzWindow="0.092249229147580741" />
+    <Q1 Mz="461.74765008249994" MzWindow="0.0923495300165" />
+    <Q1 Mz="462.24915442709619" MzWindow="0.092449830885419235" />
+    <Q1 Mz="462.750491224112" MzWindow="0.0925500982448224" />
+    <Q1 Mz="463.25178609822035" MzWindow="0.092650357219644069" />
+  </FilterPair>
+  <FilterPair PrecursorMz="474.23074799833336" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="SLHTLFGDELC[+58.0]K" MinTime="0" MaxTime="10.083333015441895">
+    <Q1 Mz="473.8964408872539" MzWindow="0.094779288177450779" />
+    <Q1 Mz="474.23074799833336" MzWindow="0.094846149599666668" />
+    <Q1 Mz="474.56505521941267" MzWindow="0.094913011043882528" />
+    <Q1 Mz="474.89890350473968" MzWindow="0.094979780700947938" />
+    <Q1 Mz="475.23272587529948" MzWindow="0.0950465451750599" />
+    <Q1 Mz="475.5665652827555" MzWindow="0.0951133130565511" />
+  </FilterPair>
+  <FilterPair PrecursorMz="482.213534125" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="YIC[+58.0]DNQDTISSK" MinTime="0" MaxTime="8.9500000476837158">
+    <Q1 Mz="481.87923348934896" MzWindow="0.096375846697869791" />
+    <Q1 Mz="482.213534125" MzWindow="0.096442706825" />
+    <Q1 Mz="482.54783487065106" MzWindow="0.096509566974130212" />
+    <Q1 Mz="482.88164824405959" MzWindow="0.096576329648811923" />
+    <Q1 Mz="483.21547771652882" MzWindow="0.09664309554330576" />
+    <Q1 Mz="483.54931734904625" MzWindow="0.096709863469809254" />
+  </FilterPair>
+  <FilterPair PrecursorMz="507.81332436249988" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="QTALVELLK" MinTime="0.15000009536743164" MaxTime="10.150000095367432">
+    <Q1 Mz="507.31183882368686" MzWindow="0.10146236776473737" />
+    <Q1 Mz="507.81332436249988" MzWindow="0.10156266487249997" />
+    <Q1 Mz="508.314809901313" MzWindow="0.1016629619802626" />
+    <Q1 Mz="508.81615900183147" MzWindow="0.1017632318003663" />
+    <Q1 Mz="509.31746301628436" MzWindow="0.10186349260325688" />
+  </FilterPair>
+  <FilterPair PrecursorMz="547.31743296666673" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="KVPQVSTPTLVEVSR" MinTime="0" MaxTime="9.6666669845581055">
+    <Q1 Mz="546.98313252287187" MzWindow="0.10939662650457438" />
+    <Q1 Mz="547.31743296666673" MzWindow="0.10946348659333334" />
+    <Q1 Mz="547.65173341046159" MzWindow="0.10953034668209231" />
+    <Q1 Mz="547.98597598038407" MzWindow="0.10959719519607682" />
+    <Q1 Mz="548.32018886849119" MzWindow="0.10966403777369824" />
+    <Q1 Mz="548.65438242535242" MzWindow="0.10973087648507049" />
+  </FilterPair>
+  <FilterPair PrecursorMz="582.31897085999992" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="LVNELTEFAK" MinTime="0" MaxTime="9.9666671752929688">
+    <Q1 Mz="581.81747717424048" MzWindow="0.1163634954348481" />
+    <Q1 Mz="582.31897085999992" MzWindow="0.11646379417199998" />
+    <Q1 Mz="582.82046454575959" MzWindow="0.11656409290915192" />
+    <Q1 Mz="583.32182874831176" MzWindow="0.11666436574966235" />
+    <Q1 Mz="583.82314610990863" MzWindow="0.11676462922198173" />
+  </FilterPair>
+  <FilterPair PrecursorMz="653.36170135" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="HLVDEPQNLIK" MinTime="0" MaxTime="9.5999999046325684">
+    <Q1 Mz="652.86025107695025" MzWindow="0.13057205021539006" />
+    <Q1 Mz="653.36170135" MzWindow="0.13067234027" />
+    <Q1 Mz="653.8631516230497" MzWindow="0.13077263032460995" />
+    <Q1 Mz="654.36449882675356" MzWindow="0.13087289976535071" />
+    <Q1 Mz="654.86580073311029" MzWindow="0.13097316014662205" />
+  </FilterPair>
+  <FilterPair PrecursorMz="710.8424839975" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="SLHTLFGDELC[+58.0]K" MinTime="0" MaxTime="10.083333015441895">
+    <Q1 Mz="710.34102333088117" MzWindow="0.14206820466617623" />
+    <Q1 Mz="710.8424839975" MzWindow="0.1421684967995" />
+    <Q1 Mz="711.343944829119" MzWindow="0.14226878896582379" />
+    <Q1 Mz="711.84471725710944" MzWindow="0.1423689434514219" />
+    <Q1 Mz="712.34545081294937" MzWindow="0.14246909016258988" />
+    <Q1 Mz="712.8462099241334" MzWindow="0.14256924198482668" />
+  </FilterPair>
+  <FilterPair PrecursorMz="722.8166631875" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="YIC[+58.0]DNQDTISSK" MinTime="0" MaxTime="8.9500000476837158">
+    <Q1 Mz="722.31521223402331" MzWindow="0.14446304244680466" />
+    <Q1 Mz="722.8166631875" MzWindow="0.1445633326375" />
+    <Q1 Mz="723.31811430597656" MzWindow="0.1446636228611953" />
+    <Q1 Mz="723.8188343660895" MzWindow="0.1447637668732179" />
+    <Q1 Mz="724.31957857479335" MzWindow="0.14486391571495866" />
+    <Q1 Mz="724.82033802356921" MzWindow="0.14496406760471384" />
+  </FilterPair>
+  <FilterPair PrecursorMz="820.47251145000007" Extractor="summed" HighAccQ1="true" HighAccQ3="false" ModifiedSequence="KVPQVSTPTLVEVSR" MinTime="0" MaxTime="9.6666669845581055">
+    <Q1 Mz="819.97106078430761" MzWindow="0.16399421215686152" />
+    <Q1 Mz="820.47251145000007" MzWindow="0.16409450229000003" />
+    <Q1 Mz="820.97396211569253" MzWindow="0.1641947924231385" />
+    <Q1 Mz="821.47532597057625" MzWindow="0.16429506519411524" />
+    <Q1 Mz="821.97664530273687" MzWindow="0.16439532906054738" />
+    <Q1 Mz="822.47793563802907" MzWindow="0.16449558712760581" />
+  </FilterPair>
+</SpectrumFilterDocument>
