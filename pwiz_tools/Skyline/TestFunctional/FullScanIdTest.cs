@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -81,13 +83,30 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libraryName });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForDocumentChange(docInitial);
-            WaitForCondition(() =>
+            try
+            {
+                WaitForCondition(() =>
+                {
+                    var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+                    return librarySettings.IsLoaded &&
+                           librarySettings.Libraries.Count > 0 &&
+                           librarySettings.Libraries[0].Keys.Count() == 43;
+                });
+            }
+            catch (Exception e)
             {
                 var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-                return librarySettings.IsLoaded &&
-                       librarySettings.Libraries.Count > 0 &&
-                       librarySettings.Libraries[0].Keys.Count() == 43;
-            });
+                var libraryKeysCounts = string.Join(",", librarySettings.Libraries.Select(
+                    library => null == library ? "null" : string.Empty + library.Keys.Count()));
+                string message =
+                    string.Format(
+                        "Timeout waiting for libraries.  IsLoaded:{0} Libraries.Count:{1} LibrariesKeysCounts:{2}",
+                        librarySettings.IsLoaded,
+                        librarySettings.Libraries.Count,
+                        libraryKeysCounts);
+                    
+                throw new Exception(message, e);
+            }
 
             var docSetup = SkylineWindow.Document;
 
