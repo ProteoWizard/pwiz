@@ -39,6 +39,8 @@
 #include "MassLynxRawChromatogramReader.h"
 #include "MassLynxRawInfo.h"
 #include "MassLynxRawScanStatsReader.h"
+#include "cdtdefs.h"
+#include "compresseddatacluster.h"
 
 namespace pwiz {
 namespace vendor_api {
@@ -64,7 +66,10 @@ struct PWIZ_API_DECL RawData
 
     typedef map<string, vector<boost::any> > ExtendedScanStatsByName;
 
+    const string& RawFilepath() const {return rawpath_;}
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
+    const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
+
     size_t FunctionCount() const {return functionIndexList.back() + 1;}
 
     RawData(const string& rawpath)
@@ -72,7 +77,10 @@ struct PWIZ_API_DECL RawData
           Info(Reader),
           ScanReader(Reader),
           ChromatogramReader(Reader),
-          scanStatsInitialized(init_once_flag_proxy)
+          rawpath_(rawpath),
+          scanStatsInitialized(init_once_flag_proxy),
+          cdcFunctionIndex(-1),
+          cdcBlockIndex(-1)
     {
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
 		// For functions over 100, the names become _FUNC0100.DAT
@@ -89,8 +97,44 @@ struct PWIZ_API_DECL RawData
             functionCount = std::max(functionCount, number);
         }
 
+        ionMobilityByFunctionIndex.resize(functionIndexList.size(), false);
+        for (size_t i=0; i < functionIndexList.size(); ++i)
+        {
+            CDC.Initialise(rawpath.c_str(), functionIndexList[i]+1); // 1-based
+            ionMobilityByFunctionIndex[i] = CDC.isInitialised();
+        }
+
         initHeaderProps(rawpath);
 	}
+
+    const CompressedDataCluster& GetCompressedDataClusterForBlock(int functionIndex, int blockIndex) const
+    {
+        if (functionIndex == cdcFunctionIndex && blockIndex == cdcBlockIndex)
+            return CDC;
+
+        if (functionIndex != cdcFunctionIndex)
+            CDC.Initialise(rawpath_.c_str(), functionIndex+1); // 1-based
+
+        CDC.loadDataBlock(blockIndex);
+
+        cdcFunctionIndex = functionIndex;
+        cdcBlockIndex = blockIndex;
+        return CDC;
+    }
+
+    double GetDriftTime(int functionIndex, int blockIndex, int scanIndex) const
+    {
+		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+        const ExtendedScanStatsByName& extendedScanStatsByName = extendedScanStatsByFunction[functionIndex];
+        ExtendedScanStatsByName::const_iterator transportRFItr = extendedScanStatsByName.find("Transport RF");
+        if (transportRFItr != extendedScanStatsByName.end())
+        {
+            double transportRF = boost::any_cast<short>(transportRFItr->second[std::min(transportRFItr->second.size()-1, (size_t) blockIndex)]);
+            double pusherInterval = 1000 / transportRF;
+            return (scanIndex+1) * pusherInterval;
+        }
+        return 0.0;
+    }
 
 	const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
 	{
@@ -104,20 +148,27 @@ struct PWIZ_API_DECL RawData
 		return extendedScanStatsByFunction[functionIndex];
 	}
 
-    const string GetHeaderProp(string name) const
+    const string& GetHeaderProp(const string& name) const
     {
-        if (headerProps.count(name) == 0)
-            return "";
-        return headerProps.find(name)->second;
+        map<string, string>::const_iterator findItr = headerProps.find(name);
+        if (findItr == headerProps.end())
+            return empty_;
+        return findItr->second;
     }
 
     private:
+    string rawpath_, empty_;
     vector<int> functionIndexList;
+    vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
 
 	mutable once_flag_proxy scanStatsInitialized;
     mutable vector<vector<MSScanStats>> scanStatsByFunction;
     mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
+
+    mutable int cdcFunctionIndex;
+    mutable int cdcBlockIndex;
+    mutable CompressedDataCluster CDC;
 
     void initHeaderProps(const string& rawpath)
     {

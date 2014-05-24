@@ -30,6 +30,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 
 #ifdef PWIZ_READER_AGILENT
@@ -58,12 +59,13 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     
 #ifdef PWIZ_READER_AGILENT
-    SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile);
+    SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config);
 
     private:
 
     const MSData& msd_;
     MassHunterDataPtr rawfile_;
+    Reader::Config config_;
     mutable size_t size_;
 
     mutable util::once_flag_proxy indexInitialized_;
@@ -72,6 +74,8 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     {
         int rowNumber; // continguous 0-based index (not equal to SpectrumIdentity::index since some scan types are skipped)
         int scanId; // unique but not contiguous
+        int frameIndex; // 0-based in pwiz but 1-based in MIDAC
+        int driftBinIndex; // 0-based
     };
 
     mutable vector<IndexEntry> index_;

@@ -47,7 +47,7 @@ ostream* os_ = &cout;
 
 
 /// Holds the results of the parseCommandLine function. 
-struct Config
+struct Config : public Reader::Config
 {
     vector<string> filenames;
     vector<string> filters;
@@ -58,12 +58,14 @@ struct Config
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
     bool merge;
-    bool simAsSpectra;
-    bool srmAsSpectra;
 
     Config()
-    :   outputPath("."), verbose(false), merge(false), simAsSpectra(false), srmAsSpectra(false)
-    {}
+        : outputPath("."), verbose(false), merge(false)
+    {
+        simAsSpectra = false;
+        srmAsSpectra = false;
+        combineIonMobilitySpectra = false;
+    }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
 };
@@ -301,6 +303,9 @@ Config parseCommandLine(int argc, char** argv)
         ("srmAsSpectra",
             po::value<bool>(&config.srmAsSpectra)->zero_tokens(),
             ": write selected reaction monitoring as spectra, not chromatograms")
+        ("combineIonMobilitySpectra",
+            po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
+            ": write all drift bins/scans in a frame/block as one spectrum instead of individual spectra")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")
@@ -668,9 +673,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     vector<MSDataPtr> msdList;
     int failedFileCount = 0;
 
-    ReaderList::Config readerConfig;
-    readerConfig.simAsSpectra = config.simAsSpectra;
-    readerConfig.srmAsSpectra = config.srmAsSpectra;
+    ReaderList::Config readerConfig(config);
 
     // Each file is read in separately in MSData objects in the msdList list.
     BOOST_FOREACH(const string& filename, filenames)
@@ -733,9 +736,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     *os_ << "processing file: " << filename << endl;
 
-    ReaderList::Config readerConfig;
-    readerConfig.simAsSpectra = config.simAsSpectra;
-    readerConfig.srmAsSpectra = config.srmAsSpectra;
+    ReaderList::Config readerConfig(config);
 
     vector<MSDataPtr> msdList;
     readers.read(filename, msdList, readerConfig);

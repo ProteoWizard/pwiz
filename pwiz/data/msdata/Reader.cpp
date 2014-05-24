@@ -40,6 +40,7 @@ Reader::Config::Config()
     : simAsSpectra(false)
     , srmAsSpectra(false)
     , acceptZeroLengthSpectra(false)
+    , combineIonMobilitySpectra(false)
 {
 }
 
@@ -49,6 +50,7 @@ Reader::Config::Config(const Config& rhs)
     simAsSpectra = rhs.simAsSpectra;
     srmAsSpectra = rhs.srmAsSpectra;
 	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
+    combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

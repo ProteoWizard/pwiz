@@ -74,7 +74,8 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
 {
     config.simAsSpectra = readerConfig->simAsSpectra;
     config.srmAsSpectra = readerConfig->srmAsSpectra;
-	config.acceptZeroLengthSpectra = readerConfig->acceptZeroLengthSpectra;
+    config.acceptZeroLengthSpectra = readerConfig->acceptZeroLengthSpectra;
+    config.combineIonMobilitySpectra = readerConfig->combineIonMobilitySpectra;
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)

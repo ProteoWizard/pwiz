@@ -37,6 +37,7 @@ rule vendor-api-requirements ( properties * )
     if $(dll_location)
     {
         result += <source>MassHunterData.cpp ;
+        result += <source>MidacData.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
         result += <link>static ; # <using-clr>true and <link>shared don't mix
     }
@@ -64,6 +65,7 @@ rule vendor-api-usage-requirements ( properties * )
         result += <assembly>$(dll_location)/BaseDataAccess.dll ;
         result += <assembly>$(dll_location)/BaseError.dll ;
         result += <assembly>$(dll_location)/BaseTof.dll ;
+        result += <assembly>$(dll_location)/MIDAC.dll ;
         result += <assembly-dependency>$(dll_location)/agtsampleinforw.dll ;
         if ! ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) )
         {
@@ -78,9 +80,10 @@ rule msvc-agilent-requirement ( properties * )
 {
     # Must be msvc
     if ! <toolset>msvc in $(properties) { return <build>no ; }
+
     # If msvc 9.0, must be 32-bit
     if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) &&
-       ( [ MATCH (x64) : $(PLATFORM) ] )           
+         <address-model>64 in $(properties)
     { return <build>no ; }
 }
 
@@ -131,6 +134,7 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)\\BaseError.dll ;
         result += <source>$(dll_location)\\BaseTof.dll ;
         result += <source>$(dll_location)\\MassSpecDataReader.dll ;
+        result += <source>$(dll_location)\\MIDAC.dll ;
         result += <source>$(API_PATH)\\EULA.MHDAC ;
     }
     return $(result) ;

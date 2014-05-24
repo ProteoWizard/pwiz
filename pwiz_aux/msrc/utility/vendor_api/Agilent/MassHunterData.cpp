@@ -23,11 +23,12 @@
 #define PWIZ_SOURCE
 
 #pragma unmanaged
-#include "MassHunterData.hpp"
+#include "boost/thread/mutex.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "boost/thread/mutex.hpp"
+#include "MassHunterData.hpp"
+#include "MidacData.hpp"
 
 
 #pragma managed
@@ -37,7 +38,9 @@ using namespace pwiz::util;
 
 using System::String;
 using System::Math;
+using System::Object;
 namespace MHDAC = Agilent::MassSpectrometry::DataAnalysis;
+namespace MIDAC = Agilent::MassSpectrometry::MIDAC;
 
 
 namespace pwiz {
@@ -74,6 +77,15 @@ MHDAC::IBDASpecFilter^ bdaSpecFilterForScanId(int scanId, bool preferProfileData
     return result;
 }
 
+template<typename N, typename M>
+N managedRangeToNative(M^ input_range)
+{
+    N output_range;
+    output_range.start = input_range->Min;
+    output_range.end = input_range->Max;
+    return output_range;
+}
+
 boost::mutex massHunterInitMutex;
 
 } // namespace
@@ -95,6 +107,10 @@ class MassHunterDataImpl : public MassHunterData
     virtual int getTotalScansPresent() const;
     virtual bool hasProfileData() const;
 
+    virtual bool hasIonMobilityData() const;
+    virtual int getTotalIonMobilityFramesPresent() const;
+    virtual FramePtr getIonMobilityFrame(int frameIndex) const;
+
     virtual const set<Transition>& getTransitions() const;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
 
@@ -112,6 +128,7 @@ class MassHunterDataImpl : public MassHunterData
 
     private:
     gcroot<MHDAC::IMsdrDataReader^> reader_;
+    gcroot<MIDAC::IMidacImsReader^> imsReader_;
     gcroot<MHDAC::IBDAMSScanFileInformation^> scanFileInfo_;
     automation_vector<double> ticTimes_, bpcTimes_;
     automation_vector<float> ticIntensities_, bpcIntensities_;
@@ -130,25 +147,28 @@ class MassHunterDataImpl : public MassHunterData
 typedef boost::shared_ptr<MassHunterDataImpl> MassHunterDataImplPtr;
 
 
+// HACK: normally I would have a second Impl class for MIDAC, but I think future DLLs will merge the functionality together more smoothly,
+// or MHDAC will disappear entirely
 struct ScanRecordImpl : public ScanRecord
 {
     ScanRecordImpl(MHDAC::IMSScanRecord^ scanRecord) : scanRecord_(scanRecord) {}
 
-    virtual int getScanId() const {return scanRecord_->ScanID;}
-    virtual double getRetentionTime() const {return scanRecord_->RetentionTime;}
-    virtual int getMSLevel() const {return scanRecord_->MSLevel == MHDAC::MSLevel::MSMS ? 2 : 1;}
-    virtual MSScanType getMSScanType() const {return (MSScanType) scanRecord_->MSScanType;}
-    virtual double getTic() const {return scanRecord_->Tic;}
-    virtual double getBasePeakMZ() const {return scanRecord_->BasePeakMZ;}
-    virtual double getBasePeakIntensity() const {return scanRecord_->BasePeakIntensity;}
-    virtual IonizationMode getIonizationMode() const {return (IonizationMode) scanRecord_->IonizationMode;}
-    virtual IonPolarity getIonPolarity() const {return (IonPolarity) scanRecord_->IonPolarity;}
-    virtual double getMZOfInterest() const {return scanRecord_->MZOfInterest;}
-    virtual int getTimeSegment() const {return scanRecord_->TimeSegment;}
-    virtual double getFragmentorVoltage() const {return scanRecord_->FragmentorVoltage;}
-    virtual double getCollisionEnergy() const {return scanRecord_->CollisionEnergy;}
-    virtual bool getIsFragmentorVoltageDynamic() const {return scanRecord_->IsFragmentorVoltageDynamic;}
-    virtual bool getIsCollisionEnergyDynamic() const {return scanRecord_->IsCollisionEnergyDynamic;}
+    virtual int getScanId() const;
+    virtual double getRetentionTime() const;
+    virtual int getMSLevel() const;
+    virtual MSScanType getMSScanType() const;
+    virtual double getTic() const;
+    virtual double getBasePeakMZ() const;
+    virtual double getBasePeakIntensity() const;
+    virtual IonizationMode getIonizationMode() const;
+    virtual IonPolarity getIonPolarity() const;
+    virtual double getMZOfInterest() const;
+    virtual int getTimeSegment() const;
+    virtual double getFragmentorVoltage() const;
+    virtual double getCollisionEnergy() const;
+    virtual bool getIsFragmentorVoltageDynamic() const;
+    virtual bool getIsCollisionEnergyDynamic() const;
+    virtual bool getIsIonMobilityScan() const;
 
     private:
     gcroot<MHDAC::IMSScanRecord^> scanRecord_;
@@ -173,8 +193,8 @@ struct SpectrumImpl : public Spectrum
     virtual void getPrecursorIons(vector<double>& precursorIons) const;
     virtual bool getPrecursorCharge(int& charge) const;
     virtual bool getPrecursorIntensity(double& precursorIntensity) const;
-    virtual void getXArray(automation_vector<double>& x) const;
-    virtual void getYArray(automation_vector<float>& y) const;
+    virtual void getXArray(std::vector<double>& x) const;
+    virtual void getYArray(std::vector<float>& y) const;
 
     private:
     gcroot<MHDAC::IBDASpecData^> specData_;
@@ -218,20 +238,35 @@ bool Transition::operator< (const Transition& rhs) const
 PWIZ_API_DECL
 MassHunterDataPtr MassHunterData::create(const string& path)
 {
-    MassHunterDataImplPtr dataReader(new MassHunterDataImpl(path));
+    MassHunterDataPtr dataReader;
+    if (MassHunterData::hasIonMobilityData(path))
+        dataReader.reset(new MidacDataImpl(path));
+    else
+        dataReader.reset(new MassHunterDataImpl(path));
     return boost::static_pointer_cast<MassHunterData>(dataReader);
 }
 
+
 #pragma managed
+bool MassHunterData::hasIonMobilityData(const string& path)
+{
+    try {return MIDAC::MidacFileAccess::FileHasImsData(ToSystemString(path));} CATCH_AND_FORWARD
+}
+
+
 MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 {
     try
     {
+        String^ filepath = ToSystemString(path);
+
         {
             boost::mutex::scoped_lock lock(massHunterInitMutex);
+
             reader_ = gcnew MHDAC::MassSpecDataReader();
-            if (!reader_->OpenDataFile(ToSystemString(path)))
-            {}    // TODO: log warning about incomplete acquisition, possibly indicating corrupt data
+            if (!reader_->OpenDataFile(filepath))
+            {
+            }    // TODO: log warning about incomplete acquisition, possibly indicating corrupt data
         }
 
         hasProfileData_ = bfs::exists(bfs::path(path) / "AcqData/MSProfile.bin");
@@ -254,9 +289,9 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
         ToAutomationVector(bpc->XArray, bpcTimes_);
         ToAutomationVector(bpc->YArray, bpcIntensities_);
 
-		// chromatograms are always read completely into memory, and failing
-		// to store them on this object after reading cost a 50x performance
-		// hit on large MRM files.
+        // chromatograms are always read completely into memory, and failing
+        // to store them on this object after reading cost a 50x performance
+        // hit on large MRM files.
         filter = gcnew MHDAC::BDAChromFilter();
         filter->DoCycleSum = false;
         filter->ExtractOneChromatogramPerScanSegment = true;
@@ -346,7 +381,15 @@ blt::local_date_time MassHunterDataImpl::getAcquisitionTime() const
 {
     try
     {
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader_->FileInformation->AcquisitionTime.ToUniversalTime().ToOADate()));
+        System::DateTime acquisitionTime = reader_->FileInformation->AcquisitionTime;
+
+        // these are Boost.DateTime restrictions enforced because one of the test files had a corrupt date
+        if (acquisitionTime.Year > 10000)
+            acquisitionTime = acquisitionTime.AddYears(10000 - acquisitionTime.Year);
+        else if (acquisitionTime.Year < 1400)
+            acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
+
+        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(acquisitionTime.ToUniversalTime().ToOADate()));
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
     }
     CATCH_AND_FORWARD
@@ -375,6 +418,18 @@ int MassHunterDataImpl::getTotalScansPresent() const
 bool MassHunterDataImpl::hasProfileData() const
 {
     return hasProfileData_;
+}
+
+bool MassHunterDataImpl::hasIonMobilityData() const { return false; }
+
+int MassHunterDataImpl::getTotalIonMobilityFramesPresent() const
+{
+    return 0;
+}
+
+FramePtr MassHunterDataImpl::getIonMobilityFrame(int frameIndex) const
+{
+    return FramePtr();
 }
 
 const set<Transition>& MassHunterDataImpl::getTransitions() const
@@ -413,15 +468,15 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
         // until someone can figure out why storing SIM chromatograms in the constructor
         // causes the unit test to fail, only MRM uses faster way of retrieving chromatograms
         // while SIM continues to use the original, slower method.
-		array<MHDAC::IBDAChromData^>^ chromatograms = chromMrm_; // transition.type == Transition::MRM ? chromMrm_ : chromSim_;
-		if (transition.type != Transition::MRM)
-		{
+        array<MHDAC::IBDAChromData^>^ chromatograms = chromMrm_; // transition.type == Transition::MRM ? chromMrm_ : chromSim_;
+        if (transition.type != Transition::MRM)
+        {
             MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
-			filter->ChromatogramType = MHDAC::ChromType::SelectedIonMonitoring;
-			filter->ExtractOneChromatogramPerScanSegment = true;
-			filter->DoCycleSum = false;
-			chromatograms = reader_->GetChromatogram(filter);
-		}
+            filter->ChromatogramType = MHDAC::ChromType::SelectedIonMonitoring;
+            filter->ExtractOneChromatogramPerScanSegment = true;
+            filter->DoCycleSum = false;
+            chromatograms = reader_->GetChromatogram(filter);
+        }
 
         return ChromatogramPtr(new ChromatogramImpl(chromatograms[index]));
     }
@@ -474,6 +529,84 @@ SpectrumPtr MassHunterDataImpl::getPeakSpectrumById(int scanId, PeakFilterPtr pe
 }
 
 
+int ScanRecordImpl::getScanId() const
+{
+    try {return scanRecord_->ScanID;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getRetentionTime() const
+{
+    try {return scanRecord_->RetentionTime;} CATCH_AND_FORWARD
+}
+
+int ScanRecordImpl::getMSLevel() const
+{
+    try {return scanRecord_->MSLevel == MHDAC::MSLevel::MSMS ? 2 : 1;} CATCH_AND_FORWARD
+}
+
+MSScanType ScanRecordImpl::getMSScanType() const
+{
+    try {return (MSScanType)scanRecord_->MSScanType;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getTic() const
+{
+    try {return scanRecord_->Tic;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getBasePeakMZ() const
+{
+    try {return scanRecord_->BasePeakMZ;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getBasePeakIntensity() const
+{
+    try {return scanRecord_->BasePeakIntensity;} CATCH_AND_FORWARD
+}
+
+IonizationMode ScanRecordImpl::getIonizationMode() const
+{
+    try {return (IonizationMode)scanRecord_->IonizationMode;} CATCH_AND_FORWARD
+}
+
+IonPolarity ScanRecordImpl::getIonPolarity() const
+{
+    try {return (IonPolarity)scanRecord_->IonPolarity;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getMZOfInterest() const
+{
+    try {return scanRecord_->MZOfInterest;} CATCH_AND_FORWARD
+}
+
+int ScanRecordImpl::getTimeSegment() const
+{
+    try {return scanRecord_->TimeSegment;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getFragmentorVoltage() const
+{
+    try {return scanRecord_->FragmentorVoltage;} CATCH_AND_FORWARD
+}
+
+double ScanRecordImpl::getCollisionEnergy() const
+{
+    try {return scanRecord_->CollisionEnergy;} CATCH_AND_FORWARD
+}
+
+bool ScanRecordImpl::getIsFragmentorVoltageDynamic() const
+{
+    try {return scanRecord_->IsFragmentorVoltageDynamic;} CATCH_AND_FORWARD
+}
+
+bool ScanRecordImpl::getIsCollisionEnergyDynamic() const
+{
+    try {return scanRecord_->IsCollisionEnergyDynamic;} CATCH_AND_FORWARD
+}
+
+bool ScanRecordImpl::getIsIonMobilityScan() const {return false;}
+
+
 MassRange SpectrumImpl::getMeasuredMassRange() const
 {
     try
@@ -503,14 +636,14 @@ bool SpectrumImpl::getPrecursorIntensity(double& precursorIntensity) const
     try {return specData_->GetPrecursorIntensity(precursorIntensity);} CATCH_AND_FORWARD
 }
 
-void SpectrumImpl::getXArray(automation_vector<double>& x) const
+void SpectrumImpl::getXArray(std::vector<double>& x) const
 {
-    try {return ToAutomationVector(specData_->XArray, x);} CATCH_AND_FORWARD
+    try {return ToStdVector(specData_->XArray, x);} CATCH_AND_FORWARD
 }
 
-void SpectrumImpl::getYArray(automation_vector<float>& y) const
+void SpectrumImpl::getYArray(std::vector<float>& y) const
 {
-    try {return ToAutomationVector(specData_->YArray, y);} CATCH_AND_FORWARD
+    try {return ToStdVector(specData_->YArray, y);} CATCH_AND_FORWARD
 }
 
 

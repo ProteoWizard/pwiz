@@ -233,7 +233,8 @@ void diff(const Precursor& a,
 
     if (!config.ignoreMetadata)
     {
-        diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
+        if (!config.ignoreIdentity)
+            diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
         diff(static_cast<const ParamContainer&>(a.isolationWindow), b.isolationWindow, a_b.isolationWindow, b_a.isolationWindow, config);
         diff(static_cast<const ParamContainer&>(a.activation), b.activation, a_b.activation, b_a.activation, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);

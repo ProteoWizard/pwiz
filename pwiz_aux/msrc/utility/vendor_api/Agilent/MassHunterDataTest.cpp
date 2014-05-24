@@ -34,7 +34,7 @@ ostream* os_ = 0;
 
 void test(const string& rawpath)
 {
-    cout << "Testing " << rawpath << endl;
+    /*cout << "Testing " << rawpath << endl;
     MassHunterDataPtr dataReader = MassHunterData::create(rawpath);
     cout << dataReader->getDeviceType() << endl;
     cout << dataReader->getDeviceName(dataReader->getDeviceType()) << endl;
@@ -93,7 +93,7 @@ void test(const string& rawpath)
     c1->getXArray(masses);
     c1->getYArray(intensities);
     if (!masses.empty())
-        cout << "Times (" << masses.size() << ") [" << masses.front() << "-" << masses.back() << "]" << endl;
+        cout << "Times (" << masses.size() << ") [" << masses.front() << "-" << masses.back() << "]" << endl;*/
 }
 
 

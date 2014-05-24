@@ -173,7 +173,7 @@ void Reader_Waters::read(const string& filename,
 
     RawDataPtr rawdata = RawDataPtr(new RawData(filename));
 
-    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata));
+    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata, config));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Waters(rawdata));
 
     fillInMetadata(filename, rawdata, result);

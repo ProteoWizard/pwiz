@@ -31,16 +31,19 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
+#include <boost/spirit/include/karma.hpp>
 
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
+namespace Agilent = pwiz::vendor_api::Agilent;
 
-SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile)
+SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config)
 :   msd_(msd),
     rawfile_(rawfile),
+    config_(config),
     size_(0),
     indexInitialized_(util::init_once_flag_proxy)
 {
@@ -123,23 +126,32 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     result->index = index;
     result->id = ie.id;
 
-    ScanRecordPtr scanRecordPtr = rawfile_->getScanRecord(ie.rowNumber);
+    ScanRecordPtr scanRecordPtr = rawfile_->getScanRecord(ie.rowNumber); // equivalent to frameIndex
     MSScanType scanType = scanRecordPtr->getMSScanType();
     int msLevel = scanRecordPtr->getMSLevel();
+    bool isIonMobilityScan = scanRecordPtr->getIsIonMobilityScan();
+    CVID spectrumType = translateAsSpectrumType(scanType);
 
     result->set(translateAsPolarityType(scanRecordPtr->getIonPolarity()));
-    result->set(MS_ms_level, msLevel);
-    result->set(translateAsSpectrumType(scanType));
-
-    result->set(MS_base_peak_m_z, scanRecordPtr->getBasePeakMZ(), MS_m_z);
-    result->set(MS_base_peak_intensity, rawfile_->getBpcIntensities()[ie.rowNumber], MS_number_of_detector_counts);
-    result->set(MS_total_ion_current, rawfile_->getTicIntensities()[ie.rowNumber], MS_number_of_detector_counts);
 
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
-    scan.set(MS_scan_start_time, rawfile_->getTicTimes()[ie.rowNumber], UO_minute);
+
+    if (isIonMobilityScan)
+    {
+        //result->set(MS_base_peak_intensity, scanRecordPtr->getBasePeakIntensity(), MS_number_of_detector_counts);
+        //result->set(MS_total_ion_current, scanRecordPtr->getTic(), MS_number_of_detector_counts);
+        scan.set(MS_scan_start_time, scanRecordPtr->getRetentionTime(), UO_minute);
+    }
+    else
+    {
+        result->set(MS_base_peak_m_z, scanRecordPtr->getBasePeakMZ(), MS_m_z);
+        result->set(MS_base_peak_intensity, rawfile_->getBpcIntensities()[ie.rowNumber], MS_number_of_detector_counts);
+        result->set(MS_total_ion_current, rawfile_->getTicIntensities()[ie.rowNumber], MS_number_of_detector_counts);
+        scan.set(MS_scan_start_time, rawfile_->getTicTimes()[ie.rowNumber], UO_minute);
+    }
 
     double mzOfInterest = scanRecordPtr->getMZOfInterest();
     if (msLevel > 1 && mzOfInterest > 0)
@@ -178,24 +190,40 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     bool reportMS2ForAllIonsScan = false; // watching out for MS1 with nonzero collision energy - return as an MS2 with a huge window
     if (1==msLevel)
     { 
-        double collisionenergy = scanRecordPtr->getCollisionEnergy();
-        if (collisionenergy > 0)
+        double collisionEnergy = scanRecordPtr->getCollisionEnergy();
+        if (collisionEnergy > 0)
         {
             // all-ions scan - report it as MS2 with a single precursor and a huge selection window
             msLevel = 2;
-            result->set(MS_ms_level, msLevel);
+            spectrumType = MS_MSn_spectrum;
             reportMS2ForAllIonsScan = true;
             Precursor precursor;
             precursor.activation.set(MS_CID); // MSDR provides no access to this, so assume CID
-            precursor.activation.set(MS_collision_energy, collisionenergy, UO_electronvolt);
+            precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
             // note: can't give isolationWindow or precursor.selectedIons at (detailLevel <  DetailLevel_FullMetadata)
             result->precursors.push_back(precursor);
         }
     }
+    result->set(MS_ms_level, msLevel);
+    result->set(spectrumType);
 
     // past this point the full spectrum is required
     if ((int) detailLevel < (int) DetailLevel_FullMetadata)
         return result;
+
+    Agilent::FramePtr frame;
+    Agilent::DriftScanPtr driftScan;
+    if (isIonMobilityScan)
+    {
+        frame = rawfile_->getIonMobilityFrame(ie.frameIndex);
+        if (config_.combineIonMobilitySpectra)
+            driftScan = frame->getTotalScan();
+        else
+        {
+            driftScan = frame->getScan(ie.driftBinIndex);
+            scan.userParams.push_back(UserParam("drift time", lexical_cast<string>(driftScan->getDriftTime()), "xsd:double", UO_millisecond));
+        }
+    }
 
     // MHDAC doesn't support centroiding of non-TOF spectra
     DeviceType deviceType = rawfile_->getDeviceType();
@@ -204,15 +232,49 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 
     bool doCentroid = canCentroid && msLevelsToCentroid.contains(msLevel);
 
-    pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr;
-    if (doCentroid)
-        spectrumPtr = rawfile_->getPeakSpectrumByRow(ie.rowNumber);
-    else
-        spectrumPtr = rawfile_->getProfileSpectrumByRow(ie.rowNumber);
+    Agilent::SpectrumPtr spectrumPtr;
+    MassRange minMaxMz;
+    if (!isIonMobilityScan)
+    {
+        if (doCentroid)
+            spectrumPtr = rawfile_->getPeakSpectrumByRow(ie.rowNumber);
+        else
+            spectrumPtr = rawfile_->getProfileSpectrumByRow(ie.rowNumber);
 
-    MassRange minMaxMz = spectrumPtr->getMeasuredMassRange();
-    scan.scanWindows.push_back(ScanWindow(minMaxMz.start, minMaxMz.end, MS_m_z));
-    
+        minMaxMz = spectrumPtr->getMeasuredMassRange();
+        scan.scanWindows.push_back(ScanWindow(minMaxMz.start, minMaxMz.end, MS_m_z));
+    }
+
+
+    vector<double> xArray;
+    vector<float> yArray;
+
+    MSStorageMode storageMode;
+    bool hasProfile;
+
+    if (!isIonMobilityScan)
+    {
+        storageMode = spectrumPtr->getMSStorageMode();
+        hasProfile = storageMode == MSStorageMode_ProfileSpectrum;
+
+        spectrumPtr->getXArray(xArray);
+        spectrumPtr->getYArray(yArray);
+    }
+    else
+    {
+        storageMode = driftScan->getMSStorageMode();
+        hasProfile = storageMode == MSStorageMode_ProfileSpectrum;
+        canCentroid = false;
+
+        xArray = driftScan->getXArray();
+        yArray = driftScan->getYArray();
+
+        minMaxMz.start = xArray.front();
+        minMaxMz.end = xArray.back();
+        scan.scanWindows.push_back(ScanWindow(minMaxMz.start, minMaxMz.end, MS_m_z));
+    }
+
+
     if (reportMS2ForAllIonsScan)
     {
         // claim a target window that encompasses all ions
@@ -244,24 +306,15 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             selectedIon.set(MS_peak_intensity, precursorIntensity, MS_number_of_detector_counts);
     }
 
-    MSStorageMode storageMode = spectrumPtr->getMSStorageMode();
-    bool hasProfile = storageMode == MSStorageMode_ProfileSpectrum;
-
     if (hasProfile && (!canCentroid || !doCentroid))
     {
         result->set(MS_profile_spectrum);
     }
     else
     {
-        result->set(MS_centroid_spectrum); 
+        result->set(MS_centroid_spectrum);
         doCentroid = hasProfile && canCentroid;
     }
-
-    automation_vector<double> xArray;
-    spectrumPtr->getXArray(xArray);
-
-    automation_vector<float> yArray;
-    spectrumPtr->getYArray(yArray);
 
     if (detailLevel == DetailLevel_FullData)
     {
@@ -342,7 +395,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     }
     else
     {
-        if (doCentroid || yArray.size() < 3)
+        if (doCentroid || xArray.size() < 3)
         {
             result->defaultArrayLength = (size_t) yArray.size();
 
@@ -398,38 +451,91 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 
 PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 {
-    MSScanType scanTypes = rawfile_->getScanTypes();
+    using namespace boost::spirit::karma;
 
-    // if any of these types are present, we enumerate each spectrum
-    if (scanTypes & MSScanType_Scan ||
-        scanTypes & MSScanType_ProductIon ||
-        scanTypes & MSScanType_PrecursorIon)
+	bool hasIMS = rawfile_->hasIonMobilityData(); // enumerate all drift scans
+	if (hasIMS)
     {
-        int size = rawfile_->getTotalScansPresent();
-        index_.reserve(size);
+        int frames = rawfile_->getTotalIonMobilityFramesPresent();
+        int driftBinsPerFrame = rawfile_->getIonMobilityFrame(0)->getDriftBinsPresent();
+        size_t size = frames * driftBinsPerFrame;
+		index_.reserve(size);
 
-        for (size_t i=0, end = (size_t) size; i < end; ++i)
-        {
-            ScanRecordPtr scanRecordPtr = rawfile_->getScanRecord(i);
-            MSScanType scanType = scanRecordPtr->getMSScanType();
+        for (int i = 0; i < frames; ++i)
+		{
+			FramePtr frame = rawfile_->getIonMobilityFrame(i);
 
-            // these spectra are chromatogram-centric
-            if (scanType == MSScanType_SelectedIon ||
-                scanType == MSScanType_TotalIon ||
-                scanType == MSScanType_MultipleReaction)
-                continue;
+            if (config_.combineIonMobilitySpectra)
+            {
+                index_.push_back(IndexEntry());
+                IndexEntry& ie = index_.back();
+                ie.rowNumber = ie.frameIndex = (int)i;
+                ie.scanId = i + 1;
+                ie.index = index_.size() - 1;
+            }
+            else
+            {
+                const vector<short>& nonEmptyDriftBins = frame->getNonEmptyDriftBins();
+                for (size_t j = 0, end = nonEmptyDriftBins.size(); j < end; ++j)
+			    {
+                    int driftBinIndex = nonEmptyDriftBins[j];
 
-            index_.push_back(IndexEntry());
-            IndexEntry& ie = index_.back();
-            ie.rowNumber = (int) i;
-            ie.scanId = scanRecordPtr->getScanId();
-            ie.index = index_.size()-1;
+                    // HACK: frame 25, bin 99 of Test_ShewFromUimf returns a null spectrum but still comes back as non-empty;
+                    // if this happens more often we will need a fix from Agilent
+                    if (j + 1 == end)
+                        try { frame->getScan(driftBinIndex); } catch (runtime_error&) { continue; }
 
-            ostringstream oss;
-            oss << "scanId=" << ie.scanId;
-            ie.id = oss.str();
-        }
-    }
+                    /*if (scan->getScanId() == 0)
+                        continue;*/ // BUG or empty bin?
+
+				    index_.push_back(IndexEntry());
+				    IndexEntry& ie = index_.back();
+				    ie.rowNumber = ie.frameIndex = (int)i;
+                    ie.driftBinIndex = driftBinIndex;
+                    ie.scanId = (i * driftBinsPerFrame) + driftBinIndex; // scan->getScanId();
+                    ie.index = index_.size() - 1;
+
+                    std::back_insert_iterator<std::string> sink(ie.id);
+                    generate(sink, "scanId=" << int_, ie.scanId);
+			    }
+                }
+		}
+	}
+	else
+	{
+		MSScanType scanTypes = rawfile_->getScanTypes();
+
+		// if any of these types are present, we enumerate each spectrum
+		if (scanTypes & MSScanType_Scan ||
+			scanTypes & MSScanType_ProductIon ||
+			scanTypes & MSScanType_PrecursorIon)
+		{
+			int size = rawfile_->getTotalScansPresent();
+			index_.reserve(size);
+
+			for (size_t i = 0, end = (size_t)size; i < end; ++i)
+			{
+				ScanRecordPtr scanRecordPtr = rawfile_->getScanRecord(i);
+				MSScanType scanType = scanRecordPtr->getMSScanType();
+
+				// these spectra are chromatogram-centric
+				if (scanType == MSScanType_SelectedIon ||
+					scanType == MSScanType_TotalIon ||
+					scanType == MSScanType_MultipleReaction)
+					continue;
+
+				index_.push_back(IndexEntry());
+				IndexEntry& ie = index_.back();
+				ie.rowNumber = (int)i;
+				ie.scanId = scanRecordPtr->getScanId();
+                ie.frameIndex = ie.driftBinIndex = 0;
+                ie.index = index_.size() - 1;
+
+                std::back_insert_iterator<std::string> sink(ie.id);
+                generate(sink, "scanId=" << int_, ie.scanId);
+			}
+		}
+	}
 
     size_ = index_.size();
 }

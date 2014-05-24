@@ -279,6 +279,7 @@ void testRead(const Reader& reader, const string& rawpath)
         string fileType = reader.identify(rawpath, rawheader);
         if (bal::contains(fileType, "WIFF") ||
             bal::contains(fileType, "Waters") ||
+            bal::contains(fileType, "MassHunter") ||
             fileType == "Bruker FID" ||
             bal::contains(fileType, "T2D"))
             diffConfig_non_mzML.ignoreIdentity = true;

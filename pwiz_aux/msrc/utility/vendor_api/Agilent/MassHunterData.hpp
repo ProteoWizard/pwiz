@@ -198,8 +198,8 @@ struct PWIZ_API_DECL Spectrum
     virtual int getScanId() const = 0;
 
     virtual int getTotalDataPoints() const = 0;
-    virtual void getXArray(automation_vector<double>& x) const = 0;
-    virtual void getYArray(automation_vector<float>& y) const = 0;
+    virtual void getXArray(std::vector<double>& x) const = 0;
+    virtual void getYArray(std::vector<float>& y) const = 0;
 
     virtual ~Spectrum() {}
 };
@@ -224,6 +224,7 @@ struct PWIZ_API_DECL ScanRecord
     virtual double getCollisionEnergy() const = 0;
     virtual bool getIsFragmentorVoltageDynamic() const = 0;
     virtual bool getIsCollisionEnergyDynamic() const = 0;
+    virtual bool getIsIonMobilityScan() const = 0;
 
     virtual ~ScanRecord() {}
 };
@@ -231,11 +232,47 @@ struct PWIZ_API_DECL ScanRecord
 typedef boost::shared_ptr<ScanRecord> ScanRecordPtr;
 
 
+struct PWIZ_API_DECL DriftScan
+{
+    virtual MSStorageMode getMSStorageMode() const = 0;
+    virtual DeviceType getDeviceType() const = 0;
+    virtual void getPrecursorIons(std::vector<double>& precursorIons) const = 0;
+    virtual double getCollisionEnergy() const = 0;
+    virtual double getDriftTime() const = 0;
+    virtual int getScanId() const = 0;
+
+    virtual int getTotalDataPoints() const = 0;
+    virtual const std::vector<double>& getXArray() const = 0;
+    virtual const std::vector<float>& getYArray() const = 0;
+
+    virtual ~DriftScan() {}
+};
+
+typedef boost::shared_ptr<DriftScan> DriftScanPtr;
+
+
+struct PWIZ_API_DECL Frame
+{
+    virtual int getFrameIndex() const = 0;
+    virtual TimeRange getDriftTimeRange() const = 0;
+    virtual double getRetentionTime() const = 0;
+    virtual int getDriftBinsPresent() const = 0;
+    virtual const std::vector<short>& getNonEmptyDriftBins() const = 0;
+    virtual DriftScanPtr getScan(int driftBinIndex) const = 0;
+    virtual DriftScanPtr getTotalScan() const = 0;
+
+    virtual ~Frame() {}
+};
+
+typedef boost::shared_ptr<Frame> FramePtr;
+
+
 class PWIZ_API_DECL MassHunterData
 {
     public:
     typedef boost::shared_ptr<MassHunterData> Ptr;
     static Ptr create(const std::string& path);
+    static bool hasIonMobilityData(const std::string& path);
 
     virtual std::string getVersion() const = 0;
     virtual DeviceType getDeviceType() const = 0;
@@ -246,6 +283,10 @@ class PWIZ_API_DECL MassHunterData
     virtual MSStorageMode getSpectraFormat() const = 0;
     virtual int getTotalScansPresent() const = 0;
     virtual bool hasProfileData() const = 0;
+
+    virtual bool hasIonMobilityData() const = 0;
+    virtual int getTotalIonMobilityFramesPresent() const = 0;
+    virtual FramePtr getIonMobilityFrame(int frameIndex) const = 0;
 
     virtual const std::set<Transition>& getTransitions() const = 0;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const = 0;

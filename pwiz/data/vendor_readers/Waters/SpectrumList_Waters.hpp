@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 
 using boost::shared_ptr;
@@ -50,23 +51,32 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
 
 #ifdef PWIZ_READER_WATERS
-    SpectrumList_Waters(MSData& msd, RawDataPtr rawdata);
+    SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config);
 
     private:
 
     MSData& msd_;
     RawDataPtr rawdata_;
     size_t size_;
+    Reader::Config config_;
 
     struct IndexEntry : public SpectrumIdentity
     {
         int function;
         int process;
         int scan;
+        int block; // block < 0 is not ion mobility
     };
 
     mutable vector<IndexEntry> index_;
     mutable map<string, size_t> idToIndexMap_;
+
+    void initializeCoefficients() const;
+    double calibrate(double mz) const;
+    mutable vector<double> calibrationCoefficients_;
+    mutable vector<float> imsMasses_;
+    mutable vector<int> massIndices_;
+    mutable vector<float> imsIntensities_;
 
     void createIndex();
 #endif // PWIZ_READER_WATERS

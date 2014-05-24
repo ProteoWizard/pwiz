@@ -49,6 +49,9 @@ class PWIZ_API_DECL Reader
 		/// when true, allows for skipping 0 length checks (and thus skip re-reading data for ABI)
 		bool acceptZeroLengthSpectra;
 
+        /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
+        bool combineIonMobilitySpectra;
+
         Config();
         Config(const Config& rhs);
     };
