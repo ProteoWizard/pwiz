@@ -862,6 +862,14 @@
       <Link>mfc100u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\cdt.dll">
+      <Link>MassLynxRaw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0\cdt.dll">
+      <Link>MassLynxRaw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\MassLynxRaw.dll">
       <Link>MassLynxRaw.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
