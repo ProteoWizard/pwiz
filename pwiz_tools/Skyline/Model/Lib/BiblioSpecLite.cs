@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 4;
+        private const int FORMAT_VERSION_CACHE = 5;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
