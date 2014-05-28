@@ -198,6 +198,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             public string Title { get; set; }
             public Color Color { get; set; }
+            public float LineWidth { get { return LineBase.Default.Width; } }
 
             void CustomizeAxis(Axis axis)
             {

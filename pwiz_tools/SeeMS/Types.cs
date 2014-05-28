@@ -196,6 +196,7 @@ namespace seems
 
         public virtual string Title { get { return Id; } }
         public virtual Color Color { get { return Color.Gray; } }
+        public virtual float LineWidth { get { return ZedGraph.LineBase.Default.Width; } }
 
         public virtual void CustomizeXAxis( ZedGraph.Axis axis )
         {
