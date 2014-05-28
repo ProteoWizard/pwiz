@@ -108,6 +108,12 @@ namespace pwiz.Skyline.Model.Results
                 // TODO: Figure out a way to turn off time sharing on first SIM scan so that
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule;
+
+                // If we're using bare measured drift times from spectral libraries, go get those now
+                var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryDriftTimes
+                    ? document.Settings.GetIonMobilities(msDataFileUri)
+                    : null;
+
                 foreach (var nodePep in document.Peptides)
                 {
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
@@ -119,7 +125,7 @@ namespace pwiz.Skyline.Model.Results
                         double? startDriftTimeMsec = null, endDriftTimeMsec = null;
                         double windowDT;
                         double? centerDriftTime = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey(nodePep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), out windowDT);
+                            new LibKey(nodePep.ModifiedSequence, nodeGroup.TransitionGroup.PrecursorCharge), libraryIonMobilityInfo, out windowDT);
                         if (centerDriftTime.HasValue)
                         {
                             startDriftTimeMsec = centerDriftTime.Value - windowDT / 2;

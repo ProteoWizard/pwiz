@@ -411,6 +411,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseSpectralLibraryDriftTimes.Name = "cbUseSpectralLibraryDriftTimes";
             this.helpTip.SetToolTip(this.cbUseSpectralLibraryDriftTimes, resources.GetString("cbUseSpectralLibraryDriftTimes.ToolTip"));
             this.cbUseSpectralLibraryDriftTimes.UseVisualStyleBackColor = true;
+            this.cbUseSpectralLibraryDriftTimes.CheckedChanged += new System.EventHandler(this.cbUseSpectralLibraryDriftTimes_CheckChanged);
             // 
             // tabControl1
             // 

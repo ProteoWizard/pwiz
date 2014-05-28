@@ -27,9 +27,11 @@ DefineAnnotationDlg,TestAnnotations
 DocumentGridForm,TestReportSummary
 EditCEDlg,TestOptimization
 EditDPDlg,TestEditDialogs
+EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes
 EditExclusionDlg,TestEditDialogs
 EditFragmentLossDlg,TestNeutralLoss
+EditIonMobilityLibraryDlg,TestIonMobility
 EditIrtCalcDlg,TestRetentionTimeFilter
 EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
@@ -65,6 +67,7 @@ GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
+ImportIonMobilityFromSpectralLibraryDlg,TestIonMobility
 ImportPeptideSearchDlg.SpectraPage,TestMs1Tutorial
 ImportPeptideSearchDlg.ChromatogramsPage,TestMs1Tutorial
 ImportPeptideSearchDlg.MatchModsPage,TestMs1Tutorial

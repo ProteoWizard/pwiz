@@ -423,7 +423,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 355);
+            WaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);

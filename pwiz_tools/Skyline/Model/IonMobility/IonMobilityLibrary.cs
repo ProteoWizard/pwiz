@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.IonMobility
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
                 // Calculate the minimal set of peptides needed for this document
                 var dbPeptides = _database.GetPeptides().ToList();
-                var persistPeptides = new List<DbIonMobilityPeptide>();
+                var persistPeptides = new List<ValidatingIonMobilityPeptide>();
                 var dictPeptides = dbPeptides.ToDictionary(pep => pep.PeptideModSeq);
                 foreach (var peptide in document.Peptides)
                 {
@@ -95,22 +96,17 @@ namespace pwiz.Skyline.Model.IonMobility
                     DbIonMobilityPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {
-                        persistPeptides.Add(NewPeptide(dbPeptide));
+                        persistPeptides.Add(new ValidatingIonMobilityPeptide(dbPeptide.Sequence,dbPeptide.CollisionalCrossSection));
                         // Only add once
                         dictPeptides.Remove(modifiedSeq);
                     }
                 }
 
-                ionMobilityDbMinimal.UpdatePeptides(persistPeptides, new DbIonMobilityPeptide[0]);
+                ionMobilityDbMinimal.UpdatePeptides(persistPeptides, new ValidatingIonMobilityPeptide[0]);
                 fs.Commit();
             }
 
             return persistPath;
-        }
-
-        private DbIonMobilityPeptide NewPeptide(DbIonMobilityPeptide dbPeptide)
-        {
-            return new DbIonMobilityPeptide(dbPeptide);
         }
 
         public override double? GetDriftTimeMsec(String seq, ChargeRegressionLine regressionLine)

@@ -146,7 +146,7 @@
             // 
             this.addIRTDatabaseContextMenuItem.Name = "addIRTDatabaseContextMenuItem";
             resources.ApplyResources(this.addIRTDatabaseContextMenuItem, "addIRTDatabaseContextMenuItem");
-            this.addIRTDatabaseContextMenuItem.Click += new System.EventHandler(this.addIRTDatabaseContextMenuItem_Click);
+            this.addIRTDatabaseContextMenuItem.Click += new System.EventHandler(this.addIonMobilityDatabaseContextMenuItem_Click);
             // 
             // label4
             // 

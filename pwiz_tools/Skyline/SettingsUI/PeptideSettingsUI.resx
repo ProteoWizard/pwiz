@@ -1154,9 +1154,6 @@ times from a peptide specific hydrophobicity score.</value>
 For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
 W = 2T/R</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
     <value>textSpectralLibraryDriftTimesResolvingPower</value>
   </data>
@@ -1192,9 +1189,6 @@ W = 2T/R</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
     <value>If checked, then drift time in any loaded spectral libraries will be used in chromatogram extraction.</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryDriftTimes</value>
@@ -1351,9 +1345,6 @@ W = 2T/R</value>
   </data>
   <data name="labelResolvingPower.Text" xml:space="preserve">
     <value>Resolving &amp;power:</value>
-  </data>
-  <data name="labelResolvingPower.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
     <value>labelResolvingPower</value>

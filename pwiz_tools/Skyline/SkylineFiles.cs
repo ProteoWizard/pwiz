@@ -38,6 +38,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Esp;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -47,6 +48,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
 
 namespace pwiz.Skyline
 {
@@ -240,6 +242,8 @@ namespace pwiz.Skyline
                 document = ConnectBackgroundProteome(document, path);
             if (document != null)
                 document = ConnectIrtDatabase(document, path);
+            if (document != null)
+                document = ConnectIonMobilityDatabase(document, path);
             return document;
         }
 
@@ -392,6 +396,87 @@ namespace pwiz.Skyline
             while (true);
         }
 
+        private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
+        {
+            var settings = document.Settings.ConnectIonMobilityDatabase(imdb => FindIonMobilityDatabase(documentPath, imdb));
+            if (settings == null)
+                return null;
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+            return document.ChangeSettings(settings);
+        }
+
+        private IonMobilityLibrarySpec FindIonMobilityDatabase(string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
+        {
+
+            IonMobilityLibrarySpec result;
+            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibrarySpec.Name, out result))
+            {
+                if (result != null && File.Exists(result.PersistencePath))
+                    return result;
+            }
+            if (documentPath == null)
+                return null;
+
+            // First look for the file name in the document directory
+            string fileName = Path.GetFileName(ionMobilityLibrarySpec.PersistencePath);
+            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    var ionMobilityLib = ionMobilityLibrarySpec as IonMobilityLibrary;
+                    if (ionMobilityLib != null)
+                        return ionMobilityLib.ChangeDatabasePath(filePath);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch 
+                {
+                    //Todo: should this fail silenty or raise another dialog box?
+                }
+            }
+
+            do
+            {
+                using (var dlg = new MissingFileDlg
+                {
+                    ItemName = ionMobilityLibrarySpec.Name,
+                    ItemType = Resources.SkylineWindow_FindIonMobilityDatabase_Ion_Mobility_Database,
+                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIonMobilityDatabase_ion_mobility_database_files, IonMobilityDb.EXT),
+                    FileHint = Path.GetFileName(ionMobilityLibrarySpec.PersistencePath),
+                    FileDlgInitialPath = Path.GetDirectoryName(documentPath),
+                    Title = Resources.SkylineWindow_FindIonMobilityDatabase_Find_Ion_Mobility_Database
+                })
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        if (dlg.FilePath == null)
+                            return IonMobilityLibrary.NONE;
+
+                        try
+                        {
+                            var ionMobilityLib = ionMobilityLibrarySpec as IonMobilityLibrary;
+                            if (ionMobilityLib != null)
+                                return ionMobilityLib.ChangeDatabasePath(dlg.FilePath);
+                        }
+                        catch (DatabaseOpeningException e)
+                        {
+                            var message = TextUtil.SpaceSeparate(
+                                Resources.SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_,
+                                e.Message); 
+                            MessageBox.Show(message);
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            while (true);
+        }
+
         private SrmDocument ConnectBackgroundProteome(SrmDocument document, string documentPath)
         {
             var settings = document.Settings.ConnectBackgroundProteome(backgroundProteomeSpec =>
@@ -486,7 +571,7 @@ namespace pwiz.Skyline
                         string pathFile = msDataFilePath.FilePath;
                         if (missingFiles.Contains(pathFile))
                             continue;
-                        string pathPartCache = ChromatogramCache.PartPathForName(path, pathFileSample);
+                        string pathPartCache = ChromatogramCache.PartPathForName(path,  pathFileSample);
                         if (File.Exists(pathFile) ||
                             Directory.Exists(pathFile) || // some sample "files" are actually directories (.d etc)
                             File.Exists(pathPartCache) ||

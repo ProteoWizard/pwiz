@@ -920,20 +920,18 @@ namespace pwiz.Skyline.Model.Lib
         public string Name { get; private set; }
 
         /// <summary>
-        /// Return the average ion mobility for spectra that were identified with a
-        /// specific modified peptide sequence and charge state.  TODO - outlier detection as in RT code?
+        /// Return the average measured drift time for spectra that were identified with a
+        /// specific modified peptide sequence and charge state.  
         /// </summary>
-        public IonMobilityInfo GetIonMobilityInfo(LibKey chargedPeptide)
+        public double? GetLibraryMeasuredDriftTimeMsec(LibKey chargedPeptide)
         {
             IonMobilityInfo[] ionMobilities;
             if ((!_dictChargedPeptideIonMobilities.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
                 return null;
-            if (ionMobilities.Length == 1)
-                return ionMobilities[0];
-            if ((ionMobilities[0].IsCollisionalCrossSection && ionMobilities.Any(dt => !dt.IsCollisionalCrossSection))
-               || (!ionMobilities[0].IsCollisionalCrossSection) && ionMobilities.Any(dt => dt.IsCollisionalCrossSection))
-                return ionMobilities[0];
-            return new IonMobilityInfo(ionMobilities.Select(dt => dt.Value).Average(), ionMobilities[0].IsCollisionalCrossSection);
+            if (ionMobilities.All(dt => dt.IsCollisionalCrossSection))
+                return null;
+            double? result = Array.FindAll(ionMobilities, dt => !dt.IsCollisionalCrossSection).Select(dt => dt.Value).Average();
+            return result;
         }
 
         public IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict()
@@ -1420,7 +1418,6 @@ namespace pwiz.Skyline.Model.Lib
 
         public class ChromData
         {
-            public IonMobilityInfo IonMobilityInfo { get; set; }  // TODO bspratt - I think this goes here, since it's also per-charge
             public double Mz { get; set; }
             public double Height { get; set; }
             public float[] Intensities { get; set; }

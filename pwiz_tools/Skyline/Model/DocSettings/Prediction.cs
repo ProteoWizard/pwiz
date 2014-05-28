@@ -1992,7 +1992,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string Name { get; }
 
-        IonMobilityInfo GetIonMobilityInfo(LibKey peptide);
+        double? GetLibraryMeasuredDriftTimeMsec(LibKey peptide);
 
         IDictionary<LibKey, IonMobilityInfo[]> GetIonMobilityDict();
 

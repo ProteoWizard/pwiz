@@ -372,7 +372,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        private void addIRTDatabaseContextMenuItem_Click(object sender, EventArgs e)
+        private void addIonMobilityDatabaseContextMenuItem_Click(object sender, EventArgs e)
         {
             AddIonMobilityDatabase();
         }
@@ -492,13 +492,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private void btnImportFromLibrary_Click(object sender, EventArgs e)
         {
-            AddLibrary();
+            ImportFromSpectralLibrary();
         }
 
-        public void AddLibrary()
+        public void ImportFromSpectralLibrary()
         {
             CheckDisposed();
-            _gridViewLibraryDriver.AddSpectralLibrary();
+            _gridViewLibraryDriver.ImportFromSpectralLibrary();
         }
 
 
@@ -554,27 +554,26 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 Items.Add(measuredCollisionalCrossSection);
         }
 
-        public void AddSpectralLibrary()
+        public void ImportFromSpectralLibrary()
         {
-            using (var addLibraryDlg = new AddDriftTimeSpectralLibrary(Settings.Default.SpectralLibraryList))
+            using (var importFromLibraryDlg = new ImportIonMobilityFromSpectralLibraryDlg(Settings.Default.SpectralLibraryList))
             {
-                if (addLibraryDlg.ShowDialog(MessageParent) == DialogResult.OK)
+                if (importFromLibraryDlg.ShowDialog(MessageParent) == DialogResult.OK)
                 {
-                    AddSpectralLibrary(addLibraryDlg.Library);
+                    ImportFromSpectralLibrary(importFromLibraryDlg.Library, importFromLibraryDlg.ChargeRegressionsLines);
                 }
             }
         }
 
-        private void AddSpectralLibrary(LibrarySpec librarySpec)
+        private void ImportFromSpectralLibrary(LibrarySpec librarySpec, IDictionary<int, RegressionLine> chargeRegressionLines)
         {
-            // TODO bspratt apply regressions as needed (express this in the UI, too)
             var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
             Library library = null;
-            IEnumerable<ValidatingIonMobilityPeptide> driftTimes = null;
+            IEnumerable<ValidatingIonMobilityPeptide> peptideCollisionalCrossSections = null;
             try
             {
                 library = libraryManager.TryGetLibrary(librarySpec);
-                using (var longWait = new LongWaitDlg
+                using (var longWait = new LongWaitDlg  
                 {
                     Text = Resources.CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library,
                     Message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_, librarySpec.FilePath),
@@ -597,7 +596,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                 return;
                             }
 
-                            driftTimes = ProcessIonMobilityValues(monitor, GetIonMobilityProviders(library), fileCount, null); // TODO - regression dict
+                            peptideCollisionalCrossSections = ProcessIonMobilityValues(monitor, GetIonMobilityProviders(library), fileCount, chargeRegressionLines); 
                         });
                         if (status.IsError)
                         {
@@ -624,10 +623,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
 
-            if (driftTimes == null)
+            if (peptideCollisionalCrossSections == null)
                 return;
 
-            SetTablePeptides(driftTimes);
+            SetTablePeptides(peptideCollisionalCrossSections);
         }
 
 
@@ -651,21 +650,20 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                       int countProviders,
                                       IDictionary<int, RegressionLine> regressions)
         {
-            var status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetetionTimes_Adding_retention_times);
-            var peptideTimes = new List<ValidatingIonMobilityPeptide>();
+            var status = new ProgressStatus(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information);
+            var peptideIonMobilities = new List<ValidatingIonMobilityPeptide>();
             int runCount = 0;
-            foreach (var driftTimeProvider in providers)
+            foreach (var ionMobilityInfoProvider in providers)
             {
                 if ((monitor != null ) && monitor.IsCanceled)
                     return null;
                 runCount++;
-                string message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__, driftTimeProvider.Name);
+                string message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__, ionMobilityInfoProvider.Name);
                 if (monitor != null) 
                     monitor.UpdateProgress(status = status.ChangeMessage(message));
-                foreach (var ionMobilityList in driftTimeProvider.GetIonMobilityDict())
+                foreach (var ionMobilityList in ionMobilityInfoProvider.GetIonMobilityDict())
                 {
-                    // If there is more than one value, just average them - but first make sure they are all
-                    // same type, across all libraries being loaded
+                    // If there is more than one value, just average them
                     double total = 0;
                     int count = 0;
                     foreach (var ionMobilityInfo in ionMobilityList.Value)
@@ -688,7 +686,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         count++;
                     }
                     if (count > 0)
-                        peptideTimes.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.Sequence, total / count));
+                        peptideIonMobilities.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.Sequence, total / count));
                 }
                 if (monitor != null)
                     monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));
@@ -697,7 +695,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (monitor != null)
                 monitor.UpdateProgress(status.Complete());
 
-            return peptideTimes;
+            return peptideIonMobilities;
         }
     }
 

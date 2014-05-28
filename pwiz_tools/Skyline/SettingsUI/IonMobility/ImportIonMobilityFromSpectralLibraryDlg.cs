@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -32,13 +33,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 {
     public enum SpectralLibrarySource { settings, file }
 
-    public partial class AddDriftTimeSpectralLibrary : FormEx
+    public partial class ImportIonMobilityFromSpectralLibraryDlg : FormEx
     {
-        public AddDriftTimeSpectralLibrary(IEnumerable<LibrarySpec> librarySpecs)
+        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs)
         {
             InitializeComponent();
 
             comboLibrary.Items.AddRange(librarySpecs.Cast<object>().ToArray());
+            if ((comboLibrary.Items.Count == 1) &&  (Source == SpectralLibrarySource.settings))
+                comboLibrary.SelectedIndex = 0; // The obvious choice
             ComboHelper.AutoSizeDropDown(comboLibrary);
         }
 
@@ -65,6 +68,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
+        public Dictionary<int, RegressionLine> ChargeRegressionsLines { get; private set; }
+
         public string FilePath
         {
             get { return textFilePath.Text; }
@@ -75,21 +80,21 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             string message = null;
             if (string.IsNullOrEmpty(path))
-                message = Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library;
+                message = Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library;
             else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
-                message = TextUtil.LineSeparate(string.Format(Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_, path),
-                                                Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_);
+                message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_, path),
+                                                Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_);
             }
             else if (!path.EndsWith(BiblioSpecLiteSpec.EXT))
             {
-                message = TextUtil.LineSeparate(string.Format(Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_, path),
-                                                Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_);
+                message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_, path),
+                                                Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_);
             }
             else if (!File.Exists(path))
             {
-                message = TextUtil.LineSeparate(string.Format(Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_, path),
-                                                Resources.AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library_);
+                message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_, path),
+                                                Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library_);
             }
             return message;
         }
@@ -110,9 +115,16 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var librarySpec = Library;
             if (librarySpec == null)
             {
-                MessageDlg.Show(this, Resources.AddDriftTimeSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_);
+                MessageDlg.Show(this, Resources.ImportIonMobilityFromSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_);
                 return;
             }
+
+            var table = new ChargeRegressionTable(gridRegression);
+            var chargeRegressionLinesList = table.GetTableChargeRegressionLines();
+            if (chargeRegressionLinesList == null) // Some error detected in the charged regression lines table
+                return;
+            ChargeRegressionsLines = chargeRegressionLinesList.ToDictionary(x => x.Charge, x => x.RegressionLine);
+            
 
             DialogResult = DialogResult.OK;
         }
@@ -167,5 +179,28 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 textFilePath.Text = dlg.FileName;
             }
         }
+
+        #region Functional test support
+
+        public void PasteRegressionValues()
+        {
+            gridRegression.DoPaste(this, ChargeRegressionTable.ValidateRegressionCellValues);
+        }
+
+        #endregion
+
+        private void gridRegression_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Handle Ctrl + V for paste
+            if (e.KeyCode == Keys.V && e.Control)
+            {
+                PasteRegressionValues();
+            }
+            else if (e.KeyCode == Keys.Delete)
+            {
+                gridRegression.DoDelete();
+            }
+        }
+
     }
 }

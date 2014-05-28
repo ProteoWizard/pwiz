@@ -105,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverDT = new SettingsListComboDriver<DriftTimePredictor>(comboDriftTimePredictor, Settings.Default.DriftTimePredictorList);
             string selDT = (Prediction.DriftTimePredictor == null ? null : Prediction.DriftTimePredictor.Name);
             _driverDT.LoadList(selDT);
-            cbUseSpectralLibraryDriftTimes.Checked = textMeasureRTWindow.Enabled = Prediction.UseLibraryDriftTimes;
+            cbUseSpectralLibraryDriftTimes.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = Prediction.UseLibraryDriftTimes;
             if (Prediction.LibraryDriftTimesResolvingPower.HasValue)
                 textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryDriftTimesResolvingPower.Value.ToString(LocalizationHelper.CurrentCulture);
 
@@ -255,7 +255,7 @@ namespace pwiz.Skyline.SettingsUI
                 const double minWindow = 0;
                 const double maxWindow = double.MaxValue;
                 if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Prediction,
-                        textMeasureRTWindow, minWindow, maxWindow, out libraryDTWindowOut))
+                        textSpectralLibraryDriftTimesResolvingPower, minWindow, maxWindow, out libraryDTWindowOut))
                     return null;
                 libraryDTResolvingPower = libraryDTWindowOut;
             }
@@ -549,6 +549,24 @@ namespace pwiz.Skyline.SettingsUI
                         measuredRTWindow > PeptidePrediction.MAX_MEASURED_RT_WINDOW)
                 {
                     textMeasureRTWindow.Text = string.Empty;
+                }
+            }
+        }
+
+        private void cbUseSpectralLibraryDriftTimes_CheckChanged(object sender, EventArgs e)
+        {
+            bool enable = cbUseSpectralLibraryDriftTimes.Checked;
+            textSpectralLibraryDriftTimesResolvingPower.Enabled = enable;
+            // If disabling the text box, and it has content, make sure it is
+            // valid content.  Otherwise, clear the current content, which
+            // is always valid, if the measured drift time values will not be used.
+            if (!enable && !string.IsNullOrEmpty(textSpectralLibraryDriftTimesResolvingPower.Text))
+            {
+                double resolvingPower;
+                if (!double.TryParse(textSpectralLibraryDriftTimesResolvingPower.Text, out resolvingPower) ||
+                        resolvingPower <= 0)
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = string.Empty;
                 }
             }
         }

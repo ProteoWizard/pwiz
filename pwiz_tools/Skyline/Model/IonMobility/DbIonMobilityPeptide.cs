@@ -17,10 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 
 namespace pwiz.Skyline.Model.IonMobility
@@ -58,47 +55,11 @@ namespace pwiz.Skyline.Model.IonMobility
             Id = other.Id;
         }
 
-        public DbIonMobilityPeptide(LibKey peptide, double collisionalCrossSection)
-            : this(peptide.Sequence, collisionalCrossSection)
-        {
-        }
-
         public DbIonMobilityPeptide(string sequence, double collisionalCrossSection)
         {
             PeptideModSeq = sequence;
             CollisionalCrossSection = collisionalCrossSection;
         }
-
-        public static List<DbIonMobilityPeptide> FindNonConflicts(IList<DbIonMobilityPeptide> oldPeptides, IList<DbIonMobilityPeptide> newPeptides, out IList<Tuple<DbIonMobilityPeptide, DbIonMobilityPeptide>> conflicts)
-        {
-            var peptidesNoConflict = new List<DbIonMobilityPeptide>();
-            conflicts = new List<Tuple<DbIonMobilityPeptide, DbIonMobilityPeptide>>();
-            var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
-            var dictNew = newPeptides.ToDictionary(pep => pep.PeptideModSeq);
-            foreach (var newPeptide in newPeptides)
-            {
-                DbIonMobilityPeptide oldPeptide;
-                // A conflict occurs only when there is another peptide of the same sequence, and different CCS
-                if (!dictOld.TryGetValue(newPeptide.PeptideModSeq, out oldPeptide) || 
-                    Math.Abs(newPeptide.CollisionalCrossSection - oldPeptide.CollisionalCrossSection) < COLLISIONAL_CROSS_SECTION_MIN_DIFF )
-                {
-                    peptidesNoConflict.Add(newPeptide);
-                }
-                else
-                {
-                    conflicts.Add(new Tuple<DbIonMobilityPeptide, DbIonMobilityPeptide>(newPeptide, oldPeptide));
-                }
-            }
-            foreach (var oldPeptide in oldPeptides)
-            {
-                DbIonMobilityPeptide newPeptide;
-                if (!dictNew.TryGetValue(oldPeptide.PeptideModSeq, out newPeptide))
-                    peptidesNoConflict.Add(oldPeptide);
-            }
-            return peptidesNoConflict;
-        }
-
-        public const double COLLISIONAL_CROSS_SECTION_MIN_DIFF = 0.001;  // TODO - what's a good value here?
 
         #region object overrides
 

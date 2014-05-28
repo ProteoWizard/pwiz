@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.IonMobility
@@ -115,21 +116,21 @@ namespace pwiz.Skyline.Model.IonMobility
             return result;
         }
 
-        public IonMobilityDb UpdatePeptides(IList<DbIonMobilityPeptide> newPeptides, IList<DbIonMobilityPeptide> oldPeptides)
+        public IonMobilityDb UpdatePeptides(IList<ValidatingIonMobilityPeptide> newPeptides, IList<ValidatingIonMobilityPeptide> oldPeptides)
         {
-            var dictOld = new Dictionary<String, DbIonMobilityPeptide>();
-            foreach (var dbIonMobilityPeptide in oldPeptides)  // Not using ToDict in case of duplicate entries
+            var dictOld = new Dictionary<String, ValidatingIonMobilityPeptide>();
+            foreach (var ionMobilityPeptide in oldPeptides)  // Not using ToDict in case of duplicate entries
             {
-                DbIonMobilityPeptide pep;
-                if (!dictOld.TryGetValue(dbIonMobilityPeptide.Sequence, out pep))
-                    dictOld[dbIonMobilityPeptide.Sequence] = dbIonMobilityPeptide;
+                ValidatingIonMobilityPeptide pep;
+                if (!dictOld.TryGetValue(ionMobilityPeptide.Sequence, out pep))
+                    dictOld[ionMobilityPeptide.Sequence] = ionMobilityPeptide;
             }
-            var dictNew = new Dictionary<String, DbIonMobilityPeptide>();
-            foreach (var dbIonMobilityPeptide in newPeptides)  // Not using ToDict in case of duplicate entries
+            var dictNew = new Dictionary<String, ValidatingIonMobilityPeptide>();
+            foreach (var ionMobilityPeptide in newPeptides)  // Not using ToDict in case of duplicate entries
             {
-                DbIonMobilityPeptide pep;
-                if (!dictNew.TryGetValue(dbIonMobilityPeptide.Sequence, out pep))
-                    dictNew[dbIonMobilityPeptide.Sequence] = dbIonMobilityPeptide;
+                ValidatingIonMobilityPeptide pep;
+                if (!dictNew.TryGetValue(ionMobilityPeptide.Sequence, out pep))
+                    dictNew[ionMobilityPeptide.Sequence] = ionMobilityPeptide;
             }
 
             using (var session = OpenWriteSession())
@@ -138,7 +139,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 // Remove peptides that are no longer in the list
                 foreach (var peptideOld in oldPeptides)
                 {
-                    DbIonMobilityPeptide pep;
+                    ValidatingIonMobilityPeptide pep;
                     if (!dictNew.TryGetValue(peptideOld.Sequence, out pep))
                         session.Delete(peptideOld);
                 }
@@ -146,7 +147,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 // Add or update peptides that have changed from the old list
                 foreach (var peptideNew in newPeptides)
                 {
-                    DbIonMobilityPeptide pep;
+                    ValidatingIonMobilityPeptide pep;
                     if (!dictOld.TryGetValue(peptideNew.Sequence, out pep))
                     {
                         // Create a new instance, because not doing this causes a BindingSource leak

@@ -7138,28 +7138,28 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_file_" xml:space="preserve">
     <value>The file {0} is not a valid ion mobility database file.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library" xml:space="preserve">
     <value>Please specify a path to an existing spectral library.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_" xml:space="preserve">
     <value>The file {0} appears to be a redundant library.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_" xml:space="preserve">
     <value>Please choose a non redundant library.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_" xml:space="preserve">
     <value>The file {0} is not a BiblioSpec library.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_" xml:space="preserve">
     <value>Only BiblioSpec libraries contain enough ion mobility information to support this operation.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_" xml:space="preserve">
     <value>The file {0} does not exist.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library_" xml:space="preserve">
     <value>Please specify a path to an existing spectral library.</value>
   </data>
-  <data name="AddDriftTimeSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_" xml:space="preserve">
+  <data name="ImportIonMobilityFromSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_" xml:space="preserve">
     <value>Please choose the library you would like to add.</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_database_file___Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
@@ -7317,5 +7317,23 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1__" xml:space="preserve">
     <value>Cannot import measured drift time for sequence {0}: no regression was provided for charge state {1}.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information" xml:space="preserve">
+    <value>Reading ion mobility information</value>
+  </data>
+  <data name="CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_database__0__" xml:space="preserve">
+    <value>Error: Could not find the ion mobility database {0}.</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_Ion_Mobility_Database" xml:space="preserve">
+    <value>Ion Mobility Database</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_ion_mobility_database_files" xml:space="preserve">
+    <value>ion mobility database files</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_Find_Ion_Mobility_Database" xml:space="preserve">
+    <value>Find Ion Mobility Database</value>
+  </data>
+  <data name="SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_" xml:space="preserve">
+    <value>The ion mobility library specified could not be opened:</value>
   </data>
 </root>

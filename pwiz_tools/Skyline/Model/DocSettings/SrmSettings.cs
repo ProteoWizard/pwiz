@@ -782,11 +782,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRetentionTimes(new MsDataFilePath(name));
         }
 
-        public LibraryIonMobilityInfo GetDriftTimes(string filePath)
+        public LibraryIonMobilityInfo GetIonMobilities(MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
             LibraryIonMobilityInfo ionMobilities;
-            if (libraries.TryGetDriftTimes(new MsDataFilePath(filePath), out ionMobilities))
+            if (libraries.TryGetIonMobilities(filePath, out ionMobilities))
                 return ionMobilities;
             return null;
         }
@@ -1065,11 +1065,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ConnectIrtDatabase(Func<RCalcIrt, RCalcIrt> findCalculatorSpec)
         {
-            if(PeptideSettings.Prediction.RetentionTime == null)
+            if (PeptideSettings.Prediction.RetentionTime == null)
                 return this;
 
-            var iRTCalc = PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;            
-            if(iRTCalc == null)
+            var iRTCalc = PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+            if (iRTCalc == null)
                 return this;
 
             var iRTCalcNew = findCalculatorSpec(iRTCalc);
@@ -1086,6 +1086,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return this.ChangePeptidePrediction(predict =>
                 predict.ChangeRetentionTime(!iRTCalcNew.IsNone
                     ? predict.RetentionTime.ChangeCalculator(iRTCalcNew)
+                    : null));
+        }
+
+        public SrmSettings ConnectIonMobilityDatabase(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)
+        {
+            if (PeptideSettings.Prediction.DriftTimePredictor == null)
+                return this;
+
+            var ionMobilityLibrary = PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary;
+            if (ionMobilityLibrary == null)
+                return this;
+
+            var ionMobilityLibSpec = findIonMobilityLibSpec(ionMobilityLibrary);
+            if (ionMobilityLibSpec == null)
+            {
+                // cancel
+                return null;
+            }
+            if (ionMobilityLibSpec.PersistencePath == ionMobilityLibrary.PersistencePath)
+            {
+                return this;
+            }
+
+            return this.ChangePeptidePrediction(predict =>
+                predict.ChangeDriftTimePredictor(!ionMobilityLibSpec.IsNone
+                    ? predict.DriftTimePredictor.ChangeLibrary(ionMobilityLibSpec)
                     : null));
         }
 

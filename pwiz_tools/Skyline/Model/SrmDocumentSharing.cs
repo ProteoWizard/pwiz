@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-    internal class SrmDocumentSharing
+    public class SrmDocumentSharing
     {
         public const string EXT = ".zip"; // Not L10N
         public const string EXT_SKY_ZIP = ".sky.zip"; // Not L10N
@@ -242,6 +243,15 @@ namespace pwiz.Skyline.Model
                     if (tempDbPath != null)
                         zip.AddFile(tempDbPath, string.Empty);
                 }
+                if (Document.Settings.HasIonMobilityLibraryPersisted)
+                {
+                    // Minimize any persistable drift time predictor
+                    tempDir = new TemporaryDirectory();
+                    string tempDbPath = Document.Settings.PeptideSettings.Prediction.DriftTimePredictor
+                        .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document);
+                    if (tempDbPath != null)
+                        zip.AddFile(tempDbPath, string.Empty);
+                }
                 if (Document.Settings.HasLibraries)
                 {
                     // Minimize all libraries in a temporary directory, and add them
@@ -391,5 +401,26 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
+
+
+        #region Functional testing support
+
+        public IEnumerable<string> ListEntries()
+        {
+            WaitBroker = null;
+            var entries = new List<string>();
+
+            using (ZipFile zip = ZipFile.Read(SharedPath))
+            {
+                foreach (var entry in zip.Entries)
+                {
+                    entries.Add(entry.FileName);
+                }
+            }
+
+            return entries;
+        }
+
+        #endregion
     }
 }

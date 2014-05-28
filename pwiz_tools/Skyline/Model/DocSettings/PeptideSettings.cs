@@ -262,6 +262,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? LibraryDriftTimesResolvingPower { get; private set; }
 
+        public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }
+
         public int CalcMaxTrendReplicates(SrmDocument document)
         {
             if (!UseMeasuredRTs || !MeasuredRTWindow.HasValue)
@@ -300,14 +302,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, replicateNum, algorithm,
                 singleWindow, null, out windowRT);
-        }
-
-        public double? PredictDriftTime(PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup,
-            out double windowDtMsec)
-        {
-            int charge = nodeGroup.TransitionGroup.PrecursorCharge;
-            return GetDriftTime(new LibKey(nodePep.ModifiedSequence, charge), out windowDtMsec);
         }
 
         public double? PredictRetentionTimeForChromImport(SrmDocument document, PeptideDocNode nodePep,
@@ -406,11 +400,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return predictedRT;
         }
 
-        public double? GetDriftTime(LibKey key, out double windowDtMsec)
+        /// <summary>
+        /// Get drift time for the charged peptide from our drift time predictor, or,
+        /// failing that, from the provided spectral library if it has bare drift times
+        /// </summary>
+        /// <param name="chargedPeptide"></param>
+        /// <param name="libraryIonMobilityInfo"></param>
+        /// <param name="windowDtMsec"></param>
+        /// <returns>drift time or null</returns>
+        public double? GetDriftTime(LibKey chargedPeptide, LibraryIonMobilityInfo libraryIonMobilityInfo, out  double windowDtMsec)
         {
             if (DriftTimePredictor != null)
             {
-                return DriftTimePredictor.GetDriftTimeAndWindow(key, out windowDtMsec);
+                double? result = DriftTimePredictor.GetDriftTimeAndWindow(chargedPeptide, out windowDtMsec);
+                if (result.HasValue)
+                    return result;
+            }
+
+            if (libraryIonMobilityInfo != null)
+            {
+                double? dt = libraryIonMobilityInfo.GetLibraryMeasuredDriftTimeMsec(chargedPeptide);
+                if ((dt != null) && (LibraryDriftTimesResolvingPower ?? 0) > 0)
+                {
+                    double? result = dt.Value;
+                    windowDtMsec = 2.0 * result.Value / LibraryDriftTimesResolvingPower.Value;
+                    return result;
+                }
             }
             windowDtMsec = 0;
             return null;
@@ -1740,7 +1755,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetDriftTimes(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             Assume.IsTrue(IsLoaded);
 
