@@ -290,8 +290,8 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(13);
             PauseForScreenShot("Main window with imported data", 14);
  
-           RunUIWithDocumentWait(() =>
-           {
+            RunUIWithDocumentWait(() =>
+            {
                 SkylineWindow.IntegrateAll();
 
                 SkylineWindow.ShowGraphPeakArea(true);

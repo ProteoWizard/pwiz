@@ -41,6 +41,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
 {
@@ -51,6 +52,7 @@ namespace pwiz.Skyline
         ResultsGrid.IStateProvider
     {
         private GraphSpectrum _graphSpectrum;
+        private GraphFullScan _graphFullScan;
         private readonly GraphSpectrumSettings _graphSpectrumSettings;
         private GraphSummary _graphRetentionTime;
         private GraphSummary _graphPeakArea;
@@ -268,6 +270,11 @@ namespace pwiz.Skyline
                         ShowGraphPeakArea(enable && Settings.Default.ShowPeakAreaGraph);
                     }
                 }
+                if (_graphFullScan != null && _graphFullScan.Visible && !enable)
+                {
+                    layoutLock.EnsureLocked();
+                    DestroyGraphFullScan();
+                }
 
                 if (!ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults))
                 {
@@ -434,6 +441,7 @@ namespace pwiz.Skyline
             foreach (GraphChromatogram graphChrom in _listGraphChrom)
                 DestroyGraphChrom(graphChrom);
             _listGraphChrom.Clear();
+            DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
             
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
@@ -1077,6 +1085,85 @@ namespace pwiz.Skyline
                 case 3: set.ShowCharge3 = charge3MenuItem.Checked = check; break;
                 case 4: set.ShowCharge4 = charge4MenuItem.Checked = check; break;
             }
+        }
+
+        public void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        {
+            if (scanProvider == null)
+            {
+                if (_graphFullScan != null)
+                    _graphFullScan.ShowSpectrum(null, 0, 0);
+                return;
+            }
+
+            if (_graphFullScan != null)
+            {
+                _graphFullScan.Activate();
+                _graphFullScan.Focus();
+            }
+            else
+            {
+                // JUST PLAYING:
+                //var graphDriftTime = new GraphDriftTime();
+                //graphDriftTime.Show();
+
+                _graphFullScan = CreateGraphFullScan();
+                
+                // Choose a position to float the window
+                var rectFloat = GetFloatingRectangleForNewWindow();
+                _graphFullScan.Show(dockPanel, rectFloat);
+            }
+            _graphFullScan.ShowSpectrum(scanProvider, transitionIndex, scanIndex);
+        }
+
+        // Testing
+        public bool IsGraphFullScanVisible
+        {
+            get { return _graphFullScan != null && _graphFullScan.Visible; }
+        }
+
+        private GraphFullScan CreateGraphFullScan()
+        {
+            // Create a new spectrum graph
+            _graphFullScan = new GraphFullScan(this);
+            _graphFullScan.UpdateUI();
+            _graphFullScan.FormClosed += graphFullScan_FormClosed;
+            _graphFullScan.VisibleChanged += graphFullScan_VisibleChanged;
+            _graphFullScan.SelectedScanChanged += graphFullScan_SelectedScanChanged;
+            return _graphFullScan;
+        }
+
+        private void DestroyGraphFullScan()
+        {
+            if (_graphFullScan != null)
+            {
+                _graphFullScan.FormClosed -= graphFullScan_FormClosed;
+                _graphFullScan.VisibleChanged -= graphFullScan_VisibleChanged;
+                _graphFullScan.SelectedScanChanged -= graphFullScan_SelectedScanChanged;
+                _graphFullScan.HideOnClose = false;
+                _graphFullScan.Close();
+                _graphFullScan = null;
+            }
+        }
+
+        private void graphFullScan_SelectedScanChanged(object sender, SelectedScanEventArgs e)
+        {
+            SelectedScanFile = e.DataFile;
+            SelectedScanRetentionTime = e.RetentionTime;
+            UpdateChromGraphs();
+        }
+
+        private void graphFullScan_VisibleChanged(object sender, EventArgs e)
+        {
+            if (_graphFullScan != null)
+                Settings.Default.ShowFullScan = _graphFullScan.Visible;
+        }
+
+        private void graphFullScan_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Update settings and menu check
+            Settings.Default.ShowFullScan = false;
+            _graphFullScan = null;
         }
 
         #endregion
@@ -1976,9 +2063,10 @@ namespace pwiz.Skyline
 
         private GraphChromatogram CreateGraphChrom(string name)
         {
-            var graphChrom = new GraphChromatogram(name, this);
+            var graphChrom = new GraphChromatogram(this, this, name);
             graphChrom.FormClosed += graphChromatogram_FormClosed;
             graphChrom.PickedPeak += graphChromatogram_PickedPeak;
+            graphChrom.ClickedChromatogram += graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
             graphChrom.ZoomAll += graphChromatogram_ZoomAll;
@@ -1991,6 +2079,7 @@ namespace pwiz.Skyline
             // Detach event handlers and dispose
             graphChrom.FormClosed -= graphChromatogram_FormClosed;
             graphChrom.PickedPeak -= graphChromatogram_PickedPeak;
+            graphChrom.ClickedChromatogram -= graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
             graphChrom.ZoomAll -= graphChromatogram_ZoomAll;
@@ -2079,6 +2168,21 @@ namespace pwiz.Skyline
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
             }
+        }
+
+        private void graphChromatogram_ClickedChromatogram(object sender, ClickedChromatogramEventArgs e)
+        {
+            if (e.ScanProvider != null)
+            {
+                var dataFile = e.ScanProvider.DataFilePath;
+                if (e.ScanIndex == -1)
+                {
+                    MessageDlg.Show(this, Resources.SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_, dataFile);
+                    return;
+                }
+            }
+
+            ShowGraphFullScan(e.ScanProvider, e.TransitionIndex, e.ScanIndex);
         }
 
         /// <summary>
@@ -2426,6 +2530,9 @@ namespace pwiz.Skyline
                 }
             }
         }
+
+        public MsDataFileUri SelectedScanFile { get; set; }
+        public double SelectedScanRetentionTime { get; set; }
 
         public void ActivateReplicate(string name)
         {

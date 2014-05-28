@@ -1848,5 +1848,41 @@ namespace pwiz.Skyline.Properties {
                 this["ShowPeptidesDisplayMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowFullScan {
+            get {
+                return ((bool)(this["ShowFullScan"]));
+            }
+            set {
+                this["ShowFullScan"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("ByName")]
+        public string ShowPeptidesDisplayModeEnum {
+            get {
+                return ((string)(this["ShowPeptidesDisplayModeEnum"]));
+            }
+            set {
+                this["ShowPeptidesDisplayModeEnum"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoZoomFullScanGraph {
+            get {
+                return ((bool)(this["AutoZoomFullScanGraph"]));
+            }
+            set {
+                this["AutoZoomFullScanGraph"] = value;
+            }
+        }
     }
 }

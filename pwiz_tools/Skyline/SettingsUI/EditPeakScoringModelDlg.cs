@@ -28,7 +28,6 @@ using ZedGraph;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;

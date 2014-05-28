@@ -28,11 +28,12 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class MessageDlg : FormEx
     {
-        public static void Show(IWin32Window parent, string message)
+        public static void Show(IWin32Window parent, string message, params object[] args)
         {
-            using (var dlg = new MessageDlg(message))
+            var formatMessage = string.Format(message, args);
+            using (var dlg = new MessageDlg(formatMessage))
             {
-                dlg.ShowWithTimeout(parent, message);
+                dlg.ShowWithTimeout(parent, formatMessage);
             }
         }
 

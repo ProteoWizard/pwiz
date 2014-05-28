@@ -246,11 +246,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AnnotationTest.zip" />
+    <None Include="AssayLibraryImportTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="DocumentGridTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="ExportChromatogramTest.zip" />
+    <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
     <None Include="FullScanIdTest.zip" />
     <None Include="ImportDocTest.zip" />
@@ -267,14 +270,18 @@
     <None Include="ManageResultsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />
+    <None Include="PeakBoundaryCompareTest.zip" />
+    <None Include="PeakScoringModelTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
+    <None Include="ReintegrateDlgTest.zip" />
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
+    <None Include="ShareSettingsTest.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />
     <None Include="StandardTypeTest.zip" />

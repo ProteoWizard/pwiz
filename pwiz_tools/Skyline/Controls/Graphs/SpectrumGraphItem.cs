@@ -94,7 +94,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
         public bool ShowDuplicates { get; set; }
-        public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
         // ReSharper disable InconsistentNaming
@@ -375,10 +374,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                             MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 
-        public Color Color
+        public virtual Color Color
         {
             get { return Color.Gray; }
         }
+
+        public float LineWidth { get; set; }
 
         public virtual void CustomizeCurve(CurveItem curveItem)
         {

@@ -98,7 +98,109 @@ namespace pwiz.MSGraph
             AxisChange();
         }
 
-        public override void Draw( Graphics g )
+        /// <summary>
+        /// Find the closest curve/point to the cursor.
+        /// </summary>
+        /// <param name="maxDistance">Maximum distance from curve allowed.</param>
+        /// <param name="pt">Cursor coordinates.</param>
+        /// <param name="closestCurve">Returns the closest curve (or null if none is close enough).</param>
+        /// <param name="closestPoint">Returns the closest point on the curve.</param>
+        public void FindClosestCurve(PointF pt, int maxDistance, out CurveItem closestCurve, out PointF closestPoint)
+        {
+            // Determine boundaries of point search in graph coordinates.
+            double xLo, xHi, y;
+            ReverseTransform(new PointF(pt.X - maxDistance, 0), out xLo, out y);
+            ReverseTransform(new PointF(pt.X + maxDistance, 0), out xHi, out y);
+
+            closestCurve = null;
+            closestPoint = new PointF();
+            double closestDistanceSquared = maxDistance * maxDistance;
+
+            // Iterate through each curve, finding the closest one within the distance limit (closestDistanceSquared).
+            foreach (var curve in CurveList)
+                FindClosestPoint(curve, xLo, xHi, pt, ref closestCurve, ref closestPoint, ref closestDistanceSquared);
+        }
+
+        /// <summary>
+        /// Find the closest point to the cursor of the given curve.
+        /// </summary>
+        /// <param name="curve">Curve to check.</param>
+        /// <param name="xLo">Lowest x value to search (in axis coordinates).</param>
+        /// <param name="xHi">Highest x value to search (in axis coordinates).</param>
+        /// <param name="pt">Cursor coordinates.</param>
+        /// <param name="closestCurve">Records which curve is the closest during multiple calls.</param>
+        /// <param name="closestPoint">Records the closest point over multiple calls.</param>
+        /// <param name="closestDistanceSquared">Records the closest squared distance over multiple calls.</param>
+        private void FindClosestPoint(CurveItem curve, double xLo, double xHi, PointF pt,
+            ref CurveItem closestCurve, ref PointF closestPoint, ref double closestDistanceSquared)
+        {
+            if (!curve.IsVisible || curve.NPts == 0)
+                return;
+            var points = curve.Points as MSPointList;
+            if (points == null)
+                return;
+            int minIndex = Math.Max(0, points.LowerBound(xLo) - 1);
+            int maxIndex = Math.Min(curve.NPts, points.LowerBound(xHi) + 2);
+            for (int i = minIndex; i < maxIndex - 1; i++)
+            {
+                // Transform line segment to UI coordinates.
+                var pt0 = GeneralTransform(points[i].X, points[i].Y, CoordType.AxisXYScale);
+                var pt1 = GeneralTransform(points[i + 1].X, points[i + 1].Y, CoordType.AxisXYScale);
+
+                // Choose axis of greatest change for projection,
+                // and make it the x coordinate.
+                bool swapped;
+                PointF pts;
+                if (Math.Abs(pt0.Y - pt1.Y) > Math.Abs(pt0.X - pt1.X))
+                {
+                    swapped = true;
+                    pts = new PointF(pt.Y, pt.X);
+                    pt0 = new PointF(pt0.Y, pt0.X);
+                    pt1 = new PointF(pt1.Y, pt1.X);
+                    // Make sure first coordinate of pt0 is less than pt1
+                    if (pt0.Y >= pt1.Y)
+                    {
+                        var ptTmp = pt0;
+                        pt0 = pt1;
+                        pt1 = ptTmp;
+                    }
+                }
+                else
+                {
+                    swapped = false;
+                    pts = pt;
+                }
+
+                // If within the extent of the line segment, project along lesser axis onto the line segment.
+                // Otherwise, choose the closest endpoint.
+                PointF projectedPoint =
+                    (pts.X < pt0.X) ? pt0 :
+                    (pts.X > pt1.X) ? pt1 :
+                    new PointF(pts.X, pt0.Y + (pt1.Y - pt0.Y) * (pts.X - pt0.X) / (pt1.X - pt0.X));
+                double distanceSquared = GetDistanceSquared(pts, projectedPoint);
+                if (closestDistanceSquared > distanceSquared)
+                {
+                    closestDistanceSquared = distanceSquared;
+                    closestCurve = curve;
+                    if (swapped)
+                    {
+                        closestPoint.X = projectedPoint.Y;
+                        closestPoint.Y = projectedPoint.X;
+                    }
+                    else
+                        closestPoint = projectedPoint;
+                }
+            }
+        }
+
+        private static double GetDistanceSquared(PointF p0, PointF p1)
+        {
+            double xDiff = p0.X - p1.X;
+            double yDiff = p0.Y - p1.Y;
+            return (xDiff * xDiff + yDiff * yDiff);
+        }
+
+        public override void Draw(Graphics g)
         {
             drawLabels( g );
             base.Draw( g );

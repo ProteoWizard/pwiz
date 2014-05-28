@@ -88,7 +88,8 @@ namespace pwiz.Skyline.Controls.Graphs
                               int step,
                               Color color,
                               float fontSize,
-                              int width)
+                              int width,
+                              FullScanInfo fullScanInfo = null)
         {
             TransitionGroupNode = transitionGroupNode;
             TransitionNode = transition;
@@ -96,6 +97,7 @@ namespace pwiz.Skyline.Controls.Graphs
             TransitionChromInfo = tranPeakInfo;
             TimeRegressionFunction = timeRegressionFunction;
             Color = color;
+            FullScanInfo = fullScanInfo;
 
             _step = step;
             _fontSpec = CreateFontSpec(color, fontSize);
@@ -151,6 +153,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public FullScanInfo FullScanInfo { get; private set; }
         public TransitionGroupDocNode TransitionGroupNode { get; private set; }
         public TransitionDocNode TransitionNode { get; private set; }
         public ChromatogramInfo Chromatogram { get; private set; }
@@ -723,6 +726,21 @@ namespace pwiz.Skyline.Controls.Graphs
             return new ScaledRetentionTime(_measuredTimes[index], _displayTimes[index]);
         }
 
+        public ScaledRetentionTime GetNearestMeasuredTime(double measuredTime)
+        {
+            int index = GetNearestMeasuredIndex(measuredTime);
+            if (index < 0)
+            {
+                return ScaledRetentionTime.ZERO;
+            }
+            return new ScaledRetentionTime(_measuredTimes[index], _displayTimes[index]);
+        }
+
+        public int GetNearestMeasuredIndex(double measuredTime)
+        {
+            return NearestIndex(_measuredTimes, measuredTime);
+        }
+
         private static int NearestIndex(double[] sortedArray, double value)
         {
             int index = Array.BinarySearch(sortedArray, value);
@@ -843,7 +861,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                             MSPointList pointList, GraphObjList annotations);
         public abstract IPointList Points { get; }
 
-        public Color Color { get; set; }
+        public virtual Color Color { get; set; }
+
+        public float LineWidth { get; set; }
 
         public virtual void CustomizeCurve(CurveItem curveItem)
         {
@@ -878,5 +898,11 @@ namespace pwiz.Skyline.Controls.Graphs
             axis.Title.FontSpec.Border.IsVisible = false;
             axis.Title.Text = title;
         }
+    }
+
+    public class FullScanInfo
+    {
+        public ChromatogramInfo ChromInfo;
+        public string ScanName;
     }
 }

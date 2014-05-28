@@ -773,7 +773,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new ChromCachedFile[0],
                     new[] { new ChromTransition(chromData.Mz, 0, 0, 0, ChromSource.unknown), },
                     peaks, null,
-                    chromGroup.Times, new[] { chromData.Intensities }, null);
+                    chromGroup.Times, new[] { chromData.Intensities }, null, null);
             
         }
     }

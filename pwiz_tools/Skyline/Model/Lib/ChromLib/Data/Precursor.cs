@@ -56,10 +56,14 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 
                 float[] times;
                 float[][] intensities;
-                short[][] massErrors;
-                ChromatogramCache.BytesToTimeIntensities(uncompressedBytes, NumPoints, NumTransitions, false, 
-                    out times, out intensities, out massErrors);
-                return new ChromatogramTimeIntensities(times, intensities, massErrors);
+
+                short[][] massErrors; // dummy variable
+                int[][] scanIds; // dummy variable
+
+                ChromatogramCache.BytesToTimeIntensities(uncompressedBytes, NumPoints, NumTransitions,
+                    false, false, false, false, // for now, no mass errors or scan IDs (TODO: what about chromatogram libraries for DIA?)
+                    out times, out intensities, out massErrors, out scanIds);
+                return new ChromatogramTimeIntensities(times, intensities, massErrors, scanIds);
             }
             set
             {
@@ -68,7 +72,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
                     Chromatogram = null;
                     return;
                 }
-                var uncompressed = ChromatogramCache.TimeIntensitiesToBytes(value.Times, value.Intensities, value.MassErrors);
+                var uncompressed = ChromatogramCache.TimeIntensitiesToBytes(value.Times, value.Intensities, value.MassErrors, value.ScanIds);
                 Chromatogram = uncompressed.Compress(3);
             }
         }
@@ -76,15 +80,17 @@ namespace pwiz.Skyline.Model.Lib.ChromLib.Data
 
         public class ChromatogramTimeIntensities
         {
-            public ChromatogramTimeIntensities(float[] times, float[][] intensities, short[][] massErrors)
+            public ChromatogramTimeIntensities(float[] times, float[][] intensities, short[][] massErrors, int[][] scanIds)
             {
                 Times = times;
                 Intensities = intensities;
                 MassErrors = massErrors;
+                ScanIds = scanIds;
             }
             public float[] Times { get; private set; }
             public float[][] Intensities { get; private set; }
             public short[][] MassErrors { get; private set; }
+            public int[][] ScanIds { get; private set; }
         }
     }
 }

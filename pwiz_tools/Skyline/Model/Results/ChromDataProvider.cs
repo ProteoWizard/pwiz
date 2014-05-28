@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
         public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
 
         public abstract bool GetChromatogram(int id, out ChromExtra extra,
-            out float[] times, out float[] intensities, out float[] massErrors);
+            out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors);
 
         public abstract double? MaxRetentionTime { get; }
 
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             // No mass errors in SRM
             massErrors = null;
@@ -257,6 +257,7 @@ namespace pwiz.Skyline.Model.Results
 
             string chromId;
             _dataFile.GetChromatogram(id, out chromId, out times, out intensities);
+            scanIds = null;
 
             // Assume that each chromatogram will be read once, though this may
             // not always be completely true.

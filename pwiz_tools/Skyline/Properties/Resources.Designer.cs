@@ -9313,6 +9313,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS/MS.
+        /// </summary>
+        public static string GraphFullScan_GraphFullScan_MS_MS {
+            get {
+                return ResourceManager.GetString("GraphFullScan_GraphFullScan_MS_MS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1.
+        /// </summary>
+        public static string GraphFullScan_GraphFullScan_MS1 {
+            get {
+                return ResourceManager.GetString("GraphFullScan_GraphFullScan_MS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SIM.
+        /// </summary>
+        public static string GraphFullScan_GraphFullScan_SIM {
+            get {
+                return ResourceManager.GetString("GraphFullScan_GraphFullScan_SIM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading....
+        /// </summary>
+        public static string GraphFullScan_LoadScan_Loading___ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_LoadScan_Loading___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum unavailable.
+        /// </summary>
+        public static string GraphFullScan_LoadScan_Spectrum_unavailable {
+            get {
+                return ResourceManager.GetString("GraphFullScan_LoadScan_Spectrum_unavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading spectrum. Library may be corrupted..
         /// </summary>
         public static string GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted {
@@ -9553,6 +9598,26 @@ namespace pwiz.Skyline.Properties {
         public static string HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML {
             get {
                 return ResourceManager.GetString("HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Icojam_Blueberry_Basic_Arrow_left {
+            get {
+                object obj = ResourceManager.GetObject("Icojam-Blueberry-Basic-Arrow-left", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Icojam_Blueberry_Basic_Arrow_right {
+            get {
+                object obj = ResourceManager.GetObject("Icojam-Blueberry-Basic-Arrow-right", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -11250,6 +11315,16 @@ namespace pwiz.Skyline.Properties {
         public static string LongWaitDlg_PerformWork_canceled {
             get {
                 return ResourceManager.GetString("LongWaitDlg_PerformWork_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap magnifier_zoom_in {
+            get {
+                object obj = ResourceManager.GetObject("magnifier_zoom_in", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -16377,6 +16452,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The data file {0} could not be found, either at its original location or in the document or document parent folder..
+        /// </summary>
+        public static string ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_ {
+            get {
+                return ResourceManager.GetString("ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_origina" +
+                        "l_location_or_in_the_document_or_document_parent_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The replicate {0} contains peptides without enough information to rank transitions for triggered acquisition..
         /// </summary>
         public static string SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_ {
@@ -17210,6 +17295,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak {
             get {
                 return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The raw file must be re-imported in order to show full scans: {0}.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_impor" +
+                        "ted_in_order_to_show_full_scans___0_", resourceCulture);
             }
         }
         

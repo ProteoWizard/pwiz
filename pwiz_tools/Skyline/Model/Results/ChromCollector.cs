@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -82,6 +83,16 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
+        /// Add a scan id.
+        /// </summary>
+        public void AddScanId(int scanId)
+        {
+            if (ScanIdCollector == null)
+                ScanIdCollector = new ChromCollector();
+            ScanIdCollector.Add(scanId);
+        }
+
+        /// <summary>
         /// Add a time.
         /// </summary>
         public void AddMassError(float error)
@@ -120,6 +131,11 @@ namespace pwiz.Skyline.Model.Results
         public ChromCollector TimesCollector { private get; set; }
 
         /// <summary>
+        /// This collector holds scan ids.
+        /// </summary>
+        public ChromCollector ScanIdCollector { get; set; }
+
+        /// <summary>
         /// This collector holds mass error values for high res chromatograms.
         /// </summary>
         public ChromCollector MassErrorCollector { private get; set; }
@@ -138,7 +154,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
-        public void ReleaseChromatogram(out float[] times, out float[] intensities, out float[] massErrors)
+        public void ReleaseChromatogram(out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             if (!ReferenceEquals(_lastTimesCollector, TimesCollector))
             {
@@ -154,6 +170,13 @@ namespace pwiz.Skyline.Model.Results
             massErrors = MassErrorCollector != null
                 ? MassErrorCollector.GetData()
                 : null;
+            // We store scanIds as floats in the ChromCollector, which is okay because floats have enough precision to
+            // hold as many unique scanIds as we can imagine.
+            scanIds = null;
+            if (ScanIdCollector != null)
+            {
+                scanIds = ScanIdCollector.GetData().Select(f => (int) f).ToArray();
+            }
 
             // Intensities may need to be sorted if the corresponding times
             // were out of order.
@@ -162,6 +185,8 @@ namespace pwiz.Skyline.Model.Results
                 intensities = ArrayUtil.ApplyOrder(_sortIndexes, intensities);
                 if (massErrors != null)
                     massErrors = ArrayUtil.ApplyOrder(_sortIndexes, massErrors);
+                if (scanIds != null)
+                    scanIds = ArrayUtil.ApplyOrder(_sortIndexes, scanIds);
             }
 
             // Make sure times and intensities match in length

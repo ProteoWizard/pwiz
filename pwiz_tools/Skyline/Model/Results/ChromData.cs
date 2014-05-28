@@ -56,11 +56,13 @@ namespace pwiz.Skyline.Model.Results
         {
             ChromExtra extra;
             float[] times, intensities, massErrors;
-            bool result = provider.GetChromatogram(ProviderId, out extra, out times, out intensities, out massErrors);
+            int[] scanIds;
+            bool result = provider.GetChromatogram(ProviderId, out extra, out times, out scanIds, out intensities, out massErrors);
             Extra = extra;
             RawTimes = Times = times;
             RawIntensities = Intensities = intensities;
             RawMassErrors = massErrors;
+            RawScanIds = ScanIds = scanIds;
             return result;
         }
 
@@ -161,6 +163,7 @@ namespace pwiz.Skyline.Model.Results
         public float[] RawTimes { get; private set; }
         private float[] RawIntensities { get; set; }
         private float[] RawMassErrors { get; set; }
+        private int[] RawScanIds { get; set; }
         public IEnumerable<CrawdadPeak> RawPeaks { get; private set; }
 
         /// <summary>
@@ -203,15 +206,18 @@ namespace pwiz.Skyline.Model.Results
         }
         private short[] _massErrors10X;
 
+        public int[] ScanIds { get; private set; }
+
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
         public bool IsOptimizationData { get; set; }
         public ChromKey PrimaryKey { get; set; }
 
-        public void FixChromatogram(float[] timesNew, float[] intensitiesNew)
+        public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIdsNew)
         {
             RawTimes = Times = timesNew;
             RawIntensities = Intensities = intensitiesNew;
+            RawScanIds = ScanIds = scanIdsNew;
         }
 
         public CrawdadPeak CalcPeak(int startIndex, int endIndex)
@@ -351,6 +357,25 @@ namespace pwiz.Skyline.Model.Results
             Times = timesNew;
             Intensities = intensNew.ToArray();
             MassErrors10X = massErrorsNew != null ? massErrorsNew.ToArray() : null;
+
+            // Replicate scan ids to match new times.
+            if (RawScanIds != null)
+            {
+                ScanIds = new int[timesNew.Length];
+                int rawIndex = 0;
+                for (int i = 0; i < timesNew.Length; i++)
+                {
+                    // Choose the RawScanId corresponding to the closest RawTime to the new time.
+                    float newTime = Times[i];
+                    while (rawIndex < RawTimes.Length && RawTimes[rawIndex] <= newTime)
+                        rawIndex++;
+                    if (rawIndex >= RawTimes.Length)
+                        rawIndex--;
+                    if (rawIndex > 0 && newTime - RawTimes[rawIndex - 1] < RawTimes[rawIndex] - newTime)
+                        rawIndex--;
+                    ScanIds[i] = RawScanIds[rawIndex];
+                }
+            }
         }
 
         private static short AddMassError(ICollection<short> massErrors10X, double massError)

@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
                 foreach (var chromatogram in chromatogramGroup.Chromatogram)
                 {
-                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, null, 0, chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false);
+                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, chromatogramGroup.PrecursorMz, null, 0, chromatogram.ProductMz, 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false);
                 }
             }
         }

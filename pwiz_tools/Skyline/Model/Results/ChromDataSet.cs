@@ -182,6 +182,28 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public int[][] ScanIds
+        {
+            get
+            {
+                var listScanIds = new int[Helpers.CountEnumValues<ChromSource>() - 1][];
+                foreach (var chromData in _listChromData)
+                {
+                    var source = chromData.PrimaryKey.Source;
+                    if (source == ChromSource.unknown)
+                        continue;
+                    if (listScanIds[(int) source] != null)
+                    {
+                        if (!ArrayUtil.EqualsDeep(chromData.ScanIds, listScanIds[(int) source]))
+                            Assume.Fail();
+                        continue;
+                    }
+                    listScanIds[(int) source] = chromData.ScanIds;
+                }
+                return listScanIds;
+            }
+        }
+
         public bool Load(ChromDataProvider provider)
         {
             foreach (var chromData in _listChromData.ToArray())
@@ -784,7 +806,8 @@ namespace pwiz.Skyline.Model.Results
                 var intensitiesNew = new float[end - start];
                 Array.Copy(times, start, timesNew, 0, timesNew.Length);
                 Array.Copy(intensities, start, intensitiesNew, 0, intensitiesNew.Length);
-                chromData.FixChromatogram(timesNew, intensitiesNew);
+                Assume.IsNull(chromData.ScanIds);
+                chromData.FixChromatogram(timesNew, intensitiesNew, null);
             }
             return true;
         }
@@ -832,7 +855,8 @@ namespace pwiz.Skyline.Model.Results
                     timesNew[iNew] = times[i];
                     intensitiesNew[iNew] = intensities[i];
                 }
-                chromData.FixChromatogram(timesNew, intensitiesNew);
+                Assume.IsNull(chromData.ScanIds);
+                chromData.FixChromatogram(timesNew, intensitiesNew, null);
             }
             return fixedZeros;
         }

@@ -92,6 +92,11 @@ namespace pwiz.MSGraph
         Color Color { get; }
 
         /// <summary>
+        /// gets the width of graph lines
+        /// </summary>
+        float LineWidth { get; }
+
+        /// <summary>
         /// customize the X axis to use when graphing this item;
         /// when a GraphPane's type changes, this function is used to setup the X axis
         /// </summary>

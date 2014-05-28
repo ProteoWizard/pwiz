@@ -461,5 +461,14 @@
     <Setting Name="ShowPeptidesDisplayMode" Type="System.String" Scope="User">
       <Value Profile="(Default)">ByName</Value>
     </Setting>
+    <Setting Name="ShowFullScan" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowPeptidesDisplayModeEnum" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ByName</Value>
+    </Setting>
+    <Setting Name="AutoZoomFullScanGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

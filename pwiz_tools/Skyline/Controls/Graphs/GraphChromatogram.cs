@@ -154,24 +154,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
             void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId);
             PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode);
-        }
 
-        private class DefaultStateProvider : IStateProvider
-        {
-            public TreeNodeMS SelectedNode { get { return null; } }
-            public IList<TreeNodeMS> SelectedNodes { get { return null; } }
-            public SpectrumDisplayInfo SelectedSpectrum { get { return null; } }
-            public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId) { }
-            public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode) { return null; }
-            public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
-            {
-                return null;
-            }
+            MsDataFileUri SelectedScanFile { get; }
+            double SelectedScanRetentionTime { get; }
         }
 
         private string _nameChromatogramSet;
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
+        private readonly LineItem _fullScanTrackingPoint;
+        private readonly LineItem _fullScanSelectedPoint;
+        private PointF _fullScanTrackingPointLocation;
 
         // Active graph state
         private readonly GraphHelper _graphHelper;
@@ -182,27 +175,49 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _hasMergedChromInfo;
         private int _chromIndex;
         private bool _showPeptideTotals;
+        private Identity _transitionId;
+        private bool _showingTransitions;
 
         private const int MaxPeptidesDisplayed = 100;
+        private const int FullScanPointSize = 12;
 
-        public GraphChromatogram(string name, IDocumentUIContainer documentUIContainer)
+        public GraphChromatogram(IStateProvider stateProvider, IDocumentUIContainer documentContainer, string name)
         {
             InitializeComponent();
+
             graphControl.GraphPane = new MSGraphPane();
             _graphHelper = GraphHelper.Attach(graphControl);
             NameSet = name;
             Icon = Resources.SkylineData;
 
             _nameChromatogramSet = name;
-            _documentContainer = documentUIContainer;
+            _documentContainer = documentContainer;
             _documentContainer.ListenUI(OnDocumentUIChanged);
-            _stateProvider = documentUIContainer as IStateProvider ??
-                             new DefaultStateProvider();
+            _stateProvider = stateProvider;
             
             // Synchronize the zooming across all graph panes
             // Note that this only affects applying ZoomState to a graph pane.  Explicit changes 
             // to Scale Min/Max properties need to be manually applied to each axis.
             graphControl.IsSynchronizeXAxes = true;
+
+            _fullScanSelectedPoint = CreateScanPoint(Color.Red);
+            _fullScanTrackingPoint = CreateScanPoint(Color.Black);
+        }
+
+        private LineItem CreateScanPoint(Color color)
+        {
+            return new LineItem(string.Empty, null, null, color, SymbolType.Circle)
+            {
+                Symbol =
+                {
+                    Size = FullScanPointSize,
+                    Fill = new Fill(Color.Black),
+                    IsAntiAlias = true,
+                    Border = { Color = color, IsAntiAlias = true, Width = 2 }
+                },
+                Label = { IsVisible = false },
+                IsVisible = false
+            };
         }
 
         public string NameSet
@@ -262,6 +277,75 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 peakTime);
                 PickedPeak(this, e);
             }
+        }
+
+        [Browsable(true)]
+        public event EventHandler<ClickedChromatogramEventArgs> ClickedChromatogram;
+
+        /// <summary>
+        /// User clicked on a chromatogram.
+        /// </summary>
+        public void FireClickedChromatogram(GraphPane graphPane)
+        {
+            if (ClickedChromatogram == null)
+                return;
+
+            if (!_fullScanTrackingPoint.IsVisible)
+            {
+                _fullScanSelectedPoint.IsVisible = false;
+                ClickedChromatogram(this, new ClickedChromatogramEventArgs(null, 0, 0));
+                return;
+            }
+
+            var clickedItem = (ChromGraphItem) _closestCurve.Tag;
+            if (clickedItem.TransitionNode == null)
+                return;
+            _transitionId = clickedItem.TransitionNode.Id;
+            var chromatogramGroupInfo = clickedItem.Chromatogram;
+
+            double displayTime = _fullScanTrackingPoint.Points[0].X;
+            var retentionTime = clickedItem.GetNearestDisplayTime(displayTime);
+            if (retentionTime.IsZero)
+                return;
+            int scanIndex = chromatogramGroupInfo.ScanIds != null
+                ? FindScanIndex(chromatogramGroupInfo, retentionTime.MeasuredTime, 0, chromatogramGroupInfo.Times.Length)
+                : -1;
+            var transitions = new TransitionFullScanInfo[graphPane.CurveList.Count];
+            int transitionIndex = 0;
+            for (int i = 0; i < transitions.Length; i++)
+            {
+                var curve = graphPane.CurveList[i];
+                var graphItem = (ChromGraphItem) curve.Tag;
+                var fullScanInfo = graphItem.FullScanInfo;
+                transitions[i] = new TransitionFullScanInfo
+                {
+                    Name = fullScanInfo.ScanName,
+                    Source = fullScanInfo.ChromInfo.Source,
+                    ScanIds = fullScanInfo.ChromInfo.ScanIds,
+                    Color = curve.Color,
+                    PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
+                    ProductMz = fullScanInfo.ChromInfo.ProductMz,
+                    ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth
+                };
+                if (ReferenceEquals(curve, _closestCurve))
+                    transitionIndex = i;
+            }
+            var e = new ClickedChromatogramEventArgs(
+                new ScanProvider(_documentContainer.DocumentFilePath, FilePath, chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions),
+                transitionIndex, 
+                scanIndex);
+            ClickedChromatogram(this, e);
+        }
+
+        private int FindScanIndex(ChromatogramGroupInfo chromatogramGroupInfo, double retentionTime, int startIndex, int endIndex)
+        {
+            if (endIndex - startIndex <= 1)
+                return startIndex;
+
+            int index = (startIndex + endIndex) / 2;
+            return (retentionTime < chromatogramGroupInfo.Times[index])
+                ? FindScanIndex(chromatogramGroupInfo, retentionTime, startIndex, index)
+                : FindScanIndex(chromatogramGroupInfo, retentionTime, index, endIndex);
         }
 
         [Browsable(true)]
@@ -590,6 +674,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed)
                 return;
 
+            _fullScanSelectedPoint.IsVisible = false;
+
             var settings = DocumentUI.Settings;
             var results = settings.MeasuredResults;
             if (results == null)
@@ -684,6 +770,7 @@ namespace pwiz.Skyline.Controls.Graphs
             try
             {
                 _showPeptideTotals = peptideAndTransitionGroups.ShowPeptideTotals;
+                _showingTransitions = false;
 
                 // Make sure all the chromatogram info for the relevant transition groups is present.
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -799,6 +886,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
+                        _showingTransitions = true;
                         var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
                         for (int i = 0; i < _nodeGroups.Length; i++)
                         {
@@ -829,6 +917,30 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        nodeGroup, chromGroupInfo, PaneKey.PRODUCTS, DisplayTypeChrom.products,
                                                        ref bestStartTime, ref bestEndTime);
                                 }
+                            }
+                        }
+
+                        // Should we show the scan selection point?
+                        if (_arrayChromInfo != null && Equals(_stateProvider.SelectedScanFile, FilePath) && _transitionId != null)
+                        {
+                            foreach (var graphPane in graphControl.MasterPane.PaneList)
+                            {
+                                var transitionCurve = GetTransitionCurve(graphPane);
+                                if (transitionCurve == null)
+                                    continue;
+                                var graphItem = transitionCurve.Tag as ChromGraphItem;
+                                if (graphItem == null)
+                                    continue;
+                                int rtIndex = graphItem.GetNearestMeasuredIndex(_stateProvider.SelectedScanRetentionTime);
+                                if (rtIndex == -1)
+                                    continue;
+
+                                _fullScanSelectedPoint.Points = new PointPairList();
+                                _fullScanSelectedPoint.AddPoint(transitionCurve.Points[rtIndex]);
+                                _fullScanSelectedPoint.Symbol.Fill.Color = Color.FromArgb(150,
+                                    transitionCurve.Color);
+                                _fullScanSelectedPoint.IsVisible = true;
+                                break;
                             }
                         }
                     }
@@ -911,7 +1023,44 @@ namespace pwiz.Skyline.Controls.Graphs
  
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                         !Settings.Default.LockYChrom;
-            graphControl.Refresh();
+
+            var selectedPane = GetScanSelectedPane();
+            if (selectedPane == null)
+                Refresh();
+            else
+            {
+                selectedPane.CurveList.Insert(0, _fullScanSelectedPoint);
+                Refresh();
+                selectedPane.CurveList.RemoveAt(0);
+            }
+        }
+
+        private CurveItem GetTransitionCurve(GraphPane graphPane)
+        {
+            foreach (var curve in graphPane.CurveList)
+            {
+                var graphItem = curve.Tag as ChromGraphItem;
+                if (graphItem != null && graphItem.TransitionNode != null &&
+                    ReferenceEquals(_transitionId, graphItem.TransitionNode.Id))
+                {
+                    return curve;
+                }
+            }
+            return null;
+        }
+
+        private GraphPane GetScanSelectedPane()
+        {
+            if (_transitionId != null)
+            {
+                foreach (var graphPane in graphControl.MasterPane.PaneList)
+                {
+                    if (GetTransitionCurve(graphPane) != null)
+                        return graphPane;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1124,6 +1273,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo((float) nodeTran.Mz, mzMatchTolerance);
                 }
             }
+
             int bestPeakTran = -1;
             TransitionChromInfo tranPeakInfo = null;
             float maxPeakHeight = float.MinValue;
@@ -1293,6 +1443,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (bestPeakTran == i)
                     tranPeakInfoGraph = tranPeakInfo;
 
+                var scanName = nodeTran.FragmentIonName;
+                if (nodeTran.Transition.Charge > 1)
+                    scanName += Transition.GetChargeIndicator(nodeTran.Transition.Charge);
+                if (nodeTran.Transition.MassIndex > 0)
+                    scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
+                var fullScanInfo = new FullScanInfo
+                {
+                    ChromInfo = arrayChromInfo[i],
+                    ScanName = scanName
+                };
                 var graphItem = new ChromGraphItem(nodeGroup,
                                                     nodeTran,
                                                     info,
@@ -1306,7 +1466,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                     step,
                                                     color,
                                                     fontSize,
-                                                    width);
+                                                    width,
+                                                    fullScanInfo);
                 _graphHelper.AddChromatogram(graphPaneKey, graphItem);
                 iColor++;
             }
@@ -2479,7 +2640,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IEnumerable<ChromGraphItem> GraphItems
         {
-            get { return GraphPanes.SelectMany(pane=>pane.CurveList.Select(curve=>(ChromGraphItem) curve.Tag)); }
+            get { return GraphPanes.SelectMany(pane=>pane.CurveList.Select(curve=>(ChromGraphItem) curve.Tag)).Where(graphItem => graphItem != null); }
         }
 
         public double[] RetentionMsMs
@@ -2511,6 +2672,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
 
             PointF pt = new PointF(e.X, e.Y);
+            if (_showingTransitions)
+            {
+                ShowHighlightPoint(pt);
+                if (IsOverHighlightPoint(pt))
+                {
+                    graphControl.Cursor = Cursors.Hand;
+                    return true;
+                }
+            }
 
             if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
             {
@@ -2562,11 +2732,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (_extractor.HasValue)
                         return false;
 
-                    if (nearest is CurveItem)
-                    {
-                        graphControl.Cursor = Cursors.VSplit;
-                        return true;
-                    }
                     if (nearest is XAxis && IsGroupActive)
                     {
                         graphControl.Cursor = Cursors.VSplit;
@@ -2578,6 +2743,60 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
 
+        private bool IsOverHighlightPoint(PointF pt)
+        {
+            return _fullScanTrackingPoint.IsVisible &&
+                   GetDistanceSquared(pt, _fullScanTrackingPointLocation) < FullScanPointSize*FullScanPointSize/4;
+        }
+
+        private CurveItem _closestCurve;
+
+        /// <summary>
+        /// Display the closest curve point to the cursor.
+        /// </summary>
+        /// <param name="pt">Cursor coordinates</param>
+        private void ShowHighlightPoint(PointF pt)
+        {
+            var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
+            if (graphPane == null)
+                return;
+
+            // Add tracking and selection points.
+            var selectedPane = GetScanSelectedPane();
+            if (selectedPane != null)
+            {
+                _fullScanSelectedPoint.IsVisible = true;
+                selectedPane.CurveList.Insert(0, _fullScanSelectedPoint);
+            }
+            graphPane.CurveList.Insert(0, _fullScanTrackingPoint);
+
+            // Find the closest curve point to the cursor.
+            graphPane.FindClosestCurve(pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
+
+            // Display the highlight point.
+            _fullScanTrackingPoint.IsVisible = false;
+            if (_closestCurve != null)
+            {
+                double x, y;
+                graphPane.ReverseTransform(_fullScanTrackingPointLocation, out x, out y);
+                _fullScanTrackingPoint.Points = new PointPairList();
+                _fullScanTrackingPoint.AddPoint(x, y);
+                _fullScanTrackingPoint.Symbol.Fill.Color = Color.FromArgb(150, _closestCurve.Color);
+                _fullScanTrackingPoint.Symbol.Border.Color = Color.FromArgb(
+                    (int) (_closestCurve.Color.R*0.6),
+                    (int) (_closestCurve.Color.G*0.6),
+                    (int) (_closestCurve.Color.B*0.6));
+                _fullScanTrackingPoint.IsVisible = true;
+            }
+                
+            Refresh();
+
+            // Remove tracking and selection points.
+            graphPane.CurveList.RemoveAt(0);
+            if (selectedPane != null)
+                selectedPane.CurveList.RemoveAt(0);
+        }
+       
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             // Don't allow editing if multiple peptides are selected.
@@ -2587,6 +2806,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
+                if (IsOverHighlightPoint(pt))
+                    return true;
+
                 using (Graphics g = CreateGraphics())
                 {
                     GraphPane nearestGraphPane;
@@ -2644,19 +2866,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (_extractor.HasValue)
                             return false;
 
-                        CurveItem[] changeCurves = null;
-                        // If clicked on the XAxis for a graph of a single precursor, use its first curve
-                        var item = nearest as CurveItem;
-                        if (item != null)
-                            changeCurves = new[] {item};
-                        else if (nearest is XAxis && IsGroupActive)
+                        if (nearest is XAxis && IsGroupActive)
                         {
-                            changeCurves = IsMultiGroup
+                            var changeCurves = IsMultiGroup
                                                ? nearestGraphPane.CurveList.ToArray()
                                                : new[] {nearestGraphPane.CurveList.First()};
-                        }
-                        if (changeCurves != null)
-                        {
                             var listDragInfos = new List<PeakBoundsDragInfo>();
                             foreach (var curveItem in changeCurves)
                             {
@@ -2686,9 +2900,18 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (e.Button == MouseButtons.Left)
             {
+                PointF pt = new PointF(e.X, e.Y);
+                if (IsOverHighlightPoint(pt))
+                {
+                    var graphPane = GraphPaneFromPoint(pt);
+                    if (graphPane != null)
+                    {
+                        FireClickedChromatogram(graphPane);
+                        return true;
+                    }
+                }
                 if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
                 {
-                    PointF pt = new PointF(e.X, e.Y);
                     DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
                     EndDrag(true);
                     return true;
@@ -2700,6 +2923,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 return true;
             }
             return false;
+        }
+
+        private static double GetDistanceSquared(PointF p0, PointF p1)
+        {
+            double xDiff = p0.X - p1.X;
+            double yDiff = p0.Y - p1.Y;
+            return (xDiff * xDiff + yDiff * yDiff);
         }
 
         private PeakBoundsDragInfo StartDrag(GraphPane graphPane, ChromGraphItem graphItem, PointF pt,
@@ -3117,6 +3347,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public Identity TransitionId { get; private set; }
         public ScaledRetentionTime RetentionTime { get; private set; }
+    }
+
+    public sealed class ClickedChromatogramEventArgs : EventArgs
+    {
+        public ClickedChromatogramEventArgs(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        {
+            ScanProvider = scanProvider;
+            TransitionIndex = transitionIndex;
+            ScanIndex = scanIndex;
+        }
+
+        public IScanProvider ScanProvider { get; private set; }
+        public int TransitionIndex { get; private set; }
+        public int ScanIndex { get; private set; }
     }
 
     public sealed class ChangedPeakBoundsEventArgs : PeakEventArgs

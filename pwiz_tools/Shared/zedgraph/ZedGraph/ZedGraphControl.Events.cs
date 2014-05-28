@@ -851,7 +851,7 @@ namespace ZedGraph
 		{
 			if ( ( _isEnableVZoom || _isEnableHZoom ) && _isEnableWheelZoom && _masterPane != null )
 			{
-				GraphPane pane = this.MasterPane.FindChartRect( new PointF( e.X, e.Y ) );
+				GraphPane pane = this.MasterPane.FindPane( new PointF( e.X, e.Y ) );
 				if ( pane != null && e.Delta != 0 )
 				{
 					ZoomState oldState = ZoomStateSave( pane, ZoomState.StateType.WheelZoom );
@@ -918,12 +918,14 @@ namespace ZedGraph
 
 			pane.ReverseTransform( centerPt, out x, out x2, out y, out y2 );
 
-			if ( _isEnableHZoom )
+		    bool verticalZoom = x < pane.XAxis.Scale.Min && y[0] > pane.YAxis.Scale.Min;
+
+			if ( _isEnableHZoom && !verticalZoom )
 			{
 				ZoomScale( pane.XAxis, zoomFraction, x, isZoomOnCenter );
 				ZoomScale( pane.X2Axis, zoomFraction, x2, isZoomOnCenter );
 			}
-			if ( _isEnableVZoom )
+            if ((_isEnableVZoom || verticalZoom) && y[0] > pane.YAxis.Scale.Min)
 			{
 				for ( int i = 0; i < pane.YAxisList.Count; i++ )
 					ZoomScale( pane.YAxisList[i], zoomFraction, y[i], isZoomOnCenter );
@@ -1007,13 +1009,13 @@ namespace ZedGraph
 				*/
 				double minLin = axis._scale._minLinearized;
 				double maxLin = axis._scale._maxLinearized;
-				double range = ( maxLin - minLin ) * zoomFraction / 2.0;
+				double f1 = 1 / zoomFraction - 1;
 
 				if ( !isZoomOnCenter )
 					centerVal = ( maxLin + minLin ) / 2.0;
 
-				axis._scale._minLinearized = centerVal - range;
-				axis._scale._maxLinearized = centerVal + range;
+				axis._scale._minLinearized = minLin - (minLin - centerVal) * f1;
+				axis._scale._maxLinearized = maxLin - (maxLin - centerVal) * f1;
 				//				}
 
 				axis._scale._minAuto = false;

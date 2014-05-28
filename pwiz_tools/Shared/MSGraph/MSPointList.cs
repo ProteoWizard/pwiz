@@ -198,73 +198,43 @@ namespace pwiz.MSGraph
         public List<int> ScaledMaxIndexList { get { return _scaledMaxIndexList; } }
 
         /// <summary>
-        /// Returns the index of the point in the full list with the lowest X value greater than or equal to 'x'; returns -1 if no such value is in the list
+        /// Returns the index of the point in the full list with the largest X value less than or equal to 'x'; returns -1 if no such value is in the list
         /// </summary>
         public int FullLowerBound (double x)
         {
-            if (_fullPointList.Count == 0 ||
-                _fullPointList[_fullPointList.Count - 1].X < x)
-                return -1;
-
-            int min = 0;
-            int max = _fullPointList.Count;
-            int best;
-            while (true)
-            {
-                int i = (max + min) / 2;
-                if (_fullPointList[i].X < x)
-                {
-                    if (min == i)
-                        return (max == _fullPointList.Count ? -1 : max);
-                    min = i;
-                }
-                else
-                {
-                    best = i;
-                    max = i;
-                    if (i == 0)
-                        break;
-                }
-            }
-            return best;
+            return GetLowerBound(_fullPointList, x);
         }
 
         /// <summary>
-        /// Returns the index of the point in the scaled list with the lowest X value greater than or equal to 'x'; returns -1 if no such value is in the list
+        /// Returns the index of the point in the scaled list with the largest X value less than or equal to 'x'; returns -1 if no such value is in the list
         /// </summary>
         public int ScaledLowerBound( double x )
         {
-            if( _scaledPointList.Count == 0 ||
-                _scaledPointList[_scaledPointList.Count - 1].X < x )
+            return GetLowerBound(_scaledPointList, x);
+        }
+
+        private int GetLowerBound(PointPairList pointList, double x)
+        {
+            if (pointList.Count == 0 || pointList[0].X > x)
                 return -1;
 
             int min = 0;
-            int max = _scaledPointList.Count;
-            int best;
-            while( true )
+            int max = pointList.Count;
+            while (max - 1 > min)
             {
-                int i = ( max + min ) / 2;
-                if( _scaledPointList[i].X < x )
-                {
-                    if( min == i )
-                        return ( max == _scaledPointList.Count ? -1 : max );
+                int i = (max + min) / 2;
+                if (pointList[i].X <= x)
                     min = i;
-                }
                 else
-                {
-                    best = i;
                     max = i;
-                    if( i == 0 )
-                        break;
-                }
             }
-            return best;
+            return min;
         }
 
         /// <summary>
-        /// Returns the index of the point in the scaled list with the lowest X value greater than or equal to 'x'; returns -1 if no such value is in the list
+        /// Returns the index of the point with the largest X value less than or equal to 'x'; returns -1 if no such value is in the list
         /// </summary>
-        public int LowerBound( double x ) {return ScaledLowerBound(x);}
+        public int LowerBound( double x ) {return ScaledCount > 0 ? ScaledLowerBound(x) : FullLowerBound(x);}
 
         public int GetNearestMaxIndexToBin( int bin )
         {

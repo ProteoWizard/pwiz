@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Util
@@ -149,34 +148,6 @@ namespace pwiz.Skyline.Util
         public virtual void CancelDialog()
         {
             CancelButton.PerformClick();
-        }
-    }
-
-    public class DockableFormEx : DockableForm, IFormView
-    {
-        protected override void OnParentChanged(EventArgs e)
-        {
-            base.OnParentChanged(e);
-            if (Program.SkylineOffscreen && ParentForm != null)
-                FormEx.SetOffscreen(ParentForm);
-        }
-
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            if (Program.SkylineOffscreen && Parent == null)
-                FormEx.SetOffscreen(this);
-        }
-
-        protected override bool ShowWithoutActivation
-        {
-            get { return Program.FunctionalTest || Program.SkylineOffscreen; }
-        }
-
-        public void CheckDisposed()
-        {
-            if (IsDisposed)
-                throw new ObjectDisposedException("Form disposed"); // Not L10N
         }
     }
 }

@@ -7336,4 +7336,34 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_not_be_opened_" xml:space="preserve">
     <value>The ion mobility library specified could not be opened:</value>
   </data>
+  <data name="magnifier_zoom_in" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\magnifier_zoom_in.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_MS_MS" xml:space="preserve">
+    <value>MS/MS</value>
+  </data>
+  <data name="GraphFullScan_GraphFullScan_SIM" xml:space="preserve">
+    <value>SIM</value>
+  </data>
+  <data name="GraphFullScan_LoadScan_Loading___" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_" xml:space="preserve">
+    <value>The raw file must be re-imported in order to show full scans: {0}</value>
+  </data>
+  <data name="ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_" xml:space="preserve">
+    <value>The data file {0} could not be found, either at its original location or in the document or document parent folder.</value>
+  </data>
+  <data name="GraphFullScan_LoadScan_Spectrum_unavailable" xml:space="preserve">
+    <value>Spectrum unavailable</value>
+  </data>
+  <data name="Icojam-Blueberry-Basic-Arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Icojam-Blueberry-Basic-Arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

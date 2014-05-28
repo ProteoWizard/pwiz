@@ -36,7 +36,7 @@ namespace pwiz.MSGraph
 
             GraphPane = new MSGraphPane(new LabelBoundsCache()); // replace default ZedGraph.GraphPane
 
-            IsZoomOnMouseCenter = false;
+            IsZoomOnMouseCenter = true;
             IsEnableVZoom = false;
             IsEnableVPan = false;
             IsEnableHEdit = false;
@@ -299,7 +299,7 @@ namespace pwiz.MSGraph
         {
             CurveItem newCurve = item.GraphItemDrawMethod == MSGraphItemDrawMethod.line ?
                 new LineItem( item.Title, new MSPointList( item.Points ), item.Color, SymbolType.None ) :
-                new StickItem( item.Title, new MSPointList( item.Points ), item.Color );
+                new StickItem( item.Title, new MSPointList( item.Points ), item.Color, item.LineWidth );
 
             if( item.GraphItemDrawMethod == MSGraphItemDrawMethod.line )
             {

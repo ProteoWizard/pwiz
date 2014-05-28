@@ -44,7 +44,13 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromTaskList == null ? null : _chromTaskList.ChromIds; }
         }
 
-        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(
+            int id, 
+            out ChromExtra extra,
+            out float[] times, 
+            out int[] scanIds, 
+            out float[] intensities,
+            out float[] massErrors)
         {
             bool loaded = _chromTaskList.GetChromatogram(id, out extra, out times, out intensities, out massErrors);
             if (loaded)
@@ -57,6 +63,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             SetPercentComplete(_chromTaskList.PercentComplete * 99/100);
+            scanIds = null; // TODO
             return loaded;
         }
 

@@ -41,7 +41,7 @@ namespace TestPerf
             Assert.AreEqual(1, cookieContainer.Count);
         }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestContents()
         {
             ChorusSession chorusSession = new ChorusSession();
@@ -52,7 +52,7 @@ namespace TestPerf
         /// <summary>
         /// Tests that all instrument models are identified as something by ChorusSession.GetFileTypeFromInstrumentModel
         /// </summary>
-        [TestMethod]
+        //[TestMethod]
         public void TestInstrumentModels()
         {
             var accounts = new[]

@@ -520,6 +520,21 @@ namespace pwiz.Skyline.Model.Results
                 List<short[]> massError10Xs = originalChromGroup.MassError10XArray != null
                                                   ? new List<short[]>()
                                                   : null;
+                int[][] scanIds = null;
+                if (originalChromGroup.ScanIds != null)
+                {
+                    scanIds = new int[originalChromGroup.ScanIds.Length][];
+                    for (int i = 0; i < scanIds.Length; i++)
+                    {
+                        if (originalChromGroup.ScanIds[i] != null)
+                        {
+                            scanIds[i] =
+                                originalChromGroup.ScanIds[i].Skip(minimizedChromGroup.OptimizedFirstScan)
+                                    .Take(numPoints)
+                                    .ToArray();
+                        }
+                    }
+                }
 
                 foreach (var originalIndex in minimizedChromGroup.RetainedTransitionIndexes)
                 {
@@ -546,7 +561,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 var massError10XArray = massError10Xs != null ? massError10Xs.ToArray() : null;
-                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities.ToArray(), massError10XArray);
+                byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities.ToArray(), massError10XArray, scanIds);
                 // Compress the data (can be huge for AB data with lots of zeros)
                 byte[] pointsCompressed = points.Compress(3);
                 int lenCompressed = pointsCompressed.Length;

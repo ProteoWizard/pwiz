@@ -308,6 +308,18 @@
     <Compile Include="Controls\Graphs\AsyncRenderControl.Designer.cs">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\GraphDriftTime.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphDriftTime.Designer.cs">
+      <DependentUpon>GraphDriftTime.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphFullScan.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphFullScan.Designer.cs">
+      <DependentUpon>GraphFullScan.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\GraphHelper.cs" />
     <Compile Include="Controls\Graphs\HiLowMiddleErrorBarItem.cs" />
     <Compile Include="Controls\Graphs\MeanErrorBarItem.cs" />
@@ -922,6 +934,7 @@
     <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequestExtra.cs" />
     <Compile Include="Model\Results\RemoteChromDataProvider.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
+    <Compile Include="Model\Results\ScanProvider.cs" />
     <Compile Include="Model\Results\Scoring\NextGenFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
@@ -1314,6 +1327,9 @@
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphDriftTime.resx">
+      <DependentUpon>GraphDriftTime.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -1369,6 +1385,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncRenderControl.zh-CHS.resx">
       <DependentUpon>AsyncRenderControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\GraphFullScan.resx">
+      <DependentUpon>GraphFullScan.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.ja.resx">
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
@@ -1632,6 +1652,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\OpenDataSourceDialog.ja.resx">
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\OpenDataSourceDialog.zh-CHS.resx">
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
@@ -1719,6 +1740,9 @@
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <Content Include="Resources\magnifier_zoom_in.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2305,6 +2329,9 @@
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
+    <Compile Include="Util\DockableFormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Util\DotTraceProfile.cs" />
     <Compile Include="Util\Extensions\ActionUtil.cs" />
     <Compile Include="Util\FileSize.cs" />
@@ -2971,102 +2998,102 @@
   <ItemGroup>
     <PublishFile Include="BDal.BCO.Objects.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CCO.Objects.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.Factory">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.Interfaces">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.UntU2">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="FlexVariableTable.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ICRVariableTable.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>

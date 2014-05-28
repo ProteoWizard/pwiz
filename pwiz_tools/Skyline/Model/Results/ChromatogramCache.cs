@@ -935,66 +935,114 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void BytesToTimeIntensities(byte[] bytes, int numPoints, int numTrans, bool withErrors,
-            out float[] times, out float[][] intensities, out short[][] massErrors)
+            bool withMs1ScanIds, bool withFragmentScanIds, bool withSimScanIds,
+            out float[] times, out float[][] intensities, out short[][] massErrors, out int[][] scanIds)
         {
             times = new float[numPoints];
             intensities = new float[numTrans][];
-            massErrors = withErrors ? new short[numTrans][] : null; 
+            massErrors = withErrors ? new short[numTrans][] : null;
+            scanIds = null; 
 
             int sizeArray = sizeof(float)*numPoints;
             Buffer.BlockCopy(bytes, 0, times, 0, sizeArray);
-            for (int i = 0, offsetTran = sizeArray; i < numTrans; i++, offsetTran += sizeArray)
+            int offset = sizeArray;
+            for (int i = 0; i < numTrans; i++, offset += sizeArray)
             {
                 intensities[i] = new float[numPoints];
-                Buffer.BlockCopy(bytes, offsetTran, intensities[i], 0, sizeArray);
+                Buffer.BlockCopy(bytes, offset, intensities[i], 0, sizeArray);
             }
             if (withErrors)
             {
                 int sizeArrayErrors = sizeof(short)*numPoints;
-                for (int i = 0, offsetTran = sizeArray*(numTrans + 1); i < numTrans; i++, offsetTran += sizeArrayErrors)
+                for (int i = 0; i < numTrans; i++, offset += sizeArrayErrors)
                 {
                     massErrors[i] = new short[numPoints];
-                    Buffer.BlockCopy(bytes, offsetTran, massErrors[i], 0, sizeArrayErrors);
+                    Buffer.BlockCopy(bytes, offset, massErrors[i], 0, sizeArrayErrors);
+                }
+            }
+            if (withMs1ScanIds || withFragmentScanIds || withSimScanIds)
+            {
+                scanIds = new int[Helpers.CountEnumValues<ChromSource>() - 1][];
+                int sizeArrayScanIds = sizeof(int) * numPoints;
+                if (withMs1ScanIds)
+                    scanIds[(int)ChromSource.ms1] = new int[sizeArrayScanIds];
+                if (withFragmentScanIds)
+                    scanIds[(int)ChromSource.fragment] = new int[sizeArrayScanIds];
+                if (withSimScanIds)
+                    scanIds[(int)ChromSource.sim] = new int[sizeArrayScanIds];
+                for (int source = 0; source < scanIds.Length; source++)
+                {
+                    if (scanIds[source] != null)
+                    {
+                        Buffer.BlockCopy(bytes, offset, scanIds[source], 0, sizeArrayScanIds);
+                        offset += sizeArrayScanIds;
+        }
                 }
             }
         }
 
-        public static byte[] TimeIntensitiesToBytes(float[] times, float[][] intensities, short[][] massErrors)
+        public static byte[] TimeIntensitiesToBytes(float[] times, float[][] intensities, short[][] massErrors, int[][] scanIds)
         {
             int numPoints = times.Length;
             int sizeArray = numPoints*sizeof(float);
             int numTrans = intensities.Length;
             bool hasErrors = massErrors != null;
-            byte[] points = new byte[GetChromatogramsByteCount(numTrans, numPoints, hasErrors)];
+            bool hasMs1ScanIds = scanIds != null && scanIds[(int) ChromSource.ms1] != null;
+            bool hasFragmentScanIds = scanIds != null && scanIds[(int) ChromSource.fragment] != null;
+            bool hasSimScanIds = scanIds != null && scanIds[(int) ChromSource.sim] != null;
+            byte[] points = new byte[GetChromatogramsByteCount(numTrans, numPoints, hasErrors, hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds)];
 
             // Write times
             Buffer.BlockCopy(times, 0, points, 0, sizeArray);
+            int offset = sizeArray;
 
             // Write intensites
-            for (int i = 0, offsetTran = sizeArray; i < numTrans; i++, offsetTran += sizeArray)
+            for (int i = 0; i < numTrans; i++, offset += sizeArray)
             {
-                Buffer.BlockCopy(intensities[i], 0, points, offsetTran, sizeArray);
+                Buffer.BlockCopy(intensities[i], 0, points, offset, sizeArray);
             }
 
             // Write mass errors, if provided
             if (hasErrors)
             {
                 int sizeArrayErrors = numPoints*sizeof(short);
-                for (int i = 0, offsetTran = sizeArray*(numTrans + 1); i < numTrans; i++, offsetTran += sizeArrayErrors)
+                for (int i = 0; i < numTrans; i++, offset += sizeArrayErrors)
                 {
-                    Buffer.BlockCopy(massErrors[i], 0, points, offsetTran, sizeArrayErrors);
+                    Buffer.BlockCopy(massErrors[i], 0, points, offset, sizeArrayErrors);
                 }
             }
+
+            // Write scan ids, if provided
+            if (scanIds != null)
+            {
+                int sizeArrayScanIds = numPoints*sizeof(int);
+                for (int source = 0; source < scanIds.Length; source++)
+                {
+                    if (scanIds[source] != null)
+                    {
+                        Buffer.BlockCopy(scanIds[source], 0, points, offset, sizeArrayScanIds);
+                        offset += sizeArrayScanIds;
+                    }
+                }
+            }
+
             return points;
         }
 
-        public static int GetChromatogramsByteCount(int numTrans, int numPoints, bool hasErrors)
+        public static int GetChromatogramsByteCount(int numTrans, int numPoints, bool hasErrors, 
+            bool hasMs1ScanIds, bool hasFragmentScanIds, bool hasSimScanIds)
         {
             int sizeArray = sizeof(float)*numPoints;
             int sizeArrayErrors = sizeof(short)*numPoints;
             int sizeTotal = sizeArray*(numTrans + 1);
             if (hasErrors)
                 sizeTotal += sizeArrayErrors*numTrans;
+            if (hasMs1ScanIds)
+                sizeTotal += sizeof (int)*numPoints;
+            if (hasFragmentScanIds)
+                sizeTotal += sizeof (int)*numPoints;
+            if (hasSimScanIds)
+                sizeTotal += sizeof (int)*numPoints;
             return sizeTotal;
         }
 
@@ -1033,7 +1081,7 @@ namespace pwiz.Skyline.Model.Results
                     float extractionWidth = tranInfo.ExtractionWidth;
                     ChromSource source = tranInfo.Source;
                     ChromKey key = new ChromKey(_seqBytes, groupInfo.SeqIndex, groupInfo.SeqLen,
-                        groupInfo.Precursor, product, extractionWidth, tranInfo.IonMobilityValue, tranInfo.IonMobilityExtractionWidth,  source, groupInfo.Extractor, true);
+                        groupInfo.Precursor, product, extractionWidth, tranInfo.IonMobilityValue, tranInfo.IonMobilityExtractionWidth,  source, groupInfo.Extractor, true, true);
 
                     int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
                     int rank = groupInfo.HasStatusRank ? groupInfo.StatusRank : -1;

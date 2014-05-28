@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphChromatogram));
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolBar = new System.Windows.Forms.ToolStrip();

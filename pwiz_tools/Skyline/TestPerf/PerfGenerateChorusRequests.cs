@@ -86,7 +86,7 @@ namespace TestPerf
             {
                 TestFilesDir testFilesDir = TestFilesDirForUrl(chorusDataSet.SkyZipUrl);
                 string skyFileName = Path.GetFileName(testFilesDir.FullPath);
-                Debug.Assert(skyFileName != null, "skyFileName != null");
+                Assert.IsNotNull(skyFileName, "skyFileName != null");
                 StringAssert.EndsWith(skyFileName, ".sky");
                 skyFileName = Uri.UnescapeDataString(skyFileName);
                 string skyFilePath = Path.Combine(testFilesDir.FullPath, skyFileName);

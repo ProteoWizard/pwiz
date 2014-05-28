@@ -251,7 +251,8 @@ namespace pwiz.Skyline.Model.Results
                     
                     if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
-                        var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabledMs;
+                        // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
+                        var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabled;
                         inFile = GetMsDataFile(dataFilePathPart, sampleIndex, enableSimSpectrum);
                     }
 
@@ -1115,8 +1116,9 @@ namespace pwiz.Skyline.Model.Results
                         short[][] massErrors = null;
                         if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
                             massErrors = chromDataSet.MassErrors10X;
+                        int[][] scanIds = chromDataSet.ScanIds;
                         // Write the raw chromatogram points
-                        byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massErrors);
+                        byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities, massErrors, scanIds);
                         // Compress the data (can be huge for AB data with lots of zeros)
                         byte[] pointsCompressed = points.Compress(3);
                         int lenCompressed = pointsCompressed.Length;
@@ -1148,6 +1150,15 @@ namespace pwiz.Skyline.Model.Results
                             flags |= ChromGroupHeaderInfo5.FlagValues.has_calculated_mzs;
                         if (chromDataSet.Extractor == ChromExtractor.base_peak)
                             flags |= ChromGroupHeaderInfo5.FlagValues.extracted_base_peak;
+                        if (scanIds != null)
+                        {
+                            if (scanIds[(int)ChromSource.ms1] != null)
+                                flags |= ChromGroupHeaderInfo5.FlagValues.has_ms1_scan_ids;
+                            if (scanIds[(int)ChromSource.fragment] != null)
+                                flags |= ChromGroupHeaderInfo5.FlagValues.has_frag_scan_ids;
+                            if (scanIds[(int)ChromSource.sim] != null)
+                                flags |= ChromGroupHeaderInfo5.FlagValues.has_sim_scan_ids;
+                        }
                         var header = new ChromGroupHeaderInfo5(chromDataSet.PrecursorMz,
                                                                currentFileIndex,
                                                                chromDataSet.Count,

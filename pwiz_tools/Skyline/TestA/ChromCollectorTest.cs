@@ -163,7 +163,8 @@ namespace pwiz.SkylineTestA
                 TestAllocator.Test(testAllocator.BlockCount, testAllocator.BlockSize, -1, true, (collector, index) =>
                     {
                         float[] times, intensities, massErrors;
-                        collector.ReleaseChromatogram(out times, out intensities, out massErrors);
+                        int[] scanIds;
+                        collector.ReleaseChromatogram(out times, out scanIds, out intensities, out massErrors);
                         Assert.AreEqual(testAllocator.BlockSize, times.Length);
                         Assert.AreEqual(testAllocator.BlockSize, intensities.Length);
                         for (int i = 0; i < testAllocator.BlockSize; i++)
@@ -188,7 +189,8 @@ namespace pwiz.SkylineTestA
                 {
                     collector.TimesCollector = groupedTimesCollector;
                     float[] times, intensities, massErrors;
-                    collector.ReleaseChromatogram(out times, out intensities, out massErrors);
+                    int[] scanIds;
+                    collector.ReleaseChromatogram(out times, out scanIds, out intensities, out massErrors);
                     Assert.AreEqual(testAllocator.BlockSize, times.Length);
                     Assert.AreEqual(testAllocator.BlockSize, intensities.Length);
                     for (int i = 0; i < testAllocator.BlockSize; i++)
@@ -257,7 +259,8 @@ namespace pwiz.SkylineTestA
                 {
                     collector.TimesCollector = groupedTimesCollector;
                     float[] times, intensities, massErrors;
-                    collector.ReleaseChromatogram(out times, out intensities, out massErrors);
+                    int[] scanIds;
+                    collector.ReleaseChromatogram(out times, out scanIds, out intensities, out massErrors);
                     Assert.AreEqual(testAllocator.BlockSize, times.Length);
                     Assert.AreEqual(testAllocator.BlockSize, intensities.Length);
                     // Times will be ordered, and data reversed.
