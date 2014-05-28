@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by nicksh on 3/19/2014.
  */
-public class ChromatogramGroupPoints {
+public class ChromatogramGroupPoints implements GroupPoints {
     private final ChromatogramRequestDocument.ChromatogramGroup chromatogramGroupInfo;
     private List<Float> times;
     private List<float[]> intensitiesList;
@@ -25,10 +25,12 @@ public class ChromatogramGroupPoints {
         }
     }
 
+    @Override
     public ChromatogramRequestDocument.ChromatogramGroup getChromatogramGroupInfo() {
         return chromatogramGroupInfo;
     }
 
+    @Override
     public void addPoint(double retentionTime, List<ChromatogramPointValue> values) {
         int expectedArrayLength = chromatogramGroupInfo.getChromatogram().size();
         if (expectedArrayLength != values.size()) {
@@ -49,6 +51,7 @@ public class ChromatogramGroupPoints {
         }
     }
 
+    @Override
     public byte[] toByteArray() {
         if (times.size() == 0) {
             return new byte[0];
@@ -79,10 +82,12 @@ public class ChromatogramGroupPoints {
         }
     }
 
+    @Override
     public int getPointCount() {
         return times.size();
     }
 
+    @Override
     public boolean hasMassErrors() {
         return null != relativeMassErrorsList;
     }

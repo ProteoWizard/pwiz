@@ -36,7 +36,7 @@ public class SkydWriter {
     public SkydWriter(StreamWrapper stream) {
         this.stream = stream;
     }
-    public void writeChromData(ChromatogramGroupPoints chromatogramPoints) throws Exception {
+    public void writeChromData(GroupPoints chromatogramPoints) throws Exception {
         ChromatogramRequestDocument.ChromatogramGroup chromatogramGroupInfo = chromatogramPoints.getChromatogramGroupInfo();
         ChromGroupHeader chromGroupHeader = new ChromGroupHeader();
         chromGroupHeader.calcSeqIndex(chromatogramGroupInfo.getModifiedSequence());
@@ -68,7 +68,7 @@ public class SkydWriter {
 
     /**
      * Write out the header information at the end of the file.
-     * The bulk of the data in a .skyd file is written in {@link #writeChromData(ChromatogramGroupPoints)}.
+     * The bulk of the data in a .skyd file is written in {@link #writeChromData(GroupPoints)}.
      * Then, the list of {@link ChromTransition}, {@link ChromGroupHeader}, and the block of bytes that contain
      * all of the strings shared by the ChromGroupHeaders.  Skyd files from this class only ever contain data from
      * one MS data file, but Skyline Skyd files will also have a list of "ChromCachedFile" structures with the file
@@ -134,9 +134,9 @@ public class SkydWriter {
         stream.writeLong(filesLocation);
     }
 
-    public static void writeSkydFile(Iterable<ChromatogramGroupPoints> chromatogramGroupPointsCollection, OutputStream outputStream) throws Exception {
+    public static void writeSkydFile(Iterable<? extends GroupPoints> chromatogramGroupPointsCollection, OutputStream outputStream) throws Exception {
         SkydWriter skydWriter = new SkydWriter(new StreamWrapper(outputStream));
-        for (ChromatogramGroupPoints chromatogramGroupPoints : chromatogramGroupPointsCollection) {
+        for (GroupPoints chromatogramGroupPoints : chromatogramGroupPointsCollection) {
             skydWriter.writeChromData(chromatogramGroupPoints);
         }
         skydWriter.finish();
