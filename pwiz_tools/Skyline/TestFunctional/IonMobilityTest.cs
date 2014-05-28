@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
 
             // do a few unit tests on the UI error handlers
-            TestGetIonMobilityDBErrorHandling();
+            TestGetIonMobilityDBErrorHandling(testFilesDir);
             TestImportIonMobilityFromSpectralLibraryErrorHandling();
             TestEditIonMobilityLibraryDlgErrorHandling();
             TestEditDriftTimePredictorDlgErrorHandling();
@@ -316,7 +316,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Test various error conditions in IonMobilityDb.cs
         /// </summary>
-        public void TestGetIonMobilityDBErrorHandling()
+        public void TestGetIonMobilityDBErrorHandling(TestFilesDir testFilesDir)
         {
             AssertEx.ThrowsException<DatabaseOpeningException>(() => IonMobilityDb.GetIonMobilityDb(null, null),
                 Resources.IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_database_);
@@ -329,7 +329,7 @@ namespace pwiz.SkylineTestFunctional
                         .IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_,
                     badfilename));
 
-            const string bogusfile = "bogus.imdb";
+            string bogusfile = testFilesDir.GetTestPath("bogus.imdb");
             using (FileStream fs = File.Create(bogusfile))
             {
                 Byte[] info = new UTF8Encoding(true).GetBytes("This is a bogus file.");
