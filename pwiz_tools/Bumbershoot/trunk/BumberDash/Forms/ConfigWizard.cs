@@ -524,12 +524,12 @@ namespace BumberDash.Forms
             }
             else if (PrecursorMidRadio.Checked)
             {
-                PrecursorToleranceBox.Text = "50";
+                PrecursorToleranceBox.Text = "25";
                 PrecursorToleranceUnitsBox.Text = "ppm";
             }
             else if (PrecursorHighRadio.Checked)
             {
-                PrecursorToleranceBox.Text = "20";
+                PrecursorToleranceBox.Text = "10";
                 PrecursorToleranceUnitsBox.Text = "ppm";
             }
 
@@ -540,12 +540,12 @@ namespace BumberDash.Forms
             }
             else if (FragmentMidRadio.Checked)
             {
-                FragmentToleranceBox.Text = "25";
+                FragmentToleranceBox.Text = "50";
                 FragmentToleranceUnitsBox.Text = "ppm";
             }
             else if (FragmentHighRadio.Checked)
             {
-                FragmentToleranceBox.Text = "10";
+                FragmentToleranceBox.Text = "20";
                 FragmentToleranceUnitsBox.Text = "ppm";
             }
         }
