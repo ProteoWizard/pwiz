@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestTutorial
             return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
-        private bool IsFullData { get { return IsPauseForScreenShots; } }
+        private bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode; } }
 
         protected override void DoTest()
         {

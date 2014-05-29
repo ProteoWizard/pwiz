@@ -62,6 +62,9 @@ namespace SkylineTester
                 args.Append(loop);
             }
 
+            if (MainWindow.RunDemoMode.Checked)
+                args.Append(" demo=on");
+
             var cultures = new List<CultureInfo>();
             if (MainWindow.TestsEnglish.Checked)
                 cultures.Add(new CultureInfo("en-US"));

@@ -91,6 +91,7 @@ namespace SkylineTester
             this.runLoops = new System.Windows.Forms.RadioButton();
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
+            this.runDemoMode = new System.Windows.Forms.CheckBox();
             this.runFullQualityPass = new System.Windows.Forms.CheckBox();
             this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
@@ -218,6 +219,8 @@ namespace SkylineTester
             this.nightly64Bit = new System.Windows.Forms.ToolStripMenuItem();
             this.zip32Bit = new System.Windows.Forms.ToolStripMenuItem();
             this.zip64Bit = new System.Windows.Forms.ToolStripMenuItem();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.accessInternet = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -227,8 +230,6 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.accessInternet = new System.Windows.Forms.ToolStripMenuItem();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -967,6 +968,7 @@ namespace SkylineTester
             this.testsGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.testsGroup.Controls.Add(this.runDemoMode);
             this.testsGroup.Controls.Add(this.runFullQualityPass);
             this.testsGroup.Controls.Add(this.testsTree);
             this.testsGroup.Controls.Add(this.skipCheckedTests);
@@ -979,6 +981,17 @@ namespace SkylineTester
             this.testsGroup.TabIndex = 16;
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
+            // 
+            // runDemoMode
+            // 
+            this.runDemoMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.runDemoMode.AutoSize = true;
+            this.runDemoMode.Location = new System.Drawing.Point(280, 451);
+            this.runDemoMode.Name = "runDemoMode";
+            this.runDemoMode.Size = new System.Drawing.Size(104, 17);
+            this.runDemoMode.TabIndex = 33;
+            this.runDemoMode.Text = "Run demo mode";
+            this.runDemoMode.UseVisualStyleBackColor = true;
             // 
             // runFullQualityPass
             // 
@@ -2246,7 +2259,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 110;
+            this.outputSplitContainer.SplitterDistance = 98;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2264,7 +2277,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 110);
+            this.commandShell.Size = new System.Drawing.Size(693, 98);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2281,7 +2294,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 333);
+            this.errorConsole.Size = new System.Drawing.Size(693, 345);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2424,7 +2437,7 @@ namespace SkylineTester
             // 
             this.findTestToolStripMenuItem.Name = "findTestToolStripMenuItem";
             this.findTestToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-            this.findTestToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.findTestToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.findTestToolStripMenuItem.Text = "Find...";
             this.findTestToolStripMenuItem.Click += new System.EventHandler(this.findTestToolStripMenuItem_Click);
             // 
@@ -2432,7 +2445,7 @@ namespace SkylineTester
             // 
             this.findNextToolStripMenuItem.Name = "findNextToolStripMenuItem";
             this.findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            this.findNextToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.findNextToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.findNextToolStripMenuItem.Text = "Find next";
             this.findNextToolStripMenuItem.Click += new System.EventHandler(this.findNextToolStripMenuItem_Click);
             // 
@@ -2516,6 +2529,21 @@ namespace SkylineTester
             this.zip64Bit.Text = "zip (64 bit)";
             this.zip64Bit.Click += new System.EventHandler(this.selectBuild_Click);
             // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.accessInternet});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // accessInternet
+            // 
+            this.accessInternet.CheckOnClick = true;
+            this.accessInternet.Name = "accessInternet";
+            this.accessInternet.Size = new System.Drawing.Size(154, 22);
+            this.accessInternet.Text = "Access internet";
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -2597,21 +2625,6 @@ namespace SkylineTester
             this.myTreeView1.Name = "myTreeView1";
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
-            // 
-            // optionsToolStripMenuItem
-            // 
-            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.accessInternet});
-            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.optionsToolStripMenuItem.Text = "Options";
-            // 
-            // accessInternet
-            // 
-            this.accessInternet.CheckOnClick = true;
-            this.accessInternet.Name = "accessInternet";
-            this.accessInternet.Size = new System.Drawing.Size(154, 22);
-            this.accessInternet.Text = "Access internet";
             // 
             // SkylineTesterWindow
             // 
@@ -2900,6 +2913,7 @@ namespace SkylineTester
         private CheckBox showMatchingPagesTutorial;
         private ToolStripMenuItem optionsToolStripMenuItem;
         private ToolStripMenuItem accessInternet;
+        private CheckBox runDemoMode;
     }
 }
 

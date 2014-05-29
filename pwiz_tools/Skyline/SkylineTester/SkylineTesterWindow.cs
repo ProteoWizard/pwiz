@@ -597,6 +597,7 @@ namespace SkylineTester
                 runCheckedTests,
                 skipCheckedTests,
                 runFullQualityPass,
+                runDemoMode,
 
                 // Build
                 buildTrunk,
@@ -998,6 +999,7 @@ namespace SkylineTester
         public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
         public Button           RunForms                    { get { return runForms; } }
         public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
+        public CheckBox         RunDemoMode                 { get { return runDemoMode; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
