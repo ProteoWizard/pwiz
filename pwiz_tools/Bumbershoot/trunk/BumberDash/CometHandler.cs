@@ -40,6 +40,12 @@ namespace BumberDash
                 FragmentBinOffset = 0.4;
                 ActivationMethod = ActivationMethodOptions.CID;
             }
+            else if (configuration == Preconfigurations.Tof)
+            {
+                FragmentBinTolerance = 0.1;
+                FragmentBinOffset = 0.0;
+                ActivationMethod = ActivationMethodOptions.HCD;
+            }
             else if (configuration == Preconfigurations.HighResolution)
             {
                 FragmentBinTolerance = 0.02;
@@ -61,6 +67,11 @@ namespace BumberDash
         public static CometParams GetIonTrapParams()
         {
             return new CometParams(Preconfigurations.IonTrap);
+        }
+
+        public static CometParams GetTofParams()
+        {
+            return new CometParams(Preconfigurations.Tof);
         }
 
         public static CometParams GetHighResParams()
@@ -116,7 +127,8 @@ namespace BumberDash
         private static class Preconfigurations
         {
             public static int IonTrap = 1;
-            public static int HighResolution = 2;
+            public static int Tof = 2;
+            public static int HighResolution = 3;
         }
 
         public class Modification

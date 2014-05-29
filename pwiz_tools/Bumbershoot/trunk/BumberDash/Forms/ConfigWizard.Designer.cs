@@ -131,6 +131,8 @@
             this.CancelButton = new System.Windows.Forms.Button();
             this.PreviousButton = new System.Windows.Forms.Button();
             this.NextButton = new System.Windows.Forms.Button();
+            this.FragmentMidRadio = new System.Windows.Forms.RadioButton();
+            this.PrecursorMidRadio = new System.Windows.Forms.RadioButton();
             this.EnzymePanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ModBox)).BeginInit();
             this.InstrumentPanel.SuspendLayout();
@@ -425,9 +427,10 @@
             this.InstrumentPanel.Controls.Add(this.panel3);
             this.InstrumentPanel.Controls.Add(this.panel2);
             this.InstrumentPanel.Controls.Add(this.label17);
-            this.InstrumentPanel.Location = new System.Drawing.Point(140, 140);
+            this.InstrumentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.InstrumentPanel.Location = new System.Drawing.Point(0, 0);
             this.InstrumentPanel.Name = "InstrumentPanel";
-            this.InstrumentPanel.Size = new System.Drawing.Size(200, 100);
+            this.InstrumentPanel.Size = new System.Drawing.Size(427, 301);
             this.InstrumentPanel.TabIndex = 50;
             // 
             // FineTunePanel
@@ -438,9 +441,9 @@
             this.FineTunePanel.Controls.Add(this.PrecursorToleranceBox);
             this.FineTunePanel.Controls.Add(this.PrecursorToleranceUnitsBox);
             this.FineTunePanel.Controls.Add(this.MyriMonoPrecursorMzToleranceLabel);
-            this.FineTunePanel.Location = new System.Drawing.Point(9, 252);
+            this.FineTunePanel.Location = new System.Drawing.Point(9, 260);
             this.FineTunePanel.Name = "FineTunePanel";
-            this.FineTunePanel.Size = new System.Drawing.Size(412, 43);
+            this.FineTunePanel.Size = new System.Drawing.Size(412, 35);
             this.FineTunePanel.TabIndex = 7;
             this.FineTunePanel.Visible = false;
             // 
@@ -512,7 +515,7 @@
             // FineTuneBox
             // 
             this.FineTuneBox.AutoSize = true;
-            this.FineTuneBox.Location = new System.Drawing.Point(12, 230);
+            this.FineTuneBox.Location = new System.Drawing.Point(9, 245);
             this.FineTuneBox.Name = "FineTuneBox";
             this.FineTuneBox.Size = new System.Drawing.Size(122, 17);
             this.FineTuneBox.TabIndex = 6;
@@ -523,18 +526,19 @@
             // 
             // panel3
             // 
+            this.panel3.Controls.Add(this.FragmentMidRadio);
             this.panel3.Controls.Add(this.FragmentHighRadio);
             this.panel3.Controls.Add(this.FragmentLowRadio);
             this.panel3.Controls.Add(this.label18);
             this.panel3.Location = new System.Drawing.Point(9, 141);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(412, 79);
+            this.panel3.Size = new System.Drawing.Size(412, 100);
             this.panel3.TabIndex = 5;
             // 
             // FragmentHighRadio
             // 
             this.FragmentHighRadio.AutoSize = true;
-            this.FragmentHighRadio.Location = new System.Drawing.Point(9, 56);
+            this.FragmentHighRadio.Location = new System.Drawing.Point(9, 75);
             this.FragmentHighRadio.Name = "FragmentHighRadio";
             this.FragmentHighRadio.Size = new System.Drawing.Size(214, 17);
             this.FragmentHighRadio.TabIndex = 7;
@@ -567,18 +571,19 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.PrecursorMidRadio);
             this.panel2.Controls.Add(this.PrecursorHighRadio);
             this.panel2.Controls.Add(this.PrecursorLowRadio);
             this.panel2.Controls.Add(this.label5);
-            this.panel2.Location = new System.Drawing.Point(9, 45);
+            this.panel2.Location = new System.Drawing.Point(9, 31);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(412, 86);
+            this.panel2.Size = new System.Drawing.Size(412, 100);
             this.panel2.TabIndex = 4;
             // 
             // PrecursorHighRadio
             // 
             this.PrecursorHighRadio.AutoSize = true;
-            this.PrecursorHighRadio.Location = new System.Drawing.Point(9, 57);
+            this.PrecursorHighRadio.Location = new System.Drawing.Point(9, 77);
             this.PrecursorHighRadio.Name = "PrecursorHighRadio";
             this.PrecursorHighRadio.Size = new System.Drawing.Size(214, 17);
             this.PrecursorHighRadio.TabIndex = 5;
@@ -630,10 +635,9 @@
             this.OutputPanel.Controls.Add(this.OutputNewFolderLabel);
             this.OutputPanel.Controls.Add(this.OutputNewFolderBox);
             this.OutputPanel.Controls.Add(this.label11);
-            this.OutputPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.OutputPanel.Location = new System.Drawing.Point(0, 0);
+            this.OutputPanel.Location = new System.Drawing.Point(108, 99);
             this.OutputPanel.Name = "OutputPanel";
-            this.OutputPanel.Size = new System.Drawing.Size(427, 301);
+            this.OutputPanel.Size = new System.Drawing.Size(200, 100);
             this.OutputPanel.TabIndex = 40;
             // 
             // OutputFolderBrowse
@@ -1261,9 +1265,9 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.InstrumentPanel);
             this.splitContainer1.Panel1.Controls.Add(this.OutputPanel);
             this.splitContainer1.Panel1.Controls.Add(this.EnzymePanel);
-            this.splitContainer1.Panel1.Controls.Add(this.InstrumentPanel);
             this.splitContainer1.Panel1.Controls.Add(this.ResourcesPanel);
             this.splitContainer1.Panel1.Controls.Add(this.FilesPanel);
             this.splitContainer1.Panel1.Controls.Add(this.SearchTypePanel);
@@ -1306,6 +1310,30 @@
             this.NextButton.Text = "Next";
             this.NextButton.UseVisualStyleBackColor = true;
             this.NextButton.Click += new System.EventHandler(this.NavigateButton_Click);
+            // 
+            // FragmentMidRadio
+            // 
+            this.FragmentMidRadio.AutoSize = true;
+            this.FragmentMidRadio.Location = new System.Drawing.Point(9, 52);
+            this.FragmentMidRadio.Name = "FragmentMidRadio";
+            this.FragmentMidRadio.Size = new System.Drawing.Size(233, 17);
+            this.FragmentMidRadio.TabIndex = 8;
+            this.FragmentMidRadio.TabStop = true;
+            this.FragmentMidRadio.Text = "Medium resolution, such as TOF instruments";
+            this.FragmentMidRadio.UseVisualStyleBackColor = true;
+            this.FragmentMidRadio.CheckedChanged += new System.EventHandler(this.Tolerance_CheckChanged);
+            // 
+            // PrecursorMidRadio
+            // 
+            this.PrecursorMidRadio.AutoSize = true;
+            this.PrecursorMidRadio.Location = new System.Drawing.Point(9, 54);
+            this.PrecursorMidRadio.Name = "PrecursorMidRadio";
+            this.PrecursorMidRadio.Size = new System.Drawing.Size(233, 17);
+            this.PrecursorMidRadio.TabIndex = 9;
+            this.PrecursorMidRadio.TabStop = true;
+            this.PrecursorMidRadio.Text = "Medium resolution, such as TOF instruments";
+            this.PrecursorMidRadio.UseVisualStyleBackColor = true;
+            this.PrecursorMidRadio.CheckedChanged += new System.EventHandler(this.Tolerance_CheckChanged);
             // 
             // ConfigWizard
             // 
@@ -1452,5 +1480,7 @@
         private System.Windows.Forms.Button OutputFolderBrowse;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox OutputFolderBox;
+        private System.Windows.Forms.RadioButton FragmentMidRadio;
+        private System.Windows.Forms.RadioButton PrecursorMidRadio;
     }
 }

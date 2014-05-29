@@ -515,12 +515,17 @@ namespace BumberDash.Forms
 
         private void Tolerance_CheckChanged(object sender, EventArgs e)
         {
-            FineTuneBox.Visible = ((PrecursorLowRadio.Checked || PrecursorHighRadio.Checked)
-                                   && (FragmentLowRadio.Checked || FragmentHighRadio.Checked));
+            FineTuneBox.Visible = ((PrecursorLowRadio.Checked || PrecursorMidRadio.Checked || PrecursorHighRadio.Checked)
+                                   && (FragmentLowRadio.Checked || FragmentMidRadio.Checked || FragmentHighRadio.Checked));
             if (PrecursorLowRadio.Checked)
             {
                 PrecursorToleranceBox.Text = "1.5";
                 PrecursorToleranceUnitsBox.Text = "mz";
+            }
+            else if (PrecursorMidRadio.Checked)
+            {
+                PrecursorToleranceBox.Text = "50";
+                PrecursorToleranceUnitsBox.Text = "ppm";
             }
             else if (PrecursorHighRadio.Checked)
             {
@@ -532,6 +537,11 @@ namespace BumberDash.Forms
             {
                 FragmentToleranceBox.Text = "0.5";
                 FragmentToleranceUnitsBox.Text = "mz";
+            }
+            else if (FragmentMidRadio.Checked)
+            {
+                FragmentToleranceBox.Text = "25";
+                FragmentToleranceUnitsBox.Text = "ppm";
             }
             else if (FragmentHighRadio.Checked)
             {
@@ -689,7 +699,10 @@ namespace BumberDash.Forms
                     else if (currentParam.Value.Trim('"').EndsWith("ppm")
                         && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), out value))
                     {
-                        PrecursorHighRadio.Checked = true;
+                        if (value > 30)
+                            PrecursorMidRadio.Checked = true;
+                        else
+                            PrecursorHighRadio.Checked = true;
                         precursor = value.ToString();
                         precursorUnit = "ppm";
                     }
@@ -708,7 +721,10 @@ namespace BumberDash.Forms
                     else if (currentParam.Value.Trim('"').EndsWith("ppm")
                         && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), out value))
                     {
-                        FragmentHighRadio.Checked = true;
+                        if (value > 15)
+                            FragmentMidRadio.Checked = true;
+                        else
+                            FragmentHighRadio.Checked = true;
                         FragmentToleranceBox.Text = value.ToString();
                         FragmentToleranceUnitsBox.Text = "ppm";
                     }
@@ -1040,9 +1056,13 @@ namespace BumberDash.Forms
             }
             if (destinationProgram == "Comet")
             {
-                var cometParams = FragmentLowRadio.Checked
-                                      ? CometParams.GetIonTrapParams()
-                                      : CometParams.GetHighResParams();
+                CometParams cometParams;
+                if (FragmentLowRadio.Checked)
+                    cometParams = CometParams.GetIonTrapParams();
+                else if (FragmentMidRadio.Checked)
+                    cometParams = CometParams.GetTofParams();
+                else
+                    cometParams = CometParams.GetHighResParams();
                 cometParams.PrecursorTolerance = double.Parse(PrecursorToleranceBox.Text);
                 cometParams.PrecursorUnit = PrecursorToleranceUnitsBox.Text == "mz"
                                                 ? CometParams.PrecursorUnitOptions.Daltons
@@ -1105,6 +1125,12 @@ namespace BumberDash.Forms
                 msgfParams.FragmentationMethod = FragmentLowRadio.Checked
                                                      ? MSGFParams.FragmentationMethodOptions.CID
                                                      : MSGFParams.FragmentationMethodOptions.HCD;
+                if (PrecursorLowRadio.Checked || FragmentLowRadio.Checked)
+                    msgfParams.Instrument = MSGFParams.InstrumentOptions.LowResLTQ;
+                else if (PrecursorMidRadio.Checked || FragmentMidRadio.Checked)
+                    msgfParams.Instrument = MSGFParams.InstrumentOptions.TOF;
+                else
+                    msgfParams.Instrument = MSGFParams.InstrumentOptions.HighResLTQ;
                 msgfParams.OutputSuffix = MSGFSuffixBox.Text;
                 if (MSGFParams.CleavageAgentOptions.ContainsKey(CleavageAgentBox.Text))
                     msgfParams.CleavageAgent = MSGFParams.CleavageAgentOptions[CleavageAgentBox.Text];
