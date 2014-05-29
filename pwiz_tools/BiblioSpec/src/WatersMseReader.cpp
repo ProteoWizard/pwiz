@@ -28,6 +28,12 @@
 
 #include "WatersMseReader.h"
 #include "boost/algorithm/string.hpp"
+#include "boost/filesystem.hpp"
+
+//#ifdef PWIZ_READER_WATERS
+#include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
+using namespace pwiz::vendor_api::Waters;
+//#endif
 
 using namespace std;
 
@@ -131,12 +137,43 @@ WatersMseReader::WatersMseReader(BlibBuilder& maker,
                                  const ProgressIndicator* parentProgress)
   : BuildParser(maker, csvname, parentProgress), 
     csvName_(csvname), scoreThreshold_(getScoreThreshold(MSE)), lineNum_(1), 
-    curMsePSM_(NULL), numColumns_(0)
+    curMsePSM_(NULL), numColumns_(0), pusherInterval_(-1)
 {
     Verbosity::debug("Creating WatersMseReader.");
     
     setSpecFileName(csvname, // this is for BuildParser
                     false);  // don't look for the file
+
+    if (maker.getPusherInterval() > 0)
+    {
+        pusherInterval_ = maker.getPusherInterval();
+        Verbosity::debug("Using forced pusher interval of %f.", pusherInterval_);
+    }
+//#ifdef PWIZ_READER_WATERS
+    else
+    {
+        string rawDataPath(csvname);
+        size_t suffixPos = rawDataPath.find("_final_fragment.csv");
+        if (suffixPos != string::npos) {
+            rawDataPath.replace(suffixPos, string::npos, ".raw");
+            if (boost::filesystem::exists(rawDataPath)) {
+                Verbosity::debug("Found raw file.");
+                RawDataPtr rawData(new RawData(rawDataPath));
+                const vector<int>& functions = rawData->FunctionIndexList();
+                if (!functions.empty()) {
+                    int function = functions.front();
+                    const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawData->GetExtendedScanStats(function);
+                    RawData::ExtendedScanStatsByName::const_iterator transportRfItr = extendedScanStatsByName.find("Transport RF");
+                    if (transportRfItr != extendedScanStatsByName.end()) {
+                        double transportRf = boost::any_cast<short>(transportRfItr->second[0]);
+                        pusherInterval_ = 1000 / transportRf;
+                        Verbosity::debug("Pusher interval is %f.", pusherInterval_);
+                    }
+                }
+            }
+        }
+    }
+//#endif
     
     // point to self as spec reader
     delete specReader_;
@@ -383,7 +420,7 @@ void WatersMseReader::storeLine(LineEntry& entry){
         curMsePSM_->unmodSeq = entry.sequence;
         curMsePSM_->mz = entry.precursorMz;
         curMsePSM_->score = entry.score;
-        curMsePSM_->precursorMobility = entry.precursorMobility;
+        curMsePSM_->precursorMobility = (pusherInterval_ > 0) ? pusherInterval_ * entry.precursorMobility : 0;
         curMsePSM_->retentionTime = entry.retentionTime;
         parseModString(entry, curMsePSM_);
         curMsePSM_->mzs.push_back(entry.fragmentMz);
@@ -495,7 +532,7 @@ bool WatersMseReader::getSpectrum(PSM* psm,
 
     returnData.id = ((MsePSM*)psm)->specKey;
     returnData.ionMobility = ((MsePSM*)psm)->precursorMobility;
-    returnData.ionMobilityType = 1;
+    returnData.ionMobilityType = (returnData.ionMobility > 0) ? 1 : 0;
     returnData.retentionTime = ((MsePSM*)psm)->retentionTime;
     returnData.mz = ((MsePSM*)psm)->mz;
     returnData.numPeaks = ((MsePSM*)psm)->mzs.size();

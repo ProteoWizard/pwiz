@@ -94,6 +94,7 @@ class BlibBuilder : public BlibMaker
   int getLevelCompress();
   vector<char*> getInputFiles();
   string getMaxQuantModsPath();
+  double getPusherInterval() const;
   const set<string>* getTargetSequences();
   const set<string>* getTargetSequencesModified();
   virtual int parseCommandArgs(int argc, char* argv[]);
@@ -119,6 +120,7 @@ class BlibBuilder : public BlibMaker
   int fileSizeThresholdForCaching; // for parsing .dat files
   vector<char*> input_files;
   string maxQuantModsPath;
+  double forcedPusherInterval;
   set<string>* targetSequences;
   set<string>* targetSequencesModified;
   queue<STDIN_LIST> stdinput;

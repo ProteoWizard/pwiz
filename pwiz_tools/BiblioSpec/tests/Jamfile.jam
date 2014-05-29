@@ -556,7 +556,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 make output/mse-mobility.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
-  : -o
+  : -o -P 0.068999
   : ../src//BlibBuild inputs/waters-mobility.final_fragment.csv output/mse-mobility.blib
   : 
   : build-mse-mobility ;

@@ -35,7 +35,8 @@ namespace BiblioSpec {
 
 BlibBuilder::BlibBuilder():
 level_compress(3), fileSizeThresholdForCaching(800000000),
-targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin)
+targetSequences(NULL), targetSequencesModified(NULL), stdinStream(&cin),
+forcedPusherInterval(-1)
 {
     scoreThresholds[SQT] = 0.01;    // 1% FDR
     scoreThresholds[PEPXML] = 0.95; // peptide prophet probability
@@ -91,6 +92,7 @@ void BlibBuilder::usage()
         "   -i <library_id>   LSID library ID. Default uses file name.\n"
         "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n"
         "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n";
+        "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n";
 
     cerr << usage << endl;
     exit(1);
@@ -110,6 +112,10 @@ vector<char*> BlibBuilder::getInputFiles() {
 
 string BlibBuilder::getMaxQuantModsPath() {
     return maxQuantModsPath;
+}
+
+double BlibBuilder::getPusherInterval() const {
+    return forcedPusherInterval;
 }
 
 const set<string>* BlibBuilder::getTargetSequences() {
@@ -370,6 +376,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         Verbosity::set_verbosity(v_level);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
+    } else if (switchName == 'P' && ++i < argc) {
+        forcedPusherInterval = atof(argv[i]);
     } else if (switchName == 'u') {
         stdinput.push(UNMODIFIED_SEQUENCES);
     } else if (switchName == 'U') {

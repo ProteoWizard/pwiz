@@ -154,7 +154,7 @@ alias pwiz-boost-libraries
     /ext/boost//iostreams
     /ext/boost//system
     /ext/expat//expat
-    $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    $(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common
     $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml//pwiz_utility_minimxml
     $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc

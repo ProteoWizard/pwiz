@@ -206,6 +206,8 @@ class WatersMseReader : public BuildParser, public SpecFileReader {
         std::vector<wColumnTranslator>targetColumns_; // columns to extract 
         std::vector<wColumnTranslator>optionalColumns_; // not required
 
+        double pusherInterval_;
+
         void initTargetColumns();
         bool openFile();
         void parseHeader(std::string& line);
