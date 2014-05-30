@@ -153,7 +153,10 @@ WatersMseReader::WatersMseReader(BlibBuilder& maker,
     else
     {
         string rawDataPath(csvname);
-        size_t suffixPos = rawDataPath.find("_final_fragment.csv");
+        size_t suffixPos = rawDataPath.find("_IA_final_fragment.csv");
+        if (suffixPos == string::npos) {
+            suffixPos = rawDataPath.find("_final_fragment.csv");
+        }
         if (suffixPos != string::npos) {
             rawDataPath.replace(suffixPos, string::npos, ".raw");
             if (boost::filesystem::exists(rawDataPath)) {
@@ -411,6 +414,13 @@ void WatersMseReader::storeLine(LineEntry& entry){
 
     // else, entry is a new PSM. Save current
     insertCurPSM();
+
+    // Do we need to get the pusher frequency for ion mobility?
+    if ((entry.precursorMobility > 0) && (pusherInterval_ <= 0)) {
+            throw BlibException(false, "Drift time data can only be processed with the original raw data "
+            "present in the same directory as the final_fragment.csv, or by specifying a pusher interval "
+            "on the command line.");
+    }
 
     // init the new PSM with all of the current entry values
     // must be a Pass1 or Pass2 peptide

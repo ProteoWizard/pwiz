@@ -2486,15 +2486,19 @@
       <Link>BaseDataAccess.dll.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\BiblioSpec\binaries\BlibBuild.exe">
+    <Content Include="..\Shared\ProteowizardWrapper\obj\$(Platform)\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\BiblioSpec\binaries\BlibFilter.exe">
+    <Content Include="..\Shared\ProteowizardWrapper\obj\$(Platform)\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\BiblioSpec\binaries\msparser.dll">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\build-nt-x86\msvc-release\msparser.dll">
+      <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\build-nt-x86\msvc-release-x86_64\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
