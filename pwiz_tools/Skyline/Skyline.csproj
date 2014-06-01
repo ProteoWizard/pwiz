@@ -2494,11 +2494,7 @@
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="..\..\build-nt-x86\msvc-release\msparser.dll">
-      <Link>msparser.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\build-nt-x86\msvc-release-x86_64\msparser.dll">
+    <Content Include="..\Shared\ProteowizardWrapper\obj\$(PLATFORM)\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -878,15 +878,15 @@
       <Link>MassLynxRaw.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Shared\BiblioSpec\binaries\BlibBuild.exe">
+    <Content Include="..\..\Shared\ProteowizardWrapper\obj\$(Platform)\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Shared\BiblioSpec\binaries\BlibFilter.exe">
+    <Content Include="..\..\Shared\ProteowizardWrapper\obj\$(Platform)\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\Shared\BiblioSpec\binaries\msparser.dll">
+    <Content Include="..\..\Shared\ProteowizardWrapper\obj\$(PLATFORM)\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
