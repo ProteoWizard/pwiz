@@ -568,6 +568,15 @@ namespace pwiz.ProteomeDatabase.Fasta
                         prot.SetWebSearchTerm(new WebSearchTerm(UNIPROTKB_TAG,mapped)); 
                     }
                 }
+                else if (prot.GetProteinMetadata().GetSearchType() == UNIPROTKB_TAG)
+                {
+                    // Check for homegrown numbering schemes
+                    long dummy;
+                    if (Int64.TryParse(search, out dummy))
+                    {
+                        prot.SetWebSearchCompleted();  // All numbers, not a Uniprot ID
+                    }
+                }
 
                 if (prot.GetProteinMetadata().NeedsSearch())
                 {

@@ -326,6 +326,16 @@ namespace CommonTest
                             gene: "ADL400W AGOS_ADL400W AGOS_AFR758C")
                     }),
 
+                new FastaHeaderParserTest( // some kind of homegrown numbering scheme - don't even go to the web for that
+                    ">000001 ENSBTAP00000055373 pep:known scaffold:UMD3.1:GJ059509.1:3535:6470:-1 gene:ENSBTAG00000047958 transcript:ENSBTAT00000064726 gene_biotype:protein_coding transcript_biotype:protein_coding",
+                    new[]
+                    {
+                        new FastaHeaderReaderResult(accession: novalue, name: "000001",
+                            preferredname: novalue,
+                            description: "ENSBTAP00000055373 pep:known scaffold:UMD3.1:GJ059509.1:3535:6470:-1 gene:ENSBTAG00000047958 transcript:ENSBTAT00000064726 gene_biotype:protein_coding transcript_biotype:protein_coding", 
+                            species: novalue, gene: novalue, websearchcode: WebEnabledFastaImporter.SEARCHDONE_TAG)
+                    }),
+
                // keep these negative tests at end, it ensures more code coverage in the retry code
                 new FastaHeaderParserTest( // this one is a negative test
                     NEGTEST,
