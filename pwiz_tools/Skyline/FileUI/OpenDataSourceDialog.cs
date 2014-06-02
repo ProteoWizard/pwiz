@@ -251,7 +251,7 @@ namespace pwiz.Skyline.FileUI
             listView.Items.Clear();
 
             var listSourceInfo = new List<SourceInfo>();
-            if (null == directory)
+            if (null == directory || directory is MsDataFilePath && string.IsNullOrEmpty(((MsDataFilePath) directory).FilePath))
             {
                 foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
                 {
