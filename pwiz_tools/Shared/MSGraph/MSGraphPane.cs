@@ -159,7 +159,7 @@ namespace pwiz.MSGraph
                     pt0 = new PointF(pt0.Y, pt0.X);
                     pt1 = new PointF(pt1.Y, pt1.X);
                     // Make sure first coordinate of pt0 is less than pt1
-                    if (pt0.Y >= pt1.Y)
+                    if (pt0.X >= pt1.X)
                     {
                         var ptTmp = pt0;
                         pt0 = pt1;
