@@ -36,19 +36,23 @@ namespace pwiz.Skyline.Model.Databinding
             }
             set
             {
-                if (Equals(ViewSpecList, value))
-                {
-                    return;
-                }
-                var deletedViews = new HashSet<string>(ViewSpecList.ViewSpecs.Select(view => view.Name)
-                    .Except(value.ViewSpecs.Select(view => view.Name)));
+                bool changed = false;
+                var viewNames = new HashSet<string>(value.ViewSpecs.Select(view => view.Name));
                 var newReports =
-                    Settings.Default.ReportSpecList.Where(reportSpec => !deletedViews.Contains(reportSpec.Name)).ToArray();
+                    Settings.Default.ReportSpecList.Where(reportSpec => viewNames.Contains(reportSpec.Name)).ToArray();
                 if (newReports.Length != Settings.Default.ReportSpecList.Count)
                 {
-                    var newReportSpecList = new ReportSpecList();
+                    var newReportSpecList = new ReportSpecList
+                    {
+                        RevisionIndex = Settings.Default.ReportSpecList.RevisionIndex
+                    };
                     newReportSpecList.AddRange(newReports);
                     Settings.Default.ReportSpecList = newReportSpecList;
+                    changed = true;
+                }
+                if (!changed && Equals(ViewSpecList, value))
+                {
+                    return;
                 }
                 Settings.Default.ViewSpecList = value;
                 if (null != SettingsChange)
