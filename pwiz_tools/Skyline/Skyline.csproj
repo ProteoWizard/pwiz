@@ -983,6 +983,12 @@
     <Compile Include="SettingsUI\AddPathsDlg.Designer.cs">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\DiaIsolationWindowsGraphForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\DiaIsolationWindowsGraphForm.Designer.cs">
+      <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\IonMobility\ChargeRegressionTable.cs" />
     <Compile Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.cs">
       <SubType>Form</SubType>
@@ -1804,6 +1810,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.zh-CHS.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\DiaIsolationWindowsGraphForm.resx">
+      <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.ja.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>

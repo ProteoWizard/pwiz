@@ -24,6 +24,7 @@ ColumnChooser,TestStandardTypeWithOldReports
 ConfigureToolsDlg,TestQuasarTutorial
 CreateIrtCalculatorDlg,TestAssayLibraryImport
 DefineAnnotationDlg,TestAnnotations
+DiaIsolationWindowsGraphForm,TestIsolationScheme
 DocumentGridForm,TestReportSummary
 EditCEDlg,TestOptimization
 EditDPDlg,TestEditDialogs

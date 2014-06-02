@@ -5632,6 +5632,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Extraction Windows.
+        /// </summary>
+        public static string DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows {
+            get {
+                return ResourceManager.GetString("DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cycle.
+        /// </summary>
+        public static string DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle {
+            get {
+                return ResourceManager.GetString("DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Isolation Windows.
+        /// </summary>
+        public static string DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Isolation_Windows {
+            get {
+                return ResourceManager.GetString("DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Isolation_Windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z {
+            get {
+                return ResourceManager.GetString("DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Digesting {0} proteome with {1}.
         /// </summary>
         public static string DigestHelper_Digest_Digesting__0__proteome_with__1__ {

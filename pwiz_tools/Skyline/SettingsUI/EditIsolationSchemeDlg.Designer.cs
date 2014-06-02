@@ -59,14 +59,15 @@
             this.labelIsolationWidth = new System.Windows.Forms.Label();
             this.rbUseResultsData = new System.Windows.Forms.RadioButton();
             this.gridIsolationWindows = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.labelDeconvPre = new System.Windows.Forms.Label();
-            this.comboDeconvPre = new System.Windows.Forms.ComboBox();
             this.colStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTarget = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStartMargin = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colEndMargin = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.labelDeconvPre = new System.Windows.Forms.Label();
+            this.comboDeconvPre = new System.Windows.Forms.ComboBox();
+            this.comboIsolation = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             this.SuspendLayout();
@@ -110,6 +111,7 @@
             resources.ApplyResources(this.btnGraph, "btnGraph");
             this.btnGraph.Name = "btnGraph";
             this.btnGraph.UseVisualStyleBackColor = true;
+            this.btnGraph.Click += new System.EventHandler(this.btnGraph_Click);
             // 
             // labelMargins
             // 
@@ -201,6 +203,8 @@
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.Format = "N2";
+            dataGridViewCellStyle1.NullValue = null;
             dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
@@ -217,6 +221,8 @@
             dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle7.Format = "N4";
+            dataGridViewCellStyle7.NullValue = null;
             dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
@@ -231,19 +237,6 @@
             dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridIsolationWindows.RowHeadersDefaultCellStyle = dataGridViewCellStyle8;
             this.gridIsolationWindows.RowHeadersVisible = false;
-            // 
-            // labelDeconvPre
-            // 
-            resources.ApplyResources(this.labelDeconvPre, "labelDeconvPre");
-            this.labelDeconvPre.Name = "labelDeconvPre";
-            // 
-            // comboDeconvPre
-            // 
-            resources.ApplyResources(this.comboDeconvPre, "comboDeconvPre");
-            this.comboDeconvPre.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboDeconvPre.FormattingEnabled = true;
-            this.comboDeconvPre.Name = "comboDeconvPre";
-            this.comboDeconvPre.SelectedIndexChanged += new System.EventHandler(this.comboDeconv_SelectedIndexChanged);
             // 
             // colStart
             // 
@@ -291,12 +284,41 @@
             resources.ApplyResources(this.colEndMargin, "colEndMargin");
             this.colEndMargin.Name = "colEndMargin";
             // 
+            // labelDeconvPre
+            // 
+            resources.ApplyResources(this.labelDeconvPre, "labelDeconvPre");
+            this.labelDeconvPre.Name = "labelDeconvPre";
+            // 
+            // comboDeconvPre
+            // 
+            resources.ApplyResources(this.comboDeconvPre, "comboDeconvPre");
+            this.comboDeconvPre.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDeconvPre.FormattingEnabled = true;
+            this.comboDeconvPre.Name = "comboDeconvPre";
+            this.comboDeconvPre.SelectedIndexChanged += new System.EventHandler(this.comboDeconv_SelectedIndexChanged);
+            // 
+            // comboIsolation
+            // 
+            this.comboIsolation.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
+            this.comboIsolation.AutoCompleteCustomSource.AddRange(new string[] {
+            resources.GetString("comboIsolation.AutoCompleteCustomSource"),
+            resources.GetString("comboIsolation.AutoCompleteCustomSource1")});
+            this.comboIsolation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboIsolation.FormattingEnabled = true;
+            this.comboIsolation.Items.AddRange(new object[] {
+            resources.GetString("comboIsolation.Items"),
+            resources.GetString("comboIsolation.Items1")});
+            resources.ApplyResources(this.comboIsolation, "comboIsolation");
+            this.comboIsolation.Name = "comboIsolation";
+            this.comboIsolation.SelectedIndexChanged += new System.EventHandler(this.comboIsolation_SelectedIndexChanged);
+            // 
             // EditIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.comboIsolation);
             this.Controls.Add(this.labelDeconvPre);
             this.Controls.Add(this.comboDeconvPre);
             this.Controls.Add(this.labelDeconvolution);
@@ -363,5 +385,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colTarget;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStartMargin;
         private System.Windows.Forms.DataGridViewTextBoxColumn colEndMargin;
+        private System.Windows.Forms.ComboBox comboIsolation;
     }
 }

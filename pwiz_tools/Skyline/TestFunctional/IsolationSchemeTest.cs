@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -26,6 +27,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -827,6 +829,100 @@ namespace pwiz.SkylineTestFunctional
                     }));
 
                 OkDialog(editDlg, editDlg.OkDialog);
+            }
+            RunUI(() => editList.SelectItem("test1")); // Not L10N
+            {
+                // Test Extraction/Isolation Alternation
+                const int rows = 5;
+                const int startMargin = 5;
+                const int firstRangeStart = 100;
+                const int firstRangeEnd = 120;
+                const int rangeInterval = 100;
+
+                double?[][] expectedValues = new double?[rows][];
+                RunDlg<EditIsolationSchemeDlg>(editList.EditItem, editDlg =>
+                {
+                    editDlg.IsolationSchemeName = "test3";
+                    editDlg.UseResults = false;
+                    editDlg.SpecifyTarget = false;
+                    editDlg.MarginType = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
+                   
+                    for (int row = 0; row < rows; row++)
+                    {
+                        editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START,row);
+                        editDlg.IsolationWindowGrid.SetCellValue(firstRangeStart + rangeInterval*row);
+                        editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, row);
+                        editDlg.IsolationWindowGrid.SetCellValue(firstRangeEnd + rangeInterval*row);
+                        editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START_MARGIN, row);
+                        editDlg.IsolationWindowGrid.SetCellValue(startMargin);
+                    }
+                    for (int row = 0; row < rows; row ++)
+                    {
+                        expectedValues[row] = new double?[]
+                        {
+                            firstRangeStart + rangeInterval*row,
+                            firstRangeEnd + rangeInterval*row,
+                            startMargin
+                        };
+                    }
+                    VerifyCellValues(editDlg, expectedValues);
+                    editDlg.IsolationType = EditIsolationSchemeDlg.COMBO_EXTRACTION_INDEX;
+                    // Test extraction alternation
+                    for (int row = 0; row < rows; row ++)
+                    {
+                        expectedValues[row][0] += startMargin;
+                        expectedValues[row][1] -= startMargin;
+                    }
+                    VerifyCellValues(editDlg, expectedValues);
+                    editDlg.OkDialog();
+                });
+                RunUI(() => editList.SelectItem("test3")); // Not L10N
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
+                    int row = 0;
+                    RunUI(() =>
+                    {
+                        // Test that the isolation windows were saved correctly as extraction windows
+                        foreach (IsolationWindow isolationWindow in editDlg.IsolationScheme.PrespecifiedIsolationWindows)
+                        {
+                            Assert.AreEqual(expectedValues[row][0], isolationWindow.Start);
+                            Assert.AreEqual(expectedValues[row][1], isolationWindow.End);
+                            Assert.AreEqual(expectedValues[row][2], isolationWindow.StartMargin);
+                            row++;
+                        }
+                    });
+                    // Test Graph to make sure it has the right lines
+                    RunDlg<DiaIsolationWindowsGraphForm>(editDlg.OpenGraph, diaGraph =>
+                    {
+                        int windowCount = diaGraph.Windows.Count;
+                        int isolationCount = windowCount/2;
+                        for (int i = 0; i < isolationCount; i ++)
+                        {
+                            for (int j = 0; j < 2; j ++)
+                            {
+                                Location locWindow = diaGraph.Windows.ElementAt(i*2 + j).Location;
+                                Location locLMargin = diaGraph.LeftMargins.ElementAt(i*2 + j).Location;
+                                Location locRMargin = diaGraph.RightMargins.ElementAt(i*2 + j).Location;
+                                Assert.AreEqual(locWindow.X1, expectedValues[i][0]);
+                                Assert.AreEqual(locWindow.X2, expectedValues[i][1]);
+                                Assert.AreEqual(locWindow.Y1, locWindow.Y2);
+                                Assert.AreEqual(locWindow.Y1, j + (double) i / expectedValues.Length);
+                                Assert.AreEqual(locLMargin.X1, expectedValues[i][0] - expectedValues[i][2]);
+                                Assert.AreEqual(locLMargin.X2, expectedValues[i][0]);
+                                Assert.AreEqual(locLMargin.Y1, locLMargin.Y2);
+                                Assert.AreEqual(locLMargin.Y1, j + (double) i/expectedValues.Length);
+                                Assert.AreEqual(locRMargin.X1, expectedValues[i][1]);
+                                Assert.AreEqual(locRMargin.X2, expectedValues[i][1] + expectedValues[i][2]);
+                                Assert.AreEqual(locRMargin.Y1, locRMargin.Y2);
+                                Assert.AreEqual(locRMargin.Y1, j + (double)i / expectedValues.Length);
+                            }
+                        }
+                        diaGraph.CloseButton();
+                    });
+
+                    OkDialog(editDlg, editDlg.OkDialog);
+                }
+                
                 OkDialog(editList, editList.OkDialog);
                 OkDialog(fullScanDlg, fullScanDlg.OkDialog);
             }
