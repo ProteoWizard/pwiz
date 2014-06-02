@@ -1884,5 +1884,29 @@ namespace pwiz.Skyline.Properties {
                 this["AutoZoomFullScanGraph"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilterDriftTimesFullScan {
+            get {
+                return ((bool)(this["FilterDriftTimesFullScan"]));
+            }
+            set {
+                this["FilterDriftTimesFullScan"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SumScansFullScan {
+            get {
+                return ((bool)(this["SumScansFullScan"]));
+            }
+            set {
+                this["SumScansFullScan"] = value;
+            }
+        }
     }
 }

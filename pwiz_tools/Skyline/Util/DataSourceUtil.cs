@@ -56,16 +56,9 @@ namespace pwiz.Skyline.Util
         public const string UNKNOWN_TYPE = "unknown";
         // ReSharper restore NonLocalizedString
 
-        public static bool IsDataSource(String path)
+        public static bool IsDataSource(string path)
         {
-            if (Path.HasExtension(path))
-            {
-                return IsDataSource(new FileInfo(path));
-            }
-            else
-            {
-                return IsDataSource(new FileInfo(path));
-            }
+            return IsDataSource(new FileInfo(path)) || IsDataSource(new DirectoryInfo(path));
         }
 
         public static bool IsDataSource(DirectoryInfo dirInfo)

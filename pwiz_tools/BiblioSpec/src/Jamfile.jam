@@ -238,3 +238,34 @@ make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy ;
 
 # required file for running BlibBuild with MaxQuant support
 make modifications.xml : ./modifications.xml : @common.copy ;
+
+rule install-msparser-requirements ( properties * )
+{
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        local result = <source>./unimod_2.xsd
+            <source>./quantitation_1.xsd
+			<source>./quantitation_2.xsd
+			<source>./modifications.xml ;
+			
+        if <toolset>msvc in $(properties)
+        {
+            if <runtime-debugging>on in $(properties)
+            {
+                result += <source>$(msparser_path)/lib/msparserD.dll ;
+            }
+            else
+            {
+                result += <source>$(msparser_path)/lib/msparser.dll ;
+            }
+        }
+        return $(result) ;
+    }
+}
+
+install install_msparser
+    : : <conditional>@install-msparser-requirements
+    ;
+
+explicit install_msparser ;

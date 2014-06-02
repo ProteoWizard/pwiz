@@ -337,8 +337,8 @@ namespace SkylineTester
                             var testNumber = line.Substring(8, 7).Trim();
                             var testName = line.Substring(16, 46).TrimEnd();
                             var memory = line.Substring(i + 10).Split('/');
-                            var managedMemory = double.Parse(memory[0]);
-                            var totalMemory = double.Parse(memory[1].Split(' ')[0]);
+                            var managedMemory = ParseMemory(memory[0]) ?? 0.0;
+                            var totalMemory = ParseMemory(memory[1].Split(' ')[0]) ?? 0.0;
                             var managedTag = "{0} MB\n{1} {2}".With(managedMemory, testNumber, testName);
                             var totalTag = "{0} MB\n{1} {2}".With(totalMemory, testNumber, testName);
 
@@ -434,16 +434,24 @@ namespace SkylineTester
                 var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
                 var parts = line.Split(' ');
                 var failures = int.Parse(parts[4]);
-                var managedMemory = Double.Parse(parts[6].Split('/')[0]);
-                var totalMemory = Double.Parse(parts[6].Split('/')[1]);
+                var managedMemory = ParseMemory(parts[6].Split('/')[0]);
+                var totalMemory = ParseMemory(parts[6].Split('/')[1]);
 
                 MainWindow.NewNightlyRun.Revision = _revision;
                 MainWindow.NewNightlyRun.RunMinutes = (int)(DateTime.Now - MainWindow.NewNightlyRun.Date).TotalMinutes;
                 MainWindow.NewNightlyRun.TestsRun = MainWindow.TestsRun;
                 MainWindow.NewNightlyRun.Failures = failures;
-                MainWindow.NewNightlyRun.ManagedMemory = (int)managedMemory;
-                MainWindow.NewNightlyRun.TotalMemory = (int)totalMemory;
+                MainWindow.NewNightlyRun.ManagedMemory = (int)(managedMemory??0);
+                MainWindow.NewNightlyRun.TotalMemory = (int)(totalMemory??0);
             }
+        }
+
+        private static double? ParseMemory(string memoryText)
+        {
+            double memory;
+            if (double.TryParse(memoryText, out memory))
+                return memory;
+            return null;
         }
 
         private int GetRevision(bool nuke)

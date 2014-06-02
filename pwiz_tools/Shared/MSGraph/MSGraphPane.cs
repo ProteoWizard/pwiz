@@ -63,6 +63,7 @@ namespace pwiz.MSGraph
 
         public bool AllowCurveOverlap { get; set; }
         public bool AllowLabelOverlap { get; set; }
+        public bool AllowYAutoScale { get; set; }
 
         protected MSGraphItemType _currentItemType;
         public MSGraphItemType CurrentItemType
@@ -253,7 +254,8 @@ namespace pwiz.MSGraph
             Axis yAxis = YAxis;
 
             yAxis.Scale.MinAuto = false;
-            yAxis.Scale.Min = 0;
+            if (!AllowYAutoScale || yAxis.Scale.Min < 0)
+                yAxis.Scale.Min = 0;
 
             // ensure that the chart rectangle is the right size
             AxisChange(g);

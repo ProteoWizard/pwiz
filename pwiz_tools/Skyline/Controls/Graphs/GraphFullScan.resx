@@ -207,8 +207,32 @@
   <data name="magnifyBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
-  <data name="magnifyBtn.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
+  <data name="magnifyBtn.ToolTipText" xml:space="preserve">
+    <value>Zoom to Selection</value>
+  </data>
+  <data name="spectrumBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="spectrumBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="spectrumBtn.ToolTipText" xml:space="preserve">
+    <value>Show 2D Spectrum</value>
+  </data>
+  <data name="spectrumBtn.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="filterBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="filterBtn.ToolTipText" xml:space="preserve">
+    <value>Filter Drift Times</value>
+  </data>
+  <data name="filterBtn.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
     <value>13, 22</value>
@@ -346,6 +370,18 @@
     <value>magnifyBtn</value>
   </data>
   <data name="&gt;&gt;magnifyBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;spectrumBtn.Name" xml:space="preserve">
+    <value>spectrumBtn</value>
+  </data>
+  <data name="&gt;&gt;spectrumBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;filterBtn.Name" xml:space="preserve">
+    <value>filterBtn</value>
+  </data>
+  <data name="&gt;&gt;filterBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblScanId.Name" xml:space="preserve">

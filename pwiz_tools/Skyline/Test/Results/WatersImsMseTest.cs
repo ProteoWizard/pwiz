@@ -50,34 +50,32 @@ namespace pwiz.SkylineTest.Results
     {
         private const string ZIP_FILE = @"Test\Results\WatersImsMseTest.zip";
 
-
+        private enum DriftFilterType { none, predictor, library }
 
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(0);
+            WatersImsMseChromatogramTest(DriftFilterType.none);
         }
 
         [TestMethod]
         public void WatersImsMsePredictedDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(1);
+            WatersImsMseChromatogramTest(DriftFilterType.predictor);
         }
 
         [TestMethod]
         public void WatersImsMseLibraryDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(2);
+            WatersImsMseChromatogramTest(DriftFilterType.library);
         }
 
-
-        // mode 0: use no drift times, mode 1: use drift time predictor, mode 2: use drift times from library
-        private void WatersImsMseChromatogramTest(int mode)
+        private void WatersImsMseChromatogramTest(DriftFilterType mode)
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            bool withDriftTimePredictor = (mode == 1); // Load the doc that has a drift time predictor?
-            bool withDriftTimeFilter = (mode != 0); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
+            bool withDriftTimePredictor = (mode == DriftFilterType.predictor); // Load the doc that has a drift time predictor?
+            bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering?  (either with predictor, or with bare times in blib file)
             string docPath;
             SrmDocument document = InitWatersImsMseDocument(testFilesDir, withDriftTimePredictor ? "single_with_driftinfo.sky" : "single_no_driftinfo.sky", out docPath);
             AssertEx.IsDocumentState(document, withDriftTimePredictor ? 1 : 0, 1, 1, 1, 8); // Drift time lib load bumps the doc version

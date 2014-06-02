@@ -27,6 +27,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     import path feature ;
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
+    path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
 
     # read these from global module
     TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
@@ -191,9 +192,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz/data/identdata//install_pwiz_identdata/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//install_msparser/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
     ;
 
     make InspectCode
@@ -209,6 +210,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//install_msparser/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
     ;
         
     

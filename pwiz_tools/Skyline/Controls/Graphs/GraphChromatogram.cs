@@ -325,7 +325,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     Color = curve.Color,
                     PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
                     ProductMz = fullScanInfo.ChromInfo.ProductMz,
-                    ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth
+                    ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth,
+                    IonMobilityValue = fullScanInfo.ChromInfo.IonMobilityValue,
+                    IonMobilityExtractionWidth = fullScanInfo.ChromInfo.IonMobilityExtractionWidth
                 };
                 if (ReferenceEquals(curve, _closestCurve))
                     transitionIndex = i;

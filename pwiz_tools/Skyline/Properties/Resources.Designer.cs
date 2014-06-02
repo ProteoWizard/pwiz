@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to M/Z.
+        ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string AbstractMSGraphItem_CustomizeXAxis_MZ {
             get {
@@ -9309,6 +9309,15 @@ namespace pwiz.Skyline.Properties {
         public static string GraphData_Graph_Regression_Refined {
             get {
                 return ResourceManager.GetString("GraphData_Graph_Regression_Refined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time (ms).
+        /// </summary>
+        public static string GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_", resourceCulture);
             }
         }
         

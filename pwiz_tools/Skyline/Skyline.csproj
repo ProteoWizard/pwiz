@@ -2196,16 +2196,30 @@
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Content Include="..\Shared\BiblioSpec\binaries\modifications.xml">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\modifications.xml">
       <Link>modifications.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\BiblioSpec\binaries\quantitation_1.xsd">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\modifications.xml">
+      <Link>modifications.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\quantitation_1.xsd">
       <Link>quantitation_1.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\BiblioSpec\binaries\quantitation_2.xsd">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\quantitation_1.xsd">
+      <Link>quantitation_1.xsd</Link>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\quantitation_2.xsd">
+      <Link>quantitation_2.xsd</Link>
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\quantitation_2.xsd">
       <Link>quantitation_2.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -2486,15 +2500,27 @@
       <Link>BaseDataAccess.dll.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\ProteowizardWrapper\obj\$(Platform)\BlibBuild.exe">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\ProteowizardWrapper\obj\$(Platform)\BlibFilter.exe">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibBuild.exe">
+      <Link>BlibBuild.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Shared\ProteowizardWrapper\obj\$(PLATFORM)\msparser.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe">
+      <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\msparser.dll">
+      <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\msparser.dll">
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2928,7 +2954,11 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
-    <Content Include="..\Shared\BiblioSpec\binaries\unimod_2.xsd">
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\unimod_2.xsd">
+      <Link>unimod_2.xsd</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

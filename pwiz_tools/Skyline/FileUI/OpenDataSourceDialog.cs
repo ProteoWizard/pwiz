@@ -732,9 +732,7 @@ namespace pwiz.Skyline.FileUI
                     fileOrDirName = Path.Combine(currentDirectoryPath.FilePath, fileOrDirName);
                     triedAddingDirectory = true;
                 }
-                if (exists &&  
-                    (DataSourceUtil.IsDataSource(fileOrDirName) ||
-                     DataSourceUtil.IsDataSource(new DirectoryInfo(fileOrDirName)))) // some input "files" are directories
+                if (exists && DataSourceUtil.IsDataSource(fileOrDirName))
                 {
                     DataSources = new[] {MsDataFileUri.Parse(fileOrDirName)};
                     DialogResult = DialogResult.OK;

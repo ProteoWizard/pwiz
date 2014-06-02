@@ -110,6 +110,9 @@ namespace pwiz.Skyline.Model.Results
                         if (!rtFirst.HasValue)
                             rtFirst = dataSpectrum.RetentionTime;
                     }
+                    if (!_filter.IsAgilentMse && !dataSpectrum.DriftTimeMsec.HasValue)
+                        break;
+
                     if (_lookAheadIndex < _lenSpectra)
                     {
                         dataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);

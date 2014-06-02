@@ -34,8 +34,9 @@ namespace TestPerf
     [TestClass]
     public class PerfChorusGenerateChromatograms : AbstractUnitTest
     {
-        ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
-        [TestMethod]
+        private static readonly ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
+
+        //[TestMethod]
         public void TestThermoDIA()
         {
             var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
@@ -56,7 +57,7 @@ namespace TestPerf
             Assert.AreEqual(0, chromTaskList.ListExceptions().Count);
             Console.Out.WriteLine("Elapsed time {0}", endTime.Subtract(startTime));
         }
-        [TestMethod]
+        //[TestMethod]
         public void TestThermoDIAChunked()
         {
             var xmlSerializer = new XmlSerializer(typeof(ChromatogramRequestDocument));

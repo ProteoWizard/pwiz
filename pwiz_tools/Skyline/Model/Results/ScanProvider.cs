@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using pwiz.ProteowizardWrapper;
@@ -34,6 +35,8 @@ namespace pwiz.Skyline.Model.Results
         public double PrecursorMz;
         public double ProductMz;
         public double? ExtractionWidth;
+        public double? IonMobilityValue;
+        public double? IonMobilityExtractionWidth;
     }
 
     public interface IScanProvider : IDisposable
@@ -43,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
         ChromSource Source { get; }
         float[] Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
-        FullScan[] GetScans(int scanId);
+        MsDataSpectrum[] GetScans(int scanId);
         void Adopt(IScanProvider scanProvider);
     }
 
@@ -77,11 +80,27 @@ namespace pwiz.Skyline.Model.Results
         public float[] Times { get; private set; }
         public TransitionFullScanInfo[] Transitions { get; private set; }
 
-        public FullScan[] GetScans(int scanId)
+        public MsDataSpectrum[] GetScans(int scanId)
         {
-            var fullScans = new FullScan[1];
-            fullScans[0] = new FullScan { Spectrum = GetDataFile().GetSpectrum(scanId) };
-            return fullScans;
+            var fullScans = new List<MsDataSpectrum>();
+            var currentScan = GetDataFile().GetSpectrum(scanId);
+            fullScans.Add(currentScan);
+            if (currentScan.DriftTimeMsec.HasValue)
+            {
+                while (true)
+                {
+                    scanId++;
+                    var nextScan = GetDataFile().GetSpectrum(scanId);
+                    if (!nextScan.DriftTimeMsec.HasValue ||
+                        nextScan.RetentionTime != currentScan.RetentionTime)
+                    {
+                        break;
+                    }
+                    fullScans.Add(nextScan);
+                    currentScan = nextScan;
+                }
+            }
+            return fullScans.ToArray();
         }
 
         private MsDataFileImpl GetDataFile()
@@ -108,16 +127,17 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
             string dataFilePath = msDataFilePath.FilePath;
-            if (File.Exists(dataFilePath))
+            
+            if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
             string fileName = Path.GetFileName(dataFilePath) ?? string.Empty;
             string docDir = Path.GetDirectoryName(DocFilePath) ?? Directory.GetCurrentDirectory();
             dataFilePath = Path.Combine(docDir,  fileName);
-            if (File.Exists(dataFilePath))
+            if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
             string docParentDir = Path.GetDirectoryName(docDir) ?? Directory.GetCurrentDirectory();
             dataFilePath = Path.Combine(docParentDir, fileName);
-            if (File.Exists(dataFilePath))
+            if (File.Exists(dataFilePath) || Directory.Exists(dataFilePath))
                 return dataFilePath;
             return null;
         }
@@ -130,11 +150,5 @@ namespace pwiz.Skyline.Model.Results
                 _dataFile = null;
             }
         }
-    }
-
-    public class FullScan
-    {
-        public double? DriftTime { get; set; }
-        public MsDataSpectrum Spectrum { get; set; }
     }
 }

@@ -36,16 +36,17 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class GraphFullScan : DockableFormEx, IGraphContainer
     {
+        private const float DRIFT_SAMPLE_RADIUS = 10.0f;
+
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
         private readonly BackgroundScanProvider _scanProvider;
-        private FullScan[] _fullScans;
+        private MsDataSpectrum[] _fullScans;
         private string _fileName;
         private int _transitionIndex;
         private int _scanIndex;
         private readonly string[] _sourceNames;
         private ChromSource _source;
-        private MsDataSpectrum _spectrum;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
         {
@@ -63,15 +64,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphPane.Title.IsVisible = true;
             GraphPane.Legend.IsVisible = false;
+            GraphPane.XAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeXAxis_MZ;
 
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
         }
 
-        private void SetScans(FullScan[] scans)
+        private void SetScans(MsDataSpectrum[] scans)
         {
             _fullScans = scans;
-
-            GraphScan();
+            CreateGraph();
         }
 
         private void HandleLoadScanException(Exception ex)
@@ -191,10 +192,100 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void GraphScan()
+        /// <summary>
+        /// Create the heat map or single scan graph.
+        /// </summary>
+        private void CreateGraph()
         {
             GraphPane.CurveList.Clear();
             GraphPane.GraphObjList.Clear();
+
+            bool hasDriftDimension = _fullScans.Length > 1;
+            bool useHeatMap = hasDriftDimension && !Settings.Default.SumScansFullScan;
+
+            filterBtn.Visible = spectrumBtn.Visible = hasDriftDimension;
+            graphControl.IsEnableVPan = graphControl.IsEnableVZoom = useHeatMap;
+
+            if (useHeatMap)
+                CreateDriftTimeHeatmap();
+            else
+                CreateSingleScan();
+
+            double retentionTime = _fullScans[0].RetentionTime ?? _scanProvider.Times[_scanIndex];
+            GraphPane.Title.Text = string.Format("{0} ({1:F2})", _fileName, retentionTime); // Not L10N
+            UpdateUI();
+
+            FireSelectedScanChanged(retentionTime);
+        }
+
+        /// <summary>
+        /// Create a drift time heat map graph.
+        /// </summary>
+        private void CreateDriftTimeHeatmap()
+        {
+            GraphPane.YAxis.Title.Text = Resources.GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_;
+            GraphPane.AllowYAutoScale = graphControl.IsEnableVZoom = graphControl.IsEnableVPan = true;
+
+            // Create curves for each intensity color.
+            var curves = new LineItem[_heatMapColors.Length/3];
+            for (int i = 0; i < curves.Length; i++)
+            {
+                var color = Color.FromArgb(_heatMapColors[i*3], _heatMapColors[i*3 + 1], _heatMapColors[i*3 + 2]);
+                curves[i] = new LineItem(string.Empty)
+                {
+                    Line = new Line {IsVisible = false},
+                    Symbol = new Symbol
+                    {
+                        Border = new Border { IsVisible = false }, 
+                        Size = DRIFT_SAMPLE_RADIUS, 
+                        Fill = new Fill(color), 
+                        Type = SymbolType.Circle
+                    },
+                };
+                GraphPane.CurveList.Insert(0, curves[i]);
+            }
+
+            var fullScans = GetFilteredScans();
+
+            // Find the maximum intensity.
+            double max = double.MinValue;
+            for (int i = 0; i < fullScans.Length; i++)
+            {
+                var scan = fullScans[i];
+                for (int j = 0; j < scan.Mzs.Length; j++)
+                {
+                    double intensity = scan.Intensities[j];
+                    max = Math.Max(max, intensity);
+                }
+            }
+            if (max <= 0)
+                return;
+
+            // Place each point in the proper intensity/color bin.
+            double scale = (_heatMapColors.Length / 3 - 1) / Math.Log(max);
+            for (int i = 0; i < fullScans.Length; i++)
+            {
+                var scan = fullScans[i];
+                for (int j = 0; j < scan.Mzs.Length; j++)
+                {
+                    if (scan.Intensities[j] > 0)
+                    {
+                        // A log scale produces a better visual display.
+                        int intensity = (int)(Math.Log(scan.Intensities[j]) * scale);
+                        if (intensity > 0)
+                            curves[intensity].AddPoint(scan.Mzs[j], scan.DriftTimeMsec ?? 0);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create stick graph of a single scan.
+        /// </summary>
+        private void CreateSingleScan()
+        {
+            GraphPane.YAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+            GraphPane.AllowYAutoScale = graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
 
             // Create a point list for each transition, and a default point list for points not 
             // associated with a transition.
@@ -204,11 +295,33 @@ namespace pwiz.Skyline.Controls.Graphs
             var defaultPointList = new PointPairList();
 
             // Assign each point to a transition point list, or else the default point list.
-            _spectrum = _fullScans[0].Spectrum;
-            for (int i = 0; i < _spectrum.Mzs.Length; i++)
+            IList<double> mzs;
+            IList<double> intensities;
+            if (_fullScans.Length == 1)
             {
-                double mz = _spectrum.Mzs[i];
-                double intensity = _spectrum.Intensities[i];
+                mzs = _fullScans[0].Mzs;
+                intensities = _fullScans[0].Intensities;
+            }
+            else
+            {
+                mzs = new List<double>();
+                intensities = new List<double>();
+
+                var fullScans = GetFilteredScans();
+
+                double minMz;
+                var indices = new int[fullScans.Length];
+                while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
+                {
+                    mzs.Add(minMz);
+                    intensities.Add(SumIntensities(fullScans, minMz, indices));
+                }
+            }
+
+            for (int i = 0; i < mzs.Count; i++)
+            {
+                double mz = mzs[i];
+                double intensity = intensities[i];
                 var assignedPointList = defaultPointList;
                 for (int j = 0; j < _scanProvider.Transitions.Length; j++)
                 {
@@ -282,12 +395,70 @@ namespace pwiz.Skyline.Controls.Graphs
                 label.FontSpec.Fill = new Fill(Color.FromArgb(100, Color.White));
                 GraphPane.GraphObjList.Add(label);
             }
+        }
 
-            double retentionTime = _spectrum.RetentionTime ?? _scanProvider.Times[_scanIndex];
-            GraphPane.Title.Text = string.Format("{0} ({1:F2})", _fileName, retentionTime); // Not L10N
-            UpdateUI();
+        private MsDataSpectrum[] GetFilteredScans()
+        {
+            var fullScans = _fullScans;
+            double minDrift, maxDrift;
+            GetDriftRange(out minDrift, out maxDrift);
+            if (Settings.Default.FilterDriftTimesFullScan)
+                fullScans = fullScans.Where(s => minDrift <= s.DriftTimeMsec && s.DriftTimeMsec <= maxDrift).ToArray();
+            return fullScans;
+        }
 
-            FireSelectedScanChanged(retentionTime);
+        private void GetDriftRange(out double minDrift, out double maxDrift)
+        {
+            minDrift = double.MaxValue;
+            maxDrift = double.MinValue;
+            foreach (var transition in _scanProvider.Transitions)
+            {
+                if (!transition.IonMobilityValue.HasValue || !transition.IonMobilityExtractionWidth.HasValue)
+                {
+                    // Accept all values
+                    minDrift = double.MinValue;
+                    maxDrift = double.MaxValue;
+                }
+                else
+                {
+                    double startDrift = transition.IonMobilityValue.Value -
+                                        transition.IonMobilityExtractionWidth.Value / 2;
+                    double endDrift = startDrift + transition.IonMobilityExtractionWidth.Value;
+                    minDrift = Math.Min(minDrift, startDrift);
+                    maxDrift = Math.Max(maxDrift, endDrift);
+                }
+            }
+        }
+
+        private static double FindMinMz(MsDataSpectrum[] spectra, int[] indices)
+        {
+            double minMz = double.MaxValue;
+            for (int i = 0; i < indices.Length; i++)
+            {
+                var scan = spectra[i];
+                int indexMz = indices[i];
+                if (indexMz != -1 && indexMz < scan.Mzs.Length)
+                    minMz = Math.Min(minMz, spectra[i].Mzs[indexMz]);
+            }
+            return minMz;
+        }
+
+        private static double SumIntensities(MsDataSpectrum[] spectra, double mz, int[] indices)
+        {
+            double intensity = 0;
+            for (int i = 0; i < indices.Length; i++)
+            {
+                var scan = spectra[i];
+                int indexMz = indices[i];
+                // In case of zero length m/z arrays, set index to -1 the first time through
+                if (indexMz >= scan.Mzs.Length)
+                    indexMz = indices[i] = -1;
+                if (indexMz == -1 || mz != scan.Mzs[indexMz])
+                    continue;
+                intensity += scan.Intensities[indexMz++];
+                indices[i] = indexMz < scan.Mzs.Length ? indexMz : -1;
+            }
+            return intensity;
         }
 
         private Color Blend(Color baseColor, Color blendColor, double blendAmount)
@@ -483,26 +654,54 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
+            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
         }
 
-        private void magnify_Click(object sender, EventArgs e)
+        private void magnifyBtn_CheckedChanged(object sender, EventArgs e)
         {
-            magnifyBtn.Checked = !magnifyBtn.Checked;
-            Settings.Default.AutoZoomFullScanGraph = magnifyBtn.Checked;
+            ZoomToSelection(magnifyBtn.Checked);
+        }
+
+        public void ZoomToSelection(bool zoom)
+        {
+            Settings.Default.AutoZoomFullScanGraph = magnifyBtn.Checked = zoom;
             Zoom();
-            GraphScan();
+            CreateGraph();
+        }
+
+        private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
+        {
+            SumScans(spectrumBtn.Checked);
+        }
+
+        public void SumScans(bool sum)
+        {
+            Settings.Default.SumScansFullScan = spectrumBtn.Checked = sum;
+            graphControl.GraphPane.SetScale(graphControl.CreateGraphics()); // Reset y-axis
+            CreateGraph();
+        }
+
+        private void filterBtn_CheckedChanged(object sender, EventArgs e)
+        {
+            FilterDriftTimes(filterBtn.Checked);
+        }
+
+        public void FilterDriftTimes(bool filter)
+        {
+            Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
+            CreateGraph();            
         }
 
         private void btnIsolationWindow_Click(object sender, EventArgs e)
         {
-            var target = _spectrum.Precursors[0].IsolationWindowTargetMz;
+            var spectrum = _fullScans[0];
+            var target = spectrum.Precursors[0].IsolationWindowTargetMz;
             if (!target.HasValue)
                 MessageDlg.Show(this, "No isolation target"); // Not L10N
             else
             {
-                double low = target.Value - _spectrum.Precursors[0].IsolationWindowLower.Value;
-                double high = target.Value + _spectrum.Precursors[0].IsolationWindowUpper.Value;
+                double low = target.Value - spectrum.Precursors[0].IsolationWindowLower ?? 0;
+                double high = target.Value + spectrum.Precursors[0].IsolationWindowUpper ?? 0;
                 MessageDlg.Show(this, "Isolation window: {0}, {1}, {2}", low, target, high); // Not L10N
             }
         }
@@ -522,10 +721,10 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly Thread _backgroundThread;
 
             private readonly Form _form;
-            private readonly Action<FullScan[]> _successAction;
+            private readonly Action<MsDataSpectrum[]> _successAction;
             private readonly Action<Exception> _failureAction;
 
-            public BackgroundScanProvider(Form form, Action<FullScan[]> successAction, Action<Exception> failureAction)
+            public BackgroundScanProvider(Form form, Action<MsDataSpectrum[]> successAction, Action<Exception> failureAction)
             {
                 _scanIdNext = -1;
 
@@ -640,6 +839,110 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
+
+        private static readonly int[] _heatMapColors =
+        {
+            0, 0, 255,
+            0, 1, 255,
+            0, 2, 255,
+            0, 4, 255,
+            0, 5, 255,
+            0, 7, 255,
+            0, 9, 255,
+            0, 11, 255,
+            0, 13, 255,
+            0, 15, 255,
+            0, 18, 253,
+            0, 21, 251,
+            0, 24, 250,
+            0, 27, 248,
+            0, 30, 245,
+            0, 34, 243,
+            0, 37, 240,
+            0, 41, 237,
+            0, 45, 234,
+            0, 49, 230,
+            0, 53, 226,
+            0, 57, 222,
+            0, 62, 218,
+            0, 67, 214,
+            0, 71, 209,
+            0, 76, 204,
+            0, 82, 199,
+            0, 87, 193,
+            0, 93, 188,
+            0, 98, 182,
+            0, 104, 175,
+            0, 110, 169,
+            0, 116, 162,
+            7, 123, 155,
+            21, 129, 148,
+            34, 136, 141,
+            47, 142, 133,
+            60, 149, 125,
+            71, 157, 117,
+            83, 164, 109,
+            93, 171, 100,
+            104, 179, 91,
+            113, 187, 92,
+            123, 195, 73,
+            132, 203, 63,
+            140, 211, 53,
+            148, 220, 43,
+            156, 228, 33,
+            163, 237, 22,
+            170, 246, 11,
+            176, 255, 0,
+            183, 248, 0,
+            188, 241, 0,
+            194, 234, 0,
+            199, 227, 0,
+            204, 220, 0,
+            209, 214, 0,
+            213, 207, 0,
+            217, 200, 0,
+            221, 194, 0,
+            224, 188, 0,
+            227, 181, 0,
+            230, 175, 0,
+            233, 169, 0,
+            236, 163, 0,
+            238, 157, 0,
+            240, 151, 0,
+            243, 145, 0,
+            244, 140, 0,
+            246, 134, 0,
+            248, 129, 0,
+            249, 123, 0,
+            250, 118, 0,
+            251, 112, 0,
+            252, 107, 0,
+            253, 102, 0,
+            254, 97, 0,
+            255, 92, 0,
+            255, 87, 0,
+            255, 82, 0,
+            255, 78, 0,
+            255, 73, 0,
+            255, 68, 0,
+            255, 64, 0,
+            255, 59, 0,
+            255, 55, 0,
+            255, 51, 0,
+            255, 47, 0,
+            255, 43, 0,
+            255, 39, 0,
+            255, 35, 0,
+            255, 31, 0,
+            255, 27, 0,
+            255, 23, 0,
+            255, 20, 0,
+            255, 16, 0,
+            255, 13, 0,
+            255, 10, 0,
+            255, 8, 0,
+            255, 3, 0
+        };
     }
 
     public class SpectrumItem : AbstractMSGraphItem

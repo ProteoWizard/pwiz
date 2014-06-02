@@ -40,6 +40,8 @@
             this.rightButton = new System.Windows.Forms.ToolStripButton();
             this.leftButton = new System.Windows.Forms.ToolStripButton();
             this.magnifyBtn = new System.Windows.Forms.ToolStripButton();
+            this.spectrumBtn = new System.Windows.Forms.ToolStripButton();
+            this.filterBtn = new System.Windows.Forms.ToolStripButton();
             this.lblScanId = new System.Windows.Forms.ToolStripLabel();
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
             this.GraphPanel.SuspendLayout();
@@ -68,8 +70,6 @@
             resources.ApplyResources(this.graphControl, "graphControl");
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphControl.IsEnableVPan = false;
-            this.graphControl.IsEnableVZoom = false;
             this.graphControl.IsShowCopyMessage = false;
             this.graphControl.IsZoomOnMouseCenter = true;
             this.graphControl.Name = "graphControl";
@@ -91,6 +91,8 @@
             this.rightButton,
             this.leftButton,
             this.magnifyBtn,
+            this.spectrumBtn,
+            this.filterBtn,
             this.lblScanId,
             this.btnIsolationWindow});
             resources.ApplyResources(this.toolBar, "toolBar");
@@ -135,13 +137,35 @@
             // 
             this.magnifyBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.magnifyBtn.Checked = true;
+            this.magnifyBtn.CheckOnClick = true;
             this.magnifyBtn.CheckState = System.Windows.Forms.CheckState.Checked;
             this.magnifyBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.magnifyBtn.Image = global::pwiz.Skyline.Properties.Resources.magnifier_zoom_in;
             resources.ApplyResources(this.magnifyBtn, "magnifyBtn");
-            this.magnifyBtn.Margin = new System.Windows.Forms.Padding(10, 1, 10, 2);
+            this.magnifyBtn.Margin = new System.Windows.Forms.Padding(0, 1, 10, 2);
             this.magnifyBtn.Name = "magnifyBtn";
-            this.magnifyBtn.Click += new System.EventHandler(this.magnify_Click);
+            this.magnifyBtn.CheckedChanged += new System.EventHandler(this.magnifyBtn_CheckedChanged);
+            // 
+            // spectrumBtn
+            // 
+            this.spectrumBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.spectrumBtn.CheckOnClick = true;
+            this.spectrumBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.spectrumBtn.Image = global::pwiz.Skyline.Properties.Resources.DataProcessing;
+            resources.ApplyResources(this.spectrumBtn, "spectrumBtn");
+            this.spectrumBtn.Name = "spectrumBtn";
+            this.spectrumBtn.CheckedChanged += new System.EventHandler(this.spectrumBtn_CheckedChanged);
+            // 
+            // filterBtn
+            // 
+            this.filterBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.filterBtn.CheckOnClick = true;
+            this.filterBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.filterBtn.Image = global::pwiz.Skyline.Properties.Resources.Filter;
+            resources.ApplyResources(this.filterBtn, "filterBtn");
+            this.filterBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
+            this.filterBtn.Name = "filterBtn";
+            this.filterBtn.CheckedChanged += new System.EventHandler(this.filterBtn_CheckedChanged);
             // 
             // lblScanId
             // 
@@ -189,6 +213,8 @@
         private System.Windows.Forms.ToolStripLabel lblScanId;
         private System.Windows.Forms.ToolStripButton magnifyBtn;
         private System.Windows.Forms.ToolStripButton btnIsolationWindow;
+        private System.Windows.Forms.ToolStripButton spectrumBtn;
+        private System.Windows.Forms.ToolStripButton filterBtn;
 
 
     }

@@ -2061,11 +2061,26 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                float extractionWidth = ChromTransition.ExtractionWidth;
-                if (extractionWidth == 0)
-                    return null;
-                return extractionWidth;
+                return FloatToNullableDouble(ChromTransition.ExtractionWidth);
             }
+        }
+
+        public double? IonMobilityValue
+        {
+            get { return FloatToNullableDouble(ChromTransition.IonMobilityValue); }
+        }
+
+        public double? IonMobilityExtractionWidth
+        {
+            get { return FloatToNullableDouble(ChromTransition.IonMobilityExtractionWidth); }
+        }
+
+        private static double? FloatToNullableDouble(float value)
+        {
+            float extractionWidth = value;
+            if (extractionWidth == 0)
+                return null;
+            return extractionWidth;
         }
 
         private ChromTransition ChromTransition

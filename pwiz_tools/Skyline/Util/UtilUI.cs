@@ -360,18 +360,27 @@ window.onload = submitForm;
 
     public static class ZedGraphHelper
     {
-        public static void BuildContextMenu(ZedGraphControl graphControl, ContextMenuStrip menuStrip)
+        public static void BuildContextMenu(ZedGraphControl graphControl, ContextMenuStrip menuStrip, bool keepZoom = false)
         {
             var items = new ToolStripItem[menuStrip.Items.Count];
             for (int i = 0; i < items.Length; i++)
                 items[i] = menuStrip.Items[i];
 
             // Remove some ZedGraph menu items not of interest
+            bool seenZoom = false;
             foreach (var item in items)
             {
                 var tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val" || tag == "unzoom" || tag == "undo_all") // Not L10N
+                if (tag == "set_default" || tag == "show_val" || item is ToolStripSeparator) // Not L10N
                     menuStrip.Items.Remove(item);
+                else if (tag == "unzoom" || tag == "undo_all") // Not L10N
+                {
+                    if (!keepZoom)
+                        menuStrip.Items.Remove(item);
+                    else if (!seenZoom)
+                        menuStrip.Items.Insert(menuStrip.Items.IndexOf(item), new ToolStripSeparator());
+                    seenZoom = true;
+                }
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);            
         }
