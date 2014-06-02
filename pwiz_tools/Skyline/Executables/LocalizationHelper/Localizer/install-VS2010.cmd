@@ -1,1 +1,0 @@
-@xcopy plugins\* "%LOCALAPPDATA%\JetBrains\ReSharper\v8.2\vs10.0\plugins" /r/y
