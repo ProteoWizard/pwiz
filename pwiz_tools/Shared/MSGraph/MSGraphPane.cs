@@ -45,6 +45,7 @@ namespace pwiz.MSGraph
             YAxis.MinorTic.IsOpposite = false;
             IsFontsScaled = false;
             YAxis.Scale.MaxGrace = 0.1;
+            YAxis.MajorGrid.IsZeroLine = false; // Hide the y=0 line
 
             _currentItemType = MSGraphItemType.unknown;
             _pointAnnotations = new GraphObjList();
@@ -254,8 +255,6 @@ namespace pwiz.MSGraph
             Axis yAxis = YAxis;
 
             yAxis.Scale.MinAuto = false;
-            if (!AllowYAutoScale || yAxis.Scale.Min < 0)
-                yAxis.Scale.Min = 0;
 
             // ensure that the chart rectangle is the right size
             AxisChange(g);

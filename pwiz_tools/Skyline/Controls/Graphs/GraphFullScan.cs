@@ -200,11 +200,15 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.CurveList.Clear();
             GraphPane.GraphObjList.Clear();
 
+            if (_fullScans == null)
+                return;
+
             bool hasDriftDimension = _fullScans.Length > 1;
             bool useHeatMap = hasDriftDimension && !Settings.Default.SumScansFullScan;
 
             filterBtn.Visible = spectrumBtn.Visible = hasDriftDimension;
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = useHeatMap;
+            GraphPane.Legend.IsVisible = useHeatMap;
 
             if (useHeatMap)
                 CreateDriftTimeHeatmap();
@@ -224,26 +228,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void CreateDriftTimeHeatmap()
         {
             GraphPane.YAxis.Title.Text = Resources.GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_;
-            GraphPane.AllowYAutoScale = graphControl.IsEnableVZoom = graphControl.IsEnableVPan = true;
-
-            // Create curves for each intensity color.
-            var curves = new LineItem[_heatMapColors.Length/3];
-            for (int i = 0; i < curves.Length; i++)
-            {
-                var color = Color.FromArgb(_heatMapColors[i*3], _heatMapColors[i*3 + 1], _heatMapColors[i*3 + 2]);
-                curves[i] = new LineItem(string.Empty)
-                {
-                    Line = new Line {IsVisible = false},
-                    Symbol = new Symbol
-                    {
-                        Border = new Border { IsVisible = false }, 
-                        Size = DRIFT_SAMPLE_RADIUS, 
-                        Fill = new Fill(color), 
-                        Type = SymbolType.Circle
-                    },
-                };
-                GraphPane.CurveList.Insert(0, curves[i]);
-            }
+            graphControl.IsEnableVZoom = graphControl.IsEnableVPan = true;
 
             var fullScans = GetFilteredScans();
 
@@ -260,9 +245,33 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (max <= 0)
                 return;
+            double scale = (_heatMapColors.Length / 3 - 1) / Math.Log(max);
+
+            // Create curves for each intensity color.
+            var curves = new LineItem[_heatMapColors.Length/3];
+            for (int i = 0; i < curves.Length; i++)
+            {
+                var color = Color.FromArgb(_heatMapColors[i*3], _heatMapColors[i*3 + 1], _heatMapColors[i*3 + 2]);
+                curves[i] = new LineItem(string.Empty)
+                {
+                    Line = new Line {IsVisible = false},
+                    Symbol = new Symbol
+                    {
+                        Border = new Border { IsVisible = false }, 
+                        Size = DRIFT_SAMPLE_RADIUS, 
+                        Fill = new Fill(color), 
+                        Type = SymbolType.Circle
+                    }
+                };
+                if ((i + 1)%(_heatMapColors.Length/3/4) == 0)
+                {
+                    double intensity = Math.Pow(Math.E, i/scale);
+                    curves[i].Label.Text = intensity.ToString("F0"); // Not L10N
+                }
+                GraphPane.CurveList.Insert(0, curves[i]);
+            }
 
             // Place each point in the proper intensity/color bin.
-            double scale = (_heatMapColors.Length / 3 - 1) / Math.Log(max);
             for (int i = 0; i < fullScans.Length; i++)
             {
                 var scan = fullScans[i];
@@ -285,7 +294,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void CreateSingleScan()
         {
             GraphPane.YAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
-            GraphPane.AllowYAutoScale = graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
+            graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
 
             // Create a point list for each transition, and a default point list for points not 
             // associated with a transition.
