@@ -1303,7 +1303,7 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityDatabase(imdb => FindIonMobilityDatabase(documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityDatabase(documentPath, imdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -1337,7 +1337,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_database__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
+            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
             return null;
         }
 

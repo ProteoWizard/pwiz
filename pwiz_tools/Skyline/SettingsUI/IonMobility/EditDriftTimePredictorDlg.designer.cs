@@ -29,27 +29,27 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditDriftTimePredictorDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditDriftTimePredictorDlg));
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.bindingChargeRegressionLines = new System.Windows.Forms.BindingSource(this.components);
-            this.btnOk = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.gridRegression = new System.Windows.Forms.DataGridView();
             this.Charge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Slope = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Intercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.comboLibrary = new System.Windows.Forms.ComboBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.textResolvingPower = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.textName = new System.Windows.Forms.TextBox();
+            this.bindingChargeRegressionLines = new System.Windows.Forms.BindingSource(this.components);
+            this.btnOk = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).BeginInit();
             this.SuspendLayout();
             // 
             // helpTip
@@ -57,25 +57,6 @@
             this.helpTip.AutoPopDelay = 15000;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
-            // 
-            // btnOk
-            // 
-            resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.Name = "btnOk";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
             // 
             // gridRegression
             // 
@@ -137,27 +118,46 @@
             this.helpTip.SetToolTip(this.comboLibrary, resources.GetString("comboLibrary.ToolTip"));
             this.comboLibrary.SelectedIndexChanged += new System.EventHandler(this.comboIonMobilityLibrary_SelectedIndexChanged);
             // 
-            // label5
-            // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
-            // 
             // textResolvingPower
             // 
             resources.ApplyResources(this.textResolvingPower, "textResolvingPower");
             this.textResolvingPower.Name = "textResolvingPower";
             this.helpTip.SetToolTip(this.textResolvingPower, resources.GetString("textResolvingPower.ToolTip"));
             // 
-            // label3
-            // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
-            // 
             // textName
             // 
             resources.ApplyResources(this.textName, "textName");
             this.textName.Name = "textName";
             this.helpTip.SetToolTip(this.textName, resources.GetString("textName.ToolTip"));
+            // 
+            // btnOk
+            // 
+            resources.ApplyResources(this.btnOk, "btnOk");
+            this.btnOk.Name = "btnOk";
+            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
             // 
             // label4
             // 
@@ -184,8 +184,8 @@
             this.MinimizeBox = false;
             this.Name = "EditDriftTimePredictorDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingChargeRegressionLines)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

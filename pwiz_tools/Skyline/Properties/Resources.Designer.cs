@@ -2916,13 +2916,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot import measured drift time for sequence {0}: no regression was provided for charge state {1}..
+        ///   Looks up a localized string similar to Cannot import measured drift time for sequence {0}: no collisional cross section conversion parameters were provided for charge state {1}..
         /// </summary>
-        public static string CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1__ {
+        public static string CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__ {
             get {
                 return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_meas" +
-                        "ured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1" +
-                        "__", resourceCulture);
+                        "ured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parame" +
+                        "ters_were_provided_for_charge_state__1__", resourceCulture);
             }
         }
         
@@ -3883,12 +3883,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Could not find the ion mobility database {0}..
+        ///   Looks up a localized string similar to Error: Could not find the ion mobility library {0}..
         /// </summary>
-        public static string CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_database__0__ {
+        public static string CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__ {
             get {
-                return ResourceManager.GetString("CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_databa" +
-                        "se__0__", resourceCulture);
+                return ResourceManager.GetString("CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_librar" +
+                        "y__0__", resourceCulture);
             }
         }
         
@@ -6287,50 +6287,50 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to open a new database file?  Any changes to the current library will be lost..
+        ///   Looks up a localized string similar to Are you sure you want to open a new ion mobility library file?  Any changes to the current library will be lost..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file___Any_changes_to_the_current_library_will_be_lost_ {
+        public static string EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_ {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_d" +
-                        "atabase_file___Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_i" +
+                        "on_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open Ion Mobility Database.
+        ///   Looks up a localized string similar to Open Ion Mobility Library.
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Database {
+        public static string EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Library {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Database", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Library", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to create a new ion mobility database file?  Any changes to the current library will be lost..
+        ///   Looks up a localized string similar to Are you sure you want to create a new ion mobility library file?  Any changes to the current library will be lost..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_database_file___Any_changes_to_the_current_library_will_be_lost_ {
+        public static string EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_ {
             get {
                 return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new" +
-                        "_ion_mobility_database_file___Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
+                        "_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create Ion Mobility Database.
+        ///   Looks up a localized string similar to Create Ion Mobility Library.
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Database {
+        public static string EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Library {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Database", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Library", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The ion mobility database file {0} could not be created..
+        ///   Looks up a localized string similar to The ion mobility library file {0} could not be created..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_database_file__0__could_not_be_created {
+        public static string EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_library_file__0__could_not_be_created {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_database_file__0__could" +
-                        "_not_be_created", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_library_file__0__could_" +
+                        "not_be_created", resourceCulture);
             }
         }
         
@@ -6345,63 +6345,63 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Click the Create button to create a new database or the Open button to open an existing database file..
+        ///   Looks up a localized string similar to Click the Create button to create a new library or the Open button to open an existing library file..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file_ {
+        public static string EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_ {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_databa" +
-                        "se_or_the_Open_button_to_open_an_existing_database_file_", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_librar" +
+                        "y_or_the_Open_button_to_open_an_existing_library_file_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failure updating peptides in the ion mobility database. The database may be out of synch..
+        ///   Looks up a localized string similar to Failure updating peptides in the ion mobility library. The library may be out of synch..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_database__The_database_may_be_out_of_synch_ {
+        public static string EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_ {
             get {
                 return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_" +
-                        "database__The_database_may_be_out_of_synch_", resourceCulture);
+                        "library__The_library_may_be_out_of_synch_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please choose a database file for the ion mobility database..
+        ///   Looks up a localized string similar to Please choose a file for the ion mobility library..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_database_file_for_the_ion_mobility_database {
+        public static string EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_file_for_the_ion_mobility_library {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_database_file_for_the_ion_mobi" +
-                        "lity_database", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_file_for_the_ion_mobility_libr" +
+                        "ary", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a name for the ion mobility ibrary..
+        ///   Looks up a localized string similar to Please enter a name for the ion mobility library..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_ibrary_ {
+        public static string EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_library_ {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_ibrar" +
-                        "y_", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_libra" +
+                        "ry_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please use a full path to a database file for the ion mobility database..
+        ///   Looks up a localized string similar to Please use a full path to a file for the ion mobility library..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_ion_mobility_database_ {
+        public static string EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_file_for_the_ion_mobility_library_ {
             get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_" +
-                        "the_ion_mobility_database_", resourceCulture);
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_file_for_the_ion_m" +
+                        "obility_library_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The file {0} does not exist. Click the Create button to create a new ion mobility database or click the Open button to find the missing file..
+        ///   Looks up a localized string similar to The file {0} does not exist. Click the Create button to create a new ion mobility library or click the Open button to find the missing file..
         /// </summary>
-        public static string EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_database_or_click_the_Open_button_to_find_the_missing_file_ {
+        public static string EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_ {
             get {
                 return ResourceManager.GetString("EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Cre" +
-                        "ate_button_to_create_a_new_ion_mobility_database_or_click_the_Open_button_to_fin" +
-                        "d_the_missing_file_", resourceCulture);
+                        "ate_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find" +
+                        "_the_missing_file_", resourceCulture);
             }
         }
         
@@ -10272,70 +10272,70 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion Mobility Database Files.
+        ///   Looks up a localized string similar to Ion Mobility Library Files.
         /// </summary>
-        public static string IonMobilityDb_FILTER_IONMOBILITYDB_Ion_Mobility_Database_Files {
+        public static string IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files {
             get {
-                return ResourceManager.GetString("IonMobilityDb_FILTER_IONMOBILITYDB_Ion_Mobility_Database_Files", resourceCulture);
+                return ResourceManager.GetString("IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading ion mobility database {0}.
+        ///   Looks up a localized string similar to Loading ion mobility library {0}.
         /// </summary>
-        public static string IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_database__0_ {
+        public static string IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_ {
             get {
-                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_database__0_", resourceCulture);
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please provide a path to an existing ion mobility database..
+        ///   Looks up a localized string similar to Please provide a path to an existing ion mobility library..
         /// </summary>
-        public static string IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_database_ {
+        public static string IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_library_ {
             get {
                 return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_" +
-                        "database_", resourceCulture);
+                        "library_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The file {0} is not a valid ion mobility database file..
+        ///   Looks up a localized string similar to The file {0} is not a valid ion mobility library file..
         /// </summary>
-        public static string IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_file_ {
+        public static string IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_library_file_ {
             get {
-                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_" +
-                        "file_", resourceCulture);
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_library_f" +
+                        "ile_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The ion mobility database file {0} could not be found. Perhaps you did not have sufficient privileges to create it?.
+        ///   Looks up a localized string similar to The ion mobility library file {0} could not be found. Perhaps you did not have sufficient privileges to create it?.
         /// </summary>
-        public static string IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_ {
+        public static string IonMobilityDb_GetIonMobilityDb_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_ {
             get {
-                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_fo" +
-                        "und__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_", resourceCulture);
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_ion_mobility_library_file__0__could_not_be_fou" +
+                        "nd__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path containing ion mobility database {0} does not exist..
+        ///   Looks up a localized string similar to The path containing ion mobility library {0} does not exist..
         /// </summary>
-        public static string IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_database__0__does_not_exist {
+        public static string IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_not_exist_ {
             get {
-                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_database__0__does" +
-                        "_not_exist", resourceCulture);
+                return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_" +
+                        "not_exist_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You do not have privileges to access the ion mobility database file {0}.
+        ///   Looks up a localized string similar to You do not have privileges to access the ion mobility library file {0}.
         /// </summary>
-        public static string IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_database_file__0_ {
+        public static string IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_library_file__0_ {
             get {
                 return ResourceManager.GetString("IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobil" +
-                        "ity_database_file__0_", resourceCulture);
+                        "ity_library_file__0_", resourceCulture);
             }
         }
         
@@ -17171,29 +17171,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Find Ion Mobility Database.
+        ///   Looks up a localized string similar to ion mobility library files.
         /// </summary>
-        public static string SkylineWindow_FindIonMobilityDatabase_Find_Ion_Mobility_Database {
+        public static string SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files {
             get {
-                return ResourceManager.GetString("SkylineWindow_FindIonMobilityDatabase_Find_Ion_Mobility_Database", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion Mobility Database.
-        /// </summary>
-        public static string SkylineWindow_FindIonMobilityDatabase_Ion_Mobility_Database {
-            get {
-                return ResourceManager.GetString("SkylineWindow_FindIonMobilityDatabase_Ion_Mobility_Database", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ion mobility database files.
-        /// </summary>
-        public static string SkylineWindow_FindIonMobilityDatabase_ion_mobility_database_files {
-            get {
-                return ResourceManager.GetString("SkylineWindow_FindIonMobilityDatabase_ion_mobility_database_files", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files", resourceCulture);
             }
         }
         
@@ -17204,6 +17186,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_FindIonMobilityDatabase_The_ion_mobility_library_specified_could_no" +
                         "t_be_opened_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find Ion Mobility Library.
+        /// </summary>
+        public static string SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Library.
+        /// </summary>
+        public static string SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library", resourceCulture);
             }
         }
         

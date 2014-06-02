@@ -463,8 +463,7 @@ C = (D - intercept) / slope
 
 Each charge state requires a different slope and intercept value.  If a charge state is not represented in this list, no observed drift time information for that charge can be converted to collisional cross sections.  
 
-If the spectral library contains actual collisional cross section data instead of observed drift time values then charge-slope-intercept values are not needed for import.
-</value>
+If the spectral library contains actual collisional cross section data instead of observed drift time values then charge-slope-intercept values are not needed for import.</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -491,13 +490,13 @@ If the spectral library contains actual collisional cross section data instead o
     <value>4, 0, 4, 0</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>415, 17</value>
+    <value>340, 17</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Regression parameters for converting from measured drift times:</value>
+    <value>&amp;Parameters for converting from measured drift times:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

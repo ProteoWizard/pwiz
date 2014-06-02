@@ -44,9 +44,9 @@ namespace pwiz.Skyline.Model.IonMobility
     {
         public const string EXT = ".imdb"; // Not L10N
 
-        public static string FILTER_IONMOBILITYDB
+        public static string FILTER_IONMOBILITYLIBRARY
         {
-            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYDB_Ion_Mobility_Database_Files, EXT); }
+            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
         }
 
         public const int SCHEMA_VERSION_CURRENT = 1;
@@ -244,18 +244,18 @@ namespace pwiz.Skyline.Model.IonMobility
         // Throws DatabaseOpeningException
         public static IonMobilityDb GetIonMobilityDb(string path, IProgressMonitor loadMonitor)
         {
-            var status = new ProgressStatus(string.Format(Resources.IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_database__0_, path));
+            var status = new ProgressStatus(string.Format(Resources.IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_, path));
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status);
 
             try
             {
                 if (String.IsNullOrEmpty(path))
-                    throw new DatabaseOpeningException(Resources.IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_database_);
+                    throw new DatabaseOpeningException(Resources.IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_library_);
                 if (!File.Exists(path))
                     throw new DatabaseOpeningException(
                         string.Format(
-                        Resources.IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_,
+                        Resources.IonMobilityDb_GetIonMobilityDb_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_,
                         path));
 
                 string message;
@@ -273,19 +273,19 @@ namespace pwiz.Skyline.Model.IonMobility
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_database_file__0_, path);
+                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_library_file__0_, path);
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_database__0__does_not_exist, path);
+                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_not_exist_, path);
                 }
                 catch (FileNotFoundException)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_, path);
+                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_, path);
                 }
                 catch (Exception) // SQLiteException is already something of a catch-all, just lump it with the others here
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_file_, path);
+                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_library_file_, path);
                 }
 
                 throw new DatabaseOpeningException(message);

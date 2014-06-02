@@ -138,7 +138,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_database_file___Any_changes_to_the_current_library_will_be_lost_,
+                var result = MessageBox.Show(this, Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -147,11 +147,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             using (var dlg = new SaveFileDialog
             {
-                Title = Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Database,
+                Title = Resources.EditIonMobilityLibraryDlg_btnCreateDb_Click_Create_Ion_Mobility_Library,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,
                 DefaultExt = IonMobilityDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IonMobilityDb.FILTER_IONMOBILITYDB) 
+                Filter = TextUtil.FileDialogFiltersAll(IonMobilityDb.FILTER_IONMOBILITYLIBRARY) 
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             catch (Exception x)
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_database_file__0__could_not_be_created, path),
+                var message = TextUtil.LineSeparate(string.Format(Resources.EditIonMobilityLibraryDlg_CreateDatabase_The_ion_mobility_library_file__0__could_not_be_created, path),
                                                     x.Message);
                 MessageDlg.Show(this, message);
             }
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(this, Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file___Any_changes_to_the_current_library_will_be_lost_,
+                var result = MessageBox.Show(this, Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_ion_mobility_library_file___Any_changes_to_the_current_library_will_be_lost_,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -212,10 +212,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             using (OpenFileDialog dlg = new OpenFileDialog
             {
-                Title = Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Database,
+                Title = Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Library,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 DefaultExt = IonMobilityDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IonMobilityDb.FILTER_IONMOBILITYDB)
+                Filter = TextUtil.FileDialogFiltersAll(IonMobilityDb.FILTER_IONMOBILITYLIBRARY)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if (!File.Exists(path))
             {
-                MessageDlg.Show(this, String.Format(Resources.EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_database_or_click_the_Open_button_to_find_the_missing_file_,
+                MessageDlg.Show(this, String.Format(Resources.EditIonMobilityLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_ion_mobility_library_or_click_the_Open_button_to_find_the_missing_file_,
                                                     path));
                 return;
             }
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             if(string.IsNullOrEmpty(textLibraryName.Text))
             {
-                MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_ibrary_);
+                MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Please_enter_a_name_for_the_ion_mobility_library_);
                 textLibraryName.Focus();
                 return;
             }
@@ -284,8 +284,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             string message;
             if (string.IsNullOrEmpty(textDatabase.Text))
             {
-                message = TextUtil.LineSeparate(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_database_file_for_the_ion_mobility_database,
-                                                Resources.EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file_);
+                message = TextUtil.LineSeparate(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_file_for_the_ion_mobility_library,
+                                                Resources.EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_);
                 MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
@@ -293,8 +293,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             string path = Path.GetFullPath(textDatabase.Text);
             if (!Equals(path, textDatabase.Text))
             {
-                message = TextUtil.LineSeparate(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_ion_mobility_database_,
-                                                Resources.EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file_);
+                message = TextUtil.LineSeparate(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_file_for_the_ion_mobility_library_,
+                                                Resources.EditIonMobilityLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_);
                 MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
@@ -332,7 +332,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 // CONSIDER: (copied from iRT code) Not sure if this is the right thing to do.  It would
                 //           be nice to solve whatever is causing this, but this is
                 //           better than showing an unexpected error form with stack trace.
-                MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_database__The_database_may_be_out_of_synch_);
+                MessageDlg.Show(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_);
                 return;
             }
 
@@ -372,15 +372,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        private void addIonMobilityDatabaseContextMenuItem_Click(object sender, EventArgs e)
+        private void addIonMobilityLibraryContextMenuItem_Click(object sender, EventArgs e)
         {
-            AddIonMobilityDatabase();
+            AddIonMobilityLibrary();
         }
 
         /// <summary>
         /// import ion mobility data from an external file format.
         /// </summary>
-        public void AddIonMobilityDatabase()
+        public void AddIonMobilityLibrary()
         {
             // _gridViewLibraryDriver.AddIonMobilityDatabase(); TODO once we have some examples of external files
         }
@@ -679,7 +679,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                             if ((regressions != null) && regressions.TryGetValue(ionMobilityList.Key.Charge, out regression))
                                 total += regression.GetX(ionMobilityInfo.Value); // x = (y-intercept)/slope
                             else
-                                throw new Exception(String.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1__,
+                                throw new Exception(String.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
                                     ionMobilityList.Key.Sequence,
                                     ionMobilityList.Key.Charge));
                         }

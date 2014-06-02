@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     : null));
         }
 
-        public SrmSettings ConnectIonMobilityDatabase(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)
+        public SrmSettings ConnectIonMobilityLibrary(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)
         {
             if (PeptideSettings.Prediction.DriftTimePredictor == null)
                 return this;

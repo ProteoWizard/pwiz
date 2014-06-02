@@ -243,7 +243,7 @@ namespace pwiz.Skyline
             if (document != null)
                 document = ConnectIrtDatabase(document, path);
             if (document != null)
-                document = ConnectIonMobilityDatabase(document, path);
+                document = ConnectIonMobilityLibrary(document, path);
             return document;
         }
 
@@ -396,9 +396,9 @@ namespace pwiz.Skyline
             while (true);
         }
 
-        private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
+        private SrmDocument ConnectIonMobilityLibrary(SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityDatabase(imdb => FindIonMobilityDatabase(documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityLibrary(documentPath, imdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -406,7 +406,7 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private IonMobilityLibrarySpec FindIonMobilityDatabase(string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
+        private IonMobilityLibrarySpec FindIonMobilityLibrary(string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
         {
 
             IonMobilityLibrarySpec result;
@@ -442,11 +442,11 @@ namespace pwiz.Skyline
                 using (var dlg = new MissingFileDlg
                 {
                     ItemName = ionMobilityLibrarySpec.Name,
-                    ItemType = Resources.SkylineWindow_FindIonMobilityDatabase_Ion_Mobility_Database,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIonMobilityDatabase_ion_mobility_database_files, IonMobilityDb.EXT),
+                    ItemType = Resources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library,
+                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files, IonMobilityDb.EXT),
                     FileHint = Path.GetFileName(ionMobilityLibrarySpec.PersistencePath),
                     FileDlgInitialPath = Path.GetDirectoryName(documentPath),
-                    Title = Resources.SkylineWindow_FindIonMobilityDatabase_Find_Ion_Mobility_Database
+                    Title = Resources.SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library
                 })
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)

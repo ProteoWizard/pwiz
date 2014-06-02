@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestA
             AssertEx.ThrowsException<Exception>(() => CollisionalCrossSectionGridViewDriver.ProcessIonMobilityValues(null,
                 lib1, 2, null),
                 String.Format(
-                        Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_regression_was_provided_for_charge_state__1__,
+                        Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
                         seq3, 1));
 
             var regressions = new Dictionary<int, RegressionLine> {{1, new RegressionLine(2, 1)}};

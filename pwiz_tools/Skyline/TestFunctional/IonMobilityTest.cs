@@ -319,14 +319,13 @@ namespace pwiz.SkylineTestFunctional
         public void TestGetIonMobilityDBErrorHandling(TestFilesDir testFilesDir)
         {
             AssertEx.ThrowsException<DatabaseOpeningException>(() => IonMobilityDb.GetIonMobilityDb(null, null),
-                Resources.IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_database_);
+                Resources.IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_library_);
 
             const string badfilename = "nonexistent_file.imdb";
             AssertEx.ThrowsException<DatabaseOpeningException>(
                 () => IonMobilityDb.GetIonMobilityDb(badfilename, null),
                 String.Format(
-                    Resources
-                        .IonMobilityDb_GetIonMobilityDb_The_ion_mobility_database_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_,
+                    Resources.IonMobilityDb_GetIonMobilityDb_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_,
                     badfilename));
 
             string bogusfile = testFilesDir.GetTestPath("bogus.imdb");
@@ -338,7 +337,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.ThrowsException<DatabaseOpeningException>(
                 () => IonMobilityDb.GetIonMobilityDb(bogusfile, null),
                 String.Format(
-                    Resources.IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_database_file_,
+                    Resources.IonMobilityDb_GetIonMobilityDb_The_file__0__is_not_a_valid_ion_mobility_library_file_,
                     bogusfile));
         }
 
