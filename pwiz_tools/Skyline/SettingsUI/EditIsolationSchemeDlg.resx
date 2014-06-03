@@ -834,12 +834,6 @@
   <data name="comboIsolation.AutoCompleteCustomSource1" xml:space="preserve">
     <value>Extraction</value>
   </data>
-  <data name="comboIsolation.Items" xml:space="preserve">
-    <value>Isolation</value>
-  </data>
-  <data name="comboIsolation.Items1" xml:space="preserve">
-    <value>Extraction</value>
-  </data>
   <data name="comboIsolation.Location" type="System.Drawing.Point, System.Drawing">
     <value>34, 217</value>
   </data>

@@ -7384,4 +7384,10 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows" xml:space="preserve">
     <value>Extraction Windows</value>
   </data>
+  <data name="WindowType_ISOLATION_Isolation" xml:space="preserve">
+    <value>Isolation</value>
+  </data>
+  <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
+    <value>Extraction</value>
+  </data>
 </root>

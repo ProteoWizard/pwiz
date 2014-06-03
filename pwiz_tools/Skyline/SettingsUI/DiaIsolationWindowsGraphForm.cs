@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -38,14 +39,12 @@ namespace pwiz.Skyline.SettingsUI
         private readonly List<LineObj> _rightMargins; 
         private readonly double _largestMz;
 
-        public DiaIsolationWindowsGraphForm(IEnumerable<EditIsolationWindow> isolationWindows, string marginType, bool isIsolation)
+        public DiaIsolationWindowsGraphForm(List<IsolationWindow> isolationWindows)
         {
             InitializeComponent();
-
             Icon = Resources.Skyline;
-
-            this.marginType = marginType;
-            this.isIsolation = isIsolation;
+            
+            if (isolationWindows.Count == 0) return;
             zgIsolationGraph.GraphPane.Title.Text = Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Isolation_Windows;
             zgIsolationGraph.GraphPane.XAxis.Title.Text = Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z;
             zgIsolationGraph.GraphPane.YAxis.Title.Text = Resources.DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle;
@@ -68,18 +67,13 @@ namespace pwiz.Skyline.SettingsUI
             var isolationWindowArray = isolationWindows.ToArray();  // ReSharper
             int windowCount = isolationWindowArray.Length;
             int windowNum = 0;
-            foreach(EditIsolationWindow window in isolationWindowArray)
+            foreach (IsolationWindow window in isolationWindowArray)
             {
-                if (window.Start == null || window.End == null)
-                    continue;
-                
-                double windowY = (double) windowNum/windowCount;
-                double windowNextY = (double) windowNum/windowCount + 1;
-                double startMargin = window.StartMargin ?? 0;
-                double endMargin = startMargin;
-                if (Equals(marginType, CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC))
-                    endMargin = window.EndMargin ?? 0;
 
+                double windowY = (double)windowNum / windowCount;
+                double windowNextY = (double)windowNum / windowCount + 1;
+                double startMargin = window.StartMargin ?? 0;
+                double endMargin = (window.EndMargin ?? (window.StartMargin ?? 0));
                 LineObj window1 = GetWindow(window, windowY);
                 window1.IsClippedToChartRect = true;
                 window1.Line.Width = LINE_WIDTH;
@@ -124,17 +118,17 @@ namespace pwiz.Skyline.SettingsUI
                 zgIsolationGraph.GraphPane.GraphObjList.Add(window2);
                 zgIsolationGraph.GraphPane.GraphObjList.Add(leftMargin2);
                 zgIsolationGraph.GraphPane.GraphObjList.Add(rightMargin2);
-                _largestMz = Math.Max(_largestMz,rightMargin1.Location.X2);
+                _largestMz = Math.Max(_largestMz, rightMargin1.Location.X2);
                 _smallesMz = Math.Min(_smallesMz, leftMargin1.Location.X1);
                 windowNum++;
             }
             zgIsolationGraph.GraphPane.XAxis.Scale.Min = _smallesMz;
-            zgIsolationGraph.GraphPane.XAxis.Scale.Max = _largestMz;  
+            zgIsolationGraph.GraphPane.XAxis.Scale.Max = _largestMz;
             zgIsolationGraph.GraphPane.YAxis.Scale.Min = -0.25;
             zgIsolationGraph.GraphPane.YAxis.Scale.Max = 2;
             zgIsolationGraph.AxisChange();
             zgIsolationGraph.Invalidate();
-            if (!Equals(marginType, CalculateIsolationSchemeDlg.WindowMargin.NONE))
+            if (isolationWindows.ElementAt(0).StartMargin != null)
             {
                 cbMargin.Checked = true;
             }
@@ -145,23 +139,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private LineObj GetWindow(EditIsolationWindow editWindow,double yPos)
+        private static LineObj GetWindow(IsolationWindow window,double yPos)
         {
-            double x1 = editWindow.Start ?? 0;
-            double x2 = editWindow.End ?? 0;
-            if (isIsolation)
-            {
-                if (Equals(marginType, CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC))
-                {
-                    x1 += editWindow.StartMargin ?? 0;
-                    x2 -= editWindow.StartMargin ?? 0;
-                }   
-                else if (Equals(marginType, CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC))
-                {
-                    x1 += editWindow.StartMargin ?? 0;
-                    x2 -= editWindow.EndMargin ?? 0;
-                }
-            }
+            double x1 = window.Start;
+            double x2 = window.End;
             return new LineObj(Color.Blue, x1, yPos, x2, yPos);
         }
 

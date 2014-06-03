@@ -86,8 +86,6 @@
 
         private ZedGraph.ZedGraphControl zgIsolationGraph;
         private System.Windows.Forms.CheckBox cbMargin;
-        private readonly string marginType;
-        private readonly bool isIsolation;
         private System.Windows.Forms.Button btnClose;
     }
 }

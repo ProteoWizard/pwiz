@@ -866,7 +866,7 @@ namespace pwiz.SkylineTestFunctional
                         };
                     }
                     VerifyCellValues(editDlg, expectedValues);
-                    editDlg.IsolationType = EditIsolationSchemeDlg.COMBO_EXTRACTION_INDEX;
+                    editDlg.IsolationType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                     // Test extraction alternation
                     for (int row = 0; row < rows; row ++)
                     {

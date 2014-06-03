@@ -300,14 +300,8 @@
             // comboIsolation
             // 
             this.comboIsolation.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
-            this.comboIsolation.AutoCompleteCustomSource.AddRange(new string[] {
-            resources.GetString("comboIsolation.AutoCompleteCustomSource"),
-            resources.GetString("comboIsolation.AutoCompleteCustomSource1")});
             this.comboIsolation.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboIsolation.FormattingEnabled = true;
-            this.comboIsolation.Items.AddRange(new object[] {
-            resources.GetString("comboIsolation.Items"),
-            resources.GetString("comboIsolation.Items1")});
             resources.ApplyResources(this.comboIsolation, "comboIsolation");
             this.comboIsolation.Name = "comboIsolation";
             this.comboIsolation.SelectedIndexChanged += new System.EventHandler(this.comboIsolation_SelectedIndexChanged);

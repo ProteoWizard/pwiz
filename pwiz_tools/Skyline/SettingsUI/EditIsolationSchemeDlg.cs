@@ -44,8 +44,18 @@ namespace pwiz.Skyline.SettingsUI
         public const int COLUMN_START_MARGIN = 3;
         public const int COLUMN_END_MARGIN = 4;
 
-        public const int COMBO_ISOLATION_INDEX = 0;
-        public const int COMBO_EXTRACTION_INDEX = 1;
+        public static class WindowType
+        {
+            public static string ISOLATION
+            {
+                get { return Resources.WindowType_ISOLATION_Isolation; }
+            }
+
+            public static string EXTRACTION
+            {
+                get { return Resources.WindowType_EXTRACTION_Extraction; }
+            }
+        };
 
         public static class WindowMargin
         {
@@ -137,9 +147,13 @@ namespace pwiz.Skyline.SettingsUI
            
 
             //Initialize IsolationComboBox
-            comboIsolation.SelectedIndex = 0;
-
-            
+            comboIsolation.Items.AddRange(
+                new object[]
+                {
+                    WindowType.ISOLATION,
+                    WindowType.EXTRACTION
+                });
+            comboIsolation.SelectedItem = WindowType.ISOLATION;
         }
 
         private void OnLoad(object sender, EventArgs e)
@@ -200,7 +214,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         double start = isolationWindow.Start;
                         double end = isolationWindow.End;
-                        if (comboIsolation.SelectedIndex == COMBO_ISOLATION_INDEX)
+                        if (Equals(comboIsolation.SelectedItem,WindowType.ISOLATION))
                         {
                             start -= (isolationWindow.StartMargin ?? 0);
                             end += (isolationWindow.EndMargin ?? (isolationWindow.StartMargin ?? 0));
@@ -402,7 +416,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         double startValue = editWindow.Start.Value;
                         double endValue = editWindow.End.Value;
-                        if (comboIsolation.SelectedIndex == COMBO_ISOLATION_INDEX)
+                        if (Equals(comboIsolation.SelectedItem,WindowType.ISOLATION))
                         {
                             if (!Equals(marginType, WindowMargin.NONE))
                             {
@@ -528,6 +542,42 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             DialogResult = DialogResult.OK;
+        }
+
+        private List<IsolationWindow> GetIsolationWindows()
+        {
+            List<IsolationWindow> windowList = new List<IsolationWindow>();
+            string marginType = MarginType;
+            foreach (var editWindow in _gridViewDriver.Items)
+            {
+                double startValue = editWindow.Start ?? 0;
+                double endValue = editWindow.End ?? 0;
+                if (Equals(comboIsolation.SelectedItem, WindowType.ISOLATION))
+                {
+                    if (!Equals(marginType, WindowMargin.NONE))
+                    {
+                        startValue += editWindow.StartMargin ?? 0;
+                    }
+                    if (Equals(marginType, WindowMargin.ASYMMETRIC))
+                    {
+                        endValue -= editWindow.EndMargin ?? 0;
+                    }
+                    else if (Equals(marginType, WindowMargin.SYMMETRIC))
+                    {
+                        endValue -= editWindow.StartMargin ?? 0;
+                    }
+                }
+                IsolationWindow isolationWindow = new IsolationWindow(
+// ReSharper disable PossibleInvalidOperationException
+                    startValue,
+                    endValue,
+// ReSharper restore PossibleInvalidOperationException
+                    cbSpecifyTarget.Checked ? editWindow.Target : null,
+                    !Equals(marginType, WindowMargin.NONE) ? editWindow.StartMargin : null,
+                    Equals(marginType, WindowMargin.ASYMMETRIC) ? editWindow.EndMargin : null);
+                windowList.Add(isolationWindow);
+            }
+            return windowList;
         }
 
         private int FindErrorCell(EditIsolationWindow editWindow)
@@ -945,14 +995,14 @@ namespace pwiz.Skyline.SettingsUI
             set { comboMargins.SelectedItem = value; }
         }
 
-        public int IsolationType
+        public object IsolationType
         {
             get { return comboIsolation.SelectedIndex; }
             set
             {
-                if(value > COMBO_EXTRACTION_INDEX || value < 0)
+                if(!Equals(value,WindowType.ISOLATION) && ! Equals(value,WindowType.EXTRACTION))
                     throw new ArgumentOutOfRangeException();
-                comboIsolation.SelectedIndex = value;
+                comboIsolation.SelectedItem = value;
             }
         }
         public void Clear()
@@ -968,18 +1018,18 @@ namespace pwiz.Skyline.SettingsUI
         #endregion
 
 
-        private int _lastIndex = COMBO_ISOLATION_INDEX;
+        private object _lastWindowType = WindowType.ISOLATION;
 
         private void comboIsolation_SelectedIndexChanged(object sender, EventArgs e)
         {
             //Nothing needs to be done if comboIsolation's value is the same
-            if (_lastIndex == comboIsolation.SelectedIndex) return;
-            _lastIndex = comboIsolation.SelectedIndex;
+            if (Equals(comboIsolation.SelectedItem,_lastWindowType)) return;
+            _lastWindowType = comboIsolation.SelectedItem;
             
             var selectedItem = MarginType;
             
             //Switch to isolation
-            if (comboIsolation.SelectedIndex == COMBO_ISOLATION_INDEX)
+            if (Equals(comboIsolation.SelectedItem,WindowType.ISOLATION))
             {
                 for (int row = 0; row < gridIsolationWindows.RowCount - 1; row++)
                 {
@@ -1031,7 +1081,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OpenGraph()
         {
-            using (var graphDlg = new DiaIsolationWindowsGraphForm(_gridViewDriver.Items, MarginType, comboIsolation.SelectedIndex == COMBO_ISOLATION_INDEX))
+            using (var graphDlg = new DiaIsolationWindowsGraphForm(GetIsolationWindows()))
             {
                 graphDlg.ShowDialog(this);
             } 

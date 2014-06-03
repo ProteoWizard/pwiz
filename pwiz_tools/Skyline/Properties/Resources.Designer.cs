@@ -22460,6 +22460,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Extraction.
+        /// </summary>
+        public static string WindowType_EXTRACTION_Extraction {
+            get {
+                return ResourceManager.GetString("WindowType_EXTRACTION_Extraction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Isolation.
+        /// </summary>
+        public static string WindowType_ISOLATION_Isolation {
+            get {
+                return ResourceManager.GetString("WindowType_ISOLATION_Isolation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data truncation in library header. File may be corrupted..
         /// </summary>
         public static string XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted {
