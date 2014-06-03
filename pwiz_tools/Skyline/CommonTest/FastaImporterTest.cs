@@ -670,7 +670,7 @@ namespace CommonTest
                         bool searchCompleted =
                             String.IsNullOrEmpty(result.GetProteinMetadata().GetPendingSearchTerm());
                         bool searchDelayed = (test==1); // first go round we simulate bad web access
-                        if (!Equals(result.WebSearchInfo.ToString(), WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(CultureInfo.InvariantCulture))) // the 'no search possible' case
+                        if (!result.WebSearchInfo.ToString().StartsWith(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(CultureInfo.InvariantCulture))) // the 'no search possible' case
                             Assert.IsTrue(searchCompleted == !searchDelayed);
                     }
                 }
