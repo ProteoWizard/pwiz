@@ -215,6 +215,49 @@ namespace pwiz.Skyline.Controls.Graphs
             else
                 CreateSingleScan();
 
+            // Add extraction boxes.
+            for (int i = 0; i < _scanProvider.Transitions.Length; i++)
+            {
+                var transition = _scanProvider.Transitions[i];
+                if (transition.Source != _source)
+                    continue;
+                var color1 = Blend(transition.Color, Color.White, 0.60);
+                var color2 = Blend(transition.Color, Color.White, 0.95);
+                var extractionBox = new BoxObj(
+                    transition.ProductMz - transition.ExtractionWidth.Value / 2,
+                    0.0,
+                    transition.ExtractionWidth.Value,
+                    1.0,
+                    Color.Transparent,
+                    transition.Color,
+                    Color.White)
+                {
+                    Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                    ZOrder = ZOrder.F_BehindGrid,
+                    Fill = new Fill(color1, color2, 90),
+                    IsClippedToChartRect = true,
+                };
+                GraphPane.GraphObjList.Add(extractionBox);
+            }
+
+            // Add labels.
+            for (int i = 0; i < _scanProvider.Transitions.Length; i++)
+            {
+                var transition = _scanProvider.Transitions[i];
+                if (transition.Source != _source)
+                    continue;
+                var label = new TextObj(transition.Name, transition.ProductMz, 0.02, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Top)
+                {
+                    ZOrder = ZOrder.D_BehindAxis,
+                    IsClippedToChartRect = true,
+                };
+                label.FontSpec.Border.IsVisible = false;
+                label.FontSpec.FontColor = Blend(transition.Color, Color.Black, 0.30);
+                label.FontSpec.IsBold = true;
+                label.FontSpec.Fill = new Fill(Color.FromArgb(180, Color.White));
+                GraphPane.GraphObjList.Add(label);
+            }
+
             double retentionTime = _fullScans[0].RetentionTime ?? _scanProvider.Times[_scanIndex];
             GraphPane.Title.Text = string.Format("{0} ({1:F2})", _fileName, retentionTime); // Not L10N
             UpdateUI();
@@ -286,6 +329,23 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+
+            double minDrift, maxDrift;
+            GetDriftRange(out minDrift, out maxDrift);
+
+            var driftTimeBox = new BoxObj(
+                0.0,
+                maxDrift,
+                1.0,
+                maxDrift - minDrift,
+                Color.Transparent,
+                Color.FromArgb(50, Color.Gray))
+            {
+                Location = { CoordinateFrame = CoordType.XChartFractionYScale },
+                ZOrder = ZOrder.F_BehindGrid,
+                IsClippedToChartRect = true,
+            };
+            GraphPane.GraphObjList.Add(driftTimeBox);
         }
 
         /// <summary>
@@ -361,48 +421,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 var item = new SpectrumItem(defaultPointList, Color.Gray);
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item);
                 curveItem.Label.IsVisible = false;
-            }
-
-            // Add extraction boxes.
-            for (int i = 0; i < pointLists.Length; i++)
-            {
-                var transition = _scanProvider.Transitions[i];
-                if (transition.Source != _source)
-                    continue;
-                var color1 = Blend(transition.Color, Color.White, 0.60);
-                var color2 = Blend(transition.Color, Color.White, 0.95);
-                var extractionBox = new BoxObj(
-                    transition.ProductMz - transition.ExtractionWidth.Value/2,
-                    0.0,
-                    transition.ExtractionWidth.Value,
-                    1.0,
-                    Color.Transparent,
-                    transition.Color,
-                    Color.White)
-                {
-                    Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
-                    ZOrder = ZOrder.F_BehindGrid,
-                    Fill = new Fill(color1, color2, 90),
-                    IsClippedToChartRect = true,
-                };
-                GraphPane.GraphObjList.Add(extractionBox);
-            }
-
-            // Add labels.
-            for (int i = 0; i < pointLists.Length; i++)
-            {
-                var transition = _scanProvider.Transitions[i];
-                if (transition.Source != _source)
-                    continue;
-                var label = new TextObj(transition.Name, transition.ProductMz, 0.02, CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Top)
-                {
-                    ZOrder = ZOrder.D_BehindAxis,
-                    IsClippedToChartRect = true,
-                };
-                label.FontSpec.Border.IsVisible = false;
-                label.FontSpec.FontColor = Blend(transition.Color, Color.Black, 0.30);
-                label.FontSpec.Fill = new Fill(Color.FromArgb(100, Color.White));
-                GraphPane.GraphObjList.Add(label);
             }
         }
 
@@ -522,21 +540,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void Zoom()
         {
-            var axis = GraphPane.XAxis;
+            var xScale = GraphPane.XAxis.Scale;
+            var yScale = GraphPane.YAxis.Scale;
+            xScale.MinAuto = xScale.MaxAuto = true;
+            yScale.MinAuto = yScale.MaxAuto = true;
+            GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
             if (magnifyBtn.Checked)
             {
-                axis.Scale.MinAuto = false;
-                axis.Scale.MaxAuto = false;
+                xScale.MinAuto = xScale.MaxAuto = false;
                 double mz = _scanProvider.Source == ChromSource.ms1
                     ? _scanProvider.Transitions[_transitionIndex].PrecursorMz
                     : _scanProvider.Transitions[_transitionIndex].ProductMz;
-                axis.Scale.Min = mz - 1.5;
-                axis.Scale.Max = mz + 3.5;
+                xScale.Min = mz - 1.5;
+                xScale.Max = mz + 3.5;
             }
-            else
+            if (filterBtn.Checked && !spectrumBtn.Checked)
             {
-                axis.Scale.MinAuto = true;
-                axis.Scale.MaxAuto = true;
+                yScale.MinAuto = yScale.MaxAuto = false;
+                double minDriftTime, maxDriftTime;
+                GetDriftRange(out minDriftTime, out maxDriftTime);
+                double range = maxDriftTime - minDriftTime;
+                yScale.Min = minDriftTime - range/2;
+                yScale.Max = maxDriftTime + range/2;
             }
             graphControl.GraphPane.AxisChange();
         }
@@ -686,7 +711,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void SumScans(bool sum)
         {
             Settings.Default.SumScansFullScan = spectrumBtn.Checked = sum;
-            graphControl.GraphPane.SetScale(graphControl.CreateGraphics()); // Reset y-axis
+            Zoom();
             CreateGraph();
         }
 
@@ -698,6 +723,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void FilterDriftTimes(bool filter)
         {
             Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
+            Zoom();
             CreateGraph();            
         }
 

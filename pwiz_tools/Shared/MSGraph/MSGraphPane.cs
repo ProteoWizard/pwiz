@@ -46,6 +46,7 @@ namespace pwiz.MSGraph
             IsFontsScaled = false;
             YAxis.Scale.MaxGrace = 0.1;
             YAxis.MajorGrid.IsZeroLine = false; // Hide the y=0 line
+            LockYAxisAtZero = true;
 
             _currentItemType = MSGraphItemType.unknown;
             _pointAnnotations = new GraphObjList();
@@ -64,7 +65,7 @@ namespace pwiz.MSGraph
 
         public bool AllowCurveOverlap { get; set; }
         public bool AllowLabelOverlap { get; set; }
-        public bool AllowYAutoScale { get; set; }
+        public bool LockYAxisAtZero { get; set; }
 
         protected MSGraphItemType _currentItemType;
         public MSGraphItemType CurrentItemType
@@ -255,6 +256,8 @@ namespace pwiz.MSGraph
             Axis yAxis = YAxis;
 
             yAxis.Scale.MinAuto = false;
+            if (LockYAxisAtZero)
+                yAxis.Scale.Min = 0;
 
             // ensure that the chart rectangle is the right size
             AxisChange(g);
