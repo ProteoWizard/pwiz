@@ -318,7 +318,7 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 if (!filter.ContainsTime(rt.Value))
                                     continue;
-                                chromMapMs.AddSharedTime((float)rt.Value);
+                                chromMapMs.AddSharedTime((float)rt.Value, scanId);
                             }
                             foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt, dataSpectrum.Precursors,
                                 spectra))
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Model.Results
 
         private void AddChromatograms(ChromDataCollectorSet chromMap, ChromSource source)
         {
-            ChromCollector scanIdCollector = null;
+            var scanIdCollector = chromMap.ScanIdsCollector;
             var timesCollector = chromMap.SharedTimesCollector;
             foreach (var pairPrecursor in chromMap.PrecursorCollectorMap)
             {
@@ -535,9 +535,10 @@ namespace pwiz.Skyline.Model.Results
         public ChromCollector SharedTimesCollector { get; private set; }
         public ChromCollector ScanIdsCollector { get; private set; }
 
-        public void AddSharedTime(float time)
+        public void AddSharedTime(float time, int scanId)
         {
             SharedTimesCollector.Add(time);
+            ScanIdsCollector.Add(scanId);
         }
 
         public IList<Tuple<PrecursorModSeq, ChromDataCollector>> PrecursorCollectorMap { get; private set; }
