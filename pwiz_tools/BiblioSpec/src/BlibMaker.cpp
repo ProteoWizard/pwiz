@@ -30,6 +30,12 @@ namespace BiblioSpec {
 
 static const char ERROR_GENERIC[] = "Unexpected failure.";
 
+// Due to original omission of a schema version number, and the unused
+// integer values minorVersion, the minorVersion field has been taken
+// for use as a schemaVersion
+#define MAJOR_VERSION_CURRENT 0
+#define MINOR_VERSION_CURRENT 2 // Version 2 adds ion mobility information
+
 
 // SQLite uses 1.5K pages, and PRAGMA cache_size is specified in these pages
 //     see http://www.sqlite.org/pragma.html
@@ -279,9 +285,10 @@ void BlibMaker::createTables()
     char* date = ctime(&t);
 
     string blibLSID = getLSID();
-    sprintf(zSql, "INSERT INTO LibInfo values('%s','%s',%i,0,1)", // schemaVersion = 1
+    sprintf(zSql, "INSERT INTO LibInfo values('%s','%s',%i,%i,%i)", 
             blibLSID.c_str(), date, 
-            -1);// init count as -1 to mean 'not counted', 0 could be 'no spec'
+            -1, // init count as -1 to mean 'not counted', 0 could be 'no spec'
+            MAJOR_VERSION_CURRENT, MINOR_VERSION_CURRENT);
     sql_stmt(zSql);
 
     strcpy(zSql,

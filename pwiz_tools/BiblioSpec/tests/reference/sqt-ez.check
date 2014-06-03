@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:sqt-ez.blib	3	1	1
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:sqt-ez.blib	3	1	2
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	DSYVGDEAQSK	599.765338	2	DSYVGDEAQSK	-	-	1	577	0.0	0	10.7323	1	872	0.0	1

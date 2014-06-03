@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:msgf-mzid.blib	5	1	1
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:msgf-mzid.blib	5	1	2
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	FKWNGTDTNSAAEK	784.865295	2	FKWNGTDTNSAAEK	-	-	1	655	0.0	0	32.904148	1	10073	0.0	15

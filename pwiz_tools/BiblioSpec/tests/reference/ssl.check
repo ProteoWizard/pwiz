@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:ssl.blib	10	1	1
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:ssl.blib	10	1	2
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobilityValue	ionMobilityType	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	TASEFDSAIAQDK	613.81	2	TASEFDSAIAQDK	-	-	1	442	0.0	0	0.0	1	146	0.0	0
