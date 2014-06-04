@@ -104,11 +104,11 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
 
     msd.id = p.filename().replace_extension("").string(utf8);
 
-    /*SoftwarePtr softwareMassHunter(new Software);
-    softwareMassHunter->id = "MassHunter";
-    softwareMassHunter->set(MS_MassHunter_Data_Acquisition);
-    softwareMassHunter->version = rawfile->getVersion();
-    msd.softwarePtrs.push_back(softwareMassHunter);*/
+    SoftwarePtr softwareShimadzu(new Software);
+    softwareShimadzu->id = "Shimadzu software";
+    softwareShimadzu->set(MS_Shimadzu_Corporation_software);
+    softwareShimadzu->version = "4.0";
+    msd.softwarePtrs.push_back(softwareShimadzu);
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz";
@@ -128,7 +128,7 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     //if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    initializeInstrumentConfigurationPtrs(msd, rawfile, softwarePwiz);
+    initializeInstrumentConfigurationPtrs(msd, rawfile, softwareShimadzu);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 

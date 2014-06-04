@@ -9,22 +9,25 @@
       <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd" name="20140312_六mix_column_1 (scheduled) 一个试.lcd" location="file:///C:\pwiz-src\branches\work\20140312_Shimadzu_integration\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
+      <sourceFile id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd" name="20140312_六mix_column_1 (scheduled) 一个试.lcd" location="file:///C:\pwiz-src2\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
         <cvParam cvRef="MS" accession="MS:1000929" name="Shimadzu Biotech nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000560" name="mass spectrometer file format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="74e7b9e84c1135dcf9f94fc1def85fccd7eeecf7"/>
       </sourceFile>
     </sourceFileList>
   </fileDescription>
-  <softwareList count="1">
-    <software id="pwiz" version="3.0.5886">
+  <softwareList count="2">
+    <software id="Shimadzu_x0020_software" version="4.0">
+      <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
+    </software>
+    <software id="pwiz" version="3.0.6312">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
       <cvParam cvRef="MS" accession="MS:1000124" name="Shimadzu instrument model" value=""/>
-      <softwareRef ref="pwiz"/>
+      <softwareRef ref="Shimadzu_x0020_software"/>
     </instrumentConfiguration>
   </instrumentConfigurationList>
   <dataProcessingList count="1">

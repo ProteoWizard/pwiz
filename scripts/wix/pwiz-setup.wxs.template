@@ -267,6 +267,11 @@
 <?endif?>
 
 
+<!-- Shimadzu DLLs -->
+<Component Feature="MainFeature"><File Id="_EULA.SFCS" Name="EULA.SFCS" Source="msvc-release\EULA.SFCS" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_DataReader.dll" Name="DataReader.dll" Source="msvc-release\DataReader.dll" KeyPath="yes"/></Component>
+
+
 <!-- Thermo DLLs -->
 <Component Feature="MainFeature"><File Id="_EULA.MSFileReader" Name="EULA.MSFileReader" Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.dll" Name="MSFileReader.XRawfile2.dll" Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
