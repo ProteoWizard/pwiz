@@ -269,6 +269,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
         xArray = driftScan->getXArray();
         yArray = driftScan->getYArray();
 
+        if (xArray.empty() || yArray.empty())
+            return result;
+
         minMaxMz.start = xArray.front();
         minMaxMz.end = xArray.back();
         scan.scanWindows.push_back(ScanWindow(minMaxMz.start, minMaxMz.end, MS_m_z));
@@ -458,7 +461,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
     {
         int frames = rawfile_->getTotalIonMobilityFramesPresent();
         int driftBinsPerFrame = rawfile_->getIonMobilityFrame(0)->getDriftBinsPresent();
-        size_t size = frames * driftBinsPerFrame;
+        size_t size = config_.combineIonMobilitySpectra ? frames : frames * driftBinsPerFrame;
 		index_.reserve(size);
 
         for (int i = 0; i < frames; ++i)
@@ -475,30 +478,51 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
             }
             else
             {
-                const vector<short>& nonEmptyDriftBins = frame->getNonEmptyDriftBins();
-                for (size_t j = 0, end = nonEmptyDriftBins.size(); j < end; ++j)
-			    {
-                    int driftBinIndex = nonEmptyDriftBins[j];
-
-                    // HACK: frame 25, bin 99 of Test_ShewFromUimf returns a null spectrum but still comes back as non-empty;
-                    // if this happens more often we will need a fix from Agilent
-                    if (j + 1 == end)
-                        try { frame->getScan(driftBinIndex); } catch (runtime_error&) { continue; }
-
-                    /*if (scan->getScanId() == 0)
+                if (config_.acceptZeroLengthSpectra)
+                {
+                    for (size_t driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
+                    {
+                        /*if (scan->getScanId() == 0)
                         continue;*/ // BUG or empty bin?
 
-				    index_.push_back(IndexEntry());
-				    IndexEntry& ie = index_.back();
-				    ie.rowNumber = ie.frameIndex = (int)i;
-                    ie.driftBinIndex = driftBinIndex;
-                    ie.scanId = (i * driftBinsPerFrame) + driftBinIndex; // scan->getScanId();
-                    ie.index = index_.size() - 1;
+                        index_.push_back(IndexEntry());
+                        IndexEntry& ie = index_.back();
+                        ie.rowNumber = ie.frameIndex = (int)i;
+                        ie.driftBinIndex = driftBinIndex;
+                        ie.scanId = (i * driftBinsPerFrame) + driftBinIndex; // scan->getScanId();
+                        ie.index = index_.size() - 1;
 
-                    std::back_insert_iterator<std::string> sink(ie.id);
-                    generate(sink, "scanId=" << int_, ie.scanId);
-			    }
+                        std::back_insert_iterator<std::string> sink(ie.id);
+                        generate(sink, "scanId=" << int_, ie.scanId);
+                    }
                 }
+                else
+                {
+                    const vector<short>& nonEmptyDriftBins = frame->getNonEmptyDriftBins();
+                    for (size_t j = 0, end = nonEmptyDriftBins.size(); j < end; ++j)
+			        {
+                        int driftBinIndex = nonEmptyDriftBins[j];
+
+                        // HACK: frame 25, bin 99 of Test_ShewFromUimf returns a null spectrum but still comes back as non-empty;
+                        // if this happens more often we will need a fix from Agilent
+                        if (j + 1 == end)
+                            try { frame->getScan(driftBinIndex); } catch (runtime_error&) { continue; }
+
+                        /*if (scan->getScanId() == 0)
+                            continue;*/ // BUG or empty bin?
+
+				        index_.push_back(IndexEntry());
+				        IndexEntry& ie = index_.back();
+				        ie.rowNumber = ie.frameIndex = (int)i;
+                        ie.driftBinIndex = driftBinIndex;
+                        ie.scanId = (i * driftBinsPerFrame) + driftBinIndex; // scan->getScanId();
+                        ie.index = index_.size() - 1;
+
+                        std::back_insert_iterator<std::string> sink(ie.id);
+                        generate(sink, "scanId=" << int_, ie.scanId);
+			        }
+                }
+            }
 		}
 	}
 	else

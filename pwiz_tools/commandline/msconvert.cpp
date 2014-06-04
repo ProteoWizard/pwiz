@@ -306,6 +306,9 @@ Config parseCommandLine(int argc, char** argv)
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
             ": write all drift bins/scans in a frame/block as one spectrum instead of individual spectra")
+        ("acceptZeroLengthSpectra",
+            po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
+            ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")

@@ -361,7 +361,6 @@ FrameImpl::FrameImpl(MIDAC::IMidacImsReader^ imsReader, int frameIndex) : imsRea
 {
     frameInfo_ = imsReader->FrameInfo(frameIndex + 1);
     numDriftBins_ = imsReader->FileInfo->MaxNonTfsMsPerFrame;
-    ToStdVector(imsReader->NonEmptyDriftBins(frameIndex + 1), nonEmptyDriftBins_);
 }
 
 int FrameImpl::getFrameIndex() const { return frameIndex_; }
@@ -378,7 +377,12 @@ double FrameImpl::getRetentionTime() const
 
 int FrameImpl::getDriftBinsPresent() const { return numDriftBins_; }
 
-const std::vector<short>& FrameImpl::getNonEmptyDriftBins() const { return nonEmptyDriftBins_; }
+const std::vector<short>& FrameImpl::getNonEmptyDriftBins() const
+{
+    if (nonEmptyDriftBins_.empty())
+        ToStdVector(imsReader_->NonEmptyDriftBins(frameIndex_ + 1), nonEmptyDriftBins_);
+    return nonEmptyDriftBins_;
+}
 
 DriftScanPtr FrameImpl::getScan(int driftBinIndex) const
 {
