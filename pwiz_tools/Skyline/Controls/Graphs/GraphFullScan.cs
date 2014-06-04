@@ -72,6 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetScans(MsDataSpectrum[] scans)
         {
             _fullScans = scans;
+            Zoom();
             CreateGraph();
         }
 
@@ -129,7 +130,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 comboBoxScanType.SelectedIndexChanged += comboBoxScanType_SelectedIndexChanged;
                 comboBoxScanType.Enabled = true;
 
-                Zoom();
                 LoadScan();
             }
             else
@@ -197,11 +197,11 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void CreateGraph()
         {
-            GraphPane.CurveList.Clear();
-            GraphPane.GraphObjList.Clear();
-
             if (_fullScans == null)
                 return;
+
+            GraphPane.CurveList.Clear();
+            GraphPane.GraphObjList.Clear();
 
             bool hasDriftDimension = _fullScans.Length > 1;
             bool useHeatMap = hasDriftDimension && !Settings.Default.SumScansFullScan;

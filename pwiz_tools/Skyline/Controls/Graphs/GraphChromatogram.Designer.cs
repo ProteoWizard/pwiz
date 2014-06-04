@@ -45,6 +45,7 @@
             this.graphControl.IsEnableVPan = false;
             this.graphControl.IsEnableVZoom = false;
             this.graphControl.IsShowCopyMessage = false;
+            this.graphControl.IsZoomOnMouseCenter = true;
             this.graphControl.Name = "graphControl";
             this.graphControl.ScrollGrace = 0D;
             this.graphControl.ScrollMaxX = 0D;
