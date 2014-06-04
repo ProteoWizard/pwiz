@@ -87,6 +87,8 @@ namespace pwiz.Skyline.Controls.Graphs
             btnCancelFile.Visible = false;
         }
 
+        public bool Canceled { get; private set; }
+
         // AllChromatogramsGraph still has work to do processing chromatogram data
         // even after the user closes the window, so we just hide the window instead
         // of actually closing it.
@@ -177,6 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs
         // Cancel all uncached files.
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            Canceled = true;
             Hide();
             Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
                                               doc => FilterFiles(doc, info => IsCachedFile(doc, info)));

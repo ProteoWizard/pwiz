@@ -3605,7 +3605,8 @@ namespace pwiz.Skyline
 
                 if (_allChromatogramsGraph != null)
                 {
-                    Settings.Default.AutoShowAllChromatogramsGraph = _allChromatogramsGraph.Visible;
+                    if (!_allChromatogramsGraph.Canceled)
+                        Settings.Default.AutoShowAllChromatogramsGraph = _allChromatogramsGraph.Visible;
                     DestroyAllChromatogramsGraph();
                 }
             }
