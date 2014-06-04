@@ -290,6 +290,10 @@ namespace pwiz.Skyline.Model.Results
                         allChromData.MaxRetentionTime = (float)(provider.MaxRetentionTime ?? 0);
                         allChromData.MaxRetentionTimeKnown = provider.MaxRetentionTime.HasValue;
                     }
+                    else if (ChorusResponseChromDataProvider.IsChorusResponse(dataFilePath))
+                    {
+                        provider = new ChorusResponseChromDataProvider(_document, fileInfo, _status, StartPercent, EndPercent, _loader);
+                    }
                     else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
                         provider = new RemoteChromDataProvider(_document, fileInfo, _status, StartPercent, EndPercent, _loader);

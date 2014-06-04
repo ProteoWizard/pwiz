@@ -33,9 +33,10 @@ namespace pwiz.Skyline.Model.Results
             : base(chromFileInfo, progressStatus, startPercent, endPercent, loader)
         {
             ChromatogramRequestDocument fullChromatogramRequest = new SpectrumFilter(document, chromFileInfo.FilePath, null).ToChromatogramRequestDocument();
-            ChorusUrl chorusUrl = (ChorusUrl) chromFileInfo.FilePath;
+            ChorusUrl chorusUrl = chromFileInfo.FilePath as ChorusUrl;
             ChorusAccount chorusAccount = chorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
-            _chromTaskList = new ChromTaskList(CheckCancelled, document, chorusAccount, chorusUrl, ChromTaskList.ChunkChromatogramRequest(fullChromatogramRequest, 100));
+            _chromTaskList = new ChromTaskList(CheckCancelled, document, chorusAccount, chorusUrl,
+                ChromTaskList.ChunkChromatogramRequest(fullChromatogramRequest, 100));
             _chromTaskList.SetMinimumSimultaneousTasks(2);
         }
 
@@ -100,7 +101,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsRemoteChromFile(MsDataFileUri msDataFileUri)
         {
-            return msDataFileUri is ChorusUrl || DataSourceUtil.EXT_CHORUSRESPONSE == msDataFileUri.GetExtension();
+            return msDataFileUri is ChorusUrl || ChorusResponseChromDataProvider.IsChorusResponse(msDataFileUri);
         }
 
         private void CheckCancelled()

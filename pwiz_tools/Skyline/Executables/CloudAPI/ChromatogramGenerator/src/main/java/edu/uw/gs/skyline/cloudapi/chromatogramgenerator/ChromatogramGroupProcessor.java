@@ -56,10 +56,11 @@ class ChromatogramGroupProcessor {
             default:
                 return;
         }
-        processSpectrumAndAddPoint(retentionTime, msSpectrum.getMzs(), msSpectrum.getIntensities(), chromatogramGroupPoints);
+        processSpectrumAndAddPoint(retentionTime, msSpectrum.getScanId(), msSpectrum.getMzs(), msSpectrum.getIntensities(), chromatogramGroupPoints);
     }
 
     public boolean processSpectrumAndAddPoint(double retentionTime,
+                                              Integer scanId,
                                               double[] mzArray,
                                               double[] intensityArray,
                                               ChromatogramGroupPoints chromatogramGroupPoints) {
@@ -67,7 +68,7 @@ class ChromatogramGroupProcessor {
         for (ChromatogramRequestDocument.ChromatogramGroup.Chromatogram chromatogram : chromatogramGroup.getChromatogram()) {
             values.add(ChromatogramPointValue.calculate(mzArray, intensityArray, chromatogram.getProductMz(), chromatogramGroup.getExtractor(), chromatogram.getMzWindow()));
         }
-        chromatogramGroupPoints.addPoint((float) retentionTime, values);
+        chromatogramGroupPoints.addPoint((float) retentionTime, scanId, values);
         return true;
     }
 

@@ -885,7 +885,8 @@
     <Compile Include="Model\Results\AbstractDemultiplexer.cs" />
     <Compile Include="Model\Results\ArrayPool.cs" />
     <Compile Include="Model\Results\CachedChromatogramDataProvider.cs" />
-    <Compile Include="Model\Results\Chromatogram.cs" />
+    <Compile Include="Model\Results\ChorusResponseChromDataProvider.cs" />
+	<Compile Include="Model\Results\Chromatogram.cs" />
     <Compile Include="Model\Results\ChromatogramCache.cs" />
     <Compile Include="Controls\Graphs\AllChromatogramsGraph.cs">
       <SubType>Form</SubType>

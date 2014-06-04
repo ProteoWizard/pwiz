@@ -60,6 +60,7 @@ public class MzmlSpectrumIterator implements Iterator<MsSpectrum> {
     public MsSpectrum next() {
         Spectrum spectrum = iterator.next();
         MsSpectrum msSpectrum = new MsSpectrum();
+        msSpectrum.setScanId(spectrum.getIndex());
         for (BinaryDataArray binaryDataArray : spectrum.getBinaryDataArrayList().getBinaryDataArray()) {
             switch (binaryDataArray.getDataType()) {
                 case MZ_VALUES:

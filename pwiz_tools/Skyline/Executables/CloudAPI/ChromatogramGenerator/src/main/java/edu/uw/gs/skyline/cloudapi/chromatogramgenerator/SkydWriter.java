@@ -27,7 +27,7 @@ import java.util.zip.Deflater;
  */
 public class SkydWriter {
     /** All skyd files write their version number exactly 52 bytes before the end of the file. */
-    public static final int FORMAT_VERSION_CACHE = 6;
+    public static final int FORMAT_VERSION_CACHE = 8;
     private final StreamWrapper stream;
     private List<ChromTransition> transitions = new ArrayList<ChromTransition>();
     private List<ChromGroupHeader> chromGroupHeaders = new ArrayList<ChromGroupHeader>();
@@ -49,6 +49,21 @@ public class SkydWriter {
         chromGroupHeader.precursor = chromatogramGroupInfo.getPrecursorMz();
         // TODO(nicksh): find out what hasCalculatedMzs means
         chromGroupHeader.hasCalculatedMzs = false;
+
+        if (chromatogramPoints.hasScanIds()) {
+            switch (chromatogramPoints.getChromatogramGroupInfo().getSource()) {
+                case MS_1:
+                    chromGroupHeader.has_ms1_scan_ids = true;
+                    break;
+                case SIM:
+                    chromGroupHeader.has_sim_scan_ids = true;
+                    break;
+                case MS_2:
+                    chromGroupHeader.has_frag_scan_ids = true;
+                    break;
+            }
+        }
+
         for (ChromatogramRequestDocument.ChromatogramGroup.Chromatogram transition : chromatogramGroupInfo.getChromatogram()) {
             ChromTransition chromTransition = new ChromTransition();
             chromTransition.chromSource = chromatogramGroupInfo.getSource();
@@ -157,6 +172,9 @@ public class SkydWriter {
         public boolean hasMassErrors;
         public boolean hasCalculatedMzs;
         public boolean extracted_base_peak;
+        public boolean has_ms1_scan_ids;
+        public boolean has_sim_scan_ids;
+        public boolean has_frag_scan_ids;
         public int fileIndex;
         public int seqLen;
         public int numTransitions;
@@ -182,6 +200,15 @@ public class SkydWriter {
             }
             if (extracted_base_peak) {
                 flagBits |= 0x04;
+            }
+            if (has_ms1_scan_ids) {
+                flagBits |= 0x08;
+            }
+            if (has_sim_scan_ids) {
+                flagBits |= 0x10;
+            }
+            if (has_frag_scan_ids) {
+                flagBits |= 0x20;
             }
             stream.writeShort(flagBits);
             stream.writeShort((short) (fileIndex & 0xffff));
@@ -230,10 +257,14 @@ public class SkydWriter {
     private class ChromTransition {
         public double product;
         public float extractionWidth;
+        public float ionMobilityValue;
+        public float ionMobilityExtractionWidth;
         public ChromSource chromSource;
         public void write(StreamWrapper stream) throws Exception {
             stream.writeDouble(product);
             stream.writeFloat(extractionWidth);
+            stream.writeFloat(ionMobilityValue);
+            stream.writeFloat(ionMobilityExtractionWidth);
             short flagBits;
             switch (chromSource) {
                 default:

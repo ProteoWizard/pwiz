@@ -8,6 +8,7 @@ public class MsSpectrum {
     private double[] intensities;
     boolean centroided;
     Double retentionTime;
+    Integer scanId;
     int msLevel;
     MsPrecursor[] precursors = new MsPrecursor[0];
 
@@ -41,6 +42,14 @@ public class MsSpectrum {
 
     public void setRetentionTime(Double retentionTime) {
         this.retentionTime = retentionTime;
+    }
+
+    public Integer getScanId() {
+        return scanId;
+    }
+
+    public void setScanId(Integer scanId) {
+        this.scanId = scanId;
     }
 
     public int getMsLevel() {

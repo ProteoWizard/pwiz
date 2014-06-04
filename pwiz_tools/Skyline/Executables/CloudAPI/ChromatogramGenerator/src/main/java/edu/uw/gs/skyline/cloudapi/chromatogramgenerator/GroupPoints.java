@@ -10,11 +10,13 @@ import java.util.List;
 public interface GroupPoints {
     ChromatogramRequestDocument.ChromatogramGroup getChromatogramGroupInfo();
 
-    void addPoint(double retentionTime, List<ChromatogramPointValue> values);
+    void addPoint(double retentionTime, Integer scanId, List<ChromatogramPointValue> values);
 
     byte[] toByteArray();
 
     int getPointCount();
 
     boolean hasMassErrors();
+
+    boolean hasScanIds();
 }

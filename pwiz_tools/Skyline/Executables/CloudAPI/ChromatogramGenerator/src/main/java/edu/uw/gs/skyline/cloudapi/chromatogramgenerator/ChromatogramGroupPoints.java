@@ -13,12 +13,14 @@ import java.util.List;
 public class ChromatogramGroupPoints implements GroupPoints {
     private final ChromatogramRequestDocument.ChromatogramGroup chromatogramGroupInfo;
     private List<Float> times;
+    private List<Integer> scanIds;
     private List<float[]> intensitiesList;
     private List<float[]> relativeMassErrorsList;
 
     public ChromatogramGroupPoints(ChromatogramRequestDocument.ChromatogramGroup chromatogramGroupInfo) {
         this.chromatogramGroupInfo = chromatogramGroupInfo;
         times = new ArrayList<Float>();
+        scanIds = new ArrayList<Integer>();
         intensitiesList = new ArrayList<float[]>();
         if (chromatogramGroupInfo.isMassErrors()) {
             relativeMassErrorsList = new ArrayList<float[]>();
@@ -31,10 +33,20 @@ public class ChromatogramGroupPoints implements GroupPoints {
     }
 
     @Override
-    public void addPoint(double retentionTime, List<ChromatogramPointValue> values) {
+    public void addPoint(double retentionTime, Integer scanId, List<ChromatogramPointValue> values) {
         int expectedArrayLength = chromatogramGroupInfo.getChromatogram().size();
         if (expectedArrayLength != values.size()) {
             throw new IllegalArgumentException("Values size is " + values.size() + " should be " + expectedArrayLength);
+        }
+        if (null == scanId) {
+            if (0 != scanIds.size()) {
+                throw new IllegalArgumentException("scanId cannot be null because scan ids have already been added");
+            }
+        } else {
+            if (0 == scanIds.size() && 0 != times.size()) {
+                throw new IllegalArgumentException("scanId cannot have value because earlier scanIds were null");
+            }
+            scanIds.add(scanId);
         }
         times.add((float) retentionTime);
         float[] intensities = new float[values.size()];
@@ -76,6 +88,11 @@ public class ChromatogramGroupPoints implements GroupPoints {
                     }
                 }
             }
+            if (hasScanIds()) {
+                for (int scanId : scanIds) {
+                    streamWrapper.writeInt(scanId);
+                }
+            }
             return byteArrayOutputStream.toByteArray();
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
@@ -90,5 +107,9 @@ public class ChromatogramGroupPoints implements GroupPoints {
     @Override
     public boolean hasMassErrors() {
         return null != relativeMassErrorsList;
+    }
+
+    public boolean hasScanIds() {
+        return scanIds.size() > 0;
     }
 }
