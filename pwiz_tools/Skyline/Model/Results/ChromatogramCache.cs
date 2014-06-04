@@ -965,11 +965,11 @@ namespace pwiz.Skyline.Model.Results
                 scanIds = new int[Helpers.CountEnumValues<ChromSource>() - 1][];
                 int sizeArrayScanIds = sizeof(int) * numPoints;
                 if (withMs1ScanIds)
-                    scanIds[(int)ChromSource.ms1] = new int[sizeArrayScanIds];
+                    scanIds[(int)ChromSource.ms1] = new int[numPoints];
                 if (withFragmentScanIds)
-                    scanIds[(int)ChromSource.fragment] = new int[sizeArrayScanIds];
+                    scanIds[(int)ChromSource.fragment] = new int[numPoints];
                 if (withSimScanIds)
-                    scanIds[(int)ChromSource.sim] = new int[sizeArrayScanIds];
+                    scanIds[(int)ChromSource.sim] = new int[numPoints];
                 for (int source = 0; source < scanIds.Length; source++)
                 {
                     if (scanIds[source] != null)
