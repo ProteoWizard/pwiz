@@ -219,9 +219,6 @@
   <data name="spectrumBtn.ToolTipText" xml:space="preserve">
     <value>Show 2D Spectrum</value>
   </data>
-  <data name="spectrumBtn.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -230,9 +227,6 @@
   </data>
   <data name="filterBtn.ToolTipText" xml:space="preserve">
     <value>Filter Drift Times</value>
-  </data>
-  <data name="filterBtn.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
     <value>13, 22</value>
@@ -269,6 +263,9 @@
   </data>
   <data name="btnIsolationWindow.ToolTipText" xml:space="preserve">
     <value>Isolation window</value>
+  </data>
+  <data name="btnIsolationWindow.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -326,6 +323,9 @@
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>473, 386</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
     <value>Full Scan</value>

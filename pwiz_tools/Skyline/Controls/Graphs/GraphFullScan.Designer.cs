@@ -70,6 +70,8 @@
             resources.ApplyResources(this.graphControl, "graphControl");
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphControl.IsEnableVPan = false;
+            this.graphControl.IsEnableVZoom = false;
             this.graphControl.IsShowCopyMessage = false;
             this.graphControl.IsZoomOnMouseCenter = true;
             this.graphControl.Name = "graphControl";
@@ -149,7 +151,9 @@
             // spectrumBtn
             // 
             this.spectrumBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.spectrumBtn.Checked = true;
             this.spectrumBtn.CheckOnClick = true;
+            this.spectrumBtn.CheckState = System.Windows.Forms.CheckState.Checked;
             this.spectrumBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.spectrumBtn.Image = global::pwiz.Skyline.Properties.Resources.DataProcessing;
             resources.ApplyResources(this.spectrumBtn, "spectrumBtn");

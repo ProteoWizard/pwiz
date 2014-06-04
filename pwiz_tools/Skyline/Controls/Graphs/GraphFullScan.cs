@@ -67,6 +67,11 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.XAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeXAxis_MZ;
 
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
+            spectrumBtn.Checked = Settings.Default.SumScansFullScan;
+            filterBtn.Checked = Settings.Default.FilterDriftTimesFullScan;
+
+            spectrumBtn.Visible = false;
+            filterBtn.Visible = false;
         }
 
         private void SetScans(MsDataSpectrum[] scans)
@@ -333,6 +338,7 @@ namespace pwiz.Skyline.Controls.Graphs
             double minDrift, maxDrift;
             GetDriftRange(out minDrift, out maxDrift);
 
+            // Add gray shaded box behind heat points.
             var driftTimeBox = new BoxObj(
                 0.0,
                 maxDrift,
@@ -346,6 +352,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 IsClippedToChartRect = true,
             };
             GraphPane.GraphObjList.Add(driftTimeBox);
+
+            // Add outline in front of heat points, so you can tell where the limits are in a dense graph.
+            var driftTimeOutline = new BoxObj(
+                0.0,
+                maxDrift,
+                1.0,
+                maxDrift - minDrift,
+                Color.FromArgb(50, Color.DarkViolet),
+                Color.Transparent)
+            {
+                Location = { CoordinateFrame = CoordType.XChartFractionYScale },
+                ZOrder = ZOrder.C_BehindChartBorder,
+                IsClippedToChartRect = true,
+                Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
+            };
+            GraphPane.GraphObjList.Add(driftTimeOutline);
         }
 
         /// <summary>
@@ -540,11 +562,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void Zoom()
         {
+            if (_scanProvider == null)
+                return;
+
             var xScale = GraphPane.XAxis.Scale;
             var yScale = GraphPane.YAxis.Scale;
             xScale.MinAuto = xScale.MaxAuto = true;
-            yScale.MinAuto = yScale.MaxAuto = true;
+            yScale.MinAuto = false;
+            yScale.Min = 0;
+            yScale.MaxAuto = true;
             GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
+            
             if (magnifyBtn.Checked)
             {
                 xScale.MinAuto = xScale.MaxAuto = false;
@@ -554,15 +582,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
+            
             if (filterBtn.Checked && !spectrumBtn.Checked)
             {
-                yScale.MinAuto = yScale.MaxAuto = false;
+                yScale.MaxAuto = false;
                 double minDriftTime, maxDriftTime;
                 GetDriftRange(out minDriftTime, out maxDriftTime);
                 double range = maxDriftTime - minDriftTime;
                 yScale.Min = minDriftTime - range/2;
                 yScale.Max = maxDriftTime + range/2;
             }
+
             graphControl.GraphPane.AxisChange();
         }
 
@@ -570,7 +600,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
-            if (!Visible || IsDisposed)
+            if (!Visible || IsDisposed || _scanProvider == null)
                 return;
 
             if (_fullScans != null)
