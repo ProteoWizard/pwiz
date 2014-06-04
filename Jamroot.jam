@@ -109,6 +109,11 @@ if ! $(boost_version_suffix) { errors.user-error "Unable to determine version fr
 constant BOOST_VERSION : [ regex.split $(boost_version_suffix[1]) _ ] ;
 
 
+# declare a feature indicating vendor API support is desired (but not necessarily possible on the current platform)
+import feature ;
+feature.feature vendor-api-support : on off : incidental propagated ;
+
+
 if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text formats like mzML, mzXML, MGF etc
 {
     echo "NOTICE: building without support for binary msdata formats as requested" ;
@@ -127,7 +132,7 @@ rule without-mz5 ( properties * )
    }
    else 
    {
-       return [ without-binary-msdata ] ;
+       return [ without-binary-msdata $(properties) ] ;
    }
 }
 
@@ -136,7 +141,7 @@ rule without-binary-msdata ( properties * )
 {
    if --without-binary-msdata in [ modules.peek : ARGV ]
    {
-       return <location-prefix>without-binary-msdata <define>WITHOUT_MZ5 ;
+       return <location-prefix>without-binary-msdata <define>WITHOUT_MZ5 <vendor-api-support>off ;
    }
 }
 
@@ -146,7 +151,6 @@ path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 
 
 import testing ; # needed to enable unit-test rule
-import feature ; # needed for install rules
 import package ; # needed for package install
 import path ; # needed for glob, exists, etc.
 import project ; # needed for project.current

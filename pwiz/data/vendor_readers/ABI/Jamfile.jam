@@ -60,7 +60,8 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ wiff-dll-location $(API_PATH) : $(properties) ] &&
-	   ! [ without-binary-msdata ]
+	   ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties)
     {
         result += <define>PWIZ_READER_ABI ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
@@ -68,7 +69,7 @@ rule vendor-api-usage-requirements ( properties * )
     else if ! $(.warn-once)
     {
         .warn-once = true ;
-		if  [ without-binary-msdata ] 
+		if [ without-binary-msdata $(properties) ] 
 		{
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
 		}

@@ -19,18 +19,14 @@
 // limitations under the License.
 //
 
-#include <iostream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <cstring>
-#include <stdlib.h>
-#include <vector>
-#include <algorithm>
-
-using namespace std;
+#include <cstdlib>
 
 // Run the given BiblioSpec tool with the given arguments
-int main(int argc, char** argv){
-
+int main(int argc, char** argv)
+{
     string usage = "ExecuteBlib <blib tool> [<inputs>+] ";
 
     // require a Blib executable and then any number of inputs for it
@@ -49,12 +45,14 @@ int main(int argc, char** argv){
 	const char* pdbExt = ".pdb";
     string inputs;  // all else
 
-    for(int i = 1; i < argc; i++){
+    for(int i = 1; i < argc; i++)
+    {
         string token = argv[i];
         if (token == "--teamcity-test-decoration")
             continue;
 
-        if( token[0] == '-' ){
+        if (token[0] == '-')
+        {
             // replace any _ with ' ' so options can have args
             size_t position = token.find('_');
             if( position != string::npos ){
@@ -62,21 +60,25 @@ int main(int argc, char** argv){
             }
             options += token;
             options += " ";
-        } else if( token.find("BlibBuild") != string::npos ||
-                   token.find("BlibFilter") != string::npos ||
-                   token.find("BlibToMs2") != string::npos ||
-                   token.find("BlibSearch") != string::npos ){
+        }
+        else if (bal::contains(token, "BlibBuild") ||
+                 bal::contains(token, "BlibFilter") ||
+                 bal::contains(token, "BlibToMs2") ||
+                 bal::contains(token, "BlibSearch"))
+        {
             // Ignore the .pdb if it ends up in the command line.
-		    if ( token.compare(token.length() - strlen(pdbExt),
-                               strlen(pdbExt), pdbExt) == 0 ) {
+		    if ( bal::iends_with(token, pdbExt) ) {
                 continue;
 			}
             command = token; // check that only one token matches?
             command += " ";
-        } else if ( token.compare(token.length() - strlen(libExt),
-                                  strlen(libExt), libExt) == 0 ){
+        }
+        else if (bal::iends_with(token, libExt))
+        {
             libNames.push_back(token);
-        } else{
+        }
+        else
+        {
             inputs += token;
             inputs += " ";
         }
@@ -85,6 +87,14 @@ int main(int argc, char** argv){
     // for multiple libs, put them in alphabetical order since we have no
     // guarantee how they will be passed to this
     sort(libNames.begin(), libNames.end());
+
+    // create an empty file for the output database
+    if (!bfs::exists(libNames.back()))
+    {
+        bfs::create_directories(bfs::path(libNames.back()).parent_path());
+        ofstream(libNames.back().c_str());
+    }
+
     string libName; 
     for(size_t i = 0; i < libNames.size(); i++){
         libName += libNames[i];

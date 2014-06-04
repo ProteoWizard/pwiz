@@ -57,7 +57,8 @@ rule vendor-api-requirements ( properties * )
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
-	   ! [ without-binary-msdata ]
+	   ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties)
     {
         result += <source>Reader_Waters_Detail.cpp ;
     }
@@ -75,7 +76,8 @@ rule vendor-api-usage-requirements ( properties * )
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
-	   ! [ without-binary-msdata ]
+	   ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties)
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
         result += <define>PWIZ_READER_WATERS ;
@@ -83,7 +85,7 @@ rule vendor-api-usage-requirements ( properties * )
     else if ! $(.warn-once)
     {
         .warn-once = true ;
-        if  [ without-binary-msdata ] 
+        if [ without-binary-msdata $(properties) ] 
 		{
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
 		}
@@ -154,7 +156,7 @@ rule test-requirements ( properties * )
         warn-once "[$(READER_PATH)] Missing test data." ;
         result += <build>no ;
     }
-    else if [ without-binary-msdata ] 
+    else if [ without-binary-msdata $(properties) ] 
 	{
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
 	}

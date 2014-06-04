@@ -46,7 +46,8 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ bruker-dll-location $(API_PATH) : $(properties) ] &&
-       ! [ without-binary-msdata ]
+       ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties)
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_bruker ;
         result += <define>PWIZ_READER_BRUKER ;
@@ -54,7 +55,7 @@ rule vendor-api-requirements ( properties * )
     else if ! $(.warn-once)
     {
         .warn-once = true ;
-        if  [ without-binary-msdata ] 
+        if [ without-binary-msdata $(properties) ] 
         {
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -134,7 +135,7 @@ rule test-requirements ( properties * )
         warn-once "[$(READER_PATH)] Missing test data." ;
         result += <build>no ;
     }
-    else if [ without-binary-msdata ] 
+    else if [ without-binary-msdata $(properties) ] 
     {
         warn-once "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
