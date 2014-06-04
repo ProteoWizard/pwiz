@@ -1026,51 +1026,47 @@ namespace pwiz.Skyline.SettingsUI
             if (Equals(comboIsolation.SelectedItem,_lastWindowType)) return;
             _lastWindowType = comboIsolation.SelectedItem;
             
-            var selectedItem = MarginType;
-            
-            //Switch to isolation
-            if (Equals(comboIsolation.SelectedItem,WindowType.ISOLATION))
+            string selectedType = MarginType;
+            bool isIsolation = Equals(comboIsolation.SelectedItem, WindowType.ISOLATION);
+            int row = 0;
+            foreach (EditIsolationWindow window in _gridViewDriver.Items)
             {
-                for (int row = 0; row < gridIsolationWindows.RowCount - 1; row++)
+                double startMargin = 0;
+                double endMargin = 0;
+                if (Equals(selectedType, WindowMargin.SYMMETRIC))
                 {
-                    DataGridViewCellCollection cells = gridIsolationWindows.Rows[row].Cells;
-                    double startMargin;
-                    double endMargin;
-                    if (Equals(selectedItem, WindowMargin.SYMMETRIC))
+                    startMargin = window.StartMargin ?? 0;
+                    endMargin = startMargin;
+                }
+                else if (Equals(selectedType, WindowMargin.ASYMMETRIC))
+                {
+                    startMargin = window.StartMargin ?? 0;
+                    endMargin = window.EndMargin ?? 0;
+                }
+
+                if (window.Start != null)
+                {
+                    double newStart;
+                    if (isIsolation)
                     {
-                        startMargin = (double)cells[COLUMN_START_MARGIN].Value;
-                        endMargin = (double)cells[COLUMN_START_MARGIN].Value;
+                        newStart = (double) window.Start - startMargin;
                     }
                     else
                     {
-                        startMargin = (double)cells[COLUMN_START_MARGIN].Value;
-                        endMargin = (double)cells[COLUMN_END_MARGIN].Value;
+                        newStart = (double) window.Start + startMargin;
                     }
-                    _gridViewDriver.SetCellValue(COLUMN_START, row, (double)cells[COLUMN_START].Value - startMargin);
-                    _gridViewDriver.SetCellValue(COLUMN_END, row, (double)cells[COLUMN_END].Value + endMargin);
+                    _gridViewDriver.SetCellValue(COLUMN_START,row,newStart);
                 }
-            }
-            //Switch to extraction
-            else
-            {
-                for (int row = 0; row < gridIsolationWindows.RowCount - 1; row ++)
+                if (window.End != null)
                 {
-                    DataGridViewCellCollection cells = gridIsolationWindows.Rows[row].Cells;
-                    double startMargin;
-                    double endMargin;
-                    if (Equals(selectedItem, WindowMargin.SYMMETRIC))
-                    {
-                        startMargin = (double) cells[COLUMN_START_MARGIN].Value;
-                        endMargin = (double) cells[COLUMN_START_MARGIN].Value;
-                    }
+                    double newEnd;
+                    if (isIsolation)
+                        newEnd = (double) window.End + endMargin;
                     else
-                    {
-                        startMargin = (double) cells[COLUMN_START_MARGIN].Value;
-                        endMargin = (double) cells[COLUMN_END_MARGIN].Value;
-                    }
-                    _gridViewDriver.SetCellValue(COLUMN_START, row, (double) cells[COLUMN_START].Value + startMargin);
-                    _gridViewDriver.SetCellValue(COLUMN_END, row, (double) cells[COLUMN_END].Value - endMargin);
+                        newEnd = (double) window.End - endMargin;
+                    _gridViewDriver.SetCellValue(COLUMN_END,row,newEnd);
                 }
+                row ++;
             }
         }
 
