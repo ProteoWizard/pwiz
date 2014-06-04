@@ -255,9 +255,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         break;
                     }
 
-                    // Don't look inside directories which are actually data sources
+                    // Don't look inside directories which are actually data sources,
+                    // but do see if such directories have a basename match
                     if (DataSourceUtil.IsDataSource(dir))
+                    {
+                        CheckBasenameMatch(dir, missingFiles, ref numMissingFiles);
+                        if (numMissingFiles == 0)
+                        {
+                            return;
+                        }
                         continue;
+                    }
 
                     longWaitBroker.Message = String.Format(Resources.ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__, dir);
                     FindDataFiles(longWaitBroker, missingFiles, dir, ref numMissingFiles);
@@ -271,6 +279,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.Show(WizardForm, TextUtil.LineSeparate(string.Format(Resources.ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__, directory), x.Message));
             }
+        }
+
+        private bool CheckBasenameMatch(string fileName, Dictionary<string, ResultsFileFindInfo> missingFiles, ref int numMissingFiles)
+        {
+            foreach (var item in missingFiles.Keys.Where(item => !missingFiles[item].Found))
+            {
+                if (null == item) // For ReSharper
+                    continue;
+
+                if (Equals(item, fileName) ||
+                    MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
+                        Path.GetFileNameWithoutExtension(fileName)))
+                {
+                    missingFiles[item].Found = true;
+                    missingFiles[item].Path = new MsDataFilePath(fileName);
+                    numMissingFiles--;
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void SearchForDataFilesInDirectory(ILongWaitBroker longWaitBroker, Dictionary<string, ResultsFileFindInfo> missingFiles, string dir, ref int numMissingFiles)
@@ -288,22 +316,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 // Check to see if the file matches any of the missing files
                 string fileName = Path.GetFileName(file);
-                foreach (var item in missingFiles.Keys.Where(item => !missingFiles[item].Found))
-                {
-                    if (null == item)   // For ReSharper
-                        continue;
 
-                    if (Equals(item, fileName) ||
-                        MeasuredResults.IsBaseNameMatch(Path.GetFileNameWithoutExtension(item),
-                                                        Path.GetFileNameWithoutExtension(file)))
+                if (CheckBasenameMatch(fileName, missingFiles, ref numMissingFiles))
+                {
+                    if (numMissingFiles == 0)
                     {
-                        missingFiles[item].Found = true;
-                        missingFiles[item].Path = new MsDataFilePath(file);
-                        numMissingFiles--;
-                        if (numMissingFiles == 0)
-                        {
-                            return;
-                        }
+                        return;
                     }
                 }
             }

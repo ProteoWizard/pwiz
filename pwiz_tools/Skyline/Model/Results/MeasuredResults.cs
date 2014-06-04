@@ -250,7 +250,8 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsUnderscoreSuffix(string name)
         {
-            return name.EndsWith("_final_fragment"); // Not L10N
+            return name.ToLowerInvariant().EndsWith("_ia_final_fragment") || // Not L10N
+                   name.EndsWith("_final_fragment"); // Not L10N
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local

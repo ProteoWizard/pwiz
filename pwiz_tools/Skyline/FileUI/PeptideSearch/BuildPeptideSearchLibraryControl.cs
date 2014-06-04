@@ -185,8 +185,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 else
                 {
                     // If the document does not have a document library, then delete the one that we have found
-                    FileEx.SafeDelete(outputPath);
-                    FileEx.SafeDelete(Path.ChangeExtension(outputPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
+                    try
+                    {
+                        // CONSIDER: it may be that user is trying to re-import, in which case this file is probably in use
+                        FileEx.SafeDelete(outputPath);
+                        FileEx.SafeDelete(Path.ChangeExtension(outputPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
+                    }
+                    catch (FileEx.DeleteException de)
+                    {
+                        MessageDlg.Show(this, de.Message);
+                        return false;
+                    }
                 }
             }
 
