@@ -382,8 +382,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var chromCollector = pairProduct.Value;
                     if (timesCollector != null)
+                    {
+                        chromCollector.ScanIdCollector = scanIdCollector;
                         chromCollector.TimesCollector = timesCollector;
-                    chromCollector.ScanIdCollector = scanIdCollector;
+                    }
                     var key = new ChromKey(collector.ModifiedSequence,
                         collector.PrecursorMz,
                         collector.IonMobilityValue,
@@ -518,8 +520,10 @@ namespace pwiz.Skyline.Model.Results
             TypeOfScans = timeSharing;
             PrecursorCollectorMap = new List<Tuple<PrecursorModSeq, ChromDataCollector>>();
             if (timeSharing == TimeSharing.shared)
+            {
                 SharedTimesCollector = new ChromCollector();
-            ScanIdsCollector = new ChromCollector();
+                ScanIdsCollector = new ChromCollector();
+            }
             _allChromData = allChromData;
         }
 

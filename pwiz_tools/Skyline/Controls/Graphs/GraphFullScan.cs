@@ -772,10 +772,33 @@ namespace pwiz.Skyline.Controls.Graphs
                 _failureAction = failureAction;
             }
 
-            public MsDataFileUri DataFilePath { get { return _scanProvider.DataFilePath; } }
-            public ChromSource Source { get { return _scanProvider.Source; } }
-            public TransitionFullScanInfo[] Transitions { get { return _scanProvider.Transitions; } }
-            public float[] Times { get { return _scanProvider.Times; } }
+            public MsDataFileUri DataFilePath
+            {
+                get { return GetProviderProperty(p => p.DataFilePath, new MsDataFilePath(string.Empty)); }
+            }
+
+            public ChromSource Source
+            {
+                get { return GetProviderProperty(p => p.Source, ChromSource.unknown); }
+            }
+
+            public TransitionFullScanInfo[] Transitions
+            {
+                get { return GetProviderProperty(p => p.Transitions, new TransitionFullScanInfo[0]); }
+            }
+
+            public float[] Times
+            {
+                get { return GetProviderProperty(p => p.Times, new float[0]); }
+            }
+
+            private TProp GetProviderProperty<TProp>(Func<IScanProvider, TProp> getProp, TProp defaultValue)
+            {
+                lock (this)
+                {
+                    return _scanProvider != null ? getProp(_scanProvider) : defaultValue;
+                }
+            }
 
             /// <summary>
             /// Always run on a specific bakground thread to avoid changing threads when dealing
