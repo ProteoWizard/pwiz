@@ -677,6 +677,16 @@ namespace pwiz.Skyline.Controls.Graphs
             _scanProvider.Dispose();
         }
 
+        private void leftButton_Click(object sender, EventArgs e)
+        {
+            ChangeScan(-1);
+        }
+
+        private void rightButton_Click(object sender, EventArgs e)
+        {
+            ChangeScan(1);
+        }
+
         private void ChangeScan(int delta)
         {
             if (_fullScans == null)
@@ -707,16 +717,6 @@ namespace pwiz.Skyline.Controls.Graphs
             LoadScan(false, false);
         }
 
-        private void rightButton_Click(object sender, EventArgs e)
-        {
-            ChangeScan(1);
-        }
-
-        private void leftButton_Click(object sender, EventArgs e)
-        {
-            ChangeScan(-1);
-        }
-
         private void comboBoxScanType_SelectedIndexChanged(object sender, EventArgs e)
         {
             _source = SourceFromName(comboBoxScanType.Text);
@@ -739,11 +739,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
-        {
-            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
         }
 
         private void magnifyBtn_CheckedChanged(object sender, EventArgs e)
@@ -799,6 +794,160 @@ namespace pwiz.Skyline.Controls.Graphs
                 MessageDlg.Show(this, "Isolation window: {0}, {1}, {2}", low, target, high); // Not L10N
             }
         }
+
+        #region Mouse events
+
+        private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
+        }
+
+        private void graphControl_MouseClick(object sender, MouseEventArgs e)
+        {
+            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
+            if (nearestLabel == null)
+                return;
+            _transitionIndex = (int) nearestLabel.Tag;
+            magnifyBtn.Checked = true;
+            CreateGraph();
+            ZoomXAxis();
+            ZoomYAxis();
+            UpdateUI();
+        }
+
+        private bool graphControl_MouseMove(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var pt = new PointF(e.X, e.Y);
+            var nearestLabel = GetNearestLabel(pt);
+            if (nearestLabel == null)
+                return false;
+            
+            graphControl.Cursor = Cursors.Hand;
+            return true;
+        }
+
+        #endregion
+
+        private TextObj GetNearestLabel(PointF mousePoint)
+        {
+            using (Graphics g = CreateGraphics())
+            {
+                object nearestObject;
+                int index;
+                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out index))
+                {
+                    var textObj = nearestObject as TextObj;
+                    if (textObj != null)
+                        return textObj;
+                }
+            }
+
+            return null;
+        }
+
+        private static readonly int[] _heatMapColors =
+        {
+            0, 0, 255,
+            0, 1, 255,
+            0, 2, 255,
+            0, 4, 255,
+            0, 5, 255,
+            0, 7, 255,
+            0, 9, 255,
+            0, 11, 255,
+            0, 13, 255,
+            0, 15, 255,
+            0, 18, 253,
+            0, 21, 251,
+            0, 24, 250,
+            0, 27, 248,
+            0, 30, 245,
+            0, 34, 243,
+            0, 37, 240,
+            0, 41, 237,
+            0, 45, 234,
+            0, 49, 230,
+            0, 53, 226,
+            0, 57, 222,
+            0, 62, 218,
+            0, 67, 214,
+            0, 71, 209,
+            0, 76, 204,
+            0, 82, 199,
+            0, 87, 193,
+            0, 93, 188,
+            0, 98, 182,
+            0, 104, 175,
+            0, 110, 169,
+            0, 116, 162,
+            7, 123, 155,
+            21, 129, 148,
+            34, 136, 141,
+            47, 142, 133,
+            60, 149, 125,
+            71, 157, 117,
+            83, 164, 109,
+            93, 171, 100,
+            104, 179, 91,
+            113, 187, 92,
+            123, 195, 73,
+            132, 203, 63,
+            140, 211, 53,
+            148, 220, 43,
+            156, 228, 33,
+            163, 237, 22,
+            170, 246, 11,
+            176, 255, 0,
+            183, 248, 0,
+            188, 241, 0,
+            194, 234, 0,
+            199, 227, 0,
+            204, 220, 0,
+            209, 214, 0,
+            213, 207, 0,
+            217, 200, 0,
+            221, 194, 0,
+            224, 188, 0,
+            227, 181, 0,
+            230, 175, 0,
+            233, 169, 0,
+            236, 163, 0,
+            238, 157, 0,
+            240, 151, 0,
+            243, 145, 0,
+            244, 140, 0,
+            246, 134, 0,
+            248, 129, 0,
+            249, 123, 0,
+            250, 118, 0,
+            251, 112, 0,
+            252, 107, 0,
+            253, 102, 0,
+            254, 97, 0,
+            255, 92, 0,
+            255, 87, 0,
+            255, 82, 0,
+            255, 78, 0,
+            255, 73, 0,
+            255, 68, 0,
+            255, 64, 0,
+            255, 59, 0,
+            255, 55, 0,
+            255, 51, 0,
+            255, 47, 0,
+            255, 43, 0,
+            255, 39, 0,
+            255, 35, 0,
+            255, 31, 0,
+            255, 27, 0,
+            255, 23, 0,
+            255, 20, 0,
+            255, 16, 0,
+            255, 13, 0,
+            255, 10, 0,
+            255, 8, 0,
+            255, 3, 0
+        };
 
         /// <summary>
         /// Provides a constant background thread with responsibility for all interactions
@@ -956,146 +1105,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
-
-        private void graphControl_MouseClick(object sender, MouseEventArgs e)
-        {
-            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
-            if (nearestLabel == null)
-                return;
-            _transitionIndex = (int) nearestLabel.Tag;
-            magnifyBtn.Checked = true;
-            CreateGraph();
-            ZoomXAxis();
-            ZoomYAxis();
-            UpdateUI();
-        }
-
-        private void graphControl_MouseMove(object sender, MouseEventArgs e)
-        {
-            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
-            Cursor = (nearestLabel != null) ? Cursors.Hand : Cursors.Cross;
-        }
-
-        private TextObj GetNearestLabel(PointF mousePoint)
-        {
-            using (Graphics g = CreateGraphics())
-            {
-                object nearestObject;
-                int index;
-                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out index))
-                {
-                    var textObj = nearestObject as TextObj;
-                    if (textObj != null)
-                        return textObj;
-                }
-            }
-
-            return null;
-        }
-
-        private static readonly int[] _heatMapColors =
-        {
-            0, 0, 255,
-            0, 1, 255,
-            0, 2, 255,
-            0, 4, 255,
-            0, 5, 255,
-            0, 7, 255,
-            0, 9, 255,
-            0, 11, 255,
-            0, 13, 255,
-            0, 15, 255,
-            0, 18, 253,
-            0, 21, 251,
-            0, 24, 250,
-            0, 27, 248,
-            0, 30, 245,
-            0, 34, 243,
-            0, 37, 240,
-            0, 41, 237,
-            0, 45, 234,
-            0, 49, 230,
-            0, 53, 226,
-            0, 57, 222,
-            0, 62, 218,
-            0, 67, 214,
-            0, 71, 209,
-            0, 76, 204,
-            0, 82, 199,
-            0, 87, 193,
-            0, 93, 188,
-            0, 98, 182,
-            0, 104, 175,
-            0, 110, 169,
-            0, 116, 162,
-            7, 123, 155,
-            21, 129, 148,
-            34, 136, 141,
-            47, 142, 133,
-            60, 149, 125,
-            71, 157, 117,
-            83, 164, 109,
-            93, 171, 100,
-            104, 179, 91,
-            113, 187, 92,
-            123, 195, 73,
-            132, 203, 63,
-            140, 211, 53,
-            148, 220, 43,
-            156, 228, 33,
-            163, 237, 22,
-            170, 246, 11,
-            176, 255, 0,
-            183, 248, 0,
-            188, 241, 0,
-            194, 234, 0,
-            199, 227, 0,
-            204, 220, 0,
-            209, 214, 0,
-            213, 207, 0,
-            217, 200, 0,
-            221, 194, 0,
-            224, 188, 0,
-            227, 181, 0,
-            230, 175, 0,
-            233, 169, 0,
-            236, 163, 0,
-            238, 157, 0,
-            240, 151, 0,
-            243, 145, 0,
-            244, 140, 0,
-            246, 134, 0,
-            248, 129, 0,
-            249, 123, 0,
-            250, 118, 0,
-            251, 112, 0,
-            252, 107, 0,
-            253, 102, 0,
-            254, 97, 0,
-            255, 92, 0,
-            255, 87, 0,
-            255, 82, 0,
-            255, 78, 0,
-            255, 73, 0,
-            255, 68, 0,
-            255, 64, 0,
-            255, 59, 0,
-            255, 55, 0,
-            255, 51, 0,
-            255, 47, 0,
-            255, 43, 0,
-            255, 39, 0,
-            255, 35, 0,
-            255, 31, 0,
-            255, 27, 0,
-            255, 23, 0,
-            255, 20, 0,
-            255, 16, 0,
-            255, 13, 0,
-            255, 10, 0,
-            255, 8, 0,
-            255, 3, 0
-        };
     }
 
     public class SpectrumItem : AbstractMSGraphItem
