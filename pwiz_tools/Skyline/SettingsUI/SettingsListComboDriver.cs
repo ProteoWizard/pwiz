@@ -177,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
 
             int i = _selectedIndexLast;
             TItem itemNew = default(TItem);
-            if (i >= List.ExcludeDefaults)
+            if ((i >= List.ExcludeDefaults) && (i < List.Count))
                 itemNew = itemEditor.EditItem(Combo.TopLevelControl, List[i], List, null);
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
