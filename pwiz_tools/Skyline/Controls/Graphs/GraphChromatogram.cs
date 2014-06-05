@@ -157,6 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             MsDataFileUri SelectedScanFile { get; }
             double SelectedScanRetentionTime { get; }
+            Identity SelectedScanTransition { get; }
         }
 
         private string _nameChromatogramSet;
@@ -175,7 +176,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _hasMergedChromInfo;
         private int _chromIndex;
         private bool _showPeptideTotals;
-        private Identity _transitionId;
         private bool _showingTransitions;
 
         private const int MaxPeptidesDisplayed = 100;
@@ -300,7 +300,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var clickedItem = (ChromGraphItem) _closestCurve.Tag;
             if (clickedItem.TransitionNode == null)
                 return;
-            _transitionId = clickedItem.TransitionNode.Id;
             var chromatogramGroupInfo = clickedItem.Chromatogram;
 
             double displayTime = _fullScanTrackingPoint.Points[0].X;
@@ -327,7 +326,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     ProductMz = fullScanInfo.ChromInfo.ProductMz,
                     ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth,
                     IonMobilityValue = fullScanInfo.ChromInfo.IonMobilityValue,
-                    IonMobilityExtractionWidth = fullScanInfo.ChromInfo.IonMobilityExtractionWidth
+                    IonMobilityExtractionWidth = fullScanInfo.ChromInfo.IonMobilityExtractionWidth,
+                    Id = graphItem.TransitionNode.Id
                 };
                 if (ReferenceEquals(curve, _closestCurve))
                     transitionIndex = i;
@@ -923,7 +923,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
 
                         // Should we show the scan selection point?
-                        if (_arrayChromInfo != null && Equals(_stateProvider.SelectedScanFile, FilePath) && _transitionId != null)
+                        if (_arrayChromInfo != null && Equals(_stateProvider.SelectedScanFile, FilePath) && _stateProvider.SelectedScanTransition != null)
                         {
                             foreach (var graphPane in graphControl.MasterPane.PaneList)
                             {
@@ -1043,7 +1043,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var graphItem = curve.Tag as ChromGraphItem;
                 if (graphItem != null && graphItem.TransitionNode != null &&
-                    ReferenceEquals(_transitionId, graphItem.TransitionNode.Id))
+                    ReferenceEquals(_stateProvider.SelectedScanTransition, graphItem.TransitionNode.Id))
                 {
                     return curve;
                 }
@@ -1053,7 +1053,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphPane GetScanSelectedPane()
         {
-            if (_transitionId != null)
+            if (_stateProvider.SelectedScanTransition != null)
             {
                 foreach (var graphPane in graphControl.MasterPane.PaneList)
                 {

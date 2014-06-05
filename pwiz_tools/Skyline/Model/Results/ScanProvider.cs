@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model.Results
         public double? ExtractionWidth;
         public double? IonMobilityValue;
         public double? IonMobilityExtractionWidth;
+        public Identity Id;
     }
 
     public interface IScanProvider : IDisposable

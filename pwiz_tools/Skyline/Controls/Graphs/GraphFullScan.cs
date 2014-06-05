@@ -550,9 +550,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (SelectedScanChanged != null)
             {
                 if (_fullScans != null)
-                    SelectedScanChanged(this, new SelectedScanEventArgs(_scanProvider.DataFilePath, retentionTime));
+                    SelectedScanChanged(this, new SelectedScanEventArgs(_scanProvider.DataFilePath, retentionTime, _scanProvider.Transitions[_transitionIndex].Id));
                 else
-                    SelectedScanChanged(this, new SelectedScanEventArgs(null, 0));
+                    SelectedScanChanged(this, new SelectedScanEventArgs(null, 0, null));
             }
         }
 
@@ -1137,13 +1137,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class SelectedScanEventArgs : EventArgs
     {
-        public SelectedScanEventArgs(MsDataFileUri dataFile, double retentionTime)
+        public SelectedScanEventArgs(MsDataFileUri dataFile, double retentionTime, Identity transitionId)
         {
             DataFile = dataFile;
             RetentionTime = retentionTime;
+            TransitionId = transitionId;
         }
 
         public MsDataFileUri DataFile { get; private set; }
         public double RetentionTime { get; private set; }
+        public Identity TransitionId { get; private set; }
     }
 }

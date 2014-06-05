@@ -1150,6 +1150,7 @@ namespace pwiz.Skyline
         {
             SelectedScanFile = e.DataFile;
             SelectedScanRetentionTime = e.RetentionTime;
+            SelectedScanTransition = e.TransitionId;
             UpdateChromGraphs();
         }
 
@@ -2533,6 +2534,7 @@ namespace pwiz.Skyline
 
         public MsDataFileUri SelectedScanFile { get; set; }
         public double SelectedScanRetentionTime { get; set; }
+        public Identity SelectedScanTransition { get; set; }
 
         public void ActivateReplicate(string name)
         {
