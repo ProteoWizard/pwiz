@@ -79,6 +79,13 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetScans(MsDataSpectrum[] scans)
         {
             _fullScans = scans;
+            double minDriftTime, maxDriftTime;
+            GetDriftRange(out minDriftTime, out maxDriftTime);
+            if (maxDriftTime <= 0)
+            {
+                filterBtn.Visible = false;
+                filterBtn.Checked = false;
+            }
             CreateGraph();
             if (_zoomXAxis)
             {
