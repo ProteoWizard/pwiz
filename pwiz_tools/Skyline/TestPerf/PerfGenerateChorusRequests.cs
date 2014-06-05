@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -78,8 +80,18 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            string chorusRequestOutputDirectory = Path.Combine(TestContext.TestResultsDirectory, "chorusrequests");
-            Directory.CreateDirectory(chorusRequestOutputDirectory);
+            string chorusRequestOutputDirectory;
+            if (null != TestContext.TestResultsDirectory)
+            {
+                chorusRequestOutputDirectory = Path.Combine(TestContext.TestResultsDirectory, "chorusrequests");
+                Directory.CreateDirectory(chorusRequestOutputDirectory);
+            }
+            else
+            {
+                // When running unit tests under resharper, we have no TestResultsDirectory, so we only send
+                // the output to Console.Out.
+                chorusRequestOutputDirectory = null;
+            }
             var xmlSerializer = new XmlSerializer(typeof(pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode.ChromatogramRequestDocument));
 
             foreach (var chorusDataSet in ChorusDataSets)
@@ -96,11 +108,21 @@ namespace TestPerf
                 RunUI(()=> { document = SkylineWindow.DocumentUI; });
                 Assert.IsNotNull(document);
                 SpectrumFilter spectrumFilterData = new SpectrumFilter(document, MsDataFileUri.Parse(""), null);
-                string outputFile = Path.Combine(chorusRequestOutputDirectory, chorusDataSet.Name + ".chorusrequest.xml");
                 var chorusRequestDocument = spectrumFilterData.ToChromatogramRequestDocument();
-                using (var stream = new FileStream(outputFile, FileMode.Create))
+                Console.Out.WriteLine("***BEGIN {0}.chorusrequest.xml***", chorusDataSet.Name);
+                using (var xmlWriter = XmlWriter.Create(Console.Out, new XmlWriterSettings {Encoding = Encoding.UTF8}))
                 {
-                    xmlSerializer.Serialize(stream, chorusRequestDocument);
+                    xmlSerializer.Serialize(xmlWriter, chorusRequestDocument);
+                }
+                Console.Out.WriteLine("***END {0}.chorusrequest.xml***", chorusDataSet.Name);
+                if (null != chorusRequestOutputDirectory)
+                {
+                    string outputFile = Path.Combine(chorusRequestOutputDirectory,
+                        chorusDataSet.Name + ".chorusrequest.xml");
+                    using (var stream = new FileStream(outputFile, FileMode.Create))
+                    {
+                        xmlSerializer.Serialize(stream, chorusRequestDocument);
+                    }
                 }
             }
         }
