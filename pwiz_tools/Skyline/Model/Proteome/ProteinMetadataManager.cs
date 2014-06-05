@@ -96,6 +96,9 @@ namespace pwiz.Skyline.Model.Proteome
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document,
             SrmDocument docCurrent)
         {
+            if (!FastaImporter.HasWebAccess()) // Do we even have web access?
+                return false; // Return silently rather than flashing the progress bar
+
             SrmDocument docNew, docOrig;
             do
             {

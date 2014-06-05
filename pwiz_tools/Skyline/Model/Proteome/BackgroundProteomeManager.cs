@@ -289,6 +289,9 @@ namespace pwiz.Skyline.Model.Proteome
             public bool LookupProteinMetadata(ref ProgressStatus progressStatus)
             // ReSharper restore RedundantAssignment
             {
+                if (!_manager.FastaImporter.HasWebAccess()) // Do we even have web access?
+                    return false; // Return silently rather than flashing the progress bar
+
                 using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome, _isTemporary))
                 {
                     _progressStatus = new ProgressStatus(

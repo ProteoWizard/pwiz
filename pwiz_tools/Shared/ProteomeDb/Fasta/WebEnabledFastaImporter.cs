@@ -83,6 +83,18 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         }
 
+        /// <summary>
+        /// Quick, cheap check for internet access (uniprot access, specifically)
+        /// </summary>
+        /// <returns>false if internet isn't available for any reason</returns>
+        public bool HasWebAccess()
+        {
+            var prot = ParseProteinLine(KNOWNGOOD_UNIPROT_SEARCH_TARGET);
+            var protname = new DbProteinName(prot, new ProteinMetadata(KNOWNGOOD_UNIPROT_SEARCH_TARGET, string.Empty, null, null, null, null,
+                UNIPROTKB_TAG+KNOWNGOOD_UNIPROT_SEARCH_TARGET));
+            return DoWebserviceLookup(new []{protname}, null, true).Any();
+        }
+
         public IEnumerable<DbProtein> Import(TextReader reader)
         {
             string line;
@@ -725,6 +737,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
         public const string KNOWNGOOD_GENINFO_SEARCH_TARGET = "15834432"; // Not L10N
         public const string KNOWNGOOD_ENTREZ_SEARCH_TARGET = "XP_915497"; // Not L10N
+        public const string KNOWNGOOD_UNIPROT_SEARCH_TARGET = "Q08641"; // Not L10N
 
         private bool SimilarSearchTerms(string a, string b)
         {

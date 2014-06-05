@@ -154,6 +154,17 @@ namespace CommonTest
                     }),
 
                 new FastaHeaderParserTest(
+                    @">"+WebEnabledFastaImporter.KNOWNGOOD_UNIPROT_SEARCH_TARGET,
+                    new[]
+                    {
+                        new FastaHeaderReaderResult(accession: WebEnabledFastaImporter.KNOWNGOOD_UNIPROT_SEARCH_TARGET,
+                            name: WebEnabledFastaImporter.KNOWNGOOD_UNIPROT_SEARCH_TARGET,
+                            preferredname: "AB140_YEAST",
+                            description: "tRNA(Thr) (cytosine(32)-N(3))-methyltransferase (EC 2.1.1.268) (Actin-binding protein of 140 kDa) (tRNA methyltransferase of 140 kDa)",
+                            species: "Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast)", gene: "ABP140 TRM140 YOR239W YOR240W")
+                    }),
+
+                new FastaHeaderParserTest(
                     ">SYHC Histidyl-tRNA synthetase, cytoplasmic OS=Homo sapiens GN=HARS PE=1 SV=2",
                     new[]
                     {
