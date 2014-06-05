@@ -83,6 +83,8 @@
             this.graphControl.ScrollMinY = 0D;
             this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
+            this.graphControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseMove);
             // 
             // toolBar
             // 

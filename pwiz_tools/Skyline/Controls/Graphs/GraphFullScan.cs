@@ -47,6 +47,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _scanIndex;
         private readonly string[] _sourceNames;
         private ChromSource _source;
+        private bool _zoomXAxis;
+        private bool _zoomYAxis;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
         {
@@ -77,8 +79,18 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetScans(MsDataSpectrum[] scans)
         {
             _fullScans = scans;
-            Zoom();
             CreateGraph();
+            if (_zoomXAxis)
+            {
+                _zoomXAxis = false;
+                ZoomXAxis();
+            }
+            if (_zoomYAxis)
+            {
+                _zoomYAxis = false;
+                ZoomYAxis();
+            }
+            UpdateUI();
         }
 
         private void HandleLoadScanException(Exception ex)
@@ -135,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 comboBoxScanType.SelectedIndexChanged += comboBoxScanType_SelectedIndexChanged;
                 comboBoxScanType.Enabled = true;
 
-                LoadScan();
+                LoadScan(true, true);
             }
             else
             {
@@ -151,8 +163,11 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Focus();
         }
 
-        private void LoadScan()
+        private void LoadScan(bool zoomXAxis, bool zoomYAxis)
         {
+            _zoomXAxis = zoomXAxis;
+            _zoomYAxis = zoomYAxis;
+
             int scanId = GetScanId();
             if (scanId < 0)
             {
@@ -255,6 +270,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     ZOrder = ZOrder.D_BehindAxis,
                     IsClippedToChartRect = true,
+                    Tag = i
                 };
                 label.FontSpec.Border.IsVisible = false;
                 label.FontSpec.FontColor = Blend(transition.Color, Color.Black, 0.30);
@@ -265,7 +281,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double retentionTime = _fullScans[0].RetentionTime ?? _scanProvider.Times[_scanIndex];
             GraphPane.Title.Text = string.Format("{0} ({1:F2})", _fileName, retentionTime); // Not L10N
-            UpdateUI();
 
             FireSelectedScanChanged(retentionTime);
         }
@@ -548,7 +563,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _scanProvider.SetScanProvider(null);
 
-                LoadScan();
+                LoadScan(true, true);
             }
         }
 
@@ -560,19 +575,13 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI(false);
         }
 
-        private void Zoom()
+        private void ZoomXAxis()
         {
-            if (_scanProvider == null)
+            if (_scanProvider == null || _scanProvider.Transitions.Length == 0)
                 return;
 
             var xScale = GraphPane.XAxis.Scale;
-            var yScale = GraphPane.YAxis.Scale;
-            xScale.MinAuto = xScale.MaxAuto = true;
-            yScale.MinAuto = false;
-            yScale.Min = 0;
-            yScale.MaxAuto = true;
-            GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
-            
+
             if (magnifyBtn.Checked)
             {
                 xScale.MinAuto = xScale.MaxAuto = false;
@@ -582,6 +591,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
+            else
+            {
+                xScale.MinAuto = xScale.MaxAuto = true;
+                graphControl.GraphPane.AxisChange();
+            }
+        }
+
+        private void ZoomYAxis()
+        {
+            if (_scanProvider == null || _scanProvider.Transitions.Length == 0)
+                return;
+
+            var yScale = GraphPane.YAxis.Scale;
+            yScale.MinAuto = false;
+            yScale.Min = 0;
+            GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
             
             if (filterBtn.Checked && !spectrumBtn.Checked)
             {
@@ -592,8 +617,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 yScale.Min = minDriftTime - range/2;
                 yScale.Max = maxDriftTime + range/2;
             }
-
-            graphControl.GraphPane.AxisChange();
+            else
+            {
+                yScale.MaxAuto = true;
+                graphControl.GraphPane.AxisChange();
+            }
         }
 
         public void UpdateUI(bool selectionChanged = true)
@@ -676,8 +704,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            LoadScan();
-            UpdateUI(false);
+            LoadScan(false, false);
         }
 
         private void rightButton_Click(object sender, EventArgs e)
@@ -693,9 +720,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void comboBoxScanType_SelectedIndexChanged(object sender, EventArgs e)
         {
             _source = SourceFromName(comboBoxScanType.Text);
-            Zoom();
-            LoadScan();
-            UpdateUI(false);
+            LoadScan(true, true);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -729,8 +754,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ZoomToSelection(bool zoom)
         {
             Settings.Default.AutoZoomFullScanGraph = magnifyBtn.Checked = zoom;
-            Zoom();
             CreateGraph();
+            ZoomXAxis();
+            ZoomYAxis();
+            UpdateUI();
         }
 
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
@@ -741,8 +768,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public void SumScans(bool sum)
         {
             Settings.Default.SumScansFullScan = spectrumBtn.Checked = sum;
-            Zoom();
             CreateGraph();
+            ZoomYAxis();
+            UpdateUI();
         }
 
         private void filterBtn_CheckedChanged(object sender, EventArgs e)
@@ -753,8 +781,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public void FilterDriftTimes(bool filter)
         {
             Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
-            Zoom();
             CreateGraph();            
+            ZoomYAxis();
+            UpdateUI();
         }
 
         private void btnIsolationWindow_Click(object sender, EventArgs e)
@@ -926,6 +955,42 @@ namespace pwiz.Skyline.Controls.Graphs
                         Monitor.Wait(this);
                 }
             }
+        }
+
+        private void graphControl_MouseClick(object sender, MouseEventArgs e)
+        {
+            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
+            if (nearestLabel == null)
+                return;
+            _transitionIndex = (int) nearestLabel.Tag;
+            magnifyBtn.Checked = true;
+            CreateGraph();
+            ZoomXAxis();
+            ZoomYAxis();
+            UpdateUI();
+        }
+
+        private void graphControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            var nearestLabel = GetNearestLabel(new PointF(e.X, e.Y));
+            Cursor = (nearestLabel != null) ? Cursors.Hand : Cursors.Cross;
+        }
+
+        private TextObj GetNearestLabel(PointF mousePoint)
+        {
+            using (Graphics g = CreateGraphics())
+            {
+                object nearestObject;
+                int index;
+                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out index))
+                {
+                    var textObj = nearestObject as TextObj;
+                    if (textObj != null)
+                        return textObj;
+                }
+            }
+
+            return null;
         }
 
         private static readonly int[] _heatMapColors =

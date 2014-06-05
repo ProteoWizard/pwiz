@@ -2674,16 +2674,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
 
             PointF pt = new PointF(e.X, e.Y);
-            if (_showingTransitions)
-            {
-                ShowHighlightPoint(pt);
-                if (IsOverHighlightPoint(pt))
-                {
-                    graphControl.Cursor = Cursors.Hand;
-                    return true;
-                }
-            }
-
             if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
             {
                 graphControl.Cursor = Cursors.VSplit;
@@ -2742,6 +2732,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 }
             }
+
+            // Show full scan tracking dot.
+            if (_showingTransitions)
+            {
+                ShowHighlightPoint(pt);
+                if (IsOverHighlightPoint(pt))
+                {
+                    graphControl.Cursor = Cursors.Hand;
+                    return true;
+                }
+            }
+
             return false;
         }
 
