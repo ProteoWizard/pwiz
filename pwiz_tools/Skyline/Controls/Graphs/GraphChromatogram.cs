@@ -2054,7 +2054,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var listTimes = new List<double>();
                     foreach (var group in transitionGroups)
                     {
-                        listTimes.AddRange(settings.GetUnalignedRetentionTimes(group.Peptide.Sequence, mods));
+                        listTimes.AddRange(settings.GetRetentionTimesNotAlignedTo(FilePath, group.Peptide.Sequence, mods));
                     }
                     if (listTimes.Count > 0)
                     {

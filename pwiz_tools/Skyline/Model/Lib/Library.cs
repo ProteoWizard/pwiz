@@ -124,8 +124,11 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                     }
                     libraries = libraries.ChangeLibraries(list.ToArray());
+                    ProgressStatus status = new ProgressStatus(Resources.LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries);
+                    UpdateProgress(status);
                     docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideSettings(
                         docCurrent.Settings.PeptideSettings.ChangeLibraries(libraries)));
+                    UpdateProgress(status.Complete());
                 }
                 while (!CompleteProcessing(container, docNew, docCurrent));
             }

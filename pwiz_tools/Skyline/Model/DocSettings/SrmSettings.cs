@@ -729,6 +729,41 @@ namespace pwiz.Skyline.Model.DocSettings
             return times.ToArray();
         }
 
+        public double[] GetRetentionTimesNotAlignedTo(MsDataFileUri fileNotAlignedTo, string peptideSequence,
+            ExplicitMods explicitMods)
+        {
+            var times = new List<double>();
+            string basename = fileNotAlignedTo.GetFileNameWithoutExtension();
+            var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(basename);
+            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
+                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
+
+            foreach (var library in PeptideSettings.Libraries.Libraries)
+            {
+                if (null == library)
+                {
+                    continue;
+                }
+                foreach (var source in library.ListRetentionTimeSources())
+                {
+                    if (MeasuredResults.IsBaseNameMatch(source.Name, basename))
+                    {
+                        continue;
+                    }
+                    if (null != fileAlignments)
+                    {
+                        if (null != fileAlignments.RetentionTimeAlignments.Find(source.Name))
+                        {
+                            continue;
+                        }
+                    }
+                    int? indexIgnore = null;
+                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
+                }
+            }
+            return times.ToArray();
+        }
+
         public double[] GetAllRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
         {
             return GetAllRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods);

@@ -840,6 +840,10 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ThermoZerosFix()
         {
+            if (_listChromData.Any(chromData => null != chromData.ScanIds))
+            {
+                return false;
+            }
             bool fixedZeros = false;
             // Remove interleaving zeros
             foreach (var chromData in _listChromData.Where(HasThermoZerosBug))
