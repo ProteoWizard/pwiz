@@ -64,6 +64,10 @@ namespace pwiz.Skyline.ToolsUI
                     listBoxLanguages.SelectedIndex = i;
                 }
             }
+            if (!Settings.Default.EnableChorus)
+            {
+                tabControl.TabPages.Remove(tabChorus);
+            }
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)

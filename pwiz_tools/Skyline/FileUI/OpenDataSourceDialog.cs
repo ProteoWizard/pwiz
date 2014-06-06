@@ -74,12 +74,28 @@ namespace pwiz.Skyline.FileUI
             listView.SmallImageList = imageList;
             listView.LargeImageList = imageList;
 
-            TreeView tv = new TreeView {Indent = 8};
-            _chorusIndex = lookInComboBox.Items.Count;
-            TreeNode chorusNode = tv.Nodes.Add("Chorus", // Not L10N
-                Resources.OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project, (int)ImageIndex.Chorus, (int) ImageIndex.Chorus);
-            chorusNode.Tag = ChorusUrl.EMPTY;
-            lookInComboBox.Items.Add(chorusNode);
+            TreeView tv = new TreeView { Indent = 8 };
+            if (Settings.Default.EnableChorus)
+            {
+                _chorusIndex = lookInComboBox.Items.Count;
+                TreeNode chorusNode = tv.Nodes.Add("Chorus", // Not L10N
+                    Resources.OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project, (int) ImageIndex.Chorus,
+                    (int) ImageIndex.Chorus);
+                chorusNode.Tag = ChorusUrl.EMPTY;
+                lookInComboBox.Items.Add(chorusNode);
+                chorusButton.Visible = true;
+                recentDocumentsButton.Visible = false;
+            }
+            else
+            {
+                _chorusIndex = -1;
+                TreeNode recentDocumentsNode = tv.Nodes.Add("My Recent Documents", // Not L10N
+                    Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents, 0, 0);
+                recentDocumentsNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Recent));
+                lookInComboBox.Items.Add(recentDocumentsNode);
+                chorusButton.Visible = false;
+                recentDocumentsButton.Visible = true;
+            }
             TreeNode desktopNode = tv.Nodes.Add("Desktop",  // Not L10N
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop, (int) ImageIndex.Desktop, (int) ImageIndex.Desktop );
             desktopNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
@@ -1075,6 +1091,11 @@ namespace pwiz.Skyline.FileUI
                 _chorusAccounts.Add(newAccount);
             }
             return _chorusAccounts.Any();
+        }
+
+        private void recentDocumentsButton_Click(object sender, EventArgs e)
+        {
+            CurrentDirectory = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Recent));
         }
     }
 }

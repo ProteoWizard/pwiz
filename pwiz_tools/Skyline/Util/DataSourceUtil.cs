@@ -111,7 +111,14 @@ namespace pwiz.Skyline.Util
                 case EXT_MZML: return TYPE_MZML;
                 case EXT_MZ5: return TYPE_MZ5;
                 case EXT_XML: return GetSourceTypeFromXML(fileInfo.FullName);
-                case EXT_CHORUSRESPONSE: return TYPE_CHORUSRESPONSE;
+                case EXT_CHORUSRESPONSE:
+                {
+                    if (Settings.Default.EnableChorus)
+                    {
+                        return TYPE_CHORUSRESPONSE;
+                    }
+                    return UNKNOWN_TYPE;
+                }
                 default: return UNKNOWN_TYPE;
             }
         }

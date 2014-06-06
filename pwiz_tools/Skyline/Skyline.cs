@@ -242,6 +242,7 @@ namespace pwiz.Skyline
                 // CONSIDER: Reload last document?
                 NewDocument();
             }
+            chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
         }
 
         protected override void OnHandleCreated(EventArgs e)

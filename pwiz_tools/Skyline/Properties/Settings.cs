@@ -939,6 +939,13 @@ namespace pwiz.Skyline.Properties
                 this["ChorusAccountList"] = value; // Not L10N
             }
         }
+
+        [UserScopedSetting]
+        public bool EnableChorus
+        {
+            get { return ((bool?) this["EnableChorus"]) ?? false; }
+            set { this["EnableChorus"] = value; }
+        }
     }
 
     /// <summary>

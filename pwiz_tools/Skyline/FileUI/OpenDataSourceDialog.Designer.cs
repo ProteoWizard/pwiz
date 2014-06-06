@@ -56,6 +56,7 @@ namespace pwiz.Skyline.FileUI
             this.desktopButton = new System.Windows.Forms.Button();
             this.myDocumentsButton = new System.Windows.Forms.Button();
             this.myComputerButton = new System.Windows.Forms.Button();
+            this.recentDocumentsButton = new System.Windows.Forms.Button();
             this.navToolStrip.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -214,6 +215,7 @@ namespace pwiz.Skyline.FileUI
             this.flowLayoutPanel1.BackColor = System.Drawing.SystemColors.Window;
             this.flowLayoutPanel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.flowLayoutPanel1.Controls.Add(this.chorusButton);
+            this.flowLayoutPanel1.Controls.Add(this.recentDocumentsButton);
             this.flowLayoutPanel1.Controls.Add(this.desktopButton);
             this.flowLayoutPanel1.Controls.Add(this.myDocumentsButton);
             this.flowLayoutPanel1.Controls.Add(this.myComputerButton);
@@ -271,6 +273,15 @@ namespace pwiz.Skyline.FileUI
             this.myComputerButton.Name = "myComputerButton";
             this.myComputerButton.UseVisualStyleBackColor = false;
             this.myComputerButton.Click += new System.EventHandler(this.myComputerButton_Click);
+            // 
+            // recentDocumentsButton
+            // 
+            this.recentDocumentsButton.FlatAppearance.BorderSize = 0;
+            resources.ApplyResources(this.recentDocumentsButton, "recentDocumentsButton");
+            this.recentDocumentsButton.ImageList = this.lookInImageList;
+            this.recentDocumentsButton.Name = "recentDocumentsButton";
+            this.recentDocumentsButton.UseVisualStyleBackColor = false;
+            this.recentDocumentsButton.Click += new System.EventHandler(this.recentDocumentsButton_Click);
             // 
             // OpenDataSourceDialog
             // 
@@ -332,5 +343,6 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.Button myComputerButton;
         private System.Windows.Forms.ImageList lookInImageList;
         private System.Windows.Forms.ColumnHeader FileType;
+        private System.Windows.Forms.Button recentDocumentsButton;
     }
 }
