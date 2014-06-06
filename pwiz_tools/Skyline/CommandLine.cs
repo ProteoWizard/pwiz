@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
@@ -1212,6 +1213,8 @@ namespace pwiz.Skyline
             if (document != null)
                 document = ConnectIrtDatabase(document, path);
             if (document != null)
+                document = ConnectOptimizationDatabase(document, path);
+            if (document != null)
                 document = ConnectIonMobilityDatabase(document, path);
             return document;
         }
@@ -1301,6 +1304,43 @@ namespace pwiz.Skyline
             return null;
         }
 
+        private SrmDocument ConnectOptimizationDatabase(SrmDocument document, string documentPath)
+        {
+            var settings = document.Settings.ConnectOptimizationDatabase(lib => FindOptimizationDatabase(documentPath, lib));
+            if (settings == null)
+                return null;
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+            return document.ChangeSettings(settings);
+        }
+
+        private OptimizationLibrary FindOptimizationDatabase(string documentPath, OptimizationLibrary optLib)
+        {
+            OptimizationLibrary result;
+            if (Settings.Default.OptimizationLibraryList.TryGetValue(optLib.Name, out result))
+                return result;
+
+            // First look for the file name in the document directory
+            string fileName = Path.GetFileName(optLib.DatabasePath);
+            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    return optLib.ChangeDatabasePath(filePath);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                    //Todo: should this fail silenty or report an error
+                }
+            }
+
+            _out.WriteLine(Resources.CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__, Path.GetFileName(optLib.DatabasePath));
+            return null;
+        }
+
         private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
         {
             var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityDatabase(documentPath, imdb));
@@ -1340,8 +1380,6 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
             return null;
         }
-
-
 
         private SrmDocument ConnectBackgroundProteome(SrmDocument document, string documentPath)
         {

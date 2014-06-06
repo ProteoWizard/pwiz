@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -511,6 +512,38 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this[typeof(CollisionEnergyList).Name] = value;
+            }
+        }
+
+        public OptimizationLibrary GetOptimizationLibraryByName(string name)
+        {
+            OptimizationLibrary library;
+            if (!OptimizationLibraryList.TryGetValue(name, out library))
+                library = OptimizationLibraryList.GetDefault();
+            return library;
+        }
+
+        [UserScopedSettingAttribute]
+        public OptimizationLibraryList OptimizationLibraryList
+        {
+            get
+            {
+                OptimizationLibraryList list = (OptimizationLibraryList)this[typeof(OptimizationLibraryList).Name];
+                if (list == null)
+                {
+                    list = new OptimizationLibraryList();
+                    list.AddDefaults();
+                    OptimizationLibraryList = list;
+                }
+                else
+                {
+                    list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(OptimizationLibraryList).Name] = value;
             }
         }
 
@@ -1462,6 +1495,83 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return Resources.CollisionEnergyList_Label_Collision_Energy_Regression; } }
     }
 
+    public sealed class OptimizationLibraryList : SettingsList<OptimizationLibrary>
+    {
+        public override string GetDisplayName(OptimizationLibrary item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, OptimizationLibrary.NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
+        public static OptimizationLibrary GetDefault()
+        {
+            return OptimizationLibrary.NONE;
+        }
+
+        public override OptimizationLibrary EditItem(Control owner, OptimizationLibrary item,
+            IEnumerable<OptimizationLibrary> existing, object tag)
+        {
+            using (EditOptimizationLibraryDlg editOptimizationLibraryDlg = new EditOptimizationLibraryDlg(item, existing ?? this, OptimizationType.collision_energy))
+            {
+                return editOptimizationLibraryDlg.ShowDialog(owner) == DialogResult.OK ? editOptimizationLibraryDlg.Library : null;
+            }
+        }
+
+        public override OptimizationLibrary CopyItem(OptimizationLibrary item)
+        {
+            return (OptimizationLibrary)item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<OptimizationLibrary> GetDefaults(int revisionIndex)
+        {
+            return new[] { GetDefault() };
+        }
+
+        public void EnsureDefault()
+        {
+            // Make sure the choice of no library is present.
+            OptimizationLibrary defaultElement = GetDefault();
+            if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
+                Insert(0, defaultElement);
+        }
+
+        public override string Title { get { return Resources.OptimizationLibraryList_Title_Edit_Optimization_Databases; } }
+
+        public override string Label { get { return Resources.OptimizationLibraryList_Label_Optimization_Database; } }
+
+        public override int ExcludeDefaults { get { return 1; } }
+
+        public bool CanEditItem(OptimizationLibrary item)
+        {
+            return item != null && !GetDefaults().Contains(item);
+        }
+
+        public void Initialize(IProgressMonitor loadMonitor)
+        {
+            foreach (var lib in this.ToArray())
+                Initialize(loadMonitor, lib);
+        }
+
+        public OptimizationLibrary Initialize(IProgressMonitor loadMonitor, OptimizationLibrary lib)
+        {
+            if (lib == null)
+                return null;
+
+            try
+            {
+                var libInit = lib.Initialize(loadMonitor);
+                if (!Equals(lib.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(libInit, lib))
+                    SetValue(libInit);
+                lib = libInit;
+            }
+            catch (Exception)
+            {
+                //Consider: Should we really fail silently?
+            }
+            return lib;
+        }
+    }
+
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
     {
         private static readonly DeclusteringPotentialRegression NONE =
@@ -2088,6 +2198,7 @@ namespace pwiz.Skyline.Properties
                         MassType.Monoisotopic, // FragmentMassType
                         CollisionEnergyList.GetDefault(),
                         null,
+                        OptimizationLibraryList.GetDefault(),
                         OptimizedMethodType.None
                     ),
                     new TransitionFilter

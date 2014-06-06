@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -683,18 +684,20 @@ namespace pwiz.Skyline.Model
                                             TransitionDocNode nodeTran,
                                             int step)
         {
-            var prediction = Document.Settings.TransitionSettings.Prediction;
+            // If no optimizing
+            if (OptimizeType == null)
+            {
+                double? optimizedCE = Document.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTran);
+                if (optimizedCE.HasValue)
+                    return optimizedCE.Value;
+            }
 
             // If exporting optimization methods, or optimization data should be ignored,
             // use the regression setting to calculate CE
-            if (OptimizeType != null || prediction.OptimizedMethodType == OptimizedMethodType.None)
-            {
-                if (!Equals(OptimizeType, ExportOptimize.CE))
-                    step = 0;
-                return Document.GetCollisionEnergy(nodePep, nodeGroup, step);
-            }
+            if (!Equals(OptimizeType, ExportOptimize.CE))
+                step = 0;
 
-            return Document.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTran);
+            return Document.GetCollisionEnergy(nodePep, nodeGroup, step);
         }
 
         protected double GetDeclusteringPotential(PeptideDocNode nodePep,

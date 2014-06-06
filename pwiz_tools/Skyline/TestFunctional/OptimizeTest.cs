@@ -27,10 +27,13 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Optimization;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -107,6 +110,93 @@ namespace pwiz.SkylineTestFunctional
             ExportCEOptimizingTransitionList(filePath);
 
             // Undo the change of CE regression
+            RunUI(SkylineWindow.Undo);
+
+            // Test optimization library
+            docCurrent = SkylineWindow.Document;
+
+            // Open transition settings and add new optimization library
+            var transitionSettingsUIOpt = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            var editOptLibLoadExisting = ShowDialog<EditOptimizationLibraryDlg>(transitionSettingsUIOpt.AddToOptimizationLibraryList);
+            // Load from existing file
+            const string existingLibName = "Test load existing library";
+            RunUI(() =>
+            {
+                editOptLibLoadExisting.OpenDatabase(TestFilesDir.GetTestPath("Duplicates.optdb"));
+                editOptLibLoadExisting.LibName = existingLibName;
+            });
+            OkDialog(editOptLibLoadExisting, editOptLibLoadExisting.OkDialog);
+            // Add new optimization library
+            var editOptLib = ShowDialog<EditOptimizationLibraryDlg>(transitionSettingsUIOpt.AddToOptimizationLibraryList);
+
+            string optLibPath = TestFilesDir.GetTestPath("Optimized.optdb");
+            string pasteText = TextUtil.LineSeparate(new[]
+            {
+                new[] {"TPEVDDEALEK", "2", "1047.48406105", "122.50606"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
+                new[] {"DGGIDPLVR", "2", "712.43520066499991", "116.33671"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
+                new[] {"AAA", "5", "100.0", "5.0"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
+                new[] {"AAB", "5", "100.0", "5.0"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
+            });
+            RunUI(() =>
+            {
+                editOptLib.CreateDatabase(optLibPath);
+                editOptLib.LibName = "Test optimized library";
+                SetClipboardText(pasteText);
+            });
+            var addOptDlg = ShowDialog<AddOptimizationsDlg>(editOptLib.DoPasteLibrary);
+            OkDialog(addOptDlg, addOptDlg.OkDialog);
+
+            // Add duplicates and skip existing
+            // "AAA", "5", "100.0", "5.0"
+            // "AAB", "5", "100.0", "10.0"
+            var addOptDbDlgSkip = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
+            RunUI(() =>
+            {
+                addOptDbDlgSkip.Source = OptimizationLibrarySource.settings;
+                addOptDbDlgSkip.SetLibrary(existingLibName);
+            });
+            var addOptDlgAskSkip = ShowDialog<AddOptimizationsDlg>(addOptDbDlgSkip.OkDialog);
+            Assert.AreEqual(1, addOptDlgAskSkip.OptimizationsCount);
+            Assert.AreEqual(1, addOptDlgAskSkip.ExistingOptimizationsCount);
+            RunUI(() => addOptDlgAskSkip.Action = AddOptimizationsAction.skip);
+            OkDialog(addOptDlgAskSkip, addOptDlgAskSkip.OkDialog);
+            Assert.AreEqual(5.0, editOptLib.GetCEOptimization("AAB", 5, 100.0).Value);
+            // Add duplicates and average existing
+            var addOptDbDlgAvg = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
+            RunUI(() =>
+            {
+                addOptDbDlgAvg.Source = OptimizationLibrarySource.file;
+                addOptDbDlgAvg.FilePath = TestFilesDir.GetTestPath("Duplicates.optdb");
+            });
+            var addOptDlgAskAvg = ShowDialog<AddOptimizationsDlg>(addOptDbDlgAvg.OkDialog);
+            Assert.AreEqual(1, addOptDlgAskAvg.OptimizationsCount);
+            Assert.AreEqual(1, addOptDlgAskAvg.ExistingOptimizationsCount);
+            RunUI(() => addOptDlgAskAvg.Action = AddOptimizationsAction.average);
+            OkDialog(addOptDlgAskAvg, addOptDlgAskAvg.OkDialog);
+            Assert.AreEqual(7.5, editOptLib.GetCEOptimization("AAB", 5, 100.0).Value);
+            // Add duplicates and replace existing
+            var addOptDbDlgReplace = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
+            RunUI(() =>
+            {
+                addOptDbDlgReplace.Source = OptimizationLibrarySource.file;
+                addOptDbDlgReplace.FilePath = TestFilesDir.GetTestPath("Duplicates.optdb");
+            });
+            var addOptDlgAskReplace = ShowDialog<AddOptimizationsDlg>(addOptDbDlgReplace.OkDialog);
+            Assert.AreEqual(1, addOptDlgAskReplace.OptimizationsCount);
+            Assert.AreEqual(1, addOptDlgAskReplace.ExistingOptimizationsCount);
+            RunUI(() => addOptDlgAskReplace.Action = AddOptimizationsAction.replace);
+            OkDialog(addOptDlgAskReplace, addOptDlgAskReplace.OkDialog);
+            Assert.AreEqual(10.0, editOptLib.GetCEOptimization("AAB", 5, 100.0).Value);
+
+            // Done editing optimization library
+            OkDialog(editOptLib, editOptLib.OkDialog);
+            OkDialog(transitionSettingsUIOpt, transitionSettingsUIOpt.OkDialog);
+            WaitForDocumentChange(docCurrent);
+
+            string optLibExportPath = TestFilesDir.GetTestPath("OptLib.csv");
+            ExportCETransitionList(optLibExportPath, null);
+
+            // Undo the change of Optimization Library
             RunUI(SkylineWindow.Undo);
 
             docCurrent = SkylineWindow.Document;
@@ -380,6 +470,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(lines2.Length, lines1.Length);
             }
 
+            var optLib = document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
             var optType = document.Settings.TransitionSettings.Prediction.OptimizedMethodType;
             bool precursorCE = (optType != OptimizedMethodType.Transition);
 
@@ -413,11 +504,22 @@ namespace pwiz.SkylineTestFunctional
                     else
                         Assert.AreEqual(dictLightCEs[nodeTran.Transition.ToString()], tranCE);
 
-                    // If precursor CE type, then all CEs should be equal
-                    if (precursorCE)
-                        Assert.AreEqual(firstCE, tranCE);
-                    else if (firstCE != tranCE)
-                        diffTranFound = true;
+                    if (optLib != null && !optLib.IsNone)
+                    {
+                        // If there is an optimized value, CE should be equal to it
+                        DbOptimization optimization = optLib.GetOptimization(OptimizationType.collision_energy,
+                            nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.PrecursorCharge, nodeTran.Mz);
+                        if (optimization != null)
+                            Assert.AreEqual(optimization.Value, tranCE, 0.05);
+                    }
+                    else
+                    {
+                        // If precursor CE type, then all CEs should be equal
+                        if (precursorCE && (optLib == null || optLib.IsNone))
+                            Assert.AreEqual(firstCE, tranCE);
+                        else if (firstCE != tranCE)
+                            diffTranFound = true;
+                    }
                 }
             }
             Assert.IsTrue(diffCEFound);

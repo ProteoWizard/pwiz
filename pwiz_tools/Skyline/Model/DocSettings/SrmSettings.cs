@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -92,6 +93,23 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 return HasRTPrediction && PeptideSettings.Prediction.RetentionTime.Calculator.PersistencePath != null;
+            }
+        }
+
+        public bool HasOptimizationLibrary
+        {
+            get
+            {
+                return TransitionSettings.Prediction.OptimizedLibrary != null &&
+                       !TransitionSettings.Prediction.OptimizedLibrary.IsNone;
+            }
+        }
+
+        public bool HasOptimizationLibraryPersisted
+        {
+            get
+            {
+                return HasOptimizationLibrary && TransitionSettings.Prediction.OptimizedLibrary.PersistencePath != null;
             }
         }
 
@@ -1134,6 +1152,27 @@ namespace pwiz.Skyline.Model.DocSettings
                 predict.ChangeRetentionTime(!iRTCalcNew.IsNone
                     ? predict.RetentionTime.ChangeCalculator(iRTCalcNew)
                     : null));
+        }
+
+        public SrmSettings ConnectOptimizationDatabase(Func<OptimizationLibrary, OptimizationLibrary> findLibrarySpec)
+        {
+            var lib = TransitionSettings.Prediction.OptimizedLibrary;
+            if (lib == null)
+                return this;
+
+            var libNew = findLibrarySpec(lib);
+            if (libNew == null)
+            {
+                // cancel
+                return null;
+            }
+            if (libNew.DatabasePath == lib.DatabasePath)
+            {
+                return this;
+            }
+
+            return this.ChangeTransitionPrediction(predict =>
+                predict.ChangeOptimizationLibrary(!libNew.IsNone ? libNew : OptimizationLibrary.NONE));
         }
 
         public SrmSettings ConnectIonMobilityLibrary(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)

@@ -42,6 +42,7 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -243,6 +244,8 @@ namespace pwiz.Skyline
             if (document != null)
                 document = ConnectIrtDatabase(document, path);
             if (document != null)
+                document = ConnectOptimizationDatabase(document, path);
+            if (document != null)
                 document = ConnectIonMobilityLibrary(document, path);
             return document;
         }
@@ -383,6 +386,86 @@ namespace pwiz.Skyline
                         {
                             var message = TextUtil.SpaceSeparate(
                                 Resources.SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened,
+                                e.Message); // Not L10N
+                            MessageBox.Show(message);
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            while (true);
+        }
+
+        private SrmDocument ConnectOptimizationDatabase(SrmDocument document, string documentPath)
+        {
+            var settings = document.Settings.ConnectOptimizationDatabase(lib => FindOptimizationDatabase(documentPath, lib));
+            if (settings == null)
+                return null;
+            if (ReferenceEquals(settings, document.Settings))
+                return document;
+            return document.ChangeSettings(settings);
+        }
+
+
+        private OptimizationLibrary FindOptimizationDatabase(string documentPath, OptimizationLibrary optLib)
+        {
+            if (optLib.IsNone)
+                return optLib;
+
+            OptimizationLibrary lib;
+            if (Settings.Default.OptimizationLibraryList.TryGetValue(optLib.Name, out lib))
+            {
+                if (lib != null && File.Exists(lib.DatabasePath))
+                    return lib;
+            }
+            if (documentPath == null)
+                return null;
+
+            // First look for the file name in the document directory
+            string fileName = Path.GetFileName(optLib.DatabasePath);
+            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? string.Empty, fileName ?? string.Empty);
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    return optLib.ChangeDatabasePath(filePath);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                    //Todo: should this fail silenty or raise another dialog box?
+                }
+            }
+
+            do
+            {
+                using (var dlg = new MissingFileDlg
+                {
+                    ItemName = optLib.Name,
+                    ItemType = Resources.SkylineWindow_FindOptimizationDatabase_Optimization_Library,
+                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindOptimizationDatabase_Optimization_Library_Files, OptimizationDb.EXT),
+                    FileHint = Path.GetFileName(optLib.DatabasePath),
+                    FileDlgInitialPath = Path.GetDirectoryName(documentPath),
+                    Title = Resources.SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library
+                })
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        if (dlg.FilePath == null)
+                            return OptimizationLibrary.NONE;
+
+                        try
+                        {
+                            return optLib.ChangeDatabasePath(dlg.FilePath);
+                        }
+                        catch (OptimizationsOpeningException e)
+                        {
+                            var message = TextUtil.SpaceSeparate(
+                                Resources.SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_,
                                 e.Message); // Not L10N
                             MessageBox.Show(message);
                         }

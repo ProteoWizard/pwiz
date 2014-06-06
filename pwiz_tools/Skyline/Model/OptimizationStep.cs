@@ -43,13 +43,12 @@ namespace pwiz.Skyline.Model
         public delegate double GetRegressionValue(SrmSettings settings, PeptideDocNode nodePep,
                                                   TransitionGroupDocNode nodeGroup, TReg regression, int step);
 
-        public static double FindOptimizedValue(SrmSettings settings,
-                                             PeptideDocNode nodePep,
-                                             TransitionGroupDocNode nodeGroup,
-                                             TransitionDocNode nodeTran,
-                                             OptimizedMethodType methodType,
-                                             TReg regressionDocument,
-                                             GetRegressionValue getRegressionValue)
+        public static double? FindOptimizedValueFromResults(SrmSettings settings,
+                                                           PeptideDocNode nodePep,
+                                                           TransitionGroupDocNode nodeGroup,
+                                                           TransitionDocNode nodeTran,
+                                                           OptimizedMethodType methodType,
+                                                           GetRegressionValue getRegressionValue)
         {
             // Collect peak area for 
             var dictOptTotals = new Dictionary<TReg, Dictionary<int, OptimizationStep<TReg>>>();
@@ -83,7 +82,8 @@ namespace pwiz.Skyline.Model
             }
             // If no candidate values were found, use the document regressor.
             if (dictOptTotals.Count == 0)
-                return getRegressionValue(settings, nodePep, nodeGroup, regressionDocument, 0);
+                return null;
+
             // Get the CE value with the maximum total peak area
             double maxArea = 0;
             double bestValue = 0;
@@ -100,6 +100,18 @@ namespace pwiz.Skyline.Model
             }
             // Use value for candidate with the largest area
             return bestValue;
+        }
+
+        public static double FindOptimizedValue(SrmSettings settings,
+                                             PeptideDocNode nodePep,
+                                             TransitionGroupDocNode nodeGroup,
+                                             TransitionDocNode nodeTran,
+                                             OptimizedMethodType methodType,
+                                             TReg regressionDocument,
+                                             GetRegressionValue getRegressionValue)
+        {
+            double? optimizedValue = FindOptimizedValueFromResults(settings, nodePep, nodeGroup, nodeTran, methodType, getRegressionValue);
+            return optimizedValue.HasValue ? optimizedValue.Value : getRegressionValue(settings, nodePep, nodeGroup, regressionDocument, 0);
         }
 
         // ReSharper disable SuggestBaseTypeForParameter

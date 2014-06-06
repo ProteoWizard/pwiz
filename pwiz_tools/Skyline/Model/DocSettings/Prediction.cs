@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1269,6 +1270,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public override OptimizationType OptType
+        {
+            get { return OptimizationType.collision_energy; }
+        }
+
         protected override double DefaultStepSize
         {
             get { return DEFAULT_STEP_SIZE; }
@@ -1572,6 +1578,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Round(GetY(mz), 6);
         }
 
+        public override OptimizationType OptType
+        {
+            get { return OptimizationType.declustering_potential; }
+        }
+
         protected override double DefaultStepSize
         {
             get { return DEFAULT_STEP_SIZE; }
@@ -1690,6 +1701,8 @@ namespace pwiz.Skyline.Model.DocSettings
             StepSize = stepSize;
             StepCount = stepCount;
         }
+
+        public abstract OptimizationType OptType { get; }
 
         public double StepSize { get; private set; }
 

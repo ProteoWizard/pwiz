@@ -34,6 +34,8 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.comboOptimizationLibrary = new System.Windows.Forms.ComboBox();
+            this.label20 = new System.Windows.Forms.Label();
             this.labelOptimizeType = new System.Windows.Forms.Label();
             this.comboOptimizeType = new System.Windows.Forms.ComboBox();
             this.cbUseOptimized = new System.Windows.Forms.CheckBox();
@@ -136,6 +138,8 @@
             // 
             // tabGeneral
             // 
+            this.tabGeneral.Controls.Add(this.comboOptimizationLibrary);
+            this.tabGeneral.Controls.Add(this.label20);
             this.tabGeneral.Controls.Add(this.labelOptimizeType);
             this.tabGeneral.Controls.Add(this.comboOptimizeType);
             this.tabGeneral.Controls.Add(this.cbUseOptimized);
@@ -150,6 +154,19 @@
             resources.ApplyResources(this.tabGeneral, "tabGeneral");
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.UseVisualStyleBackColor = true;
+            // 
+            // comboOptimizationLibrary
+            // 
+            this.comboOptimizationLibrary.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOptimizationLibrary.FormattingEnabled = true;
+            resources.ApplyResources(this.comboOptimizationLibrary, "comboOptimizationLibrary");
+            this.comboOptimizationLibrary.Name = "comboOptimizationLibrary";
+            this.comboOptimizationLibrary.SelectedIndexChanged += new System.EventHandler(this.comboOptimizationLibrary_SelectedIndexChanged);
+            // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
             // 
             // labelOptimizeType
             // 
@@ -704,5 +721,7 @@
         private System.Windows.Forms.TextBox textMinTime;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox textMaxInclusions;
+        private System.Windows.Forms.ComboBox comboOptimizationLibrary;
+        private System.Windows.Forms.Label label20;
     }
 }

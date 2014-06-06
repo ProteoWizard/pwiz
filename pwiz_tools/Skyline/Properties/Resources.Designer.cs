@@ -459,6 +459,64 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please choose the optimization library you would like to add..
+        /// </summary>
+        public static string AddOptimizationDlg_OkDialog_Please_choose_the_optimization_library_you_would_like_to_add_ {
+            get {
+                return ResourceManager.GetString("AddOptimizationDlg_OkDialog_Please_choose_the_optimization_library_you_would_like" +
+                        "_to_add_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please specify a path to an existing optimization library..
+        /// </summary>
+        public static string AddOptimizationDlg_OkDialog_Please_specify_a_path_to_an_existing_optimization_library_ {
+            get {
+                return ResourceManager.GetString("AddOptimizationDlg_OkDialog_Please_specify_a_path_to_an_existing_optimization_lib" +
+                        "rary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string AddOptimizationDlg_OkDialog_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("AddOptimizationDlg_OkDialog_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not an optimization library..
+        /// </summary>
+        public static string AddOptimizationDlg_OkDialog_The_file__0__is_not_an_optimization_library_ {
+            get {
+                return ResourceManager.GetString("AddOptimizationDlg_OkDialog_The_file__0__is_not_an_optimization_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1 new optimization will be added to the library..
+        /// </summary>
+        public static string AddOptimizationsDlg_AddOptimizationsDlg__1_new_optimization_will_be_added_to_the_library_ {
+            get {
+                return ResourceManager.GetString("AddOptimizationsDlg_AddOptimizationsDlg__1_new_optimization_will_be_added_to_the_" +
+                        "library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No new optimizations will be added to the library..
+        /// </summary>
+        public static string AddOptimizationsDlg_AddOptimizationsDlg_No_new_optimizations_will_be_added_to_the_library_ {
+            get {
+                return ResourceManager.GetString("AddOptimizationsDlg_AddOptimizationsDlg_No_new_optimizations_will_be_added_to_the" +
+                        "_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following files are not valid library input files:.
         /// </summary>
         public static string AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_ {
@@ -3902,6 +3960,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find the optimization library {0}..
+        /// </summary>
+        public static string CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_FindOptimizationDatabase_Could_not_find_the_optimization_library__0__" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failure reading file information from directory {0}..
         /// </summary>
         public static string CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__ {
@@ -5540,6 +5608,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimization type out of range.
+        /// </summary>
+        public static string DbOptimization_DbOptimization_Optimization_type_out_of_range {
+            get {
+                return ResourceManager.GetString("DbOptimization_DbOptimization_Optimization_type_out_of_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Declustering Potential Regressions:.
         /// </summary>
         public static string DeclusterPotentialList_Label_Declustering_Potential_Regressions {
@@ -6994,6 +7071,210 @@ namespace pwiz.Skyline.Properties {
         public static string EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid {
             get {
                 return ResourceManager.GetString("EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to create a new optimization library file? Any changes to the current library will be lost..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_" +
+                        "optimization_library_file__Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create Optimization Library.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to open a new optimization library file? Any changes to the current library will be lost..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_opti" +
+                        "mization_library_file__Any_changes_to_the_current_library_will_be_lost_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Optimization Library.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} could not be created..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A library with the name {0} already exists. Do you want to overwrite it?.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__D" +
+                        "o_you_want_to_overwrite_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click the Create button to create a new library or the Open button to open an existing library file..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_libra" +
+                        "ry_or_the_Open_button_to_open_an_existing_library_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure updating optimizations in the optimization library. The database may be out of synch..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_Failure_updating_optimizations_in_the_optimization_library__The_database_may_be_out_of_synch_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_Failure_updating_optimizations_in_the_optimiz" +
+                        "ation_library__The_database_may_be_out_of_synch_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to library.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_library {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please choose a library file for the optimization library..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_Please_choose_a_library_file_for_the_optimization_library_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_Please_choose_a_library_file_for_the_optimiza" +
+                        "tion_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a name for the optimization library..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_Please_enter_a_name_for_the_optimization_library_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_Please_enter_a_name_for_the_optimization_libr" +
+                        "ary_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please use a full path to a library file for the optimization library..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OkDialog_Please_use_a_full_path_to_a_library_file_for_the_optimization_library_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OkDialog_Please_use_a_full_path_to_a_library_file_for_" +
+                        "the_optimization_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist. Click the Create button to create a new library or the Open button to find the missing file..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_find_the_missing_file_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Cr" +
+                        "eate_button_to_create_a_new_library_or_the_Open_button_to_find_the_missing_file_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} optimized collision energies.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energie" +
+                        "s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} optimized collision energy.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} optimized declustering potential.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_pote" +
+                        "ntial", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} optimized declustering potentials.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_pote" +
+                        "ntials", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collision Energy.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateValueHeader_Collision_Energy {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateValueHeader_Collision_Energy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declustering Potential.
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The optimization with sequence {0}, charge {1}, and m/z {2} appears in the {3} table more than once..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___and_m_z__2__appears_in_the__3__table_more_than_once_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequenc" +
+                        "e__0___charge__1___and_m_z__2__appears_in_the__3__table_more_than_once_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value {0} is not a valid modified peptide sequence..
+        /// </summary>
+        public static string EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_ {
+            get {
+                return ResourceManager.GetString("EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_" +
+                        "modified_peptide_sequence_", resourceCulture);
             }
         }
         
@@ -11010,6 +11291,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding optimization library.
+        /// </summary>
+        public static string LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding optimization values from {0}.
+        /// </summary>
+        public static string LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred attempting to load the optimization library file {0}..
+        /// </summary>
+        public static string LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load_the_optimization_library_file__0__ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load" +
+                        "_the_optimization_library_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A single run does not have high enough correlation to the existing iRT values to allow retention time conversion..
         /// </summary>
         public static string LibraryGridViewDriver_AddProcessedIrts_A_single_run_does_not_have_high_enough_correlation_to_the_existing_iRT_values_to_allow_retention_time_conversion {
@@ -11078,6 +11387,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The active document must contain results in order to add optimized values..
+        /// </summary>
+        public static string LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_orde" +
+                        "r_to_add_optimized_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding retention times from {0}.
         /// </summary>
         public static string LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__ {
@@ -11116,6 +11435,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charges must be valid integer numbers..
+        /// </summary>
+        public static string LibraryGridViewDriver_DoCellValidating_Charges_must_be_valid_integer_numbers_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_DoCellValidating_Charges_must_be_valid_integer_numbers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already an optimization with sequence &apos;{0}&apos;, charge {1}, and m/z {2} in the list..
+        /// </summary>
+        public static string LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0____charge__1___and_m_z__2__in_the_list_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequ" +
+                        "ence___0____charge__1___and_m_z__2__in_the_list_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The peptide {0} is already present in the {1} table, and may not be pasted into the {2} table..
         /// </summary>
         public static string LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table {
@@ -11149,6 +11487,54 @@ namespace pwiz.Skyline.Properties {
         public static string LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries {
             get {
                 return ResourceManager.GetString("LibraryManager_LoadBackground_Updating_settings_for_loaded_libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product m/zs must be greater than zero..
+        /// </summary>
+        public static string LibraryGridViewDriver_ValidateMz_Product_m_zs_must_be_greater_than_zero_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateMz_Product_m_zs_must_be_greater_than_zero_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product m/zs must be valid decimal numbers..
+        /// </summary>
+        public static string LibraryGridViewDriver_ValidateMz_Product_m_zs_must_be_valid_decimal_numbers_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateMz_Product_m_zs_must_be_valid_decimal_numbers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The pasted text must have 4 columns.
+        /// </summary>
+        public static string LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_4_columns {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_have_4_columns" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimized values must be greater than zero..
+        /// </summary>
+        public static string LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_tha" +
+                        "n_zero_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimized values must be valid decimal numbers..
+        /// </summary>
+        public static string LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_ {
+            get {
+                return ResourceManager.GetString("LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decim" +
+                        "al_numbers_", resourceCulture);
             }
         }
         
@@ -12860,6 +13246,128 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("OptimizableRegression_Validate_The_optimization_step_size__0__is_not_greater_than" +
                         "_zero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimization Libraries.
+        /// </summary>
+        public static string OptimizationDb_FILTER_OPTDB_Optimization_Libraries {
+            get {
+                return ResourceManager.GetString("OptimizationDb_FILTER_OPTDB_Optimization_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library path cannot be null..
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_Library_path_cannot_be_null_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading optimization library {0}.
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_Loading_optimization_library__0_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_Loading_optimization_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} could not be created. Perhaps you do not have sufficient privileges..
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_created__Perhaps_you_do_not_have_sufficient_privileges_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_created__Perhaps_you_d" +
+                        "o_not_have_sufficient_privileges_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} could not be opened. {1}.
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a valid optimization library file..
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_The_file__0__is_not_a_valid_optimization_library_file_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_The_file__0__is_not_a_valid_optimization_library" +
+                        "_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The path containing {0} does not exist..
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_The_path_containing__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_The_path_containing__0__does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have privilieges to access the file {0}..
+        /// </summary>
+        public static string OptimizationDb_GetOptimizationDb_You_do_not_have_privilieges_to_access_the_file__0__ {
+            get {
+                return ResourceManager.GetString("OptimizationDb_GetOptimizationDb_You_do_not_have_privilieges_to_access_the_file__" +
+                        "0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot compare OptimizationKey to an object of a different type.
+        /// </summary>
+        public static string OptimizationKey_CompareTo_Cannot_compare_OptimizationKey_to_an_object_of_a_different_type {
+            get {
+                return ResourceManager.GetString("OptimizationKey_CompareTo_Cannot_compare_OptimizationKey_to_an_object_of_a_differ" +
+                        "ent_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected use of optimization library before successful initialization..
+        /// </summary>
+        public static string OptimizationLibrary_RequireUsable_Unexpected_use_of_optimization_library_before_successful_initialization_ {
+            get {
+                return ResourceManager.GetString("OptimizationLibrary_RequireUsable_Unexpected_use_of_optimization_library_before_s" +
+                        "uccessful_initialization_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimization Database:.
+        /// </summary>
+        public static string OptimizationLibraryList_Label_Optimization_Database {
+            get {
+                return ResourceManager.GetString("OptimizationLibraryList_Label_Optimization_Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Optimization Databases.
+        /// </summary>
+        public static string OptimizationLibraryList_Title_Edit_Optimization_Databases {
+            get {
+                return ResourceManager.GetString("OptimizationLibraryList_Title_Edit_Optimization_Databases", resourceCulture);
             }
         }
         
@@ -17296,6 +17804,43 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened {
             get {
                 return ResourceManager.GetString("SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find Optimization Library.
+        /// </summary>
+        public static string SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindOptimizationDatabase_Find_Optimization_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimization Library.
+        /// </summary>
+        public static string SkylineWindow_FindOptimizationDatabase_Optimization_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindOptimizationDatabase_Optimization_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimization Library Files.
+        /// </summary>
+        public static string SkylineWindow_FindOptimizationDatabase_Optimization_Library_Files {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindOptimizationDatabase_Optimization_Library_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The database file specified could not be opened:.
+        /// </summary>
+        public static string SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_opened_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindOptimizationDatabase_The_database_file_specified_could_not_be_o" +
+                        "pened_", resourceCulture);
             }
         }
         

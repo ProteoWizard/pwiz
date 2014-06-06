@@ -28,6 +28,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -55,6 +56,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<CollisionEnergyRegression> _driverCE;
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
+        private readonly SettingsListComboDriver<OptimizationLibrary> _driverOptimizationLibrary;
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
         public const double DEFAULT_TIME_AROUND_PREDICTION = 5;
@@ -85,6 +87,10 @@ namespace pwiz.Skyline.SettingsUI
                                                                                      Settings.Default.DeclusterPotentialList);
             sel = (Prediction.DeclusteringPotential == null ? null : Prediction.DeclusteringPotential.Name);
             _driverDP.LoadList(sel);
+
+            _driverOptimizationLibrary = new SettingsListComboDriver<OptimizationLibrary>(comboOptimizationLibrary,
+                Settings.Default.OptimizationLibraryList);
+            _driverOptimizationLibrary.LoadList(Prediction.OptimizedLibrary == null ? null : Prediction.OptimizedLibrary.Name);
 
             if (Prediction.OptimizedMethodType == OptimizedMethodType.None)
                 comboOptimizeType.SelectedIndex = 0;
@@ -205,6 +211,9 @@ namespace pwiz.Skyline.SettingsUI
             string nameDP = comboDeclusterPotential.SelectedItem.ToString();
             DeclusteringPotentialRegression declusteringPotential =
                 Settings.Default.GetDeclusterPotentialByName(nameDP);
+            string nameOptLib = comboOptimizationLibrary.SelectedItem.ToString();
+            OptimizationLibrary optimizationLibrary =
+                Settings.Default.GetOptimizationLibraryByName(nameOptLib);
             OptimizedMethodType optimizedMethodType = OptimizedMethodType.None;
             if (cbUseOptimized.Checked)
             {
@@ -213,6 +222,7 @@ namespace pwiz.Skyline.SettingsUI
             TransitionPrediction prediction = new TransitionPrediction(precursorMassType,
                                                                        fragmentMassType, collisionEnergy,
                                                                        declusteringPotential,
+                                                                       optimizationLibrary,
                                                                        optimizedMethodType);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
@@ -490,6 +500,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverDP.SelectedIndexChangedEvent(sender, e);
         }
 
+        private void comboOptimizationLibrary_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverOptimizationLibrary.SelectedIndexChangedEvent(sender, e);
+        }
+
         private void cbUseOptimized_CheckedChanged(object sender, EventArgs e)
         {
             labelOptimizeType.Visible = comboOptimizeType.Visible = cbUseOptimized.Checked;
@@ -648,6 +663,16 @@ namespace pwiz.Skyline.SettingsUI
         public void AddToDPList()
         {
             _driverDP.AddItem();
+        }
+
+        public void EditOptimizationLibraryList()
+        {
+            _driverOptimizationLibrary.EditList();
+        }
+
+        public void AddToOptimizationLibraryList()
+        {
+            _driverOptimizationLibrary.AddItem();
         }
 
         public void EditEnrichmentsList()

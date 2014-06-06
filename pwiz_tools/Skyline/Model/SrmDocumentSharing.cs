@@ -199,10 +199,13 @@ namespace pwiz.Skyline.Model
         {
             // If complete sharing, just zip up existing files
             var pepSettings = Document.Settings.PeptideSettings;
+            var transitionSettings = Document.Settings.TransitionSettings;
             if (Document.Settings.HasBackgroundProteome)
                 zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, string.Empty);
             if (Document.Settings.HasRTCalcPersisted)
                 zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath, string.Empty);
+            if (Document.Settings.HasOptimizationLibraryPersisted)
+                zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath, string.Empty);
             if (Document.Settings.HasIonMobilityLibraryPersisted)
                 zip.AddFile(pepSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath, string.Empty);
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
@@ -240,6 +243,14 @@ namespace pwiz.Skyline.Model
                     tempDir = new TemporaryDirectory();
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
                         .Calculator.PersistMinimized(tempDir.DirPath, Document);
+                    if (tempDbPath != null)
+                        zip.AddFile(tempDbPath, string.Empty);
+                }
+                if (Document.Settings.HasOptimizationLibraryPersisted)
+                {
+                    tempDir = new TemporaryDirectory();
+                    string tempDbPath = Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.PersistMinimized(
+                            tempDir.DirPath, Document);
                     if (tempDbPath != null)
                         zip.AddFile(tempDbPath, string.Empty);
                 }

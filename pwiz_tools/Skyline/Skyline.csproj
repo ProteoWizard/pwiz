@@ -728,6 +728,11 @@
     <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
     <Compile Include="Model\MemoryDocumentContainer.cs" />
     <Compile Include="Model\AbstractModificationMatcher.cs" />
+    <Compile Include="Model\Optimization\DbOptimization.cs" />
+    <Compile Include="Model\Optimization\DbVersionInfo.cs" />
+    <Compile Include="Model\Optimization\OptimizationDb.cs" />
+    <Compile Include="Model\Optimization\OptimizationDbManager.cs" />
+    <Compile Include="Model\Optimization\OptimizationLibrary.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
     <Compile Include="Model\Proteome\ProteinMetadataManager.cs" />
@@ -1009,6 +1014,12 @@
     <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.designer.cs">
       <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\EditOptimizationLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditOptimizationLibraryDlg.Designer.cs">
+      <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditPeakScoringModelDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1141,6 +1152,18 @@
     </Compile>
     <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.Designer.cs">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.Designer.cs">
+      <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Optimization\AddOptimizationsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Optimization\AddOptimizationsDlg.Designer.cs">
+      <DependentUpon>AddOptimizationsDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
     <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
@@ -1750,6 +1773,7 @@
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Include="Resources\magnifier_zoom_in.ico" />
+    <EmbeddedResource Include="Model\Optimization\mapping.xml" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1895,6 +1919,9 @@
     <EmbeddedResource Include="SettingsUI\EditMeasuredIonDlg.zh-CHS.resx">
       <DependentUpon>EditMeasuredIonDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.resx">
+      <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditPeakScoringModelDlg.ja.resx">
       <DependentUpon>EditPeakScoringModelDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1966,6 +1993,13 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.zh-CHS.resx">
       <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.resx">
+      <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationsDlg.resx">
+      <DependentUpon>AddOptimizationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\PeptideSettingsUI.ja.resx">
       <DependentUpon>PeptideSettingsUI.cs</DependentUpon>
@@ -3039,102 +3073,102 @@
   <ItemGroup>
     <PublishFile Include="BDal.BCO.Objects.xml">
       <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CCO.Objects.xml">
       <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc">
       <Visible>False</Visible>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.Factory">
       <Visible>False</Visible>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.Interfaces">
       <Visible>False</Visible>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.UntU2">
       <Visible>False</Visible>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="FlexVariableTable.xml">
       <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ICRVariableTable.xml">
       <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
       <Visible>False</Visible>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>

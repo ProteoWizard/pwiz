@@ -49,6 +49,7 @@ using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -91,6 +92,7 @@ namespace pwiz.Skyline
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ProteinMetadataManager _proteinMetadataManager;
         private readonly IrtDbManager _irtDbManager;
+        private readonly OptimizationDbManager _optDbManager;
         private readonly RetentionTimeManager _retentionTimeManager;
         private readonly IonMobilityLibraryManager _ionMobilityLibraryManager;
         private readonly LibraryManager _libraryManager;
@@ -146,6 +148,9 @@ namespace pwiz.Skyline
             _irtDbManager = new IrtDbManager();
             _irtDbManager.ProgressUpdateEvent += UpdateProgress;
             _irtDbManager.Register(this);
+            _optDbManager = new OptimizationDbManager();
+            _optDbManager.ProgressUpdateEvent += UpdateProgress;
+            _optDbManager.Register(this);
             _retentionTimeManager = new RetentionTimeManager();
             _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
             _retentionTimeManager.Register(this);
@@ -329,6 +334,11 @@ namespace pwiz.Skyline
         public IrtDbManager IrtDbManager
         {
             get { return _irtDbManager; }
+        }
+
+        public OptimizationDbManager OptDbManager
+        {
+            get { return _optDbManager; }
         }
 
         public RetentionTimeManager RetentionTimeManager

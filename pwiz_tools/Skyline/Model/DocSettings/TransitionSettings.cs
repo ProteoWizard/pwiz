@@ -28,6 +28,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -285,12 +286,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionPrediction(MassType precursorMassType, MassType fragmentMassType,
                                     CollisionEnergyRegression collisionEnergy,
                                     DeclusteringPotentialRegression declusteringPotential,
+                                    OptimizationLibrary optimizationLibrary,
                                     OptimizedMethodType optimizedMethodType)
         {
             PrecursorMassType = precursorMassType;
             FragmentMassType = fragmentMassType;
             CollisionEnergy = collisionEnergy;
             DeclusteringPotential = declusteringPotential;
+            OptimizedLibrary = optimizationLibrary;
             OptimizedMethodType = optimizedMethodType;
 
             DoValidate();
@@ -301,6 +304,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    copy.FragmentMassType,
                    copy.CollisionEnergy,
                    copy.DeclusteringPotential,
+                   copy.OptimizedLibrary,
                    copy.OptimizedMethodType)
         {
         }
@@ -312,6 +316,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public CollisionEnergyRegression CollisionEnergy { get; private set; }
 
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
+
+        public OptimizationLibrary OptimizedLibrary { get; set; }
 
         public OptimizedMethodType OptimizedMethodType { get; private set; }
 
@@ -359,6 +365,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionPrediction ChangeDeclusteringPotential(DeclusteringPotentialRegression prop)
         {
             return ChangeProp(ImClone(this), im => im.DeclusteringPotential = prop);
+        }
+
+        public TransitionPrediction ChangeOptimizationLibrary(OptimizationLibrary prop)
+        {
+            return ChangeProp(ImClone(this), im => im.OptimizedLibrary = prop);
         }
 
         public TransitionPrediction ChangeOptimizedMethodType(OptimizedMethodType prop)
@@ -423,8 +434,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 CollisionEnergy = reader.DeserializeElement<CollisionEnergyRegression>();
                 RetentionTime = reader.DeserializeElement<RetentionTimeRegression>();   // v0.1.0 support
                 DeclusteringPotential = reader.DeserializeElement<DeclusteringPotentialRegression>();
+                OptimizedLibrary = reader.DeserializeElement<OptimizationLibrary>() ?? OptimizationLibrary.NONE;
 
-                reader.ReadEndElement();                
+                reader.ReadEndElement();
             }
 
             DoValidate();
@@ -440,6 +452,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(CollisionEnergy);
             if (DeclusteringPotential != null)
                 writer.WriteElement(DeclusteringPotential);
+            if (OptimizedLibrary != null && !OptimizedLibrary.IsNone)
+                writer.WriteElement(OptimizedLibrary);
         }
 
         #endregion
@@ -454,6 +468,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.FragmentMassType, FragmentMassType) &&
                    Equals(obj.CollisionEnergy, CollisionEnergy) &&
                    Equals(obj.DeclusteringPotential, DeclusteringPotential) &&
+                   Equals(obj.OptimizedLibrary, OptimizedLibrary) &&
                    Equals(obj.OptimizedMethodType, OptimizedMethodType);
         }
 
@@ -473,6 +488,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ FragmentMassType.GetHashCode();
                 result = (result*397) ^ (CollisionEnergy != null ? CollisionEnergy.GetHashCode() : 0);
                 result = (result*397) ^ (DeclusteringPotential != null ? DeclusteringPotential.GetHashCode() : 0);
+                result = (result*397) ^ OptimizedLibrary.GetHashCode();
                 result = (result*397) ^ OptimizedMethodType.GetHashCode();
                 return result;
             }
