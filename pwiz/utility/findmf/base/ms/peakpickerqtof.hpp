@@ -56,17 +56,17 @@ namespace ralab{
         {
           typedef typename std::iterator_traits<Tout>::value_type AreaType;
           for( ; beginZ != endZ ; ++beginZ , ++area )
+          {
+            size_t idx = static_cast<size_t>( *beginZ );
+            size_t start = static_cast<size_t>( boost::math::round( idx - integwith_ ) );
+            size_t end = static_cast<size_t>( boost::math::round( idx + integwith_ + 2.) );
+            AreaType aread = 0.;
+            for( ; start != end ; ++start )
             {
-              size_t idx = static_cast<size_t>( *beginZ );
-              size_t start = static_cast<size_t>( boost::math::round( idx - integwith_ ) );
-              size_t end = static_cast<size_t>( boost::math::round( idx + integwith_ + 2.) );
-              AreaType aread = 0.;
-              for( ; start != end ; ++start )
-                {
-                  aread += *(resmpled + start);
-                }
-              *area = aread;
+              aread += *(resmpled + start);
             }
+            *area = aread;
+          }
         }
       };
 
@@ -94,23 +94,23 @@ namespace ralab{
         {
           typedef typename std::iterator_traits<Tout>::value_type AreaType;
           for( ; beginZ != endZ ; ++beginZ , ++area )
-            {
-              size_t idx = static_cast<size_t>( *beginZ );
-              size_t start = static_cast<size_t>( boost::math::round( idx - integwith_ ) );
-              size_t end = static_cast<size_t>( boost::math::round( idx + integwith_ + 2) );
+          {
+            size_t idx = static_cast<size_t>( *beginZ );
+            size_t start = static_cast<size_t>( boost::math::round( idx - integwith_ ) );
+            size_t end = static_cast<size_t>( boost::math::round( idx + integwith_ + 2) );
 
-              Tintensity st = intensity + start;
-              Tintensity en = intensity + end;
-              Tintensity center = intensity + idx;
-              std::ptrdiff_t x1 = std::distance(st, center);
-              std::ptrdiff_t y1 = std::distance(center,en);
-              mextend(st , en , center);
-              std::ptrdiff_t x2 = std::distance(intensity,st);
-              std::ptrdiff_t y2 = std::distance(intensity,en);
-              std::ptrdiff_t pp = std::distance(st,en);
-              AreaType areav = std::accumulate(resampled+x2,resampled+y2,0.);
-              *area = areav;
-            }
+            Tintensity st = intensity + start;
+            Tintensity en = intensity + end;
+            Tintensity center = intensity + idx;
+            std::ptrdiff_t x1 = std::distance(st, center);
+            std::ptrdiff_t y1 = std::distance(center,en);
+            mextend(st , en , center);
+            std::ptrdiff_t x2 = std::distance(intensity,st);
+            std::ptrdiff_t y2 = std::distance(intensity,en);
+            std::ptrdiff_t pp = std::distance(st,en);
+            AreaType areav = std::accumulate(resampled+x2,resampled+y2,0.);
+            *area = areav;
+          }
         }
 
       private:
@@ -121,34 +121,34 @@ namespace ralab{
           typedef typename std::iterator_traits<TInt>::value_type Intensitytype;
           //
           for(TInt intens = idx ; intens >= start;  --intens){
-              Intensitytype val1 = *intens;
-              Intensitytype val2 = *(intens-1);
-              if(val1 > threshold_){
-                  if(val1 < val2 ){
-                      start = intens;
-                      break;
-                    }
-                }
-              else{
-                  start = intens;
-                  break;
-                }
+            Intensitytype val1 = *intens;
+            Intensitytype val2 = *(intens-1);
+            if(val1 > threshold_){
+              if(val1 < val2 ){
+                start = intens;
+                break;
+              }
             }
+            else{
+              start = intens;
+              break;
+            }
+          }
 
           for(TInt intens = idx ; intens <= end;  ++intens){
-              Intensitytype val1 = *intens;
-              Intensitytype val2 = *(intens+1);
-              if(val1 > threshold_){
-                  if(val1 < val2 ){
-                      end = intens;
-                      break;
-                    }
-                }
-              else{
-                  end = intens;
-                  break;
-                }
+            Intensitytype val1 = *intens;
+            Intensitytype val2 = *(intens+1);
+            if(val1 > threshold_){
+              if(val1 < val2 ){
+                end = intens;
+                break;
+              }
             }
+            else{
+              end = intens;
+              break;
+            }
+          }
         }
       };
 
@@ -179,11 +179,12 @@ namespace ralab{
                    TReal width = 2., //!< smooth width
                    TReal intwidth = 2., //!< integration width used for area compuation
                    TReal intensitythreshold = 10., // intensity threshold
-                   bool area = true,
-		   uint32_t maxnumberofpeaks = 0 //!< maximum of peaks returned by picker
-            ): resolution_(resolution),smoothwith_(width),
+                   bool area = true,//!< compute area or height? default - height.
+                   uint32_t maxnumberofpeaks = 0, //!< maximum of peaks returned by picker
+                   double c2d = 1e-5  //!< instrument resampling with small default dissables automatic determination
+            ): resolution_(resolution),c2d_( c2d ) ,smoothwith_(width),
           integrationWidth_(intwidth),sw_(),integrator_(integrationWidth_),
-          intensitythreshold_(intensitythreshold),area_(area)
+          intensitythreshold_(intensitythreshold),area_(area),maxnumbersofpeaks_(maxnumberofpeaks)
         {
           c2d_.defBreak(massrange,ralab::base::resample::resolution2ppm(resolution));
           c2d_.getMids(resampledmz_);
@@ -216,16 +217,16 @@ namespace ralab{
 
           //determine peak area
           if(area_){
-              peakarea_.resize(nrzerocross);
-              integrator_( zerocross_.begin(), zerocross_.begin() + nrzerocross ,
-                           smoothedintensity_.begin(),resampledintensity_.begin(), peakarea_.begin() );
-            }else{
-              //determine intensity
-              peakarea_.resize(nrzerocross);
-              ralab::base::base::interpolate_cubic( smoothedintensity_.begin() , smoothedintensity_.end() ,
-                                                    zerocross_.begin(),  zerocross_.begin()+nrzerocross ,
-                                                    peakarea_.begin());
-            }
+            peakarea_.resize(nrzerocross);
+            integrator_( zerocross_.begin(), zerocross_.begin() + nrzerocross ,
+                         smoothedintensity_.begin(),resampledintensity_.begin(), peakarea_.begin() );
+          }else{
+            //determine intensity
+            peakarea_.resize(nrzerocross);
+            ralab::base::base::interpolate_cubic( smoothedintensity_.begin() , smoothedintensity_.end() ,
+                                                  zerocross_.begin(),  zerocross_.begin()+nrzerocross ,
+                                                  peakarea_.begin());
+          }
 
           TReal threshold = static_cast<TReal>(minint) * intensitythreshold_;
 
@@ -237,11 +238,11 @@ namespace ralab{
 
 
           if(threshold > 0.01){
-              filter(threshold);
-            }
+            filter(threshold);
+          }
         }
 
-	/// get min instensity of peak to qualify for max-intensity;
+        /// get min instensity of peak to qualify for max-intensity;
         TReal getNToppeaks(){
           TReal intthres  = 0.;
           if(maxnumbersofpeaks_ < peakarea_.size())

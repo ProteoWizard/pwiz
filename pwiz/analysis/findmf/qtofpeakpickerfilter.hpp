@@ -94,6 +94,10 @@ typedef boost::uint32_t uint32_t;
         std::vector<double>& mzs = specptr->getMZArray()->data;
         std::vector<double>& intensities = specptr->getIntensityArray()->data;
 
+        /// if empty spectrum return withouth processing
+        if(mzs.size() == 0 ){
+          return specptr;
+        }
         std::pair<double, double> range = std::make_pair(mzs.front(),mzs.back());
 
         //construct peak picker

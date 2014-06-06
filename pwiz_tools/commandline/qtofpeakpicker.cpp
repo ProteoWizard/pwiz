@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
         );
   msdataptr_->run.spectrumListPtr = mp;
   pwiz::msdata::MSDataFile::Format format;
-  if(std::string("mzML").compare(b_fs::extension(aparam.outfile_)) ==0 ){
+  if(std::string(".mzML").compare(b_fs::extension(aparam.outfile_)) ==0 ){
       format = pwiz::msdata::MSDataFile::Format_mzML;
     }
   else{
