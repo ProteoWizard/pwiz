@@ -507,8 +507,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditIonMobilityLibrary()
         {
-            var list = Settings.Default.DriftTimePredictorList;
-            var calcNew = list.EditItem(this, _driverDT.SelectedItem, list, null);
+            var list = Settings.Default.IonMobilityLibraryList;
+            var calcNew = list.EditItem(this, _driverDT.SelectedItem.IonMobilityLibrary, list, null);
             if (calcNew != null)
                 list.SetValue(calcNew);
         }

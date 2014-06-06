@@ -966,13 +966,25 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!defSet.EnzymeList.Contains(PeptideSettings.Enzyme))
                 defSet.EnzymeList.Add(PeptideSettings.Enzyme);
             // Extra null checks to avoid ReSharper warnings.
-            if (PeptideSettings.Prediction != null &&
-                    PeptideSettings.Prediction.RetentionTime != null)
+            if (PeptideSettings.Prediction != null)
             {
-                if (!defSet.RetentionTimeList.Contains(PeptideSettings.Prediction.RetentionTime))
-                    defSet.RetentionTimeList.Add(PeptideSettings.Prediction.RetentionTime);
-                if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
-                    defSet.RTScoreCalculatorList.Add(PeptideSettings.Prediction.RetentionTime.Calculator);
+                if (PeptideSettings.Prediction.RetentionTime != null)
+                {
+                    if (!defSet.RetentionTimeList.Contains(PeptideSettings.Prediction.RetentionTime))
+                        defSet.RetentionTimeList.Add(PeptideSettings.Prediction.RetentionTime);
+                    if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
+                        defSet.RTScoreCalculatorList.Add(PeptideSettings.Prediction.RetentionTime.Calculator);
+                }
+                if (PeptideSettings.Prediction.DriftTimePredictor != null)
+                {
+                    if (!defSet.DriftTimePredictorList.Contains(PeptideSettings.Prediction.DriftTimePredictor))
+                        defSet.DriftTimePredictorList.Add(PeptideSettings.Prediction.DriftTimePredictor);
+                    if (PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary != null &&
+                        !defSet.IonMobilityLibraryList.Contains(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary))
+                    {
+                        defSet.IonMobilityLibraryList.Add(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary);
+                    }
+                }
             }
             if (PeptideSettings.Filter != null)
             {

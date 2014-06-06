@@ -365,36 +365,39 @@ namespace pwiz.Skyline.Controls.Graphs
             double minDrift, maxDrift;
             GetDriftRange(out minDrift, out maxDrift);
 
-            // Add gray shaded box behind heat points.
-            var driftTimeBox = new BoxObj(
-                0.0,
-                maxDrift,
-                1.0,
-                maxDrift - minDrift,
-                Color.Transparent,
-                Color.FromArgb(50, Color.Gray))
+            if (minDrift > double.MinValue && maxDrift < double.MaxValue)
             {
-                Location = { CoordinateFrame = CoordType.XChartFractionYScale },
-                ZOrder = ZOrder.F_BehindGrid,
-                IsClippedToChartRect = true,
-            };
-            GraphPane.GraphObjList.Add(driftTimeBox);
+                // Add gray shaded box behind heat points.
+                var driftTimeBox = new BoxObj(
+                    0.0,
+                    maxDrift,
+                    1.0,
+                    maxDrift - minDrift,
+                    Color.Transparent,
+                    Color.FromArgb(50, Color.Gray))
+                {
+                    Location = {CoordinateFrame = CoordType.XChartFractionYScale},
+                    ZOrder = ZOrder.F_BehindGrid,
+                    IsClippedToChartRect = true,
+                };
+                GraphPane.GraphObjList.Add(driftTimeBox);
 
-            // Add outline in front of heat points, so you can tell where the limits are in a dense graph.
-            var driftTimeOutline = new BoxObj(
-                0.0,
-                maxDrift,
-                1.0,
-                maxDrift - minDrift,
-                Color.FromArgb(50, Color.DarkViolet),
-                Color.Transparent)
-            {
-                Location = { CoordinateFrame = CoordType.XChartFractionYScale },
-                ZOrder = ZOrder.C_BehindChartBorder,
-                IsClippedToChartRect = true,
-                Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
-            };
-            GraphPane.GraphObjList.Add(driftTimeOutline);
+                // Add outline in front of heat points, so you can tell where the limits are in a dense graph.
+                var driftTimeOutline = new BoxObj(
+                    0.0,
+                    maxDrift,
+                    1.0,
+                    maxDrift - minDrift,
+                    Color.FromArgb(50, Color.DarkViolet),
+                    Color.Transparent)
+                {
+                    Location = {CoordinateFrame = CoordType.XChartFractionYScale},
+                    ZOrder = ZOrder.C_BehindChartBorder,
+                    IsClippedToChartRect = true,
+                    Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
+                };
+                GraphPane.GraphObjList.Add(driftTimeOutline);
+            }
         }
 
         /// <summary>
@@ -625,9 +628,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 yScale.MaxAuto = false;
                 double minDriftTime, maxDriftTime;
                 GetDriftRange(out minDriftTime, out maxDriftTime);
-                double range = maxDriftTime - minDriftTime;
-                yScale.Min = minDriftTime - range/2;
-                yScale.Max = maxDriftTime + range/2;
+                if (minDriftTime > double.MinValue && maxDriftTime < double.MinValue)
+                {
+                    yScale.MinAuto = yScale.MaxAuto = false;
+                    double range = maxDriftTime - minDriftTime;
+                    yScale.Min = minDriftTime - range / 2;
+                    yScale.Max = maxDriftTime + range / 2;
+                }
             }
             else
             {
@@ -968,9 +975,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class BackgroundScanProvider : IDisposable
         {
+            private const int MAX_CACHE_COUNT = 2;
+
             private bool _disposing;
             private int _scanIdNext;
             private IScanProvider _scanProvider;
+            private readonly List<IScanProvider> _cachedScanProviders;
             private readonly List<IScanProvider> _oldScanProviders;
             // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
             private readonly Thread _backgroundThread;
@@ -984,6 +994,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _scanIdNext = -1;
 
                 _oldScanProviders = new List<IScanProvider>();
+                _cachedScanProviders = new List<IScanProvider>();
                 _backgroundThread = new Thread(Work) { Name = GetType().Name, Priority = ThreadPriority.BelowNormal };
                 _backgroundThread.Start();
 
@@ -1072,14 +1083,42 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (_scanProvider != null)
                     {
                         if (scanProvider != null)
-                            scanProvider.Adopt(_scanProvider);
+                        {
+                            _cachedScanProviders.Insert(0, _scanProvider);
+                            AdoptCachedProvider(scanProvider);
+                        }
 
                         // Queue for disposal
-                        Assume.IsFalse(ReferenceEquals(scanProvider, _scanProvider));
-                        _oldScanProviders.Add(_scanProvider);
+                        if (_cachedScanProviders.Count > MAX_CACHE_COUNT)
+                        {
+                            _oldScanProviders.Add(_cachedScanProviders[MAX_CACHE_COUNT]);
+                            _cachedScanProviders.RemoveAt(MAX_CACHE_COUNT);
+                        }
+
                     }
                     _scanProvider = scanProvider;
+                    if (scanProvider == null)
+                    {
+                        _oldScanProviders.AddRange(_cachedScanProviders);
+                        _cachedScanProviders.Clear();
+                    }
                     Monitor.PulseAll(this);
+                }
+            }
+
+            private void AdoptCachedProvider(IScanProvider scanProvider)
+            {
+                lock (this)
+                {
+                    for (int i = 0; i < _cachedScanProviders.Count; i++)
+                    {
+                        if (scanProvider.Adopt(_cachedScanProviders[i]))
+                        {
+                            _oldScanProviders.Add(_cachedScanProviders[i]);
+                            _cachedScanProviders.RemoveAt(i);
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -1096,12 +1135,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private void DisposeAllProviders()
             {
+                IScanProvider[] disposeScanProviders;
                 lock (this)
                 {
-                    foreach (var provider in _oldScanProviders)
-                        provider.Dispose();
+                    disposeScanProviders = _oldScanProviders.ToArray();
                     _oldScanProviders.Clear();
                 }
+
+                foreach (var provider in disposeScanProviders)
+                    provider.Dispose();
             }
 
             public void Dispose()
@@ -1111,9 +1153,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _disposing = true;
                     SetScanProvider(null);
-
-                    while (_oldScanProviders.Any())
-                        Monitor.Wait(this);
                 }
             }
         }

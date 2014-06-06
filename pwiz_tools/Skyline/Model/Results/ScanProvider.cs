@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results
         float[] Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
         MsDataSpectrum[] GetScans(int scanId);
-        void Adopt(IScanProvider scanProvider);
+        bool Adopt(IScanProvider scanProvider);
     }
 
     public class ScanProvider : IScanProvider
@@ -64,15 +64,16 @@ namespace pwiz.Skyline.Model.Results
             Transitions = transitions;
         }
 
-        public void Adopt(IScanProvider other)
+        public bool Adopt(IScanProvider other)
         {
             if (!Equals(DocFilePath, other.DocFilePath) || !Equals(DataFilePath, other.DataFilePath))
-                return;
+                return false;
             var scanProvider = other as ScanProvider;
             if (scanProvider == null)
-                return;
+                return false;
             _dataFile = scanProvider._dataFile;
             scanProvider._dataFile = null;
+            return true;
         }
 
         public string DocFilePath { get; private set; }
