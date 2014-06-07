@@ -46,268 +46,270 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
-
-            // do a few unit tests on the UI error handlers
-            TestGetIonMobilityDBErrorHandling(testFilesDir);
-            TestImportIonMobilityFromSpectralLibraryErrorHandling();
-            TestEditIonMobilityLibraryDlgErrorHandling();
-            TestEditDriftTimePredictorDlgErrorHandling();
-
-            // Now exercise the UI
-
-            var goodPeptide = new ValidatingIonMobilityPeptide("SISIVGSYVGNR", 133.3210342);
-            Assert.IsNull(goodPeptide.Validate());
-            var badPeptides = new[]
+            using (var testFilesDir = new TestFilesDir(TestContext, TestFilesZip))
             {
-                new ValidatingIonMobilityPeptide("@#$!", 133.3210342),
-                new ValidatingIonMobilityPeptide("SISIVGSYVGNR", 0),
-                new ValidatingIonMobilityPeptide("SISIVGSYVGNR", -133.3210342),
-            };
-            foreach (var badPeptide in badPeptides)
-            {
-                Assert.IsNotNull(badPeptide.Validate());
-            }
 
-            var ionMobilityPeptides = new[]
-            {
-                new ValidatingIonMobilityPeptide("SISIVGSYVGNR",133.3210342),  // These are made-up values
-                new ValidatingIonMobilityPeptide("SISIVGSYVGNR",133.3210342),
-                new ValidatingIonMobilityPeptide("CCSDVFNQVVK",131.2405487),
-                new ValidatingIonMobilityPeptide("CCSDVFNQVVK",131.2405487),
-                new ValidatingIonMobilityPeptide("ANELLINVK",119.2825783),
-                new ValidatingIonMobilityPeptide("ANELLINVK",119.2825783),
-                new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676),
-                new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676),
-                new ValidatingIonMobilityPeptide("GVIFYESHGK",123.7844632),
-                new ValidatingIonMobilityPeptide("GVIFYESHGK",123.7844632),
-                new ValidatingIonMobilityPeptide("EKDIVGAVLK",124.3414249),
-                new ValidatingIonMobilityPeptide("EKDIVGAVLK",124.3414249),
-                new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687),
-                new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687),
-                new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687),
-                new ValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK",144.7461979),
-                new ValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK",144.7461979),
-                new ValidatingIonMobilityPeptide("IGDYAGIK", 102.2694763),
-                new ValidatingIonMobilityPeptide("IGDYAGIK", 102.2694763),
-                new ValidatingIonMobilityPeptide("GDYAGIK", 91.09155861),
-                new ValidatingIonMobilityPeptide("GDYAGIK", 91.09155861),
-                new ValidatingIonMobilityPeptide("IFYESHGK",111.2756406),
-                new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676),
-            };
-            List<ValidatingIonMobilityPeptide> minimalSet;
-            var message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(ionMobilityPeptides, out minimalSet); // Check for conflicts, strip out dupes
-            Assert.IsNull(message, "known good data set failed import");
-            Assert.AreEqual(11, minimalSet.Count, "known good data imported but with wrong result count");
+                // do a few unit tests on the UI error handlers
+                TestGetIonMobilityDBErrorHandling(testFilesDir);
+                TestImportIonMobilityFromSpectralLibraryErrorHandling();
+                TestEditIonMobilityLibraryDlgErrorHandling();
+                TestEditDriftTimePredictorDlgErrorHandling();
 
-            var save = ionMobilityPeptides[0].CollisionalCrossSection;
-            ionMobilityPeptides[0].CollisionalCrossSection += 1.0; // Same sequence and charge, different cross section
-            message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(ionMobilityPeptides, out minimalSet); // Check for conflicts, strip out dupes
-            Assert.IsNotNull(message, message);
-            Assert.IsNull(minimalSet, "bad inputs to drift time library paste should be rejected wholesale");
-            ionMobilityPeptides[0].CollisionalCrossSection = save; // restore
+                // Now exercise the UI
 
-            // Present the Prediction tab of the peptide settings dialog
-            var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                var goodPeptide = new ValidatingIonMobilityPeptide("SISIVGSYVGNR", 133.3210342);
+                Assert.IsNull(goodPeptide.Validate());
+                var badPeptides = new[]
+                {
+                    new ValidatingIonMobilityPeptide("@#$!", 133.3210342),
+                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR", 0),
+                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR", -133.3210342),
+                };
+                foreach (var badPeptide in badPeptides)
+                {
+                    Assert.IsNotNull(badPeptide.Validate());
+                }
 
-            // Simulate picking "Add..." from the Ion Mobility Libraries button context menu
-            var ionMobilityLibDlg1 = ShowDialog<EditIonMobilityLibraryDlg>(peptideSettingsDlg1.AddIonMobilityLibrary);
-            // Simulate user pasting in collisional cross section data to create a new drift time library
-            const string testlibName = "testlib";
-            string databasePath = testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
-            RunUI(() =>
-            {
-                string libraryText = BuildPasteLibraryText(ionMobilityPeptides, seq => seq.Substring(0, seq.Length - 1));
-                ionMobilityLibDlg1.LibraryName = testlibName;
-                ionMobilityLibDlg1.CreateDatabase(databasePath);
-                SetClipboardText(libraryText);
-                ionMobilityLibDlg1.DoPasteLibrary();
-                ionMobilityLibDlg1.OkDialog();
-            });
-            WaitForClosedForm(ionMobilityLibDlg1);
-            RunUI(peptideSettingsDlg1.OkDialog);
-            WaitForClosedForm(peptideSettingsDlg1);
+                var ionMobilityPeptides = new[]
+                {
+                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR",133.3210342),  // These are made-up values
+                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR",133.3210342),
+                    new ValidatingIonMobilityPeptide("CCSDVFNQVVK",131.2405487),
+                    new ValidatingIonMobilityPeptide("CCSDVFNQVVK",131.2405487),
+                    new ValidatingIonMobilityPeptide("ANELLINVK",119.2825783),
+                    new ValidatingIonMobilityPeptide("ANELLINVK",119.2825783),
+                    new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676),
+                    new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676),
+                    new ValidatingIonMobilityPeptide("GVIFYESHGK",123.7844632),
+                    new ValidatingIonMobilityPeptide("GVIFYESHGK",123.7844632),
+                    new ValidatingIonMobilityPeptide("EKDIVGAVLK",124.3414249),
+                    new ValidatingIonMobilityPeptide("EKDIVGAVLK",124.3414249),
+                    new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687),
+                    new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687),
+                    new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687),
+                    new ValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK",144.7461979),
+                    new ValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK",144.7461979),
+                    new ValidatingIonMobilityPeptide("IGDYAGIK", 102.2694763),
+                    new ValidatingIonMobilityPeptide("IGDYAGIK", 102.2694763),
+                    new ValidatingIonMobilityPeptide("GDYAGIK", 91.09155861),
+                    new ValidatingIonMobilityPeptide("GDYAGIK", 91.09155861),
+                    new ValidatingIonMobilityPeptide("IFYESHGK",111.2756406),
+                    new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676),
+                };
+                List<ValidatingIonMobilityPeptide> minimalSet;
+                var message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(ionMobilityPeptides, out minimalSet); // Check for conflicts, strip out dupes
+                Assert.IsNull(message, "known good data set failed import");
+                Assert.AreEqual(11, minimalSet.Count, "known good data imported but with wrong result count");
 
-            // Use that drift time database in a differently named library
-            const string testlibName2 = "testlib2";
-            var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
-            // Simulate user picking Add... from the Drift Time Predictor combo control
-            var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg2.AddDriftTimePredictor);
-            // ... and reopening an existing drift time database
-            var ionMobility = ShowDialog<EditIonMobilityLibraryDlg>(driftTimePredictorDlg.AddIonMobilityLibrary);
-            RunUI(() =>
-            {
-                ionMobility.LibraryName = testlibName2;
-                ionMobility.OpenDatabase(databasePath);
-                ionMobility.OkDialog();
-            });
-            WaitForClosedForm(ionMobility);
+                var save = ionMobilityPeptides[0].CollisionalCrossSection;
+                ionMobilityPeptides[0].CollisionalCrossSection += 1.0; // Same sequence and charge, different cross section
+                message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(ionMobilityPeptides, out minimalSet); // Check for conflicts, strip out dupes
+                Assert.IsNotNull(message, message);
+                Assert.IsNull(minimalSet, "bad inputs to drift time library paste should be rejected wholesale");
+                ionMobilityPeptides[0].CollisionalCrossSection = save; // restore
 
-            // Set other parameters - name, resolving power, per-charge slope+intercept
-            const string predictorName = "test";
-            const double resolvingPower = 123.4;
-            RunUI(() =>
-            {
-                driftTimePredictorDlg.SetResolvingPower(resolvingPower);
-                driftTimePredictorDlg.SetPredictorName(predictorName);
-                SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
-                driftTimePredictorDlg.PasteRegressionValues();
-            });
-            var olddoc = SkylineWindow.Document;
-            RunUI(() =>
-            {
-                // Go back to the first library we created
-                driftTimePredictorDlg.ChooseIonMobilityLibrary(testlibName);
-                driftTimePredictorDlg.OkDialog();
-                var docUI = SkylineWindow.DocumentUI;
-                if (docUI != null)
-                    SetUiDocument(docUI.ChangeSettings(docUI.Settings.ChangePeptideSettings(
-                        docUI.Settings.PeptideSettings.ChangePrediction(
-                         docUI.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictorDlg.Predictor)))));
-            });
+                // Present the Prediction tab of the peptide settings dialog
+                var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(
+                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
 
-            WaitForClosedForm(driftTimePredictorDlg);
-            RunUI(peptideSettingsDlg2.OkDialog);
+                // Simulate picking "Add..." from the Ion Mobility Libraries button context menu
+                var ionMobilityLibDlg1 = ShowDialog<EditIonMobilityLibraryDlg>(peptideSettingsDlg1.AddIonMobilityLibrary);
+                // Simulate user pasting in collisional cross section data to create a new drift time library
+                const string testlibName = "testlib";
+                string databasePath = testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
+                RunUI(() =>
+                {
+                    string libraryText = BuildPasteLibraryText(ionMobilityPeptides, seq => seq.Substring(0, seq.Length - 1));
+                    ionMobilityLibDlg1.LibraryName = testlibName;
+                    ionMobilityLibDlg1.CreateDatabase(databasePath);
+                    SetClipboardText(libraryText);
+                    ionMobilityLibDlg1.DoPasteLibrary();
+                    ionMobilityLibDlg1.OkDialog();
+                });
+                WaitForClosedForm(ionMobilityLibDlg1);
+                RunUI(peptideSettingsDlg1.OkDialog);
+                WaitForClosedForm(peptideSettingsDlg1);
 
-            /*
+                // Use that drift time database in a differently named library
+                const string testlibName2 = "testlib2";
+                var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(
+                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                // Simulate user picking Add... from the Drift Time Predictor combo control
+                var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg2.AddDriftTimePredictor);
+                // ... and reopening an existing drift time database
+                var ionMobility = ShowDialog<EditIonMobilityLibraryDlg>(driftTimePredictorDlg.AddIonMobilityLibrary);
+                RunUI(() =>
+                {
+                    ionMobility.LibraryName = testlibName2;
+                    ionMobility.OpenDatabase(databasePath);
+                    ionMobility.OkDialog();
+                });
+                WaitForClosedForm(ionMobility);
+
+                // Set other parameters - name, resolving power, per-charge slope+intercept
+                const string predictorName = "test";
+                const double resolvingPower = 123.4;
+                RunUI(() =>
+                {
+                    driftTimePredictorDlg.SetResolvingPower(resolvingPower);
+                    driftTimePredictorDlg.SetPredictorName(predictorName);
+                    SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
+                    driftTimePredictorDlg.PasteRegressionValues();
+                });
+                var olddoc = SkylineWindow.Document;
+                RunUI(() =>
+                {
+                    // Go back to the first library we created
+                    driftTimePredictorDlg.ChooseIonMobilityLibrary(testlibName);
+                    driftTimePredictorDlg.OkDialog();
+                    var docUI = SkylineWindow.DocumentUI;
+                    if (docUI != null)
+                        SetUiDocument(docUI.ChangeSettings(docUI.Settings.ChangePeptideSettings(
+                            docUI.Settings.PeptideSettings.ChangePrediction(
+                                docUI.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictorDlg.Predictor)))));
+                });
+
+                WaitForClosedForm(driftTimePredictorDlg);
+                RunUI(peptideSettingsDlg2.OkDialog);
+
+                /*
              * Check that the database was created successfully
              * Check that it has the correct number peptides
              */
-            IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
-            Assert.AreEqual(11, db.GetPeptides().Count());
-            WaitForDocumentChange(olddoc);
+                IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
+                Assert.AreEqual(11, db.GetPeptides().Count());
+                WaitForDocumentChange(olddoc);
 
-            // Check serialization and background loader
-            WaitForDocumentLoaded();
-            RunUI(() =>
-            {
-                SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky"));
-                SkylineWindow.NewDocument();
-                SkylineWindow.OpenFile(TestContext.GetTestPath("test.sky"));
-            });
+                // Check serialization and background loader
+                WaitForDocumentLoaded();
+                RunUI(() =>
+                {
+                    SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky"));
+                    SkylineWindow.NewDocument();
+                    SkylineWindow.OpenFile(TestContext.GetTestPath("test.sky"));
+                });
 
-            var doc = WaitForDocumentLoaded();
+                var doc = WaitForDocumentLoaded();
 
-            // Verify that the schema has been updated to include these new settings
-            AssertEx.ValidatesAgainstSchema(doc);
+                // Verify that the schema has been updated to include these new settings
+                AssertEx.ValidatesAgainstSchema(doc);
 
-            // Do some DT calculations
-            double windowDT;
-            double? centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey("ANELLINV", 2), null, out windowDT);
-            Assert.AreEqual((4 * (119.2825783)) + 5, centerDriftTime);
-            Assert.AreEqual(2 * ((4 * (119.2825783)) + 5)/resolvingPower, windowDT);
+                // Do some DT calculations
+                double windowDT;
+                double? centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                    new LibKey("ANELLINV", 2), null, out windowDT);
+                Assert.AreEqual((4 * (119.2825783)) + 5, centerDriftTime);
+                Assert.AreEqual(2 * ((4 * (119.2825783)) + 5)/resolvingPower, windowDT);
 
-            //
-            // Test importing collisional cross sections from a spectral lib that has drift times
-            //
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            const string libname = "libIMS";
-            var blibPath = TestContext.GetTestPath("IonMobilityTest\\mse-mobility.filtered-scaled.blib");
-            var editListUI =
-                ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
-            RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
-            {
-                editLibraryDlg.LibrarySpec = new BiblioSpecLibSpec(libname, blibPath); 
-                editLibraryDlg.OkDialog();
-            });
-            OkDialog(editListUI, editListUI.OkDialog);
-            RunUI(() =>
-            {
-                peptideSettingsUI.PickedLibraries = new[] { libname }; 
-                peptideSettingsUI.OkDialog();
-            });
-            WaitForClosedForm(peptideSettingsUI);
-            WaitForDocumentLoaded(); // Let that library load
+                //
+                // Test importing collisional cross sections from a spectral lib that has drift times
+                //
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                const string libname = "libIMS";
+                var blibPath = TestContext.GetTestPath("IonMobilityTest\\mse-mobility.filtered-scaled.blib");
+                var editListUI =
+                    ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
+                RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
+                {
+                    editLibraryDlg.LibrarySpec = new BiblioSpecLibSpec(libname, blibPath); 
+                    editLibraryDlg.OkDialog();
+                });
+                OkDialog(editListUI, editListUI.OkDialog);
+                RunUI(() =>
+                {
+                    peptideSettingsUI.PickedLibraries = new[] { libname }; 
+                    peptideSettingsUI.OkDialog();
+                });
+                WaitForClosedForm(peptideSettingsUI);
+                WaitForDocumentLoaded(); // Let that library load
 
-            // In this lib: ANGTTVLVGMPAGAK at z=2, with drift time 4.99820623749102
-            // and, a single CCS value, for ANELLINVK, which is 3.8612432898618
+                // In this lib: ANGTTVLVGMPAGAK at z=2, with drift time 4.99820623749102
+                // and, a single CCS value, for ANELLINVK, which is 3.8612432898618
 
-            // Present the Prediction tab of the peptide settings dialog
-            var peptideSettingsDlg3 = ShowDialog<PeptideSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
-            // Simulate picking "Add..." from the Drift Time Predictor combo control
-            var driftTimePredictorDlg3 = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg3.AddDriftTimePredictor);
-            const double deadeelsDT = 3.456;
-            RunUI(() =>
-            {
-                driftTimePredictorDlg3.SetResolvingPower(resolvingPower);
-                driftTimePredictorDlg3.SetPredictorName("test3");
-                SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
-                driftTimePredictorDlg3.PasteRegressionValues();
-                // Simulate user pasting in some measured drift time info
-                SetClipboardText("DEADEELS\t5\t" + deadeelsDT.ToString(CultureInfo.CurrentCulture));
-                driftTimePredictorDlg3.PasteMeasuredDriftTimes();
-            });
-            // Simulate picking "Add..." from the Ion Mobility Library combo control
-            var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(driftTimePredictorDlg3.AddIonMobilityLibrary);
-            const string testlibName3 = "testlib3";
-            string databasePath3 = testFilesDir.GetTestPath(testlibName3 + IonMobilityDb.EXT);
-            RunUI(() =>
-            {
-                ionMobilityLibDlg3.LibraryName = testlibName3;
-                ionMobilityLibDlg3.CreateDatabase(databasePath3);
-            });
-            // Simulate pressing "Import" button from the Edit Ion Mobility Library dialog
-            var importSpectralLibDlg =
-                ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibDlg3.ImportFromSpectralLibrary);
-            RunUI(() =>
-            {
-                // Set up to fail - don't provide z=2 info
-                importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
-                SetClipboardText("1\t1\t0"); // This will fail - no z=2 information
-                importSpectralLibDlg.PasteRegressionValues();
-                importSpectralLibDlg.OkDialog();
-            });
-            WaitForClosedForm(importSpectralLibDlg);
-            WaitForOpenForm<MessageDlg>().OkDialog(); // Dismiss the error message
-            // Now try again, this time with all the information
-            var importSpectralLibDlg2 =
-                ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibDlg3.ImportFromSpectralLibrary);
-            RunUI(() =>
-            {
-                importSpectralLibDlg2.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
-                importSpectralLibDlg2.FilePath = blibPath; // Simulate user entering filename
-                SetClipboardText("1\t1\t0\n2\t2\t2"); // Note non-unity slope and charge for z=2, for test purposes
-                importSpectralLibDlg2.PasteRegressionValues();
-                importSpectralLibDlg2.OkDialog();
-            });
-            WaitForClosedForm(importSpectralLibDlg);
-            WaitForCondition(() => ionMobilityLibDlg3.LibraryPeptideCount > 8); // Let that library load
-            RunUI(ionMobilityLibDlg3.OkDialog);
-            WaitForClosedForm(ionMobilityLibDlg3);
-            RunUI(driftTimePredictorDlg3.OkDialog);
-            WaitForClosedForm(driftTimePredictorDlg3);
-            RunUI(peptideSettingsDlg3.OkDialog);
-            WaitForClosedForm(peptideSettingsDlg3);
-            doc = WaitForDocumentChangeLoaded(doc); // Let that library load
+                // Present the Prediction tab of the peptide settings dialog
+                var peptideSettingsDlg3 = ShowDialog<PeptideSettingsUI>(
+                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                // Simulate picking "Add..." from the Drift Time Predictor combo control
+                var driftTimePredictorDlg3 = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg3.AddDriftTimePredictor);
+                const double deadeelsDT = 3.456;
+                RunUI(() =>
+                {
+                    driftTimePredictorDlg3.SetResolvingPower(resolvingPower);
+                    driftTimePredictorDlg3.SetPredictorName("test3");
+                    SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
+                    driftTimePredictorDlg3.PasteRegressionValues();
+                    // Simulate user pasting in some measured drift time info
+                    SetClipboardText("DEADEELS\t5\t" + deadeelsDT.ToString(CultureInfo.CurrentCulture));
+                    driftTimePredictorDlg3.PasteMeasuredDriftTimes();
+                });
+                // Simulate picking "Add..." from the Ion Mobility Library combo control
+                var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(driftTimePredictorDlg3.AddIonMobilityLibrary);
+                const string testlibName3 = "testlib3";
+                string databasePath3 = testFilesDir.GetTestPath(testlibName3 + IonMobilityDb.EXT);
+                RunUI(() =>
+                {
+                    ionMobilityLibDlg3.LibraryName = testlibName3;
+                    ionMobilityLibDlg3.CreateDatabase(databasePath3);
+                });
+                // Simulate pressing "Import" button from the Edit Ion Mobility Library dialog
+                var importSpectralLibDlg =
+                    ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibDlg3.ImportFromSpectralLibrary);
+                RunUI(() =>
+                {
+                    // Set up to fail - don't provide z=2 info
+                    importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
+                    SetClipboardText("1\t1\t0"); // This will fail - no z=2 information
+                    importSpectralLibDlg.PasteRegressionValues();
+                    importSpectralLibDlg.OkDialog();
+                });
+                WaitForClosedForm(importSpectralLibDlg);
+                WaitForOpenForm<MessageDlg>().OkDialog(); // Dismiss the error message
+                // Now try again, this time with all the information
+                var importSpectralLibDlg2 =
+                    ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibDlg3.ImportFromSpectralLibrary);
+                RunUI(() =>
+                {
+                    importSpectralLibDlg2.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
+                    importSpectralLibDlg2.FilePath = blibPath; // Simulate user entering filename
+                    SetClipboardText("1\t1\t0\n2\t2\t2"); // Note non-unity slope and charge for z=2, for test purposes
+                    importSpectralLibDlg2.PasteRegressionValues();
+                    importSpectralLibDlg2.OkDialog();
+                });
+                WaitForClosedForm(importSpectralLibDlg);
+                WaitForCondition(() => ionMobilityLibDlg3.LibraryPeptideCount > 8); // Let that library load
+                RunUI(ionMobilityLibDlg3.OkDialog);
+                WaitForClosedForm(ionMobilityLibDlg3);
+                RunUI(driftTimePredictorDlg3.OkDialog);
+                WaitForClosedForm(driftTimePredictorDlg3);
+                RunUI(peptideSettingsDlg3.OkDialog);
+                WaitForClosedForm(peptideSettingsDlg3);
+                doc = WaitForDocumentChangeLoaded(doc); // Let that library load
 
-            // Do some DT calculations with this new library
-            centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey("ANELLINVK", 2), null, out windowDT);
-            double ccs = 3.8612432898618; // should have imported CCS without any transformation
-            Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime ?? ccs, .000001);
-            Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
-            centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey("ANGTTVLVGMPAGAK", 2), null, out windowDT);
-            ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
-            Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime ?? ccs, .000001);
-            Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
+                // Do some DT calculations with this new library
+                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                    new LibKey("ANELLINVK", 2), null, out windowDT);
+                double ccs = 3.8612432898618; // should have imported CCS without any transformation
+                Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime ?? ccs, .000001);
+                Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
+                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                    new LibKey("ANGTTVLVGMPAGAK", 2), null, out windowDT);
+                ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
+                Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime ?? ccs, .000001);
+                Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
-            // Do some DT calculations with the measured drift time
-            centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey("DEADEELS", 3), null, out windowDT); // Should fail
-            Assert.AreEqual(windowDT, 0);
-            Assert.IsFalse(centerDriftTime.HasValue);
+                // Do some DT calculations with the measured drift time
+                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                    new LibKey("DEADEELS", 3), null, out windowDT); // Should fail
+                Assert.AreEqual(windowDT, 0);
+                Assert.IsFalse(centerDriftTime.HasValue);
 
-            centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            new LibKey("DEADEELS", 5), null, out windowDT);
-            Assert.AreEqual(deadeelsDT, centerDriftTime ?? -1, .000001);
-            Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
+                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                    new LibKey("DEADEELS", 5), null, out windowDT);
+                Assert.AreEqual(deadeelsDT, centerDriftTime ?? -1, .000001);
+                Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
 
-
+                
+            }
         }
 
         private void SetUiDocument(SrmDocument newDocument)
