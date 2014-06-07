@@ -119,7 +119,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
-                return HasDriftTimePrediction && PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath != null;
+                return HasDriftTimePrediction && 
+                    PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary != null &&
+                    !PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.IsNone &&
+                    PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath != null;
             }
         }
 

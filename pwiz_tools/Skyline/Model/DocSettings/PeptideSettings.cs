@@ -1755,6 +1755,10 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Get all ion mobilities associated with this filepath.  Then look at all the others
+        /// and get any that don't appear in the inital set, setting them up to be averaged.
+        /// </summary>
         public bool TryGetIonMobilities(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             Assume.IsTrue(IsLoaded);
@@ -1764,7 +1768,46 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Only one of the available libraries may claim ownership of the file
                 // in question.
                 if (lib != null && lib.TryGetIonMobilities(filePath, out ionMobilities))
+                {
+                    // TODO - or HACK, IF YOU PREFER: something better than this:
+                    // Look at all available sublibraries, use them to backfill
+                    // any missing drift time info in this one
+                    var ionMobilitiesList = new List<LibraryIonMobilityInfo>();
+                    LibraryIonMobilityInfo ionMobilitiesOther;
+                    int i = 0;
+                    while (lib.TryGetIonMobilities(i++, out ionMobilitiesOther)) // Returns false when i> internal list length
+                    {
+                        ionMobilitiesList.Add(ionMobilitiesOther);
+                    }
+
+                    for (i = 0; i < ionMobilitiesList.Count; i++)
+                    {
+                        var thisDict = ionMobilitiesList[i].GetIonMobilityDict();
+                        foreach (var im in thisDict) // For each entry this sublibrary
+                        {
+                            // If this key is not in the source file in question
+                            if (!ionMobilities.GetIonMobilityDict().ContainsKey(im.Key))
+                            {
+                                // Aggregate with any others (averaging happens elsewhere)
+                                var info = new List<IonMobilityInfo>();
+                                for (int j = i; j < ionMobilitiesList.Count; j++)
+                                {
+                                    var thatDict = ionMobilitiesList[j].GetIonMobilityDict();
+                                    if (thatDict.ContainsKey(im.Key))
+                                    {
+                                        info.AddRange(thatDict[im.Key]);
+                                    }
+                                }
+                                if (info.Any())
+                                {
+                                    ionMobilities.GetIonMobilityDict().Add(im.Key,info.ToArray());
+                                }
+                            }
+                        }
+                    }
+
                     return true;
+                }
             }
             ionMobilities = null;
             return false;

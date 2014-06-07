@@ -7219,12 +7219,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
     <value>Resolving power must be greater than 0.</value>
   </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_library_" xml:space="preserve">
-    <value>Drift time predictor must specify an ion mobility library.</value>
-  </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regression_values_" xml:space="preserve">
-    <value>Drift time predictor must include per-charge regression values.</value>
-  </data>
   <data name="ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library" xml:space="preserve">
     <value>Please specify a path to an existing spectral library.</value>
   </data>
@@ -7563,5 +7557,26 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
     <value>Extraction</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_" xml:space="preserve">
+    <value>The pasted text must have three columns.</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_" xml:space="preserve">
+    <value>A modified peptide sequence is required for each entry.</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
+    <value>The sequence {0} is not a valid modified peptide sequence.</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_" xml:space="preserve">
+    <value>The value {0} is not a valid drift time.</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_On_line__0___1_" xml:space="preserve">
+    <value>On line {0} {1}</value>
+  </data>
+  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
+    <value>Drift time predictors using an ion mobility library must provide a filename for the library.</value>
+  </data>
+  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
+    <value>Drift time predictors using an ion mobility library must include per-charge regression values.</value>
   </data>
 </root>

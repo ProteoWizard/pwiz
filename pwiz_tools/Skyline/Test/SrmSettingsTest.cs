@@ -26,6 +26,7 @@ using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -1032,6 +1033,7 @@ namespace pwiz.SkylineTest
         public void SerializeIonMobilityTest()
         {
 
+            // Check using drift time predictor without measured drift times
             const string predictor = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
                                      "<regression_dt charge=\"1\" slope=\"1\" intercept=\"0\"/></predict_drift_time>";
             const string predictorNoRegression = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/></predict_drift_time>";
@@ -1043,8 +1045,17 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
             Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
             AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
-            AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("db.imdb", ""), Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_library_);
-            AssertEx.DeserializeError<DriftTimePredictor>(predictorNoRegression,Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regression_values_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor.Replace("db.imdb", ""), Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictorNoRegression, Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
+
+            // Check using drift time predictor with only measured drift times
+            const string predictor2 = "<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\"/> </predict_drift_time>";
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor2);
+            var pred2 = AssertEx.Deserialize<DriftTimePredictor>(predictor2);
+            Assert.AreEqual(100, pred2.ResolvingPower);
+            Assert.AreEqual(17.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)) ?? 0);
+            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)));
+
 
         }
 

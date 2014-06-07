@@ -110,6 +110,13 @@
                       <xs:attribute name="intercept" type="xs:double" use="required"/>
                     </xs:complexType>
                   </xs:element>
+                  <xs:element minOccurs="0" maxOccurs="unbounded" name="measured_dt">
+                    <xs:complexType>
+                      <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
+                      <xs:attribute name="charge" type="xs:nonNegativeInteger" use="required"/>
+                      <xs:attribute name="drift_time" type="xs:double" use="required"/>
+                    </xs:complexType>
+                  </xs:element>
                 </xs:sequence>
                 <xs:attribute name="name" type="xs:string" use="required"/>
                 <xs:attribute name="resolving_power" type="xs:double" use="required"/>

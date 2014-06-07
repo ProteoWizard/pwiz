@@ -19,12 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -37,10 +40,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private DriftTimePredictor _predictor;
         private readonly IEnumerable<DriftTimePredictor> _existing;
+        private bool _showRegressions;
+
+        public const int COLUMN_SEQUENCE = 0;
+        public const int COLUMN_CHARGE = 1;
+        public const int COLUMN_DRIFT_TIME_MSEC = 2;
+
 
         public EditDriftTimePredictorDlg(IEnumerable<DriftTimePredictor> existing)
         {
             _existing = existing;
+            _showRegressions = true;
 
             InitializeComponent();
 
@@ -48,7 +58,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             _driverIonMobilityLibraryListComboDriver = new SettingsListComboDriver<IonMobilityLibrarySpec>(comboLibrary, Settings.Default.IonMobilityLibraryList);
             _driverIonMobilityLibraryListComboDriver.LoadList(null);
-
+            UpdateControls();
         }
 
         public DriftTimePredictor Predictor
@@ -59,6 +69,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 _predictor = value;
                 gridRegression.Rows.Clear();
+                gridMeasuredDriftTimes.Rows.Clear();
                 if (_predictor == null)
                 {
                     textName.Text = string.Empty;
@@ -67,16 +78,48 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 {
                     textName.Text = _predictor.Name;
 
-                    comboLibrary.SelectedItem = _predictor.IonMobilityLibrary.Name;
-                    // Reduce the sparse indexed-by-charge list to only non-empty members for display
-                    foreach (ChargeRegressionLine r in _predictor.ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
+                    // List any measured drift times
+                    if (_predictor.MeasuredDriftTimePeptides != null)
                     {
-                        gridRegression.Rows.Add(r.Charge.ToString(LocalizationHelper.CurrentCulture),
-                            r.Slope.ToString(LocalizationHelper.CurrentCulture),
-                            r.Intercept.ToString(LocalizationHelper.CurrentCulture));
+                        foreach (var p in _predictor.MeasuredDriftTimePeptides)
+                        {
+                            gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                                p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                                p.Value.ToString(LocalizationHelper.CurrentCulture));
+                        }
+                    }
+
+                    comboLibrary.SelectedItem = (_predictor.IonMobilityLibrary != null) ? _predictor.IonMobilityLibrary.Name : null;
+                    if (_predictor.ChargeRegressionLines != null)
+                    {
+                        // Reduce the sparse indexed-by-charge list to only non-empty members for display
+                        foreach (ChargeRegressionLine r in _predictor.ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
+                        {
+                            gridRegression.Rows.Add(r.Charge.ToString(LocalizationHelper.CurrentCulture),
+                                r.Slope.ToString(LocalizationHelper.CurrentCulture),
+                                r.Intercept.ToString(LocalizationHelper.CurrentCulture));
+                        }
                     }
                     textResolvingPower.Text = string.Format("{0:F04}", _predictor.ResolvingPower); // Not L10N
                 }
+                UpdateControls();
+            }
+        }
+
+        private void UpdateControls()
+        {
+            var oldVisible = _showRegressions;
+            _showRegressions = (comboLibrary.SelectedIndex > 0); // 0th entry is "None"
+            labelConversionParameters.Enabled = gridRegression.Enabled =
+                labelConversionParameters.Visible = gridRegression.Visible =
+                    _showRegressions;
+            if (oldVisible != _showRegressions)
+            {
+                int adjust = (gridRegression.Size.Height + 2*labelConversionParameters.Size.Height) * (_showRegressions ? 1 : -1);
+                Size = new Size(Size.Width, Size.Height + adjust);
+                gridMeasuredDriftTimes.Size = new Size(gridMeasuredDriftTimes.Size.Width, gridMeasuredDriftTimes.Size.Height - adjust);
+                labelIonMobilityLibrary.Location = new Point(labelIonMobilityLibrary.Location.X, labelIonMobilityLibrary.Location.Y - adjust);
+                comboLibrary.Location = new Point(comboLibrary.Location.X, comboLibrary.Location.Y - adjust);
             }
         }
 
@@ -84,6 +127,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
+
+            var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
+
             var table = new ChargeRegressionTable(gridRegression);
 
             string name;
@@ -101,6 +147,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     return;
                 }
             }
+            if (driftTable.GetTableMeasuredDriftTimes() == null) // Some error detected in the measured drift times table
+            {
+                e.Cancel = true;
+                return;
+            }
             if (table.GetTableChargeRegressionLines() == null) // Some error detected in the charged regression lines table
             {
                 e.Cancel = true;
@@ -117,7 +168,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 return;
             }
 
-            if ((comboLibrary.SelectedIndex != 0) && (comboLibrary.SelectedItem.ToString().Length == 0))
+            if ((comboLibrary.SelectedIndex > 0) && (comboLibrary.SelectedItem.ToString().Length == 0))
             {
                 MessageBox.Show(this, Resources.EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_,
                     Program.Name);
@@ -127,7 +178,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var ionMobilityLibrary = _driverIonMobilityLibraryListComboDriver.SelectedItem;
 
             DriftTimePredictor predictor =
-                new DriftTimePredictor(name, ionMobilityLibrary, table.GetTableChargeRegressionLines(), resolvingPower);
+                new DriftTimePredictor(name, driftTable.GetTableMeasuredDriftTimes(), 
+                    ionMobilityLibrary, table.GetTableChargeRegressionLines(), resolvingPower);
 
             _predictor = predictor;
 
@@ -162,6 +214,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     MessageDlg.Show(this, e.Message);
                 }
             }
+            UpdateControls();
         }
 
 
@@ -204,11 +257,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public void ChooseIonMobilityLibrary(string name)
         {
             comboLibrary.SelectedItem = name;
+            UpdateControls();
         }
 
         public void PasteRegressionValues()
         {
             gridRegression.DoPaste(this, ChargeRegressionTable.ValidateRegressionCellValues);
+        }
+
+        public void PasteMeasuredDriftTimes()
+        {
+            gridMeasuredDriftTimes.DoPaste(this, MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues);
         }
 
         #endregion
@@ -226,5 +285,179 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 gridRegression.DoDelete();
             }
         }
+
+        private void gridMeasuredDriftTimes_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Handle Ctrl + V for paste
+            if (e.KeyCode == Keys.V && e.Control)
+            {
+                PasteMeasuredDriftTimes();
+            }
+            else if (e.KeyCode == Keys.Delete)
+            {
+                gridMeasuredDriftTimes.DoDelete();
+            }
+        }
+
     }
+    
+    public class MeasuredDriftTimeTable
+    {
+        private readonly DataGridView _gridMeasuredDriftTimePeptides;
+
+        public MeasuredDriftTimeTable(DataGridView gridMeasuredDriftTimePeptides)
+        {
+            _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
+        }
+
+        public Dictionary<LibKey, double> GetTableMeasuredDriftTimes()
+        {
+            var e = new CancelEventArgs();
+            var dict = new Dictionary<LibKey, double>();
+            foreach (DataGridViewRow row in _gridMeasuredDriftTimePeptides.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                string seq;
+                if (!ValidateSequence(e, row.Cells[0], out seq))
+                    return null;
+
+                int charge;
+                if (!ValidateCharge(e, row.Cells[1], out charge))
+                    return null;
+
+                double driftTime;
+                if (!ValidateDriftTime(e, row.Cells[2], out driftTime))
+                    return null;
+
+                try
+                {
+                    dict.Add(new LibKey(seq,charge), driftTime);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch
+                {
+                    // just take the first seen    
+                }
+            }
+            return dict;
+        }
+
+        private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out int charge)
+        {
+            if (!ValidateCell(e, cell, Convert.ToInt32, out charge))
+                return false;
+
+            var errmsg = ValidateCharge(charge);
+            if (errmsg != null)
+            {
+                InvalidCell(e, cell, errmsg);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static string ValidateCharge(int charge)
+        {
+            if (charge < 1 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                return String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__, charge, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            return null;
+        }
+
+        private bool ValidateDriftTime(CancelEventArgs e, DataGridViewCell cell, out double driftTime)
+        {
+            if (!ValidateCell(e, cell, Convert.ToDouble, out driftTime))
+                return false;
+
+            // TODO: Range check.
+
+            return true;
+        }
+
+        private bool ValidateSequence(CancelEventArgs e, DataGridViewCell cell, out string sequence)
+        {
+            if (!ValidateCell(e, cell, Convert.ToString, out sequence))
+                return false;
+
+            return true;
+        }
+
+        private bool ValidateCell<TVal>(CancelEventArgs e, DataGridViewCell cell,
+            Converter<string, TVal> conv, out TVal valueT)
+        {
+            valueT = default(TVal);
+            if (cell.Value == null)
+            {
+                InvalidCell(e, cell, Resources.EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_);
+                return false;
+            }
+            string value = cell.Value.ToString();
+            try
+            {
+                valueT = conv(value);
+            }
+            catch (Exception)
+            {
+                InvalidCell(e, cell, Resources.EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_, value);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void InvalidCell(CancelEventArgs e, DataGridViewCell cell,
+            string message, params object[] args)
+        {
+            MessageBox.Show(string.Format(message, args));
+            _gridMeasuredDriftTimePeptides.Focus();
+            _gridMeasuredDriftTimePeptides.ClearSelection();
+            cell.Selected = true;
+            _gridMeasuredDriftTimePeptides.CurrentCell = cell;
+            _gridMeasuredDriftTimePeptides.BeginEdit(true);
+            e.Cancel = true;
+        }
+
+        public static string ValidateMeasuredDriftTimeCellValues(string[] values)
+        {
+            int tempInt;
+            double tempDouble;
+
+            if (values.Count() < 3)
+                return Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_;
+
+            // Parse sequence
+            var sequence = values[EditDriftTimePredictorDlg.COLUMN_SEQUENCE];
+            if (string.IsNullOrEmpty(sequence))
+                return Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_;
+
+            if (!FastaSequence.IsExSequence(sequence))
+                return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, sequence);
+
+            // Parse charge
+            if ((!int.TryParse(values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), out tempInt)) || ValidateCharge(tempInt) != null)
+                return string.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
+                    values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), TransitionGroup.MAX_PRECURSOR_CHARGE);
+
+            // Parse drift time
+            if (!double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim(), out tempDouble))
+                return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim());
+
+            return null;
+        }
+
+        public static bool ValidateMeasuredDriftTimeCellValues(string[] values, IWin32Window parent, int lineNumber)
+        {
+            string message = ValidateMeasuredDriftTimeCellValues(values);
+
+            if (message == null)
+                return true;
+
+            MessageDlg.Show(parent, string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_On_line__0___1_, lineNumber, message));
+            return false;
+        }
+
+    }
+
 }

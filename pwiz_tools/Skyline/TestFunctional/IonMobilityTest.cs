@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -146,9 +147,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Set other parameters - name, resolving power, per-charge slope+intercept
             const string predictorName = "test";
+            const double resolvingPower = 123.4;
             RunUI(() =>
             {
-                driftTimePredictorDlg.SetResolvingPower(123.4);
+                driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDlg.SetPredictorName(predictorName);
                 SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
                 driftTimePredictorDlg.PasteRegressionValues();
@@ -196,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
             double? centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
                             new LibKey("ANELLINV", 2), null, out windowDT);
             Assert.AreEqual((4 * (119.2825783)) + 5, centerDriftTime);
-            Assert.AreEqual(2 * ((4 * (119.2825783)) + 5)/123.4, windowDT);
+            Assert.AreEqual(2 * ((4 * (119.2825783)) + 5)/resolvingPower, windowDT);
 
             //
             // Test importing collisional cross sections from a spectral lib that has drift times
@@ -228,12 +230,16 @@ namespace pwiz.SkylineTestFunctional
                 () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
             // Simulate picking "Add..." from the Drift Time Predictor combo control
             var driftTimePredictorDlg3 = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg3.AddDriftTimePredictor);
+            const double deadeelsDT = 3.456;
             RunUI(() =>
             {
-                driftTimePredictorDlg3.SetResolvingPower(123.4);
+                driftTimePredictorDlg3.SetResolvingPower(resolvingPower);
                 driftTimePredictorDlg3.SetPredictorName("test3");
                 SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
                 driftTimePredictorDlg3.PasteRegressionValues();
+                // Simulate user pasting in some measured drift time info
+                SetClipboardText("DEADEELS\t5\t" + deadeelsDT.ToString(CultureInfo.CurrentCulture));
+                driftTimePredictorDlg3.PasteMeasuredDriftTimes();
             });
             // Simulate picking "Add..." from the Ion Mobility Library combo control
             var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(driftTimePredictorDlg3.AddIonMobilityLibrary);
@@ -283,13 +289,23 @@ namespace pwiz.SkylineTestFunctional
                             new LibKey("ANELLINVK", 2), null, out windowDT);
             double ccs = 3.8612432898618; // should have imported CCS without any transformation
             Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime ?? ccs, .000001);
-            Assert.AreEqual(2 * ((4 * (ccs)) + 5) / 123.4, windowDT, .000001);
+            Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
             centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
                             new LibKey("ANGTTVLVGMPAGAK", 2), null, out windowDT);
             ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
             Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime ?? ccs, .000001);
-            Assert.AreEqual(2 * ((4 * (ccs)) + 5) / 123.4, windowDT, .000001);
+            Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
+            // Do some DT calculations with the measured drift time
+            centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                            new LibKey("DEADEELS", 3), null, out windowDT); // Should fail
+            Assert.AreEqual(windowDT, 0);
+            Assert.IsFalse(centerDriftTime.HasValue);
+
+            centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTime(
+                            new LibKey("DEADEELS", 5), null, out windowDT);
+            Assert.AreEqual(deadeelsDT, centerDriftTime ?? -1, .000001);
+            Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
 
 
         }
@@ -414,13 +430,42 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Test various error conditions in EEditDriftTimePredictorDlg.cs
+        /// Test various error conditions in EditDriftTimePredictorDlg.cs
         /// </summary>
         public void TestEditDriftTimePredictorDlgErrorHandling()
         {
             AssertEx.Contains(EditDriftTimePredictorDlg.ValidateResolvingPower(0), Resources.EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
             AssertEx.Contains(EditDriftTimePredictorDlg.ValidateResolvingPower(-1), Resources.EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
             Assert.IsNull(EditDriftTimePredictorDlg.ValidateResolvingPower(1));
+
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateCharge(0),
+                String.Format(
+                Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
+                0, TransitionGroup.MAX_PRECURSOR_CHARGE));
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateCharge(99),
+                String.Format(
+                Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
+                99, TransitionGroup.MAX_PRECURSOR_CHARGE));
+            string[] dtValues = { null, null, null };
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(new[] { "", "" }),
+                Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_);
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+                Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_);
+            dtValues[0] = "$%$%!";
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+                String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, dtValues[0]));
+            dtValues[0] = "JKLM";
+            dtValues[1] = "dog";
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+                String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
+                    dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), TransitionGroup.MAX_PRECURSOR_CHARGE));
+            dtValues[2] = (17.9).ToString(CultureInfo.CurrentCulture);
+            dtValues[1] = "2";
+            Assert.IsNull(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues), 
+                string.Format("unexpected error {0}", MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues)));
+            dtValues[2] = "fish";
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+                String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim()));
 
             AssertEx.Contains(ChargeRegressionTable.ValidateCharge(0),
                 String.Format(

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using pwiz.Skyline.Util;
@@ -66,6 +67,28 @@ namespace pwiz.SkylineTest
             }
             var fieldsOut = sb.ToString().ParseDsvFields(separator);
             Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut));
+        }
+
+        [TestMethod]
+        public void DictionaryEqualsDeepTest()
+        {
+            var a = new Dictionary<int, int>();
+            var b = new Dictionary<int, int>();
+            a.Add(3, 5);
+            b.Add(3, 5);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(a, b));
+            a.Add(1, 2);
+            Assert.IsFalse(ArrayUtil.EqualsDeep(a, b));
+            b.Add(1, 3);
+            Assert.IsFalse(ArrayUtil.EqualsDeep(a, b));
+            b[1] = 2;
+            Assert.IsTrue(ArrayUtil.EqualsDeep(a, b));
+            a = null;
+            // ReSharper disable ExpressionIsAlwaysNull
+            Assert.IsFalse(ArrayUtil.EqualsDeep(a, b));
+            b = null;
+            Assert.IsTrue(ArrayUtil.EqualsDeep(a, b));
+            // ReSharper restore ExpressionIsAlwaysNull
         }
 
         [TestMethod]

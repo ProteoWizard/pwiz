@@ -1062,7 +1062,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetIonMobilities(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
-            if (fileIndex != -1)
+            if (fileIndex >= 0 && fileIndex < _librarySourceFiles.Count())
             {
                 var source = _librarySourceFiles[fileIndex];
                 ILookup<LibKey, IonMobilityInfo[]> timesLookup = _libraryEntries.ToLookup(

@@ -1789,7 +1789,7 @@ namespace pwiz.Skyline.Properties
             {
                 var predictor = driftTimePredictor;
 
-                //There is a dummy predictor called "None" with a null library
+                // Not all drift time predictors use a library
                 if (predictor.IonMobilityLibrary == null)
                     continue;
 
@@ -1849,20 +1849,20 @@ namespace pwiz.Skyline.Properties
 
         public override IEnumerable<IonMobilityLibrarySpec> GetDefaults(int revisionIndex)
         {
-            return new IonMobilityLibrarySpec[0]; // No defaults
+            return new[] { IonMobilityLibrary.NONE };
         }
 
         public void EnsureDefault()
         {
-            // Make sure the default predictors are present.
-            var defaultPredictors = GetDefaults().ToArray();
-            int len = defaultPredictors.Length;
-            if (Count < len || !ArrayUtil.ReferencesEqual(defaultPredictors, this.Take(len).ToArray()))
+            // Make sure the default libraries are present.
+            var defaultLibraries = GetDefaults().ToArray();
+            int len = defaultLibraries.Length;
+            if (Count < len || !ArrayUtil.ReferencesEqual(defaultLibraries, this.Take(len).ToArray()))
             {
-                foreach (var predictor in defaultPredictors)
-                    Remove(predictor);
-                foreach (var predictor in defaultPredictors.Reverse())
-                    Insert(0, predictor);
+                foreach (var library in defaultLibraries)
+                    Remove(library);
+                foreach (var library in defaultLibraries.Reverse())
+                    Insert(0, library);
             }
         }
 
@@ -2004,7 +2004,7 @@ namespace pwiz.Skyline.Properties
     public sealed class DriftTimePredictorList : SettingsList<DriftTimePredictor>
     {
         private static readonly DriftTimePredictor NONE =
-            new DriftTimePredictor(ELEMENT_NONE, null, null, 0);
+            new DriftTimePredictor(ELEMENT_NONE, null, null, null, 0);
 
         public override string GetDisplayName(DriftTimePredictor item)
         {

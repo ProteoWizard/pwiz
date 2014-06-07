@@ -805,6 +805,33 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Checks for deep equality, or equality of all items in a Dictionary.
+        /// </summary>
+        /// <typeparam name="TItemKey">Type of items in the dictionary keys</typeparam>
+        /// <typeparam name="TItemValue">Type of items in the dictionary values</typeparam>
+        /// <param name="values1">First array in the comparison</param>
+        /// <param name="values2">Second array in the comparison</param>
+        /// <returns>True if all items in both arrays in identical positions are Equal</returns>
+        public static bool EqualsDeep<TItemKey, TItemValue>(IDictionary<TItemKey, TItemValue> values1, IDictionary<TItemKey, TItemValue> values2)
+        {
+            if (values1 == null && values2 == null)
+                return true;
+            if (values1 == null || values2 == null)
+                return false;
+            if (values1.Count != values2.Count)
+                return false;
+            foreach(var keyValuePair1 in values1)
+            {
+                TItemValue value2;
+                if (!values2.TryGetValue(keyValuePair1.Key, out value2))
+                    return false;
+                if (!Equals(keyValuePair1.Value, value2))
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Constructs a hash-code for an Array from all of the items in
         /// the array.
         /// </summary>

@@ -1441,6 +1441,119 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     /// <summary>
+    /// Represents an observed drift time in msec for
+    /// a peptide at a given charge state.
+    /// </summary>
+    public sealed class MeasuredDriftTimePeptide : IXmlSerializable, IComparable<MeasuredDriftTimePeptide>
+    {
+        public string ModifiedSequence { get; private set; }
+        public int Charge { get; private set; }
+        public double DriftTimeMsec { get; private set; }
+
+        public MeasuredDriftTimePeptide(string seq, int charge, double driftTimeMsec)
+        {
+            ModifiedSequence = seq;
+            Charge = charge;
+            DriftTimeMsec = driftTimeMsec;
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private MeasuredDriftTimePeptide()
+        {
+        }
+
+        private enum ATTR
+        {
+            modified_sequence,
+            charge,
+            drift_time
+        }
+
+        public static MeasuredDriftTimePeptide Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new MeasuredDriftTimePeptide());
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            ModifiedSequence = reader.GetAttribute(ATTR.modified_sequence);
+            Charge = reader.GetIntAttribute(ATTR.charge);
+            DriftTimeMsec = reader.GetDoubleAttribute(ATTR.drift_time);
+            // Consume tag
+            reader.Read();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            writer.WriteAttribute(ATTR.modified_sequence, ModifiedSequence);
+            writer.WriteAttribute(ATTR.charge, Charge);
+            writer.WriteAttribute(ATTR.drift_time, DriftTimeMsec);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(MeasuredDriftTimePeptide obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj.ModifiedSequence, ModifiedSequence) && obj.Charge == Charge && obj.DriftTimeMsec == DriftTimeMsec;
+        }
+
+        public int CompareTo(MeasuredDriftTimePeptide other)
+        {
+            int result = String.Compare(ModifiedSequence, other.ModifiedSequence, StringComparison.Ordinal);
+            if (result != 0)
+                return result;
+
+            result = Charge - other.Charge;
+            if (result != 0)
+                return result;
+
+            double diff = DriftTimeMsec - other.DriftTimeMsec;
+            if (diff > 0)
+                return 1;
+            else if (diff < 0)
+                return -1;
+            return 0;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(MeasuredDriftTimePeptide)) return false;
+            return Equals((MeasuredDriftTimePeptide)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (ModifiedSequence != null ? ModifiedSequence.GetHashCode() : 0);
+                result = (result * 397) ^  (DriftTimeMsec.GetHashCode() * 397) ^ Charge;
+                return result;
+            }
+        }
+
+        #endregion
+
+    }    
+
+
+    /// <summary>
     /// Represents a regression line that applies to a transition with
     /// a specific charge state.
     /// </summary>
@@ -2076,17 +2189,20 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Round(dtMsec.Value, 4);
         }
 
+        private ImmutableDictionary<LibKey, double> _measuredDriftTimePeptides;
         private ReadOnlyCollection<ChargeRegressionLine> _chargeRegressionLines;
 
         public DriftTimePredictor(string name,
+                                    Dictionary<LibKey, double> measuredDriftTimePeptides,
                                     IonMobilityLibrarySpec ionMobilityLibrary,
                                     IList<ChargeRegressionLine> chargeSlopeIntercepts,
                                     double resolvingPower)
             : base(name)
         {
             ResolvingPower = resolvingPower;
+            MeasuredDriftTimePeptides = measuredDriftTimePeptides;
             ChargeRegressionLines = (chargeSlopeIntercepts == null) ? null : chargeSlopeIntercepts.ToArray();
-            IonMobilityLibrary = ionMobilityLibrary; // Actual loading happens in background
+            IonMobilityLibrary = ionMobilityLibrary; // Actual loading, if any, happens in background
             Validate();
         }
 
@@ -2095,6 +2211,28 @@ namespace pwiz.Skyline.Model.DocSettings
         public double ResolvingPower { get; private set; }
 
         public double InverseResolvingPowerTimesTwo { get; private set; } // Cached 2.0/resolving_power for faster window size calcs
+
+        public double? GetMeasuredDriftTimeMsec(LibKey chargedPeptide)
+        {
+            double? result = null;
+            if (MeasuredDriftTimePeptides != null)
+            {
+                double dt;
+                if (MeasuredDriftTimePeptides.TryGetValue(chargedPeptide, out dt))
+                    result = dt;
+            }
+            return result;
+        }
+
+        public IDictionary<LibKey, double> MeasuredDriftTimePeptides
+        {
+            get { return _measuredDriftTimePeptides; }
+            private set 
+            {
+                _measuredDriftTimePeptides = (value == null) ? null : new ImmutableDictionary<LibKey, double>(value);
+            }
+        }
+
 
         public IList<ChargeRegressionLine> ChargeRegressionLines
         {
@@ -2124,7 +2262,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public bool IsUsable { get { return ChargeRegressionLines != null && ChargeRegressionLines.Any() && IonMobilityLibrary.IsUsable; } }
+        public bool IsUsable
+        {
+            get
+            {
+                // We're usable if we have measured drift times, or a CCS library
+                bool usable = (_measuredDriftTimePeptides != null) && _measuredDriftTimePeptides.Any();
+                if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
+                {
+                    // If we have a CCS library, we need regressions, and the library itself needs to be ready
+                    usable |= ( ChargeRegressionLines != null && ChargeRegressionLines.Any() && IonMobilityLibrary.IsUsable );
+                }
+                return usable;
+            }
+        }
 
         #region Property change methods
 
@@ -2147,15 +2298,25 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? GetDriftTimeMsec(LibKey peptide)
         {
-            ChargeRegressionLine regressionLine = GetRegressionLine(peptide.Charge); 
-            if (regressionLine != null)
+            // Do we see this in our list of observed drift times?
+            if (MeasuredDriftTimePeptides != null)
             {
-                if (!IonMobilityLibrary.IsUsable)
+                double driftTime;
+                if (MeasuredDriftTimePeptides.TryGetValue(peptide, out driftTime))
+                    return driftTime;
+            }
+            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
+            {
+                ChargeRegressionLine regressionLine = GetRegressionLine(peptide.Charge); 
+                if (regressionLine != null)
                 {
-                    // First access?  Load the library.
-                    IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
+                    if (!IonMobilityLibrary.IsUsable)
+                    {
+                        // First access?  Load the library.
+                        IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
+                    }
+                    return IonMobilityLibrary.GetDriftTimeMsec(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
                 }
-                return IonMobilityLibrary.GetDriftTimeMsec(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
             }
             return null;
         }
@@ -2193,22 +2354,28 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private enum EL
         {
-            regression_dt
+            regression_dt,
+            measured_dt
         }
 
         private void Validate()
         {
             InverseResolvingPowerTimesTwo = (ResolvingPower > 0) ? 2.0 / ResolvingPower : double.MaxValue; // Set cache value
 
-            if (ChargeRegressionLines.Any() || ResolvingPower != 0 || ((IonMobilityLibrary != null) && !IonMobilityLibrary.IsNone))
+            // This is active if:
+            // Measured drift times are provided, or
+            // Ion mobility library is provided
+            bool hasLib = ((IonMobilityLibrary != null) && !IonMobilityLibrary.IsNone);
+            bool hasMeasured = ((MeasuredDriftTimePeptides != null) && MeasuredDriftTimePeptides.Any());
+            if (hasLib || hasMeasured)
             {
                 var messages = new List<string>();
-                if ((IonMobilityLibrary == null) || IonMobilityLibrary.IsNone || String.IsNullOrEmpty(IonMobilityLibrary.PersistencePath))
-                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_specify_an_ion_mobility_library_);
                 if (ResolvingPower <= 0)
                     messages.Add(Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
-                if (!ChargeRegressionLines.Any())
-                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictor_must_include_per_charge_regression_values_);
+                if (hasLib && String.IsNullOrEmpty(IonMobilityLibrary.PersistencePath))
+                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
+                if (hasLib && !ChargeRegressionLines.Any())
+                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
                 if (messages.Any())
                     throw new InvalidDataException(TextUtil.LineSeparate(messages));
             }
@@ -2240,6 +2407,21 @@ namespace pwiz.Skyline.Model.DocSettings
                 list.Add(ChargeRegressionLine.Deserialize(reader));
             }
             ChargeRegressionLines = list.ToArray();
+
+            // Read all measured drift times
+            var dict = new Dictionary<LibKey, double>();
+            while (reader.IsStartElement(EL.measured_dt))
+            {
+                var dt = MeasuredDriftTimePeptide.Deserialize(reader);
+                var key = new LibKey(dt.ModifiedSequence, dt.Charge);
+                if (!dict.ContainsKey(key))
+                {
+                    dict.Add(key, dt.DriftTimeMsec);
+                }
+            }
+            if (dict.Any())
+                MeasuredDriftTimePeptides = dict;
+
             reader.Read();             // Consume end tag
 
             Validate();
@@ -2252,7 +2434,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.resolving_power, ResolvingPower);
 
             // Write collisional cross sections
-            if (IonMobilityLibrary != null)
+            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone) 
             {
                 var imCalc = IonMobilityLibrary as IonMobilityLibrary;
                 if (imCalc != null)
@@ -2260,14 +2442,26 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             // Write all per-charge regressions
-            foreach (ChargeRegressionLine line in ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
+            if (ChargeRegressionLines != null)
             {
-                writer.WriteStartElement(EL.regression_dt);
-                line.WriteXml(writer);
-                writer.WriteEndElement();
+                foreach (ChargeRegressionLine line in ChargeRegressionLines.Where(chargeRegressionLine => chargeRegressionLine != null))
+                {
+                    writer.WriteStartElement(EL.regression_dt);
+                    line.WriteXml(writer);
+                    writer.WriteEndElement();
+                }
             }
-
-
+            // Write all measured drift times
+            if (MeasuredDriftTimePeptides != null)
+            {
+                foreach (var dt in MeasuredDriftTimePeptides)
+                {
+                    writer.WriteStartElement(EL.measured_dt);
+                    var mdt = new MeasuredDriftTimePeptide(dt.Key.Sequence, dt.Key.Charge, dt.Value);
+                    mdt.WriteXml(writer);
+                    writer.WriteEndElement();
+                }
+            }
         }
 
         #endregion
@@ -2281,6 +2475,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return base.Equals(obj) &&
                    Equals(obj.IonMobilityLibrary, IonMobilityLibrary) &&
                    ArrayUtil.EqualsDeep(obj.ChargeRegressionLines, ChargeRegressionLines) &&
+                   ArrayUtil.EqualsDeep(obj.MeasuredDriftTimePeptides, MeasuredDriftTimePeptides) &&
                    obj.ResolvingPower == ResolvingPower;
         }
 
@@ -2298,6 +2493,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = base.GetHashCode();
                 result = (result * 397) ^ IonMobilityLibrary.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(ChargeRegressionLines);
+                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredDriftTimePeptides);
                 result = (result * 397) ^ ResolvingPower.GetHashCode();
                 return result;
             }
