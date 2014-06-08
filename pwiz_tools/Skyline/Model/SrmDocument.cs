@@ -2451,10 +2451,7 @@ namespace pwiz.Skyline.Model
             {
                 writer.WriteAttributeString(ATTR.label_description, node.ProteinMetadataOverrides.Description); 
             }
-            if (node.PeptideGroup is FastaSequence)
-            {
-                WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
-            }
+            WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
 
