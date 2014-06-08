@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             public void AddTransition(int index, int rank, float[] times, float[] intensities)
             {
-                if (rank == 0)
+                if (rank == 0 || times.Length == 0)
                     return;
 
                 float maxTime = times[times.Length - 1];
