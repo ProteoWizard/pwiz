@@ -242,6 +242,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             catch (Exception exception)
             {
                 ChorusServerException chorusException = exception as ChorusServerException;
+                // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
                 if (null == chorusException)
                 {
                     chorusException = new ChorusServerException(

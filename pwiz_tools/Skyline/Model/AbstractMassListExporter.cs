@@ -25,7 +25,6 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;

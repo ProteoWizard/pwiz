@@ -27,12 +27,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
     public class ChromTaskList
     {
         private const int CANCEL_CHECK_MILLIS = 1000;
-        private HashSet<ChromatogramGeneratorTask> _executingTasks;
-        private List<ChromatogramGeneratorTask> _chromatogramGeneratorTasks;
-        private List<KeyValuePair<ChromKey, ChromatogramGeneratorTask>> _chromKeys;
+        private readonly HashSet<ChromatogramGeneratorTask> _executingTasks;
+        private readonly List<ChromatogramGeneratorTask> _chromatogramGeneratorTasks;
+        private readonly List<KeyValuePair<ChromKey, ChromatogramGeneratorTask>> _chromKeys;
         private int _completedCount;
         private int _minTaskCount;
-        private Action _checkCancelledAction;
+        private readonly Action _checkCancelledAction;
 
         public ChromTaskList(Action checkCancelledAction, SrmDocument srmDocument, ChorusAccount chorusAccount, ChorusUrl chorusUrl, IEnumerable<ChromatogramRequestDocument> chromatogramRequestDocuments)
         {

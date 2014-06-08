@@ -74,11 +74,13 @@ namespace pwiz.Skyline.Controls.Graphs
             myCurve.Symbol.Size = 25f;
 
             // Fill the symbol interior with color
-            var brush = new LinearGradientBrush(new Point(0, 0), new Point(1, 0), Color.Black, Color.White);
-            brush.InterpolationColors = new ColorBlend
+            var brush = new LinearGradientBrush(new Point(0, 0), new Point(1, 0), Color.Black, Color.White)
             {
-                Colors = new [] {Color.FromArgb(0, 0, 140), Color.FromArgb(0, 190, 0), Color.Red},
-                Positions = new [] {0.0f, 0.5f, 1.0f}
+                InterpolationColors = new ColorBlend
+                {
+                    Colors = new[] {Color.FromArgb(0, 0, 140), Color.FromArgb(0, 190, 0), Color.Red},
+                    Positions = new[] {0.0f, 0.5f, 1.0f}
+                }
             };
             myCurve.Symbol.Fill = new Fill(brush)
             {

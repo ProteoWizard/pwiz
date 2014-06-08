@@ -89,6 +89,8 @@ namespace pwiz.SkylineTest.Results
                 }
             }
             Assert.AreEqual(278 , maxHeight, 1);  // Without DT filtering, this will be much greater - about 996
+
+            docContainer.Release();
         }
     }
 }

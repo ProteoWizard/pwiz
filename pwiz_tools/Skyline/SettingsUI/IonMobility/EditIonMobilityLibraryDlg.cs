@@ -830,10 +830,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public string Validate()
         {
-            string result = ValidateSequence(Sequence);
-            if (result == null)
-                result = ValidateCollisionalCrossSection(CollisionalCrossSection);
-            return result;
+            return ValidateSequence(Sequence) ?? ValidateCollisionalCrossSection(CollisionalCrossSection);
         }
 
         public static string ValidateSequence(string sequence)

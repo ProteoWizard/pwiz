@@ -130,13 +130,12 @@ namespace pwiz.SkylineTestFunctional
             var editOptLib = ShowDialog<EditOptimizationLibraryDlg>(transitionSettingsUIOpt.AddToOptimizationLibraryList);
 
             string optLibPath = TestFilesDir.GetTestPath("Optimized.optdb");
-            string pasteText = TextUtil.LineSeparate(new[]
-            {
-                new[] {"TPEVDDEALEK", "2", "1047.48406105", "122.50606"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
-                new[] {"DGGIDPLVR", "2", "712.43520066499991", "116.33671"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
-                new[] {"AAA", "5", "100.0", "5.0"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
-                new[] {"AAB", "5", "100.0", "5.0"}.ToDsvLine(TextUtil.SEPARATOR_TSV),
-            });
+            string pasteText = TextUtil.LineSeparate(
+                GetPasteLine("TPEVDDEALEK", 2, 1047.48406105, 122.50606),
+                GetPasteLine("DGGIDPLVR", 2, 712.43520066499991, 116.33671),
+                GetPasteLine("AAA", 5, 100.0, 5.0),
+                GetPasteLine("AAB", 5, 100.0, 5.0));
+
             RunUI(() =>
             {
                 editOptLib.CreateDatabase(optLibPath);
@@ -341,6 +340,18 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.TransitionGroups, 2);
 
             VerifyGraphs();
+        }
+
+        private string GetPasteLine(string seq, int charge, double mz, double ce)
+        {
+            var fields = new[]
+            {
+                seq,
+                charge.ToString(CultureInfo.CurrentCulture),
+                mz.ToString(CultureInfo.CurrentCulture),
+                ce.ToString(CultureInfo.CurrentCulture)
+            };
+            return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
         private static void VerifyGraphs()

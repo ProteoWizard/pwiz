@@ -48,7 +48,6 @@ namespace pwiz.SkylineTestFunctional
         {
             using (var testFilesDir = new TestFilesDir(TestContext, TestFilesZip))
             {
-
                 // do a few unit tests on the UI error handlers
                 TestGetIonMobilityDBErrorHandling(testFilesDir);
                 TestImportIonMobilityFromSpectralLibraryErrorHandling();
@@ -307,8 +306,6 @@ namespace pwiz.SkylineTestFunctional
                     new LibKey("DEADEELS", 5), null, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerDriftTime ?? -1, .000001);
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
-
-                
             }
         }
 

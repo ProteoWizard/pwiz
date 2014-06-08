@@ -30,7 +30,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ExportChorusRequestDlg : Form
     {
-        private string _documentFilePath;
+        private readonly string _documentFilePath;
         public ExportChorusRequestDlg(SrmDocument srmDocument, string documentFilePath)
         {
             InitializeComponent();

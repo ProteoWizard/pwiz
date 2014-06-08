@@ -375,13 +375,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (null != Parameters)
             {
                 writer.WriteAttribute(ATTR.bias, Parameters.Bias);
-            }
 
-            // Write calculators
-            var calculators = new List<FeatureCalculator>(PeakFeatureCalculators.Count);
-            for (int i = 0; i < PeakFeatureCalculators.Count; i++)
-                calculators.Add(new FeatureCalculator(PeakFeatureCalculators[i].GetType(), Parameters.Weights[i]));
-            writer.WriteElements(calculators);
+                // Write calculators
+                var calculators = new List<FeatureCalculator>(PeakFeatureCalculators.Count);
+                for (int i = 0; i < PeakFeatureCalculators.Count; i++)
+                    calculators.Add(new FeatureCalculator(PeakFeatureCalculators[i].GetType(), Parameters.Weights[i]));
+                writer.WriteElements(calculators);
+            }
         }
 
         public override void Validate()

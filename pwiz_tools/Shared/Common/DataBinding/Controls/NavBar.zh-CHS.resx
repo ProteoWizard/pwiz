@@ -203,7 +203,7 @@
     <value>35, 22</value>
   </data>
   <data name="bindingNavigatorCountItem.Text" xml:space="preserve">
-    <value>当前位置</value>
+    <value>当前位置 {0}</value>
   </data>
   <data name="bindingNavigatorCountItem.ToolTipText" xml:space="preserve">
     <value>项的总数</value>

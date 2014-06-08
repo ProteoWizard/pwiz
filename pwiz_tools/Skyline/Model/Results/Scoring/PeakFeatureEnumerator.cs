@@ -87,9 +87,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                                 IDictionary<int, int> runEnumDict)
         {
             // Get peptide features for each set of comparable groups
-            return (from nodeGroups in ComparableGroups(nodePep)
-                    select nodeGroups.ToArray() into arrayGroups let labelType = arrayGroups[0].TransitionGroup.LabelType
-                    select document.GetPeakFeatures(nodePepGroup, nodePep, labelType, arrayGroups, calcs, runEnumDict)).SelectMany(f => f);
+            foreach (var nodeGroups in ComparableGroups(nodePep))
+            {
+                var arrayGroups = nodeGroups.ToArray();
+                var labelType = arrayGroups[0].TransitionGroup.LabelType;
+                foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, labelType, arrayGroups, calcs, runEnumDict))
+                {
+                    yield return peakFeature;
+                }
+            }
         }
 
         public static IEnumerable<IEnumerable<TransitionGroupDocNode>> ComparableGroups(PeptideDocNode nodePep)

@@ -21,7 +21,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -33,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
             : base(chromFileInfo, progressStatus, startPercent, endPercent, loader)
         {
             ChromatogramRequestDocument fullChromatogramRequest = new SpectrumFilter(document, chromFileInfo.FilePath, null).ToChromatogramRequestDocument();
-            ChorusUrl chorusUrl = chromFileInfo.FilePath as ChorusUrl;
+            ChorusUrl chorusUrl = (ChorusUrl) chromFileInfo.FilePath;
             ChorusAccount chorusAccount = chorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
             _chromTaskList = new ChromTaskList(CheckCancelled, document, chorusAccount, chorusUrl,
                 ChromTaskList.ChunkChromatogramRequest(fullChromatogramRequest, 100));

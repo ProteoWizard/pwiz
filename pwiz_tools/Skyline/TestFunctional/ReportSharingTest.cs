@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected class ReportInfo
         {
-            public ReportInfo(string path, List<ReportOrViewSpec> reportOrViewSpecs)
+            public ReportInfo(string path, IEnumerable<ReportOrViewSpec> reportOrViewSpecs)
             {
                 Path = path;
                 ReportOrViewSpecs = ImmutableList.ValueOf(reportOrViewSpecs);

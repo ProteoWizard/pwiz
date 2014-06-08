@@ -39,8 +39,7 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestLibIonMobilityInfo()
         {
-            var dbIon1 = new DbIonMobilityPeptide("JKLMN", 1.2);
-            dbIon1.Id = 12345;
+            var dbIon1 = new DbIonMobilityPeptide("JKLMN", 1.2) {Id = 12345};
             var dbIon2 = new DbIonMobilityPeptide(dbIon1);
             DbIonMobilityPeptide dbIon3 = null;
             Assert.AreEqual(dbIon1.GetHashCode(), dbIon2.GetHashCode());

@@ -758,7 +758,7 @@ namespace pwiz.Skyline.Model
     public class ThermoQuantivaMassListExporter : ThermoMassListExporter
     {
         // Hack to workaround Quantiva limitation
-        protected Dictionary<string, int> CompoundCounts = new Dictionary<string, int>();
+        protected readonly Dictionary<string, int> CompoundCounts = new Dictionary<string, int>();
         protected const int MAX_COMPOUND_NAME = 10;
 
         public ThermoQuantivaMassListExporter(SrmDocument document)
@@ -2593,11 +2593,8 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    internal class AdvApi
+    internal static class AdvApi
     {
-        private AdvApi()
-        {            
-        }
         [DllImport("advapi32.dll", CharSet = CharSet.Auto)] // Not L10N
         public static extern int RegOpenKeyEx(
           UIntPtr hKey,

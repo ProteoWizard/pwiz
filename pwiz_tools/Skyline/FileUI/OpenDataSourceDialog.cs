@@ -37,11 +37,11 @@ namespace pwiz.Skyline.FileUI
     {
         private readonly ListViewColumnSorter _listViewColumnSorter = new ListViewColumnSorter();
         private readonly Stack<MsDataFileUri> _previousDirectories = new Stack<MsDataFileUri>();
-        private int _specialFolderCount;
-        private int _myComputerIndex;
-        private int _chorusIndex;
+        private readonly int _specialFolderCount;
+        private readonly int _myComputerIndex;
+        private readonly int _chorusIndex;
         private ChorusSession _chorusSession;
-        private ChorusAccountList _chorusAccounts;
+        private readonly ChorusAccountList _chorusAccounts;
 
         public OpenDataSourceDialog(ChorusAccountList chorusAccounts)
         {

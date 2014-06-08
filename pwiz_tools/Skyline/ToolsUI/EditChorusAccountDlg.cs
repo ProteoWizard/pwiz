@@ -30,8 +30,8 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class EditChorusAccountDlg : Form
     {
-        private ChorusAccount _originalAccount;
-        private IList<ChorusAccount> _existing;
+        private readonly ChorusAccount _originalAccount;
+        private readonly IList<ChorusAccount> _existing;
         public EditChorusAccountDlg(ChorusAccount chorusAccount, IEnumerable<ChorusAccount> existing)
         {
             InitializeComponent();

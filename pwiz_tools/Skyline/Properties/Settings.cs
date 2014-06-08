@@ -943,8 +943,8 @@ namespace pwiz.Skyline.Properties
         [UserScopedSetting]
         public bool EnableChorus
         {
-            get { return ((bool?) this["EnableChorus"]) ?? false; }
-            set { this["EnableChorus"] = value; }
+            get { return ((bool?) this["EnableChorus"]) ?? false; } // Not L10N
+            set { this["EnableChorus"] = value; }   // Not L10N
         }
     }
 
@@ -1547,36 +1547,6 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return Resources.OptimizationLibraryList_Label_Optimization_Database; } }
 
         public override int ExcludeDefaults { get { return 1; } }
-
-        public bool CanEditItem(OptimizationLibrary item)
-        {
-            return item != null && !GetDefaults().Contains(item);
-        }
-
-        public void Initialize(IProgressMonitor loadMonitor)
-        {
-            foreach (var lib in this.ToArray())
-                Initialize(loadMonitor, lib);
-        }
-
-        public OptimizationLibrary Initialize(IProgressMonitor loadMonitor, OptimizationLibrary lib)
-        {
-            if (lib == null)
-                return null;
-
-            try
-            {
-                var libInit = lib.Initialize(loadMonitor);
-                if (!Equals(lib.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(libInit, lib))
-                    SetValue(libInit);
-                lib = libInit;
-            }
-            catch (Exception)
-            {
-                //Consider: Should we really fail silently?
-            }
-            return lib;
-        }
     }
 
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
