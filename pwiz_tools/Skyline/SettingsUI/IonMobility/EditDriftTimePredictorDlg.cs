@@ -435,6 +435,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (!FastaSequence.IsExSequence(sequence))
                 return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, sequence);
 
+            try
+            {
+                values[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = SequenceMassCalc.NormalizeModifiedSequence(sequence);
+            }
+            catch (Exception x)
+            {
+                return x.Message;
+            }
+
             // Parse charge
             if ((!int.TryParse(values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), out tempInt)) || ValidateCharge(tempInt) != null)
                 return string.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,

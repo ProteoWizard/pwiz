@@ -151,13 +151,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="gridRegression.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 452</value>
-  </data>
-  <data name="gridRegression.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>12, 387</value>
   </data>
   <data name="gridRegression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>335, 117</value>
+    <value>378, 95</value>
   </data>
   <data name="gridRegression.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -185,16 +182,13 @@ Each precursor charge state requires a different slope and intercept value.  If 
     <value>Bottom, Left</value>
   </data>
   <data name="comboLibrary.ItemHeight" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>13</value>
   </data>
   <data name="comboLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 386</value>
-  </data>
-  <data name="comboLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>12, 334</value>
   </data>
   <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>325, 24</value>
+    <value>245, 21</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -215,13 +209,10 @@ Each precursor charge state requires a different slope and intercept value.  If 
     <value>4</value>
   </data>
   <data name="textResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 101</value>
-  </data>
-  <data name="textResolvingPower.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>12, 82</value>
   </data>
   <data name="textResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 22</value>
+    <value>100, 20</value>
   </data>
   <data name="textResolvingPower.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -249,13 +240,10 @@ W = 2T/R
     <value>Top, Left, Right</value>
   </data>
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 31</value>
-  </data>
-  <data name="textName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>12, 28</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>232, 22</value>
+    <value>288, 20</value>
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -303,13 +291,10 @@ W = 2T/R
     <value>90</value>
   </data>
   <data name="gridMeasuredDriftTimes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 165</value>
-  </data>
-  <data name="gridMeasuredDriftTimes.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>12, 134</value>
   </data>
   <data name="gridMeasuredDriftTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>335, 175</value>
+    <value>378, 162</value>
   </data>
   <data name="gridMeasuredDriftTimes.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -339,13 +324,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>256, 11</value>
-  </data>
-  <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>315, 12</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -372,13 +354,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>256, 46</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>315, 41</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -408,13 +387,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="labelConversionParameters.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 421</value>
-  </data>
-  <data name="labelConversionParameters.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>9, 371</value>
   </data>
   <data name="labelConversionParameters.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 17</value>
+    <value>118, 13</value>
   </data>
   <data name="labelConversionParameters.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -444,13 +420,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="labelIonMobilityLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 367</value>
-  </data>
-  <data name="labelIonMobilityLibrary.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>9, 318</value>
   </data>
   <data name="labelIonMobilityLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 17</value>
+    <value>97, 13</value>
   </data>
   <data name="labelIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -477,13 +450,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 81</value>
-  </data>
-  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>9, 66</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 17</value>
+    <value>89, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -510,13 +480,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 11</value>
-  </data>
-  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>12, 12</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 17</value>
+    <value>38, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -543,13 +510,10 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 144</value>
-  </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>9, 117</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 17</value>
+    <value>104, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -573,13 +537,10 @@ W = 2T/R
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>8, 16</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>380, 591</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>402, 500</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
