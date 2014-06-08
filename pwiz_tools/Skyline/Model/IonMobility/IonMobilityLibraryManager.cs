@@ -31,10 +31,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             // Not loaded if the predictor is not usable
             var calc = GetIonMobilityLibrary(document);
-            if (calc != null && !calc.IsUsable)
-                return false;
-            var dtPredictor = document.Settings.PeptideSettings.Prediction.DriftTimePredictor;
-            return dtPredictor == null;
+            return (calc == null || calc.IsNone || calc.IsUsable);
         }
 
         private readonly Dictionary<string, IonMobilityLibrary> _loadedIonMobilityeLibraries =
@@ -42,20 +39,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (previous == null)
-            {
-                return true;
-            }
-            if (!ReferenceEquals(GetIonMobilityLibrary(document), GetIonMobilityLibrary(previous)))
-            {
-                return true;
-            }
-            var dtPredictor = document.Settings.PeptideSettings.Prediction.DriftTimePredictor;
-            if (dtPredictor != null)
-            {
-                return true;
-            }
-            return false;
+            return !ReferenceEquals(GetIonMobilityLibrary(document), GetIonMobilityLibrary(previous));
         }
 
         protected override bool IsLoaded(SrmDocument document)
@@ -129,6 +113,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private static IonMobilityLibrary GetIonMobilityLibrary(SrmDocument document)
         {
+            if (document == null)
+                return null;
             var driftTimePredictor = document.Settings.PeptideSettings.Prediction.DriftTimePredictor;
             if (driftTimePredictor == null)
                 return null;
