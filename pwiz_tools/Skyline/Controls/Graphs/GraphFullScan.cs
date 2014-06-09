@@ -79,12 +79,12 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetScans(MsDataSpectrum[] scans)
         {
             _fullScans = scans;
-            CreateGraph();
             if (_zoomXAxis)
             {
                 _zoomXAxis = false;
                 ZoomXAxis();
             }
+            CreateGraph();
             if (_zoomYAxis)
             {
                 _zoomYAxis = false;
@@ -623,23 +623,25 @@ namespace pwiz.Skyline.Controls.Graphs
             yScale.Min = 0;
             GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
             
-            if (filterBtn.Checked && !spectrumBtn.Checked)
+            // Auto scale graph for spectrum view or no zoom.
+            if (spectrumBtn.Checked || !magnifyBtn.Checked)
+            {
+                yScale.MaxAuto = true;
+                graphControl.GraphPane.AxisChange();
+            }
+            else
             {
                 yScale.MaxAuto = false;
                 double minDriftTime, maxDriftTime;
                 GetDriftRange(out minDriftTime, out maxDriftTime);
-                if (minDriftTime > double.MinValue && maxDriftTime < double.MinValue)
+                if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
                 {
-                    yScale.MinAuto = yScale.MaxAuto = false;
-                    double range = maxDriftTime - minDriftTime;
-                    yScale.Min = minDriftTime - range / 2;
-                    yScale.Max = maxDriftTime + range / 2;
+                    double range = filterBtn.Checked
+                        ? (maxDriftTime - minDriftTime)/2 
+                        : (maxDriftTime - minDriftTime)*2;
+                    yScale.Min = minDriftTime - range;
+                    yScale.Max = maxDriftTime + range;
                 }
-            }
-            else
-            {
-                yScale.MaxAuto = true;
-                graphControl.GraphPane.AxisChange();
             }
         }
 
@@ -768,8 +770,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ZoomToSelection(bool zoom)
         {
             Settings.Default.AutoZoomFullScanGraph = magnifyBtn.Checked = zoom;
-            CreateGraph();
             ZoomXAxis();
+            CreateGraph();
             ZoomYAxis();
             UpdateUI();
         }
