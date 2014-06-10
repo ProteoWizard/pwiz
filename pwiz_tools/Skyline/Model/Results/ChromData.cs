@@ -101,6 +101,7 @@ namespace pwiz.Skyline.Model.Results
                 Extra = Extra,
             };
             newChromData.Times = newChromData.RawTimes = SubArray(RawTimes, firstIndex, lastIndex);
+            newChromData.ScanIds = newChromData.RawScanIds = SubArray(RawScanIds, firstIndex, lastIndex);
             newChromData.Intensities = newChromData.RawIntensities = SubArray(RawIntensities, firstIndex, lastIndex);
             newChromData.RawMassErrors = SubArray(RawMassErrors, firstIndex, lastIndex);
             return newChromData;
