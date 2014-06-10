@@ -259,20 +259,16 @@ namespace pwiz.SkylineTestFunctional
                     importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
                     SetClipboardText("1\t1\t0"); // This will fail - no z=2 information
                     importSpectralLibDlg.PasteRegressionValues();
-                    importSpectralLibDlg.OkDialog();
                 });
-                WaitForClosedForm(importSpectralLibDlg);
-                WaitForOpenForm<MessageDlg>().OkDialog(); // Dismiss the error message
-                // Now try again, this time with all the information
-                var importSpectralLibDlg2 =
-                    ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibDlg3.ImportFromSpectralLibrary);
+                importSpectralLibDlg.BeginInvoke(new Action(importSpectralLibDlg.OkDialog)); // User clicks OK - we expect an error dialog to follow
+                WaitForOpenForm<MessageDlg>().OkDialog(); // Dismiss the error message, we'll be dropped back into the dialog
                 RunUI(() =>
                 {
-                    importSpectralLibDlg2.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
-                    importSpectralLibDlg2.FilePath = blibPath; // Simulate user entering filename
+                    importSpectralLibDlg.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
+                    importSpectralLibDlg.FilePath = blibPath; // Simulate user entering filename
                     SetClipboardText("1\t1\t0\n2\t2\t2"); // Note non-unity slope and charge for z=2, for test purposes
-                    importSpectralLibDlg2.PasteRegressionValues();
-                    importSpectralLibDlg2.OkDialog();
+                    importSpectralLibDlg.PasteRegressionValues();
+                    importSpectralLibDlg.OkDialog();
                 });
                 WaitForClosedForm(importSpectralLibDlg);
                 WaitForCondition(() => ionMobilityLibDlg3.LibraryPeptideCount > 8); // Let that library load

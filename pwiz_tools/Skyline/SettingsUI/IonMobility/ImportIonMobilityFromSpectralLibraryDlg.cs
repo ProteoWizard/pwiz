@@ -35,7 +35,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
     public partial class ImportIonMobilityFromSpectralLibraryDlg : FormEx
     {
-        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs)
+        private CollisionalCrossSectionGridViewDriver _gridViewDriver;
+
+        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs, CollisionalCrossSectionGridViewDriver gridViewDriver)
         {
             InitializeComponent();
 
@@ -43,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if ((comboLibrary.Items.Count == 1) &&  (Source == SpectralLibrarySource.settings))
                 comboLibrary.SelectedIndex = 0; // The obvious choice
             ComboHelper.AutoSizeDropDown(comboLibrary);
+            _gridViewDriver = gridViewDriver;
         }
 
         public SpectralLibrarySource Source
@@ -101,10 +104,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public void OkDialog()
         {
+            string message;
             if (Source == SpectralLibrarySource.file)
             {
                 string path = textFilePath.Text;
-                string message = ValidateSpectralLibraryPath(path);
+                message = ValidateSpectralLibraryPath(path);
                 if (message != null)
                 {
                     MessageDlg.Show(this, message);
@@ -124,9 +128,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (chargeRegressionLinesList == null) // Some error detected in the charged regression lines table
                 return;
             ChargeRegressionsLines = chargeRegressionLinesList.ToDictionary(x => x.Charge, x => x.RegressionLine);
-            
 
-            DialogResult = DialogResult.OK;
+            // Have we got everything we need to populate the caller's grid view?
+            message = _gridViewDriver.ImportFromSpectralLibrary(librarySpec, ChargeRegressionsLines);
+            if (message == null)
+            {
+                DialogResult = DialogResult.OK;
+            }
+            else
+            {
+                MessageDlg.Show(this, message);
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)

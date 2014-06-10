@@ -556,16 +556,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public void ImportFromSpectralLibrary()
         {
-            using (var importFromLibraryDlg = new ImportIonMobilityFromSpectralLibraryDlg(Settings.Default.SpectralLibraryList))
+            using (var importFromLibraryDlg = new ImportIonMobilityFromSpectralLibraryDlg(Settings.Default.SpectralLibraryList, this))
             {
-                if (importFromLibraryDlg.ShowDialog(MessageParent) == DialogResult.OK)
-                {
-                    ImportFromSpectralLibrary(importFromLibraryDlg.Library, importFromLibraryDlg.ChargeRegressionsLines);
-                }
+                importFromLibraryDlg.ShowDialog(MessageParent);
             }
         }
 
-        private void ImportFromSpectralLibrary(LibrarySpec librarySpec, IDictionary<int, RegressionLine> chargeRegressionLines)
+        public string ImportFromSpectralLibrary(LibrarySpec librarySpec, IDictionary<int, RegressionLine> chargeRegressionLines)
         {
             var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
             Library library = null;
@@ -600,8 +597,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         });
                         if (status.IsError)
                         {
-                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
-                            return;
+                            return status.ErrorException.Message;
                         }
                     }
                     catch (Exception x)
@@ -609,8 +605,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         var message = TextUtil.LineSeparate(string.Format(Resources.CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__,
                                                                           librarySpec.FilePath),
                                                             x.Message);
-                        MessageDlg.Show(MessageParent, message);
-                        return;
+                        return message;
                     }
                 }
             }
@@ -624,9 +619,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
 
             if (peptideCollisionalCrossSections == null)
-                return;
+                return null;
 
             SetTablePeptides(peptideCollisionalCrossSections);
+            return null;
         }
 
 
