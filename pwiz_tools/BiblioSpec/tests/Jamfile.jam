@@ -259,7 +259,7 @@ blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib
 
 # Test merging existing libraries
 
-blib-test-build merge : -o : output/xmerged.redundant.blib : xmerged.redundant.check : output/demo-copy.blib output/demo.blib output/pep-proph.blib : <dependency>sqt-cms2 ;
+blib-test-build merge : -o : output/xmerged.redundant.blib : xmerged.redundant.check : output/demo-copy.blib output/demo.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
 
 # Test BlibFilter
 
