@@ -30,7 +30,7 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/filesystem.hpp"
 
-#ifdef _MSC_VER
+#ifdef USE_WATERS_READER
 #include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
 using namespace pwiz::vendor_api::Waters;
 #endif
@@ -149,7 +149,7 @@ WatersMseReader::WatersMseReader(BlibBuilder& maker,
         pusherInterval_ = maker.getPusherInterval();
         Verbosity::debug("Using forced pusher interval of %f.", pusherInterval_);
     }
-#ifdef _MSC_VER
+#ifdef USE_WATERS_READER
     else
     {
         string rawDataPath(csvname);

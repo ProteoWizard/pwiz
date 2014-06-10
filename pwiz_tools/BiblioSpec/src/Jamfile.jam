@@ -75,6 +75,27 @@ rule mascot-api-usage-requirements ( properties * )
     return $(result) ;
 }
 
+path-constant WATERS_API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters ;
+
+rule waters-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       ( <toolset-msvc:version>9.0 in $(properties) ||
+         <toolset-msvc:version>9.0express in $(properties) ||
+         <toolset-msvc:version>10.0 in $(properties) ||
+         <toolset-msvc:version>10.0express in $(properties) ) &&
+       <runtime-debugging>off in $(properties) &&
+       [ project-exists $(WATERS_API_PATH) ] &&
+       [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&
+	   ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties)
+    {
+        result += <define>USE_WATERS_READER ;
+        result += <library>$(WATERS_API_PATH)//pwiz_vendor_api_waters ;
+    }
+}
+
 
 # some properties for all
 project 
@@ -113,6 +134,7 @@ lib blibbuild
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
+    <conditional>@waters-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     <dependency>modifications.xml
  ;
@@ -154,7 +176,7 @@ alias pwiz-boost-libraries
     /ext/boost//iostreams
     /ext/boost//system
     /ext/expat//expat
-    $(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common
+    $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml//pwiz_utility_minimxml
     $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
