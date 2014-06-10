@@ -7558,6 +7558,21 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
     <value>Extraction</value>
   </data>
+  <data name="ReportSpecList_GetDefaults_Peak_Boundaries" xml:space="preserve">
+    <value>Peak Boundaries</value>
+  </data>
+  <data name="MQuestStandardIntensityCalc_Name_Standard_Intensity" xml:space="preserve">
+    <value>Standard Intensity</value>
+  </data>
+  <data name="MQuestIntensityStandardCorrelationCalc_Name_Standard_library_dot_product" xml:space="preserve">
+    <value>Standard library dot-product</value>
+  </data>
+  <data name="NextGenStandardProductMassErrorCalc_Name_Standard_product_mass_error" xml:space="preserve">
+    <value>Standard product mass error</value>
+  </data>
+  <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
+    <value>Standard signal to noise</value>
+  </data>
   <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_" xml:space="preserve">
     <value>The pasted text must have three columns.</value>
   </data>
@@ -7578,5 +7593,11 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
     <value>Drift time predictors using an ion mobility library must include per-charge regression values.</value>
+  </data>
+  <data name="MQuestStandardWeightedShapeCalc_Name_Standard_shape__weighted_" xml:space="preserve">
+    <value>Standard shape (weighted)</value>
+  </data>
+  <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
+    <value>Standard co-elution (weighted)</value>
   </data>
 </root>

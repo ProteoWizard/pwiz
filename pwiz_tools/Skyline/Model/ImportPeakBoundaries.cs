@@ -24,6 +24,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -66,13 +67,13 @@ namespace pwiz.Skyline.Model
         // ReSharper disable NonLocalizedString
         public static readonly string[][] FIELD_NAMES =
         {
-            new[] {"PeptideModifiedSequence", "FullPeptideName"},
-            new[] {"FileName", "filename"},
-            new[] {"MinStartTime", "leftWidth"},
-            new[] {"MaxEndTime", "rightWidth"},
-            new[] {"PrecursorCharge", "Charge"},
-            new[] {"PrecursorIsDecoy", "IsDecoy", "decoy"},
-            new[] {"SampleName"}
+            new[] {"PeptideModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence},
+            new[] {"FileName", "filename", "R.FileName", ColumnCaptions.FileName},
+            new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
+            new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
+            new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge},
+            new[] {"PrecursorIsDecoy", "Precursor Is Decoy", "IsDecoy", "decoy", ColumnCaptions.IsDecoy},
+            new[] {"SampleName", ColumnCaptions.SampleName}
         };
         // ReSharper restore NonLocalizedString
 

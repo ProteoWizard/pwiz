@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -320,22 +319,11 @@ namespace pwiz.SkylineTestA
             docContainerId.Release();
         }
 
-        private ReportSpec MakeReportSpec()
+        private static ReportSpec MakeReportSpec()
         {
-            Type tableTran = typeof(DbTransition);
-            Type tableTranRes = typeof(DbTransitionResult);
-            return new ReportSpec("PeakBoundaries", new QueryDef
-            {
-                Select = new[]
-                                                               {
-                                        new ReportColumn(tableTran, "Precursor", "Charge"),
-                                        new ReportColumn(tableTranRes, "ResultFile", "FileName"),
-                                        new ReportColumn(tableTranRes, "PrecursorResult", "MinStartTime"),
-                                        new ReportColumn(tableTranRes, "PrecursorResult", "MaxEndTime"),
-                                        new ReportColumn(tableTran, "Precursor", "Peptide", "ModifiedSequence"),
-                                                               }
-            });
-
+            var specList = new ReportSpecList();
+            var defaults = specList.GetDefaults();
+            return defaults.First(spec => spec.Name == Resources.ReportSpecList_GetDefaults_Peak_Boundaries);
         }
 
         private static void ImportThrowsException(SrmDocument docResults, string importText, string message, bool isMinutes = true, bool removeMissing = false, bool changePeaks = true)

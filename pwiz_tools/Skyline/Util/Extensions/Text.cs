@@ -319,6 +319,7 @@ namespace pwiz.Skyline.Util.Extensions
         
         public int NumberOfFields { get; private set; }
         public Dictionary<string, int> FieldDict { get; private set; }
+        public List<string> FieldNames { get; private set; } 
 
         public DsvFileReader(string fileName, char separator, bool hasHeaders=true) : 
             this(new StreamReader(fileName), separator, hasHeaders)
@@ -334,6 +335,7 @@ namespace pwiz.Skyline.Util.Extensions
         {
             _separator = separator;
             _reader = reader;
+            FieldNames = new List<string>();
             FieldDict = new Dictionary<string, int>();
             _titleLine = _reader.ReadLine(); // we will re-use this if it's not actually a header line
             _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
@@ -350,6 +352,7 @@ namespace pwiz.Skyline.Util.Extensions
             }
             for (int i = 0; i < fields.Length; ++i)
             {
+                FieldNames.Add(fields[i]);
                 FieldDict[fields[i]] = i;
             }
         }

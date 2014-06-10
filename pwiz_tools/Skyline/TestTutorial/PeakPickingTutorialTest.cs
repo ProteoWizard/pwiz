@@ -87,8 +87,8 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "0.5416|-2.2482|0.5928|2.2079|0.3654|0.0594|0.1669|-0.0539| null |0.2563|7.6497|-0.0968|0.5192| null | null | null | null ", // Not L10N
-            "0.2865| null | null | null |5.4170|-0.0291|0.6770|1.1543| null | null | null | null | null | null | null | null | null ", // Not L10N
+            "0.6109|-1.4593|0.3128|2.3078|2.2117|0.0668|0.1490|-0.2437| null |-0.7363|1.5011|-0.1049|0.4372|-0.0388| null |-0.0496| null |7.7481|-0.0035| null | null | null | null ", // Not L10N
+            "0.0590| null | null | null |3.1377|-0.0459|0.6183|0.5442| null | null | null | null | null |0.0590| null |0.5442| null |3.1377|-0.0459| null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()
@@ -152,7 +152,8 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(nodeGroup.TransitionGroup.Peptide.Sequence, peptideSeqHighlight);
                     var chromGroupInfo = nodeGroup.ChromInfos.ToList()[0];
                     Assert.IsNotNull(chromGroupInfo.RetentionTime);
-                    Assert.AreEqual(chromGroupInfo.RetentionTime.Value, 16.5, 0.1);
+                    // TODO: Fix the tutorial.  This was supposed to be an incorrectly picked peak, but our default scoring is now good enough to pick it correctly
+                    Assert.AreEqual(chromGroupInfo.RetentionTime.Value, 18.0, 0.1);
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
                 });
             RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
@@ -168,7 +169,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
-            RunUI(() => Assert.AreEqual(0.668, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
+            RunUI(() => Assert.AreEqual(0.297, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
             PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
@@ -183,7 +184,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // The rows which the tutorial says are missing scores are in fact missing scores
-                foreach (int i in new[] { 3, 8, 9, 12, 13, 14, 15, 16 })
+                foreach (int i in new[] { 3, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21, 22 })
                 {
                     Assert.IsFalse(editDlg.IsActiveCell(i, 0));
                 }

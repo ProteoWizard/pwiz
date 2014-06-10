@@ -46,19 +46,20 @@ namespace pwiz.SkylineTestA
             // This is the MProphet gold standard data file.  See "Supplementary Data 1" from
             // http://www.nature.com/nmeth/journal/v8/n5/full/nmeth.1584.html#/supplementary-information
             // Weights have been normalized (x 13.30133906)
+            // Changed due to upgrade from 7 to 20 iterations
             new FileWeights
             {
                 _fileName = "nmeth.1584-S2.csv",         // Not L10N
                 _weights = new[]
                 {
-                    0.7629338,
-                    0.2483368,
-                    10.05699083,
-                    8.5692666,
-                    -0.1092953,
-                    -0.3722180,
-                    1.2473886,
-                    -0.0055748 
+                    0.7450987,
+                    0.2946793,
+                    10.3627608,
+                    8.1902239,
+                    -0.1633107,
+                    -0.4086730,
+                    1.2581479,
+                    -0.0057355 
                 }
             },
             // Weights have been normalized (x 15.87149397)
@@ -67,22 +68,22 @@ namespace pwiz.SkylineTestA
                 _fileName = "testfile-no-yseries.csv",   // Not L10N 
                 _weights = new[]
                 {
-                    1.4784183,
-                    -0.1464128,
-                    -5.5954260,
-                    1.2186721,
-                    1.8647355,
-                    -1.6188369,
-                    -0.7733836,
-                    -10.3491945,
-                    -0.8011623,
-                    0.1144341,
-                    -0.0097754,
-                    -5.5213603,
-                    0.4809613,
-                    -0.4327720,
-                    2.7935483,
-                    7.9822315
+                    1.4914017,
+                    -0.1427163,
+                    -5.3524415,
+                    1.1420918,
+                    1.9215814,
+                    -1.6510679,
+                    -0.7949620,
+                    -10.5788174,
+                    -0.8218009,
+                    0.1219481,
+                    -0.0226443,
+                    -5.0446029,
+                    0.4852940,
+                    -0.4622149,
+                    2.6759886,
+                    7.6031936,
                 }
             }
         };
@@ -107,7 +108,7 @@ namespace pwiz.SkylineTestA
 
                 // Calculate weights for peak features.
                 var scoringModel = new MProphetPeakScoringModel("mProphet", fileWeights._weights);    // Not L10N
-                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), new LinearModelParams(fileWeights._weights));
+                scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(), new LinearModelParams(fileWeights._weights), false, false);
                 Assert.AreEqual(scoringModel.Parameters.Weights.Count, fileWeights._weights.Length);
                 for (int i = 0; i < scoringModel.Parameters.Weights.Count; i++)
                     Assert.AreEqual(fileWeights._weights[i], scoringModel.Parameters.Weights[i], 1e-7);
@@ -192,7 +193,10 @@ namespace pwiz.SkylineTestA
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc"" weight=""7.77""/>
                     <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc"" weight=""7.77""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc"" weight=""8.88""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCorrelationCalc"" weight=""9.99""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedShapeCalc"" weight=""9.99""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedCoElutionCalc"" weight=""9.99""/>
                 </legacy_peak_scoring_model>";
             AssertEx.Serialization<LegacyScoringModel>(testRoundTrip, AssertEx.Cloned);
 

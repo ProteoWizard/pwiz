@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = MQuestHelpers.GetAnalyteGroups(summaryPeakData).ToArray();
+            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData).ToArray();
             if (tranGroupPeakDatas.Length == 0)
                 return float.NaN;
 
@@ -71,6 +71,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected abstract bool IsIonType(TransitionDocNode nodeTran);
 
         protected abstract double MassErrorFunction(double massError);
+
+        protected abstract IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData);
     }
 
     /// <summary>
@@ -93,6 +96,41 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override double MassErrorFunction(double massError)
         {
             return Math.Abs(massError);
+        }
+
+        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+    }
+
+    /// <summary>
+    /// Calculates the average mass error over product ions for the standard isotope label
+    /// </summary>
+    public class NextGenStandardProductMassErrorCalc : MassErrorCalc
+    {
+        public NextGenStandardProductMassErrorCalc() : base("Standard product mass error") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.NextGenStandardProductMassErrorCalc_Name_Standard_product_mass_error; }
+        }
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return nodeTran != null && !nodeTran.IsMs1;
+        }
+
+        protected override double MassErrorFunction(double massError)
+        {
+            return Math.Abs(massError);
+        }
+
+        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetStandardGroups(summaryPeakData);
         }
     }
 
@@ -117,6 +155,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return massError * massError;
         }
+
+        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
     }
 
     /// <summary>
@@ -139,6 +183,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override double MassErrorFunction(double massError)
         {
             return Math.Abs(massError);
+        }
+
+        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
         }
     }
 
@@ -229,7 +279,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<IDetailedPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = MQuestHelpers.GetAnalyteGroups(summaryPeakData).ToArray();
+            var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData).ToArray();
             if (tranGroupPeakDatas.Length == 0)
                 return float.NaN;
             var snValues = new List<double>();
@@ -296,6 +346,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReversedScore { get { return false; } }
 
         protected abstract bool IsIonType(TransitionDocNode nodeTran);
+
+        protected abstract IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData);
     }
 
     public class NextGenSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
@@ -310,6 +363,33 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override bool IsIonType(TransitionDocNode nodeTran)
         {
             return nodeTran == null || !nodeTran.IsMs1;
+        }
+
+        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+    }
+
+    public class NextGenStandardSignalNoiseCalc : AbstractNextGenSignalNoiseCalc
+    {
+        public NextGenStandardSignalNoiseCalc() : base("Standard signal to noise") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise; }
+        }
+
+        protected override bool IsIonType(TransitionDocNode nodeTran)
+        {
+            return nodeTran == null || !nodeTran.IsMs1;
+        }
+
+        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetStandardGroups(summaryPeakData);
         }
     }
 }

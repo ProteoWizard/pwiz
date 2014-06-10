@@ -551,5 +551,9 @@ namespace pwiz.Skyline.EditUI
         public double? QValue2 { get { return Match2.QValue; } }
         public bool IsMatch1 { get { return Match1.IsPickedApexBetweenCuratedBoundaries; } }
         public bool IsMatch2 { get { return Match2.IsPickedApexBetweenCuratedBoundaries; } }
+        public double? Apex1 { get { return Match1.PickedApex; } }
+        public double? Apex2 { get { return Match2.PickedApex; } }
+        public double? TrueStart { get { return Match1.TrueStartBoundary; } }
+        public double? TrueEnd { get { return Match1.TrueEndBoundary; } }
     }
 }

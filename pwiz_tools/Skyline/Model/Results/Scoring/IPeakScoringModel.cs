@@ -56,7 +56,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="decoys">Scores for null distribution</param>
         /// <param name="initParameters">Initial model parameters</param>
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
-        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false);
+        /// <param name="preTrain">Use a pre-trained model to bootstrap the learning?</param>
+        IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true);
 
         /// <summary>
         /// Scoring function for the model
@@ -95,7 +96,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
         public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
-        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false);
+        public abstract IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true);
         public double Score(IList<double> features)
         {
             return Parameters.Score(features);
@@ -492,6 +493,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestWeightedReferenceShapeCalc(), 
             new MQuestWeightedReferenceCoElutionCalc(),
             new LegacyUnforcedCountScoreStandardCalc(),
+
+            // Reference standard self-calculators
+            new MQuestStandardIntensityCalc(), 
+            new MQuestStandardIntensityCorrelationCalc(), 
+            new NextGenStandardSignalNoiseCalc(),
+            new NextGenStandardProductMassErrorCalc(),
+            new MQuestStandardWeightedShapeCalc(),
+            new MQuestStandardWeightedCoElutionCalc(), 
 
             // Precursor calculators
             new NextGenCrossWeightedShapeCalc(),

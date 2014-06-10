@@ -2283,7 +2283,7 @@ namespace pwiz.Skyline.Properties
             get { return "QuaSAR Input"; } // Not L10N
         }
 
-        public override int RevisionIndexCurrent { get { return 1; } }
+        public override int RevisionIndexCurrent { get { return 2; } }
 
         public override IEnumerable<ReportSpec> GetDefaults(int revisionIndex)
         {
@@ -2341,12 +2341,13 @@ namespace pwiz.Skyline.Properties
                                         new ReportColumn(tableTranRes, "Background"),
                                         new ReportColumn(tableTranRes, "PeakRank"),
                                                                }
-                                              })
+                                              }),
                         // ReSharper restore NonLocalizedString
                         });
-
+            
             if (revisionIndex < 1)
                 return listDefaults;
+
             // ReSharper disable NonLocalizedString
             listDefaults.AddRange(new[]
                                     {
@@ -2365,7 +2366,25 @@ namespace pwiz.Skyline.Properties
     </select>
   </report>").ChangeName(SRM_COLLIDER_REPORT_NAME),
                                     });
+
+            if (revisionIndex < 2)
+                return listDefaults;
+
+            listDefaults.Add((ReportSpec)DeserializeItem(
+@"<report name=""Peak Boundaries"">
+    <table name=""T1"">DbPrecursorResult</table>
+    <table name=""T2"">DbPrecursor</table>
+    <select>
+      <column name=""T1"">PeptideResult.ProteinResult.FileName</column>
+      <column name=""T2"">Peptide.ModifiedSequence</column>
+      <column name=""T1"">MinStartTime</column>
+      <column name=""T1"">MaxEndTime</column>
+      <column name=""T2"">Charge</column>
+      <column name=""T2"">IsDecoy</column>
+    </select>
+  </report>").ChangeName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries));
             // ReSharper restore NonLocalizedString
+
             return listDefaults;
         }
 

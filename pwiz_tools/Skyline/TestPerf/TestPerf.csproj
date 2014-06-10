@@ -133,11 +133,13 @@
     <Compile Include="PerfChorusContentsTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
+    <Compile Include="PerfOpenSwathConvert.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PeakScoreCompareTest.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PerfMinimizeResultsTest.cs" />
     <Compile Include="PerfPeakTest.cs" />
+    <Compile Include="PerfPeakViewConvert.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

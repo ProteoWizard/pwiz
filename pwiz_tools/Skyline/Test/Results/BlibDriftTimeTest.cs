@@ -82,7 +82,7 @@ namespace pwiz.SkylineTest.Results
                     tolerance, true, out chromGroupInfo));
                 Assert.AreEqual(1, chromGroupInfo.Length);
                 var chromGroup = chromGroupInfo[0];
-                Assert.AreEqual(2 , chromGroup.NumPeaks); // This will be higher if we don't filter on DT
+                Assert.AreEqual(4 , chromGroup.NumPeaks); // This will be higher if we don't filter on DT
                 foreach (var tranInfo in chromGroup.TransitionPointSets)
                 {
                     maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);

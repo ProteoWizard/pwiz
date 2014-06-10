@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private ReadOnlyCollection<IPeakFeatureCalculator> _peakFeatureCalculators;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
-        private const int MAX_ITERATIONS = 7;
+        private const int MAX_ITERATIONS = 20;
         public const double DEFAULT_R_LAMBDA = 0.4;    // Lambda for pi-zero from original R mProphet
 
         /// <summary>
@@ -110,11 +110,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new NextGenSignalNoiseCalc(),
             new NextGenProductMassErrorCalc(),
 
-            // Reference standard calculators
+            // Reference standard cross-calculators
             new MQuestReferenceCorrelationCalc(),
             new MQuestWeightedReferenceShapeCalc(), 
             new MQuestWeightedReferenceCoElutionCalc(),
             new LegacyUnforcedCountScoreStandardCalc(),
+
+            // Reference standard self-calculators
+            new MQuestStandardIntensityCalc(), 
+            new MQuestStandardIntensityCorrelationCalc(),
+            new NextGenStandardSignalNoiseCalc(),
+            new NextGenStandardProductMassErrorCalc(),
+            new MQuestStandardWeightedShapeCalc(),
+            new MQuestStandardWeightedCoElutionCalc(), 
 
             // Precursor calculators
             new NextGenCrossWeightedShapeCalc(),
@@ -148,8 +156,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="decoys">Decoy transition groups.</param>
         /// <param name="initParameters">Initial model parameters (weights and bias)</param>
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
+        /// <param name="preTrain">Use a pre-trained model to bootstrap the learning.</param>
         /// <returns>Immutable model with new weights.</returns>
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true)
         {
             if(initParameters == null)
                 initParameters = new LinearModelParams(_peakFeatureCalculators.Count);
@@ -159,6 +168,29 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     decoys = decoys.Where(list => list.Count > 0).ToList();
                     var targetTransitionGroups = new ScoredGroupPeaksSet(targets);
                     var decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
+                    // Bootstrap from the pre-trained legacy model
+                    if (preTrain)
+                    {
+                        var preTrainedWeights = new double[initParameters.Weights.Count];
+                        for (int i = 0; i < preTrainedWeights.Length; ++i)
+                        {
+                            if (double.IsNaN(initParameters.Weights[i]))
+                            {
+                                preTrainedWeights[i] = double.NaN;
+                            }
+                        }
+                        var calculators = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators;
+                        for (int i = 0; i < calculators.Count; ++i)
+                        {
+                            var calculator = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators[i];
+                            SetCalculatorValue(calculator.GetType(), LegacyScoringModel.DEFAULT_WEIGHTS[i], preTrainedWeights);
+                        }
+                        // Legacy doesn't have analyte or standard intensity, so add these in
+                        SetCalculatorValue(typeof(MQuestIntensityCalc), 1.0, preTrainedWeights);
+                        SetCalculatorValue(typeof(MQuestStandardIntensityCalc), 2.0, preTrainedWeights);
+                        targetTransitionGroups.ScorePeaks(preTrainedWeights);
+                        decoyTransitionGroups.ScorePeaks(preTrainedWeights);
+                    }
 
                     // Iteratively refine the weights through multiple iterations.
                     var calcWeights = new double[initParameters.Weights.Count];
@@ -179,6 +211,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     im.UsesSecondBest = includeSecondBest;
                     im.UsesDecoys = decoys.Count > 0;
                 });
+        }
+
+        /// <summary>
+        /// Searches for a calculator type in the PeakFeatureCalculators and sets it if finds it and if
+        /// that calculator is currently active
+        /// </summary>
+        /// <param name="calculatorType">Type of the calculator to be found</param>
+        /// <param name="setValue">Value to which to set the calculator</param>
+        /// <param name="weightsToSet">Weight array whose values are to be set</param>
+        private void SetCalculatorValue(Type calculatorType, double setValue, double[] weightsToSet)
+        {
+            int indexStandardIntensity = PeakFeatureCalculators.IndexOf(calc => calc.GetType() == calculatorType);
+            if (indexStandardIntensity != -1 && !double.IsNaN(weightsToSet[indexStandardIntensity]))
+            {
+                weightsToSet[indexStandardIntensity] = setValue;
+            }
         }
 
         /// <summary>

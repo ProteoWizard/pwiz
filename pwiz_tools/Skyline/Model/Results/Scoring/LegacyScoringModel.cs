@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel_DEFAULT_NAME_Default;
 
-        public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6};
+        public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6, W7, W8, W9};
 
         public static LinearModelParams DEFAULT_PARAMS { get { return new LinearModelParams(DEFAULT_WEIGHTS); } }
 
@@ -51,6 +51,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private const double W4 = 3.0; // Library intensity correlation
         private const double W5 = 4.0; // Shape score
         private const double W6 = -0.05; // Co-elution (weighted)
+        private const double W7 = W4 * LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Library intensity for standard
+        private const double W8 = W5 * LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Shape score for standard
+        private const double W9 = W6 * LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Co-elution (weighted) for standard
+
 
         public static double Score(double logUnforcedArea,
                                    double unforcedCountScore,
@@ -90,11 +94,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     new LegacyIdentifiedCountCalc(),
                     new MQuestIntensityCorrelationCalc(),
                     new MQuestWeightedShapeCalc(),
-                    new MQuestWeightedCoElutionCalc(), 
+                    new MQuestWeightedCoElutionCalc(),
+                    new MQuestStandardIntensityCorrelationCalc(), 
+                    new MQuestStandardWeightedShapeCalc(), 
+                    new MQuestStandardWeightedCoElutionCalc(),
                 });
         } 
 
-        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false)
+        public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true)
         {
             return ChangeProp(ImClone(this), im =>
             {
