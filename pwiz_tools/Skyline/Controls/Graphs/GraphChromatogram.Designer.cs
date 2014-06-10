@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+﻿using System;
+
+namespace pwiz.Skyline.Controls.Graphs
 {
     partial class GraphChromatogram
     {
@@ -59,6 +61,7 @@
             this.graphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseDownEvent);
             this.graphControl.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseUpEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);
+            this.graphControl.MouseLeave += new EventHandler(this.graphControl_MouseLeaveEvent);
             // 
             // toolBar
             // 

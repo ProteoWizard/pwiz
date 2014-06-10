@@ -290,13 +290,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (ClickedChromatogram == null)
                 return;
 
-            if (!_fullScanTrackingPoint.IsVisible)
-            {
-                _fullScanSelectedPoint.IsVisible = false;
-                ClickedChromatogram(this, new ClickedChromatogramEventArgs(null, 0, 0));
-                return;
-            }
-
             var clickedItem = (ChromGraphItem) _closestCurve.Tag;
             if (clickedItem.TransitionNode == null)
                 return;
@@ -2669,6 +2662,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            _fullScanTrackingPoint.IsVisible = false;
+
             // Don't allow editing if multiple peptides are selected.
             if (_showPeptideTotals)
                 return false;
@@ -2677,13 +2672,18 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
             {
                 graphControl.Cursor = Cursors.VSplit;
-                if (DoDrag(_peakBoundDragInfos.First().GraphPane, pt))
-                    Refresh();
+                DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
+                Refresh();
                 return true;
             }
 
             if (e.Button != MouseButtons.None)
+            {
+                Refresh();
                 return false;
+            }
+
+            bool doFullScanTracking = _showingTransitions;
 
             using (Graphics g = CreateGraphics())
             {
@@ -2695,12 +2695,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     var label = nearest as TextObj;
                     if (label != null)
                     {
+                        doFullScanTracking = false;
                         TransitionGroupDocNode nodeGroup;
                         TransitionDocNode nodeTran;
                         if ((!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran).IsZero) ||
                             !FindAnnotatedSpectrumRetentionTime(label).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
+                            Refresh();
                             return true;
                         }
                     }
@@ -2711,22 +2713,28 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (!FindAnnotatedSpectrumRetentionTime(line).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
+                            Refresh();
                             return true;
                         }
                         GraphPane graphPane;
                         if (!_extractor.HasValue && (!FindBestPeakBoundary(pt, out graphPane, out graphItem).IsZero || graphPane != nearestGraphPane))
                         {
                             graphControl.Cursor = Cursors.VSplit;
+                            Refresh();
                             return true;
                         }
                     }
 
                     if (_extractor.HasValue)
+                    {
+                        Refresh();
                         return false;
+                    }
 
                     if (nearest is XAxis && IsGroupActive)
                     {
                         graphControl.Cursor = Cursors.VSplit;
+                        Refresh();
                         return true;
                     }
 
@@ -2734,23 +2742,26 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Show full scan tracking dot.
-            if (_showingTransitions)
+            ShowHighlightPoint(pt, doFullScanTracking);
+            if (IsOverHighlightPoint(pt))
             {
-                ShowHighlightPoint(pt);
-                if (IsOverHighlightPoint(pt))
-                {
-                    graphControl.Cursor = Cursors.Hand;
-                    return true;
-                }
+                graphControl.Cursor = Cursors.Hand;
+                return true;
             }
 
             return false;
         }
 
+
+        private void graphControl_MouseLeaveEvent(object sender, EventArgs e)
+        {
+            _fullScanTrackingPoint.IsVisible = false;
+            ShowHighlightPoint(new PointF(0, 0), false);
+        }
+
         private bool IsOverHighlightPoint(PointF pt)
         {
-            return _fullScanTrackingPoint.IsVisible &&
-                   GetDistanceSquared(pt, _fullScanTrackingPointLocation) < FullScanPointSize*FullScanPointSize/4;
+            return GetDistanceSquared(pt, _fullScanTrackingPointLocation) < FullScanPointSize*FullScanPointSize/4;
         }
 
         private CurveItem _closestCurve;
@@ -2759,11 +2770,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Display the closest curve point to the cursor.
         /// </summary>
         /// <param name="pt">Cursor coordinates</param>
-        private void ShowHighlightPoint(PointF pt)
+        /// <param name="showPoint">True to display tracking point.</param>
+        private void ShowHighlightPoint(PointF pt, bool showPoint)
         {
+            _fullScanTrackingPoint.IsVisible = false;
+
             var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
-            if (graphPane == null)
-                return;
 
             // Add tracking and selection points.
             var selectedPane = GetScanSelectedPane();
@@ -2772,31 +2784,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 _fullScanSelectedPoint.IsVisible = true;
                 selectedPane.CurveList.Insert(0, _fullScanSelectedPoint);
             }
-            graphPane.CurveList.Insert(0, _fullScanTrackingPoint);
 
-            // Find the closest curve point to the cursor.
-            graphPane.FindClosestCurve(pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
-
-            // Display the highlight point.
-            _fullScanTrackingPoint.IsVisible = false;
-            if (_closestCurve != null)
+            if (graphPane != null && showPoint)
             {
-                double x, y;
-                graphPane.ReverseTransform(_fullScanTrackingPointLocation, out x, out y);
-                _fullScanTrackingPoint.Points = new PointPairList();
-                _fullScanTrackingPoint.AddPoint(x, y);
-                _fullScanTrackingPoint.Symbol.Fill.Color = Color.FromArgb(150, _closestCurve.Color);
-                _fullScanTrackingPoint.Symbol.Border.Color = Color.FromArgb(
-                    (int) (_closestCurve.Color.R*0.6),
-                    (int) (_closestCurve.Color.G*0.6),
-                    (int) (_closestCurve.Color.B*0.6));
-                _fullScanTrackingPoint.IsVisible = true;
-            }
-                
-            Refresh();
+                // Find the closest curve point to the cursor.
+                graphPane.FindClosestCurve(pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
 
-            // Remove tracking and selection points.
-            graphPane.CurveList.RemoveAt(0);
+                // Display the highlight point.
+                if (_closestCurve != null)
+                {
+                    double x, y;
+                    graphPane.ReverseTransform(_fullScanTrackingPointLocation, out x, out y);
+                    _fullScanTrackingPoint.Points = new PointPairList();
+                    _fullScanTrackingPoint.AddPoint(x, y);
+                    _fullScanTrackingPoint.Symbol.Fill.Color = Color.FromArgb(150, _closestCurve.Color);
+                    _fullScanTrackingPoint.Symbol.Border.Color = Color.FromArgb(
+                        (int) (_closestCurve.Color.R*0.6),
+                        (int) (_closestCurve.Color.G*0.6),
+                        (int) (_closestCurve.Color.B*0.6));
+                    _fullScanTrackingPoint.IsVisible = true;
+                    graphPane.CurveList.Insert(0, _fullScanTrackingPoint);
+                    Refresh();
+                    graphPane.CurveList.RemoveAt(0);
+                }
+                else
+                {
+                    Refresh();
+                }
+            }
+            else
+            {
+                Refresh();
+            }
+
             if (selectedPane != null)
                 selectedPane.CurveList.RemoveAt(0);
         }
