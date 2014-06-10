@@ -449,7 +449,9 @@ namespace BumberDash
             {
                 foreach (var file in _moveFileList)
                 {
-                    var correctOutput = Path.Combine(_currentHI.OutputDirectory, Path.GetFileName(file)??string.Empty);
+                    var correctOutput =
+                        Path.Combine(_currentHI.OutputDirectory, Path.GetFileName(file) ?? string.Empty)
+                            .Replace("*", string.Empty).Replace("+", string.Empty);
                     if (File.Exists(file) && !File.Exists(correctOutput))
                         File.Move(file, correctOutput);
                 }
