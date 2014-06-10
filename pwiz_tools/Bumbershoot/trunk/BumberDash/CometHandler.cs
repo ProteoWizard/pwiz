@@ -17,7 +17,6 @@ namespace BumberDash
         public int MaxMods { get; set; }
         public double FragmentBinTolerance { get; set; } //unique
         public double FragmentBinOffset { get; set; } //unique
-        public string ActivationMethod { get; set; } //unique
         public string OutputSuffix { get; set; }
         public int CleavageAgent { get; set; }
         private int _maxMissedCleavages;
@@ -38,19 +37,16 @@ namespace BumberDash
             {
                 FragmentBinTolerance = 1.0005;
                 FragmentBinOffset = 0.4;
-                ActivationMethod = ActivationMethodOptions.CID;
             }
             else if (configuration == Preconfigurations.Tof)
             {
                 FragmentBinTolerance = 0.1;
                 FragmentBinOffset = 0.0;
-                ActivationMethod = ActivationMethodOptions.HCD;
             }
             else if (configuration == Preconfigurations.HighResolution)
             {
                 FragmentBinTolerance = 0.02;
                 FragmentBinOffset = 0.0;
-                ActivationMethod = ActivationMethodOptions.HCD;
             }
             else throw new Exception("Invalid Comet Preconfiguration");
 
@@ -90,17 +86,6 @@ namespace BumberDash
         {
             public static int SemiTryptic = 1;
             public static int Tryptic = 2;
-        }
-
-        public static class ActivationMethodOptions
-        {
-            public static string All = "ALL";
-            public static string CID = "CID";
-            public static string ECD = "ECD";
-            public static string ETD = "ETD";
-            public static string PQD = "PQD";
-            public static string HCD = "HCD";
-            public static string IRMPD = "IRMPD";
         }
 
         public static Dictionary<string,int> CleavageAgentOptions
@@ -214,7 +199,7 @@ namespace BumberDash
             configFile.WriteLine("use_Y_ions = 1");
             configFile.WriteLine("use_Z_ions = 0");
             configFile.WriteLine("use_NL_ions = 1                        # 0=no, 1=yes to consider NH3/H2O neutral loss peaks");
-            configFile.WriteLine("use_sparse_matrix = 0");
+            configFile.WriteLine("use_sparse_matrix = 1");
             configFile.WriteLine("");
             configFile.WriteLine("#");
             configFile.WriteLine("# output");
@@ -239,7 +224,7 @@ namespace BumberDash
             configFile.WriteLine("scan_range = 0 0                       # start and scan scan range to search; 0 as 1st entry ignores parameter");
             configFile.WriteLine("precursor_charge = 0 0                 # precursor charge range to analyze; does not override mzXML charge; 0 as 1st entry ignores parameter");
             configFile.WriteLine("ms_level = 2                           # MS level to analyze, valid are levels 2 (default) or 3");
-            configFile.WriteLine("activation_method = {0}                # activation method; used if activation method set; allowed ALL, CID, ECD, ETD, PQD, HCD, IRMPD",options.ActivationMethod);
+            configFile.WriteLine("activation_method = ALL                # activation method; used if activation method set; allowed ALL, CID, ECD, ETD, PQD, HCD, IRMPD");
             configFile.WriteLine("");
             configFile.WriteLine("#");
             configFile.WriteLine("# misc parameters");
@@ -379,9 +364,6 @@ namespace BumberDash
                         if (!validNumber)
                             break;
                         config.FragmentBinOffset = nextNumber;
-                        break;
-                    case "activation_method":
-                        config.ActivationMethod = match.Groups[2].Value;
                         break;
                     case "add_C_cysteine":
                         if (!validNumber)

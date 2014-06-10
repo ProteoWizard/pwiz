@@ -227,9 +227,9 @@ namespace BumberDash.Forms
             }
             else if (currentPanel == InstrumentPanel)
             {
-                if (!PrecursorLowRadio.Checked && !PrecursorHighRadio.Checked)
+                if (!PrecursorLowRadio.Checked && !PrecursorMidRadio.Checked && !PrecursorHighRadio.Checked)
                     return false;
-                if (!FragmentLowRadio.Checked && !FragmentHighRadio.Checked)
+                if (!FragmentLowRadio.Checked && !FragmentMidRadio.Checked && !FragmentHighRadio.Checked)
                     return false;
             }
             return true;
@@ -460,7 +460,7 @@ namespace BumberDash.Forms
             if (DBRadio.Checked)
             {
                 PrimarySuffixLabel.Text = "MyriMatch suffix";
-                if (DBRadio.Checked && MyriBox.Checked)
+                if (DBRadio.Checked && ((MyriBox.Checked ? 1 : 0) + (CometBox.Checked ? 1 : 0) + (MSGFBox.Checked ? 1 : 0)) > 1)
                 {
                     SuffixBox.Checked = true;
                     SuffixBox.Enabled = false;
@@ -945,7 +945,20 @@ namespace BumberDash.Forms
                     PropertyList = new List<ConfigProperty>(),
                     FilePath = "--Custom--"
                 };
-                if (destinationProgram == "DirecTag" || destinationProgram == "TagRecon")
+                if (destinationProgram == "DirecTag")
+                {
+                    var tolerance = double.Parse(PrecursorToleranceBox.Text);
+                    if (PrecursorToleranceUnitsBox.Text == "ppm")
+                        tolerance /= 1000;
+                    config.PropertyList.Add(new ConfigProperty
+                    {
+                        Name = "PrecursorMzTolerance",
+                        Value = tolerance.ToString(),
+                        Type = "string",
+                        ConfigAssociation = config
+                    });
+                }
+                else if (destinationProgram == "TagRecon")
                     config.PropertyList.Add(new ConfigProperty
                         {
                             Name = "PrecursorMzTolerance",
@@ -969,13 +982,41 @@ namespace BumberDash.Forms
                         Type = "string",
                         ConfigAssociation = config
                     });
-                config.PropertyList.Add(new ConfigProperty
+                if (destinationProgram == "DirecTag")
                 {
-                    Name = "FragmentMzTolerance",
-                    Value = "\"" + FragmentToleranceBox.Text + FragmentToleranceUnitsBox.Text + "\"",
-                    Type = "string",
-                    ConfigAssociation = config
-                });
+                    var tolerance = double.Parse(FragmentToleranceBox.Text);
+                    if (FragmentToleranceUnitsBox.Text == "ppm")
+                        tolerance /= 1000;
+                    config.PropertyList.Add(new ConfigProperty
+                    {
+                        Name = "FragmentMzTolerance",
+                        Value = tolerance.ToString(),
+                        Type = "string",
+                        ConfigAssociation = config
+                    });
+                    config.PropertyList.Add(new ConfigProperty
+                    {
+                        Name = "ComplementMzTolerance",
+                        Value = tolerance.ToString(),
+                        Type = "string",
+                        ConfigAssociation = config
+                    });
+                    config.PropertyList.Add(new ConfigProperty
+                    {
+                        Name = "IsotopeMzTolerance",
+                        Value = tolerance.ToString(),
+                        Type = "string",
+                        ConfigAssociation = config
+                    });
+                }
+                else
+                    config.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = "FragmentMzTolerance",
+                            Value = "\"" + FragmentToleranceBox.Text + FragmentToleranceUnitsBox.Text + "\"",
+                            Type = "string",
+                            ConfigAssociation = config
+                        });
 
                 if (destinationProgram != "DirecTag")
                 {

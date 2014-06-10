@@ -1047,11 +1047,27 @@ namespace BumberDash.Forms
                     {
                         foreach (var file in hi.FileList)
                         {
-                            var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value));
+                            var fedPathList = new List<string>();
+                            if (file.FilePath.StartsWith("!"))
+                            {
+                                var basePath = file.FilePath.Replace("!", string.Empty);
+                                var directory = Path.GetDirectoryName(basePath) ?? string.Empty;
+                                var fileMask = Path.GetFileName(basePath) ?? string.Empty;
+                                var fileList = Directory.GetFiles(directory, fileMask);
+                                if (fileList.Length == 0)
+                                    throw new Exception("Error encountered while trying to remove files");
+                                fedPathList.AddRange(fileList);
+                            }
+                            else
+                                fedPathList.Add(file.FilePath);
+                            foreach (var subFile in fedPathList)
+                            {
+                                var fileOnly = Path.GetFileNameWithoutExtension(subFile.Trim('"')).Replace("*",string.Empty).Replace("+",string.Empty);
+                                DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value));
+                                DeleteFile(String.Format(@"{0}\{1}{2}.mzid", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value));
+                            }
                         }
                     }
                     else
@@ -1060,15 +1076,31 @@ namespace BumberDash.Forms
 						var secondConfig = secondConfigList.Any() ? secondConfigList[0] : null;
                         foreach (var file in hi.FileList)
                         {
-                            var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.tags", trimmedOutput, fileOnly,
+                            var fedPathList = new List<string>();
+                            if (file.FilePath.StartsWith("!"))
+                            {
+                                var basePath = file.FilePath.Replace("!", string.Empty);
+                                var directory = Path.GetDirectoryName(basePath) ?? string.Empty;
+                                var fileMask = Path.GetFileName(basePath) ?? string.Empty;
+                                var fileList = Directory.GetFiles(directory, fileMask);
+                                if (fileList.Length == 0)
+                                    throw new Exception("Error encountered while trying to remove files");
+                                fedPathList.AddRange(fileList);
+                            }
+                            else
+                                fedPathList.Add(file.FilePath);
+                            foreach (var subFile in fedPathList)
+                            {
+                                var fileOnly = Path.GetFileNameWithoutExtension(subFile.Trim('"')).Replace("*", string.Empty).Replace("+", string.Empty);
+                                DeleteFile(String.Format(@"{0}\{1}{2}.tags", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value,
-                                                     secondConfig == null ? string.Empty : secondConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", trimmedOutput, fileOnly,
-                                                     firstConfig == null ? string.Empty : firstConfig.Value,
-                                                     secondConfig == null ? string.Empty : secondConfig.Value));
+                                DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value,
+                                                         secondConfig == null ? string.Empty : secondConfig.Value));
+                                DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", trimmedOutput, fileOnly,
+                                                         firstConfig == null ? string.Empty : firstConfig.Value,
+                                                         secondConfig == null ? string.Empty : secondConfig.Value));
+                            }
                         }
                     }
                     if (hi.OutputDirectory.EndsWith("*"))
