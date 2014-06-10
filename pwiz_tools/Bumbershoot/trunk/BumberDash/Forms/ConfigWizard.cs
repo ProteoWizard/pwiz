@@ -60,6 +60,7 @@ namespace BumberDash.Forms
             FragmentToleranceUnitsBox.Text = "ppm";
             SpecificityBox.Text = "Fully-Specific";
             ModBox.Rows.Add(new object[] {"C", 57.021464, "Static"});
+            ModBox.Rows.Add(new object[] { "M", 15.994915, "Dynamic" });
             DBSavedBrowse.Enabled = (!string.IsNullOrEmpty(Properties.Settings.Default.DatabaseFolder)
                                      && Directory.Exists(Properties.Settings.Default.DatabaseFolder));
             LibSavedBrowse.Enabled = (!string.IsNullOrEmpty(Properties.Settings.Default.LibraryFolder)

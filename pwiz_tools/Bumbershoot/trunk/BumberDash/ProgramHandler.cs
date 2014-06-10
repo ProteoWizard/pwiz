@@ -192,8 +192,39 @@ namespace BumberDash
                     }
                     break;
                 case "MSGF":
+                    //find java path
+                    var javaPath = string.Empty;
+                    string environmentPath = Environment.GetEnvironmentVariable("JAVA_HOME");
+                    if (!string.IsNullOrEmpty(environmentPath))
+                        javaPath = environmentPath;
+                    else
+                    {
+                        var javaKey = "SOFTWARE\\JavaSoft\\Java Runtime Environment\\";
+                        var rk = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(javaKey);
+                        if (rk != null)
+                        {
+                            string currentVersion = rk.GetValue("CurrentVersion").ToString();
+                            using (Microsoft.Win32.RegistryKey key = rk.OpenSubKey(currentVersion))
+                                javaPath = key.GetValue("JavaHome").ToString();
+                        }
+                        else
+                        {
+                            javaKey = "SOFTWARE\\JavaSoft\\Java Development Kit\\";
+                            rk = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(javaKey);
+                            if (rk != null)
+                            {
+                                string currentVersion = rk.GetValue("CurrentVersion").ToString();
+                                using (Microsoft.Win32.RegistryKey key = rk.OpenSubKey(currentVersion))
+                                    javaPath = key.GetValue("JavaHome").ToString();
+                            }
+                        }
+                        
+                    }
+                    if (javaPath == string.Empty)
+                        throw new Exception("Could not locate Java path");
+
                     //Set  location of the program
-                    psi = new ProcessStartInfo("java.exe");
+                    psi = new ProcessStartInfo(Path.Combine(javaPath, "bin\\java.exe"));
 
                     if (_msgfList == null || _msgfList.Count == 0)
                     {
