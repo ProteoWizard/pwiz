@@ -1586,7 +1586,7 @@ namespace BumberDash.Forms
                 _session.Flush();
             }
             else if (!Directory.Exists(hi.OutputDirectory))
-                Directory.CreateDirectory(hi.OutputDirectory);
+                Directory.CreateDirectory(hi.OutputDirectory.Replace("*", string.Empty));
 
             hi.StartTime = DateTime.Now;
             _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);

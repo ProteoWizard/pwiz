@@ -1185,7 +1185,7 @@ namespace BumberDash
             {
                 SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
-            else if (recievedLine.Contains("Myrimatch search..."))
+            else if (recievedLine.Contains("Preprocessing spectra finished"))
             {
                 SetRunStatus(String.Format("Searching File {0} of {1} ({2})", _fileProcessing,
                                            _filesToProcess, 0), false);
