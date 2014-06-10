@@ -308,7 +308,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Waters MSe is enumerated in two separate runs ("functions" in the raw data), first MS1 and then MS/MS
                 // Bruker MSe is enumerated in interleaved MS1 and MS/MS scans
-                // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...)
+                // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...) 
+                //    but with ion mobility, as of June 2014, it's just a series of MS2 scans with a single nonzero CE, or MS1 scans with 0 CE
                 if (_isAgilentMse)
                 {
                     if (1 == dataSpectrum.Level)

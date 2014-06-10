@@ -188,7 +188,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     }
 
     bool reportMS2ForAllIonsScan = false; // watching out for MS1 with nonzero collision energy - return as an MS2 with a huge window
-    if (1==msLevel)
+    if ((1==msLevel) || ((2==msLevel) && isIonMobilityScan)) // These are already declared MS2 in ion mobility data sets
     { 
         double collisionEnergy = scanRecordPtr->getCollisionEnergy();
         if (collisionEnergy > 0)

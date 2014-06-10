@@ -82,9 +82,13 @@ namespace pwiz.Skyline.Model.Results
                 return result;
             }
 
-            private bool NextSpectrumIsAgilentMse(int listLevel, MsDataSpectrum nextSpectrum)
+            private bool NextSpectrumIsAgilentMse(MsDataSpectrum nextSpectrum, int listLevel, double startCE)
             {
-                return (_filter.IsAgilentMse && (listLevel == 2) && (nextSpectrum.Level == 2));
+                // Average runs of MS/MS scans until the start CE is seen again
+                return (_filter.IsAgilentMse &&
+                    listLevel == 2 &&
+                    nextSpectrum.Level == 2 &&
+                    startCE != GetPrecursorCollisionEnergy(nextSpectrum));
             }
 
             // Deal with ion mobility data - look ahead for a run of scans all
@@ -97,6 +101,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var spectrumList = new List<MsDataSpectrum>();
                 int listLevel = dataSpectrum.Level;
+                double startCE = GetPrecursorCollisionEnergy(dataSpectrum);
                 _previousDriftTime = -1;
                 double rtTotal = 0;
                 double? rtFirst = null;
@@ -120,7 +125,7 @@ namespace pwiz.Skyline.Model.Results
                         //   Retention time hasn't changed but drift time has increased, or
                         //   Agilent ramped-CE data - MS2 scans get averaged
                         if (!(NextSpectrumIsDriftScanForCurrentRetentionTime(dataSpectrum) ||
-                              NextSpectrumIsAgilentMse(listLevel, dataSpectrum)))
+                              NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE)))
                             break;
                     }
                 }
@@ -132,6 +137,12 @@ namespace pwiz.Skyline.Model.Results
                 return spectrumList.ToArray();
             }
 
+            private static double GetPrecursorCollisionEnergy(MsDataSpectrum dataSpectrum)
+            {
+                return dataSpectrum.Precursors.Length > 0
+                    ? dataSpectrum.Precursors[0].PrecursorCollisionEnergy ?? 0
+                    : 0;
+            }
         }
 
         /// <summary>
