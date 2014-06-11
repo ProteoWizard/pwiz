@@ -285,11 +285,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphControl.AddGraphItem(chromDisplayState.GetOrCreateGraphPane(GraphControl, paneKey), chromGraphItem, false);
         }
 
-        public MSGraphPane GetGraphPane(PaneKey paneKey)
-        {
-            return _displayState.GetGraphPane(GraphControl, paneKey);
-        }
-
         public CurveItem AddSpectrum(AbstractSpectrumGraphItem item)
         {
             var pane = _displayState.GetOrCreateGraphPane(GraphControl, PaneKey.DEFAULT);
