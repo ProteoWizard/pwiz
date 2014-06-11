@@ -476,6 +476,7 @@ namespace BumberDash
                 ProcessJob(_currentHI);
                 return;
             }
+            _msgfList = null;
             if ((_destinationProgram == "Comet" || _destinationProgram == "MSGF") && _currentHI != null)
             {
                 foreach (var file in _moveFileList)
@@ -1183,7 +1184,7 @@ namespace BumberDash
             }
             else if (recievedLine.Contains("Loading database files"))
             {
-                SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _filesToProcess), true);
+                SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _msgfList.Count), true);
             }
             else if (recievedLine.Contains("Preprocessing spectra finished"))
             {

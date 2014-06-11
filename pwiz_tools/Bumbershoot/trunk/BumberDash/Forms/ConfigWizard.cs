@@ -302,7 +302,7 @@ namespace BumberDash.Forms
             var ofd = new OpenFileDialog
                 {
                     RestoreDirectory = true,
-                    Filter = "FASTA Myrimatch|*.fasta;*.fasta.index"
+                    Filter = "FASTA Myrimatch|*.fasta"
                 };
             var inputFile = GetInputFileNames()[0];
             if (!FileSelectModeBox.Checked)
