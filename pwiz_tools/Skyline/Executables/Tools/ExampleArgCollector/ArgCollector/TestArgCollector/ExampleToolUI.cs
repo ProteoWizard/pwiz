@@ -1,15 +1,16 @@
 ﻿using System.Globalization;
 using System.Windows.Forms;
+using ExampleArgCollector.Properties;
 
 namespace ExampleArgCollector
 {
+// ReSharper disable once InconsistentNaming
     public partial class ExampleToolUI : Form
     {
         public string[] Arguments { get; private set; }
 
         public ExampleToolUI(string[] oldArguments)
         {
-
             InitializeComponent();
             comboBoxTest.SelectedIndex = 1;
             Arguments = oldArguments;
@@ -38,13 +39,13 @@ namespace ExampleArgCollector
             //users cursor on textBoxTest, and return false.
             if (textBoxTest.TextLength == 0)
             {
-                MessageBox.Show("Text Box must be filled");
+                MessageBox.Show(Resources.ExampleToolUI_VerifyArguments_Text_Box_must_be_filled);
                 textBoxTest.Focus();
                 return false;
             }
             if (comboBoxTest.SelectedIndex == 0 & checkBoxTest.Checked)
             {
-                MessageBox.Show("If option 1 is selected the check box must be checked");
+                MessageBox.Show(Resources.ExampleToolUI_VerifyArguments_If_option_1_is_selected_the_check_box_must_be_checked);
                 return false;
             }
            
@@ -66,6 +67,7 @@ namespace ExampleArgCollector
         private void btnCancel_Click(object sender, System.EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
+
         }
     }
 
@@ -80,11 +82,8 @@ namespace ExampleArgCollector
                 {
                     return (dlg.ShowDialog(parent) == DialogResult.OK) ? dlg.Arguments : null;
                 }
-                else
-                {
-                    dlg.StartPosition = FormStartPosition.WindowsDefaultLocation;
-                    return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
-                }
+                dlg.StartPosition = FormStartPosition.WindowsDefaultLocation;
+                return (dlg.ShowDialog() == DialogResult.OK) ? dlg.Arguments : null;
             }
         }
     }
