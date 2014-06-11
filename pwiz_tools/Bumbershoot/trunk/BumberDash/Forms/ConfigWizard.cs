@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -59,8 +60,8 @@ namespace BumberDash.Forms
             PrecursorToleranceUnitsBox.Text = "ppm";
             FragmentToleranceUnitsBox.Text = "ppm";
             SpecificityBox.Text = "Fully-Specific";
-            ModBox.Rows.Add(new object[] {"C", 57.021464, "Static"});
-            ModBox.Rows.Add(new object[] { "M", 15.994915, "Dynamic" });
+            ModBox.Rows.Add(new object[] {"C", 57.021464.ToString(), "Static"});
+            ModBox.Rows.Add(new object[] { "M", 15.994915.ToString(), "Dynamic" });
             DBSavedBrowse.Enabled = (!string.IsNullOrEmpty(Properties.Settings.Default.DatabaseFolder)
                                      && Directory.Exists(Properties.Settings.Default.DatabaseFolder));
             LibSavedBrowse.Enabled = (!string.IsNullOrEmpty(Properties.Settings.Default.LibraryFolder)
@@ -243,7 +244,8 @@ namespace BumberDash.Forms
             {
                 if (!(e.KeyChar.Equals('-') && ((TextBox)sender).SelectionStart == 0 && !((TextBox)sender).Text.Contains('-')))
                 {
-                    if (!(e.KeyChar.Equals('.') && !((TextBox)sender).Text.Contains('.')))
+                    if (!(e.KeyChar.Equals('.') && !((TextBox)sender).Text.Contains('.')) &&
+                        !(e.KeyChar.Equals(',') && !((TextBox)sender).Text.Contains(',')))
                     {
                         e.Handled = true;
                     }
@@ -520,7 +522,7 @@ namespace BumberDash.Forms
                                    && (FragmentLowRadio.Checked || FragmentMidRadio.Checked || FragmentHighRadio.Checked));
             if (PrecursorLowRadio.Checked)
             {
-                PrecursorToleranceBox.Text = "1.5";
+                PrecursorToleranceBox.Text = 1.5.ToString();
                 PrecursorToleranceUnitsBox.Text = "mz";
             }
             else if (PrecursorMidRadio.Checked)
@@ -536,7 +538,7 @@ namespace BumberDash.Forms
 
             if (FragmentLowRadio.Checked)
             {
-                FragmentToleranceBox.Text = "0.5";
+                FragmentToleranceBox.Text = 0.5.ToString();
                 FragmentToleranceUnitsBox.Text = "mz";
             }
             else if (FragmentMidRadio.Checked)
@@ -691,14 +693,14 @@ namespace BumberDash.Forms
                 {
                     double value;
                     if (currentParam.Value.Trim('"').EndsWith("mz")
-                        && double.TryParse(currentParam.Value.Trim('"').Replace("mz", string.Empty), out value))
+                        && double.TryParse(currentParam.Value.Trim('"').Replace("mz", string.Empty),NumberStyles.Number,CultureInfo.InvariantCulture, out value))
                     {
                         PrecursorLowRadio.Checked = true;
                         precursor = value.ToString();
                         precursorUnit = "mz";
                     }
                     else if (currentParam.Value.Trim('"').EndsWith("ppm")
-                        && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), out value))
+                        && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), NumberStyles.Number, CultureInfo.InvariantCulture, out value))
                     {
                         if (value > 30)
                             PrecursorMidRadio.Checked = true;
@@ -713,14 +715,14 @@ namespace BumberDash.Forms
                 {
                     double value;
                     if (currentParam.Value.Trim('"').EndsWith("mz")
-                        && double.TryParse(currentParam.Value.Trim('"').Replace("mz", string.Empty), out value))
+                        && double.TryParse(currentParam.Value.Trim('"').Replace("mz", string.Empty), NumberStyles.Number, CultureInfo.InvariantCulture, out value))
                     {
                         FragmentLowRadio.Checked = true;
                         FragmentToleranceBox.Text = value.ToString();
                         FragmentToleranceUnitsBox.Text = "mz";
                     }
                     else if (currentParam.Value.Trim('"').EndsWith("ppm")
-                        && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), out value))
+                        && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), NumberStyles.Number, CultureInfo.InvariantCulture, out value))
                     {
                         if (value > 15)
                             FragmentMidRadio.Checked = true;
@@ -743,7 +745,7 @@ namespace BumberDash.Forms
                     for (var x = 0; x + 1 < splitString.Length; x += 2)
                     {
                         double mass;
-                        if (!double.TryParse(splitString[x+1],out mass))
+                        if (!double.TryParse(splitString[x + 1], NumberStyles.Number, CultureInfo.InvariantCulture, out mass))
                             continue;
                         ModBox.Rows.Add(new object[] { splitString[x], mass, "Static" });
                     }
@@ -755,7 +757,7 @@ namespace BumberDash.Forms
                     for (var x = 0; x + 2 < splitString.Length; x += 3)
                     {
                         double mass;
-                        if (!double.TryParse(splitString[x + 2], out mass))
+                        if (!double.TryParse(splitString[x + 2], NumberStyles.Number, CultureInfo.InvariantCulture, out mass))
                             continue;
                         ModBox.Rows.Add(new object[] { splitString[x], mass, "Dynamic" });
                     }
@@ -946,15 +948,15 @@ namespace BumberDash.Forms
                     PropertyList = new List<ConfigProperty>(),
                     FilePath = "--Custom--"
                 };
+                var tolerance = double.Parse(PrecursorToleranceBox.Text);
                 if (destinationProgram == "DirecTag")
                 {
-                    var tolerance = double.Parse(PrecursorToleranceBox.Text);
                     if (PrecursorToleranceUnitsBox.Text == "ppm")
                         tolerance /= 1000;
                     config.PropertyList.Add(new ConfigProperty
                     {
                         Name = "PrecursorMzTolerance",
-                        Value = tolerance.ToString(),
+                        Value = tolerance.ToString(CultureInfo.InvariantCulture),
                         Type = "string",
                         ConfigAssociation = config
                     });
@@ -963,7 +965,7 @@ namespace BumberDash.Forms
                     config.PropertyList.Add(new ConfigProperty
                         {
                             Name = "PrecursorMzTolerance",
-                            Value = "\"" + PrecursorToleranceBox.Text + PrecursorToleranceUnitsBox.Text + "\"",
+                            Value = "\"" + tolerance.ToString(CultureInfo.InvariantCulture) + PrecursorToleranceUnitsBox.Text + "\"",
                             Type = "string",
                             ConfigAssociation = config
                         });
@@ -971,7 +973,7 @@ namespace BumberDash.Forms
                     config.PropertyList.Add(new ConfigProperty
                     {
                         Name = "MonoPrecursorMzTolerance",
-                        Value = "\"" + PrecursorToleranceBox.Text + PrecursorToleranceUnitsBox.Text + "\"",
+                        Value = "\"" + tolerance.ToString(CultureInfo.InvariantCulture) + PrecursorToleranceUnitsBox.Text + "\"",
                         Type = "string",
                         ConfigAssociation = config
                     });
@@ -983,29 +985,29 @@ namespace BumberDash.Forms
                         Type = "string",
                         ConfigAssociation = config
                     });
+                tolerance = double.Parse(FragmentToleranceBox.Text);
                 if (destinationProgram == "DirecTag")
                 {
-                    var tolerance = double.Parse(FragmentToleranceBox.Text);
                     if (FragmentToleranceUnitsBox.Text == "ppm")
                         tolerance /= 1000;
                     config.PropertyList.Add(new ConfigProperty
                     {
                         Name = "FragmentMzTolerance",
-                        Value = tolerance.ToString(),
+                        Value = tolerance.ToString(CultureInfo.InvariantCulture),
                         Type = "string",
                         ConfigAssociation = config
                     });
                     config.PropertyList.Add(new ConfigProperty
                     {
                         Name = "ComplementMzTolerance",
-                        Value = tolerance.ToString(),
+                        Value = tolerance.ToString(CultureInfo.InvariantCulture),
                         Type = "string",
                         ConfigAssociation = config
                     });
                     config.PropertyList.Add(new ConfigProperty
                     {
                         Name = "IsotopeMzTolerance",
-                        Value = tolerance.ToString(),
+                        Value = tolerance.ToString(CultureInfo.InvariantCulture),
                         Type = "string",
                         ConfigAssociation = config
                     });
@@ -1014,7 +1016,7 @@ namespace BumberDash.Forms
                     config.PropertyList.Add(new ConfigProperty
                         {
                             Name = "FragmentMzTolerance",
-                            Value = "\"" + FragmentToleranceBox.Text + FragmentToleranceUnitsBox.Text + "\"",
+                            Value = "\"" + tolerance.ToString(CultureInfo.InvariantCulture) + FragmentToleranceUnitsBox.Text + "\"",
                             Type = "string",
                             ConfigAssociation = config
                         });
@@ -1040,7 +1042,7 @@ namespace BumberDash.Forms
                     config.PropertyList.Add(new ConfigProperty
                         {
                             Name = "MinTerminiCleavages",
-                            Value = SpecificityBox.SelectedIndex.ToString(),
+                            Value = SpecificityBox.SelectedIndex.ToString(CultureInfo.InvariantCulture),
                             Type = "int",
                             ConfigAssociation = config
                         });
@@ -1068,13 +1070,13 @@ namespace BumberDash.Forms
                     if (type == "Static")
                     {
                         staticMods.Add(residue);
-                        staticMods.Add(massString);
+                        staticMods.Add(mass.ToString(CultureInfo.InvariantCulture));
                     }
                     else
                     {
                         dynamicMods.Add(residue);
                         dynamicMods.Add("*");
-                        dynamicMods.Add(massString);
+                        dynamicMods.Add(mass.ToString(CultureInfo.InvariantCulture));
                     }
                 }
                 if (staticMods.Count > 0)
@@ -1221,6 +1223,14 @@ namespace BumberDash.Forms
                 return config;
             }
             throw new Exception("Invalid destination program, can't construct configuration");
+        }
+
+        private void ToleranceBox_Leave(object sender, EventArgs e)
+        {
+            double output;
+            var box = sender as TextBox ?? new TextBox();
+            if (!double.TryParse(box.Text, out output))
+                box.Text = string.Empty;
         }
     }
 }

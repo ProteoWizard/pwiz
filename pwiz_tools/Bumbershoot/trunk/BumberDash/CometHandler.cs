@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -156,7 +157,7 @@ namespace BumberDash
             configFile.WriteLine("#");
             configFile.WriteLine("# masses");
             configFile.WriteLine("#");
-            configFile.WriteLine("peptide_mass_tolerance = {0}",options.PrecursorTolerance);
+            configFile.WriteLine("peptide_mass_tolerance = {0}",options.PrecursorTolerance.ToString(CultureInfo.InvariantCulture));
             configFile.WriteLine("peptide_mass_units = {0}                 # 0=amu, 1=mmu, 2=ppm",options.PrecursorUnit);
             configFile.WriteLine("mass_type_parent = 1                   # 0=average masses, 1=monoisotopic masses");
             configFile.WriteLine("mass_type_fragment = 1                 # 0=average masses, 1=monoisotopic masses");
@@ -177,7 +178,7 @@ namespace BumberDash
             configFile.WriteLine("#");
             for (var x = 1; x <= 6; x++)
                 if (options.DynamicModifications.Count >= x)
-                    configFile.WriteLine("variable_mod{0} = {1}   {2} 0 3", x, options.DynamicModifications[x-1].MassChange,
+                    configFile.WriteLine("variable_mod{0} = {1}   {2} 0 3", x, options.DynamicModifications[x - 1].MassChange.ToString(CultureInfo.InvariantCulture),
                                       options.DynamicModifications[x-1].Residue);
                 else
                     configFile.WriteLine("variable_mod{0} = 0.0 X 0 3", x);
@@ -189,8 +190,8 @@ namespace BumberDash
             configFile.WriteLine("# ion trap ms/ms:  1.0005 tolerance, 0.4 offset (mono masses), theoretical_fragment_ions = 1");
             configFile.WriteLine("# high res ms/ms:    0.02 tolerance, 0.0 offset (mono masses), theoretical_fragment_ions = 0");
             configFile.WriteLine("#");
-            configFile.WriteLine("fragment_bin_tol = {0}              # binning to use on fragment ions",options.FragmentBinTolerance);
-            configFile.WriteLine("fragment_bin_offset = {0}              # offset position to start the binning (0.0 to 1.0)",options.FragmentBinOffset);
+            configFile.WriteLine("fragment_bin_tol = {0}              # binning to use on fragment ions", options.FragmentBinTolerance.ToString(CultureInfo.InvariantCulture));
+            configFile.WriteLine("fragment_bin_offset = {0}              # offset position to start the binning (0.0 to 1.0)", options.FragmentBinOffset.ToString(CultureInfo.InvariantCulture));
             configFile.WriteLine("theoretical_fragment_ions = 0          # 0=default peak shape, 1=M peak only");
             configFile.WriteLine("use_A_ions = 0");
             configFile.WriteLine("use_B_ions = 1");
@@ -268,7 +269,7 @@ namespace BumberDash
             configFile.WriteLine("add_P_proline = 0.0000                 # added to P - avg.  97.1152, mono.  97.05276");
             configFile.WriteLine("add_V_valine = 0.0000                  # added to V - avg.  99.1311, mono.  99.06841");
             configFile.WriteLine("add_T_threonine = 0.0000               # added to T - avg. 101.1038, mono. 101.04768");
-            configFile.WriteLine("add_C_cysteine = {0}             # added to C - avg. 103.1429, mono. 103.00918", options.StaticCysteineMod);
+            configFile.WriteLine("add_C_cysteine = {0}             # added to C - avg. 103.1429, mono. 103.00918", options.StaticCysteineMod.ToString(CultureInfo.InvariantCulture));
             configFile.WriteLine("add_L_leucine = 0.0000                 # added to L - avg. 113.1576, mono. 113.08406");
             configFile.WriteLine("add_I_isoleucine = 0.0000              # added to I - avg. 113.1576, mono. 113.08406");
             configFile.WriteLine("add_N_asparagine = 0.0000              # added to N - avg. 114.1026, mono. 114.04293");

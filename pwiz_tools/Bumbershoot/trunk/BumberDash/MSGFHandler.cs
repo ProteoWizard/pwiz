@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -111,7 +112,7 @@ namespace BumberDash
                    + " -m " + config.FragmentationMethod
                    + " -protocol " + config.Protocol
                    + " -e " + config.CleavageAgent
-                   + " -t " + config.PrecursorTolerance + config.PrecursorToleranceUnits
+                   + " -t " + config.PrecursorTolerance.ToString(CultureInfo.InvariantCulture) + config.PrecursorToleranceUnits
                    + " -ti " + config.IsotopeErrorMin + "," + config.IsotopeErrorMax
                    + " -ntt " + config.Specificity
                    + " -s \"[FullFileName]\"";

@@ -427,7 +427,7 @@
             this.InstrumentPanel.Controls.Add(this.panel3);
             this.InstrumentPanel.Controls.Add(this.panel2);
             this.InstrumentPanel.Controls.Add(this.label17);
-            this.InstrumentPanel.Location = new System.Drawing.Point(134, 126);
+            this.InstrumentPanel.Location = new System.Drawing.Point(145, 129);
             this.InstrumentPanel.Name = "InstrumentPanel";
             this.InstrumentPanel.Size = new System.Drawing.Size(200, 100);
             this.InstrumentPanel.TabIndex = 50;
@@ -454,6 +454,7 @@
             this.FragmentToleranceBox.TabIndex = 80;
             this.FragmentToleranceBox.Tag = "";
             this.FragmentToleranceBox.Text = "0.5";
+            this.FragmentToleranceBox.Leave += new System.EventHandler(this.ToleranceBox_Leave);
             // 
             // FragmentToleranceUnitsBox
             // 
@@ -486,6 +487,7 @@
             this.PrecursorToleranceBox.TabIndex = 78;
             this.PrecursorToleranceBox.Tag = "";
             this.PrecursorToleranceBox.Text = "10";
+            this.PrecursorToleranceBox.Leave += new System.EventHandler(this.ToleranceBox_Leave);
             // 
             // PrecursorToleranceUnitsBox
             // 
