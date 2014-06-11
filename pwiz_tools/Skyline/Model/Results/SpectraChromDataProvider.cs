@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Model.Results
             public LookaheadContext(SpectrumFilter filter, MsDataFileImpl dataFile)
             {
                 _lookAheadIndex = 0;
+                _lookAheadDataSpectrum = null;
                 _filter = filter;
                 _dataFile = dataFile;
                 _rt = null;
@@ -64,13 +65,37 @@ namespace pwiz.Skyline.Model.Results
             private double? _rt;
             private readonly SpectrumFilter _filter;
             private readonly MsDataFileImpl _dataFile;
+            private MsDataSpectrum _lookAheadDataSpectrum; // Result of _datafile.GetSpectrum(_lookaheadIndex), or null
             private readonly int _lenSpectra;
             private double _previousDriftTime;
+
+            public int GetMsLevel(int index)
+            {
+                if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
+                    return _lookAheadDataSpectrum.Level;
+                else
+                    return _dataFile.GetMsLevel(index);
+            }
+
+            public MsDataSpectrum GetSpectrum(int index)
+            {
+                if (index == _lookAheadIndex)
+                {
+                    return _lookAheadDataSpectrum ?? (_lookAheadDataSpectrum = _dataFile.GetSpectrum(index));
+                }
+                else
+                {
+                    return _dataFile.GetSpectrum(index);
+                }
+            }
 
             public int NextIndex(int proposed)
             {
                 if (_lookAheadIndex <= proposed)
+                {
                     _lookAheadIndex = proposed + 1;
+                    _lookAheadDataSpectrum = null;
+                }
                 return _lookAheadIndex;
             }
 
@@ -105,6 +130,7 @@ namespace pwiz.Skyline.Model.Results
                 _previousDriftTime = -1;
                 double rtTotal = 0;
                 double? rtFirst = null;
+                _lookAheadDataSpectrum = null;  
                 while (_lookAheadIndex++ < _lenSpectra)
                 {
                     _rt = dataSpectrum.RetentionTime;
@@ -120,7 +146,7 @@ namespace pwiz.Skyline.Model.Results
 
                     if (_lookAheadIndex < _lenSpectra)
                     {
-                        dataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
+                        dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
                         // Reasons to keep adding to the list:
                         //   Retention time hasn't changed but drift time has increased, or
                         //   Agilent ramped-CE data - MS2 scans get averaged
@@ -298,10 +324,10 @@ namespace pwiz.Skyline.Model.Results
                         _isSingleMzMatch = true;
 
                         // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                        if (!filter.EnabledMsMs && dataFile.GetMsLevel(i) != 1)
+                        if (!filter.EnabledMsMs && lookaheadContext.GetMsLevel(i) != 1)
                             continue;
 
-                        var dataSpectrum = dataFile.GetSpectrum(i);
+                        var dataSpectrum = lookaheadContext.GetSpectrum(i);
                         if (dataSpectrum.Mzs.Length == 0)
                             continue;
 

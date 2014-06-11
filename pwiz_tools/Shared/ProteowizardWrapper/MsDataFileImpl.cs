@@ -623,6 +623,19 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
 
+            if (spectrum != null)
+                return new MsDataSpectrum
+                {
+                    Level = GetMsLevel(spectrum) ?? 0,
+                    Index = spectrum.index,
+                    RetentionTime = GetStartTime(spectrum),
+                    DriftTimeMsec = GetDriftTimeMsec(spectrum),
+                    Precursors = GetPrecursors(spectrum),
+                    Centroided = IsCentroided(spectrum),
+                    Mzs = new double[0],
+                    Intensities = new double[0]
+                };
+
             return new MsDataSpectrum
             {
                 Centroided = true,

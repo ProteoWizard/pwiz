@@ -67,6 +67,10 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     MassHunterDataPtr rawfile_;
     Reader::Config config_;
     mutable size_t size_;
+    mutable int lastFrameIndex_;
+    mutable pwiz::vendor_api::Agilent::FramePtr lastFrame_;
+    mutable int lastRowNumber_;
+    mutable ScanRecordPtr lastScanRecord_;
 
     mutable util::once_flag_proxy indexInitialized_;
 

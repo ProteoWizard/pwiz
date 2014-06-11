@@ -45,7 +45,11 @@ SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr 
     rawfile_(rawfile),
     config_(config),
     size_(0),
-    indexInitialized_(util::init_once_flag_proxy)
+    indexInitialized_(util::init_once_flag_proxy),
+    lastFrame_(NULL),
+    lastFrameIndex_(-1),
+    lastRowNumber_(-1),
+    lastScanRecord_(NULL)
 {
 }
 
@@ -126,7 +130,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     result->index = index;
     result->id = ie.id;
 
-    ScanRecordPtr scanRecordPtr = rawfile_->getScanRecord(ie.rowNumber); // equivalent to frameIndex
+    if (lastRowNumber_ != ie.rowNumber)
+        lastScanRecord_ = rawfile_->getScanRecord(lastRowNumber_ = ie.rowNumber); // equivalent to frameIndex
+    ScanRecordPtr scanRecordPtr = lastScanRecord_;
     MSScanType scanType = scanRecordPtr->getMSScanType();
     int msLevel = scanRecordPtr->getMSLevel();
     bool isIonMobilityScan = scanRecordPtr->getIsIonMobilityScan();
@@ -211,16 +217,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     if ((int) detailLevel < (int) DetailLevel_FullMetadata)
         return result;
 
-    Agilent::FramePtr frame;
     Agilent::DriftScanPtr driftScan;
     if (isIonMobilityScan)
     {
-        frame = rawfile_->getIonMobilityFrame(ie.frameIndex);
+        if (ie.frameIndex != lastFrameIndex_)
+            lastFrame_ = rawfile_->getIonMobilityFrame(lastFrameIndex_ = ie.frameIndex);
         if (config_.combineIonMobilitySpectra)
-            driftScan = frame->getTotalScan();
+            driftScan = lastFrame_->getTotalScan();
         else
         {
-            driftScan = frame->getScan(ie.driftBinIndex);
+            driftScan = lastFrame_->getScan(ie.driftBinIndex);
             scan.userParams.push_back(UserParam("drift time", lexical_cast<string>(driftScan->getDriftTime()), "xsd:double", UO_millisecond));
         }
     }
@@ -339,8 +345,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             // Agilent profile mode data returns all zero-intensity samples, so we filter out
             // samples that aren't adjacent to a non-zero-intensity sample value.
 
-            mzArray.reserve(xArray.size() / 2);
-            intensityArray.reserve(xArray.size() / 2);
+            mzArray.resize(xArray.size());
+            intensityArray.resize(xArray.size());
+            double *mzPtr = &mzArray[0];
+            double *intPtr = &intensityArray[0];
 
             size_t index=0;
             size_t lastIndex = yArray.size();
@@ -350,24 +358,24 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             {
                 if (index>0)
                 {
-                    mzArray.push_back(xArray[index-1]);
-                    intensityArray.push_back(0);
+                    *mzPtr++ = xArray[index-1];
+                    *intPtr++ = 0;
                 }
-                mzArray.push_back(xArray[index]);
-                intensityArray.push_back(yArray[index]);
+                *mzPtr++ = xArray[index];
+                *intPtr++ = yArray[index];
                 index++;
 
                 while ( index < lastIndex )
                 {
                     if (0 != yArray[index])
                     {
-                        mzArray.push_back(xArray[index]);
-                        intensityArray.push_back(yArray[index++]);
+                        *mzPtr++ = xArray[index];
+                        *intPtr++ = yArray[index++];
                     }
                     else // skip over a run of zeros if possible, preserving those adjacent to nonzeros
                     {
-                        mzArray.push_back(xArray[index]);  // we're adjacent to a nonzero so save this one at least
-                        intensityArray.push_back(0);
+                        *mzPtr++ = xArray[index];  // we're adjacent to a nonzero so save this one at least
+                        *intPtr++ = 0;
                         // now look for next nonzero value if any
                         size_t z = index+1;
                         float *y=&yArray[index];
@@ -376,17 +384,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
                         {
                             if (z != index+1) // did we cover a run of zeros?
                             {
-                                mzArray.push_back(xArray[z-1]); // write a single adjacent zero
-                                intensityArray.push_back(0);
+                                *mzPtr++ = xArray[z-1]; // write a single adjacent zero
+                                *intPtr++ = 0;
                             }
-                            mzArray.push_back(xArray[z]); 
-                            intensityArray.push_back(yArray[z]);
+                            *mzPtr++ = xArray[z]; 
+                            *intPtr++ = yArray[z];
                         }
                         index = z+1;
                     }
                 }
             }
-
+            size_t newcount = mzPtr - &mzArray[0];
+            mzArray.resize(newcount);
+            intensityArray.resize(newcount);
         }
 
         if (!mzArray.empty())
@@ -466,8 +476,6 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
         for (int i = 0; i < frames; ++i)
 		{
-			FramePtr frame = rawfile_->getIonMobilityFrame(i);
-
             if (config_.combineIonMobilitySpectra)
             {
                 index_.push_back(IndexEntry());
@@ -498,6 +506,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
                 }
                 else
                 {
+                    FramePtr frame = rawfile_->getIonMobilityFrame(i);
                     const vector<short>& nonEmptyDriftBins = frame->getNonEmptyDriftBins();
                     for (size_t j = 0, end = nonEmptyDriftBins.size(); j < end; ++j)
 			        {
