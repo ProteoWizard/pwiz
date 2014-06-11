@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Model.Results
         private bool _writerStarted;
         private bool _writerCompleted;
         private bool _readCompleted;
+        private bool _writerIsWaitingForChromDataSets;
         private Exception _writeException;
 
         // Accessed only on the write thread
@@ -296,7 +297,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
-                        provider = new RemoteChromDataProvider(_document, fileInfo, _status, StartPercent, EndPercent, _loader);
+                        provider = new RemoteChromDataProvider(_document, _retentionTimePredictor, fileInfo, _status, StartPercent, EndPercent, _loader);
                     }
                     else if (ChromatogramDataProvider.HasChromatogramData(inFile))
                         provider = CreateChromatogramProvider(inFile, fileInfo, _tempFileSubsitute == null);
@@ -459,10 +460,25 @@ namespace pwiz.Skyline.Model.Results
 
             // Avoid holding onto chromatogram data sets for entire read
             dictPeptideChromData.Clear();
-
+            bool wasFirstPass = true;
             for (int i = 0; i < listChromData.Count; i++)
             {
                 var pepChromData = listChromData[i];
+                bool firstPass = null != pepChromData.NodePep && _retentionTimePredictor.IsFirstPassPeptide(pepChromData.NodePep);
+                if (wasFirstPass && !firstPass)
+                {
+                    // When we finished with the standard peptides, we need to wait until the writer thread is
+                    // finished processing _chromDataSets so that _retentionTimePredictor can provide
+                    // times for the rest of the peptides.
+                    lock (_chromDataSets)
+                    {
+                        while (_chromDataSets.Any() || (_writerStarted && !_writerIsWaitingForChromDataSets))
+                        {
+                            Monitor.Wait(_chromDataSets, 100);
+                        }
+                    }
+                }
+                wasFirstPass = firstPass;
                 if (!pepChromData.Load(provider))
                     continue;
 
@@ -665,7 +681,7 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Used for retentiont time prediction during import
         /// </summary>
-        private class RetentionTimePredictor
+        private class RetentionTimePredictor : IRetentionTimePredictor
         {
             private readonly RetentionScoreCalculatorSpec _calculator;
             private RegressionLineElement _conversion;
@@ -742,6 +758,11 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 return GetPredictedRetentionTime(nodePep);
+            }
+
+            public bool IsFirstPassPeptide(PeptideDocNode nodePep)
+            {
+                return string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
             }
         }
 
@@ -1057,7 +1078,17 @@ namespace pwiz.Skyline.Model.Results
 // ReSharper restore LocalizableElement
                             WRITE_THREADS.Add(Thread.CurrentThread);
                             while (_writerStarted && !_readCompleted && _chromDataSets.Count == 0)
-                                Monitor.Wait(_chromDataSets);
+                            {
+                                try
+                                {
+                                    _writerIsWaitingForChromDataSets = true;
+                                    Monitor.Wait(_chromDataSets);
+                                }
+                                finally
+                                {
+                                    _writerIsWaitingForChromDataSets = false;
+                                }
+                            }
 
                             if (!_writerStarted)
                                 return;

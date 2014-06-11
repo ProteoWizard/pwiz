@@ -19,10 +19,11 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
@@ -44,25 +45,25 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
                 "DdaSmall.ChorusRequest.xml");
             Assert.IsNotNull(stream);
             var chromatogramRequest = (ChromatogramRequestDocument) new XmlSerializer(typeof (ChromatogramRequestDocument)).Deserialize(stream);
-            var chromTaskList = new ChromTaskList(() => { }, new SrmDocument(SrmSettingsList.GetDefault()), TEST_ACCOUNT,
+            var chromTaskList = new ChromTaskList(() => { }, new SrmDocument(SrmSettingsList.GetDefault()), TEST_ACCOUNT, 
                 TEST_ACCOUNT.GetChorusUrl().SetFileId(7), ChromTaskList.ChunkChromatogramRequest(chromatogramRequest, 1));
             chromTaskList.SetMinimumSimultaneousTasks(10);
             var failedTasks = new HashSet<ChromatogramGeneratorTask>();
-            foreach (var chromId in chromTaskList.ChromIds)
+            foreach (var chromKey in chromTaskList.ChromKeys)
             {
-                ChromExtra chromExtra;
                 float[] times;
                 float[] intensities;
                 float[] massErrors;
-                chromTaskList.GetChromatogram(chromId.Value, out chromExtra, out times, out intensities, out massErrors);
+                chromTaskList.GetChromatogram(chromKey, out times, out intensities, out massErrors);
                 if (null == times)
                 {
-                    var task = chromTaskList.GetGeneratorTask(chromId.Value);
+                    var task = chromTaskList.GetGeneratorTask(chromKey);
                     if (failedTasks.Add(task))
                     {
-                        var document = new StringWriter();
-                        new XmlSerializer(typeof(ChromatogramRequestDocument)).Serialize(document, task.ChromatogramRequestDocument);
-                        Console.Out.WriteLine("Failed to get data for {0}", document);
+                        var memoryStream = new MemoryStream();
+                        var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings {Encoding = Encoding.UTF8});
+                        new XmlSerializer(typeof(ChromatogramRequestDocument)).Serialize(xmlWriter, task.ChromatogramRequestDocument);
+                        Console.Out.WriteLine("Failed to get data for {0}", Encoding.UTF8.GetString(memoryStream.ToArray()));
                         
                     }
                 }
@@ -70,4 +71,5 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
             Assert.AreEqual(0, failedTasks.Count);
         }
     }
+
 }

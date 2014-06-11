@@ -914,6 +914,7 @@
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\Exception.cs" />
     <Compile Include="Model\Results\ExtractedSpectrum.cs" />
+    <Compile Include="Model\Results\IRetentionTimePredictor.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
     <Compile Include="Model\Results\MsDataFilePath.cs" />
@@ -933,6 +934,7 @@
     <Compile Include="Model\Results\RemoteApi\ChorusItem.cs" />
     <Compile Include="Model\Results\RemoteApi\ChorusSession.cs" />
     <Compile Include="Model\Results\RemoteApi\ChromatogramGeneratorTask.cs" />
+    <Compile Include="Model\Results\RemoteApi\ChromatogramRequestProvider.cs" />
     <Compile Include="Model\Results\RemoteApi\ChromTaskList.cs" />
     <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequest.cs">
       <DependentUpon>ChromatogramRequest.xsd</DependentUpon>

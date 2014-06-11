@@ -16,32 +16,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
     internal class RemoteChromDataProvider : ChromDataProvider
     {
-        private ChromTaskList _chromTaskList;
-        public RemoteChromDataProvider(SrmDocument document, ChromFileInfo chromFileInfo, ProgressStatus progressStatus, int startPercent,
+        private ChorusAccount _chorusAccount;
+        private SrmDocument _document;
+        private ChromatogramRequestProvider[] _chromatogramRequestProviders;
+        private ChromTaskList[] _chromTaskLists;
+
+        public RemoteChromDataProvider(SrmDocument document, IRetentionTimePredictor retentionTimePredictor, ChromFileInfo chromFileInfo, ProgressStatus progressStatus, int startPercent,
             int endPercent, ILoadMonitor loader)
             : base(chromFileInfo, progressStatus, startPercent, endPercent, loader)
         {
-            ChromatogramRequestDocument fullChromatogramRequest = new SpectrumFilter(document, chromFileInfo.FilePath, null).ToChromatogramRequestDocument();
-            ChorusUrl chorusUrl = (ChorusUrl) chromFileInfo.FilePath;
-            ChorusAccount chorusAccount = chorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
-            _chromTaskList = new ChromTaskList(CheckCancelled, document, chorusAccount, chorusUrl,
-                ChromTaskList.ChunkChromatogramRequest(fullChromatogramRequest, 100));
-            _chromTaskList.SetMinimumSimultaneousTasks(2);
+            _document = document;
+            ChorusUrl chorusUrl = (ChorusUrl)chromFileInfo.FilePath;
+            _chorusAccount = chorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
+            var chromatogramRequestProviders = new List<ChromatogramRequestProvider>();
+            foreach (bool firstPass in new[] {true, false})
+            {
+                if (null == retentionTimePredictor && !firstPass)
+                {
+                    continue;
+                }
+                var chromatogramRequestProvider = new ChromatogramRequestProvider(document, chorusUrl,
+                    retentionTimePredictor, firstPass);
+                if (0 == chromatogramRequestProvider.ChromKeys.Count)
+                {
+                    continue;
+                }
+                chromatogramRequestProviders.Add(chromatogramRequestProvider);
+            }
+            _chromatogramRequestProviders = chromatogramRequestProviders.ToArray();
+            _chromTaskLists = new ChromTaskList[_chromatogramRequestProviders.Length];
         }
 
         public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
         {
-            get { return _chromTaskList == null ? null : _chromTaskList.ChromIds; }
+            get
+            {
+                return _chromatogramRequestProviders.SelectMany(chromRequestProvider => chromRequestProvider.ChromKeys)
+                    .Select((key, index) => new KeyValuePair<ChromKey, int>(key, index));
+            }
         }
 
         public override bool GetChromatogram(
@@ -52,18 +76,47 @@ namespace pwiz.Skyline.Model.Results
             out float[] intensities,
             out float[] massErrors)
         {
-            bool loaded = _chromTaskList.GetChromatogram(id, out extra, out times, out intensities, out massErrors);
-            if (loaded)
+            bool loaded = false;
+            extra = null;
+            times = null;
+            scanIds = null;
+            intensities = null;
+            massErrors = null;
+            int idRemain = id;
+            for (int iTaskList = 0; iTaskList < _chromatogramRequestProviders.Length; iTaskList++)
             {
-                LoadingStatus.Transitions.AddTransition(
-                        extra.StatusId,
-                        extra.StatusRank,
-                        times,
-                        intensities);
+                ChromatogramRequestProvider requestProvider = _chromatogramRequestProviders[iTaskList];
+                if (requestProvider.ChromKeys.Count <= idRemain)
+                {
+                    idRemain -= requestProvider.ChromKeys.Count;
+                    continue;
+                }
+                ChromTaskList chromTaskList = _chromTaskLists[iTaskList];
+                if (null == chromTaskList)
+                {
+                    chromTaskList = _chromTaskLists[iTaskList] = new ChromTaskList(CheckCancelled, _document, _chorusAccount, requestProvider.ChorusUrl, ChromTaskList.ChunkChromatogramRequest(requestProvider.GetChromatogramRequest(), 100));
+                }
+                ChromKey chromKey = requestProvider.ChromKeys[idRemain];
+                loaded = chromTaskList.GetChromatogram(chromKey, out times, out intensities, out massErrors);
+                if (loaded)
+                {
+                    extra = new ChromExtra(id, chromKey.Precursor == 0 ? 0 : -1);
+                    if (times.Length > 0)
+                    {
+                        LoadingStatus.Transitions.AddTransition(
+                                extra.StatusId,
+                                extra.StatusRank,
+                                times,
+                                intensities);
+                    }
+                }
+                break;
             }
+            int percentComplete = _chromTaskLists.Sum(taskList => taskList == null ? 0 : taskList.PercentComplete)/
+                                  _chromTaskLists.Length;
 
-            SetPercentComplete(_chromTaskList.PercentComplete * 99/100);
-            scanIds = null; // TODO
+            percentComplete = Math.Min(percentComplete, 99);
+            SetPercentComplete(percentComplete);
             return loaded;
         }
 
@@ -89,7 +142,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override void ReleaseMemory()
         {
-            _chromTaskList = null;
+            _chromTaskLists = null;
         }
 
         public override void Dispose()

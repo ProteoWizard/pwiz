@@ -27,9 +27,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
     public class ChromTaskList
     {
         private const int CANCEL_CHECK_MILLIS = 1000;
-        private readonly HashSet<ChromatogramGeneratorTask> _executingTasks;
-        private readonly List<ChromatogramGeneratorTask> _chromatogramGeneratorTasks;
-        private readonly List<KeyValuePair<ChromKey, ChromatogramGeneratorTask>> _chromKeys;
+        private HashSet<ChromatogramGeneratorTask> _executingTasks;
+        private List<ChromatogramGeneratorTask> _chromatogramGeneratorTasks;
+        private IDictionary<ChromKey, ChromatogramGeneratorTask> _chromKeys;
         private int _completedCount;
         private int _minTaskCount;
         private readonly Action _checkCancelledAction;
@@ -40,12 +40,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             ChorusSession = new ChorusSession();
             _checkCancelledAction = checkCancelledAction;
             _chromatogramGeneratorTasks = new List<ChromatogramGeneratorTask>();
-            _chromKeys = new List<KeyValuePair<ChromKey, ChromatogramGeneratorTask>>();
+            _chromKeys = new Dictionary<ChromKey, ChromatogramGeneratorTask>();
             foreach (var chunk in chromatogramRequestDocuments)
             {
                 ChromatogramGeneratorTask task = new ChromatogramGeneratorTask(this, chorusAccount, chorusUrl, chunk);
                 _chromatogramGeneratorTasks.Add(task);
-                _chromKeys.AddRange(ListChromKeys(chunk).Select(key => new KeyValuePair<ChromKey, ChromatogramGeneratorTask>(key, task)));
+                foreach (ChromKey chromKey in ListChromKeys(chunk))
+                {
+                    _chromKeys[chromKey] = task;
+                }
             }
             _executingTasks = new HashSet<ChromatogramGeneratorTask>();
         }
@@ -116,10 +119,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             get { return _chromKeys.Select((key, index) => new KeyValuePair<ChromKey, int>(key.Key, index)); }
         }
 
-        public bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out float[] intensities, out float[] massErrors)
+        public bool GetChromatogram(ChromKey chromKey, out float[] times, out float[] intensities, out float[] massErrors)
         {
-            var entry = _chromKeys[id];
-            var task = entry.Value;
+            ChromatogramGeneratorTask task;
+            if (!_chromKeys.TryGetValue(chromKey, out task))
+            {
+                times = null;
+                intensities = null;
+                massErrors = null;
+                return false;
+            }
             lock (LockObj)
             {
                 StartTask(task);
@@ -129,9 +138,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     CheckCancelled();
                 }
             }
-            bool result = task.GetChromatogram(entry.Key, out times, out intensities, out massErrors);
-            extra = result ? new ChromExtra(id, entry.Key.Precursor == 0 ? 0 : -1) : null;
-            return result;
+            return task.GetChromatogram(chromKey, out times, out intensities, out massErrors);
         }
 
         private void EnsureMinTasksRunning()
@@ -239,10 +246,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             return _chromatogramGeneratorTasks.AsReadOnly();
         }
 
-        public ChromatogramGeneratorTask GetGeneratorTask(int chromId)
+        public IEnumerable<ChromKey> ChromKeys {get { return _chromKeys.Keys; }}
+
+        public ChromatogramGeneratorTask GetGeneratorTask(ChromKey chromKey)
         {
-            var entry = _chromKeys[chromId];
-            return entry.Value;
+            ChromatogramGeneratorTask task;
+            _chromKeys.TryGetValue(chromKey, out task);
+            return task;
         }
     }
 }

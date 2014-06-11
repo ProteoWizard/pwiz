@@ -86,10 +86,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public bool IsFinished()
         {
-            lock (this)
-            {
-                return _finished;
-            }
+            return _finished;
         }
 
         private void SendRequest()
