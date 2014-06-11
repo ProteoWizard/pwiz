@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -308,8 +309,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     Id = graphItem.TransitionNode.Id
                 });
             }
+            IScanProvider scanProvider;
+            var chorusUrl = FilePath as ChorusUrl;
+            if (null == chorusUrl)
+            {
+                scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
+                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray());
+            }
+            else
+            {
+                scanProvider = new ChorusScanProvider(_documentContainer.DocumentFilePath, chorusUrl, 
+                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray());
+            }
             var e = new ClickedChromatogramEventArgs(
-                new ScanProvider(_documentContainer.DocumentFilePath, FilePath, chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray()),
+                scanProvider,
                 transitionIndex, 
                 scanIndex);
             ClickedChromatogram(this, e);

@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             get { return _chromKeys.Select((key, index) => new KeyValuePair<ChromKey, int>(key.Key, index)); }
         }
 
-        public bool GetChromatogram(ChromKey chromKey, out float[] times, out float[] intensities, out float[] massErrors)
+        public bool GetChromatogram(ChromKey chromKey, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             ChromatogramGeneratorTask task;
             if (!_chromKeys.TryGetValue(chromKey, out task))
@@ -127,6 +127,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 times = null;
                 intensities = null;
                 massErrors = null;
+                scanIds = null;
                 return false;
             }
             lock (LockObj)
@@ -138,7 +139,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     CheckCancelled();
                 }
             }
-            return task.GetChromatogram(chromKey, out times, out intensities, out massErrors);
+            return task.GetChromatogram(chromKey, out times, out scanIds, out intensities, out massErrors);
         }
 
         private void EnsureMinTasksRunning()

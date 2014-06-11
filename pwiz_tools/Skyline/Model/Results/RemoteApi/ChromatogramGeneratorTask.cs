@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             get { return _failures.AsReadOnly(); }
         }
 
-        public bool GetChromatogram(ChromKey chromKey, out float[] times, out float[] intensities, out float[] massErrors)
+        public bool GetChromatogram(ChromKey chromKey, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             int keyIndex = -1;
             if (_chromKeyIndiceses != null)
@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             if (keyIndex == -1 || _chromKeyIndiceses == null)   // Keep ReSharper from complaining
             {
                 times = null;
+                scanIds = null;
                 intensities = null;
                 massErrors = null;
                 return false;
@@ -162,6 +163,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             chromGroupInfo.ReadChromatogram(_chromatogramCache);
             var tranInfo = chromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
             times = tranInfo.Times;
+            if (null != tranInfo.ScanIds)
+            {
+                scanIds = tranInfo.ScanIds[(int) chromKeyIndices.Key.Source];
+            }
+            else
+            {
+                scanIds = null;
+            }
             intensities = tranInfo.Intensities;
             massErrors = null;
             if (tranInfo.MassError10Xs != null)

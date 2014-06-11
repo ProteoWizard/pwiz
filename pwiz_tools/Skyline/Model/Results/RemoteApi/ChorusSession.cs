@@ -19,12 +19,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using pwiz.Common.Collections;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -217,6 +221,84 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
             ActionUtil.RunAsync(() => FetchAndStoreContents(chorusAccount, chorusUrl));
             return false;
+        }
+
+        public MsDataSpectrum GetSpectrum(ChorusAccount chorusAccount, ChorusUrl chorusUrl, ChromSource source, double precursor, int scanId)
+        {
+            string strSource;
+            int msLevel = 1;
+            // ReSharper disable NonLocalizedString
+            switch (source)
+            {
+                case ChromSource.ms1:
+                    strSource = "ms1";
+                    break;
+                case ChromSource.sim:
+                    strSource = "sim";
+                    break;
+                case ChromSource.fragment:
+                    strSource = "ms2";
+                    msLevel = 2;
+                    break;
+                default:
+                    throw new ArgumentException("Unknown source " + source);
+            }
+          
+            string strUri = string.Format(CultureInfo.InvariantCulture, 
+                "{0}/skyline/api/chroextract/file/{1}/source/{2}/precursor/{3}/{4}",
+                chorusUrl.ServerUrl,
+                chorusUrl.FileId,
+                strSource,
+                precursor,
+                scanId);
+            // ReSharper restore NonLocalizedString
+
+            CookieContainer cookieContainer = new CookieContainer();
+            if (null != chorusAccount)
+            {
+                Login(chorusAccount, cookieContainer);
+            }
+            var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(strUri));
+            WebRequestStarting(webRequest);
+            try
+            {
+                webRequest.CookieContainer = cookieContainer;
+                using (HttpWebResponse response = (HttpWebResponse) webRequest.GetResponse())
+                {
+                    string strResponse = string.Empty;
+                    var responseStream = response.GetResponseStream();
+                    if (null != responseStream)
+                    {
+                        var streamReader = new StreamReader(responseStream);
+                        strResponse = streamReader.ReadToEnd();
+                    }
+                    // ReSharper disable NonLocalizedString
+                    JObject jObject = JsonConvert.DeserializeObject<JObject>(strResponse);
+                    string strMzs = jObject["mzs-base64"].ToString();
+                    string strIntensities = jObject["intensities-base64"].ToString();
+                    byte[] mzBytes = Convert.FromBase64String(strMzs);
+                    byte[] intensityBytes = Convert.FromBase64String(strIntensities);
+                    double[] mzs = PrimitiveArrays.FromBytes<double>(
+                        PrimitiveArrays.ReverseBytesInBlocks(mzBytes, sizeof(double)));
+                    float[] intensityFloats = PrimitiveArrays.FromBytes<float>(
+                        PrimitiveArrays.ReverseBytesInBlocks(intensityBytes, sizeof(float)));
+                    double[] intensities = intensityFloats.Select(f => (double) f).ToArray();
+                    MsDataSpectrum spectrum = new MsDataSpectrum
+                    {
+                        Index = jObject["index"].ToObject<int>(),
+                        Level = msLevel,
+                        RetentionTime = jObject["rt"].ToObject<double>(),
+                        Mzs = mzs,
+                        Intensities = intensities,
+                    };
+                    // ReSharper restore NonLocalizedString
+                    return spectrum;
+                }
+            }
+            finally
+            {
+                WebRequestFinished(webRequest);
+            }
         }
 
         private void FetchAndStoreContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl)

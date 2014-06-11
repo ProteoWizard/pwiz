@@ -54,7 +54,8 @@ namespace pwiz.SkylineTestA.Results.RemoteApi
                 float[] times;
                 float[] intensities;
                 float[] massErrors;
-                chromTaskList.GetChromatogram(chromKey, out times, out intensities, out massErrors);
+                int[] scanIds;
+                chromTaskList.GetChromatogram(chromKey, out times, out scanIds, out intensities, out massErrors);
                 if (null == times)
                 {
                     var task = chromTaskList.GetGeneratorTask(chromKey);

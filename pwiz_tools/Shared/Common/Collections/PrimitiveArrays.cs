@@ -70,5 +70,20 @@ namespace pwiz.Common.Collections
         {
             Write(stream, new[] {value});
         }
+
+        /// <summary>
+        /// Changes whether a byte array is big-endian or little-endian by
+        /// reversing the elements of the specified size.
+        /// </summary>
+        public static byte[] ReverseBytesInBlocks(byte[] bytes, int blockSize)
+        {
+            byte[] result = new byte[bytes.Length];
+            for (int i = 0; i < result.Length; i++)
+            {
+                int sourceIndex = (i/blockSize*blockSize) + blockSize - 1 - i%blockSize;
+                result[i] = bytes[sourceIndex];
+            }
+            return result;
+        }
     }
 }
