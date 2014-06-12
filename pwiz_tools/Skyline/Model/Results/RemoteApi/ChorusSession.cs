@@ -106,9 +106,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public void AddAuthHeader(ChorusAccount chorusAccount, HttpWebRequest webRequest)
         {
-            byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", chorusAccount.Username, chorusAccount.Password)); // Not L10N
-            var authHeader = "Basic " + Convert.ToBase64String(authBytes); // Not L10N
-            webRequest.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            if (null != chorusAccount)
+            {
+                // ReSharper disable NonLocalizedString
+                byte[] authBytes = Encoding.UTF8.GetBytes(chorusAccount.Username + ':' + chorusAccount.Password);
+                var authHeader = "Basic " + Convert.ToBase64String(authBytes);
+                // ReSharper restore NonLocalizedString
+                webRequest.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            }
         }
 
         public void GenerateChromatograms(ChorusAccount chorusAccount, 
@@ -117,8 +122,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             Stream outputStream)
         {
             CookieContainer cookieContainer = new CookieContainer();
-            Login(chorusAccount, cookieContainer);
             var webRequest = (HttpWebRequest)WebRequest.Create(chorusUrl.GetChromExtractionUri());
+            AddAuthHeader(chorusAccount, webRequest);
             WebRequestStarting(webRequest);
             try
             {
@@ -254,15 +259,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             // ReSharper restore NonLocalizedString
 
             CookieContainer cookieContainer = new CookieContainer();
-            if (null != chorusAccount)
-            {
-                Login(chorusAccount, cookieContainer);
-            }
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(strUri));
             WebRequestStarting(webRequest);
             try
             {
                 webRequest.CookieContainer = cookieContainer;
+                AddAuthHeader(chorusAccount, webRequest);
                 using (HttpWebResponse response = (HttpWebResponse) webRequest.GetResponse())
                 {
                     string strResponse = string.Empty;
@@ -435,13 +437,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             // ReSharper disable NonLocalizedString
             new TopLevelContents("myProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Projects, chorusContents => chorusContents.myProjects),
-            new TopLevelContents("sharedProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects, chorusContents => chorusContents.sharedProjects),
-            new TopLevelContents("publicProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Projects, chorusContents => chorusContents.publicProjects),
             new TopLevelContents("myExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Experiments, chorusContents=>chorusContents.myExperiments), 
-            new TopLevelContents("sharedExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments, chorusContents=>chorusContents.sharedExperiments), 
-            new TopLevelContents("publicExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments, chorusContents=>chorusContents.publicExperiments), 
             new TopLevelContents("myFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_My_Files, chorusContents=>chorusContents.myFiles), 
+            new TopLevelContents("sharedProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects, chorusContents => chorusContents.sharedProjects),
+            new TopLevelContents("sharedExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments, chorusContents=>chorusContents.sharedExperiments), 
             new TopLevelContents("sharedFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Shared_Files, chorusContents=>chorusContents.sharedFiles), 
+            new TopLevelContents("publicProjects", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Projects, chorusContents => chorusContents.publicProjects),
+            new TopLevelContents("publicExperiments", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments, chorusContents=>chorusContents.publicExperiments), 
             new TopLevelContents("publicFiles", Resources.ChorusSession_TOP_LEVEL_ITEMS_Public_Files, chorusContents=>chorusContents.publicFiles), 
             // ReSharper restore NonLocalizedString
         };
