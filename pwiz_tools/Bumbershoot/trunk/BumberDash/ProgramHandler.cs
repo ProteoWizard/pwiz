@@ -516,6 +516,7 @@ namespace BumberDash
             else
                 _destinationProgram = string.Empty;
 
+            _fullError = string.Empty;
             foreach (var file in _tempFiles)
                 File.Delete(file);
         }

@@ -702,7 +702,7 @@ namespace BumberDash.Forms
                     else if (currentParam.Value.Trim('"').EndsWith("ppm")
                         && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), NumberStyles.Number, CultureInfo.InvariantCulture, out value))
                     {
-                        if (value > 30)
+                        if (value > 15)
                             PrecursorMidRadio.Checked = true;
                         else
                             PrecursorHighRadio.Checked = true;
@@ -724,7 +724,7 @@ namespace BumberDash.Forms
                     else if (currentParam.Value.Trim('"').EndsWith("ppm")
                         && double.TryParse(currentParam.Value.Trim('"').Replace("ppm", string.Empty), NumberStyles.Number, CultureInfo.InvariantCulture, out value))
                     {
-                        if (value > 15)
+                        if (value > 30)
                             FragmentMidRadio.Checked = true;
                         else
                             FragmentHighRadio.Checked = true;
@@ -1046,6 +1046,13 @@ namespace BumberDash.Forms
                             Type = "int",
                             ConfigAssociation = config
                         });
+                    config.PropertyList.Add(new ConfigProperty
+                    {
+                        Name = "DecoyPrefix",
+                        Value = "XXX_",
+                        Type = "string",
+                        ConfigAssociation = config
+                    });
                 }
                 if (destinationProgram == "TagRecon" && BlindModBox.Checked)
                     config.PropertyList.Add(new ConfigProperty

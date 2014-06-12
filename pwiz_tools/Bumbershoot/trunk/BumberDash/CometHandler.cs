@@ -238,7 +238,7 @@ namespace BumberDash
             configFile.WriteLine("nucleotide_reading_frame = 0           # 0=proteinDB, 1-6, 7=forward three, 8=reverse three, 9=all six");
             configFile.WriteLine("clip_nterm_methionine = 0              # 0=leave sequences as-is; 1=also consider sequence w/o N-term methionine");
             configFile.WriteLine("spectrum_batch_size = 8000           # max. # of spectra to search at a time; 0 to search the entire scan range in one loop");
-            configFile.WriteLine("decoy_prefix = rev_                  # decoy entries are denoted by this string which is pre-pended to each protein accession");
+            configFile.WriteLine("decoy_prefix = XXX_                  # decoy entries are denoted by this string which is pre-pended to each protein accession");
             configFile.WriteLine("");
             configFile.WriteLine("#");
             configFile.WriteLine("# spectral processing");

@@ -109,6 +109,7 @@ namespace BumberDash
         {
             return "-inst " + config.Instrument
                    + " -o \"[FileNameOnly]" + config.OutputSuffix + ".mzid\""
+                   + " -tda 1"
                    + " -m " + config.FragmentationMethod
                    + " -protocol " + config.Protocol
                    + " -e " + config.CleavageAgent
