@@ -218,7 +218,7 @@ struct PWIZ_API_DECL RawData
                     //std::cout << extendedStatsTypes[i].name << " " << extendedStatsTypes[i].typeCode << std::endl;
                     switch (type.typeCode)
                     {
-                        case CHAR: fillExtendedStatsByName<char>(statsReader, function, type, extendedScanStatsMap); break;
+                        case Waters::CHAR: fillExtendedStatsByName<char>(statsReader, function, type, extendedScanStatsMap); break;
                         case SHORT_INT: fillExtendedStatsByName<short>(statsReader, function, type, extendedScanStatsMap); break;
                         case LONG_INT: fillExtendedStatsByName<int>(statsReader, function, type, extendedScanStatsMap); break;
                         case SINGLE_FLOAT: fillExtendedStatsByName<float>(statsReader, function, type, extendedScanStatsMap); break;

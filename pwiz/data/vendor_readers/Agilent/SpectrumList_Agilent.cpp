@@ -462,6 +462,40 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
 }
 
 
+PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const
+{
+    pwiz::analysis::Spectrum3DPtr result(new pwiz::analysis::Spectrum3D);
+
+    if (!rawfile_->hasIonMobilityData())
+        return result;
+
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Agilent::createIndex, this));
+
+    boost::container::flat_map<double, size_t>::const_iterator findItr = scanTimeToFrameMap_.lower_bound(floor(scanStartTime * 1e8)/1e8);
+    if (findItr == scanTimeToFrameMap_.end() || findItr->first - 1e-8 > scanStartTime)
+        return result;
+
+    FramePtr frame = rawfile_->getIonMobilityFrame(findItr->second);
+    int driftBinsPerFrame = frame->getDriftBinsPresent();
+    (*result).reserve(driftBinsPerFrame);
+    for (size_t driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
+    {
+        DriftScanPtr driftScan = frame->getScan(driftBinIndex);
+        if (driftTimeRanges.find(driftScan->getDriftTime()) == driftTimeRanges.end())
+            continue;
+
+        boost::container::flat_map<double, float>& driftSpectrum = (*result)[driftScan->getDriftTime()];
+        size_t numDataPoints = (size_t) driftScan->getTotalDataPoints();
+        const vector<double>& mzArray = driftScan->getXArray();
+        const vector<float>& intensityArray = driftScan->getYArray();
+        driftSpectrum.reserve(numDataPoints);
+        for (size_t i = 0; i < numDataPoints; ++i)
+            driftSpectrum[mzArray[i]] = intensityArray[i];
+    }
+    return result;
+}
+
+
 PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 {
     using namespace boost::spirit::karma;
@@ -476,6 +510,9 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
         for (int i = 0; i < frames; ++i)
 		{
+            FramePtr frame = rawfile_->getIonMobilityFrame(i);
+            scanTimeToFrameMap_[frame->getRetentionTime()] = i;
+
             if (config_.combineIonMobilitySpectra)
             {
                 index_.push_back(IndexEntry());
@@ -506,7 +543,6 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
                 }
                 else
                 {
-                    FramePtr frame = rawfile_->getIonMobilityFrame(i);
                     const vector<short>& nonEmptyDriftBins = frame->getNonEmptyDriftBins();
                     for (size_t j = 0, end = nonEmptyDriftBins.size(); j < end; ++j)
 			        {
@@ -598,6 +634,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+PWIZ_API_DECL pwiz::analysis::Spectrum3D SpectrumList_Agilent::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const {return pwiz::analysis::Spectrum3D();}
 
 } // detail
 } // msdata

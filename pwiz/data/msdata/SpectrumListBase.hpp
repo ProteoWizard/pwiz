@@ -26,7 +26,9 @@
 
 
 #include "pwiz/data/msdata/MSData.hpp"
+#include <boost/functional/hash.hpp>
 #include <stdexcept>
+#include <iostream>
 
 
 namespace pwiz {
@@ -42,11 +44,25 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
 
     /// set DataProcessing
-    virtual void setDataProcessingPtr(DataProcessingPtr dp) {dp_ = dp;}
+    virtual void setDataProcessingPtr(DataProcessingPtr dp) { dp_ = dp; }
+
+    /// issues a warning once per SpectrumList instance (based on string hash)
+    virtual void warn_once(const char* msg) const
+    {
+        boost::hash<const char*> H;
+        if (warn_msg_hashes.insert(H(msg)).second) // .second is true iff value is new
+        {
+            std::cerr << msg << std::endl;
+        }
+    }
 
     protected:
 
     DataProcessingPtr dp_;
+
+    private:
+
+    mutable std::set<size_t> warn_msg_hashes; // for warn_once use
 };
 
 

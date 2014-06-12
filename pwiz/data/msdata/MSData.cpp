@@ -26,7 +26,6 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/lexical_cast.hpp>
 #include "Diff.hpp"
-#include <boost/functional/hash.hpp>
 
 namespace pwiz {
 namespace msdata {
@@ -1014,6 +1013,27 @@ PWIZ_API_DECL size_t SpectrumList::find(const string& id) const
 }
 
 
+PWIZ_API_DECL size_t SpectrumList::findAbbreviated(const string& abbreviatedId, char delimiter) const
+{
+    vector<string> abbreviatedTokens, actualTokens;
+
+    // "1.1.123.2" splits to { 1, 1, 123, 2 }
+    bal::split(abbreviatedTokens, abbreviatedId, bal::is_any_of(string(1, delimiter)));
+
+    if (empty()) return 0;
+
+    // "sample=1 period=1 cycle=123 experiment=2" splits to { sample, 1, period, 1, cycle, 123, experiment, 2 }
+    string firstId = spectrumIdentity(0).id;
+    bal::split(actualTokens, firstId, bal::is_any_of(" ="));
+
+    string fullId(actualTokens[0] + "=" + abbreviatedTokens[0]);
+    for (size_t i = 1; i < abbreviatedTokens.size(); ++i)
+        fullId += " " + actualTokens[2*i] + "=" + abbreviatedTokens[i];
+
+    return find(fullId);
+}
+
+
 PWIZ_API_DECL IndexList SpectrumList::findNameValue(const string& name, const string& value) const
 {
     IndexList result;
@@ -1039,14 +1059,27 @@ PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList::dataProcessin
     return shared_ptr<const DataProcessing>();
 }
 
+
+PWIZ_API_DECL SpectrumPtr SpectrumList::spectrum(const SpectrumPtr& seed, bool getBinaryData) const
+{
+    return spectrum(seed->index, getBinaryData);
+};
+
+
+PWIZ_API_DECL SpectrumPtr SpectrumList::spectrum(size_t index, DetailLevel detailLevel) const
+{
+    // By default faster metadeta access is not implemented
+    if (detailLevel == DetailLevel_FastMetadata || detailLevel == DetailLevel_InstantMetadata)
+        return SpectrumPtr(new Spectrum);
+
+    return spectrum(index, detailLevel == DetailLevel_FullData);
+}
+
+
 PWIZ_API_DECL void SpectrumList::warn_once(const char *msg) const
 {
-    boost::hash<const char*> H;
-    if (warn_msg_hashes.insert(H(msg)).second) // .second is true iff value is new
-    {
-        cerr << msg << endl;
-    }
 }
+
 
 //
 // SpectrumListSimple

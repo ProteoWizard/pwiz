@@ -41,7 +41,7 @@ void testSpectrumListSimple()
 
     Spectrum^ spectrum0 = gcnew Spectrum();
     spectrum0->index = 0;
-    spectrum0->id = "id1";
+    spectrum0->id = "sample=1 period=1 cycle=123 experiment=2";
 
     // add m/z values 0,...,9
     BinaryDataArray^ bd_mz = gcnew BinaryDataArray();
@@ -60,7 +60,7 @@ void testSpectrumListSimple()
     
     Spectrum^ spectrum1 = gcnew Spectrum();
     spectrum1->index = 1;
-    spectrum1->id = "id2";
+    spectrum1->id = "sample=1 period=1 cycle=345 experiment=2";
     spectrum1->set(CVID::MS_MSn_spectrum);
     spectrum1->set(CVID::MS_ionization_type, 420);
 
@@ -77,8 +77,12 @@ void testSpectrumListSimple()
     // verify index()
     SpectrumList^ spectrumList = data.run->spectrumList;
     unit_assert(spectrumList->size() == 2);
-    unit_assert(spectrumList->find("id1") == 0);
-    unit_assert(spectrumList->find("id2") == 1);
+    unit_assert(spectrumList->find("sample=1 period=1 cycle=123 experiment=2") == 0);
+    unit_assert(spectrumList->find("sample=1 period=1 cycle=345 experiment=2") == 1);
+
+    // verify findAbbreviated()
+    unit_assert_operator_equal(0, spectrumList->findAbbreviated("1.1.123.2"));
+    unit_assert_operator_equal(1, spectrumList->findAbbreviated("1.1.345.2"));
 
     // verify spectrumIdentity()
 

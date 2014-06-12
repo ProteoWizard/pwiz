@@ -309,6 +309,86 @@ PWIZ_API_DECL double SpectrumList_Waters::calibrate(double mz) const
     return pow(c[0] + c[1]*sqrtMz + c[2]*mz + c[3]*pow(sqrtMz,3) + c[4]*pow(sqrtMz,4), 2);
 }
 
+
+PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const
+{
+    pwiz::analysis::Spectrum3DPtr result(new pwiz::analysis::Spectrum3D);
+
+    if (scanTimeToFunctionAndBlockMap_.empty()) // implies no ion mobility data
+        return result;
+
+    boost::container::flat_map<double, vector<pair<int, int> > >::const_iterator findItr = scanTimeToFunctionAndBlockMap_.lower_bound(floor(scanStartTime * 1e6) / 1e6);
+    if (findItr == scanTimeToFunctionAndBlockMap_.end() || findItr->first - 1e-6 > scanStartTime)
+        return result;
+
+    for (size_t pair = 0; pair < findItr->second.size(); ++pair)
+    {
+        int function = findItr->second[pair].first;
+        int block = findItr->second[pair].first;
+
+        int axisLength = 0, nonZeroDataPoints = 0, numScansInBlock = 0;
+
+        const CompressedDataCluster& cdc = rawdata_->GetCompressedDataClusterForBlock(function, block);
+        vector<float>& imsMasses = imsMasses_;
+        vector<int>& massIndices = massIndices_;
+        vector<float>& imsIntensities = imsIntensities_;
+
+        cdc.getMassAxisLength(axisLength);
+        if (axisLength != imsMasses.size())
+        {
+            imsMasses_.resize(axisLength);
+            cdc.getMassAxis(&imsMasses[0]);
+            massIndices.resize(axisLength);
+            imsIntensities.resize(axisLength);
+            std::fill(massIndices.begin(), massIndices.end(), 0.0f);
+            std::fill(imsIntensities.begin(), imsIntensities.end(), 0.0f);
+        }
+
+        cdc.getScansInBlock(numScansInBlock);
+
+        // CDC masses are uncalibrated, so we have to get calibration coefficients and do it ourselves
+        initializeCoefficients();
+
+        for (int scan = 0; scan < numScansInBlock; ++scan)
+        {
+            double driftTime = rawdata_->GetDriftTime(function, block, scan);
+
+            if (driftTimeRanges.find(driftTime) == driftTimeRanges.end())
+                continue;
+
+            cdc.getScan(block, scan, &massIndices[0], &imsIntensities[0], nonZeroDataPoints);
+
+            if (nonZeroDataPoints == 0)
+                continue;
+
+            boost::container::flat_map<double, float>& driftSpectrum = (*result)[driftTime];
+
+            driftSpectrum[calibrate(imsMasses[massIndices[0] - 1])] = 0;
+            for (int i = 0, end = nonZeroDataPoints; i < end; ++i)
+            {
+                if (i > 0 && massIndices[i - 1] != massIndices[i] - 1)
+                {
+                    driftSpectrum[calibrate(imsMasses[massIndices[i] - 1])] = 0;
+                }
+
+                driftSpectrum[calibrate(imsMasses[massIndices[i]])] = imsIntensities[i];
+
+                if (i + 1 < end && massIndices[i + 1] != massIndices[i] + 1)
+                {
+                    driftSpectrum[calibrate(imsMasses[massIndices[i] + 1])] = 0;
+                }
+            }
+            driftSpectrum[calibrate(imsMasses[massIndices[nonZeroDataPoints - 1] + 1])] = 0;
+
+            std::fill_n(massIndices.begin(), nonZeroDataPoints, 0.0f);
+            std::fill_n(imsIntensities.begin(), nonZeroDataPoints, 0.0f);
+        }
+    }
+
+    return result;
+}
+
+
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
     BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
@@ -339,25 +419,31 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             int numBlocks;         // number of blocks
 
 	        cdc.getNumberOfBlocks(numBlocks);
-	        cdc.getScansInBlock(numScansInBlock);
+            cdc.getScansInBlock(numScansInBlock);
+
+            scanTimeToFunctionAndBlockMap_.reserve(numBlocks);
 
             int scanCount = numBlocks * numScansInBlock;
 
-            for (size_t i=0; i < numBlocks; ++i)
-            for (size_t j=0; j < numScansInBlock; ++j)
+            for (int i=0; i < numBlocks; ++i)
             {
-                index_.push_back(IndexEntry());
-                IndexEntry& ie = index_.back();
-                ie.function = function;
-                ie.process = 0;
-                ie.block = i;
-                ie.scan = j;
-                ie.index = index_.size()-1;
+                scanTimeToFunctionAndBlockMap_[rawdata_->GetScanStats(function, i).rt * 60].push_back(make_pair(function, i));
 
-                std::back_insert_iterator<string> sink(ie.id);
-                generate(sink,
-                            "function=" << int_ << " process=" << int_ << " scan=" << int_,
-                            (ie.function+1), ie.process, ((numScansInBlock*ie.block)+ie.scan+1));
+                for (int j=0; j < numScansInBlock; ++j)
+                {
+                    index_.push_back(IndexEntry());
+                    IndexEntry& ie = index_.back();
+                    ie.function = function;
+                    ie.process = 0;
+                    ie.block = i;
+                    ie.scan = j;
+                    ie.index = index_.size()-1;
+
+                    std::back_insert_iterator<string> sink(ie.id);
+                    generate(sink,
+                                "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                                (ie.function+1), ie.process, ((numScansInBlock*ie.block)+ie.scan+1));
+                }
             }
         }
         else
@@ -403,7 +489,8 @@ size_t SpectrumList_Waters::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Waters::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
-SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const { return SpectrumPtr(); }
+PWIZ_API_DECL pwiz::analysis::Spectrum3D SpectrumList_Waters::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const { return pwiz::analysis::Spectrum3D(); }
 
 } // detail
 } // msdata

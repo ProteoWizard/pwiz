@@ -42,7 +42,7 @@ void testSpectrumListSimple()
 
     SpectrumPtr spectrum0(new Spectrum);
     spectrum0->index = 0;
-    spectrum0->id = "scan=1";
+    spectrum0->id = "sample=1 period=1 cycle=123 experiment=2";
 
     // add m/z values 0,...,9
     BinaryDataArrayPtr bd_mz(new BinaryDataArray);
@@ -61,7 +61,7 @@ void testSpectrumListSimple()
     
     SpectrumPtr spectrum1(new Spectrum);
     spectrum1->index = 1;
-    spectrum1->id = "scan=2";
+    spectrum1->id = "sample=1 period=1 cycle=345 experiment=2";
     spectrum1->cvParams.push_back(MS_MSn_spectrum);
     spectrum1->cvParams.push_back(CVParam(MS_ionization_type, 420));
 
@@ -77,16 +77,20 @@ void testSpectrumListSimple()
 
     // verify index()
     const SpectrumList& spectrumList = *data.run.spectrumListPtr;
-    unit_assert(spectrumList.size() == 2);
-    unit_assert(spectrumList.find("scan=1") == 0);
-    unit_assert(spectrumList.find("scan=2") == 1);
+    unit_assert_operator_equal(2, spectrumList.size());
+    unit_assert_operator_equal(0, spectrumList.find("sample=1 period=1 cycle=123 experiment=2"));
+    unit_assert_operator_equal(1, spectrumList.find("sample=1 period=1 cycle=345 experiment=2"));
+
+    // verify findAbbreviated()
+    unit_assert_operator_equal(0, spectrumList.findAbbreviated("1.1.123.2"));
+    unit_assert_operator_equal(1, spectrumList.findAbbreviated("1.1.345.2"));
 
     // verify findNameValue
 
-    IndexList result = spectrumList.findNameValue("scan", "1");
+    IndexList result = spectrumList.findNameValue("cycle", "123");
     unit_assert(result.size()==1 && result[0]==0);
 
-    result = spectrumList.findNameValue("scan", "2");
+    result = spectrumList.findNameValue("cycle", "345");
     unit_assert(result.size()==1 && result[0]==1);
 
     // verify spectrumIdentity()

@@ -42,6 +42,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
 #pragma warning( pop )
@@ -308,6 +309,45 @@ public ref class SpectrumList_ChargeStateCalculator : public msdata::SpectrumLis
                                        double intensityFractionBelowPrecursorForSinglyCharged);
 
     /// charge calculation works on any SpectrumList
+    static bool accept(msdata::SpectrumList^ inner);
+};
+
+
+public value class ContinuousInterval
+{
+    public:
+    ContinuousInterval(double begin, double end);
+    property double Begin;
+    property double End;
+};
+
+typedef System::Collections::Generic::KeyValuePair<double, double> MzIntensityPair;
+typedef System::Collections::Generic::List<MzIntensityPair> Spectrum3DValue;
+
+/// <summary>
+/// A List of pairs of ion mobility drift time and spectra (a List of MzIntensityPairs)
+/// </summary>
+typedef System::Collections::Generic::List<System::Collections::Generic::KeyValuePair<double, Spectrum3DValue^>> Spectrum3D;
+
+/// <summary>
+/// SpectrumList implementation that can create 3D spectra of ion mobility drift time and m/z
+/// </summary>
+public ref class SpectrumList_3D : public msdata::SpectrumList
+{
+    DEFINE_INTERNAL_LIST_WRAPPER_CODE(SpectrumList_3D, pwiz::analysis::SpectrumList_3D)
+
+    public:
+
+    SpectrumList_3D(msdata::SpectrumList^ inner);
+
+    /// <summary>
+    /// creates a 3d spectrum at the given scan start time (specified in seconds) and including the given drift time ranges (specified in milliseconds)
+    /// </summary>
+    virtual Spectrum3D^ spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ driftTimeRanges);
+
+    /// <summary>
+    /// works only on SpectrumList_Waters and SpectrumList_Agilent
+    /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 };
 

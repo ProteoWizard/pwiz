@@ -626,6 +626,16 @@ int SpectrumList::find(System::String^ id)
     try {return (int) (*base_)->find(ToStdString(id));} CATCH_AND_FORWARD
 }
 
+int SpectrumList::findAbbreviated(System::String^ abbreviatedId)
+{
+    return findAbbreviated(abbreviatedId, '.');
+}
+
+int SpectrumList::findAbbreviated(System::String^ abbreviatedId, char delimiter)
+{
+    try {return (int) (*base_)->findAbbreviated(ToStdString(abbreviatedId), delimiter);} CATCH_AND_FORWARD
+}
+
 IndexList^ SpectrumList::findNameValue(System::String^ name, System::String^ value)
 {
     try

@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
 
 
 using boost::shared_ptr;
@@ -50,6 +51,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
 
+    virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
+
 #ifdef PWIZ_READER_WATERS
     SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config);
 
@@ -70,6 +73,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
 
     mutable vector<IndexEntry> index_;
     mutable map<string, size_t> idToIndexMap_;
+    mutable boost::container::flat_map<double, vector<pair<int, int> > > scanTimeToFunctionAndBlockMap_;
 
     void initializeCoefficients() const;
     double calibrate(double mz) const;

@@ -1308,6 +1308,16 @@ public ref class SpectrumList
     virtual int find(System::String^ id);
 
     /// <summary>
+    /// find an abbreviated id (e.g. "1.1.123.2" for "sample=1 period=1 cycle=123 experiment=2") in the spectrum index (returns size() on failure), using the default '.' delimiter
+    /// </summary>
+    virtual int findAbbreviated(System::String^ abbreviatedId);
+
+    /// <summary>
+    /// find an abbreviated id (e.g. "1.1.123.2" for "sample=1 period=1 cycle=123 experiment=2") in the spectrum index (returns size() on failure)
+    /// </summary>
+    virtual int findAbbreviated(System::String^ abbreviatedId, char delimiter);
+
+    /// <summary>
     /// find all spectrum indexes with specified name/value pair
     /// </summary>
     virtual IndexList^ findNameValue(System::String^ name, System::String^ value);

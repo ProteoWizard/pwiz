@@ -665,6 +665,9 @@ class PWIZ_API_DECL SpectrumList
     /// find id in the spectrum index (returns size() on failure)
     virtual size_t find(const std::string& id) const;
 
+    /// find an abbreviated id (e.g. "1.1.123.2" for "sample=1 period=1 cycle=123 experiment=2") in the spectrum index (returns size() on failure)
+    virtual size_t findAbbreviated(const std::string& abbreviatedId, char delimiter = '.') const;
+
     /// find all spectrum indexes with specified name/value pair 
     virtual IndexList findNameValue(const std::string& name, const std::string& value) const;
 
@@ -679,33 +682,21 @@ class PWIZ_API_DECL SpectrumList
     /// get a copy of the seed spectrum, optionally with its binary data populated
     /// this is useful for formats like mzML that can delay loading of binary data
     /// - client may assume the underlying Spectrum* is valid 
-    virtual SpectrumPtr spectrum(const SpectrumPtr &seed, bool getBinaryData) const {
-        return spectrum(seed->index, getBinaryData); // default implementation
-    };
+    virtual SpectrumPtr spectrum(const SpectrumPtr& seed, bool getBinaryData) const;
 
     /// retrieve a spectrum by index
     /// - detailLevel determines what fields are guaranteed present on the spectrum after the call
     /// - client may assume the underlying Spectrum* is valid 
-    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const
-    {
-        // By default faster metadeta access is not implemented
-        if (detailLevel == DetailLevel_FastMetadata || detailLevel == DetailLevel_InstantMetadata)
-            return SpectrumPtr(new Spectrum);
-
-        return spectrum(index, detailLevel == DetailLevel_FullData);
-    }
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
 
     /// returns the data processing affecting spectra retrieved through this interface
     /// - may return a null shared pointer
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
-    /// makes it easy to issue simple warnings without repeats (based on string hash)
-    void warn_once(const char *msg) const; 
+    /// issues a warning once per SpectrumList instance (based on string hash)
+    virtual void warn_once(const char* msg) const; 
 
     virtual ~SpectrumList(){} 
-
-private:
-    mutable std::set<size_t> warn_msg_hashes; // for warn_once use
 };
 
 
@@ -889,7 +880,7 @@ struct PWIZ_API_DECL MSData
     MSData();
     virtual ~MSData();
     bool empty() const;
-    
+
     /// returns the version of this mzML document;
     /// for a document created programmatically, the version is the current release version of mzML;
     /// for a document created from a file/stream, the version is the schema version read from the file/stream

@@ -42,6 +42,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_TitleMaker.cpp
 		SpectrumList_PrecursorRefine.cpp
         SpectrumList_ZeroSamplesFilter.cpp
+        SpectrumList_3D.cpp
         PrecursorRecalculatorDefault.cpp
         PrecursorMassFilter.cpp
 		MS2NoiseFilter.cpp
@@ -107,3 +108,11 @@ run-if-exists SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_proces
     : # default-build
     ;
 
+import path ;
+run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
+    : # input-files
+    : # requirements
+    : SpectrumList_3D_Test # target name
+    : # default-build
+    ;

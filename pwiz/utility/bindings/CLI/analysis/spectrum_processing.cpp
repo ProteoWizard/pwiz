@@ -26,6 +26,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/analysis/Version.hpp"
+#include "boost/foreach_field.hpp"
 #pragma warning( pop )
 
 namespace b = pwiz::analysis;
@@ -344,6 +345,50 @@ SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalculator(
 bool SpectrumList_ChargeStateCalculator::accept(msdata::SpectrumList^ inner)
 {
     return b::SpectrumList_ChargeStateCalculator::accept(*inner->base_);
+}
+
+
+
+
+ContinuousInterval::ContinuousInterval(double begin, double end)
+{
+    Begin = begin;
+    End = end;
+}
+
+
+
+
+SpectrumList_3D::SpectrumList_3D(msdata::SpectrumList^ inner)
+    : msdata::SpectrumList(0)
+{
+        base_ = new b::SpectrumList_3D(*inner->base_);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+}
+
+Spectrum3D^ SpectrumList_3D::spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ driftTimeRanges)
+{
+    boost::icl::interval_set<double> driftTimeRangesSet;
+    for each (ContinuousInterval interval in driftTimeRanges)
+        driftTimeRangesSet.add(boost::icl::continuous_interval<double>(interval.Begin, interval.End));
+
+    b::Spectrum3DPtr nativeResult = base_->spectrum3d(scanStartTime, driftTimeRangesSet);
+
+    int i=0;
+    Spectrum3D^ result = gcnew Spectrum3D(nativeResult->size());
+    for (b::Spectrum3D::const_iterator itr = nativeResult->begin(), end = nativeResult->end(); itr != end; ++itr)
+    {
+        result->Add(System::Collections::Generic::KeyValuePair<double, Spectrum3DValue^>(itr->first, gcnew Spectrum3DValue(itr->second.size())));
+        Spectrum3DValue^ spectrum = result[i++].Value;
+        for (b::Spectrum3D::value_type::second_type::const_iterator itr2 = itr->second.begin(), end2 = itr->second.end(); itr2 != end2; ++itr2)
+            spectrum->Add(MzIntensityPair(itr2->first, itr2->second));
+    }
+    return result;
+}
+
+bool SpectrumList_3D::accept(msdata::SpectrumList^ inner)
+{
+    return b::SpectrumList_3D::accept(*inner->base_);
 }
 
 

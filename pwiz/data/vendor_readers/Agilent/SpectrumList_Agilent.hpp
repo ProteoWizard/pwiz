@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
 
 
 #ifdef PWIZ_READER_AGILENT
@@ -57,7 +58,9 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
-    
+
+    virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
+
 #ifdef PWIZ_READER_AGILENT
     SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config);
 
@@ -83,7 +86,8 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     };
 
     mutable vector<IndexEntry> index_;
-    mutable map<string, size_t> idToIndexMap_;
+    mutable boost::container::flat_map<string, size_t> idToIndexMap_;
+    mutable boost::container::flat_map<double, size_t> scanTimeToFrameMap_;
 
     void createIndex() const;
 #endif // PWIZ_READER_AGILENT
