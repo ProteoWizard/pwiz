@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -46,9 +47,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public static class WindowType
         {
-            public static string ISOLATION
+            public static string MEASUREMENT
             {
-                get { return Resources.WindowType_ISOLATION_Isolation; }
+                get { return Resources.WindowType_MEASUREMENT_Measurement; }
             }
 
             public static string EXTRACTION
@@ -150,10 +151,10 @@ namespace pwiz.Skyline.SettingsUI
             comboIsolation.Items.AddRange(
                 new object[]
                 {
-                    WindowType.ISOLATION,
+                    WindowType.MEASUREMENT,
                     WindowType.EXTRACTION
                 });
-            comboIsolation.SelectedItem = WindowType.ISOLATION;
+            comboIsolation.SelectedItem = WindowType.MEASUREMENT;
         }
 
         private void OnLoad(object sender, EventArgs e)
@@ -214,7 +215,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         double start = isolationWindow.Start;
                         double end = isolationWindow.End;
-                        if (Equals(comboIsolation.SelectedItem,WindowType.ISOLATION))
+                        if (Equals(comboIsolation.SelectedItem,WindowType.MEASUREMENT))
                         {
                             start -= (isolationWindow.StartMargin ?? 0);
                             end += (isolationWindow.EndMargin ?? (isolationWindow.StartMargin ?? 0));
@@ -393,61 +394,10 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 // Validate prespecified windows.
-                var windowList = new List<IsolationWindow>();
-                string marginType = MarginType;
-                for (int row = 0; row < _gridViewDriver.Items.Count; row++)
-                {
-                    var editWindow = _gridViewDriver.Items[row];
-
-                    // Report any problems in this row.
-                    int errorCell = FindErrorCell(editWindow);
-                    if (errorCell >= COLUMN_START)
-                    {
-                        _gridViewDriver.SelectCell(errorCell, row);
-                        MessageDlg.Show(this,
-                            string.Format(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window,
-                                _gridViewDriver.GetHeaderText(errorCell)));
-                        _gridViewDriver.EditCell();
-                        return;
-                    }
-
-                    IsolationWindow isolationWindow;
-                    try
-                    {
-                        double startValue = editWindow.Start.Value;
-                        double endValue = editWindow.End.Value;
-                        if (Equals(comboIsolation.SelectedItem,WindowType.ISOLATION))
-                        {
-                            if (!Equals(marginType, WindowMargin.NONE))
-                            {
-                                startValue += editWindow.StartMargin ?? 0;
-                            }
-                            if (Equals(marginType, WindowMargin.ASYMMETRIC))
-                            {
-                                endValue -= editWindow.EndMargin ?? 0;
-                            }
-                            else if (Equals(marginType, WindowMargin.SYMMETRIC))
-                            {
-                                endValue -= editWindow.StartMargin ?? 0;
-                            }
-                        }
-                        isolationWindow = new IsolationWindow(
-// ReSharper disable PossibleInvalidOperationException
-                            startValue,
-                            endValue,
-// ReSharper restore PossibleInvalidOperationException
-                            cbSpecifyTarget.Checked ? editWindow.Target : null,
-                            !Equals(marginType, WindowMargin.NONE) ? editWindow.StartMargin : null,
-                            Equals(marginType, WindowMargin.ASYMMETRIC) ? editWindow.EndMargin : null);
-                    }
-                    catch (InvalidDataException exception)
-                    {
-                        _gridViewDriver.SelectRow(row);
-                        MessageDlg.Show(this, exception.Message);
-                        return;
-                    }
-                    windowList.Add(isolationWindow);
-                }
+                List<IsolationWindow> windowList;
+                if((windowList = GetIsolationWindows()) == null)
+                    return;
+                
 
                 // Must be at least one window.
                 if (windowList.Count == 0)
@@ -491,33 +441,6 @@ namespace pwiz.Skyline.SettingsUI
 // ReSharper restore PossibleInvalidOperationException
                 }
 
-                    // Check unambiguous isolation window ranges.
-                else
-                {
-                    windowList.Sort((w1, w2) => w1.Start.CompareTo(w2.Start));
-                    for (int row = 1; row < windowList.Count; row++)
-                    {
-                        // If the previous window's end is >= to this window's end, it entirely contains this window.
-                        string errorText = null;
-                        if (windowList[row - 1].End >= windowList[row].End)
-                            errorText =
-                                Resources
-                                    .EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_contained_by_the_previous_window;
-                            // If the following window's start is <= the previous window's end, the current window is redundant.
-                        else if (row < windowList.Count - 1 && windowList[row - 1].End >= windowList[row + 1].Start)
-                            errorText =
-                                Resources
-                                    .EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_covered_by_windows_before_and_after_it;
-                        if (errorText != null)
-                        {
-                            _gridViewDriver.Sort(COLUMN_START);
-                            _gridViewDriver.SelectRow(row);
-                            MessageDlg.Show(this, errorText);
-                            return;
-                        }
-                    }
-                }
-
                 int? windowsPerScan = null;
                 if (Equals(SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED))
                 {
@@ -529,7 +452,40 @@ namespace pwiz.Skyline.SettingsUI
                         return;
                     windowsPerScan = x;
                 }
-
+                // Check for overlap and gaps
+                List<IsolationWindow> sortedWindowList = windowList.OrderBy(o => o.Start).ToList();
+                bool gapsOk = false;
+                bool overlapsOk = false;
+                bool overlap = Overlap;
+                int increment = overlap ? 2 : 1;
+                int subtraction = overlap ? 3 : 1;
+                for (int i = 0; i < sortedWindowList.Count - subtraction; i += increment)
+                {
+                    for (int j = 0; j < increment; j ++)
+                    {
+                        IsolationWindow current = sortedWindowList.ElementAt(i + j);
+                        IsolationWindow next = sortedWindowList.ElementAt(i + j + increment);
+                        if (!gapsOk && current.End < next.Start)
+                        {
+                            if (MultiButtonMsgDlg.Show(this, Resources.EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_,
+                                                       MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
+                            {
+                                return;
+                            }
+                            gapsOk = true;
+                        }
+                        else if (!overlapsOk && current.End > next.Start)
+                        {
+                            if (MultiButtonMsgDlg.Show(this, Resources.EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue,
+                                MultiButtonMsgDlg.BUTTON_YES,
+                                MultiButtonMsgDlg.BUTTON_NO,false) != DialogResult.Yes)
+                            {
+                                return;
+                            }
+                            overlapsOk = true;
+                        }
+                    }
+                }
                 try
                 {
                     _isolationScheme = new IsolationScheme(name, windowList, SpecialHandling, windowsPerScan);
@@ -546,35 +502,67 @@ namespace pwiz.Skyline.SettingsUI
 
         private List<IsolationWindow> GetIsolationWindows()
         {
-            List<IsolationWindow> windowList = new List<IsolationWindow>();
-            string marginType = MarginType;
-            foreach (var editWindow in _gridViewDriver.Items)
+            //Overlap requires an even number of windows
+            if (Overlap && _gridViewDriver.Items.Count%2 == 1)
             {
-                double startValue = editWindow.Start ?? 0;
-                double endValue = editWindow.End ?? 0;
-                if (Equals(comboIsolation.SelectedItem, WindowType.ISOLATION))
+                MessageDlg.Show(this, Resources.EditIsolationSchemeDlg_GetIsolationWindows_Overlap_requires_an_even_number_of_windows_);
+                return null;
+            }
+
+            // Validate prespecified windows.
+            var windowList = new List<IsolationWindow>();
+            string marginType = MarginType;
+            for (int row = 0; row < _gridViewDriver.Items.Count; row++)
+            {
+                var editWindow = _gridViewDriver.Items[row];
+
+                // Report any problems in this row.
+                int errorCell = FindErrorCell(editWindow);
+                if (errorCell >= COLUMN_START)
                 {
-                    if (!Equals(marginType, WindowMargin.NONE))
-                    {
-                        startValue += editWindow.StartMargin ?? 0;
-                    }
-                    if (Equals(marginType, WindowMargin.ASYMMETRIC))
-                    {
-                        endValue -= editWindow.EndMargin ?? 0;
-                    }
-                    else if (Equals(marginType, WindowMargin.SYMMETRIC))
-                    {
-                        endValue -= editWindow.StartMargin ?? 0;
-                    }
+                    _gridViewDriver.SelectCell(errorCell, row);
+                    MessageDlg.Show(this,
+                        string.Format(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window,
+                            _gridViewDriver.GetHeaderText(errorCell)));
+                    _gridViewDriver.EditCell();
+                    return null;
                 }
-                IsolationWindow isolationWindow = new IsolationWindow(
-// ReSharper disable PossibleInvalidOperationException
-                    startValue,
-                    endValue,
-// ReSharper restore PossibleInvalidOperationException
-                    cbSpecifyTarget.Checked ? editWindow.Target : null,
-                    !Equals(marginType, WindowMargin.NONE) ? editWindow.StartMargin : null,
-                    Equals(marginType, WindowMargin.ASYMMETRIC) ? editWindow.EndMargin : null);
+
+                IsolationWindow isolationWindow;
+                try
+                {
+                    double startValue = editWindow.Start.Value;
+                    double endValue = editWindow.End.Value;
+                    if (Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT))
+                    {
+                        if (!Equals(marginType, WindowMargin.NONE))
+                        {
+                            startValue += editWindow.StartMargin ?? 0;
+                        }
+                        if (Equals(marginType, WindowMargin.ASYMMETRIC))
+                        {
+                            endValue -= editWindow.EndMargin ?? 0;
+                        }
+                        else if (Equals(marginType, WindowMargin.SYMMETRIC))
+                        {
+                            endValue -= editWindow.StartMargin ?? 0;
+                        }
+                    }
+                    isolationWindow = new IsolationWindow(
+                        // ReSharper disable PossibleInvalidOperationException
+                        startValue,
+                        endValue,
+                        // ReSharper restore PossibleInvalidOperationException
+                        cbSpecifyTarget.Checked ? editWindow.Target : null,
+                        !Equals(marginType, WindowMargin.NONE) ? editWindow.StartMargin : null,
+                        Equals(marginType, WindowMargin.ASYMMETRIC) ? editWindow.EndMargin : null);
+                }
+                catch (InvalidDataException exception)
+                {
+                    _gridViewDriver.SelectRow(row);
+                    MessageDlg.Show(this, exception.Message);
+                    return null;
+                }
                 windowList.Add(isolationWindow);
             }
             return windowList;
@@ -606,7 +594,8 @@ namespace pwiz.Skyline.SettingsUI
             bool fromResults = rbUseResultsData.Checked;
             labelWindowsPerScan.Enabled =
                 textWindowsPerScan.Enabled =
-                    (!fromResults && Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX));
+                    (!fromResults && (Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX)||
+                                      Equals(comboDeconvPre.SelectedItem,DeconvolutionMethod.MSX_OVERLAP)));
         }
 
 
@@ -693,6 +682,11 @@ namespace pwiz.Skyline.SettingsUI
                     else
                         comboMargins.SelectedItem = WindowMargin.NONE;
 
+                    //Determine if calculation was on Isolation Or Extraction
+                    comboIsolation.SelectedItem = calculateDlg.IsIsolation ? 
+                        WindowType.MEASUREMENT : 
+                        WindowType.EXTRACTION;
+
                     // Load isolation windows into grid.
                     foreach (var window in isolationWindows)
                     {
@@ -700,15 +694,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
 
                     // Copy multiplexed windows settings.
-                    if (calculateDlg.Multiplexed)
-                    {
-                        comboDeconvPre.SelectedItem = DeconvolutionMethod.MSX;
-                        textWindowsPerScan.Text = calculateDlg.WindowsPerScan.ToString(LocalizationHelper.CurrentCulture);
-                    }
-                    else
-                    {
-                        textWindowsPerScan.Text = string.Empty;
-                    }
+                    comboDeconvPre.SelectedItem = calculateDlg.Deconvolution;
+                    textWindowsPerScan.Text = calculateDlg.Multiplexed ? 
+                        calculateDlg.WindowsPerScan.ToString(LocalizationHelper.CurrentCulture) : 
+                        string.Empty;
                 }
             }
         }
@@ -995,16 +984,26 @@ namespace pwiz.Skyline.SettingsUI
             set { comboMargins.SelectedItem = value; }
         }
 
-        public object IsolationType
+        public object CurrenWindowType
         {
             get { return comboIsolation.SelectedIndex; }
             set
             {
-                if(!Equals(value,WindowType.ISOLATION) && ! Equals(value,WindowType.EXTRACTION))
+                if(!Equals(value,WindowType.MEASUREMENT) && ! Equals(value,WindowType.EXTRACTION))
                     throw new ArgumentOutOfRangeException();
                 comboIsolation.SelectedItem = value;
             }
         }
+
+        public bool Overlap
+        {
+            get
+            {
+                return Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.OVERLAP) ||
+                       Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX_OVERLAP);
+            }
+        }
+
         public void Clear()
         {
             _gridViewDriver.Items.Clear();
@@ -1018,7 +1017,7 @@ namespace pwiz.Skyline.SettingsUI
         #endregion
 
 
-        private object _lastWindowType = WindowType.ISOLATION;
+        private object _lastWindowType = WindowType.MEASUREMENT;
 
         private void comboIsolation_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1027,7 +1026,7 @@ namespace pwiz.Skyline.SettingsUI
             _lastWindowType = comboIsolation.SelectedItem;
             
             string selectedType = MarginType;
-            bool isIsolation = Equals(comboIsolation.SelectedItem, WindowType.ISOLATION);
+            bool isIsolation = Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT);
             int row = 0;
             foreach (EditIsolationWindow window in _gridViewDriver.Items)
             {
@@ -1077,10 +1076,25 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OpenGraph()
         {
-            using (var graphDlg = new DiaIsolationWindowsGraphForm(GetIsolationWindows()))
+            if (Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX) ||
+                Equals(comboDeconvPre.SelectedItem, DeconvolutionMethod.MSX_OVERLAP))
+            {
+                MessageDlg.Show(this,Resources.EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_);
+                return;
+            }
+                   
+            List<IsolationWindow> windows = GetIsolationWindows();
+            if (windows == null)
+                return;
+            int windowsPerScan;
+            if (! int.TryParse(textWindowsPerScan.Text, out windowsPerScan))
+                windowsPerScan = 1;
+            bool useMargins = !Equals(comboMargins.SelectedItem, WindowMargin.NONE);
+            using (var graphDlg = new DiaIsolationWindowsGraphForm(windows, useMargins,
+                comboDeconvPre.SelectedItem, windowsPerScan))
             {
                 graphDlg.ShowDialog(this);
-            } 
+            }
         }
     }
 }

@@ -72,25 +72,13 @@ namespace pwiz.SkylineTestFunctional
             CheckError(() => _calcDlg.WindowWidth = 1950, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range);
             CheckError(() => _calcDlg.WindowWidth = 1);
 
-            // Check Overlap values.
-            CheckError(() =>
-                {
-                    _calcDlg.Start = 100;
-                    _calcDlg.End = 101;
-                    _calcDlg.WindowWidth = 1;
-                    _calcDlg.Overlap = -1;
-                },
-                Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
-            CheckError(() => _calcDlg.Overlap = 100, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
-            CheckError(() => _calcDlg.Overlap = 50);
-
             // Check Overlap/Optimize conflict.
             RunDlg<MultiButtonMsgDlg>(() => 
                 {
                     _calcDlg.Start = 100;
                     _calcDlg.End = 101;
                     _calcDlg.WindowWidth = 1;
-                    _calcDlg.Overlap = 50;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
                 msgDlg =>
@@ -101,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 {
                     Assert.IsTrue(_calcDlg.OptimizeWindowPlacement);
-                    Assert.AreEqual(_calcDlg.Overlap, null);
+                    Assert.AreEqual(_calcDlg.Overlap, 0);
                     _calcDlg.OptimizeWindowPlacement = false;
                 });
 
@@ -110,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 100;
                     _calcDlg.End = 101;
                     _calcDlg.WindowWidth = 1;
-                    _calcDlg.Overlap = 50;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
                 msgDlg =>
@@ -131,7 +119,7 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 100;
                     _calcDlg.End = 101;
                     _calcDlg.WindowWidth = 1;
-                    _calcDlg.Overlap = null;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
                     _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
                     _calcDlg.MarginLeft = null;
                 },
@@ -166,9 +154,11 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Start = 100;
                     _calcDlg.End = 101;
                     _calcDlg.WindowWidth = 1;
-                    _calcDlg.Overlap = 50;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
                 },
                 100, 101, null, null, null,
+                101, 102, null, null, null,
+                99.5, 100.5, null, null, null,
                 100.5, 101.5, null, null, null);
 
             // One max-range window.
@@ -183,6 +173,7 @@ namespace pwiz.SkylineTestFunctional
             // One max-range window with asymmetric margins and centered target.
             CheckWindows(() =>
                 {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                     _calcDlg.Start = 50;
                     _calcDlg.End = 2000;
                     _calcDlg.WindowWidth = 1950;
@@ -196,6 +187,7 @@ namespace pwiz.SkylineTestFunctional
             // Now with window optimization.
             CheckWindows(() =>
                 {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                     _calcDlg.Start = 50;
                     _calcDlg.End = 1900;
                     _calcDlg.WindowWidth = 1850;
@@ -210,6 +202,7 @@ namespace pwiz.SkylineTestFunctional
             // Four windows that fit exactly.
             CheckWindows(() =>
                 {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                     _calcDlg.Start = 100;
                     _calcDlg.End = 200;
                     _calcDlg.WindowWidth = 25;
@@ -225,6 +218,7 @@ namespace pwiz.SkylineTestFunctional
             // Four windows that don't fit exactly.
             CheckWindows(() =>
                 {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                     _calcDlg.Start = 100;
                     _calcDlg.End = 200;
                     _calcDlg.WindowWidth = 33;

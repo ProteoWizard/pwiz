@@ -125,6 +125,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test asymmetric isolation width (automatic split).
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
@@ -145,6 +146,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test asymmetric isolation width (manually set).
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
@@ -164,6 +166,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test return to symmetric isolation width.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
@@ -184,6 +187,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test return to symmetric isolation width with only left width specified.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
@@ -207,6 +211,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test non-numeric isolation width.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
@@ -384,6 +389,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify simple isolation window, test windows per scan.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -402,6 +408,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -445,8 +452,9 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
-                        Assert.IsFalse(editDlg.UseResults); 
+                        Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
                                 new double?[] {100.0, 500.0},
@@ -473,6 +481,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty target.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -511,6 +520,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -580,6 +590,7 @@ namespace pwiz.SkylineTestFunctional
                 // Save margin.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START_MARGIN, 0);
                         editDlg.IsolationWindowGrid.SetCellValue(1);
                         editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START_MARGIN, 1);
@@ -597,6 +608,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify margin.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -620,6 +632,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty end margin.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -684,6 +697,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify margin.
                 RunUI(() =>
                     {
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
                         Assert.AreEqual("test2", editDlg.IsolationSchemeName); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
@@ -828,7 +842,12 @@ namespace pwiz.SkylineTestFunctional
                         new double?[] {200.0, 300.0, 250.0 }
                     }));
 
-                OkDialog(editDlg, editDlg.OkDialog);
+                RunDlg<MultiButtonMsgDlg>(editDlg.OkDialog, messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_, messageDlg.Message);
+                    messageDlg.BtnYesClick();
+                });
+                WaitForClosedForm(editDlg);
             }
             RunUI(() => editList.SelectItem("test1")); // Not L10N
             {
@@ -840,42 +859,50 @@ namespace pwiz.SkylineTestFunctional
                 const int rangeInterval = 100;
 
                 double?[][] expectedValues = new double?[rows][];
-                RunDlg<EditIsolationSchemeDlg>(editList.EditItem, editDlg =>
                 {
-                    editDlg.IsolationSchemeName = "test3";
-                    editDlg.UseResults = false;
-                    editDlg.SpecifyTarget = false;
-                    editDlg.MarginType = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
+                    RunUI(() =>
+                    {
+                        editDlg.IsolationSchemeName = "test3";
+                        editDlg.UseResults = false;
+                        editDlg.SpecifyTarget = false;
+                        editDlg.MarginType = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
                    
-                    for (int row = 0; row < rows; row++)
-                    {
-                        editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START,row);
-                        editDlg.IsolationWindowGrid.SetCellValue(firstRangeStart + rangeInterval*row);
-                        editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, row);
-                        editDlg.IsolationWindowGrid.SetCellValue(firstRangeEnd + rangeInterval*row);
-                        editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START_MARGIN, row);
-                        editDlg.IsolationWindowGrid.SetCellValue(startMargin);
-                    }
-                    for (int row = 0; row < rows; row ++)
-                    {
-                        expectedValues[row] = new double?[]
+                        for (int row = 0; row < rows; row++)
                         {
-                            firstRangeStart + rangeInterval*row,
-                            firstRangeEnd + rangeInterval*row,
-                            startMargin
-                        };
-                    }
-                    VerifyCellValues(editDlg, expectedValues);
-                    editDlg.IsolationType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
-                    // Test extraction alternation
-                    for (int row = 0; row < rows; row ++)
+                            editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START,row);
+                            editDlg.IsolationWindowGrid.SetCellValue(firstRangeStart + rangeInterval*row);
+                            editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, row);
+                            editDlg.IsolationWindowGrid.SetCellValue(firstRangeEnd + rangeInterval*row);
+                            editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START_MARGIN, row);
+                            editDlg.IsolationWindowGrid.SetCellValue(startMargin);
+                        }
+                        for (int row = 0; row < rows; row ++)
+                        {
+                            expectedValues[row] = new double?[]
+                            {
+                                firstRangeStart + rangeInterval*row,
+                                firstRangeEnd + rangeInterval*row,
+                                startMargin
+                            };
+                        }
+                        VerifyCellValues(editDlg, expectedValues);
+                        editDlg.CurrenWindowType = EditIsolationSchemeDlg.WindowType.EXTRACTION;
+                        // Test extraction alternation
+                        for (int row = 0; row < rows; row ++)
+                        {
+                            expectedValues[row][0] += startMargin;
+                            expectedValues[row][1] -= startMargin;
+                        }
+                        VerifyCellValues(editDlg, expectedValues);
+                    });
+                    RunDlg<MultiButtonMsgDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        expectedValues[row][0] += startMargin;
-                        expectedValues[row][1] -= startMargin;
-                    }
-                    VerifyCellValues(editDlg, expectedValues);
-                    editDlg.OkDialog();
-                });
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_, messageDlg.Message);
+                        messageDlg.BtnYesClick();
+                    });
+                    WaitForClosedForm(editDlg);
+                }
                 RunUI(() => editList.SelectItem("test3")); // Not L10N
                 {
                     var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
@@ -891,38 +918,98 @@ namespace pwiz.SkylineTestFunctional
                             row++;
                         }
                     });
+                    
                     // Test Graph to make sure it has the right lines
                     RunDlg<DiaIsolationWindowsGraphForm>(editDlg.OpenGraph, diaGraph =>
                     {
                         int windowCount = diaGraph.Windows.Count;
-                        int isolationCount = windowCount/2;
+                        int isolationCount = windowCount/diaGraph.CyclesPerGraph;
                         for (int i = 0; i < isolationCount; i ++)
                         {
-                            for (int j = 0; j < 2; j ++)
+                            for (int j = 0; j < 3; j ++)
                             {
-                                Location locWindow = diaGraph.Windows.ElementAt(i*2 + j).Location;
-                                Location locLMargin = diaGraph.LeftMargins.ElementAt(i*2 + j).Location;
-                                Location locRMargin = diaGraph.RightMargins.ElementAt(i*2 + j).Location;
+                                int index = j*isolationCount + i;
+                                Location locWindow = diaGraph.Windows.ElementAt(index).Location;
+                                Location locLMargin = diaGraph.LeftMargins.ElementAt(index).Location;
+                                Location locRMargin = diaGraph.RightMargins.ElementAt(index).Location;
                                 Assert.AreEqual(locWindow.X1, expectedValues[i][0]);
                                 Assert.AreEqual(locWindow.X2, expectedValues[i][1]);
-                                Assert.AreEqual(locWindow.Y1, locWindow.Y2);
                                 Assert.AreEqual(locWindow.Y1, j + (double) i / expectedValues.Length);
                                 Assert.AreEqual(locLMargin.X1, expectedValues[i][0] - expectedValues[i][2]);
                                 Assert.AreEqual(locLMargin.X2, expectedValues[i][0]);
-                                Assert.AreEqual(locLMargin.Y1, locLMargin.Y2);
                                 Assert.AreEqual(locLMargin.Y1, j + (double) i/expectedValues.Length);
                                 Assert.AreEqual(locRMargin.X1, expectedValues[i][1]);
                                 Assert.AreEqual(locRMargin.X2, expectedValues[i][1] + expectedValues[i][2]);
-                                Assert.AreEqual(locRMargin.Y1, locRMargin.Y2);
                                 Assert.AreEqual(locRMargin.Y1, j + (double)i / expectedValues.Length);
                             }
                         }
                         diaGraph.CloseButton();
                     });
 
-                    OkDialog(editDlg, editDlg.OkDialog);
+                    RunDlg<CalculateIsolationSchemeDlg>(editDlg.Calculate, calc =>
+                    {
+                        calc.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                        calc.Start = 100;
+                        calc.End = 1000;
+                        calc.WindowWidth = 50;
+                        calc.OkDialog();
+                    });
+                    //Make sure overlap graphs correctly
+                    RunDlg<DiaIsolationWindowsGraphForm>(editDlg.OpenGraph, diaGraph =>
+                    {
+                        int windowSize = 19;
+                        for (int cycle = 0; cycle < diaGraph.CyclesPerGraph - 1; cycle ++)
+                        {
+                            int startDifferenceMult = cycle%2 == 0 ? -1 : 1;
+                            for (int i = 0; i < windowSize; i ++)
+                            {
+                                Location window = diaGraph.Windows.ElementAt(cycle * windowSize + i).Location;
+                                Location nextWindow = diaGraph.Windows.ElementAt((cycle + 1)*windowSize + i).Location;
+                                Assert.AreEqual(window.X1 + startDifferenceMult * 0.5 * window.Width, nextWindow.X1);
+                                Assert.AreEqual(window.X2 + startDifferenceMult * 0.5 * window.Width, nextWindow.X2);
+                            }
+                        }
+                        diaGraph.CloseButton();
+                    });
+                    
+                    //Make sure gaps and overlaps work correctly
+                    RunUI(() =>
+                    {
+                        editDlg.IsolationWindowGrid.SelectCell(1,1);
+                        editDlg.IsolationWindowGrid.SetCellValue(210);
+                        editDlg.IsolationWindowGrid.SelectCell(1,2);
+                        editDlg.IsolationWindowGrid.SetCellValue(240);
+                    });
+                    RunDlg<DiaIsolationWindowsGraphForm>(editDlg.OpenGraph, diaGraph =>
+                    {
+                        int expectedGaps = diaGraph.CyclesPerGraph - diaGraph.CyclesPerGraph/2;
+                        int expectedOverlaps = expectedGaps;
+                        Assert.AreEqual(expectedOverlaps,diaGraph.Overlaps.Count);
+                        Assert.AreEqual(expectedGaps,diaGraph.Gaps.Count);
+                        for (int i = 0; i < expectedGaps; i ++)
+                        {
+                            Location overlap = diaGraph.Overlaps.ElementAt(i).Location;
+                            Location gap = diaGraph.Gaps.ElementAt(i).Location;
+                            Assert.AreEqual(i*2,overlap.Y1);
+                            Assert.AreEqual(i*2,gap.Y1);
+                            Assert.AreEqual(200,overlap.X1);
+                            Assert.AreEqual(210,overlap.X2);
+                            Assert.AreEqual(240,gap.X1);
+                            Assert.AreEqual(250,gap.X2);
+                            Assert.AreEqual(1,gap.Height);
+                            Assert.AreEqual(1,overlap.Height);
+                        }
+                        diaGraph.CloseButton();
+                    });
+                    RunUI(() =>
+                    {
+                        editDlg.IsolationWindowGrid.SelectCell(1, 1);
+                        editDlg.IsolationWindowGrid.SetCellValue(200);
+                        editDlg.IsolationWindowGrid.SelectCell(1, 2);
+                        editDlg.IsolationWindowGrid.SetCellValue(250);
+                    });
+                    OkDialog(editDlg,editDlg.OkDialog);
                 }
-                
                 OkDialog(editList, editList.OkDialog);
                 OkDialog(fullScanDlg, fullScanDlg.OkDialog);
             }

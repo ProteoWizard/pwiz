@@ -2945,12 +2945,6 @@
   <data name="EditIsolationSchemeDlg_OkDialog_The_selected_target_is_not_unique" xml:space="preserve">
 <value>選択したターゲットは一意ではありません。</value>
       </data>
-  <data name="EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_contained_by_the_previous_window" xml:space="preserve">
-<value>選択した単離ウィンドウは、その前のウィンドウに含まれています。</value>
-      </data>
-  <data name="EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_covered_by_windows_before_and_after_it" xml:space="preserve">
-<value>選択した単離ウィンドウは、その前後のウィンドウで覆われています。</value>
-      </data>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Margin" xml:space="preserve">
 <value>マージン</value>
       </data>

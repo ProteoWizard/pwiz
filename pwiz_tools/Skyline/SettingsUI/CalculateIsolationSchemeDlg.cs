@@ -34,7 +34,22 @@ namespace pwiz.Skyline.SettingsUI
     public partial class CalculateIsolationSchemeDlg : FormEx
     {
         public IList<EditIsolationWindow> IsolationWindows { get { return CreateIsolationWindows(); } }
-        public bool Multiplexed { get { return cbMultiplexed.Checked; } }
+
+        public object Deconvolution
+        {
+            get { return comboDeconv.SelectedItem; }
+            set {comboDeconv.SelectedItem = value;}
+        }
+
+        public bool Multiplexed
+        {
+            get
+            {
+                return Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX) ||
+                       Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP);
+            }
+        }
+
         public int WindowsPerScan 
         { 
             get
@@ -46,7 +61,8 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 textWindowsPerScan.Text = value.ToString(LocalizationHelper.CurrentCulture);
-                cbMultiplexed.Checked = (WindowsPerScan != 0);
+                if (WindowsPerScan != 0)
+                    comboDeconv.SelectedItem = EditIsolationSchemeDlg.DeconvolutionMethod.MSX;
             }
         }
 
@@ -76,6 +92,24 @@ namespace pwiz.Skyline.SettingsUI
                         WindowMargin.ASYMMETRIC
                     });
             comboMargins.SelectedItem = WindowMargin.NONE;
+
+            //Initialize window type combo box
+            comboWindowType.Items.AddRange(new object[]
+            {
+                EditIsolationSchemeDlg.WindowType.MEASUREMENT,
+                EditIsolationSchemeDlg.WindowType.EXTRACTION
+            });
+            comboWindowType.SelectedItem = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+
+            //Initialize deconvolution combo box
+            comboDeconv.Items.AddRange(new object[]
+            {
+                EditIsolationSchemeDlg.DeconvolutionMethod.NONE,
+                EditIsolationSchemeDlg.DeconvolutionMethod.MSX,
+                EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP,
+                EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP
+            });
+            comboDeconv.SelectedItem = EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
         }
 
         private IList<EditIsolationWindow> CreateIsolationWindows()
@@ -84,12 +118,10 @@ namespace pwiz.Skyline.SettingsUI
             double start;
             double end;
             double windowWidth;
-            double overlap;
             double marginLeft = 0;
             double marginRight = 0;
             int windowsPerScan = 0;
-
-            double.TryParse(textOverlap.Text, out overlap);
+            double overlap = Overlap;
 
             var comboMarginSelectedItem = comboMargins.SelectedItem.ToString();
 
@@ -108,8 +140,20 @@ namespace pwiz.Skyline.SettingsUI
             if (!double.TryParse(textStart.Text, out start) ||
                 !double.TryParse(textEnd.Text, out end) ||
                 !double.TryParse(textWidth.Text, out windowWidth) ||
-                (Multiplexed && !int.TryParse(textWindowsPerScan.Text, out windowsPerScan)) ||
-                start >= end ||
+                (Multiplexed && !int.TryParse(textWindowsPerScan.Text, out windowsPerScan))) 
+            {
+                return isolationWindows;
+            }
+
+            bool isIsolation = Equals(comboWindowType.SelectedItem, EditIsolationSchemeDlg.WindowType.MEASUREMENT);
+            if (isIsolation)
+            {
+                start += marginLeft;
+                end -= marginRight;
+                windowWidth -= marginLeft + marginRight;
+            }
+
+            if (start >= end ||
                 windowWidth <= 0 ||
                 overlap >= 100)
             {
@@ -118,7 +162,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Calculate how many windows will be needed.
             double windowStep = windowWidth * (100 - overlap) / 100;
-            int windowCount = (int) Math.Ceiling((end - start)/windowStep);
+            int windowCount = (int) Math.Ceiling((end - start) /windowStep);
             if (Multiplexed && windowCount % windowsPerScan != 0)
             {
                 windowCount = (windowCount/windowsPerScan + 1)*windowsPerScan;
@@ -143,6 +187,15 @@ namespace pwiz.Skyline.SettingsUI
             bool generateTarget = cbGenerateMethodTarget.Checked;
             bool generateStartMargin = (comboMargins.SelectedItem.ToString() != WindowMargin.NONE);
             bool generateEndMargin = (comboMargins.SelectedItem.ToString() == WindowMargin.ASYMMETRIC);
+            if (overlap > 0)
+            {
+                if (windowCount%2 != 0)
+                {
+                    windowCount ++;
+                }
+                windowCount += 2;
+                start -= windowStep;
+            }
             for (int i = 0; i < windowCount; i++, start += windowStep)
             {
                 // Apply instrument limits to method start and end.
@@ -155,13 +208,16 @@ namespace pwiz.Skyline.SettingsUI
 
                 var window = new EditIsolationWindow
                 {
-                    Start = methodStart + marginLeft,
-                    End = methodEnd - marginRight,
+                    Start = methodStart + (isIsolation ? 0 : marginLeft),
+                    End = methodEnd - (isIsolation ?  0 : marginRight),
                     Target = generateTarget ? (double?)((methodStart + methodEnd) / 2) : null,
                     StartMargin = generateStartMargin ? (double?)marginLeft : null,
                     EndMargin = generateEndMargin ? (double?)marginRight : null
                 };
-                isolationWindows.Add(window);
+                if (overlap > 0)
+                    isolationWindows.Insert(i % 2 == 1 ? i / 2 : i, window);
+                else
+                    isolationWindows.Add(window);
             }
 
             return isolationWindows;
@@ -212,12 +268,6 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            // Validate overlap.
-            double overlap;
-            if (textOverlap.Enabled && textOverlap.Text.Trim().Length > 0 && !helper.ValidateDecimalTextBox(e, textOverlap, 0, 99, out overlap))
-            {
-                return;
-            }
 
             // Validate margins.
             double marginLeft = 0.0;
@@ -271,23 +321,29 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textMarginLeft.Enabled = false;
                 textMarginRight.Visible = false;
+                comboWindowType.Enabled = false;
+                labelWindowType.Enabled = false;
             }
             else if (string.Equals(comboMarginsSelectedItem,WindowMargin.SYMMETRIC))
             {
                 textMarginLeft.Enabled = true;
                 textMarginRight.Visible = false;
+                comboWindowType.Enabled = true;
+                labelWindowType.Enabled = true;
             }
             else if (string.Equals(comboMarginsSelectedItem,WindowMargin.ASYMMETRIC))
             {
                 textMarginLeft.Enabled = true;
                 textMarginRight.Visible = true;
+                comboWindowType.Enabled = true;
+                labelWindowType.Enabled = true;
             }
+            UpdateWindowCount();
         }
 
         private void cbOptimizeWindowPlacement_CheckedChanged(object sender, EventArgs e)
         {
-            double overlap;
-            double.TryParse(textOverlap.Text, out overlap);
+            double overlap = Overlap;
             if (cbOptimizeWindowPlacement.Checked && overlap != 0)
             {
                 if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
@@ -299,17 +355,13 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    textOverlap.Text = string.Empty;
+                    comboDeconv.SelectedItem =
+                       Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP) ?
+                       EditIsolationSchemeDlg.DeconvolutionMethod.MSX :
+                       EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
                 }
             }
 
-            textOverlap.Enabled = !cbOptimizeWindowPlacement.Checked;
-
-            UpdateWindowCount();
-        }
-
-        private void textOverlap_TextChanged(object sender, EventArgs e)
-        {
             UpdateWindowCount();
         }
 
@@ -333,16 +385,36 @@ namespace pwiz.Skyline.SettingsUI
             UpdateWindowCount();
         }
 
+        private void comboDeconv_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            bool multiplexed = Multiplexed;
+            textWindowsPerScan.Enabled = multiplexed;
+            labelWindowsPerScan.Enabled = multiplexed;
+            cbOptimizeWindowPlacement_CheckedChanged(null, null);
+        }
+
+        private void comboWindowType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateWindowCount();
+        }
+
+        private void textMarginLeft_TextChanged(object sender, EventArgs e)
+        {
+            if (IsIsolation)
+                UpdateWindowCount();
+        }
+
+        private void textMarginRight_TextChanged(object sender, EventArgs e)
+        {
+            if (IsIsolation)
+                UpdateWindowCount();
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
         }
 
-        private void cbMultiplexed_CheckedChanged(object sender, EventArgs e)
-        {
-            textWindowsPerScan.Enabled = cbMultiplexed.Checked;
-            labelWindowsPerScan.Enabled = cbMultiplexed.Checked;
-        }
 
         #region Functional Test Support
 
@@ -364,10 +436,16 @@ namespace pwiz.Skyline.SettingsUI
             set { textWidth.Text = Helpers.NullableDoubleToString(value); }
         }
 
-        public double? Overlap
+        public double Overlap
         {
-            get { return Helpers.ParseNullableDouble(textOverlap.Text); }
-            set { textOverlap.Text = Helpers.NullableDoubleToString(value); }
+            get
+            {
+                return
+                    ((Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP) ||
+                     Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP))
+                        ? 50
+                        : 0);
+            }
         }
 
         public string Margins
@@ -398,6 +476,63 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbOptimizeWindowPlacement.Checked; }
             set { cbOptimizeWindowPlacement.Checked = value; }
+        }
+
+        public bool IsIsolation
+        {
+            get { return Equals(comboWindowType.SelectedItem, EditIsolationSchemeDlg.WindowType.MEASUREMENT); }
+        }
+
+        public object WindowType
+        {
+            get { return comboWindowType.SelectedItem; }
+            set { comboWindowType.SelectedItem = value; }
+        }
+
+        public double RealMarginLeft
+        {
+            get { return (MarginLeft ?? 0); }
+        }
+
+        public double RealMarginRight
+        {
+            get { return (MarginRight ?? (MarginLeft ?? 0)); }    
+        }
+
+        public double? ExtractionStart
+        {
+            get
+            {
+                if (IsIsolation)
+                    return Start + RealMarginLeft;
+                else
+                    return Start;
+            }
+            set
+            {
+                if (IsIsolation)
+                    Start = value - RealMarginLeft;
+                else
+                    Start = value;
+            }
+        }
+
+        public double? ExtractionEnd
+        {
+            get
+            {
+                if (IsIsolation)
+                    return End - RealMarginRight;
+                else
+                    return End;
+            }
+            set
+            {
+                if (IsIsolation)
+                    End = value + RealMarginRight;
+                else
+                    End = value;
+            }
         }
         #endregion
     }

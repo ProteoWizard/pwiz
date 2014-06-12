@@ -2945,12 +2945,6 @@
   <data name="EditIsolationSchemeDlg_OkDialog_The_selected_target_is_not_unique" xml:space="preserve">
     <value>选定目标并不是独一无二的。</value>
   </data>
-  <data name="EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_contained_by_the_previous_window" xml:space="preserve">
-    <value>选定的隔离窗口包含于上一个窗口。</value>
-  </data>
-  <data name="EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_covered_by_windows_before_and_after_it" xml:space="preserve">
-    <value>选定的隔离窗口被之前和之后的窗口覆盖。</value>
-  </data>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Margin" xml:space="preserve">
     <value>边距</value>
   </data>

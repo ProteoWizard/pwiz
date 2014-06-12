@@ -105,6 +105,9 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void Btn0Click()
         {
+            // Tests shouldn't call this function when the button is not visible
+            if (!btn0.Visible)
+                throw new NotSupportedException();
             CheckDisposed();
             btn0.PerformClick();
         }
@@ -116,6 +119,17 @@ namespace pwiz.Skyline.Alerts
         {
             CheckDisposed();
             btn1.PerformClick();
+        }
+
+        /// <summary>
+        /// Click the left-most visible button
+        /// </summary>
+        public void BtnYesClick()
+        {
+            if (btn0.Visible)
+                Btn0Click();
+            else
+                Btn1Click();
         }
 
         /// <summary>

@@ -2945,12 +2945,6 @@ Are you sure you want to continue?</value>
   <data name="EditIsolationSchemeDlg_OkDialog_The_selected_target_is_not_unique" xml:space="preserve">
     <value>The selected target is not unique.</value>
   </data>
-  <data name="EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_contained_by_the_previous_window" xml:space="preserve">
-    <value>The selected isolation window is contained by the previous window.</value>
-  </data>
-  <data name="EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_covered_by_windows_before_and_after_it" xml:space="preserve">
-    <value>The selected isolation window is covered by windows before and after it.</value>
-  </data>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Margin" xml:space="preserve">
     <value>Margin</value>
   </data>
@@ -6191,7 +6185,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_" xml:space="preserve">
     <value>Imported peptide {0} with iRT library value is already being used as an iRT standard.</value>
   </data>
-    <data name="SkylineWindow_Paste_Could_not_perform_transition_list_paste___0_" xml:space="preserve">
+  <data name="SkylineWindow_Paste_Could_not_perform_transition_list_paste___0_" xml:space="preserve">
     <value>Could not perform transition list paste: {0}</value>
   </data>
   <data name="MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_" xml:space="preserve">
@@ -7015,7 +7009,7 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides" xml:space="preserve">
     <value>Adding iRT values for imported peptides</value>
   </data>
-    <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
+  <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
     <value>Two transitions of the same precursor, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list.</value>
   </data>
   <data name="OptimizationLibraryList_Title_Edit_Optimization_Databases" xml:space="preserve">
@@ -7540,8 +7534,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="IonMobilityTest_TestGetIonMobilityDBErrorHandling_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_" xml:space="preserve">
     <value>The ion mobility library file {0} could not be found. Perhaps you did not have sufficient privileges to create it?</value>
   </data>
-  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Isolation_Windows" xml:space="preserve">
-    <value>Isolation Windows</value>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows" xml:space="preserve">
+    <value>Measurement Windows</value>
   </data>
   <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle" xml:space="preserve">
     <value>Cycle</value>
@@ -7552,8 +7546,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows" xml:space="preserve">
     <value>Extraction Windows</value>
   </data>
-  <data name="WindowType_ISOLATION_Isolation" xml:space="preserve">
-    <value>Isolation</value>
+  <data name="WindowType_MEASUREMENT_Measurement" xml:space="preserve">
+    <value>Measurement</value>
   </data>
   <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
     <value>Extraction</value>
@@ -7599,5 +7593,17 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
     <value>Standard co-elution (weighted)</value>
+  </data>
+  <data name="EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue" xml:space="preserve">
+    <value>There are overlaps in a single cycle of your extraction windows. Are you sure you want to continue?</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_GetIsolationWindows_Overlap_requires_an_even_number_of_windows_" xml:space="preserve">
+    <value>Overlap requires an even number of windows.</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_" xml:space="preserve">
+    <value>There are gaps in a single cycle of your extraction windows. Are you sure you want to continue?</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_" xml:space="preserve">
+    <value>Multiplex graphing is not supported.</value>
   </data>
 </root>
