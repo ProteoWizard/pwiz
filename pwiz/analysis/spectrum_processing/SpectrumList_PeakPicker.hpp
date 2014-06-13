@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/common/LocalMaximumPeakDetector.hpp"
+#include "pwiz/analysis/common/CwtPeakDetector.hpp"
 
 
 namespace pwiz {
@@ -47,6 +48,7 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
 
     static bool accept(const msdata::SpectrumListPtr& inner);
 
+    virtual msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel) const;
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     private:

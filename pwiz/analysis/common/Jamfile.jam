@@ -32,6 +32,7 @@ lib pwiz_analysis_common
         SavitzkyGolaySmoother.cpp
         WhittakerSmoother.cpp
         LocalMaximumPeakDetector.cpp
+        CwtPeakDetector.cpp
     : # requirements
         <library>/ext/boost//thread
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
@@ -51,3 +52,4 @@ unit-test-if-exists ExtraZeroSamplesFilterTest : ExtraZeroSamplesFilterTest.cpp 
 unit-test-if-exists SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_common ;
 unit-test-if-exists WhittakerSmootherTest : WhittakerSmootherTest.cpp pwiz_analysis_common ;
 unit-test-if-exists LocalMaximumPeakDetectorTest : LocalMaximumPeakDetectorTest.cpp pwiz_analysis_common ;
+unit-test-if-exists CwtPeakDetectorTest : CwtPeakDetectorTest.cpp pwiz_analysis_common ;

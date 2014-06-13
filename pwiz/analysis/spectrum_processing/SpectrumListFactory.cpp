@@ -26,10 +26,12 @@
 #include "SpectrumListFactory.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_ScanSummer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeFromIsotope.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRefine.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
@@ -139,34 +141,170 @@ SpectrumListPtr filterCreator_sortScanTime(const MSData& msd, const string& arg)
 }
 UsageInfo usage_sortScanTime = {"","This filter reorders spectra, sorting them by ascending scan start time."};
 
+SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& arg)
+{
+
+    // defaults
+    double precursorTol = 0.05; // m/z
+    double rTimeTol = 10; // seconds
+
+    istringstream parser(arg);
+    string nextStr;
+
+    while ( parser >> nextStr )
+    {
+
+        if ( string::npos == nextStr.rfind('=') )
+                throw runtime_error("[filterCreator_scanSummer] = sign required after keyword argument");
+
+        string keyword = nextStr.substr(0,nextStr.rfind('='));
+        string paramVal = nextStr.substr(nextStr.rfind('=')+1);
+
+        if ( boost::iequals(keyword,"precursorTol") )
+        {
+            try { lexical_cast<double>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_scanSummer] A numeric value must follow the precursorTol argument."); }
+            precursorTol = lexical_cast<double>(paramVal);
+            if ( precursorTol < 0 ) { throw runtime_error("[filterCreator_nativeCentroid] precursorTol must be greater than or equal to zero."); }
+        }
+        else if ( boost::iequals(keyword,"rTimeTol") )
+        {
+            try { lexical_cast<double>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_scanSummer] A numeric value must follow the rTimeTol argument."); }
+            rTimeTol = lexical_cast<double>(paramVal);
+            if ( rTimeTol < 0 ) { throw runtime_error("[filterCreator_nativeCentroid] rTimeTol must be greater than or equal to zero."); }
+        }
+        else
+        {
+            throw runtime_error("[filterCreator_nativeCentroid] Invalid keyword entered.");
+        }
+
+    }
+
+    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr,precursorTol,rTimeTol));
+}
+UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [rTimeTol=<retention time tolerance>]",
+    "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance>(default: 0.05 Th.)"
+    "and <retention time tolerance> (default: 10 secs.). Its use is intended for some Waters DDA data, where sub-scans " 
+    "should be summed together to increase the SNR. This filter has only been tested for Waters data."};
+
 SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& arg)
 {
-    istringstream parser(arg);
-    string preferVendorPeakPicking;
-    parser >> preferVendorPeakPicking;
-    bool preferVendor = boost::iequals(preferVendorPeakPicking , "true");
 
-    string msLevelSets;
-    getline(parser, msLevelSets);
+    // by default assume we are using the low-quality localMax code unless explicitly told otherwise
+
+    // default values for CWT
+    bool preferVendor = false;
+    bool preferCwt = false; 
+    double mzTol = 0.1; // default value, minimum spacing between peaks
+    double minSnr = 1.0; // for the cwt algorithm, default value is 1.01
+    int fixedPeaksKeep = 0; // this will always be set to zero, except from charge determination algorithm
+
+    string msLevelSets = "1-"; // peak-pick all MS levels by default
+
+    istringstream parser(arg);
+    string pickerType;
+    parser >> pickerType;
+    string nextStr;
+
+    if ( !pickerType.empty() )
+    {
+
+        preferVendor = boost::iequals(pickerType,"vendor");
+        preferCwt = boost::iequals(pickerType,"cwt");
+
+        while ( parser >> nextStr )
+        {
+
+            if ( string::npos == nextStr.rfind('=') )
+                throw runtime_error("[filterCreator_nativeCentroid] = sign required after keyword argument");
+
+            string keyword = nextStr.substr(0,nextStr.rfind('='));
+            string paramVal = nextStr.substr(nextStr.rfind('=')+1);
+
+            if ( boost::iequals(keyword,"snr") )
+            {
+                try { lexical_cast<double>(paramVal); }
+                catch (...) { throw runtime_error("[filterCreator_nativeCentroid] A numeric value must follow the snr argument."); }
+                minSnr = lexical_cast<double>(paramVal);
+                if ( minSnr < 0 ) { throw runtime_error("[filterCreator_nativeCentroid] snr must be greater than or equal to zero."); }
+            }
+            else if ( boost::iequals(keyword,"peakSpace") ) 
+            {
+                try { lexical_cast<double>(paramVal); }
+                catch (...) { throw runtime_error("[filterCreator_nativeCentroid] A numeric value must follow the peakSpace argument."); }
+                mzTol = lexical_cast<double>(paramVal);
+                if ( mzTol < 0 ) { throw runtime_error("[filterCreator_nativeCentroid] peakSpace must be greater than or equal to zero."); }
+            }
+            else if ( boost::iequals(keyword,"msLevel") )
+            {
+                msLevelSets = paramVal;
+            }
+            else
+            {
+                throw runtime_error("[filterCreator_nativeCentroid] Invalid keyword argument.");
+            }
+
+        }
+
+        // give the user some feedback
+        if ( preferCwt & preferVendor )
+        {
+            throw runtime_error("[filterCreator_nativeCentroid] Cannot request both cwt and vendor peak-picking.");
+        }
+        else if ( preferCwt )
+        {
+            cout << "---CantWaiT Parameters---" << endl;
+            cout << "minimum SNR: " << minSnr << endl;
+            cout << "minimum peak spacing: " << mzTol << endl;
+            cout << "msLevels: " << msLevelSets << endl << endl;
+        }
+        else if ( preferVendor )
+        {
+            cout << "Applying vendor peak-picking" << endl;
+        }
+        else
+        {
+            cout << "WARNING: applying simple local maxima peak-picking. Specify cwt or vendor for high-quality processing." << endl;
+        }
+
+    }
 
     IntegerSet msLevelsToCentroid;
     msLevelsToCentroid.parse(msLevelSets);
 
     if (preferVendor && msd.countFiltersApplied())
-    {
         cerr << "[SpectrumList_PeakPicker] Warning: vendor peakPicking requested, but peakPicking is not the first filter.  Since the vendor DLLs can only operate directly on raw data, this filter will likely not have any effect." << endl;
-    }
 
-    return SpectrumListPtr(new 
-        SpectrumList_PeakPicker(msd.run.spectrumListPtr,
-                                PeakDetectorPtr(new LocalMaximumPeakDetector(3)),
-                                preferVendor,
-                                msLevelsToCentroid));
+    if (preferCwt)
+    {
+        return SpectrumListPtr(new 
+            SpectrumList_PeakPicker(msd.run.spectrumListPtr,
+                                    PeakDetectorPtr(new CwtPeakDetector(minSnr,fixedPeaksKeep,mzTol)),
+                                    preferVendor,
+                                    msLevelsToCentroid));
+    }
+    else
+    {
+        return SpectrumListPtr(new 
+            SpectrumList_PeakPicker(msd.run.spectrumListPtr,
+                                    PeakDetectorPtr(new LocalMaximumPeakDetector(3)),
+                                    preferVendor,
+                                    msLevelsToCentroid));
+    }
 }
-UsageInfo usage_nativeCentroid = {"<prefer_vendor> <ms_levels>","This filter performs centroiding on spectra with the "
-    "selected <ms_levels>, expressed as an int_set.  The value for <prefer_vendor> must be \"True\" or \"False\": when "
-    "True, vendor (Windows DLL) code is used if available.  IMPORTANT NOTE: since this filter operates on the raw "
-    "data through the vendor DLLs, IT MUST BE THE FIRST FILTER IN ANY LIST OF FILTERS when <prefer_vendor> is set to \"True\"."
+UsageInfo usage_nativeCentroid = {"[<PickerType> [snr=<minimum signal-to-noise ratio>] [peakSpace=<minimum peak spacing>] [msLevel=<ms_levels>]]","This filter performs centroiding on spectra"
+    "with the selected <ms_levels>, expressed as an int_set.  The value for <PickerType> must be \"cwt\" or \"vendor\": when <PickerType> = "
+    "\"vendor\", vendor (Windows DLL) code is used if available.  IMPORTANT NOTE: since this filter operates on the raw "
+    "data through the vendor DLLs, IT MUST BE THE FIRST FILTER IN ANY LIST OF FILTERS when \"vendor\" is used. "
+    "The other option for PickerType is \"cwt\", which uses ProteoWizard's wavelet-based algorithm for performing peak-picking with a "
+    "wavelet-space signal-to-noise ratio of <signal-to-noise ratio>.\n" 
+    "Defaults:\n "
+    "<PickerType> is a low-quality (non-vendor) local maxima algorithm\n "
+    "<signal-to-noise ratio> = 1.0\n "
+    "<minimum peak spacing> = 0.1\n "
+    "<ms_levels> = 1-\n "
+
 };
 
 /**
@@ -318,28 +456,72 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg)
     bool hires = false;
     string buf;
     parser >> buf;
-    if (buf.empty() == false)
+
+    MZTolerance mzt(hires? 0.01 : 0.5);
+
+    bool poisson = false;
+    int maxCharge = 3, minCharge = 1;
+
+    if ( !buf.empty() )
     {
-        if (buf == "true")
+        if ( buf == "Poisson" )
+            poisson = true;
+        else if ( buf == "highres" )
             hires = true;
     }
 
-    MZTolerance mzt(hires? 0.01 : 0.5);
-    if (parser.good())
+    while ( parser >> buf )
     {
-        parser >> mzt;
+
+        if ( string::npos == buf.rfind('=') )
+            throw runtime_error("[filterCreator_MS2Deisotope] = sign required after keyword argument");
+
+        string keyword = buf.substr(0,buf.rfind('='));
+        string paramVal = buf.substr(buf.rfind('=')+1);
+
+        if ( boost::iequals(keyword,"minCharge") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_MS2Deisotope] An integer must follow the minCharge argument."); }
+            minCharge = lexical_cast<int>(paramVal);
+            if ( minCharge < 0 ) { throw runtime_error("[filterCreator_MS2Deisotope] minCharge must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"maxCharge") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_MS2Deisotope] An integer must follow the maxCharge argument."); }
+            maxCharge = lexical_cast<int>(paramVal);    
+            if ( maxCharge < 0 ) { throw runtime_error("[filterCreator_MS2Deisotope] maxCharge must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"mzTol") )
+        {
+            try { lexical_cast<double>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_MS2Deisotope] A numeric value must follow the mzTol keyword."); }
+            if ( lexical_cast<double>(paramVal) < 0 ) { throw runtime_error("[filterCreator_MS2Deisotope] mzTol must be a positive."); }
+            mzt = lexical_cast<double>(paramVal);    
+        }
+        else
+        {
+            throw runtime_error("[filterCreator_MS2Deisotope] Invalid keyword entered.");
+        }
+
     }
 
+    // sanity check
+    if ( minCharge > maxCharge)
+        throw runtime_error("[filterCreator_MS2Deisotope] minCharge must be less than maxCharge.");
 
-    SpectrumDataFilterPtr filter = SpectrumDataFilterPtr(new MS2Deisotoper(MS2Deisotoper::Config(mzt, hires)));
+    SpectrumDataFilterPtr filter = SpectrumDataFilterPtr(new MS2Deisotoper(MS2Deisotoper::Config(mzt, hires, poisson, maxCharge, minCharge)));
     return SpectrumListPtr(new 
             SpectrumList_PeakFilter(msd.run.spectrumListPtr,
                                    filter));
 }
-UsageInfo usage_MS2Deisotope = { "[<hi_res> [<mz_tolerance>]]",
-    "Deisotopes ms2 spectra using Markey method.\n"
-    "  <hi_res> sets high resolution mode to \"false\" (the default) or \"true\".\n"
-    "  <mz_tolerance> sets the mz tolerance.  It defaults to .01 in high resoltion mode, otherwise it defaults to 0.5."
+UsageInfo usage_MS2Deisotope = { "[hi_res [mzTol=<mzTol>]] [Poisson [minCharge=<minCharge>] [maxCharge=<maxCharge>]]",
+    "Deisotopes ms2 spectra using the Markey method or a Poisson model.\n"
+    "  For the Markey method, hi_res sets high resolution mode to \"false\" (the default) or \"true\".\n"
+    "  <mzTol> sets the mz tolerance.  It defaults to .01 in high resoltion mode, otherwise it defaults to 0.5.\n"
+    "  Poisson activates a Poisson model based on the relative intensity distribution.\n"
+    "  <minCharge> (default: 1) and <maxCharge> (default: 3) define the charge search range within the Poisson deisotoper. (default: 1)"
     };
 
 struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
@@ -632,6 +814,115 @@ UsageInfo usage_chargeStatePredictor = {"[<overrideExistingCharge> [<maxMultiple
     "  <algorithmMakeMS2> : default is \"false\", when set to \"true\" the \"makeMS2\" algorithm is used instead of the one described above."
     };
 
+SpectrumListPtr filterCreator_chargeFromIsotope(const MSData& msd, const string& arg)
+{
+
+    // defaults
+    int maxCharge = 8;
+    int minCharge = 1;
+    int parentsBefore = 2;
+    int parentsAfter = 0;
+    double isolationWidth = 1.25;
+    int defaultChargeMax = 0;
+    int defaultChargeMin = 0;
+
+    istringstream parser(arg);
+    string nextStr;
+
+    while ( parser >> nextStr )
+    {
+
+        if ( string::npos == nextStr.rfind('=') )
+            throw runtime_error("[filterCreator_turbocharger] = sign required after keyword argument");
+
+        string keyword = nextStr.substr(0,nextStr.rfind('='));
+        string paramVal = nextStr.substr(nextStr.rfind('=')+1);
+
+        if ( boost::iequals(keyword,"minCharge") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] An integer must follow the minCharge argument."); }
+            minCharge = lexical_cast<int>(paramVal);
+            if ( minCharge < 0 ) { throw runtime_error("[filterCreator_turbocharger] minCharge must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"maxCharge") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] An integer must follow the maxCharge argument."); }
+            maxCharge = lexical_cast<int>(paramVal);    
+            if ( maxCharge < 0 ) { throw runtime_error("[filterCreator_turbocharger] maxCharge must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"parentsBefore") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] An integer must follow the parentsBefore argument."); }
+            parentsBefore = lexical_cast<int>(paramVal);
+            if ( parentsBefore < 0 ) { throw runtime_error("[filterCreator_turbocharger] parentsBefore must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"parentsAfter") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] An integer must follow the parentsAfter argument."); }
+            parentsAfter = lexical_cast<int>(paramVal);
+            if ( parentsAfter < 0 ) { throw runtime_error("[filterCreator_turbocharger] parentsAfter must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"halfIsoWidth") )
+        {
+            try { lexical_cast<double>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] A numeric value must follow the halfIsoWidth argument."); }
+            isolationWidth = lexical_cast<double>(paramVal);
+            if ( isolationWidth <= 0 ) { throw runtime_error("[filterCreator_turbocharger] halfIsoWidth must be positive."); }
+        }
+        else if ( boost::iequals(keyword,"defaultMinCharge") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] An integer must follow the defaultChargeMin argument."); }
+            defaultChargeMin = lexical_cast<int>(paramVal);
+            if ( defaultChargeMin < 0 ) { throw runtime_error("[filterCreator_turbocharger] defaultChargeMin must be a positive integer."); }
+        }
+        else if ( boost::iequals(keyword,"defaultMaxCharge") )
+        {
+            try { lexical_cast<int>(paramVal); }
+            catch (...) { throw runtime_error("[filterCreator_turbocharger] An integer must follow the defaultChargeMax argument."); }
+            defaultChargeMax = lexical_cast<int>(paramVal);
+            if ( defaultChargeMax < 0 ) { throw runtime_error("[filterCreator_turbocharger] defaultChargeMax must be a positive integer."); }
+        }
+        else
+        {
+            throw runtime_error("[filterCreator_turbocharger] Invalid keyword entered.");
+        }
+
+            
+
+    }
+
+    // a few more sanity checks
+    if ( minCharge > maxCharge ) { throw runtime_error("[filterCreator_turbocharger] maxCharge must be greater than or equal to minCharge."); }
+    if ( defaultChargeMin > defaultChargeMax ) { throw runtime_error("[filterCreator_turbocharger] defaultMaxCharge must be greater than or equal to defaultMinCharge."); }
+
+
+    cout << "***turbocharger parameters***" << endl;
+    cout << "minCharge: " << minCharge << endl;
+    cout << "maxCharge: " << maxCharge << endl;
+    cout << "parentsBefore: " << parentsBefore << endl;
+    cout << "parentsAfter: " << parentsAfter << endl;
+    cout << "halfIsoWidth: " << isolationWidth << endl;
+    cout << "defaultMinCharge: " << defaultChargeMin << endl;
+    cout << "defaultMaxCharge: " << defaultChargeMax << endl;
+    
+
+    return SpectrumListPtr(new
+        SpectrumList_ChargeFromIsotope(msd,maxCharge,minCharge,parentsBefore,parentsAfter,isolationWidth,
+                                           defaultChargeMax,defaultChargeMin));
+}
+UsageInfo usage_chargeFromIsotope = {"[minCharge=<minCharge>] [maxCharge=<maxCharge>] [parentsBefore=<before>] [parentsAfter=<after>] [halfIsoWidth=<half-width of isolation window>] [defaultMinCharge=<defaultMinCharge>] [defaultMaxCharge=<defaultMaxCharge>] [useVendorPeaks=<useVendorPeaks>]",
+    "Predicts MSn spectrum precursor charge based on the isotopic distribution associated with the parent scan(s) of the selected precursor\n"
+    "  <maxCharge> (default: 8) and <minCharge> (default 1): defines range of possible precursor charge states.\n"
+    "  <before> (default: 2) and <after> (default 0): number of parent (MS1) scans to check for precursor isotopes, before and after a MS/MS in retention time.\n"
+    "  <half-width of isolation window> (default: 1.25): half-width of the isolation window (in Th.) from which precursor is derived. Window is centered at target m/z with a total size of +/- the value entered.\n"
+    "  <defaultMinCharge> (default: 0) and <defaultMaxCharge> (default: 0): in the event that no isotope is found in the isolation window, a range of charges between these two values will be assigned to the spectrum. If both values are left at zero, no charge will be assigned to the spectrum."
+    };
+
 /** 
   *  filter on the basis of ms2 activation type
   *
@@ -868,12 +1159,14 @@ JumpTableEntry jumpTable_[] =
     {"defaultArrayLength", usage_defaultArrayLength, filterCreator_defaultArrayLength},
     {"zeroSamples", usage_zeroSamples , filterCreator_ZeroSamples},
     {"mzPresent", usage_mzPresent , filterCreator_mzPresent},
+    {"scanSumming", usage_scanSummer, filterCreator_scanSummer},
 
     // MSn Spectrum Processing/Filtering
     {"MS2Denoise", usage_MS2Denoise , filterCreator_MS2Denoise},
     {"MS2Deisotope", usage_MS2Deisotope , filterCreator_MS2Deisotope},
     {"ETDFilter", usage_ETDFilter , filterCreator_ETDFilter},
     {"chargeStatePredictor", usage_chargeStatePredictor , filterCreator_chargeStatePredictor},
+    {"turbocharger",usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
     {"activation", usage_activation , filterCreator_ActivationType},
     {"analyzer", usage_analyzerType , filterCreator_AnalyzerType},
     {"analyzerType", usage_analyzerTypeOld , filterCreator_AnalyzerType},

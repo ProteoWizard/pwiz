@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.hpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Chris Paulse <cpaulse <a.t> systemsbiology.org>
@@ -27,6 +27,10 @@
 #include "pwiz/analysis/common/DataFilter.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
 
+typedef struct {
+    int charge;
+    std::vector <int> indexList;
+} isoChain;
 
 namespace pwiz {
 namespace analysis {
@@ -42,11 +46,14 @@ struct PWIZ_API_DECL MS2Deisotoper : public SpectrumDataFilter
      /// PrecursorMassFilter's parameters
     struct PWIZ_API_DECL Config
     {
-        Config(MZTolerance tol = MZTolerance(0.5), bool hires_ = false) 
-            : matchingTolerance(tol), hires(hires_) {}
+        Config(MZTolerance tol = MZTolerance(0.5), bool hires_ = false, bool poisson_ = false, int maxCharge_ = 3, int minCharge_ = 1) 
+            : matchingTolerance(tol), hires(hires_), poisson(poisson_), maxCharge(maxCharge_), minCharge(minCharge_) {}
 
         MZTolerance matchingTolerance;
         bool hires;
+        bool poisson;
+        int maxCharge;
+        int minCharge;
     };
 
     MS2Deisotoper(const MS2Deisotoper::Config params_) : params(params_) {}

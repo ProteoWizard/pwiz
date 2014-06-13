@@ -115,6 +115,7 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         cerr << " as it depends on Windows DLLs.  ";
 #endif
         cerr << "Using ProteoWizard centroiding algorithm instead." << endl;
+		cerr << "High-quality peak-picking can be enabled using the cwt flag." << endl;
     }
     dp_->processingMethods.push_back(method);
 }
@@ -123,6 +124,19 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
 PWIZ_API_DECL bool SpectrumList_PeakPicker::accept(const msdata::SpectrumListPtr& inner)
 {
     return true;
+}
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, DetailLevel detailLevel) const
+{
+
+    // this is useful when a peak-picker is nested inside another filter, so that peak-picking
+    // is not performed twice inadventantly. E.g., the turbocharger constructor iterates over 
+    // all spectra in order to find and sort the ms1 spectra. If a peak-picker was listed as the 
+    // first filter, a spectrum(index,true) call would perform peak-picking when all we are looking
+    // for is the spectrum metadata (i.e., retention time).
+
+    return inner_->spectrum(index,detailLevel);
+
 }
 
 

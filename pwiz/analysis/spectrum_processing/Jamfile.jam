@@ -31,12 +31,14 @@ lib pwiz_analysis_spectrum_processing
     : # sources  
         SpectrumListFactory.cpp
         SpectrumList_Sorter.cpp
+        SpectrumList_ScanSummer.cpp
         SpectrumList_Filter.cpp
         SpectrumList_PrecursorRecalculator.cpp
         SpectrumList_Smoother.cpp
         SpectrumList_PeakPicker.cpp
         SpectrumList_PeakFilter.cpp
         SpectrumList_ChargeStateCalculator.cpp
+        SpectrumList_ChargeFromIsotope.cpp
         SpectrumList_MZWindow.cpp
         SpectrumList_MetadataFixer.cpp
         SpectrumList_TitleMaker.cpp
@@ -75,6 +77,9 @@ unit-test-if-exists SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_a
 unit-test-if-exists SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_ChargeFromIsotopeTest : SpectrumList_ChargeFromIsotopeTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_ScanSummerTest : SpectrumList_ScanSummerTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists MS2DeisotoperTest : MS2DeisotoperTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test-if-exists SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test-if-exists SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing ;
