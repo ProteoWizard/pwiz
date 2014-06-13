@@ -524,6 +524,10 @@ namespace SkylineTester
             selectedItem.Visible = true;
             selectedItem.Checked = true;
             selectedBuild.Text = selectedItem.Text;
+
+            // Reset languages to match the selected build
+            InitLanguages(formsLanguage);
+            InitLanguages(tutorialsLanguage);
         }
 
         public string GetSelectedBuildDir()
