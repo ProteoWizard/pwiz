@@ -73,7 +73,7 @@ void testWrap()
     unit_assert_operator_equal(2, msd.allDataProcessingPtrs().size());
     unit_assert_operator_equal(1, msd.allDataProcessingPtrs()[1]->processingMethods.size());
 
-    SpectrumListFactory::wrap(msd, "peakPicking true [1,6]");
+    SpectrumListFactory::wrap(msd, "peakPicking msLevel=[1,6]");
 
     vector<double> peakData(sl->spectrum(0)->getMZArray()->data);
     unit_assert(peakData.size() == 1);
