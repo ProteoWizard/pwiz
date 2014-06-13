@@ -35,7 +35,7 @@ using namespace pwiz::analysis;
 ostream* os_ = 0;
 
 template<typename MapT>
-typename MapT::const_iterator find_nearest(const MapT& m, typename const MapT::key_type& query, typename const MapT::key_type& tolerance)
+typename MapT::const_iterator find_nearest(MapT const& m, typename MapT::key_type const& query, typename MapT::key_type const& tolerance)
 {
     typename MapT::const_iterator cur, min, max, best;
 

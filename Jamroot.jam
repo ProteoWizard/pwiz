@@ -109,9 +109,18 @@ if ! $(boost_version_suffix) { errors.user-error "Unable to determine version fr
 constant BOOST_VERSION : [ regex.split $(boost_version_suffix[1]) _ ] ;
 
 
-# declare a feature indicating vendor API support is desired (but not necessarily possible on the current platform)
+import path ;
 import feature ;
-feature.feature vendor-api-support : on off : incidental propagated ;
+
+# declare a feature indicating vendor API support is desired (but not necessarily possible on the current platform)
+if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+{
+    feature.feature vendor-api-support : on off : incidental propagated ; # on is the default
+}
+else
+{
+    feature.feature vendor-api-support : off on : incidental propagated ; # off is the default
+}
 
 
 if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text formats like mzML, mzXML, MGF etc
