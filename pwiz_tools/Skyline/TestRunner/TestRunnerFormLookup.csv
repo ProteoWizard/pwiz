@@ -3,7 +3,10 @@ AddIrtCalculatorDlg,IrtFunctionalTest
 AddIrtPeptidesDlg,IrtFunctionalTest
 AddIrtSpectralLibrary,TestIrtTutorial
 AddIrtStandardsDlg,IrtFunctionalTest
+AddOptimizationLibraryDlg,TestOptimization
+AddOptimizationsDlg,TestOptimization
 AddPathsDlg,TestLibraryBuild
+AddPeakCompareDlg,TestPeakBoundaryCompare
 AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*
@@ -21,6 +24,7 @@ ChooseSchedulingReplicatesDlg,TestRetentionTimeFilter
 ChromatogramRTThresholdDlg,TestEditDialogs
 ChromChartPropertyDlg,TestPeakPickingTutorial
 ColumnChooser,TestStandardTypeWithOldReports
+ComparePeakPickingDlg,TestPeakBoundaryCompare
 ConfigureToolsDlg,TestQuasarTutorial
 CreateIrtCalculatorDlg,TestAssayLibraryImport
 DefineAnnotationDlg,TestAnnotations
@@ -41,6 +45,7 @@ EditLibraryDlg,TestRetentionTimeAlignment
 EditListDlg`2,TestEditStaticMod
 EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote
+EditOptimizationLibraryDlg,TestOptimization
 EditPeakScoringModelDlg.ModelTab,TestPeakScoringModel
 EditPeakScoringModelDlg.FeaturesTab,TestPeakPickingTutorial
 EditPeakScoringModelDlg.PvalueTab,TestPeakPickingTutorial
