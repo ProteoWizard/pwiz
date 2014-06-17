@@ -59,8 +59,8 @@ void testWrap()
     SpectrumListFactory::wrap(msd, "scanNumber [19,20]");
     unit_assert(sl->size() == 2);
 
-	// make sure we can handle config file lines copied from commandline
-	// with quotes intact
+    // make sure we can handle config file lines copied from commandline
+    // with quotes intact
     SpectrumListFactory::wrap(msd, "'index [1,1]'");
     unit_assert(sl->size() == 1);
     unit_assert(sl->spectrumIdentity(0).id == "scan=20");
@@ -73,14 +73,18 @@ void testWrap()
     unit_assert_operator_equal(2, msd.allDataProcessingPtrs().size());
     unit_assert_operator_equal(1, msd.allDataProcessingPtrs()[1]->processingMethods.size());
 
-    SpectrumListFactory::wrap(msd, "peakPicking msLevel=[1,6]");
+    SpectrumListFactory::wrap(msd, "peakPicking true [1,6]"); // backwards compatible syntax
+    SpectrumListFactory::wrap(msd, "peakPicking false"); // backwards compatible syntax
+    SpectrumListFactory::wrap(msd, "peakPicking cwt msLevel=[1,6]");
+    SpectrumListFactory::wrap(msd, "peakPicking cwt snr=1.2 msLevel=2-");
+    SpectrumListFactory::wrap(msd, "peakPicking cwt peakSpace=0.05");
 
     vector<double> peakData(sl->spectrum(0)->getMZArray()->data);
     unit_assert(peakData.size() == 1);
     unit_assert(peakData[0] == 0);
 
     unit_assert_operator_equal(2, msd.allDataProcessingPtrs().size());
-    unit_assert_operator_equal(2, msd.allDataProcessingPtrs()[1]->processingMethods.size());
+    unit_assert_operator_equal(6, msd.allDataProcessingPtrs()[1]->processingMethods.size());
 }
 
 

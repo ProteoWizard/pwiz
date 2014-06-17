@@ -495,7 +495,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeFromIsotope::spectrum(size_t index,
 
 void SpectrumList_ChargeFromIsotope::getMS1RetentionTimes()
 {
-    cout << "Turbocharger initialization, storing and sorting survey scans by retention time. This may take a few minutes for large files." << endl << endl;
+    //cout << "Turbocharger initialization, storing and sorting survey scans by retention time. This may take a few minutes for large files." << endl << endl;
 
     int nScans = inner_->size();
     MS1retentionTimes.reserve( nScans );
