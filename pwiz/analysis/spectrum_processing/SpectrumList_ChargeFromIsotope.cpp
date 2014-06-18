@@ -293,12 +293,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeFromIsotope::spectrum(size_t index,
                 double KLscore = getKLscore( chains[j], peakMZs, peakIntensities );
                 int startIndex = (chains[j].indexList.size()-minIsotopePeaks)*nSamples;
                 vector <double> simValues;
-                simValues.assign(&simulatedKLs[startIndex],&simulatedKLs[startIndex+nSamples]);
+                simValues.assign(&simulatedKLs[startIndex],&simulatedKLs[startIndex+nSamples-1]);
                 vector< double >::iterator i1 = upper_bound(simValues.begin(),simValues.end(),KLscore); // returns iterator to first value that's > KLscore
                 int klVectorIndex = i1 - simValues.begin();
                 scores[j].intensityPvalue = double(klVectorIndex+1) / double(nSamples+1);
                 //////////////////////////////////////////////////////////////////////////////////////
-
 
 
                 //////////////////////////////////////////////////////////////////////////////////////
@@ -315,12 +314,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeFromIsotope::spectrum(size_t index,
 
                 // get the P value for the m/z sse
                 startIndex = (chains[j].indexList.size()-minIsotopePeaks)*nPossibleChargeStates*nSamples + (chains[j].charge-minCharge_)*nSamples;
-                simValues.assign(&simulatedSSEs[startIndex],&simulatedSSEs[startIndex+nSamples]);
+                simValues.assign(&simulatedSSEs[startIndex],&simulatedSSEs[startIndex+nSamples-1]);
                 i1 = upper_bound(simValues.begin(),simValues.end(),sse); // returns iterator to first value that's > sse
                 int mzVectorIndex = i1 - simValues.begin();
                 //////////////////////////////////////////////////////////////////////////////////////
-
-
 
                 //////////////////////////////////////////////////////////////////////////////////////
                 // now calculate the sum of intensity rank score
@@ -331,8 +328,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeFromIsotope::spectrum(size_t index,
                 {
                     double intensity = peakIntensities[chains[j].indexList[k]];
                     i1 = upper_bound(sortedPeakIntensities.begin(),sortedPeakIntensities.end(),intensity);
-                    i1--;
-                    int rank = nPeaks - (i1 - sortedPeakIntensities.begin()); // remember sortedPeakIntensities sorted from least to most intense
+                    //i1--;
+                    //int rank = nPeaks - (i1 - sortedPeakIntensities.begin()); // remember sortedPeakIntensities sorted from least to most intense
+                    //int rank = nPeaks - 1 - (i1 - sortedPeakIntensities.begin()); // remember sortedPeakIntensities sorted from least to most intense
+                    int rank = (i1 - 1) - sortedPeakIntensities.begin();
+                    rank = nPeaks - rank;
                     intensitySumRank += rank;
                 }
                 startIndex = (nPeaks - minNumberPeaks)*nIsotopePeakPossibilities*nSamples + (chains[j].indexList.size()-minIsotopePeaks)*nSamples;
@@ -349,7 +349,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeFromIsotope::spectrum(size_t index,
                     combos = combinations > nSamples ? nSamples : combinations;
                 }
                 vector <int> simIntValues;
-                simIntValues.assign(&simulatedIntensityRankSum[startIndex],&simulatedIntensityRankSum[startIndex+combos]);
+                simIntValues.assign(&simulatedIntensityRankSum[startIndex],&simulatedIntensityRankSum[startIndex+combos-1]);
                 vector<int>::iterator i2 = upper_bound(simIntValues.begin(),simIntValues.end(),intensitySumRank); // returns iterator to first value that's > KLscore
                 int intensitySumVectorIndex = i2 - simIntValues.begin();
                 //////////////////////////////////////////////////////////////////////////////////////
@@ -591,7 +591,11 @@ void SpectrumList_ChargeFromIsotope::simulateKL(const double finalRetentionTime,
     {
         double rTime = double(i) * finalRetentionTime / double(nMS1sims+1);
         vector< rtimeMap >::iterator i1 = upper_bound(MS1retentionTimes.begin(),MS1retentionTimes.end(),rTime,rtimeComparator); // returns iterator to first value that's > rTime
-        int nearestMS1scanVectorIndex = --i1 - MS1retentionTimes.begin();
+        int nearestMS1scanVectorIndex;
+        if ( i1 == MS1retentionTimes.begin() )
+            nearestMS1scanVectorIndex = 0;
+        else
+            nearestMS1scanVectorIndex = (i1 - 1) - MS1retentionTimes.begin();
         if (nearestMS1scanVectorIndex<0) nearestMS1scanVectorIndex = 0;
         nineMS1indices[i-1] = MS1retentionTimes[nearestMS1scanVectorIndex].indexMap; 
     }
@@ -815,13 +819,19 @@ void SpectrumList_ChargeFromIsotope::simulateTotIntensity(const int nIsotopePeak
 
 void SpectrumList_ChargeFromIsotope::getParentIndices( const SpectrumPtr s, vector <int> & parents ) const
 {
-    if ( MS1retentionTimes.size()>0 )
+    int nMS1scans = MS1retentionTimes.size();
+
+    if ( nMS1scans > 0 )
     {
         int parentCnt = 0;
         double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
         vector< rtimeMap >::const_iterator i1 = upper_bound(MS1retentionTimes.begin(),MS1retentionTimes.end(),rTime,rtimeComparator); // returns iterator to first value that's > rTime
 
-        int nearestMS1scanVectorIndex = (i1 - 1) - MS1retentionTimes.begin();
+		int nearestMS1scanVectorIndex;
+		if ( i1 == MS1retentionTimes.begin() )
+			nearestMS1scanVectorIndex = 0;
+		else
+			nearestMS1scanVectorIndex = (i1 - 1) - MS1retentionTimes.begin();
 
         while (nearestMS1scanVectorIndex >= 0 && parentCnt < parentsBefore_)
         {
@@ -831,10 +841,11 @@ void SpectrumList_ChargeFromIsotope::getParentIndices( const SpectrumPtr s, vect
         }
         nearestMS1scanVectorIndex = i1 - MS1retentionTimes.begin();
         parentCnt = 0; // resetting this
-        while (i1 != MS1retentionTimes.end() && parentCnt < parentsAfter_)
+        //while (i1 != MS1retentionTimes.end() && parentCnt < parentsAfter_)
+        while (nearestMS1scanVectorIndex < nMS1scans && parentCnt < parentsAfter_)
         {
             parents.push_back(MS1retentionTimes[nearestMS1scanVectorIndex].indexMap);
-            i1--;
+            //i1--;
             nearestMS1scanVectorIndex++;
             parentCnt++;
         }
@@ -1035,6 +1046,8 @@ double getKLscore( const isotopeChain chain, const vector <double> & mzs, const 
     if ( mzs.size() != intensities.size() )
          throw runtime_error("[SpectrumList_chargeFromIsotope, getKLscore] m/z and intensity vectors must be equal in size.");
 
+	//cout << "computing the KL score" << endl;
+
     // First, convert from molecular weight of ion to Mstar, which is linear mapping 
     double lambda = 1.0 / 1800.0; // parameter for poisson model
     double Mstar = lambda * mzs[chain.indexList[0]] * double(chain.charge); // from msInspect paper
@@ -1066,6 +1079,8 @@ double getKLscore( const isotopeChain chain, const vector <double> & mzs, const 
         double normObservedIntensity = intensities[chain.indexList[k]] / observedIntensitySum;
         KLscore += normObservedIntensity * log10( normObservedIntensity / poissonVals[k]  );
     }
+
+	//cout << "done computing the KL score" << endl;
 
     return KLscore;
 
