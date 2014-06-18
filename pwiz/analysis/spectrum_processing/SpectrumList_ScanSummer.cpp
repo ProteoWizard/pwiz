@@ -64,85 +64,85 @@ double SpectrumList_ScanSummer::getPrecursorMz(const msdata::Spectrum& spectrum)
     return 0;
 }
 
-void SpectrumList_ScanSummer::sumSubScansResample( vector<double> & x, vector<double> & y, size_t refIndex, DetailLevel detailLevel ) const
-{
-
-    if (x.size() != y.size())
-        throw runtime_error("[SpectrumList_ScanSummer::sumSubScans()] x and y arrays must be the same size");
-
-    int nPointsPerDalton = 800;
-
-    // get the index for the precursorGroupList
-    SpectrumPtr s = inner_->spectrum(refIndex, detailLevel ); // get binary data
-    double precursorMZ = getPrecursorMz(*s); // get the precursor value
-
-    vector<precursorGroup>::const_iterator pGroupIt = lower_bound(precursorList.begin(),precursorList.end(),precursorMZ,pGroupCompare); // returns iterator to first element in precursorList where mz >= precursorMZ
-    while ( pGroupIt->indexList[0] != (int)refIndex )
-    {
-        pGroupIt++; // lower_bound returns the first element in a repeat sequence
-        if ( pGroupIt == precursorList.end() )
-            throw runtime_error("[SpectrumList_ScanSummer::sumSubScans()] Cannot find the correct precursorList element...");
-    }
-
-    // setup the intensity bins for summing over multiple sub-scans
-    double MZspacing = 1.0 / double(nPointsPerDalton);
-    vector<double> summedIntensity(int(TotalDaltons/MZspacing)+2,0.0);
-
-    for( vector<int>::const_iterator listIt = pGroupIt->indexList.begin(); listIt != pGroupIt->indexList.end(); ++listIt)
-    {
-
-        SpectrumPtr s2 = inner_->spectrum( *listIt, detailLevel );
-        vector<double>& subMZ = s2->getMZArray()->data;
-        if (subMZ.size() < 2) continue;
-        vector<double>& subIntensity = s2->getIntensityArray()->data;
-
-        int binA, binB = (subMZ[0] - lowerMZlimit) / MZspacing; // initialize 
-        for( size_t j=0, jend=subMZ.size()-1; j < jend ; ++j)
-        {
-
-            binA = binB+1; // get bucket to the right of the first data point
-            binB = (subMZ[j+1] - lowerMZlimit) / MZspacing; // get the bucket to the left of the second data point
-
-            if ( subIntensity[j] == 0 && subIntensity[j+1] == 0 ) continue; // no interpolation needed
-
-            if ( binB < binA )
-            {
-                this->warn_once("[SpectrumList_ScanSummer]: Warning, grid spacing is coarser than raw m/z spacing in at least one case" );
-            }
-
-            int k = binA;
-            while ( k <= binB ) // while loop ensures no interpolation when binB < binA
-            {
-                // get the m/z position of the current bin
-                double mzBin = double(k) * MZspacing + lowerMZlimit;
-
-                // linear interpolation
-                summedIntensity[k] += subIntensity[j] + ( subIntensity[j+1] - subIntensity[j] ) * ( ( mzBin - subMZ[j] ) / ( subMZ[j+1] - subMZ[j] ) ); 
-
-                ++k;
-            }
-
-        }
-
-    }
-
-    x.resize(summedIntensity.size());
-    y.resize(summedIntensity.size());
-    int cnt=0;
-    for (size_t i=1, iend=summedIntensity.size()-1; i < iend ; ++i)
-    {
-        // don't print zero-intensity points flanked by other zero-intensity points
-        if ( summedIntensity[i-1] != 0.0 || summedIntensity[i] != 0.0 || summedIntensity[i+1] != 0.0 )
-        {
-            x[cnt] = lowerMZlimit + double(i) * MZspacing;
-            y[cnt] = summedIntensity[i];
-            cnt++;
-        }
-    }
-    x.resize(cnt);
-    y.resize(cnt);
-
-}
+//void SpectrumList_ScanSummer::sumSubScansResample( vector<double> & x, vector<double> & y, size_t refIndex, DetailLevel detailLevel ) const
+//{
+//
+//    if (x.size() != y.size())
+//        throw runtime_error("[SpectrumList_ScanSummer::sumSubScans()] x and y arrays must be the same size");
+//
+//    int nPointsPerDalton = 800;
+//
+//    // get the index for the precursorGroupList
+//    SpectrumPtr s = inner_->spectrum(refIndex, detailLevel ); // get binary data
+//    double precursorMZ = getPrecursorMz(*s); // get the precursor value
+//
+//    vector<precursorGroup>::const_iterator pGroupIt = lower_bound(precursorList.begin(),precursorList.end(),precursorMZ,pGroupCompare); // returns iterator to first element in precursorList where mz >= precursorMZ
+//    while ( pGroupIt->indexList[0] != (int)refIndex )
+//    {
+//        pGroupIt++; // lower_bound returns the first element in a repeat sequence
+//        if ( pGroupIt == precursorList.end() )
+//            throw runtime_error("[SpectrumList_ScanSummer::sumSubScans()] Cannot find the correct precursorList element...");
+//    }
+//
+//    // setup the intensity bins for summing over multiple sub-scans
+//    double MZspacing = 1.0 / double(nPointsPerDalton);
+//    vector<double> summedIntensity(int(TotalDaltons/MZspacing)+2,0.0);
+//
+//    for( vector<int>::const_iterator listIt = pGroupIt->indexList.begin(); listIt != pGroupIt->indexList.end(); ++listIt)
+//    {
+//
+//        SpectrumPtr s2 = inner_->spectrum( *listIt, detailLevel );
+//        vector<double>& subMZ = s2->getMZArray()->data;
+//        if (subMZ.size() < 2) continue;
+//        vector<double>& subIntensity = s2->getIntensityArray()->data;
+//
+//        int binA, binB = (subMZ[0] - lowerMZlimit) / MZspacing; // initialize 
+//        for( size_t j=0, jend=subMZ.size()-1; j < jend ; ++j)
+//        {
+//
+//            binA = binB+1; // get bucket to the right of the first data point
+//            binB = (subMZ[j+1] - lowerMZlimit) / MZspacing; // get the bucket to the left of the second data point
+//
+//            if ( subIntensity[j] == 0 && subIntensity[j+1] == 0 ) continue; // no interpolation needed
+//
+//            if ( binB < binA )
+//            {
+//                this->warn_once("[SpectrumList_ScanSummer]: Warning, grid spacing is coarser than raw m/z spacing in at least one case" );
+//            }
+//
+//            int k = binA;
+//            while ( k <= binB ) // while loop ensures no interpolation when binB < binA
+//            {
+//                // get the m/z position of the current bin
+//                double mzBin = double(k) * MZspacing + lowerMZlimit;
+//
+//                // linear interpolation
+//                summedIntensity[k] += subIntensity[j] + ( subIntensity[j+1] - subIntensity[j] ) * ( ( mzBin - subMZ[j] ) / ( subMZ[j+1] - subMZ[j] ) ); 
+//
+//                ++k;
+//            }
+//
+//        }
+//
+//    }
+//
+//    x.resize(summedIntensity.size());
+//    y.resize(summedIntensity.size());
+//    int cnt=0;
+//    for (size_t i=1, iend=summedIntensity.size()-1; i < iend ; ++i)
+//    {
+//        // don't print zero-intensity points flanked by other zero-intensity points
+//        if ( summedIntensity[i-1] != 0.0 || summedIntensity[i] != 0.0 || summedIntensity[i+1] != 0.0 )
+//        {
+//            x[cnt] = lowerMZlimit + double(i) * MZspacing;
+//            y[cnt] = summedIntensity[i];
+//            cnt++;
+//        }
+//    }
+//    x.resize(cnt);
+//    y.resize(cnt);
+//
+//}
 
 
 //
@@ -271,7 +271,6 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
 
         vector<precursorGroup>::iterator pGroupIt,prevIt;
         pGroupIt = lower_bound(precursorList.begin(),precursorList.end(),precursorMZ,pGroupCompare); // returns iterator to first element in precursorList where mz >= precursorMZ
-        prevIt = pGroupIt - 1;
 
         if ( precursorList.empty() )
         {
@@ -285,6 +284,7 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
         else if ( pGroupIt == precursorList.end() ) 
         {
 
+            prevIt = pGroupIt - 1;
             double lowerDiff = precursorMZ - prevIt->precursorMZ;  
             double lrTimeDiff = abs(rTime - prevIt->rTimeStart);
 
@@ -324,6 +324,7 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
         else
         {
 
+            prevIt = pGroupIt - 1;
             double upperDiff = pGroupIt->precursorMZ - precursorMZ; 
             double lowerDiff = precursorMZ - prevIt->precursorMZ; 
             double urTimeDiff = abs(rTime - pGroupIt->rTimeStart); 
