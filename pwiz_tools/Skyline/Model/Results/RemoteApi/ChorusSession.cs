@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -41,66 +42,59 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         private readonly object _lock = new object();
         private readonly Dictionary<ChorusAccount, ChorusContentsResponse> _chorusContentsByServerUrl 
             = new Dictionary<ChorusAccount, ChorusContentsResponse>();
-        private readonly HashSet<HttpWebRequest> _currentWebRequests = new HashSet<HttpWebRequest>();
         private readonly HashSet<ChorusAccount> _fetchRequests 
             = new HashSet<ChorusAccount>();
-        private bool _aborted;
+        private readonly CancellationTokenSource _cancellationTokenSource 
+            = new CancellationTokenSource();
 
         public ChorusContents FetchContents(ChorusAccount chorusAccount, Uri uri)
         {
             HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(uri); // Not L10N
-            WebRequestStarting(webRequest);
-            try
+            AddAuthHeader(chorusAccount, webRequest);
+            return SendRequest(webRequest, webResponse =>
             {
-                AddAuthHeader(chorusAccount, webRequest);
-                using (var webResponse = webRequest.GetResponse())
+                string strResponse = string.Empty;
+                var responseStream = webResponse.GetResponseStream();
+                if (responseStream != null)
                 {
-                    string strResponse = string.Empty;
-                    var responseStream = webResponse.GetResponseStream();
-                    if (responseStream != null)
-                    {
-                        var streamReader = new StreamReader(responseStream);
-                        strResponse = streamReader.ReadToEnd();
-                    }
-                    var chorusContents = JsonConvert.DeserializeObject<ChorusContents>(strResponse);
-                    return chorusContents;
+                    var streamReader = new StreamReader(responseStream);
+                    strResponse = streamReader.ReadToEnd();
                 }
-            }
-            finally
-            {
-                WebRequestFinished(webRequest);
-            }
+                var chorusContents = JsonConvert.DeserializeObject<ChorusContents>(strResponse);
+                return chorusContents;
+            });
         }
 
         public void Login(ChorusAccount chorusAccount, CookieContainer cookieContainer)
         {
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(chorusAccount.ServerUrl + "/j_spring_security_check"));  // Not L10N
-            WebRequestStarting(webRequest);
-            try
+            // ReSharper disable NonLocalizedString
+            webRequest.ContentType = "application/x-www-form-urlencoded";
+            webRequest.Method = "POST"; 
+            webRequest.CookieContainer = cookieContainer;
+            string postData = "j_username=" + Uri.EscapeDataString(chorusAccount.Username) + "&j_password=" +
+                                Uri.EscapeDataString(chorusAccount.Password);
+            // ReSharper restore NonLocalizedString
+            byte[] postDataBytes = Encoding.UTF8.GetBytes(postData);
+            webRequest.ContentLength = postDataBytes.Length;
+            var requestStream = webRequest.GetRequestStream();
+            requestStream.Write(postDataBytes, 0, postDataBytes.Length);
+            requestStream.Close();
+            bool loginSuccessful = SendRequest(webRequest, response =>!response.ResponseUri.ToString().Contains("login.html")); // Not L10N
+            if (!loginSuccessful)
             {
-                // ReSharper disable NonLocalizedString
-                webRequest.ContentType = "application/x-www-form-urlencoded";
-                webRequest.Method = "POST"; 
-                webRequest.CookieContainer = cookieContainer;
-                string postData = "j_username=" + Uri.EscapeDataString(chorusAccount.Username) + "&j_password=" +
-                                  Uri.EscapeDataString(chorusAccount.Password);
-                // ReSharper restore NonLocalizedString
-                byte[] postDataBytes = Encoding.UTF8.GetBytes(postData);
-                webRequest.ContentLength = postDataBytes.Length;
-                Stream requestStream = webRequest.GetRequestStream();
-                requestStream.Write(postDataBytes, 0, postDataBytes.Length);
-                requestStream.Close();
-                using (HttpWebResponse response = (HttpWebResponse) webRequest.GetResponse())
-                {
-                    if (response.ResponseUri.ToString().Contains("login.html")) // Not L10N
-                    {
-                        throw new ChorusServerException(Resources.ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_);
-                    }
-                }
+                throw new ChorusServerException(Resources.ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_);
             }
-            finally
+        }
+
+        private T SendRequest<T>(HttpWebRequest request, Func<HttpWebResponse, T> responseTransformer)
+        {
+            using (_cancellationTokenSource.Token.Register(request.Abort))
             {
-                WebRequestFinished(webRequest);
+                using (HttpWebResponse response = (HttpWebResponse) request.GetResponse())
+                {
+                    return responseTransformer(response);
+                }
             }
         }
 
@@ -116,82 +110,55 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
         }
 
-        public void GenerateChromatograms(ChorusAccount chorusAccount, 
+        public ChromatogramCache GenerateChromatograms(ChorusAccount chorusAccount, 
             ChorusUrl chorusUrl, 
-            ChromatogramRequestDocument chromatogramRequestDocument,
-            Stream outputStream)
+            ChromatogramRequestDocument chromatogramRequestDocument)
         {
-            CookieContainer cookieContainer = new CookieContainer();
             var webRequest = (HttpWebRequest)WebRequest.Create(chorusUrl.GetChromExtractionUri());
             AddAuthHeader(chorusAccount, webRequest);
-            WebRequestStarting(webRequest);
-            try
+            webRequest.Method = "POST"; // Not L10N
+            var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
+            xmlSerializer.Serialize(webRequest.GetRequestStream(), chromatogramRequestDocument);
+            webRequest.GetRequestStream().Close();
+            return SendRequest(webRequest, response =>
             {
-                webRequest.Method = "POST"; // Not L10N
-                webRequest.CookieContainer = cookieContainer;
-                var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
-                xmlSerializer.Serialize(webRequest.GetRequestStream(), chromatogramRequestDocument);
-                webRequest.GetRequestStream().Close();
-                using (HttpWebResponse response = (HttpWebResponse) webRequest.GetResponse())
+                MemoryStream memoryStream = new MemoryStream();
+                var responseStream = response.GetResponseStream();
+                if (responseStream != null)
                 {
-                    long totalBytes = 0;
                     byte[] buffer = new byte[65536];
-                    var responseStream = response.GetResponseStream();
-                    if (responseStream != null)
+                    int count;
+                    while ((count = responseStream.Read(buffer, 0, buffer.Length)) != 0)
                     {
-                        int count;
-                        while ((count = responseStream.Read(buffer, 0, buffer.Length)) != 0)
-                        {
-                            outputStream.Write(buffer, 0, count);
-                            totalBytes += count;
-                        }
-                    }
-                    if (0 == totalBytes)
-                    {
-                        if (response.StatusCode != HttpStatusCode.OK)
-                        {
-                            throw new IOException(string.Format("Empty response: status = {0}", response.StatusCode));  // Not L10N
-                        }
-                        Debug.WriteLine("Zero byte response");  // Not L10N
+                        memoryStream.Write(buffer, 0, count);
                     }
                 }
-            }
-            finally
-            {
-                WebRequestFinished(webRequest);
-            }
-        }
-
-        private void WebRequestStarting(HttpWebRequest webRequest)
-        {
-            lock (_lock)
-            {
-                if (_aborted)
+                if (0 == memoryStream.Length)
                 {
-                    throw new OperationCanceledException();
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        throw new IOException(string.Format("Empty response: status = {0}", response.StatusCode)); // Not L10N
+                    }
+                    Debug.WriteLine("Zero byte response"); // Not L10N
+                    return null;
                 }
-                _currentWebRequests.Add(webRequest);
-            }
-        }
-
-        private void WebRequestFinished(HttpWebRequest webRequest)
-        {
-            lock (_lock)
-            {
-                _currentWebRequests.Remove(webRequest);
-            }
+                ChromatogramCache.RawData rawData;
+                ChromatogramCache.LoadStructs(memoryStream, out rawData);
+                var chromCacheFile = rawData.ChromCacheFiles[0];
+                rawData.ChromCacheFiles = new[]
+                {
+                    new ChromCachedFile(chorusUrl, chromCacheFile.Flags, chromCacheFile.FileWriteTime,
+                        chromCacheFile.RunStartTime, chromCacheFile.MaxRetentionTime, chromCacheFile.MaxIntensity,
+                        chromCacheFile.InstrumentInfoList),
+                };
+                return new ChromatogramCache(string.Empty, rawData,
+                    new ChromatogramGeneratorTask.MemoryPooledStream(memoryStream));
+            });
         }
 
         public void Abort()
         {
-            lock (_lock)
-            {
-                _aborted = true;
-                foreach (var webRequest in _currentWebRequests)
-                {
-                    webRequest.Abort();
-                }
-            }
+            _cancellationTokenSource.Cancel();
         }
 
         public void RetryFetchContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl)
@@ -258,49 +225,39 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 scanId);
             // ReSharper restore NonLocalizedString
 
-            CookieContainer cookieContainer = new CookieContainer();
             var webRequest = (HttpWebRequest)WebRequest.Create(new Uri(strUri));
-            WebRequestStarting(webRequest);
-            try
-            {
-                webRequest.CookieContainer = cookieContainer;
                 AddAuthHeader(chorusAccount, webRequest);
-                using (HttpWebResponse response = (HttpWebResponse) webRequest.GetResponse())
-                {
-                    string strResponse = string.Empty;
-                    var responseStream = response.GetResponseStream();
-                    if (null != responseStream)
-                    {
-                        var streamReader = new StreamReader(responseStream);
-                        strResponse = streamReader.ReadToEnd();
-                    }
-                    // ReSharper disable NonLocalizedString
-                    JObject jObject = JsonConvert.DeserializeObject<JObject>(strResponse);
-                    string strMzs = jObject["mzs-base64"].ToString();
-                    string strIntensities = jObject["intensities-base64"].ToString();
-                    byte[] mzBytes = Convert.FromBase64String(strMzs);
-                    byte[] intensityBytes = Convert.FromBase64String(strIntensities);
-                    double[] mzs = PrimitiveArrays.FromBytes<double>(
-                        PrimitiveArrays.ReverseBytesInBlocks(mzBytes, sizeof(double)));
-                    float[] intensityFloats = PrimitiveArrays.FromBytes<float>(
-                        PrimitiveArrays.ReverseBytesInBlocks(intensityBytes, sizeof(float)));
-                    double[] intensities = intensityFloats.Select(f => (double) f).ToArray();
-                    MsDataSpectrum spectrum = new MsDataSpectrum
-                    {
-                        Index = jObject["index"].ToObject<int>(),
-                        Level = msLevel,
-                        RetentionTime = jObject["rt"].ToObject<double>(),
-                        Mzs = mzs,
-                        Intensities = intensities,
-                    };
-                    // ReSharper restore NonLocalizedString
-                    return spectrum;
-                }
-            }
-            finally
+            return SendRequest(webRequest, response =>
             {
-                WebRequestFinished(webRequest);
-            }
+                string strResponse = string.Empty;
+                var responseStream = response.GetResponseStream();
+                if (null != responseStream)
+                {
+                    var streamReader = new StreamReader(responseStream);
+                    strResponse = streamReader.ReadToEnd();
+                }
+                // ReSharper disable NonLocalizedString
+                JObject jObject = JsonConvert.DeserializeObject<JObject>(strResponse);
+                string strMzs = jObject["mzs-base64"].ToString();
+                string strIntensities = jObject["intensities-base64"].ToString();
+                byte[] mzBytes = Convert.FromBase64String(strMzs);
+                byte[] intensityBytes = Convert.FromBase64String(strIntensities);
+                double[] mzs = PrimitiveArrays.FromBytes<double>(
+                    PrimitiveArrays.ReverseBytesInBlocks(mzBytes, sizeof (double)));
+                float[] intensityFloats = PrimitiveArrays.FromBytes<float>(
+                    PrimitiveArrays.ReverseBytesInBlocks(intensityBytes, sizeof (float)));
+                double[] intensities = intensityFloats.Select(f => (double) f).ToArray();
+                MsDataSpectrum spectrum = new MsDataSpectrum
+                {
+                    Index = jObject["index"].ToObject<int>(),
+                    Level = msLevel,
+                    RetentionTime = jObject["rt"].ToObject<double>(),
+                    Mzs = mzs,
+                    Intensities = intensities,
+                };
+                // ReSharper restore NonLocalizedString
+                return spectrum;
+            });
         }
 
         private void FetchAndStoreContents(ChorusAccount chorusAccount, ChorusUrl chorusUrl)

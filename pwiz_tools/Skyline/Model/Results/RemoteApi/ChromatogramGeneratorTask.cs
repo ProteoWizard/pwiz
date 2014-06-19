@@ -95,25 +95,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             {
                 try
                 {
-                    Stream resultStream = new MemoryStream();
-                    ChorusSession.GenerateChromatograms(ChorusAccount, ChorusUrl, ChromatogramRequestDocument,
-                        resultStream);
-                    if (resultStream.Length == 0)
+                    var chromatogramCache = ChorusSession.GenerateChromatograms(ChorusAccount, ChorusUrl, ChromatogramRequestDocument);
+                    if (null == chromatogramCache)
                     {
                         return;
                     }
-
-                    ChromatogramCache.RawData rawData;
-                    ChromatogramCache.LoadStructs(resultStream, out rawData);
-                    var chromCacheFile = rawData.ChromCacheFiles[0];
-                    rawData.ChromCacheFiles = new[]
-                    {
-                        new ChromCachedFile(ChorusUrl, chromCacheFile.Flags, chromCacheFile.FileWriteTime,
-                            chromCacheFile.RunStartTime, chromCacheFile.MaxRetentionTime, chromCacheFile.MaxIntensity,
-                            chromCacheFile.InstrumentInfoList),
-                    };
-                    var chromatogramCache = new ChromatogramCache(string.Empty, rawData,
-                        new MemoryPooledStream(resultStream));
                     var chromKeyIndiceses = chromatogramCache.GetChromKeys(ChorusUrl).ToList();
                     lock (this)
                     {

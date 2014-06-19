@@ -147,9 +147,16 @@ namespace pwiz.Skyline.FileUI
             {
                 if (Equals(value, ChorusUrl.EMPTY))
                 {
-                    if (!EnsureChorusAccount())
+                    EnsureChorusAccount();
+                    if (!_chorusAccounts.Any())
                     {
                         return;
+                    }
+                    if (_chorusAccounts.Count == 1)
+                    {
+                        // If there is exactly one account, then skip the level that
+                        // lists the accounts to choose from.
+                        value = _chorusAccounts.First().GetChorusUrl();
                     }
                 }
                 if (value != null)
@@ -1064,11 +1071,11 @@ namespace pwiz.Skyline.FileUI
             Chorus
         }
 
-        private bool EnsureChorusAccount()
+        private void EnsureChorusAccount()
         {
             if (_chorusAccounts.Any())
             {
-                return true;
+                return;
             }
             DialogResult buttonPress = MultiButtonMsgDlg.Show(
                 this,
@@ -1078,7 +1085,7 @@ namespace pwiz.Skyline.FileUI
                     Resources.OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Chorus_account),
                 Resources.OpenDataSourceDialog_EnsureChorusAccount_Register, Resources.OpenDataSourceDialog_EnsureChorusAccount_Add, true);
             if (buttonPress == DialogResult.Cancel)
-                return false;
+                return;
 
             if (buttonPress == DialogResult.Yes)
             {
@@ -1090,7 +1097,6 @@ namespace pwiz.Skyline.FileUI
             {
                 _chorusAccounts.Add(newAccount);
             }
-            return _chorusAccounts.Any();
         }
 
         private void recentDocumentsButton_Click(object sender, EventArgs e)

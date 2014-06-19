@@ -31,7 +31,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
     [XmlRoot("chorus_account")]
     public sealed class ChorusAccount : Immutable, IKeyContainer<string>, IXmlSerializable
     {
-        public static readonly ChorusAccount BLANK = new ChorusAccount().SetServerUrl("https://chorusproject.org"); // Not L10N
+        public const string DEFAULT_SERVER = "https://chorusproject.org"; // Not L10N
+        public static readonly ChorusAccount BLANK = new ChorusAccount().SetServerUrl(DEFAULT_SERVER); // Not L10N
         public ChorusAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;
@@ -77,6 +78,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public string GetKey()
         {
+            if (ServerUrl == DEFAULT_SERVER)
+            {
+                return Username;
+            }
             return Username + '@' + ServerUrl;
         }
 
