@@ -946,10 +946,10 @@ SpectrumListPtr filterCreator_chargeFromIsotope(const MSData& msd, const string&
         SpectrumList_ChargeFromIsotope(msd,maxCharge,minCharge,precursorsBefore,precursorsAfter,isolationWidth,
                                            defaultChargeMax,defaultChargeMin));
 }
-UsageInfo usage_chargeFromIsotope = {"[minCharge=<minCharge>] [maxCharge=<maxCharge>] [parentsBefore=<before>] [parentsAfter=<after>] [halfIsoWidth=<half-width of isolation window>] [defaultMinCharge=<defaultMinCharge>] [defaultMaxCharge=<defaultMaxCharge>] [useVendorPeaks=<useVendorPeaks>]",
-    "Predicts MSn spectrum precursor charge based on the isotopic distribution associated with the parent scan(s) of the selected precursor\n"
+UsageInfo usage_chargeFromIsotope = {"[minCharge=<minCharge>] [maxCharge=<maxCharge>] [precursorsBefore=<before>] [precursorsAfter=<after>] [halfIsoWidth=<half-width of isolation window>] [defaultMinCharge=<defaultMinCharge>] [defaultMaxCharge=<defaultMaxCharge>] [useVendorPeaks=<useVendorPeaks>]",
+    "Predicts MSn spectrum precursor charge based on the isotopic distribution associated with the survey scan(s) of the selected precursor\n"
     "  <maxCharge> (default: 8) and <minCharge> (default 1): defines range of possible precursor charge states.\n"
-    "  <before> (default: 2) and <after> (default 0): number of parent (MS1) scans to check for precursor isotopes, before and after a MS/MS in retention time.\n"
+    "  <before> (default: 2) and <after> (default 0): number of survey (MS1) scans to check for precursor isotopes, before and after a MS/MS in retention time.\n"
     "  <half-width of isolation window> (default: 1.25): half-width of the isolation window (in Th.) from which precursor is derived. Window is centered at target m/z with a total size of +/- the value entered.\n"
     "  <defaultMinCharge> (default: 0) and <defaultMaxCharge> (default: 0): in the event that no isotope is found in the isolation window, a range of charges between these two values will be assigned to the spectrum. If both values are left at zero, no charge will be assigned to the spectrum."
     };
