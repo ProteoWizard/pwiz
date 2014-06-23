@@ -239,45 +239,46 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void FindDataFiles(ILongWaitBroker longWaitBroker, Dictionary<string, ResultsFileFindInfo> missingFiles, string directory, ref int numMissingFiles)
         {
+            SearchForDataFilesInDirectory(longWaitBroker, missingFiles, directory, ref numMissingFiles);
+            if (numMissingFiles == 0)
+            {
+                return;
+            }
+
+            string[] dirs;
             try
             {
-                SearchForDataFilesInDirectory(longWaitBroker, missingFiles, directory, ref numMissingFiles);
-                if (numMissingFiles == 0)
+                dirs = Directory.GetDirectories(directory);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            foreach (string dir in dirs)
+            {
+                if (longWaitBroker.IsCanceled)
                 {
-                    return;
+                    break;
                 }
 
-                string[] dirs = Directory.GetDirectories(directory);
-                foreach (string dir in dirs)
+                // Don't look inside directories which are actually data sources,
+                // but do see if such directories have a basename match
+                if (DataSourceUtil.IsDataSource(dir))
                 {
-                    if (longWaitBroker.IsCanceled)
-                    {
-                        break;
-                    }
-
-                    // Don't look inside directories which are actually data sources,
-                    // but do see if such directories have a basename match
-                    if (DataSourceUtil.IsDataSource(dir))
-                    {
-                        CheckBasenameMatch(dir, missingFiles, ref numMissingFiles);
-                        if (numMissingFiles == 0)
-                        {
-                            return;
-                        }
-                        continue;
-                    }
-
-                    longWaitBroker.Message = String.Format(Resources.ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__, dir);
-                    FindDataFiles(longWaitBroker, missingFiles, dir, ref numMissingFiles);
+                    CheckBasenameMatch(dir, missingFiles, ref numMissingFiles);
                     if (numMissingFiles == 0)
                     {
                         return;
                     }
+                    continue;
                 }
-            }
-            catch (Exception x)
-            {
-                MessageDlg.Show(WizardForm, TextUtil.LineSeparate(string.Format(Resources.ImportResultsControl_FindDataFiles_An_error_occurred_attempting_to_find_missing_result_files_in__0__, directory), x.Message));
+
+                longWaitBroker.Message = String.Format(Resources.ImportResultsControl_FindDataFiles_Searching_for_missing_result_files_in__0__, dir);
+                FindDataFiles(longWaitBroker, missingFiles, dir, ref numMissingFiles);
+                if (numMissingFiles == 0)
+                {
+                    return;
+                }
             }
         }
 
@@ -303,7 +304,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void SearchForDataFilesInDirectory(ILongWaitBroker longWaitBroker, Dictionary<string, ResultsFileFindInfo> missingFiles, string dir, ref int numMissingFiles)
         {
-            string[] files = Directory.GetFiles(dir);
+            string[] files;
+            try
+            {
+                files = Directory.GetFiles(dir);
+            }
+            catch (Exception)
+            {
+                // No permissions on folder
+                return;
+            }
             foreach (string file in files)
             {
                 if (longWaitBroker.IsCanceled)
