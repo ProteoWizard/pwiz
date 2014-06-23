@@ -31,6 +31,7 @@
 #include <iostream>
 #include <locale>
 #include <sstream>
+#include <stdexcept>
 
 // preprocessed prototype of SetErrorMode so windows.h doesn't have to be included;
 // this requires linking to the shared runtime but pwiz always does that on Windows
@@ -88,6 +89,7 @@ static ReportHooker reportHooker;
 #if !defined(NDEBUG)
 #define BOOST_ENABLE_ASSERT_HANDLER
 #include <sstream>
+#include <stdexcept>
 namespace boost
 {
     inline void assertion_failed(char const * expr, char const * function, char const * file, long line) // user defined
