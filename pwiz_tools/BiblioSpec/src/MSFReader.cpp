@@ -27,7 +27,7 @@ namespace BiblioSpec
                          const char* msfFile, 
                          const ProgressIndicator* parent_progress)
         : BuildParser(maker, msfFile, parent_progress),
-        msfName_(msfFile)
+        msfName_(msfFile), schemaVersion_(-1), filtered_(has_extension(msfFile, ".pdResult"))
     {
         setSpecFileName(msfFile, false);
         lookUpBy_ = INDEX_ID;
@@ -61,6 +61,26 @@ namespace BiblioSpec
                                 msfName_);
         }
 
+        // Get the schema version
+        sqlite3_stmt* statement = getStmt(
+            "SELECT SoftwareVersion FROM SchemaInfo");
+        if (hasNext(statement))
+        {
+            string version = lexical_cast<string>(sqlite3_column_text(statement, 0));
+            sqlite3_finalize(statement);
+            vector<string> versionPieces;
+            boost::split(versionPieces, version, boost::is_any_of("."));
+            try {
+                schemaVersion_ = lexical_cast<int>(versionPieces.front());
+                Verbosity::debug("Schema version is %d (%s)", schemaVersion_, version.c_str());
+            } catch (bad_lexical_cast &) {
+                Verbosity::error("Unknown schema version format: '%s'", version.c_str());
+            }
+        }
+        if (schemaVersion_ < 0) {
+            Verbosity::error("Could not determine schema version.");
+        }
+
         collectSpectra();
         collectPsms();
 
@@ -90,17 +110,23 @@ namespace BiblioSpec
      */
     void MSFReader::collectSpectra()
     {
-        int specCount = getRowCount(
-            "SpectrumHeaders "
-            "WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
+        int specCount = !filtered_ ?
+            getRowCount("SpectrumHeaders WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)") :
+            getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
         Verbosity::status("Parsing %d spectra.", specCount);
         ProgressIndicator progress(specCount);
 
-        sqlite3_stmt* statement = getStmt(
-            "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum "
-            "FROM SpectrumHeaders "
-            "JOIN Spectra ON SpectrumHeaders.UniqueSpectrumID = Spectra.UniqueSpectrumID "
-            "WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
+        sqlite3_stmt* statement = !filtered_ ?
+            getStmt(
+                "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum "
+                "FROM SpectrumHeaders "
+                "JOIN Spectra ON SpectrumHeaders.UniqueSpectrumID = Spectra.UniqueSpectrumID "
+                "WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)") :
+            getStmt(
+                "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum "
+                "FROM MSnSpectrumInfo "
+                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
+                "WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
 
         // turn each row of returned table into a spectrum
         while (hasNext(statement))
@@ -253,15 +279,28 @@ namespace BiblioSpec
         else
         {
             // get peptides with q-value <= threshold
-            statement = getStmt(
-                "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
-                "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
-                "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
-                "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-            resultCount = getRowCount(
-                "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
-                "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
-                "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+            if (!filtered_)
+            {
+                statement = getStmt(
+                    "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
+                    "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
+                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
+                    "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                resultCount = getRowCount(
+                    "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
+                    "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName = 'q-Value') "
+                    "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+            }
+            else
+            {
+                statement = getStmt(
+                    "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue "
+                    "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
+                    "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+                resultCount = getRowCount(
+                    "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
+                    "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
+            }
         }
         Verbosity::status("Parsing %d PSMs.", resultCount);
         ProgressIndicator progress(resultCount);
@@ -402,9 +441,9 @@ namespace BiblioSpec
      */
     void MSFReader::initFileNameMap()
     {
+        string fileTable = (schemaVersion_ < 2) ? "FileInfos" : "WorkflowInputFiles";
         sqlite3_stmt* statement = getStmt(
-            "SELECT FileID, FileName "
-            "FROM FileInfos");
+            "SELECT FileID, FileName FROM " + fileTable);
         while (hasNext(statement))
         {
             int thisId = sqlite3_column_int(statement, 0);
@@ -459,6 +498,11 @@ namespace BiblioSpec
      */
     bool MSFReader::hasQValues()
     {
+        if (filtered_)
+        {
+            return true;
+        }
+
         sqlite3_stmt* statement = getStmt(
             "SELECT FieldID "
             "FROM CustomDataFields "
@@ -477,11 +521,17 @@ namespace BiblioSpec
      */
     map< int, vector<SeqMod> > MSFReader::getMods()
     {
-        sqlite3_stmt* statement = getStmt(
-            "SELECT PeptideID, Position, DeltaMass "
-            "FROM PeptidesAminoAcidModifications "
-            "JOIN AminoAcidModifications "
-            "   ON PeptidesAminoAcidModifications.AminoAcidModificationID = AminoAcidModifications.AminoAcidModificationID");
+        sqlite3_stmt* statement = !filtered_ ?
+            getStmt(
+                "SELECT PeptideID, Position, DeltaMass "
+                "FROM PeptidesAminoAcidModifications "
+                "JOIN AminoAcidModifications "
+                "   ON PeptidesAminoAcidModifications.AminoAcidModificationID = AminoAcidModifications.AminoAcidModificationID") :
+            getStmt(
+                "SELECT TargetPsmsPeptideID, Position, DeltaMonoisotopicMass "
+                "FROM TargetPsmsFoundModifications "
+                "JOIN FoundModifications "
+                "   ON TargetPsmsFoundModifications.FoundModificationsModificationID = FoundModifications.ModificationID");
 
         // turn each row of returned table into a seqmod to be added to the map
         map< int, vector<SeqMod> > modMap;
@@ -558,11 +608,16 @@ namespace BiblioSpec
      */
     map<int, int> MSFReader::getFileIds()
     {
-        sqlite3_stmt* statement = getStmt(
-            "SELECT PeptideID, FileID "
-            "FROM Peptides "
-            "JOIN SpectrumHeaders ON Peptides.SpectrumID = SpectrumHeaders.SpectrumID "
-            "JOIN MassPeaks ON SpectrumHeaders.MassPeakID = MassPeaks.MassPeakID");
+        sqlite3_stmt* statement = !filtered_ ?
+            getStmt(
+                "SELECT PeptideID, FileID "
+                "FROM Peptides "
+                "JOIN SpectrumHeaders ON Peptides.SpectrumID = SpectrumHeaders.SpectrumID "
+                "JOIN MassPeaks ON SpectrumHeaders.MassPeakID = MassPeaks.MassPeakID") :
+            getStmt(
+                "SELECT PeptideID, FileID "
+                "FROM TargetPsms "
+                "JOIN WorkflowInputFiles ON TargetPsms.WorkflowID = WorkflowInputFiles.WorkflowID");
 
         // process each row of the returned table
         map<int, int> fileIdMap;
@@ -693,8 +748,8 @@ namespace BiblioSpec
         sqlite3_stmt* statement;
         if (sqlite3_prepare(msfFile_, query.c_str(), -1, &statement, NULL) != SQLITE_OK)
         {
-            Verbosity::error("Cannot prepare SQL select statement for fetching "
-                             "spectra from %s: %s", msfName_, sqlite3_errmsg(msfFile_));
+            Verbosity::error("Cannot prepare SQL statement for %s: %s ",
+                             msfName_, sqlite3_errmsg(msfFile_));
         }
         return statement;
     }

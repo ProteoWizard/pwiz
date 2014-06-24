@@ -130,7 +130,8 @@ int main(int argc, char* argv[])
                 MaxQuantReader maxQuantReader(builder, result_file, progress_cptr);
                 
                 success = maxQuantReader.parseFile();
-            } else if (has_extension(result_file, ".msf")) {
+            } else if (has_extension(result_file, ".msf") ||
+                       has_extension(result_file, ".pdResult")) {
                 MSFReader msfReader(builder, result_file, progress_cptr);
 
                 success = msfReader.parseFile();

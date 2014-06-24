@@ -205,6 +205,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                    has_extension(file_name, ".group.xml") ||
                    has_extension(file_name, ".pride.xml") ||
                    has_extension(file_name, ".msf") ||
+                   has_extension(file_name, ".pdResult") ||
                    has_extension(file_name, ".mzid") ||
                    has_extension(file_name, "msms.txt") ||
                    has_extension(file_name, "final_fragment.csv") ||
@@ -215,7 +216,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                     Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
                                      ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
                                      ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
-                                     ".msf, .mzid, perc.xml, final_fragment.csv or .blib.",
+                                     ".msf, .pdResult, .mzid, perc.xml, final_fragment.csv or .blib.",
                                      file_name);
                 }
             }

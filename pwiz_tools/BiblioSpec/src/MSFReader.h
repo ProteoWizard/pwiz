@@ -67,6 +67,8 @@ namespace BiblioSpec
 
         sqlite3* msfFile_;
         const char* msfName_;
+        int schemaVersion_;
+        bool filtered_; // msf is complete, unfiltered; pdResult is filtered and persistent version of msf
         map< string, map< PSM_SCORE_TYPE, vector<PSM*> > > fileMap_;
         map<int, string> fileNameMap_;
         map<int, SpecData*> spectra_;

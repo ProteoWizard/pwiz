@@ -44,6 +44,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXI_MZID,
             BiblioSpecLiteBuilder.EXT_XTAN_XML,
             BiblioSpecLiteBuilder.EXT_PROTEOME_DISC,
+            BiblioSpecLiteBuilder.EXT_PROTEOME_DISC_FILTERED,
             BiblioSpecLiteBuilder.EXT_PILOT,
             BiblioSpecLiteBuilder.EXT_PILOT_XML,
             BiblioSpecLiteBuilder.EXT_PRIDE_XML,
