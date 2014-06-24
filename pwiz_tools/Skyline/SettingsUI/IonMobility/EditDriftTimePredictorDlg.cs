@@ -54,6 +54,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             InitializeComponent();
 
+
+            // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
+            labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
+ 
             Icon = Resources.Skyline;
 
             _driverIonMobilityLibraryListComboDriver = new SettingsListComboDriver<IonMobilityLibrarySpec>(comboLibrary, Settings.Default.IonMobilityLibraryList);
@@ -116,6 +120,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (oldVisible != _showRegressions)
             {
                 int adjust = (gridRegression.Size.Height + 2*labelConversionParameters.Size.Height) * (_showRegressions ? 1 : -1);
+                if (!labelIonMobilityLibrary.Visible) // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
+                    adjust -= (2*labelIonMobilityLibrary.Size.Height + comboLibrary.Size.Height);
                 Size = new Size(Size.Width, Size.Height + adjust);
                 gridMeasuredDriftTimes.Size = new Size(gridMeasuredDriftTimes.Size.Width, gridMeasuredDriftTimes.Size.Height - adjust);
                 labelIonMobilityLibrary.Location = new Point(labelIonMobilityLibrary.Location.X, labelIonMobilityLibrary.Location.Y - adjust);

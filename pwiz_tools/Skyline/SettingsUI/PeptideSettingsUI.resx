@@ -1150,7 +1150,7 @@ times from a peptide specific hydrophobicity score.</value>
     <value>12</value>
   </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>Determines drift time matching tolerance (drift times are measured in milliseconds): 
+    <value>Determines matching tolerance for drift times in spectral libraries (drift times are measured in milliseconds): 
 For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
 W = 2T/R</value>
   </data>

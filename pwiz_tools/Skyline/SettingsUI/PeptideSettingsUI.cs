@@ -80,6 +80,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
+            btnUpdateIonMobilityLibraries.Visible = false; // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
+
             _parent = parent;
             _libraryManager = libraryManager;
             _peptideSettings = parent.DocumentUI.Settings.PeptideSettings;
