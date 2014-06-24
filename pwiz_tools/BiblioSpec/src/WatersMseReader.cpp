@@ -417,9 +417,15 @@ void WatersMseReader::storeLine(LineEntry& entry){
 
     // Do we need to get the pusher frequency for ion mobility?
     if ((entry.precursorMobility > 0) && (pusherInterval_ <= 0)) {
+#ifdef USE_WATERS_READER
             throw BlibException(false, "Drift time data can only be processed with the original raw data "
             "present in the same directory as the final_fragment.csv, or by specifying a pusher interval "
             "on the command line.");
+#else
+            throw BlibException(false, "Drift time data cannot be processed without the use of the Waters "
+            "DLL, which this executable is not configured to use.  Alternatively you can specify a pusher interval "
+            "on the command line.");
+#endif
     }
 
     // init the new PSM with all of the current entry values
