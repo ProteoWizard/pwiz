@@ -191,12 +191,6 @@ rule init ( version : location : options * )
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <warnings>off
             <conditional>@secure-scl-throws
-
-            # change boost debug assertions to exceptions by force including Exception.hpp
-            <include>$(THIS_PATH)
-            <variant>debug,<toolset>msvc:<cxxflags>/FIAssertException.hpp
-            <variant>debug,<toolset>gcc:<cxxflags>"-include AssertException.hpp"
-            <variant>debug,<toolset>darwin:<cxxflags>"-include AssertException.hpp"
             ;
 
         lib pthread : : <name>pthread <link>shared : 
