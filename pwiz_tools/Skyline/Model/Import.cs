@@ -1404,7 +1404,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return IsDecoy && !Precursor.LabelType.IsLight
+                return IsDecoy
                            ? TransitionCalc.MassShiftType.either
                            : TransitionCalc.MassShiftType.none;
             }
