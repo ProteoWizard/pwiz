@@ -165,6 +165,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void LoadScan(bool zoomXAxis, bool zoomYAxis)
         {
+            IsLoaded = false;
+
             _zoomXAxis = zoomXAxis;
             _zoomYAxis = zoomYAxis;
 
@@ -292,7 +294,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             double retentionTime = _fullScans[0].RetentionTime ?? _scanProvider.Times[_scanIndex];
-            GraphPane.Title.Text = string.Format("{0} ({1:F2})", _fileName, retentionTime); // Not L10N
+            GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _fileName, retentionTime);
 
             FireSelectedScanChanged(retentionTime);
         }
@@ -562,6 +564,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void FireSelectedScanChanged(double retentionTime)
         {
+            IsLoaded = true;
             if (SelectedScanChanged != null)
             {
                 if (_fullScans != null)
@@ -570,6 +573,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     SelectedScanChanged(this, new SelectedScanEventArgs(null, 0, null));
             }
         }
+
+        public bool IsLoaded { get; private set; }
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
@@ -585,9 +590,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void GraphFullScan_VisibleChanged(object sender, EventArgs e)
         {
             if (IsHidden)
+            {
                 _fullScans = null;
-            FireSelectedScanChanged(0);
-            UpdateUI(false);
+                FireSelectedScanChanged(0);
+                UpdateUI(false);
+            }
         }
 
         private void ZoomXAxis()
@@ -600,7 +607,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (magnifyBtn.Checked)
             {
                 xScale.MinAuto = xScale.MaxAuto = false;
-                double mz = _scanProvider.Source == ChromSource.ms1
+                double mz = _source == ChromSource.ms1
                     ? _scanProvider.Transitions[_transitionIndex].PrecursorMz
                     : _scanProvider.Transitions[_transitionIndex].ProductMz;
                 xScale.Min = mz - 1.5;
@@ -624,7 +631,7 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
             
             // Auto scale graph for spectrum view or no zoom.
-            if (spectrumBtn.Checked || !magnifyBtn.Checked)
+            if (spectrumBtn.Checked || (!filterBtn.Checked && !magnifyBtn.Checked))
             {
                 yScale.MaxAuto = true;
                 graphControl.GraphPane.AxisChange();
@@ -708,7 +715,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ChangeScan(1);
         }
 
-        private void ChangeScan(int delta)
+        public void ChangeScan(int delta)
         {
             if (_fullScans == null)
                 return;
@@ -847,8 +854,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
-        #endregion
-
         private TextObj GetNearestLabel(PointF mousePoint)
         {
             using (Graphics g = CreateGraphics())
@@ -865,6 +870,48 @@ namespace pwiz.Skyline.Controls.Graphs
 
             return null;
         }
+
+        #endregion
+
+        #region Test support
+
+        public void TestMouseClick(double x, double y)
+        {
+            var mouse = TransformCoordinates(x, y);
+            graphControl_MouseClick(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
+        }
+
+        public PointF TransformCoordinates(double x, double y, CoordType coordType = CoordType.AxisXYScale)
+        {
+            return GraphPane.GeneralTransform(new PointF((float)x, (float)y), coordType);
+        }
+
+        public double XAxisMin { get { return GraphPane.XAxis.Scale.Min; }}
+        public double XAxisMax { get { return GraphPane.XAxis.Scale.Max; }}
+        public double YAxisMin { get { return GraphPane.YAxis.Scale.Min; }}
+        public double YAxisMax { get { return GraphPane.YAxis.Scale.Max; }}
+
+        public void SelectScanType(ChromSource source)
+        {
+            comboBoxScanType.SelectedItem = NameFromSource(source);
+        }
+
+        public void SetFilter(bool isChecked)
+        {
+            filterBtn.Checked = isChecked;
+        }
+
+        public void SetZoom(bool isChecked)
+        {
+            magnifyBtn.Checked = isChecked;
+        }
+
+        public void SetSpectrum(bool isChecked)
+        {
+            spectrumBtn.Checked = isChecked;
+        }
+
+        #endregion Test support
 
         private static readonly int[] _heatMapColors =
         {
@@ -1034,7 +1081,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             /// <summary>
-            /// Always run on a specific bakground thread to avoid changing threads when dealing
+            /// Always run on a specific background thread to avoid changing threads when dealing
             /// with a scan provider, which can mess up data readers used by ProteoWizard.
             /// </summary>
             private void Work()
@@ -1078,16 +1125,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public void SetScanProvider(IScanProvider scanProvider)
+            public void SetScanProvider(IScanProvider newScanProvider)
             {
                 lock (this)
                 {
                     if (_scanProvider != null)
                     {
-                        if (scanProvider != null)
+                        _cachedScanProviders.Insert(0, _scanProvider);
+
+                        if (newScanProvider != null)
                         {
-                            _cachedScanProviders.Insert(0, _scanProvider);
-                            AdoptCachedProvider(scanProvider);
+                            AdoptCachedProvider(newScanProvider);
                         }
 
                         // Queue for disposal
@@ -1096,10 +1144,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             _oldScanProviders.Add(_cachedScanProviders[MAX_CACHE_COUNT]);
                             _cachedScanProviders.RemoveAt(MAX_CACHE_COUNT);
                         }
-
                     }
-                    _scanProvider = scanProvider;
-                    if (scanProvider == null)
+                    _scanProvider = newScanProvider;
+                    if (newScanProvider == null)
                     {
                         _oldScanProviders.AddRange(_cachedScanProviders);
                         _cachedScanProviders.Clear();

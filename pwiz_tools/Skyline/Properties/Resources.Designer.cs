@@ -9774,6 +9774,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}  ({1:F2} min).
+        /// </summary>
+        public static string GraphFullScan_CreateGraph__0_____1_F2__min_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph__0_____1_F2__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS.
         /// </summary>
         public static string GraphFullScan_GraphFullScan_MS_MS {

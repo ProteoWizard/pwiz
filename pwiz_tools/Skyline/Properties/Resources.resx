@@ -7807,5 +7807,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_" xml:space="preserve">
     <value>You must select an empty directory for the tutorial files.</value>
   </data>
+  <data name="GraphFullScan_CreateGraph__0_____1_F2__min_" xml:space="preserve">
+    <value>{0}  ({1:F2} min)</value>
+    <comment>"min" stands for "minutes"</comment>
+  </data>
 </root>
-

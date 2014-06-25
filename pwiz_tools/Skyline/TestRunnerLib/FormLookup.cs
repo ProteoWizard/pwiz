@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,25 +37,23 @@ namespace TestRunnerLib
             Load();
         }
 
-        private static string CacheFile
-        {
-            get
-            {
-                var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return Path.Combine(exeDir ?? "", CACHE_FILE);
-            }
-        }
-
         private void Load()
         {
-            if (!File.Exists(CacheFile))
-                return;
-
-            foreach (var line in File.ReadAllLines(CacheFile))
+            var assembly = Assembly.GetAssembly(typeof(FormLookup));
+            var stream = assembly.GetManifestResourceStream(typeof(FormLookup).Namespace + "." + CACHE_FILE);
+            if (stream == null)
+                throw new ApplicationException("Build problem: TestRunnerFormLookup.csv resource not found");
+            using (StreamReader reader = new StreamReader(stream))
             {
-                var parts = line.Split(',').ToList();
-                if (parts.Count == 2)
-                    _formLookup[parts[0]] = parts[1];
+                while (true)
+                {
+                    var line = reader.ReadLine();
+                    if (line == null)
+                        break;
+                    var parts = line.Split(',').ToList();
+                    if (parts.Count == 2)
+                        _formLookup[parts[0]] = parts[1];
+                }
             }
         }
 

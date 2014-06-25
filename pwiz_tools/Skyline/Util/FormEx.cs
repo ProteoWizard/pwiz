@@ -21,8 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 
@@ -34,7 +32,6 @@ namespace pwiz.Skyline.Util
 
         private const int TIMEOUT_SECONDS = 10;
         private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
-        private static List<string> _testRunnerForms; 
 
         public DialogResult ShowWithTimeout(IWin32Window parent, string message)
         {
@@ -79,20 +76,6 @@ namespace pwiz.Skyline.Util
             {
                 // Track undisposed forms.
                 _undisposedForms.Add(this);
-                
-                // Form should be in TestRunnerFormLookup.csv
-                if (_testRunnerForms == null)
-                {
-                    _testRunnerForms = new List<string>();
-                    var testRunnerFormLookup = File.ReadAllLines(Path.Combine(
-                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                        @"..\..\..\TestRunner\TestRunnerFormLookup.csv")); // Not L10N
-                    foreach (var line in testRunnerFormLookup)
-                        _testRunnerForms.Add(line.Split(',', '.')[0]);
-                }
-
-                if (!_testRunnerForms.Contains(GetType().Name))
-                    Assume.Fail(GetType().Name + " must be added to TestRunner\\TestRunnerFormLookup.csv"); // Not L10N
             }
 
             if (ShowFormNames)

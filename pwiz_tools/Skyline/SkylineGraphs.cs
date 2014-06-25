@@ -1103,10 +1103,6 @@ namespace pwiz.Skyline
             }
             else
             {
-                // JUST PLAYING:
-                //var graphDriftTime = new GraphDriftTime();
-                //graphDriftTime.Show();
-
                 _graphFullScan = CreateGraphFullScan();
                 
                 // Choose a position to float the window
@@ -1120,6 +1116,11 @@ namespace pwiz.Skyline
         public bool IsGraphFullScanVisible
         {
             get { return _graphFullScan != null && _graphFullScan.Visible; }
+        }
+
+        public GraphFullScan GraphFullScan
+        {
+            get { return _graphFullScan; }
         }
 
         private GraphFullScan CreateGraphFullScan()

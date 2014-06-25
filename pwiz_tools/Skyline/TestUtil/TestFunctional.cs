@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using TestRunnerLib;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -327,6 +328,12 @@ namespace pwiz.SkylineTestUtil
                                 tForm.Text = tForm.Text.Replace(formName, "(" + formType + ")");
                         });
                     }
+
+                    if (_formLookup == null)
+                        _formLookup = new FormLookup();
+                    Assert.IsNotNull(_formLookup.GetTest(formType),
+                        formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
+
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
                     {
                         var formSeen = new FormSeen();
@@ -506,6 +513,8 @@ namespace pwiz.SkylineTestUtil
         {
             return pageNum.HasValue ? LinkPdf + "#page=" + pageNum : null;
         }
+
+        private static FormLookup _formLookup;
 
         public void PauseForScreenShot(string description = null, int? pageNum = null)
         {

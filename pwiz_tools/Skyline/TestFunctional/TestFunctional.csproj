@@ -145,6 +145,7 @@
     <Compile Include="ExportChromatogramTest.cs" />
     <Compile Include="ExportIsolationListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />
+    <Compile Include="FullScanGraphTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
     <Compile Include="ImmediateWindowTest.cs" />
     <Compile Include="ImportDocTest.cs" />

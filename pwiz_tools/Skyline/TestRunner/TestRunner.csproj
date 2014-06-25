@@ -99,9 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Content Include="TestRunnerFormLookup.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">

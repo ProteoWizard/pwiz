@@ -67,6 +67,7 @@ FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
 GenerateDecoysDlg,TestPeakPickingTutorial
 GraphChromatogram,TestCustomReportsTutorial
+GraphFullScan,TestFullScanGraph
 GraphRegression,TestOptimization
 GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*

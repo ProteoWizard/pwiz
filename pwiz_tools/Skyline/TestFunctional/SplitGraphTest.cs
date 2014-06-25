@@ -82,26 +82,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 {
                     Assert.IsTrue(Settings.Default.ShowLibraryChromatograms);
-                    AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
+                    AssertCurveListsSame(graphChromatogram.CurveList,
                                          libraryMatchGraphControl.GraphPane.CurveList);
-                    AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
+                    AssertCurveListsSame(graphChromatogram.CurveList,
                                          peakAreaSummary.GraphControl.GraphPane.CurveList);
-                    Assert.AreEqual(9, graphChromatogramGraphControl.GraphPane.CurveList.Count);
+                    Assert.AreEqual(9, graphChromatogram.CurveList.Count);
                     Assert.AreEqual(1, graphChromatogramGraphControl.MasterPane.PaneList.Count);
                     Assert.AreEqual(1, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
                     SkylineWindow.ShowPrecursorTransitions();
-                    Assert.AreEqual(3, graphChromatogramGraphControl.GraphPane.CurveList.Count);
+                    Assert.AreEqual(3, graphChromatogram.CurveList.Count);
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
-                    //AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList, 
-                    //  libraryMatchGraphControl.GraphPane.CurveList);
-                    AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
+                    //AssertCurveListsSame(graphChromatogram.CurveList, libraryMatchGraphControl.GraphPane.CurveList);
+                    AssertCurveListsSame(graphChromatogram.CurveList,
                                          peakAreaSummary.GraphControl.GraphPane.CurveList);
                     SkylineWindow.ShowProductTransitions();
-                    Assert.AreEqual(6, graphChromatogramGraphControl.GraphPane.CurveList.Count);
+                    Assert.AreEqual(6, graphChromatogram.CurveList.Count);
                     // TODO(nicksh): Enable this when libraries filter based on precursor/product
-                    AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
+                    AssertCurveListsSame(graphChromatogram.CurveList,
                       libraryMatchGraphControl.GraphPane.CurveList);
-                    AssertCurveListsSame(graphChromatogramGraphControl.GraphPane.CurveList,
+                    AssertCurveListsSame(graphChromatogram.CurveList,
                                          peakAreaSummary.GraphControl.GraphPane.CurveList);
                     SkylineWindow.ShowAllTransitions();
                     SkylineWindow.ShowSplitChromatogramGraph(true);
@@ -109,9 +108,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             Assert.AreEqual(2, graphChromatogramGraphControl.MasterPane.PaneList.Count);
             Assert.AreEqual(2, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
-            AssertCurveListsSame(graphChromatogramGraphControl.MasterPane.PaneList[0].CurveList,
+            AssertCurveListsSame(GraphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[0]),
                 peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList);
-            AssertCurveListsSame(graphChromatogramGraphControl.MasterPane.PaneList[1].CurveList,
+            AssertCurveListsSame(GraphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[1]),
                 peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList);
         }
 
