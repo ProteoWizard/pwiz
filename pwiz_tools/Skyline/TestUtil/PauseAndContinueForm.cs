@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -86,23 +87,28 @@ namespace pwiz.SkylineTestUtil
         {
             ClipboardEx.UseInternalClipboard(false);
 
-            RunUI(() =>
-            {
+            Form parentWindow = SkylineWindow;
+            if (SkylineWindow != null)
                 SkylineWindow.UseKeysOverride = false;
-                var dlg = new PauseAndContinueForm(description, link, showMatchingPages) { Left = SkylineWindow.Left };
+            else
+                parentWindow = AbstractFunctionalTest.FindOpenForm<StartPage>();
+
+            RunUI(parentWindow, () =>
+            {
+                var dlg = new PauseAndContinueForm(description, link, showMatchingPages) { Left = parentWindow.Left };
                 const int spacing = 15;
-                var screen = Screen.FromControl(SkylineWindow);
-                if (SkylineWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
-                    dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
-                else if (SkylineWindow.Bottom + dlg.Height + spacing < screen.WorkingArea.Bottom)
-                    dlg.Top = SkylineWindow.Bottom + spacing;
+                var screen = Screen.FromControl(parentWindow);
+                if (parentWindow.Top > screen.WorkingArea.Top + dlg.Height + spacing)
+                    dlg.Top = parentWindow.Top - dlg.Height - spacing;
+                else if (parentWindow.Bottom + dlg.Height + spacing < screen.WorkingArea.Bottom)
+                    dlg.Top = parentWindow.Bottom + spacing;
                 else
                 {
-                    dlg.Top = SkylineWindow.Top;
-                    if (SkylineWindow.Left > screen.WorkingArea.Top + dlg.Width + spacing)
-                        dlg.Left = SkylineWindow.Left - dlg.Width - spacing;
-                    else if (SkylineWindow.Right + dlg.Width + spacing < screen.WorkingArea.Right)
-                        dlg.Left = SkylineWindow.Right + spacing;
+                    dlg.Top = parentWindow.Top;
+                    if (parentWindow.Left > screen.WorkingArea.Top + dlg.Width + spacing)
+                        dlg.Left = parentWindow.Left - dlg.Width - spacing;
+                    else if (parentWindow.Right + dlg.Width + spacing < screen.WorkingArea.Right)
+                        dlg.Left = parentWindow.Right + spacing;
                     else
                     {
                         // Can't fit on screen without overlap, so put in upper left of screen
@@ -111,7 +117,7 @@ namespace pwiz.SkylineTestUtil
                         dlg.Left = screen.WorkingArea.Left;
                     }
                 }
-                dlg.Show(SkylineWindow);
+                dlg.Show(parentWindow);
             });
 
             lock (_pauseLock)
@@ -119,7 +125,8 @@ namespace pwiz.SkylineTestUtil
                 // Wait for an event on the pause lock, when the form is closed
                 Monitor.Wait(_pauseLock);
                 ClipboardEx.UseInternalClipboard();
-                RunUI(() => SkylineWindow.UseKeysOverride = true);
+                if (SkylineWindow != null)
+                    RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);
             }
         }
 
@@ -130,9 +137,9 @@ namespace pwiz.SkylineTestUtil
             base.OnShown(e);
         }
 
-        protected static void RunUI(Action act)
+        protected static void RunUI(Form form, Action act)
         {
-            SkylineWindow.Invoke(act);
+            form.Invoke(act);
         }
 
         private static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }

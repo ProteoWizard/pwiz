@@ -69,7 +69,8 @@ namespace pwiz.Skyline
             int start = menu.DropDownItems.IndexOf(mruBeforeToolStripSeparator) + 1;
             while (!ReferenceEquals(menu.DropDownItems[start], mruAfterToolStripSeparator))
                 menu.DropDownItems.RemoveAt(start);
-            for (int i = 0; i < mruList.Count; i++)
+            int len = Math.Min(mruList.Count, Settings.Default.MruLength);
+            for (int i = 0; i < len; i++)
             {
                 MruChosenHandler handler = new MruChosenHandler(this, mruList[i]);
                 ToolStripMenuItem item = new ToolStripMenuItem(GetMruName(i, mruList[i], curDir), null,
@@ -931,7 +932,7 @@ namespace pwiz.Skyline
                 {
                     mruList.Remove(path);
                     mruList.Insert(0, path);
-                    int len = Settings.Default.MruLength;
+                    int len = Settings.Default.MruMemoryLength;
                     if (mruList.Count > len)
                         mruList.RemoveRange(len, mruList.Count - len);
                 }
@@ -2265,7 +2266,7 @@ namespace pwiz.Skyline
         {
             if (string.IsNullOrEmpty(DocumentFilePath))
             {
-                if (MessageBox.Show(errorMsg, Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(this,errorMsg,Resources.OK) == DialogResult.Cancel)
                     return false;
                 if (!SaveDocument())
                     return false;

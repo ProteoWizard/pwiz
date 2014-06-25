@@ -1358,9 +1358,20 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 int selectedIndex = 0;
-                Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
+                Invoke(new Action(() => selectedIndex = GetSelectedTabIndex()));
                 return TAB_PAGES[selectedIndex];
             }
+        }
+
+        private int GetSelectedTabIndex()
+        {
+            if (tabControl1.SelectedTab == tabPageFasta)
+                return 0;
+            else if (tabControl1.SelectedTab == tabPageProteinList)
+                return 1;
+            else if (tabControl1.SelectedTab == tabPagePeptideList)
+                return 2;
+            return 3;
         }
 
         public int PeptideRowCount

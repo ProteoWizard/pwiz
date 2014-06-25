@@ -88,6 +88,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap AbsoluteQuant_thumb {
+            get {
+                object obj = ResourceManager.GetObject("AbsoluteQuant_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap AbsoluteQuant_thumb1 {
+            get {
+                object obj = ResourceManager.GetObject("AbsoluteQuant_thumb1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retention Time.
         /// </summary>
         public static string AbstractChromGraphItem_CustomizeXAxis_Retention_Time {
@@ -304,6 +324,53 @@ namespace pwiz.Skyline.Properties {
         public static string AbstractSpectrumGraphItem_GetLabel_rank__0__ {
             get {
                 return ResourceManager.GetString("AbstractSpectrumGraphItem_GetLabel_rank__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files extracted to: {0}.
+        /// </summary>
+        public static string ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_ {
+            get {
+                return ResourceManager.GetString("ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error {0}.
+        /// </summary>
+        public static string ActionTutorial_DownloadTutorials_Error__0_ {
+            get {
+                return ResourceManager.GetString("ActionTutorial_DownloadTutorials_Error__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading to: {0}{1}Tutorial will open in browser when download is complete..
+        /// </summary>
+        public static string ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_ {
+            get {
+                return ResourceManager.GetString("ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_brow" +
+                        "ser_when_download_is_complete_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading Tutorial ZIP File.
+        /// </summary>
+        public static string ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File {
+            get {
+                return ResourceManager.GetString("ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extracting Tutorial ZIP File.
+        /// </summary>
+        public static string ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_ {
+            get {
+                return ResourceManager.GetString("ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directo" +
+                        "ry_", resourceCulture);
             }
         }
         
@@ -5502,6 +5569,26 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap CustomReports_thumb {
+            get {
+                object obj = ResourceManager.GetObject("CustomReports_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap CustomReports_thumb1 {
+            get {
+                object obj = ResourceManager.GetObject("CustomReports_thumb1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Cut {
             get {
                 object obj = ResourceManager.GetObject("Cut", resourceCulture);
@@ -5779,6 +5866,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap directoryicon {
+            get {
+                object obj = ResourceManager.GetObject("directoryicon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -7920,6 +8017,26 @@ namespace pwiz.Skyline.Properties {
         public static string EnzymeList_Title_Edit_Enzymes {
             get {
                 return ResourceManager.GetString("EnzymeList_Title_Edit_Enzymes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ExistingQuant_thumb {
+            get {
+                object obj = ResourceManager.GetObject("ExistingQuant_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ExistingQuant_thumb1 {
+            get {
+                object obj = ResourceManager.GetObject("ExistingQuant_thumb1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -10812,6 +10929,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap iRT_thumb {
+            get {
+                object obj = ResourceManager.GetObject("iRT_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to iRT Database Files.
         /// </summary>
         public static string IrtDb_FILTER_IRTDB_iRT_Database_Files {
@@ -11286,6 +11413,16 @@ namespace pwiz.Skyline.Properties {
         public static string Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted {
             get {
                 return ResourceManager.GetString("Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap LibraryExplorer_thumb {
+            get {
+                object obj = ResourceManager.GetObject("LibraryExplorer_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -12294,6 +12431,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MethodEdit_thumb {
+            get {
+                object obj = ResourceManager.GetObject("MethodEdit_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exporting method {0}....
         /// </summary>
         public static string MethodExporter_ExportMethod_Exporting_method__0__ {
@@ -12308,6 +12455,16 @@ namespace pwiz.Skyline.Properties {
         public static string MethodExporter_ExportMethod_Exporting_methods {
             get {
                 return ResourceManager.GetString("MethodExporter_ExportMethod_Exporting_methods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MethodRefine_thumb {
+            get {
+                object obj = ResourceManager.GetObject("MethodRefine_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -12713,6 +12870,16 @@ namespace pwiz.Skyline.Properties {
         public static string MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape {
             get {
                 return ResourceManager.GetString("MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MS1Filtering_thumb {
+            get {
+                object obj = ResourceManager.GetObject("MS1Filtering_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -13493,6 +13660,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap OptimizeCE_thumb {
+            get {
+                object obj = ResourceManager.GetObject("OptimizeCE_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string OptimizedMethodTypeExtension_LOCALIZED_VALUES_None {
@@ -13859,6 +14036,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must select an empty directory for the tutorial files..
+        /// </summary>
+        public static string PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_ {
+            get {
+                return ResourceManager.GetString("PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Peak {
@@ -14116,6 +14303,16 @@ namespace pwiz.Skyline.Properties {
         public static string PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_ {
             get {
                 return ResourceManager.GetString("PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap PeakPicking_thumb {
+            get {
+                object obj = ResourceManager.GetObject("PeakPicking_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -15550,6 +15747,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("PythonInstaller_PythonInstaller_Load_This_tool_requires_the_following_Python_pack" +
                         "ages__Select_packages_to_install_and_then_click_Install_to_begin_the_installatio" +
                         "n_process_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap QuaSAR_thumb {
+            get {
+                object obj = ResourceManager.GetObject("QuaSAR_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -17581,6 +17788,121 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("SkylineImg", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please save a new file to work with..
+        /// </summary>
+        public static string SkylineStartup_SaveFileDlg_Please_save_a_new_file_to_work_with_ {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SaveFileDlg_Please_save_a_new_file_to_work_with_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Blank Document.
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Blank_Document {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Blank_Document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import DDA Peptide Search.
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Import_DDA_Peptide_Search {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Import_DDA_Peptide_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import FASTA.
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Import_FASTA {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Import_FASTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Peptide List.
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Import_Peptide_List {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Import_Peptide_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Protein List.
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Import_Protein_List {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Import_Protein_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Transition List.
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Import_Transition_List {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Import_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start a new Skyline document from a complete transition list with peptide sequences, precursor m/z values, and product m/z values, which you can paste into a grid..
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transition_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__which_you_can_paste_into_a_grid_ {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transi" +
+                        "tion_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__" +
+                        "which_you_can_paste_into_a_grid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start a new Skyline document with target proteins specified in a tabular list you can paste into a grid..
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_a_tabular_list_you_can_paste_into_a_grid_ {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_s" +
+                        "pecified_in_a_tabular_list_you_can_paste_into_a_grid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start a new Skyline document with target proteins specified in FASTA format..
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_FASTA_format_ {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_s" +
+                        "pecified_in_FASTA_format_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start a new Skyline document with targets specified as a list of peptide sequences in a tabular list you can paste into a grid..
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_targets_specified_as_a_list_of_peptide_sequences_in_a_tabular_list_you_can_paste_into_a_grid_ {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_targets_specified" +
+                        "_as_a_list_of_peptide_sequences_in_a_tabular_list_you_can_paste_into_a_grid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the Skyline Import Peptide Search wizard to build a spectral library from peptide search results on DDA data, and then import the raw data to quantify peptides using Skyline MS1 Filtering..
+        /// </summary>
+        public static string SkylineStartup_SkylineStartup_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DDA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_ {
+            get {
+                return ResourceManager.GetString("SkylineStartup_SkylineStartup_Use_the_Skyline_Import_Peptide_Search_wizard_to_bui" +
+                        "ld_a_spectral_library_from_peptide_search_results_on_DDA_data__and_then_import_t" +
+                        "he_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_", resourceCulture);
             }
         }
         
@@ -20087,6 +20409,232 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_ {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Absolute Quantification.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Absolute_Quantification {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Absolute_Quantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Advanced Peak Picking Models.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Advanced_Peak_Picking_Models {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Advanced_Peak_Picking_Models", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collision Energy Optimization.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Collision_Energy_Optimization {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Collision_Energy_Optimization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Reports &amp; Results Grid.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Custom_Reports___Results_Grid {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Custom_Reports___Results_Grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience working with the power of Skyline custom Live Reports to view, edit and export a wide range of values from your Skyline documents. These reports are perfect for use in Excel or with custom code written in R, Matlab, Java, C++ and other languages for doing deep statistical analysis after processing your instrument output with Skyline. Also learn to use the Skyline Results Grid view to gain access to these values and to add custom annotations while inspecting your data in Skyline. Foll [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_customreports {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_customreports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Existing &amp; Quantitative Experiments.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Existing___Quantitative_Experiments {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Existing___Quantitative_Experiments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience using Skyline to work with empirically measured optimal collision energy (CE) values. In this tutorial, you will create scheduled CE optimization transitions lists for a document with 30 peptide precursors. Using supplied RAW files from a Thermo TSQ Vantage, you will recalculate the linear equation used to calculate CE for that instrument. You will also export a transition list with CE values optimized separately for each transition..
+        /// </summary>
+        public static string StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_to_work_with_empirically_measured_optimal_collision_energy__CE__values__In_this_tutorial__you_will_create_scheduled_CE_optimization_transitions_lists_for_a_document_with_30_peptide_precursors__Using_supplied_RAW_files_from_a_Thermo_TSQ_Vantage__you_will_recalculate_the_linear_equation_used_to_calculate_CE_for_that_instrument__You_will_also_export_a_transition_list_with_CE_values_optimized_separately_for_each_transition_ {
+            get {
+                return ResourceManager.GetString(@"StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_to_work_with_empirically_measured_optimal_collision_energy__CE__values__In_this_tutorial__you_will_create_scheduled_CE_optimization_transitions_lists_for_a_document_with_30_peptide_precursors__Using_supplied_RAW_files_from_a_Thermo_TSQ_Vantage__you_will_recalculate_the_linear_equation_used_to_calculate_CE_for_that_instrument__You_will_also_export_a_transition_list_with_CE_values_optimized_separately_for_each_transition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience using Skyline with Excel to estimate the absolute molecular quantities of peptides in your experiments. .
+        /// </summary>
+        public static string StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__ {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estima" +
+                        "te_the_absolute_molecular_quantities_of_peptides_in_your_experiments__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience working with quantitative experiments and isotope labeled reference peptides, by starting with experiments with published transition lists and SRM mass spectrometer data. Learn effective ways of analyzing your data in Skyline using several of the available peak area and retention time summary charts..
+        /// </summary>
+        public static string StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_ {
+            get {
+                return ResourceManager.GetString(@"StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience working with the Skyline Spectral Library Explorer, new in v0.7. Learn more about working with isotope labels and product ion neutral losses using MS/MS spectral libraries containing 15N labeled and phosphorylated peptides. Use the Library Explorer to accelerate the transition between shotgun discovery experiments and targeted investigation..
+        /// </summary>
+        public static string StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_ {
+            get {
+                return ResourceManager.GetString(@"StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience with iRT, a technique for storing calibrated, empirically measured peptide retention times in a library for future use in retention time prediction for scheduled acquisition and peak identity validation. In this tutorial, you will calibrate your own iRT calculator and also learn more about the iRT-C18 calibration proposed by Biognosys for the peptide standards in their iRT-Kit. You will calibrate new iRT values from SRM data, a spectral library and chromatogram peaks filtered from MS [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_irt {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_irt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT Retention Time Prediction.
+        /// </summary>
+        public static string StartPage_getBoxPanels_iRT_Retention_Time_Prediction {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_iRT_Retention_Time_Prediction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience creating a Skyline document for a targeted proteomics experiment. In this tutorial, you will create a MS/MS spectral library from pepXML and mzXML and a background proteome file from a FASTA format file. You will combine these with a public MS/MS spectral library from the Global Proteome Machine to guide creation of a new Skyline document targeting selected yeast proteins, peptides and product ions. From this document, you will export a transition list, ready to run on a AB 4000 Q Tr [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_methodedit {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_methodedit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1 Full-Scan Filtering.
+        /// </summary>
+        public static string StartPage_getBoxPanels_MS1_Full_Scan_Filtering {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_MS1_Full_Scan_Filtering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience creating a Skyline document to measure quantitative differences in peptide expression using the MS1 scans from your data dependent acquisition (DDA) experiments. In this tutorial, you will generate a spectral library from a discovery data set, set up a Skyline document for MS1 filtering, import raw mass spectrometer data to extract precursor ion chromatograms from MS1 scans, with peak picking guided by MS/MS peptide identifications, and further process the resulting quantitative data [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_ms1filtering {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_ms1filtering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn more about creating and testing advanced models for matching target peptides with chromatogram peaks in Skyline. With the 2.5 release, Skyline now supports creating linear combinations of individual peak scores using the mProphet semi-supervised learning algorithm.  In this tutorial, you will learn to generate decoy peptides and transitions, create and assess mProphet scoring models, and apply them to Skyline chromatogram peak picking, both for SRM and DIA/SWATH data.  You will learn about mProphet as [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_peakpicking {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_peakpicking", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to QuaSAR Quantitative Statistics.
+        /// </summary>
+        public static string StartPage_getBoxPanels_QuaSAR_Quantitative_Statistics {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_QuaSAR_Quantitative_Statistics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectral Library Explorer.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Spectral_Library_Explorer {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Spectral_Library_Explorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targeted Method Editing.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Targeted_Method_Editing {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Targeted_Method_Editing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targeted Method Refinement.
+        /// </summary>
+        public static string StartPage_getBoxPanels_Targeted_Method_Refinement {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Targeted_Method_Refinement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targeted MS/MS (PRM).
+        /// </summary>
+        public static string StartPage_getBoxPanels_Targeted_MS_MS__PRM_ {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_Targeted_MS_MS__PRM_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience working with targeted MS/MS (also referred to as parallel reaction monitoring - PRM) data acquired on a low resolution Thermo LTQ and a high resolution Agilent 6520 Q-TOF. Gain new understanding of the selectivity and sensitivity differences between peptide quantification using precursor and fragment ions measured on low and high resolution instruments. Discover new ways to work with and understand your own mass spectrometry data using the rich feature set provided by Skyline for wor [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string StartPage_getBoxPanels_targetedmsms {
+            get {
+                return ResourceManager.GetString("StartPage_getBoxPanels_targetedmsms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Folder for tutorial files:.
+        /// </summary>
+        public static string StartPage_Tutorial__Folder_for_tutorial_files_ {
+            get {
+                return ResourceManager.GetString("StartPage_Tutorial__Folder_for_tutorial_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ZIP Files.
+        /// </summary>
+        public static string StartPage_Tutorial_Zip_Files {
+            get {
+                return ResourceManager.GetString("StartPage_Tutorial_Zip_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List view item already has a description.
         /// </summary>
         public static string StatementCompletionForm_AddDescription_List_view_item_already_has_a_description {
@@ -20256,6 +20804,16 @@ namespace pwiz.Skyline.Properties {
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {
             get {
                 return ResourceManager.GetString("SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap TargetedMSMS_thumb {
+            get {
+                object obj = ResourceManager.GetObject("TargetedMSMS_thumb", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -23169,6 +23727,86 @@ namespace pwiz.Skyline.Properties {
         public static string WindowType_MEASUREMENT_Measurement {
             get {
                 return ResourceManager.GetString("WindowType_MEASUREMENT_Measurement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardBlankDocument {
+            get {
+                object obj = ResourceManager.GetObject("WizardBlankDocument", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardFasta {
+            get {
+                object obj = ResourceManager.GetObject("WizardFasta", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardImportPeptide {
+            get {
+                object obj = ResourceManager.GetObject("WizardImportPeptide", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardImportProteins {
+            get {
+                object obj = ResourceManager.GetObject("WizardImportProteins", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardImportTransition {
+            get {
+                object obj = ResourceManager.GetObject("WizardImportTransition", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardPeptideIcon {
+            get {
+                object obj = ResourceManager.GetObject("WizardPeptideIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardPeptideSearch {
+            get {
+                object obj = ResourceManager.GetObject("WizardPeptideSearch", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap WizardTransitionIcon {
+            get {
+                object obj = ResourceManager.GetObject("WizardTransitionIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

@@ -117,6 +117,7 @@
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -159,6 +160,12 @@
     </Compile>
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\PathChooserDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\PathChooserDlg.Designer.cs">
+      <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\ReportShutdownDlg.cs">
       <SubType>Form</SubType>
@@ -405,6 +412,31 @@
     </Compile>
     <Compile Include="Controls\SequenceTreeForm.Designer.cs">
       <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Startup\ActionBoxControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Startup\ActionBoxControl.Designer.cs">
+      <DependentUpon>ActionBoxControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Startup\ActionTutorial.cs" />
+    <Compile Include="Controls\Startup\RecentFileControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Startup\RecentFileControl.Designer.cs">
+      <DependentUpon>RecentFileControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Startup\StartPage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Startup\StartPage.Designer.cs">
+      <DependentUpon>StartPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Startup\StartupActions.cs" />
+    <Compile Include="Controls\Startup\TutorialLinkResources.Designer.cs">
+      <DependentUpon>TutorialLinkResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Controls\StatementCompletionTextBox.cs">
     </Compile>
@@ -1170,6 +1202,12 @@
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
     <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
+    <Compile Include="SettingsUI\StartPageSettingsUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\StartPageSettingsUI.Designer.cs">
+      <DependentUpon>StartPageSettingsUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
@@ -1322,6 +1360,9 @@
     <EmbeddedResource Include="Alerts\PasteTypeDlg.zh-CHS.resx">
       <DependentUpon>PasteTypeDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PathChooserDlg.resx">
+      <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1342,6 +1383,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\UpgradeDlg.zh-CHS.resx">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
@@ -1363,6 +1405,28 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphDriftTime.resx">
       <DependentUpon>GraphDriftTime.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Startup\ActionBoxControl.resx">
+      <DependentUpon>ActionBoxControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Startup\RecentFileControl.resx">
+      <DependentUpon>RecentFileControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Startup\StartPage.resx">
+      <DependentUpon>StartPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.ja.resx">
+      <DependentUpon>TutorialLinkResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>TutorialLinkResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.zh-CHS.resx">
+      <DependentUpon>TutorialLinkResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -1773,6 +1837,7 @@
     <EmbeddedResource Include="Resources\PeptideQc.bmp" />
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
     <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
+    <EmbeddedResource Include="Resources\directoryicon.png" />
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -1780,6 +1845,26 @@
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
+    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\WizardTransitionIcon.png" />
+    <EmbeddedResource Include="Resources\StartPage\CustomReports_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\iRT_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\MethodEdit_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\MethodRefine_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\PeakPicking_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\QuaSAR_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument.bmp" />
+    <EmbeddedResource Include="Resources\StartPage\WizardFasta.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardImportPeptide.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardImportProteins.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardImportTransition.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardPeptideIcon.png" />
+    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearch.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2024,6 +2109,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.zh-CHS.resx">
       <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\StartPageSettingsUI.resx">
+      <DependentUpon>StartPageSettingsUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.ja.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>

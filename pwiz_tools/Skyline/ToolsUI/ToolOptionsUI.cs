@@ -35,7 +35,7 @@ namespace pwiz.Skyline.ToolsUI
         public ToolOptionsUI()
         {
             InitializeComponent();
-
+            checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
             Icon = Resources.Skyline;
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
@@ -98,6 +98,7 @@ namespace pwiz.Skyline.ToolsUI
                 var displayLanguageItem = listBoxLanguages.SelectedItem as DisplayLanguageItem;
                 if (null != displayLanguageItem)
                 {
+                    Settings.Default.ShowStartupForm = checkBoxShowWizard.Checked;
                     Settings.Default.DisplayLanguage = displayLanguageItem.Key;
                 }
             }

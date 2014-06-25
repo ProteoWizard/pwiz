@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -82,7 +83,7 @@ namespace pwiz.SkylineTestUtil
             if (existingDialog != null)
                 Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
 
-            SkylineWindow.BeginInvoke(act);
+            SkylineBeginInvoke(act);
             TDlg dlg = WaitForOpenForm<TDlg>();
             Assert.IsNotNull(dlg);
             return dlg;
@@ -103,9 +104,31 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        protected virtual bool ShowStartPage {get { return false; }}
+        protected virtual List<string> SetMru { get { return new List<string>(); } }
+
         private static void SkylineInvoke(Action act)
         {
-            SkylineWindow.Invoke(act);
+            if (null != SkylineWindow)
+            {
+                SkylineWindow.Invoke(act);
+            }
+            else
+            {
+                FindOpenForm<StartPage>().Invoke(act);
+            }
+        }
+
+        private static void SkylineBeginInvoke(Action act)
+        {
+            if (null != SkylineWindow)
+            {
+                SkylineWindow.BeginInvoke(act);
+            }
+            else
+            {
+                FindOpenForm<StartPage>().BeginInvoke(act);
+            }
         }
 
         protected static void RunDlg<TDlg>(Action show, Action<TDlg> act = null, bool pause = false) where TDlg : Form
@@ -237,6 +260,7 @@ namespace pwiz.SkylineTestUtil
                 }
             }
         }
+
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
             foreach (var form in OpenForms)
@@ -360,7 +384,7 @@ namespace pwiz.SkylineTestUtil
                 Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isOpen = true;
-                Program.MainWindow.Invoke(new Action(() => isOpen = IsFormOpen(formClose)));
+                SkylineInvoke(() => isOpen = IsFormOpen(formClose));
                 if (!isOpen)
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -551,7 +575,8 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.BackgroundProteomeList[0] = BackgroundProteomeList.GetDefault();
                 Settings.Default.DeclusterPotentialList[0] = DeclusterPotentialList.GetDefault();
                 Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
-
+                Settings.Default.ShowStartupForm = ShowStartPage;
+                Settings.Default.MruList = SetMru;
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -617,10 +642,16 @@ namespace pwiz.SkylineTestUtil
                 {
                     if (Program.MainWindow != null && Program.MainWindow.IsHandleCreated)
                         break;
+                    if (ShowStartPage && null != FindOpenForm<StartPage>()) {
+                        break;
+                    }
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
-                Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
+                if (!ShowStartPage) 
+                {
+                    Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                     "Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000); // Not L10N
+                }
                 Settings.Default.Reset();
                 Settings.Default.EnableLiveReports = IsEnableLiveReports;
                 RunTest();
@@ -636,17 +667,22 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
-            // Clean-up before running the test
-            RunUI(() => SkylineWindow.UseKeysOverride = true);
-
-            // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
-            bool allowInternetAccess = AllowInternetAccess; // Local copy for easy change in debugger when needed
-            if (!allowInternetAccess)
+            if (null != SkylineWindow)
             {
-                var protdbLoader = SkylineWindow.BackgroundProteomeManager;
-                protdbLoader.FastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
-                var treeLoader = SkylineWindow.ProteinMetadataManager;
-                treeLoader.FastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+                // Clean-up before running the test
+                RunUI(() => SkylineWindow.UseKeysOverride = true);
+
+                // Make sure the background proteome and sequence tree protein metadata loaders don't hit the web (unless they are meant to)
+                bool allowInternetAccess = AllowInternetAccess; // Local copy for easy change in debugger when needed
+                if (!allowInternetAccess)
+                {
+                    var protdbLoader = SkylineWindow.BackgroundProteomeManager;
+                    protdbLoader.FastaImporter =
+                        new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+                    var treeLoader = SkylineWindow.ProteinMetadataManager;
+                    treeLoader.FastaImporter =
+                        new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+                }
             }
 
             // Use internal clipboard for testing so that we don't collide with other processes
@@ -661,7 +697,10 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
 
-            IsEnableLiveReports = GetBoolValue("LiveReports", true); // Return true if unspecified
+            if (null != SkylineWindow)
+            {
+                IsEnableLiveReports = GetBoolValue("LiveReports", true); // Return true if unspecified
+            }
 
             DoTest();
 

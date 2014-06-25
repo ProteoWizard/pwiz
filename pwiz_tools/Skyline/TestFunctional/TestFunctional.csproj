@@ -191,6 +191,7 @@
     <Compile Include="SplitGraphTest.cs" />
     <Compile Include="SrmCourseScenarioTest.cs" />
     <Compile Include="StandardTypeTest.cs" />
+    <Compile Include="StartPageTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -285,6 +286,7 @@
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />
     <None Include="StandardTypeTest.zip" />
+    <None Include="StartPageTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />

@@ -29,6 +29,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -200,7 +201,21 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
-                    MainWindow = new SkylineWindow();
+                    var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+                    if ((activationArgs != null && activationArgs.ActivationData.Length != 0) ||
+                        !Settings.Default.ShowStartupForm)
+                    {
+                        MainWindow = new SkylineWindow();
+                    }
+                    else
+                    {
+                        MainWindow = StartPage.ShowStartupFormDialog();
+                        if (null == MainWindow)
+                        {
+                            Application.Exit();
+                            return;
+                        }
+                    }
                 }
                 catch (Exception x)
                 {

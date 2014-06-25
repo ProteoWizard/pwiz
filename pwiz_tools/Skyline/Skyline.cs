@@ -210,32 +210,24 @@ namespace pwiz.Skyline
             // Load any file the user may have double-clicked on to run this application
             bool newFile = true;
             var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+            string fileToOpen = string.Empty;
+
             string[] args = (activationArgs != null ? activationArgs.ActivationData : null);
             if (args != null && args.Length != 0)
             {
+                fileToOpen = args[0];
+            }
+            if (!fileToOpen.Equals(string.Empty))
+            {
                 try
                 {
-                    Uri uri = new Uri(args[0]);
-                    if (!uri.IsFile)
-                        throw new UriFormatException(String.Format(Resources.SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file, uri));
-
-                    string pathOpen = Uri.UnescapeDataString(uri.AbsolutePath);
-
-                    // If the file chosen was the cache file, open its associated document.)
-                    if (Equals(Path.GetExtension(pathOpen), ChromatogramCache.EXT))
-                        pathOpen = Path.ChangeExtension(pathOpen, SrmDocument.EXT);
-                    // Handle direct open from UNC path names
-                    if (!string.IsNullOrEmpty(uri.Host))
-                        pathOpen = "//" + uri.Host + pathOpen; // Not L10N
-
-                    newFile = !OpenFile(pathOpen);
+                    newFile = !LoadFile(fileToOpen);
                 }
                 catch (UriFormatException)
                 {
                     MessageBox.Show(this, Resources.SkylineWindow_SkylineWindow_Invalid_file_specified, Program.Name);
                 }
             }
-
             // If no file was loaded, create a new one.
             if (newFile)
             {
@@ -243,6 +235,37 @@ namespace pwiz.Skyline
                 NewDocument();
             }
             chorusRequestToolStripMenuItem.Visible = Settings.Default.EnableChorus;
+        }
+
+        public void OpenPasteFileDlg(PasteFormat pf)
+        {
+            using (var pasteDlg = new PasteDlg(this)
+            {
+                SelectedPath = SelectedPath,
+                PasteFormat = pf
+            })
+            {
+                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                    SelectedPath = pasteDlg.SelectedPath;
+            }
+        }
+
+        public bool LoadFile(string file)
+        {
+            Uri uri = new Uri(file);
+            if (!uri.IsFile)
+                throw new UriFormatException(String.Format(Resources.SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file, uri));
+
+            string pathOpen = Uri.UnescapeDataString(uri.AbsolutePath).Replace("/", @"\"); // Not L10N
+            
+            // If the file chosen was the cache file, open its associated document.)
+            if (Equals(Path.GetExtension(pathOpen), ChromatogramCache.EXT))
+                pathOpen = Path.ChangeExtension(pathOpen, SrmDocument.EXT);
+            // Handle direct open from UNC path names
+            if (!string.IsNullOrEmpty(uri.Host))
+                pathOpen = "//" + uri.Host + pathOpen; // Not L10N
+
+            return OpenFile(pathOpen);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -2251,14 +2274,24 @@ namespace pwiz.Skyline
 
         public void ShowPeptideSettingsUI()
         {
-            ShowPeptideSettingsUI(null);
+            ShowPeptideSettingsUI(this);
+        }
+
+        public void ShowPeptideSettingsUI(IWin32Window parent)
+        {
+            ShowPeptideSettingsUI(parent, null);
         }
 
         public void ShowPeptideSettingsUI(PeptideSettingsUI.TABS? tab)
         {
+            ShowPeptideSettingsUI(this, tab);
+        }
+
+        private void ShowPeptideSettingsUI(IWin32Window parent, PeptideSettingsUI.TABS? tab)
+        {
             using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) { TabControlSel = tab })
             {
-                if (ps.ShowDialog(this) == DialogResult.OK)
+                if (ps.ShowDialog(parent) == DialogResult.OK)
                 {
                     if (ps.IsShowLibraryExplorer)
                         OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
@@ -2277,14 +2310,24 @@ namespace pwiz.Skyline
 
         public void ShowTransitionSettingsUI()
         {
-            ShowTransitionSettingsUI(null);
+            ShowTransitionSettingsUI(this);
+        }
+
+        public void ShowTransitionSettingsUI(IWin32Window parent)
+        {
+            ShowTransitionSettingsUI(parent, null);
         }
 
         public void ShowTransitionSettingsUI(TransitionSettingsUI.TABS? tab)
         {
+            ShowTransitionSettingsUI(this, tab);
+        }
+
+        private void ShowTransitionSettingsUI(IWin32Window parent, TransitionSettingsUI.TABS? tab)
+        {
             using (TransitionSettingsUI ts = new TransitionSettingsUI(this) { TabControlSel = tab })
             {
-                if (ts.ShowDialog(this) == DialogResult.OK)
+                if (ts.ShowDialog(parent) == DialogResult.OK)
                 {
                     // At this point the dialog does everything by itself.
                 }

@@ -1908,5 +1908,65 @@ namespace pwiz.Skyline.Properties {
                 this["SumScansFullScan"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowStartupForm {
+            get {
+                return ((bool)(this["ShowStartupForm"]));
+            }
+            set {
+                this["ShowStartupForm"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public int MruMemoryLength {
+            get {
+                return ((int)(this["MruMemoryLength"]));
+            }
+            set {
+                this["MruMemoryLength"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("678, 648")]
+        public global::System.Drawing.Size StartPageSize {
+            get {
+                return ((global::System.Drawing.Size)(this["StartPageSize"]));
+            }
+            set {
+                this["StartPageSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point StartPageLocation {
+            get {
+                return ((global::System.Drawing.Point)(this["StartPageLocation"]));
+            }
+            set {
+                this["StartPageLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool StartPageMaximized {
+            get {
+                return ((bool)(this["StartPageMaximized"]));
+            }
+            set {
+                this["StartPageMaximized"] = value;
+            }
+        }
     }
 }

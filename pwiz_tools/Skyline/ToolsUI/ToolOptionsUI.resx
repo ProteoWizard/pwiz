@@ -417,6 +417,36 @@
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="checkBoxShowWizard.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxShowWizard.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxShowWizard.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 30</value>
+  </data>
+  <data name="checkBoxShowWizard.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 17</value>
+  </data>
+  <data name="checkBoxShowWizard.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="checkBoxShowWizard.Text" xml:space="preserve">
+    <value>Show start page</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowWizard.Name" xml:space="preserve">
+    <value>checkBoxShowWizard</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowWizard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowWizard.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="checkBoxLiveReports.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -442,7 +472,7 @@
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;checkBoxLiveReports.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

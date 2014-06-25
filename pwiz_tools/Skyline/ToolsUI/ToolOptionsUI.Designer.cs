@@ -45,6 +45,7 @@ namespace pwiz.Skyline.ToolsUI
             this.checkBoxLiveReports = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabChorus.SuspendLayout();
@@ -139,6 +140,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabMisc
             // 
+            this.tabMisc.Controls.Add(this.checkBoxShowWizard);
             this.tabMisc.Controls.Add(this.checkBoxLiveReports);
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
@@ -163,6 +165,12 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxShowWizard
+            // 
+            resources.ApplyResources(this.checkBoxShowWizard, "checkBoxShowWizard");
+            this.checkBoxShowWizard.Name = "checkBoxShowWizard";
+            this.checkBoxShowWizard.UseVisualStyleBackColor = true;
             // 
             // ToolOptionsUI
             // 
@@ -207,5 +215,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.ListBox listBoxChorusAccounts;
         private System.Windows.Forms.Label lblChorusAccounts;
         private System.Windows.Forms.Button btnEditChorusAccountList;
+        private System.Windows.Forms.CheckBox checkBoxShowWizard;
     }
 }

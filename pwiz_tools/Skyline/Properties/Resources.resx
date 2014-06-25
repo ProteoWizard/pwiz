@@ -7594,6 +7594,198 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
     <value>Standard co-elution (weighted)</value>
   </data>
+  <data name="AbsoluteQuant_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\AbsoluteQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ExistingQuant_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\ExistingQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MethodRefine_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\MethodRefine_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MethodEdit_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\MethodEdit_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MS1Filtering_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\MS1Filtering_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CustomReports_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="iRT_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\iRT_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="LibraryExplorer_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\LibraryExplorer_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OptimizeCE_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\OptimizeCE_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeakPicking_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\PeakPicking_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AbsoluteQuant_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\AbsoluteQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CustomReports_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ExistingQuant_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\ExistingQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="QuaSAR_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\QuaSAR_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TargetedMSMS_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\TargetedMSMS_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardBlankDocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardFasta" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardFasta.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardImportPeptide" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardImportPeptide.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardImportProteins" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardImportProteins.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardImportTransition" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardImportTransition.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardPeptideIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardPeptideIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardPeptideSearch" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardPeptideSearch.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WizardTransitionIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\StartPage\WizardTransitionIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Targeted_Method_Editing" xml:space="preserve">
+    <value>Targeted Method Editing</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Targeted_Method_Refinement" xml:space="preserve">
+    <value>Targeted Method Refinement</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Existing___Quantitative_Experiments" xml:space="preserve">
+    <value>Existing &amp; Quantitative Experiments</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Absolute_Quantification" xml:space="preserve">
+    <value>Absolute Quantification</value>
+  </data>
+  <data name="StartPage_getBoxPanels_MS1_Full_Scan_Filtering" xml:space="preserve">
+    <value>MS1 Full-Scan Filtering</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Targeted_MS_MS__PRM_" xml:space="preserve">
+    <value>Targeted MS/MS (PRM)</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Custom_Reports___Results_Grid" xml:space="preserve">
+    <value>Custom Reports &amp; Results Grid</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Advanced_Peak_Picking_Models" xml:space="preserve">
+    <value>Advanced Peak Picking Models</value>
+  </data>
+  <data name="StartPage_getBoxPanels_iRT_Retention_Time_Prediction" xml:space="preserve">
+    <value>iRT Retention Time Prediction</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Collision_Energy_Optimization" xml:space="preserve">
+    <value>Collision Energy Optimization</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Spectral_Library_Explorer" xml:space="preserve">
+    <value>Spectral Library Explorer</value>
+  </data>
+  <data name="StartPage_getBoxPanels_QuaSAR_Quantitative_Statistics" xml:space="preserve">
+    <value>QuaSAR Quantitative Statistics</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_" xml:space="preserve">
+    <value>Get hands-on experience working with the Skyline Spectral Library Explorer, new in v0.7. Learn more about working with isotope labels and product ion neutral losses using MS/MS spectral libraries containing 15N labeled and phosphorylated peptides. Use the Library Explorer to accelerate the transition between shotgun discovery experiments and targeted investigation.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_to_work_with_empirically_measured_optimal_collision_energy__CE__values__In_this_tutorial__you_will_create_scheduled_CE_optimization_transitions_lists_for_a_document_with_30_peptide_precursors__Using_supplied_RAW_files_from_a_Thermo_TSQ_Vantage__you_will_recalculate_the_linear_equation_used_to_calculate_CE_for_that_instrument__You_will_also_export_a_transition_list_with_CE_values_optimized_separately_for_each_transition_" xml:space="preserve">
+    <value>Get hands-on experience using Skyline to work with empirically measured optimal collision energy (CE) values. In this tutorial, you will create scheduled CE optimization transitions lists for a document with 30 peptide precursors. Using supplied RAW files from a Thermo TSQ Vantage, you will recalculate the linear equation used to calculate CE for that instrument. You will also export a transition list with CE values optimized separately for each transition.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_irt" xml:space="preserve">
+    <value>Get hands-on experience with iRT, a technique for storing calibrated, empirically measured peptide retention times in a library for future use in retention time prediction for scheduled acquisition and peak identity validation. In this tutorial, you will calibrate your own iRT calculator and also learn more about the iRT-C18 calibration proposed by Biognosys for the peptide standards in their iRT-Kit. You will calibrate new iRT values from SRM data, a spectral library and chromatogram peaks filtered from MS1 scans in a discovery experiment. And, you will learn how to recalibrate these iRT values to schedule SRM acquisition on a new column with a new gradient. You will see how more accurate retention time prediction based on iRT can give you higher confidence in your chromatogram peak identity validation.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_peakpicking" xml:space="preserve">
+    <value>Learn more about creating and testing advanced models for matching target peptides with chromatogram peaks in Skyline. With the 2.5 release, Skyline now supports creating linear combinations of individual peak scores using the mProphet semi-supervised learning algorithm.  In this tutorial, you will learn to generate decoy peptides and transitions, create and assess mProphet scoring models, and apply them to Skyline chromatogram peak picking, both for SRM and DIA/SWATH data.  You will learn about mProphet assigned q values (adjusted p values, based on FDR) and how you can associate them with your picked peaks and export them in a custom report.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_customreports" xml:space="preserve">
+    <value>Get hands-on experience working with the power of Skyline custom Live Reports to view, edit and export a wide range of values from your Skyline documents. These reports are perfect for use in Excel or with custom code written in R, Matlab, Java, C++ and other languages for doing deep statistical analysis after processing your instrument output with Skyline. Also learn to use the Skyline Results Grid view to gain access to these values and to add custom annotations while inspecting your data in Skyline. Follow this tutorial to greatly increase the scope of experiments you can achieve with Skyline. </value>
+  </data>
+  <data name="StartPage_getBoxPanels_targetedmsms" xml:space="preserve">
+    <value>Get hands-on experience working with targeted MS/MS (also referred to as parallel reaction monitoring - PRM) data acquired on a low resolution Thermo LTQ and a high resolution Agilent 6520 Q-TOF. Gain new understanding of the selectivity and sensitivity differences between peptide quantification using precursor and fragment ions measured on low and high resolution instruments. Discover new ways to work with and understand your own mass spectrometry data using the rich feature set provided by Skyline for working with chromatography-based quantitative proteomics.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_ms1filtering" xml:space="preserve">
+    <value>Get hands-on experience creating a Skyline document to measure quantitative differences in peptide expression using the MS1 scans from your data dependent acquisition (DDA) experiments. In this tutorial, you will generate a spectral library from a discovery data set, set up a Skyline document for MS1 filtering, import raw mass spectrometer data to extract precursor ion chromatograms from MS1 scans, with peak picking guided by MS/MS peptide identifications, and further process the resulting quantitative data in Skyline. If you are interested in label-free quantitative analysis of discovery data sets, this tutorial will give you a new tool set for your investigation.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__" xml:space="preserve">
+    <value>Get hands-on experience using Skyline with Excel to estimate the absolute molecular quantities of peptides in your experiments. </value>
+  </data>
+  <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_" xml:space="preserve">
+    <value>Get hands-on experience working with quantitative experiments and isotope labeled reference peptides, by starting with experiments with published transition lists and SRM mass spectrometer data. Learn effective ways of analyzing your data in Skyline using several of the available peak area and retention time summary charts.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_" xml:space="preserve">
+    <value>Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the best transitions for the highest confidence peaks. Step through the scheduling process to reduce the document to a transition list that can be measured in a single injection. Import and view multiple replicates of the single-injection method.</value>
+  </data>
+  <data name="StartPage_getBoxPanels_methodedit" xml:space="preserve">
+    <value>Get hands-on experience creating a Skyline document for a targeted proteomics experiment. In this tutorial, you will create a MS/MS spectral library from pepXML and mzXML and a background proteome file from a FASTA format file. You will combine these with a public MS/MS spectral library from the Global Proteome Machine to guide creation of a new Skyline document targeting selected yeast proteins, peptides and product ions. From this document, you will export a transition list, ready to run on a AB 4000 Q Trap.</value>
+  </data>
+  <data name="ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_" xml:space="preserve">
+    <value>Files extracted to: {0}</value>
+  </data>
+  <data name="ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File" xml:space="preserve">
+    <value>Downloading Tutorial ZIP File</value>
+  </data>
+  <data name="ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_" xml:space="preserve">
+    <value>Downloading to: {0}{1}Tutorial will open in browser when download is complete.</value>
+  </data>
+  <data name="SkylineStartup_SaveFileDlg_Please_save_a_new_file_to_work_with_" xml:space="preserve">
+    <value>Please save a new file to work with.</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Blank_Document" xml:space="preserve">
+    <value>Blank Document</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Use_the_Skyline_Import_Peptide_Search_wizard_to_build_a_spectral_library_from_peptide_search_results_on_DDA_data__and_then_import_the_raw_data_to_quantify_peptides_using_Skyline_MS1_Filtering_" xml:space="preserve">
+    <value>Use the Skyline Import Peptide Search wizard to build a spectral library from peptide search results on DDA data, and then import the raw data to quantify peptides using Skyline MS1 Filtering.</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Import_Protein_List" xml:space="preserve">
+    <value>Import Protein List</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_targets_specified_as_a_list_of_peptide_sequences_in_a_tabular_list_you_can_paste_into_a_grid_" xml:space="preserve">
+    <value>Start a new Skyline document with targets specified as a list of peptide sequences in a tabular list you can paste into a grid.</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+    <value>Import Transition List</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Import_DDA_Peptide_Search" xml:space="preserve">
+    <value>Import DDA Peptide Search</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Import_FASTA" xml:space="preserve">
+    <value>Import FASTA</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_from_a_complete_transition_list_with_peptide_sequences__precursor_m_z_values__and_product_m_z_values__which_you_can_paste_into_a_grid_" xml:space="preserve">
+    <value>Start a new Skyline document from a complete transition list with peptide sequences, precursor m/z values, and product m/z values, which you can paste into a grid.</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Import_Peptide_List" xml:space="preserve">
+    <value>Import Peptide List</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_a_tabular_list_you_can_paste_into_a_grid_" xml:space="preserve">
+    <value>Start a new Skyline document with target proteins specified in a tabular list you can paste into a grid.</value>
+  </data>
+  <data name="SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_FASTA_format_" xml:space="preserve">
+    <value>Start a new Skyline document with target proteins specified in FASTA format.</value>
+  </data>
+  <data name="directoryicon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\directoryicon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="StartPage_Tutorial_Zip_Files" xml:space="preserve">
+    <value>ZIP Files</value>
+  </data>
+  <data name="ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_" xml:space="preserve">
+    <value>Extracting Tutorial ZIP File</value>
+  </data>
   <data name="EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue" xml:space="preserve">
     <value>There are overlaps in a single cycle of your extraction windows. Are you sure you want to continue?</value>
   </data>
@@ -7606,4 +7798,14 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_" xml:space="preserve">
     <value>Multiplex graphing is not supported.</value>
   </data>
+  <data name="ActionTutorial_DownloadTutorials_Error__0_" xml:space="preserve">
+    <value>Error {0}</value>
+  </data>
+  <data name="StartPage_Tutorial__Folder_for_tutorial_files_" xml:space="preserve">
+    <value>&amp;Folder for tutorial files:</value>
+  </data>
+  <data name="PathChooserDlg_OkDialog_You_must_select_an_empty_directory_for_the_tutorial_files_" xml:space="preserve">
+    <value>You must select an empty directory for the tutorial files.</value>
+  </data>
 </root>
+

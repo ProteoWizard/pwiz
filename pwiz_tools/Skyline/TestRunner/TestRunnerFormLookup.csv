@@ -99,6 +99,7 @@ PasteDlg.ProteinListTab,TestMethodEditTutorial
 PasteDlg.TransitionListTab,TestExistingExperimentsTutorial
 PasteFilteredPeptidesDlg,TestLibraryBuild
 PasteTypeDlg,TestExplicitMultiType
+PathChooserDlg,TestStartPageShowPathChooser
 PeptideSettingsUI.DigestionTab,TestMethodEditTutorial
 PeptideSettingsUI.FilterTab,TestMethodEditTutorial
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
@@ -132,6 +133,9 @@ ShareTypeDlg,TestDocumentSharing
 SkylineWindow,*
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns
+StartPage.WizardTab,TestStartPageOpenRecent
+StartPage.TutorialTab,TestStartPageCheckActionBoxes
+StartPageSettingsUI,TestStartPageImport
 StatementCompletionForm,TestBackgroundProteome
 ToolOptionsUI,TestAccessServer
 ToolStoreDlg,TestToolStore
