@@ -36,9 +36,12 @@ namespace TestPerf
     {
         private static readonly ChorusAccount TEST_ACCOUNT = new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd");
 
-        //[TestMethod]
+        [TestMethod]
         public void TestThermoDIA()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
+
             var xmlSerializer = new XmlSerializer(typeof (ChromatogramRequestDocument));
             var stream = typeof (PerfChorusGenerateChromatograms).Assembly.GetManifestResourceStream(
                 typeof (PerfChorusGenerateChromatograms), "ThermoDIA.ChorusRequest.xml");
@@ -57,9 +60,12 @@ namespace TestPerf
             Assert.AreEqual(0, chromTaskList.ListExceptions().Count);
             Console.Out.WriteLine("Elapsed time {0}", endTime.Subtract(startTime));
         }
-        //[TestMethod]
+        [TestMethod]
         public void TestThermoDIAChunked()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
+
             var xmlSerializer = new XmlSerializer(typeof(ChromatogramRequestDocument));
             var stream = typeof(PerfChorusGenerateChromatograms).Assembly.GetManifestResourceStream(
                 typeof(PerfChorusGenerateChromatograms), "ThermoDIA.ChorusRequest.xml");

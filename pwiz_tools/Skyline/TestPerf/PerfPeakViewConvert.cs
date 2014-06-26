@@ -23,20 +23,27 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil;
 
 namespace TestPerf
 {
-    //[TestClass]
-    public class PerfPeakViewConvert
+    [TestClass]
+    public class PerfPeakViewConvert : AbstractUnitTest
     {
-        //[TestMethod]
+        [TestMethod]
         public void ConvertPeakViewPerf()
         {
-            const string directory = @"D:\Processing\HasmikSwathHeavy";
-            string rtFile = Path.Combine(directory, "PeakViewRtK6R6.txt");
-            string scoreFile = Path.Combine(directory, "PeakViewScoreK6R6.txt");
-            string qValueFile = Path.Combine(directory, "PeakViewFDRK6R6.txt");
-            string combinedFile = Path.Combine(directory, "PeakViewK6R6.txt");
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
+
+            TestFilesZip =
+                @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip";
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);                 
+
+            string rtFile = testFilesDir.GetTestPath( "PeakViewRtK6R6.txt");
+            string scoreFile = testFilesDir.GetTestPath( "PeakViewScoreK6R6.txt");
+            string qValueFile = testFilesDir.GetTestPath( "PeakViewFDRK6R6.txt");
+            string combinedFile = testFilesDir.GetTestPath( "PeakViewK6R6.txt");
             RunConversion(rtFile, scoreFile, qValueFile, combinedFile);
         }
 

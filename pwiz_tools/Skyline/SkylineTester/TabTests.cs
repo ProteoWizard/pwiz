@@ -79,6 +79,8 @@ namespace SkylineTester
 
             args.Append(" language=");
             args.Append(String.Join(",", cultures));
+            if (GetTestList().Length > 0)
+                args.Append(" perftests=on"); // In case any perf tests were explicitly selected - no harm if they weren't
 
             args.Append(GetTestList());
 

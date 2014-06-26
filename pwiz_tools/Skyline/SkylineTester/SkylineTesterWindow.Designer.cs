@@ -179,6 +179,7 @@ namespace SkylineTester
             this.nightlyRunDate = new System.Windows.Forms.ComboBox();
             this.label29 = new System.Windows.Forms.Label();
             this.groupBox20 = new System.Windows.Forms.GroupBox();
+            this.nightlyRunPerfTests = new System.Windows.Forms.CheckBox();
             this.buttonNow = new System.Windows.Forms.Button();
             this.nightlyStartTime = new System.Windows.Forms.DateTimePicker();
             this.nightlyBuildType = new System.Windows.Forms.DomainUpDown();
@@ -1789,11 +1790,11 @@ namespace SkylineTester
             this.groupBox19.Controls.Add(this.nightlyDeleteBuild);
             this.groupBox19.Controls.Add(this.nightlyRoot);
             this.groupBox19.Controls.Add(this.nightlyBrowseBuild);
-            this.groupBox19.Location = new System.Drawing.Point(0, 202);
+            this.groupBox19.Location = new System.Drawing.Point(0, 216);
             this.groupBox19.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox19.Name = "groupBox19";
             this.groupBox19.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox19.Size = new System.Drawing.Size(240, 133);
+            this.groupBox19.Size = new System.Drawing.Size(240, 119);
             this.groupBox19.TabIndex = 35;
             this.groupBox19.TabStop = false;
             this.groupBox19.Text = "Build root";
@@ -1804,7 +1805,7 @@ namespace SkylineTester
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label34.Location = new System.Drawing.Point(9, 79);
             this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(224, 44);
+            this.label34.Size = new System.Drawing.Size(224, 33);
             this.label34.TabIndex = 28;
             this.label34.Text = "(Absolute path or path relative to User folder)";
             this.label34.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1848,7 +1849,7 @@ namespace SkylineTester
             this.groupBox22.Controls.Add(this.nightlyBranch);
             this.groupBox22.Controls.Add(this.nightlyBuildTrunk);
             this.groupBox22.Controls.Add(this.nightlyBranchUrl);
-            this.groupBox22.Location = new System.Drawing.Point(0, 108);
+            this.groupBox22.Location = new System.Drawing.Point(0, 126);
             this.groupBox22.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox22.Name = "groupBox22";
             this.groupBox22.Padding = new System.Windows.Forms.Padding(4);
@@ -2078,6 +2079,7 @@ namespace SkylineTester
             // 
             // groupBox20
             // 
+            this.groupBox20.Controls.Add(this.nightlyRunPerfTests);
             this.groupBox20.Controls.Add(this.buttonNow);
             this.groupBox20.Controls.Add(this.nightlyStartTime);
             this.groupBox20.Controls.Add(this.nightlyBuildType);
@@ -2090,10 +2092,20 @@ namespace SkylineTester
             this.groupBox20.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox20.Name = "groupBox20";
             this.groupBox20.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox20.Size = new System.Drawing.Size(240, 100);
+            this.groupBox20.Size = new System.Drawing.Size(240, 124);
             this.groupBox20.TabIndex = 30;
             this.groupBox20.TabStop = false;
             this.groupBox20.Text = "Run";
+            // 
+            // nightlyRunPerfTests
+            // 
+            this.nightlyRunPerfTests.AutoSize = true;
+            this.nightlyRunPerfTests.Location = new System.Drawing.Point(9, 95);
+            this.nightlyRunPerfTests.Name = "nightlyRunPerfTests";
+            this.nightlyRunPerfTests.Size = new System.Drawing.Size(181, 17);
+            this.nightlyRunPerfTests.TabIndex = 33;
+            this.nightlyRunPerfTests.Text = "Include Perf Tests in Nightly Run";
+            this.nightlyRunPerfTests.UseVisualStyleBackColor = true;
             // 
             // buttonNow
             // 
@@ -2259,7 +2271,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(693, 453);
-            this.outputSplitContainer.SplitterDistance = 98;
+            this.outputSplitContainer.SplitterDistance = 92;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2277,7 +2289,7 @@ namespace SkylineTester
             this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
             this.commandShell.Name = "commandShell";
             this.commandShell.NextCommand = 0;
-            this.commandShell.Size = new System.Drawing.Size(693, 98);
+            this.commandShell.Size = new System.Drawing.Size(693, 92);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2294,7 +2306,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(693, 345);
+            this.errorConsole.Size = new System.Drawing.Size(693, 351);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2840,6 +2852,7 @@ namespace SkylineTester
         private Button nightlyDeleteBuild;
         private TextBox nightlyRoot;
         private Button nightlyBrowseBuild;
+        private CheckBox nightlyRunPerfTests;
         private GroupBox groupBox22;
         private RadioButton nightlyBranch;
         private RadioButton nightlyBuildTrunk;

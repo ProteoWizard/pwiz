@@ -31,17 +31,18 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestPerf
 {
-    //[TestClass]
-    public class PeakScoreCompareTest : AbstractFunctionalTest
+    [TestClass]
+    public class PeakScoreCompareTest : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
     {
 
-        //[TestMethod]
+        [TestMethod]
         public void TestPeakScoreCompare()
         {
-            IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
             TestFilesZipPaths = new[]
             {
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Water.zip",

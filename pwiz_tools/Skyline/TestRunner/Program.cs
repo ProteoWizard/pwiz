@@ -41,7 +41,7 @@ namespace TestRunner
 {
     internal static class Program
     {
-        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll" };
+        private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
         private const int LeakThreshold = 100000;
         private const int LeakThresholdLow = 25000;
         private const int LeakThresholdHigh = 750000;
@@ -61,6 +61,7 @@ namespace TestRunner
                 "loop=0;repeat=1;pause=0;random=off;offscreen=on;multi=1;wait=off;internet=off;" +
                 "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
                 "quality=off;pass0=off;pass1=off;" +
+                "perftests=off;"+
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
                 "log=TestRunner.log;report=TestRunner.log";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -237,6 +238,7 @@ namespace TestRunner
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
             bool internet = commandLineArgs.ArgAsBool("internet");
+            bool perftests = commandLineArgs.ArgAsBool("perftests");
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
@@ -262,7 +264,7 @@ namespace TestRunner
             }
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, showStatus,
+                demoMode, buildMode, offscreen, internet, showStatus, perftests,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
                 results, log);
 
@@ -310,6 +312,7 @@ namespace TestRunner
                 runTests.Skyline.Set("NoVendorReaders", true);
                 runTests.AccessInternet = false;
                 runTests.LiveReports = false;
+                runTests.RunPerfTests = false;
                 runTests.CheckCrtLeaks = CrtLeakThreshold;
                 for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                 {
@@ -320,6 +323,7 @@ namespace TestRunner
                 runTests.Skyline.Set("NoVendorReaders", false);
                 runTests.AccessInternet = internet;
                 runTests.LiveReports = true;
+                runTests.RunPerfTests = perftests;
                 runTests.CheckCrtLeaks = 0;
 
                 foreach (var removeTest in removeList)

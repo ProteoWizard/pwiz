@@ -67,6 +67,7 @@ namespace TestRunnerLib
         public InvokeSkyline Skyline { get; private set; }
         public int LastTestDuration { get; private set; }
         public bool AccessInternet { get; set; }
+        public bool RunPerfTests { get; set; }
         public bool LiveReports { get; set; }
 
         public RunTests(
@@ -75,6 +76,7 @@ namespace TestRunnerLib
             bool offscreen,
             bool internet,
             bool showStatus,
+            bool perftests,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
             bool useVendorReaders = true,
@@ -104,6 +106,7 @@ namespace TestRunnerLib
             Skyline.Run("Init");
 
             AccessInternet = internet;
+            RunPerfTests = perftests;
             LiveReports = true;
 
             // Disable logging.
@@ -169,6 +172,7 @@ namespace TestRunnerLib
 
             // Set the TestContext.
             TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
+            TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
             TestContext.Properties["LiveReports"] = LiveReports.ToString();
             if (test.SetTestContext != null)
             {

@@ -34,6 +34,8 @@ namespace TestPerf
         [TestMethod]
         public void TestAuthenticate()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
             CookieContainer cookieContainer = new CookieContainer();
             ChorusSession chorusSession = new ChorusSession();
             Assert.AreEqual(0, cookieContainer.Count);
@@ -41,9 +43,11 @@ namespace TestPerf
             Assert.AreEqual(1, cookieContainer.Count);
         }
 
-        //[TestMethod]
+        [TestMethod]
         public void TestContents()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
             ChorusSession chorusSession = new ChorusSession();
             ChorusContents chorusContents = chorusSession.FetchContents(TEST_ACCOUNT, new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents"));
             Assert.IsNotNull(chorusContents);
@@ -52,9 +56,11 @@ namespace TestPerf
         /// <summary>
         /// Tests that all instrument models are identified as something by ChorusSession.GetFileTypeFromInstrumentModel
         /// </summary>
-        //[TestMethod]
+        [TestMethod]
         public void TestInstrumentModels()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
             var accounts = new[]
             {
                 new ChorusAccount("https://dev.chorusproject.org", "pavel.kaplin@gmail.com", "pwd"),

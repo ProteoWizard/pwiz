@@ -93,7 +93,7 @@ namespace SkylineTester
         private static readonly string[] TEST_DLLS =
         {
             "Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll",
-            "CommonTest.dll"
+            "CommonTest.dll", "TestPerf.dll"
         };
 
         private static readonly string[] FORMS_DLLS = {"TestFunctional.dll", "TestTutorial.dll"};
@@ -630,6 +630,7 @@ namespace SkylineTester
                 nightlyDuration,
                 nightlyBuildType,
                 nightlyBuildTrunk,
+                nightlyRunPerfTests,
                 nightlyBranch,
                 nightlyBranchUrl,
                 nightlyRoot);
@@ -981,6 +982,7 @@ namespace SkylineTester
         public ZedGraphControl  NightlyGraphMemory          { get { return nightlyGraphMemory; } }
         public TextBox          NightlyRoot                 { get { return nightlyRoot; } }
         public ComboBox         NightlyRunDate              { get { return nightlyRunDate; } }
+        public CheckBox         NightlyRunPerfTests         { get { return nightlyRunPerfTests; } }
         public DateTimePicker   NightlyStartTime            { get { return nightlyStartTime; } }
         public Label            NightlyTestName             { get { return nightlyTestName; } }
         public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }

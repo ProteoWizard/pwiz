@@ -24,11 +24,12 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil;
 
 namespace TestPerf
 {
-    //[TestClass]
-    public class PerfOpenSwathConvert
+    [TestClass]
+    public class PerfOpenSwathConvert : AbstractUnitTest 
     {
         private static readonly string[] INDIVIDUAL_OUTPUT =
         {
@@ -70,12 +71,19 @@ namespace TestPerf
         private const string MS_FILE_TYPE = ".wiff";
         private const char SEPARATOR = TextUtil.SEPARATOR_CSV;
 
-        //[TestMethod]
+        [TestMethod]
         public void ConvertOpenSwathPerf()
         {
-            const string directory = @"D:\Processing\Hasmik\Spectronaut";
-            var inFiles = INDIVIDUAL_OUTPUT.Select(fileName =>  Path.Combine(directory, fileName));
-            string outFile = Path.Combine(directory, "Spectronaut.csv");
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
+
+            TestFilesZip =
+                @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikProcessing.zip";  // TODO this doesn't actually exist yet bspratt
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);                 
+
+
+            var inFiles = INDIVIDUAL_OUTPUT.Select(testFilesDir.GetTestPath);
+            string outFile = testFilesDir.GetTestPath("Spectronaut.csv");
             RunConversion(inFiles, outFile);
         }
 

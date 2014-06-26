@@ -34,7 +34,7 @@ namespace TestPerf
     /// Summary description for PerfGenerateChorusRequests
     /// </summary>
     [TestClass]
-    public class PerfGenerateChorusRequests : AbstractFunctionalTest
+    public class PerfGenerateChorusRequests : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
     {
         public const string CHORUS_DATASET_URL = "http://proteome.gs.washington.edu/~nicksh/chorus/SkylineFiles/";
 

@@ -56,7 +56,18 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Perf tests (long running, huge-data-downloading) should be declared
+    /// as IPerfTest so that they can be skipped when the allowPerfTests flag 
+    /// is unset.
+    /// </summary>
+    public interface IPerfTest
+    {
+    }
+
+    /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
+    /// Perf tests (long running, huge-data-downloading) should be declared
+    /// as IPerfTest as well.
     /// </summary>
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
@@ -563,6 +574,14 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
+
+                IPerfTest test = this as IPerfTest;
+                if (test != null)
+                {
+                    if (!RunPerfTests)
+                        return;  // Don't want to run this lengthy test right now
+                }
+
                 Program.FunctionalTest = true;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();

@@ -32,7 +32,7 @@ namespace TestPerf
     /// Compare performance of vendor readers vs mz5 for results import.
     /// </summary>
     [TestClass]
-    public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTest
+    public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
     {
         private string _skyFile;
         private string _replicatesDirName;
@@ -71,9 +71,12 @@ namespace TestPerf
         }
 
 
-//        [TestMethod] // commented out so it doesn't get run in normal use
+        [TestMethod] 
         public void AllVsMz5OptimzeCeImportPerformanceTests()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global "allow perf tests" flag is set
+
             _loopCount = 3;
             Log.AddMemoryAppender();
             AgilentVsMz5OptimzeCeImportPerformanceTest();

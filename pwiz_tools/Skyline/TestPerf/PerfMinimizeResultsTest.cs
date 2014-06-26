@@ -32,11 +32,11 @@ namespace TestPerf
     /// going to slow us down with minimization.
     /// </summary>
     [TestClass]
-    public class PerfMinimizeResultsTest : AbstractFunctionalTest
+    public class PerfMinimizeResultsTest : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
     {
         private const string ZIP_FILE = @"https://skyline.gs.washington.edu/perftests/PerfMinimizeResultsTest.zip";
 
-     //   [TestMethod]
+        [TestMethod]
         public void TestMinimizeResultsPerformance()
         {
 

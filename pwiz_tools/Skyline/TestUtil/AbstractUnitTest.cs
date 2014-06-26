@@ -52,6 +52,11 @@ namespace pwiz.SkylineTestUtil
             get { return GetBoolValue("AccessInternet", false); }  // Return false if unspecified
         }
 
+        protected bool RunPerfTests
+        {
+            get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+        }
+
         protected bool GetBoolValue(string property, bool defaultValue)
         {
             var value = TestContext.Properties[property];
