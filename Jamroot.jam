@@ -477,20 +477,13 @@ if [ modules.peek : NT ]
      }
 
     # overwrite the original header files because of MSVC looking in the current header's path with #include "foo"
-    if $(BOOST_VERSION[2]) <= 43
-    {
-        # HACK: bug in boost::iostreams 1.43 requires a patch to support building with link=shared
-        # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
-        SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\iostreams\\device\\file_descriptor.hpp.bak rename $(BOOST_SOURCE)\\boost\\iostreams\\device\\file_descriptor.hpp file_descriptor.hpp.bak" ;
-        SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(BOOST_SOURCE)\\boost\\iostreams\\device" ;
 
-        # HACK: bug in boost::thread 1.43 requires a patch for thread-safe static usage of call_once (i.e. singletons)
-        # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4225
-        SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\thread\\win32\\once.hpp.bak rename $(BOOST_SOURCE)\\boost\\thread\\win32\\once.hpp once.hpp.bak" ;
-        SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\thread\\win32\\thread_primitives.hpp.bak rename $(BOOST_SOURCE)\\boost\\thread\\win32\\thread_primitives.hpp thread_primitives.hpp.bak" ;
-        SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\once.hpp $(BOOST_SOURCE)\\boost\\thread\\win32" ;
-        SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\thread_primitives.hpp $(BOOST_SOURCE)\\boost\\thread\\win32" ;
-    }
+    # HACK: bug in boost::interprocess (up to at least 1.55) requires a patch to support opening memory-mapped files with UTF-8 filenames
+    # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
+    SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp os_file_functions.hpp.bak" ;
+    SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp win32_api.hpp.bak" ;
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\os_file_functions.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
 }
 
 

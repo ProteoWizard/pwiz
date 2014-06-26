@@ -17,6 +17,8 @@
 #include <boost/nowide/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 
 #ifdef SHA1_UTILITY_FUNCTIONS
 #define SHA1_MAX_FILE_BUFFER 8000
@@ -150,12 +152,15 @@ bool CSHA1::HashFile(const TCHAR* tszFileName)
 
 	using namespace boost::nowide;
 
-	ifstream fpIn(tszFileName, std::ios::binary);
-	if (!fpIn) return false;
+	using namespace boost::interprocess;
+	file_mapping mmFile(tszFileName, read_only);
+	mapped_region mmRegion(mmFile, read_only);
 
-	const INT_64 lFileSize = boost::filesystem::file_size(boost::filesystem::path(tszFileName, boost::filesystem::detail::utf8_codecvt_facet()));
+	void* addr = mmRegion.get_address();
+	const INT_64 lFileSize = mmRegion.get_size();
+	unsigned char* currentOffset = reinterpret_cast<unsigned char*>(addr);
+
 	const INT_64 lMaxBuf = SHA1_MAX_FILE_BUFFER;
-	char vData[SHA1_MAX_FILE_BUFFER];
 	INT_64 lRemaining = lFileSize;
 
 	while(lRemaining > 0)
@@ -163,14 +168,10 @@ bool CSHA1::HashFile(const TCHAR* tszFileName)
 		const size_t uMaxRead = static_cast<size_t>((lRemaining > lMaxBuf) ?
 			lMaxBuf : lRemaining);
 
-		fpIn.read(vData, uMaxRead);
-		const size_t uRead = fpIn ? uMaxRead : fpIn.gcount();
-		if(uRead == 0)
-			return false;
+		Update(currentOffset, static_cast<UINT_32>(uMaxRead));
 
-		Update(reinterpret_cast<unsigned char*>(vData), static_cast<UINT_32>(uRead));
-
-		lRemaining -= static_cast<INT_64>(uRead);
+		currentOffset += uMaxRead;
+		lRemaining -= static_cast<INT_64>(uMaxRead);
 	}
 
 	return (lRemaining == 0);

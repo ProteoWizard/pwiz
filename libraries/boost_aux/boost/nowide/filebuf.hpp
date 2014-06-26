@@ -214,7 +214,6 @@ namespace nowide {
             if(n > 0) {
                 if(::fwrite(pbase(),1,n,file_) < n)
                     return -1;
-                fflush(file_);
             }
 
             if(buffer_size_ > 0) {
@@ -226,7 +225,6 @@ namespace nowide {
             else if(c!=EOF) {
                 if(::fputc(c,file_)==EOF)
                     return EOF;
-                fflush(file_);
             }
             return 0;
         }
@@ -234,7 +232,9 @@ namespace nowide {
         
         int sync()
         {
-            return overflow(EOF);
+            return (file_ == 0 ||
+                    overflow(EOF)==EOF ||
+                    0 <= fflush(file_)) ? 0 : -1;
         }
 
         int underflow()
