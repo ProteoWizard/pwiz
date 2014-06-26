@@ -153,6 +153,16 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public void AddItem(TItem item)
+        {
+            CheckDisposed();
+            if (!Equals(item, default(TItem)))
+            {
+                int i = listBox.SelectedIndex + 1;
+                _list.Insert(i, item);
+            }
+        }
+
         private void btnCopy_Click(object sender, EventArgs e)
         {
             CopyItem();

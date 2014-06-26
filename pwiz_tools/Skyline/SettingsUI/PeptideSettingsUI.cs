@@ -90,10 +90,10 @@ namespace pwiz.Skyline.SettingsUI
             _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
             _driverEnzyme.LoadList(_peptideSettings.Enzyme.GetKey());
             for (int i = DigestSettings.MIN_MISSED_CLEAVAGES; i <= DigestSettings.MAX_MISSED_CLEAVAGES; i++)
-                cbMissedCleavages.Items.Add(i.ToString(CultureInfo.InvariantCulture));
-            cbMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString(LocalizationHelper.CurrentCulture);
-            if (cbMissedCleavages.SelectedIndex < 0)
-                cbMissedCleavages.SelectedIndex = 0;
+                comboMissedCleavages.Items.Add(i.ToString(CultureInfo.InvariantCulture));
+            comboMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString(LocalizationHelper.CurrentCulture);
+            if (comboMissedCleavages.SelectedIndex < 0)
+                comboMissedCleavages.SelectedIndex = 0;
             cbRaggedEnds.Checked = Digest.ExcludeRaggedEnds;
 
             // Initialize prediction settings
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref enzyme, _peptideSettings.Enzyme);
 
             int maxMissedCleavages =
-                int.Parse(cbMissedCleavages.SelectedItem.ToString());
+                int.Parse(comboMissedCleavages.SelectedItem.ToString());
             bool excludeRaggedEnds = cbRaggedEnds.Checked;
             DigestSettings digest = new DigestSettings(maxMissedCleavages, excludeRaggedEnds);
             Helpers.AssignIfEquals(ref digest, Digest);
@@ -592,6 +592,16 @@ namespace pwiz.Skyline.SettingsUI
             btnExplore.Enabled = listLibraries.Items.Count > 0;
         }
 
+        public SettingsListBoxDriver<LibrarySpec> LibraryDriver
+        {
+            get { return _driverLibrary; }
+        }
+
+        public void SetIsotopeModifications(int index, bool check)
+        {
+            listHeavyMods.SetItemChecked(index, check);
+        }
+
         private void btnBuildLibrary_Click(object sender, EventArgs e)
         {
             ShowBuildLibraryDlg();
@@ -944,8 +954,37 @@ namespace pwiz.Skyline.SettingsUI
 
         public int MissedCleavages
         { 
-            get { return Convert.ToInt32(cbMissedCleavages.SelectedItem); }
-            set { cbMissedCleavages.SelectedItem = value.ToString(LocalizationHelper.CurrentCulture); }
+            get { return int.Parse(comboMissedCleavages.SelectedItem.ToString()); }
+            set { comboMissedCleavages.SelectedItem = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int TextMinLength
+        {
+            get { return int.Parse(textMinLength.Text); }
+            set { textMinLength.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int TextMaxLength
+        {
+            get { return int.Parse(textMaxLength.Text); }
+            set { textMaxLength.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int TextExcludeAAs
+        {
+            get { return int.Parse(textExcludeAAs.Text); }
+            set { textExcludeAAs.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public void SetLibraryChecked(int index, bool value)
+        {
+            listLibraries.SetItemChecked(index,value);
+        }
+
+        public bool AutoSelectMatchingPeptides
+        {
+            get { return cbAutoSelect.Checked; }
+            set { cbAutoSelect.Checked = value; }
         }
 
         public string[] AvailableLibraries
@@ -1060,6 +1099,47 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 throw new InvalidDataException(Resources.EditPeakScoringModelDlg_SelectedModelItem_Invalid_Model_Selection);
             }
+        }
+
+        public string ComboEnzymeSelected
+        {
+            get { return comboEnzyme.SelectedItem.ToString(); }
+            set
+            {
+                int i = 0;
+                foreach (var item in comboEnzyme.Items)
+                {
+                    if (item.ToString().Equals(value))
+                    {
+                        comboEnzyme.SelectedIndex = i;
+                        return;
+                    }
+                    i ++;
+                }
+                throw new ArgumentException();
+            }
+        }
+
+        public int MaxMissedCleavages
+        {
+            get { return int.Parse(comboMissedCleavages.SelectedItem.ToString()); }
+            set
+            {
+                foreach (var item in comboMissedCleavages.Items)
+                {
+                    if (int.Parse(item.ToString()) == value)
+                    {
+                        comboMissedCleavages.SelectedItem = value.ToString(LocalizationHelper.CurrentCulture);
+                        return;
+                    }
+                }
+                throw new ArgumentException();
+            }
+        }
+
+        public void AddBackgroundProteome()
+        {
+            _driverBackgroundProteome.AddItem();    
         }
 
         #endregion

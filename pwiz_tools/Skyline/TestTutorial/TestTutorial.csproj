@@ -121,6 +121,7 @@
     <Compile Include="PeakPickingTutorialTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuasarTutorialTest.cs" />
+    <Compile Include="SRMTutorialTest.cs" />
     <Compile Include="TargetedMSMSTutorialTest.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +194,7 @@
     <None Include="MethodRefinementViews.zip" />
     <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
+    <None Include="SRMViews.zip" />
     <None Include="TargetedMSMSViews.zip" />
     <None Include="GroupedStudiesViews.zip" />
   </ItemGroup>

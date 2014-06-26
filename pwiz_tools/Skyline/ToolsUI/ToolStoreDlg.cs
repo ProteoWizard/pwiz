@@ -135,6 +135,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public string DownloadPath { get; private set; }
 
+        public void DownloadTool(int index)
+        {
+            listBoxTools.SelectedIndex = index;
+            DownloadSelectedTool();
+        }
+
         public void DownloadSelectedTool()
         {
             try

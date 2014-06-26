@@ -92,6 +92,11 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public string StatusText
+        {
+            get { return tbxStatus.Text; }
+        }
+
         private void ResizeForBuild()
         {
             int delta = listboxFasta.Bottom - tbxStatus.Bottom;

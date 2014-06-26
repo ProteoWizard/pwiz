@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -562,6 +563,12 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public double ExclusionWindow
+        {
+            get { return double.Parse(textExclusionWindow.Text); }
+            set { textExclusionWindow.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
         public string PrecursorCharges
         {
             get { return textPrecursorCharges.Text; }
@@ -748,7 +755,26 @@ namespace pwiz.Skyline.SettingsUI
 
         public int MaxInclusions
         {
-            set { textMaxInclusions.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get { return int.Parse(textMaxInclusions.Text); }
+            set { textMaxInclusions.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public bool Filtered
+        {
+            get { return radioFiltered.Checked;  }
+            set { radioFiltered.Checked = value; }
+        }
+
+        public double MinMz
+        {
+            get { return double.Parse(textMinMz.Text); }
+            set { textMinMz.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public double MaxMz
+        {
+            get { return double.Parse(textMaxMz.Text); }
+            set { textMaxMz.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public void AddIsolationScheme()
@@ -759,6 +785,11 @@ namespace pwiz.Skyline.SettingsUI
         public void EditIsolationScheme()
         {
             FullScanSettingsControl.EditIsolationScheme();
+        }
+
+        public void SetListAlwaysAdd(int index, bool check)
+        {
+            listAlwaysAdd.SetItemChecked(index, check);
         }
 
         #endregion

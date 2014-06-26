@@ -19,8 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using MathNet.Numerics;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -396,6 +399,22 @@ namespace pwiz.Skyline.SettingsUI
                                                       nodeGroup.PrecursorMz, step);
             }
         }
+
+        #region Functional test support
+
+        public double StepSize
+        {
+             get { return double.Parse(textStepSize.Text); }
+             set { textStepSize.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public int StepCount
+        {
+            get { return int.Parse(textStepCount.Text); }
+            set { textStepCount.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        #endregion
     }
 
     internal abstract class RegressionData<TReg>

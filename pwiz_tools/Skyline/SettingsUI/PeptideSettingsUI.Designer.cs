@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStandardTypes = new System.Windows.Forms.CheckedListBox();
             this.textMaxVariableMods = new System.Windows.Forms.TextBox();
             this.textMaxNeutralLosses = new System.Windows.Forms.TextBox();
-            this.cbMissedCleavages = new System.Windows.Forms.ComboBox();
+            this.comboMissedCleavages = new System.Windows.Forms.ComboBox();
             this.comboEnzyme = new System.Windows.Forms.ComboBox();
             this.comboBackgroundProteome = new System.Windows.Forms.ComboBox();
             this.textMeasureRTWindow = new System.Windows.Forms.TextBox();
@@ -195,13 +195,13 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxNeutralLosses.Name = "textMaxNeutralLosses";
             this.helpTip.SetToolTip(this.textMaxNeutralLosses, resources.GetString("textMaxNeutralLosses.ToolTip"));
             // 
-            // cbMissedCleavages
+            // comboMissedCleavages
             // 
-            this.cbMissedCleavages.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbMissedCleavages.FormattingEnabled = true;
-            resources.ApplyResources(this.cbMissedCleavages, "cbMissedCleavages");
-            this.cbMissedCleavages.Name = "cbMissedCleavages";
-            this.helpTip.SetToolTip(this.cbMissedCleavages, resources.GetString("cbMissedCleavages.ToolTip"));
+            this.comboMissedCleavages.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboMissedCleavages.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMissedCleavages, "comboMissedCleavages");
+            this.comboMissedCleavages.Name = "comboMissedCleavages";
+            this.helpTip.SetToolTip(this.comboMissedCleavages, resources.GetString("comboMissedCleavages.ToolTip"));
             // 
             // comboEnzyme
             // 
@@ -429,7 +429,7 @@ namespace pwiz.Skyline.SettingsUI
             // tabDigestion
             // 
             this.tabDigestion.Controls.Add(this.label2);
-            this.tabDigestion.Controls.Add(this.cbMissedCleavages);
+            this.tabDigestion.Controls.Add(this.comboMissedCleavages);
             this.tabDigestion.Controls.Add(this.label1);
             this.tabDigestion.Controls.Add(this.comboEnzyme);
             this.tabDigestion.Controls.Add(this.label15);
@@ -763,7 +763,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TabPage tabDigestion;
         private System.Windows.Forms.CheckBox cbRaggedEnds;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox cbMissedCleavages;
+        private System.Windows.Forms.ComboBox comboMissedCleavages;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboEnzyme;
         private System.Windows.Forms.TabControl tabControl1;

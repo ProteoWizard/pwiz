@@ -205,5 +205,21 @@ namespace pwiz.Skyline.SettingsUI
             linkLabel.LinkVisited = true;
             WebHelpers.OpenLink(this, link);
         }
+
+        #region Functional test support
+
+        public string LibraryName
+        {
+            get { return textName.Text; }
+            set { textName.Text = value; }
+        }
+
+        public string LibraryPath
+        {
+            get { return textPath.Text; }
+            set { textPath.Text = value; }
+        }
+
+        #endregion
     }
 }

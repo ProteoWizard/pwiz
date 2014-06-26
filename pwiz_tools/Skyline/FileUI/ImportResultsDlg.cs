@@ -580,6 +580,12 @@ namespace pwiz.Skyline.FileUI
             set { radioCreateMultipleMulti.Checked = value; }
         }
 
+        public string ReplicateName
+        {
+            get { return textName.Text; }
+            set { textName.Text = value ?? string.Empty; }
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
