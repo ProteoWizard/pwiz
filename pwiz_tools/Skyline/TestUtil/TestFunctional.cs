@@ -56,15 +56,6 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
-    /// Perf tests (long running, huge-data-downloading) should be declared
-    /// as IPerfTest so that they can be skipped when the allowPerfTests flag 
-    /// is unset.
-    /// </summary>
-    public interface IPerfTest
-    {
-    }
-
-    /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
     /// as IPerfTest as well.
