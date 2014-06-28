@@ -55,7 +55,7 @@ namespace TestPerf
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/LudovicN14N15.zip"
             };
-            IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true;
             RunFunctionalTest();
         }
 
