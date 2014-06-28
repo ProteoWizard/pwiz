@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ExportChorusRequestDlg : Form
+    public partial class ExportChorusRequestDlg : FormEx
     {
         private readonly string _documentFilePath;
         public ExportChorusRequestDlg(SrmDocument srmDocument, string documentFilePath)

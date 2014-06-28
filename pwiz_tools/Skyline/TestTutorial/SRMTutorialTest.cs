@@ -39,7 +39,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class SrmTutorialTest : AbstractFunctionalTest
+    public class SrmTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestSrmTutorial()
@@ -86,9 +86,9 @@ namespace pwiz.SkylineTestTutorial
                 WaitForCondition(() => backProteomeDlg.StatusText.Length > 10);
                 Assert.IsTrue(backProteomeDlg.StatusText.Contains("3982".ToString(CultureInfo.CurrentCulture)));
             });
-
             OkDialog(backProteomeDlg, backProteomeDlg.OkDialog);
-            RunUI(() => { pepSettings.SelectedTab = PeptideSettingsUI.TABS.Prediction; });
+
+            RunUI(() => pepSettings.SelectedTab = PeptideSettingsUI.TABS.Prediction);
 
             RunUI(() =>
             {
@@ -143,13 +143,9 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(pepSettings, pepSettings.OkDialog);
 
             WaitForCondition(
-                () =>
-                    SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('{')[0]));
+                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('{')[0]));
             WaitForCondition(
-                () =>
-                    SkylineWindow.Status.Contains(
-                        Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome
-                            .Split('{')[0]));
+                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome.Split('{')[0]));
             WaitForCondition(() => SkylineWindow.Status.Contains(Resources.SkylineWindow_UpdateProgressUI_Ready));
 
             var transitionDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -160,6 +156,7 @@ namespace pwiz.SkylineTestTutorial
                 transitionDlg.FragmentMassType = MassType.Monoisotopic;
                 transitionDlg.RegressionCEName = "ABI 5500 QTrap";
             });
+
             RunUI(() =>
             {
                 transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Filter;
@@ -181,7 +178,6 @@ namespace pwiz.SkylineTestTutorial
                 transitionDlg.IonCount = 5;
                 transitionDlg.Filtered = true;
             });
-
 
             RunUI(() =>
             {
@@ -232,14 +228,10 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg.DwellTime = 20;
             });
             PauseForScreenShot("Export Transition List", 3);
-            var declusteringWarningDlg =
-                ShowDialog<MultiButtonMsgDlg>(
-                    () =>
-                        exportDlg.OkDialog(
-                            GetTestPath("Tutorial-2_TransitionList\\SRMcourse_20140210_MtbProteomeLib_TransList.csv")));
+            var declusteringWarningDlg = ShowDialog<MultiButtonMsgDlg>(
+                () => exportDlg.OkDialog(GetTestPath("Tutorial-2_TransitionList\\SRMcourse_20140210_MtbProteomeLib_TransList.csv")));
             PauseForScreenShot("Decluster Window", 3);
-            RunUI(declusteringWarningDlg.Btn1Click);
-            WaitForClosedForm(declusteringWarningDlg);
+            OkDialog(declusteringWarningDlg, declusteringWarningDlg.Btn1Click);
             WaitForClosedForm(exportDlg);
 
             //Tutorial 3
@@ -268,12 +260,13 @@ namespace pwiz.SkylineTestTutorial
                 pepSettings2.SetLibraryChecked(1, true);
             });
             OkDialog(pepSettings2, pepSettings2.OkDialog);
+            WaitForLibrary(20213);
             WaitForCondition(() => SkylineWindow.Document.TransitionCount != 313);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 96, 450);
 
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            var messageWarning = ShowDialog<MultiButtonMsgDlg>(() => { });
-            RunUI(messageWarning.Btn1Click);
+            var messageWarning = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(messageWarning, messageWarning.Btn1Click);
             PauseForScreenShot("Spectral Library Explorer Window", 3);
             OkDialog(libraryExpl, libraryExpl.Close);
 
@@ -288,8 +281,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var declusteringWarningDlg2 = ShowDialog<MultiButtonMsgDlg>(() =>
                 exportDlg2.OkDialog(GetTestPath("Tutorial-3_Library\\SRMcourse_20140210_MtbProteomeLib_hDP_TransList.csv")));
-            RunUI(declusteringWarningDlg2.Btn1Click);
-            WaitForClosedForm(declusteringWarningDlg2);
+            OkDialog(declusteringWarningDlg2, declusteringWarningDlg2.Btn1Click);
             WaitForClosedForm(exportDlg2);
 
             //Tutorial 4-A
@@ -336,14 +328,10 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg2.DwellTime = 20;
             });
             PauseForScreenShot("Export Transition List", 3);
-            var defaultWaringDlg =
-                ShowDialog<MultiButtonMsgDlg>(
-                    () =>
-                        exportDlg3.OkDialog(GetTestPath("Tutorial-4_Parameters\\SRMcourse_20140211_Parameters_CEO.csv")));
-            RunUI(defaultWaringDlg.Btn1Click);
-            WaitForClosedForm(defaultWaringDlg);
+            var defaultWaringDlg = ShowDialog<MultiButtonMsgDlg>(
+                () => exportDlg3.OkDialog(GetTestPath("Tutorial-4_Parameters\\SRMcourse_20140211_Parameters_CEO.csv")));
+            OkDialog(defaultWaringDlg, defaultWaringDlg.Btn1Click);
             WaitForClosedForm(exportDlg3);
-
 
             var paths = new string[4];
             for (int i = 0; i < paths.Length; i ++)
@@ -353,7 +341,6 @@ namespace pwiz.SkylineTestTutorial
 
             ImportResults("CEO", paths, ExportOptimize.CE);
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.ElementAt(0).IsLoaded);
-
 
             RestoreViewOnScreen(43);
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
@@ -394,7 +381,6 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot("Instrument Tab", 7);
             OkDialog(transitionSettings2, transitionSettings2.OkDialog);
-
 
             //Tutorial 4-B
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);

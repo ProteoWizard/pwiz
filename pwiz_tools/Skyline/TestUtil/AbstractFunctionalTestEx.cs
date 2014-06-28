@@ -74,6 +74,22 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Wait for the built library to be loaded, and contain the expected
+        /// number of spectra.
+        /// </summary>
+        /// <param name="expectedSpectra">Number of spectra expected in the library</param>
+        public static void WaitForLibrary(int expectedSpectra)
+        {
+            WaitForCondition(() =>
+            {
+                var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+                return librarySettings.IsLoaded &&
+                       librarySettings.Libraries.Count > 0 &&
+                       librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
+            });
+        }
+
+        /// <summary>
         /// Split or collapse multiple panes in the chromatogram graph.
         /// </summary>
         /// <param name="split">True to split panes, false for single pane</param>

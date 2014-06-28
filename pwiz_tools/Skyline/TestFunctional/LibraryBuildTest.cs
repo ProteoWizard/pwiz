@@ -388,28 +388,12 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
             // Wait for the library to load
-            WaitForLibrary(expectedSpectra);
+            AbstractFunctionalTestEx.WaitForLibrary(expectedSpectra);
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.IsLoaded);
             Assert.AreEqual(1, librarySettings.Libraries.Count);
             Assert.AreEqual(_libraryName, librarySettings.Libraries[0].Name);
             Assert.AreEqual(expectedSpectra, librarySettings.Libraries[0].Keys.Count());
-        }
-
-        /// <summary>
-        /// Wait for the built library to be loaded, and contain the expected
-        /// number of spectra.
-        /// </summary>
-        /// <param name="expectedSpectra">Number of spectra expected in the library</param>
-        private static void WaitForLibrary(int expectedSpectra)
-        {
-            WaitForCondition(() =>
-                {
-                    var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-                    return librarySettings.IsLoaded &&
-                           librarySettings.Libraries.Count > 0 &&
-                           librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
-                });            
         }
 
         private void BuildLibraryError(string inputFile, params string[] messageParts)
