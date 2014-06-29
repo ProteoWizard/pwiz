@@ -431,18 +431,25 @@ namespace SkylineTester
 
             if (lastTestResult != null)
             {
-                var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
-                var parts = line.Split(' ');
-                var failures = int.Parse(parts[4]);
-                var managedMemory = ParseMemory(parts[6].Split('/')[0]);
-                var totalMemory = ParseMemory(parts[6].Split('/')[1]);
+                try
+                {
+                    var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
+                    var parts = line.Split(' ');
+                    var failures = int.Parse(parts[parts.Length - 6]);
+                    var managedMemory = ParseMemory(parts[parts.Length - 4].Split('/')[0]);
+                    var totalMemory = ParseMemory(parts[parts.Length - 4].Split('/')[1]);
 
-                MainWindow.NewNightlyRun.Revision = _revision;
-                MainWindow.NewNightlyRun.RunMinutes = (int)(DateTime.Now - MainWindow.NewNightlyRun.Date).TotalMinutes;
-                MainWindow.NewNightlyRun.TestsRun = MainWindow.TestsRun;
-                MainWindow.NewNightlyRun.Failures = failures;
-                MainWindow.NewNightlyRun.ManagedMemory = (int)(managedMemory??0);
-                MainWindow.NewNightlyRun.TotalMemory = (int)(totalMemory??0);
+                    MainWindow.NewNightlyRun.Revision = _revision;
+                    MainWindow.NewNightlyRun.RunMinutes = (int)(DateTime.Now - MainWindow.NewNightlyRun.Date).TotalMinutes;
+                    MainWindow.NewNightlyRun.TestsRun = MainWindow.TestsRun;
+                    MainWindow.NewNightlyRun.Failures = failures;
+                    MainWindow.NewNightlyRun.ManagedMemory = (int)(managedMemory ?? 0);
+                    MainWindow.NewNightlyRun.TotalMemory = (int)(totalMemory ?? 0);
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
             }
         }
 
