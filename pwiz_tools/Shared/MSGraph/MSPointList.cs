@@ -67,6 +67,21 @@ namespace pwiz.MSGraph
             if( _scaledWidth == width && _scaledMin == min && _scaledMax == max )
                 return;
 
+            double min1 = double.MinValue;
+            double max1 = double.MaxValue;
+            for (int i = 0; i < _fullPointList.Count; ++i)
+            {
+                double x = _fullPointList[i].X;
+                if (x < min && x > min1)
+                    min1 = x;
+                if (x > max && x < max1)
+                    max1 = x;
+            }
+            if (min1 > double.MinValue)
+                min = min1;
+            if (max1 < double.MaxValue)
+                max = max1;
+
             _scaledWidth = width;
             _scaledMin = min;
             _scaledMax = max;

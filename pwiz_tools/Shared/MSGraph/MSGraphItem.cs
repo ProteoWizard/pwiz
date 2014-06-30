@@ -34,7 +34,8 @@ namespace pwiz.MSGraph
     public enum MSGraphItemDrawMethod
     {
         line,
-        stick
+        stick,
+        fill
     }
 
     public class PointAnnotation

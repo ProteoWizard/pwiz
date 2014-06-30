@@ -160,7 +160,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             UpdateUI(false);
-            graphControl.Focus();
         }
 
         private void LoadScan(bool zoomXAxis, bool zoomYAxis)
@@ -416,6 +415,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < pointLists.Length; i++)
                 pointLists[i] = new PointPairList();
             var defaultPointList = new PointPairList();
+            var allPointList = new PointPairList();
 
             // Assign each point to a transition point list, or else the default point list.
             IList<double> mzs;
@@ -445,6 +445,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 double mz = mzs[i];
                 double intensity = intensities[i];
+                allPointList.Add(mz, intensity);
                 var assignedPointList = defaultPointList;
                 for (int j = 0; j < _scanProvider.Transitions.Length; j++)
                 {
@@ -473,6 +474,13 @@ namespace pwiz.Skyline.Controls.Graphs
             // Add points that aren't associated with a transition.
             {
                 var item = new SpectrumItem(defaultPointList, Color.Gray);
+                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item);
+                curveItem.Label.IsVisible = false;
+            }
+
+            // Create curve for all points to provide shading behind stick graph.
+            {
+                var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150));
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item);
                 curveItem.Label.IsVisible = false;
             }
@@ -1242,6 +1250,20 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public override IPointList Points { get { return _points; } }
+    }
+
+    public class SpectrumShadeItem : SpectrumItem
+    {
+        public SpectrumShadeItem(IPointList points, Color color)
+            : base(points, color)
+        {
+        }
+
+        public override MSGraphItemDrawMethod GraphItemDrawMethod
+        {
+            get { return MSGraphItemDrawMethod.fill; }
+        }
+
     }
 
     public sealed class SelectedScanEventArgs : EventArgs

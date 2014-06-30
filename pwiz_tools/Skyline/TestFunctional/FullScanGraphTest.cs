@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 graphChromatogram.TestMouseMove(x, y, paneKey);
-                graphChromatogram.TestMouseUp(x, y, paneKey);
+                graphChromatogram.TestMouseDown(x, y, paneKey);
             });
             WaitForGraphs();
             CheckFullScanSelection(x, y, paneKey);

@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return MSGraphItemType.spectrum; }
         }
 
-        public MSGraphItemDrawMethod GraphItemDrawMethod
+        public virtual MSGraphItemDrawMethod GraphItemDrawMethod
         {
             get { return MSGraphItemDrawMethod.stick; }
         }

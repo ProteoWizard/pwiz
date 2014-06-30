@@ -2865,7 +2865,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 PointF pt = new PointF(e.X, e.Y);
                 if (IsOverHighlightPoint(pt))
+                {
+                    var graphPane = GraphPaneFromPoint(pt);
+                    if (graphPane != null)
+                        FireClickedChromatogram(graphPane);
                     return true;
+                }
 
                 using (Graphics g = CreateGraphics())
                 {
@@ -2959,15 +2964,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
-                if (IsOverHighlightPoint(pt))
-                {
-                    var graphPane = GraphPaneFromPoint(pt);
-                    if (graphPane != null)
-                    {
-                        FireClickedChromatogram(graphPane);
-                        return true;
-                    }
-                }
                 if (_peakBoundDragInfos != null && _peakBoundDragInfos.Length > 0)
                 {
                     DoDrag(_peakBoundDragInfos.First().GraphPane, pt);
@@ -2981,13 +2977,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 return true;
             }
             return false;
-        }
-
-        private static double GetDistanceSquared(PointF p0, PointF p1)
-        {
-            double xDiff = p0.X - p1.X;
-            double yDiff = p0.Y - p1.Y;
-            return (xDiff * xDiff + yDiff * yDiff);
         }
 
         private PeakBoundsDragInfo StartDrag(GraphPane graphPane, ChromGraphItem graphItem, PointF pt,
@@ -3211,10 +3200,10 @@ namespace pwiz.Skyline.Controls.Graphs
             HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)mouse.X, (int)mouse.Y, 0));
         }
 
-        public void TestMouseUp(double x, double y, PaneKey? paneKey)
+        public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            graphControl_MouseUpEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
+            graphControl_MouseDownEvent(null, new MouseEventArgs(MouseButtons.Left, 1, (int)mouse.X, (int)mouse.Y, 0));
         }
 
         public bool TestFullScanSelection(double x, double y, PaneKey? paneKey)
