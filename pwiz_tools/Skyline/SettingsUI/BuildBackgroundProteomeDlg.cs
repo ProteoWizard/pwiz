@@ -40,7 +40,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<BackgroundProteomeSpec> _existing;
         private String _databasePath;
         private String _name;
-        private bool _buildNew = true;  // Design mode with build UI showing
         private BackgroundProteomeSpec _backgroundProteomeSpec;
         private readonly MessageBoxHelper _messageBoxHelper;
         public BuildBackgroundProteomeDlg(IEnumerable<BackgroundProteomeSpec> existing)
@@ -51,60 +50,11 @@ namespace pwiz.Skyline.SettingsUI
 
             _existing = existing;
             _messageBoxHelper = new MessageBoxHelper(this);
-
-            // Fix dialog layout from design positioning
-            labelFileNew.Left = labelFile.Left;
-            labelFile.Visible = false;
-
-            // Close the building section of the dialog.            
-            BuildNew = false;
-        }
-
-        public bool BuildNew
-        {
-            get { return _buildNew; }            
-            set
-            {
-                if (BuildNew == value)
-                    return;
-
-                _buildNew = value;
-
-                // Update UI
-                labelFileNew.Visible =
-                    labelFasta.Visible = 
-                    listboxFasta.Visible = 
-                    btnAddFastaFile.Visible = _buildNew;
-                labelFile.Visible = !labelFileNew.Visible;
-
-                string btnText = btnBuild.Text;
-                btnBuild.Text = btnText.Substring(0, btnText.Length - 2) +
-                    (_buildNew ? "<<" : ">>"); // Not L10N
-
-                if (_buildNew && string.IsNullOrEmpty(textPath.Text))
-                {
-                    textPath.Text = Settings.Default.ProteomeDbDirectory;
-                    textName_TextChanged(this, new EventArgs());
-                }
-
-                ResizeForBuild();
-                RefreshStatus();
-            }
         }
 
         public string StatusText
         {
             get { return tbxStatus.Text; }
-        }
-
-        private void ResizeForBuild()
-        {
-            int delta = listboxFasta.Bottom - tbxStatus.Bottom;
-            if (BuildNew)
-                delta -= ClientSize.Height - labelFasta.Top;
-            listboxFasta.Anchor &= ~AnchorStyles.Bottom;
-            Height += (BuildNew ? delta : -delta);
-            listboxFasta.Anchor |= AnchorStyles.Bottom;
         }
 
         /// <summary>
@@ -128,7 +78,7 @@ namespace pwiz.Skyline.SettingsUI
                     textName.Text = _backgroundProteomeSpec.Name;
                 }
                 RefreshStatus();
-            } 
+            }
         }
 
         public static string FILTER_PROTDB
@@ -136,54 +86,23 @@ namespace pwiz.Skyline.SettingsUI
             get { return TextUtil.FileDialogFilter(Resources.BuildBackgroundProteomeDlg_FILTER_PROTDB_Proteome_File, ProteomeDb.EXT_PROTDB); }
         }
 
-        private void btnBrowse_Click(object sender, EventArgs e)
+        private void btnOpen_Click(object sender, EventArgs e)
         {
             string filterProtDb = TextUtil.FileDialogFiltersAll(FILTER_PROTDB);
             
             string fileName;
-            if (BuildNew)
+            using (var openFileDialog = new OpenFileDialog
             {
-                using (var saveFileDialog = new SaveFileDialog
-                    {
-                        Filter = filterProtDb,
-                        InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                        Title = Resources.BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome,
-                        OverwritePrompt = true,
-                    })
-                {
-                    if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-
-                    fileName = saveFileDialog.FileName;
-                }
-
-                // If the file exists, then the user chose to overwrite,
-                // so delete the existing file.
-                try
-                {
-                    FileEx.SafeDelete(fileName);
-                }
-                catch (IOException x)
-                {
-                    MessageDlg.Show(this, x.Message);
+                Filter = filterProtDb,
+                InitialDirectory = Settings.Default.ProteomeDbDirectory,
+                Title = Resources.BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme,
+                CheckFileExists = true,
+            })
+            {
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
                     return;
-                }
-            }
-            else
-            {
-                using (var openFileDialog = new OpenFileDialog
-                    {
-                        Filter = filterProtDb,
-                        InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                        Title = Resources.BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme,
-                        CheckFileExists = true,
-                    })
-                {
-                    if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
-                        return;
 
-                    fileName = openFileDialog.FileName;
-                }
+                fileName = openFileDialog.FileName;
             }
             Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(fileName);
 
@@ -192,6 +111,59 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textName.Text = Path.GetFileNameWithoutExtension(fileName);
             }
+            RefreshStatus();
+        }
+
+        private void btnCreate_Click(object sender, EventArgs e)
+        {
+            string filterProtDb = TextUtil.FileDialogFiltersAll(FILTER_PROTDB);
+
+            string fileName;
+            using (var saveFileDialog = new SaveFileDialog
+            {
+                Filter = filterProtDb,
+                InitialDirectory = Settings.Default.ProteomeDbDirectory,
+                Title = Resources.BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome,
+                OverwritePrompt = true,
+            })
+            {
+                if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                fileName = saveFileDialog.FileName;
+            }
+
+            // If the file exists, then the user chose to overwrite,
+            // so delete the existing file.
+            try
+            {
+                FileEx.SafeDelete(fileName);
+            }
+            catch (IOException x)
+            {
+                MessageDlg.Show(this, x.Message);
+                return;
+            }
+
+            Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(fileName);
+
+            textPath.Text = fileName;
+            if (textName.Text.Length == 0)
+            {
+                textName.Text = Path.GetFileNameWithoutExtension(fileName);
+            }
+
+            try
+            {
+                ProteomeDb.CreateProteomeDb(fileName);
+            }
+            catch (Exception x)
+            {
+                var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__,
+                                                                  fileName), x.Message);
+                MessageDlg.Show(this, message);
+            }
+
             RefreshStatus();
         }
 
@@ -229,53 +201,21 @@ namespace pwiz.Skyline.SettingsUI
                     _messageBoxHelper.ShowTextBoxError(textPath, Resources.BuildBackgroundProteomeDlg_OkDialog_Please_specify_a_full_path_to_the_proteome_file);
                     return;                    
                 }
+                else if (!File.Exists(textPath.Text))
+                {
+                    _messageBoxHelper.ShowTextBoxError(textPath,
+                               string.Format(Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist, textPath.Text));
+                    return; 
+                }
 
-                int proteinCount = 0;
-                if (File.Exists(textPath.Text))
-                {
-                    using (var proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text))
-                    {
-                        proteinCount = proteomeDb.GetProteinCount();
-                    }
-                }
-                if (proteinCount == 0)
-                {
-                    if (!BuildNew)
-                    {
-                        _messageBoxHelper.ShowTextBoxError(textPath,
-                            string.Format(Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist, textPath.Text));
-                        return;                        
-                    }
-                    btnAddFastaFile_Click(btnAddFastaFile, new EventArgs());
-                    if (File.Exists(textPath.Text))
-                    {
-                        using (var proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text))
-                        {
-                            proteinCount = proteomeDb.GetProteinCount();
-                        }
-                    }
-                }
-                if (proteinCount == 0)
-                {
-                    return;
-                }
+                ProteomeDb.OpenProteomeDb(textPath.Text);
             }
             catch (Exception)
             {
-                string message;
                 // In case exception is thrown opening protdb
-                if (BuildNew)
-                {
-                    message = TextUtil.LineSeparate(Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid,
-                                                    Resources.BuildBackgroundProteomeDlg_OkDialog_Click_the__Browse__button_to_choose_a_valid_path_for_your_new_proteome_file);
-                    MessageDlg.Show(this,message);
-                }
-                else
-                {
-                    message = TextUtil.LineSeparate(Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid,
-                                                    Resources.BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Build__button_to_create_a_new_one_from_FASTA_files);
-                    MessageDlg.Show(this,message);
-                }
+                string message = TextUtil.LineSeparate(Resources.BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid,
+                                                       Resources.BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files);
+                MessageDlg.Show(this, message);
                 return;
             }
 
@@ -286,24 +226,15 @@ namespace pwiz.Skyline.SettingsUI
             Close();
         }
 
-        private void btnBuild_Click(object sender, EventArgs e)
-        {
-            BuildNew = !BuildNew;
-            if (string.IsNullOrEmpty(textName.Text))
-                textName.Focus();
-            else
-                textPath.Focus();
-        }
-
         private void btnAddFastaFile_Click(object sender, EventArgs e)
         {
             using (var openFileDialog = new OpenFileDialog
-                {
-                    Title = Resources.BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File,
-                    InitialDirectory = Settings.Default.FastaDirectory,
-                    CheckPathExists = true
-                    // FASTA files often have no extension as well as .fasta and others
-                })
+            {
+                Title = Resources.BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File,
+                InitialDirectory = Settings.Default.FastaDirectory,
+                CheckPathExists = true
+                // FASTA files often have no extension as well as .fasta and others
+            })
             {
                 if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
                 {
@@ -326,15 +257,9 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     longWaitDlg.PerformWork(this, 0, () =>
                     {
-                        ProteomeDb proteomeDb;
-                        if (!File.Exists(databasePath))
-                        {
-                            proteomeDb = ProteomeDb.CreateProteomeDb(databasePath);
-                        }
-                        else
-                        {
-                            proteomeDb = ProteomeDb.OpenProteomeDb(databasePath);
-                        }
+                        ProteomeDb proteomeDb = File.Exists(databasePath)
+                            ? ProteomeDb.OpenProteomeDb(databasePath)
+                            : ProteomeDb.CreateProteomeDb(databasePath);
                         using (proteomeDb)
                         {
                             using (var reader = File.OpenText(fastaFilePath))
@@ -347,8 +272,7 @@ namespace pwiz.Skyline.SettingsUI
                 catch (Exception x)
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__,
-                                                                      fastaFilePath),
-                                                        x.Message);
+                                                                      fastaFilePath), x.Message);
                     MessageDlg.Show(this, message);
                     return;
                 }
@@ -379,10 +303,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textName_TextChanged(object sender, EventArgs e)
         {
-            if (BuildNew)
+            string name = textName.Text;
+            string outputPath = textPath.Text;
+            if (!File.Exists(outputPath))
             {
-                string name = textName.Text;
-                string outputPath = textPath.Text;
                 if (outputPath.Length > 0 && !Directory.Exists(outputPath))
                 {
                     try
@@ -410,42 +334,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private void RefreshStatus()
         {
-            if (BuildNew)
-            {
-                string path = textPath.Text;
-                string fullPath;
-                try
-                {
-                    fullPath = string.IsNullOrEmpty(path) ? null : Path.GetFullPath(path);
-                }
-                catch (Exception)
-                {
-                    fullPath = null;
-                }
-                bool browse = path == null ||   // For ReSharper
-                              !Equals(path, fullPath) ||
-                              Directory.Exists(path);
-                if (!browse)
-                {
-                    string dirName = Path.GetDirectoryName(textPath.Text);
-                    browse = dirName != null && !Directory.Exists(dirName);
-                }
-
-                if (browse)
-                {
-                    tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path_for_a_new_proteome_file;
-                    btnAddFastaFile.Enabled = false;
-                    return;
-                }
-                btnAddFastaFile.Enabled = true;                
-            }
-
-            // Unless proven otherwise.
-            btnBuild.Enabled = true;
-            btnAddFastaFile.Enabled = true;
-
             if (File.Exists(textPath.Text))
             {
+                btnAddFastaFile.Enabled = true;
                 ProteomeDb proteomeDb = null;
                 try
                 {
@@ -473,8 +364,6 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         tbxStatus.Text = TextUtil.LineSeparate(tbxStatus.Text,
                             Resources.BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_has_already_been_digested);
-                        BuildNew = false;
-                        btnBuild.Enabled = false;
                     }
                 }
                 catch (Exception)
@@ -490,14 +379,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
             }
-            else if (BuildNew)
-            {
-                tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file;
-                btnAddFastaFile.Enabled = !string.IsNullOrEmpty(textPath.Text);
-            }
             else
             {
-                tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_an_existing_proteome_file_or_click_the_Build_button_to_create_a_new_proteome_file;
+                btnAddFastaFile.Enabled = false;
+                tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file;
             }
         }
 

@@ -119,7 +119,6 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
             RunUI(() =>
             {
-                buildBackgroundProteomeDlg.BuildNew = true;
                 buildBackgroundProteomeDlg.BackgroundProteomeName = basename;
                 buildBackgroundProteomeDlg.BackgroundProteomePath = protdbPath;
                 buildBackgroundProteomeDlg.AddFastaFile(fastaFilePath);

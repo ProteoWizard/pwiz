@@ -2562,10 +2562,10 @@
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
 <value>{0} 個のペプチド</value>
       </data>
-  <data name="BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome" xml:space="preserve">
 <value>バックグラウンドプロテオームを作成</value>
       </data>
-  <data name="BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme" xml:space="preserve">
 <value>バックグラウンドプロテオームを開く</value>
       </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_background_proteome__0__already_exists" xml:space="preserve">
@@ -2580,13 +2580,13 @@
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
 <value>プロテオームファイル{0}がありません。</value>
       </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Browse__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Open__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
 <value>[参照] ボタンをクリックして、新しいプロテオームファイルの有効なパスを選択してください。</value>
       </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
 <value>プロテオームファイルが無効です。</value>
       </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Build__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
 <value>有効なプロテオームファイルを選択するか、[構築] ボタンをクリックしてFASTAファイルから新しいプロテオームファイルを作成してください。</value>
       </data>
   <data name="BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File" xml:space="preserve">
@@ -2613,7 +2613,7 @@
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
 <value>[ファイルを追加] ボタンをクリックしてFASTAファイルを追加し、新しいプロテオームファイルを作成します。</value>
       </data>
-  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_an_existing_proteome_file_or_click_the_Build_button_to_create_a_new_proteome_file" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file" xml:space="preserve">
 <value>[参照] ボタンをクリックして既存のプロテオームファイルを選択するか、[構築] ボタンをクリックして新しいプロテオームファイルを作成します。</value>
       </data>
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">

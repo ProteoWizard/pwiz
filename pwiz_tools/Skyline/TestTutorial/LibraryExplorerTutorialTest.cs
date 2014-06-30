@@ -356,7 +356,6 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI3.ShowBuildBackgroundProteomeDlg);
             RunUI(() =>
             {
-                buildBackgroundProteomeDlg.BuildNew = true;
                 buildBackgroundProteomeDlg.BackgroundProteomePath =
                     TestFilesDir.GetTestPath(@"LibraryExplorer\human.protdb"); // Not L10N
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)"; // Not L10N

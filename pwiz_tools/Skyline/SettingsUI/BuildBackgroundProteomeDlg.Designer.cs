@@ -29,7 +29,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildBackgroundProteomeDlg));
-            this.btnBrowse = new System.Windows.Forms.Button();
+            this.btnOpen = new System.Windows.Forms.Button();
             this.labelFile = new System.Windows.Forms.Label();
             this.textPath = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
@@ -38,18 +38,17 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOk = new System.Windows.Forms.Button();
             this.btnAddFastaFile = new System.Windows.Forms.Button();
             this.tbxStatus = new System.Windows.Forms.TextBox();
-            this.btnBuild = new System.Windows.Forms.Button();
             this.labelFasta = new System.Windows.Forms.Label();
             this.listboxFasta = new System.Windows.Forms.ListBox();
-            this.labelFileNew = new System.Windows.Forms.Label();
+            this.btnCreate = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // btnBrowse
+            // btnOpen
             // 
-            resources.ApplyResources(this.btnBrowse, "btnBrowse");
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            resources.ApplyResources(this.btnOpen, "btnOpen");
+            this.btnOpen.Name = "btnOpen";
+            this.btnOpen.UseVisualStyleBackColor = true;
+            this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
             // labelFile
             // 
@@ -100,13 +99,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tbxStatus.Name = "tbxStatus";
             this.tbxStatus.ReadOnly = true;
             // 
-            // btnBuild
-            // 
-            resources.ApplyResources(this.btnBuild, "btnBuild");
-            this.btnBuild.Name = "btnBuild";
-            this.btnBuild.UseVisualStyleBackColor = true;
-            this.btnBuild.Click += new System.EventHandler(this.btnBuild_Click);
-            // 
             // labelFasta
             // 
             resources.ApplyResources(this.labelFasta, "labelFasta");
@@ -118,10 +110,12 @@ namespace pwiz.Skyline.SettingsUI
             this.listboxFasta.FormattingEnabled = true;
             this.listboxFasta.Name = "listboxFasta";
             // 
-            // labelFileNew
+            // btnCreate
             // 
-            resources.ApplyResources(this.labelFileNew, "labelFileNew");
-            this.labelFileNew.Name = "labelFileNew";
+            resources.ApplyResources(this.btnCreate, "btnCreate");
+            this.btnCreate.Name = "btnCreate";
+            this.btnCreate.UseVisualStyleBackColor = true;
+            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
             // 
             // BuildBackgroundProteomeDlg
             // 
@@ -129,13 +123,12 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.labelFileNew);
+            this.Controls.Add(this.btnCreate);
             this.Controls.Add(this.listboxFasta);
             this.Controls.Add(this.labelFasta);
-            this.Controls.Add(this.btnBuild);
             this.Controls.Add(this.tbxStatus);
             this.Controls.Add(this.btnAddFastaFile);
-            this.Controls.Add(this.btnBrowse);
+            this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.labelFile);
             this.Controls.Add(this.textPath);
             this.Controls.Add(this.textName);
@@ -153,7 +146,7 @@ namespace pwiz.Skyline.SettingsUI
 
         #endregion
 
-        private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Label labelFile;
         private System.Windows.Forms.TextBox textPath;
         private System.Windows.Forms.TextBox textName;
@@ -162,10 +155,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnAddFastaFile;
         private System.Windows.Forms.TextBox tbxStatus;
-        private System.Windows.Forms.Button btnBuild;
         private System.Windows.Forms.Label labelFasta;
         private System.Windows.Forms.ListBox listboxFasta;
-        private System.Windows.Forms.Label labelFileNew;
+        private System.Windows.Forms.Button btnCreate;
 
     }
 }

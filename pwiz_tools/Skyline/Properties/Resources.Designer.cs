@@ -1867,20 +1867,30 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred attempting to create the proteome file {0}..
+        /// </summary>
+        public static string BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__ {
+            get {
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create" +
+                        "_the_proteome_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Create Background Proteome.
         /// </summary>
-        public static string BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome {
+        public static string BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome {
             get {
-                return ResourceManager.GetString("BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome", resourceCulture);
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Open Background Proteome.
         /// </summary>
-        public static string BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme {
+        public static string BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme {
             get {
-                return ResourceManager.GetString("BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme", resourceCulture);
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme", resourceCulture);
             }
         }
         
@@ -1894,22 +1904,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Choose a valid proteome file, or click the &apos;Build&apos; button to create a new one from FASTA files..
+        ///   Looks up a localized string similar to Choose a valid proteome file, or click the &apos;Create&apos; button to create a new one from FASTA files..
         /// </summary>
-        public static string BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Build__button_to_create_a_new_one_from_FASTA_files {
+        public static string BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files {
             get {
-                return ResourceManager.GetString("BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__B" +
-                        "uild__button_to_create_a_new_one_from_FASTA_files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Click the &apos;Browse&apos; button to choose a valid path for your new proteome file..
-        /// </summary>
-        public static string BuildBackgroundProteomeDlg_OkDialog_Click_the__Browse__button_to_choose_a_valid_path_for_your_new_proteome_file {
-            get {
-                return ResourceManager.GetString("BuildBackgroundProteomeDlg_OkDialog_Click_the__Browse__button_to_choose_a_valid_p" +
-                        "ath_for_your_new_proteome_file", resourceCulture);
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__C" +
+                        "reate__button_to_create_a_new_one_from_FASTA_files", resourceCulture);
             }
         }
         
@@ -1970,22 +1970,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Click the &apos;Browse&apos; button to choose a path for a new proteome file..
+        ///   Looks up a localized string similar to Click the &apos;Open&apos; button to choose an existing proteome file, or click the &apos;Create&apos; button to create a new proteome file..
         /// </summary>
-        public static string BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path_for_a_new_proteome_file {
+        public static string BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file {
             get {
-                return ResourceManager.GetString("BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path" +
-                        "_for_a_new_proteome_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Click the &apos;Browse&apos; button to choose an existing proteome file, or click the &apos;Build&apos; button to create a new proteome file..
-        /// </summary>
-        public static string BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_an_existing_proteome_file_or_click_the_Build_button_to_create_a_new_proteome_file {
-            get {
-                return ResourceManager.GetString("BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_an_exi" +
-                        "sting_proteome_file_or_click_the_Build_button_to_create_a_new_proteome_file", resourceCulture);
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_exist" +
+                        "ing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file", resourceCulture);
             }
         }
         

@@ -102,7 +102,6 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
             RunUI(() =>
             {
-                buildBackgroundProteomeDlg.BuildNew = true;
                 buildBackgroundProteomeDlg.BackgroundProteomePath =
                     TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast"); // Not L10N
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N

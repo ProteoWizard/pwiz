@@ -79,7 +79,6 @@ namespace pwiz.SkylineTestTutorial
             var backProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(pepSettings.AddBackgroundProteome);
             RunUI(() =>
             {
-                backProteomeDlg.BuildNew = true;
                 backProteomeDlg.BackgroundProteomePath = GetTestPath("Skyline");
                 backProteomeDlg.BackgroundProteomeName = "TubercuList_v2-6";
                 backProteomeDlg.AddFastaFile(fastaFile);

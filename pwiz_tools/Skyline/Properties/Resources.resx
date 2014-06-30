@@ -2562,10 +2562,10 @@ Are you sure you want to continue?</value>
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
     <value>{0} Peptides</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome" xml:space="preserve">
     <value>Create Background Proteome</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme" xml:space="preserve">
     <value>Open Background Proteome</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_background_proteome__0__already_exists" xml:space="preserve">
@@ -2580,23 +2580,17 @@ Are you sure you want to continue?</value>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
     <value>The proteome file {0} does not exist.</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Browse__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
-    <value>Click the 'Browse' button to choose a valid path for your new proteome file.</value>
-  </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
     <value>The proteome file is not valid.</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Build__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
-    <value>Choose a valid proteome file, or click the 'Build' button to create a new one from FASTA files.</value>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
+    <value>Choose a valid proteome file, or click the 'Create' button to create a new one from FASTA files.</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File" xml:space="preserve">
     <value>Add FASTA File</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__" xml:space="preserve">
     <value>An error occurred attempting to add the FASTA file {0}.</value>
-  </data>
-  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path_for_a_new_proteome_file" xml:space="preserve">
-    <value>Click the 'Browse' button to choose a path for a new proteome file.</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File" xml:space="preserve">
     <value>Loading Proteome File</value>
@@ -2613,8 +2607,8 @@ Are you sure you want to continue?</value>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>Click the 'Add File' button to add a FASTA file, and create a new proteome file.</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_an_existing_proteome_file_or_click_the_Build_button_to_create_a_new_proteome_file" xml:space="preserve">
-    <value>Click the 'Browse' button to choose an existing proteome file, or click the 'Build' button to create a new proteome file.</value>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file" xml:space="preserve">
+    <value>Click the 'Open' button to choose an existing proteome file, or click the 'Create' button to create a new proteome file.</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
     <value>You must specify an output file path.</value>
@@ -7810,5 +7804,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="GraphFullScan_CreateGraph__0_____1_F2__min_" xml:space="preserve">
     <value>{0}  ({1:F2} min)</value>
     <comment>"min" stands for "minutes"</comment>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__" xml:space="preserve">
+    <value>An error occurred attempting to create the proteome file {0}.</value>
   </data>
 </root>

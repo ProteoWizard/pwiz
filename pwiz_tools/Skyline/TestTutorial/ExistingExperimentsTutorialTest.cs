@@ -108,7 +108,6 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg,
                 buildBackgroundProteomeDlg =>
                 {
-                    buildBackgroundProteomeDlg.BuildNew = false;
                     buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast_mini"; // Not L10N
                     buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"MRMer\Yeast_MRMer_mini.protdb"); // Not L10N
                     buildBackgroundProteomeDlg.OkDialog();

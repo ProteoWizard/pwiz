@@ -2562,10 +2562,10 @@
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
     <value>{0}肽</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_btnBrowse_Click_Create_Background_Proteome" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome" xml:space="preserve">
     <value>创建背景蛋白质组</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_btnBrowse_Click_Open_Background_Protoeme" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme" xml:space="preserve">
     <value>打开背景蛋白质组</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_background_proteome__0__already_exists" xml:space="preserve">
@@ -2580,13 +2580,13 @@
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
     <value>蛋白质组文件{0}不存在。</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Browse__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Open__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
     <value>单击“浏览”按钮来针对您的新蛋白质组文件选择一个有效路径。</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
     <value>蛋白质组文件无效。</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Build__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
     <value>选择一个有效的蛋白质组文件，或者单击“构建”按钮从 FASTA 文件中创建一个新文件。</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File" xml:space="preserve">
@@ -2613,7 +2613,7 @@
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>单击“添加文件”按钮来添加一个 FASTA 文件，并且创建一个新的蛋白质组文件。</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_an_existing_proteome_file_or_click_the_Build_button_to_create_a_new_proteome_file" xml:space="preserve">
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file" xml:space="preserve">
     <value>单击“浏览”按钮选择一个现有的蛋白质组文件，或者单击“构建”按钮创建一个新的蛋白质组文件。</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
