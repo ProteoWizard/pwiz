@@ -51,6 +51,7 @@
             this.textStart = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.comboDeconv = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnOk
@@ -187,12 +188,18 @@
             this.comboDeconv.Name = "comboDeconv";
             this.comboDeconv.SelectedIndexChanged += new System.EventHandler(this.comboDeconv_SelectedIndexChanged);
             // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
             // CalculateIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.comboDeconv);
             this.Controls.Add(this.comboWindowType);
             this.Controls.Add(this.labelWindowType);
@@ -249,5 +256,6 @@
         private System.Windows.Forms.Label labelWindowType;
         private System.Windows.Forms.ComboBox comboWindowType;
         private System.Windows.Forms.ComboBox comboDeconv;
+        private System.Windows.Forms.Label label6;
     }
 }

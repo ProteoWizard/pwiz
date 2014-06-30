@@ -110,6 +110,10 @@ namespace pwiz.Skyline.SettingsUI
                 EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP
             });
             comboDeconv.SelectedItem = EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
+
+            //Position/set Window count.
+            labelWindowCount.Left = label6.Right + 1;
+            labelWindowCount.Text = String.Empty;
         }
 
         private IList<EditIsolationWindow> CreateIsolationWindows()
