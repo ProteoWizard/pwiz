@@ -7817,5 +7817,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_" xml:space="preserve">
     <value>The settings have been reset to the default values.</value>
   </data>
+  <data name="WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
+    <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.</value>
+  </data>
 </root>
 

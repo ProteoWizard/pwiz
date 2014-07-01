@@ -489,7 +489,9 @@ namespace pwiz.Skyline.FileUI
                     DeleteTempZipFile(tmpUploadUri, server.AuthHeader);
                     return;
                 }
-                
+                // Make sure the temporary file was uploaded to the server
+                ConfirmFileOnServer(tmpUploadUri, server.AuthHeader);
+
                 // Rename the temporary file
                 longWaitBroker.Message = Resources.WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server;
                 RenameTempZipFile(tmpUploadUri, uploadUri, server.AuthHeader);
@@ -561,10 +563,7 @@ namespace pwiz.Skyline.FileUI
         private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader)
         {
             var request = (HttpWebRequest) WebRequest.Create(sourceUri);
-            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            // Specify the method.
-            request.Method = "MOVE"; // Not L10N
-
+            
             // Destination URI.  
             // NOTE: Do not use Uri.ToString since it does not return the escaped version.
             request.Headers.Add("Destination", destUri.AbsoluteUri); // Not L10N
@@ -573,51 +572,63 @@ namespace pwiz.Skyline.FileUI
             // The server would return a 412 Precondition Failed status code.
             request.Headers.Add("Overwrite", "F"); // Not L10N
 
-            WebResponse response = null;
+            DoRequest(request,
+                "MOVE", // Not L10N
+                authHeader,
+                Resources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__,
+                5 // Try up to 5 times.
+                );
+        }
+
+        private static void DoRequest(HttpWebRequest request, string method, string authHeader, string errorMessage, int maxTryCount = 1)
+        {
+            request.Method = method;
+            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+
             try
             {
-                response = request.GetResponse();
+                using (request.GetResponse())
+                {
+                }
             }
-            // An exception will be thrown if the response code is not 200 (Success).
+                // An exception will be thrown if the response code is not 200 (Success).
             catch (WebException x)
             {
-                // Try again
-                RenameTempZipFile(sourceUri, destUri, authHeader);
+                if (--maxTryCount > 0)
+                {
+                    DoRequest(request, method, authHeader, errorMessage, maxTryCount);
+                }
 
                 var msg = x.Message;
-                if(x.InnerException != null)
+                if (x.InnerException != null)
                 {
                     msg += ". Inner Exception: " + x.InnerException.Message; // Not L10N
                 }
-                throw new Exception(TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__, msg), x);
+                throw new Exception(
+                    TextUtil.LineSeparate(errorMessage, msg), x);
             }
-            finally
-            {
-                if (response != null) response.Close();
-            } 
         }
 
         private void DeleteTempZipFile(Uri sourceUri, string authHeader)
         {
             var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
-            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            // Specify the method.
-            request.Method = "DELETE"; // Not L10N
 
-            WebResponse response = null;
-            try
-            {
-                response = request.GetResponse();
-            }
-            // An exception will be thrown if the response code is not 200 (Success).
-            catch (WebException x)
-            {
-                throw new Exception(TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__, x.Message), x);
-            }
-            finally
-            {
-                if (response != null) response.Close();
-            }  
+            DoRequest(request,
+                "DELETE", // Not L10N
+                authHeader,
+                Resources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__);
+        }
+
+        private void ConfirmFileOnServer(Uri sourceUri, string authHeader)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
+            
+            // Do a HEAD request to check if the file exists on the server.
+            DoRequest(request,
+                "HEAD", // Not L10N
+                authHeader,
+                Resources.WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
+                );
         }
 
         public void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)

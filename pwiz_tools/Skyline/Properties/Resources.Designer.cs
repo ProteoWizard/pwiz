@@ -23638,6 +23638,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator..
+        /// </summary>
+        public static string WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server_" +
+                        "_Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_serv" +
+                        "er_administrator_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error deleting temporary zip file: .
         /// </summary>
         public static string WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__ {
