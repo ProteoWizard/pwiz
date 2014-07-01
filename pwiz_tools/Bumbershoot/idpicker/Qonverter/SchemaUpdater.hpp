@@ -29,6 +29,8 @@
 
 #include <string>
 #include "pwiz/utility/misc/IterationListener.hpp"
+#include "sqlite3.h"
+
 
 #ifdef IDPICKER_SQLITE_64
 #define IDPICKER_SQLITE_PRAGMA_MMAP "PRAGMA mmap_size=70368744177664; -- 2^46"
@@ -47,13 +49,35 @@
 
 
 BEGIN_IDPICKER_NAMESPACE
+
+
+class cancellation_exception : public std::exception {};
+
+// convenient macro for one-line status and cancellation updates
+#define ITERATION_UPDATE(ilr, index, count, message) \
+{ \
+    if ((ilr) && (ilr)->broadcastUpdateMessage(pwiz::util::IterationListener::UpdateMessage((index), (count), (message))) == pwiz::util::IterationListener::Status_Cancel) \
+    {throw cancellation_exception();} \
+}
+
+
 const extern int CURRENT_SCHEMA_REVISION;
 namespace SchemaUpdater {
+
+
+/// creates user functions used by IDPicker code:
+/// DISTINCT_DOUBLE_ARRAY_SUM
+void createUserSQLiteFunctions(sqlite3* idpDbConnection);
 
 
 /// update IDPicker database to the current schema version, or throw an exception if updating is impossible;
 /// returns true iff the database schema was updated
 bool update(const std::string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
+
+
+/// update IDPicker database connection to the current schema version, or throw an exception if updating is impossible;
+/// returns true iff the database schema was updated
+bool update(sqlite3* idpDbConnection, pwiz::util::IterationListenerRegistry* ilr = 0);
 
 
 /// returns true iff the idpDB has an IntegerSet table (which is the last table to be created)

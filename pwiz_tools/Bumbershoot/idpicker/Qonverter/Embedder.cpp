@@ -60,14 +60,6 @@ const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
 #endif
 
 
-// convenient macro for one-line status and cancellation updates
-#define ITERATION_UPDATE(ilr, index, count, message) \
-{ \
-    if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage((index), (count), (message))) == IterationListener::Status_Cancel) \
-        return; \
-}
-
-
 QuantitationConfiguration::QuantitationConfiguration(QuantitationMethod quantitationMethod, pwiz::chemistry::MZTolerance reporterIonMzTolerance)
     : quantitationMethod(quantitationMethod), reporterIonMzTolerance(reporterIonMzTolerance)
 {}
@@ -800,6 +792,15 @@ bool hasGeneMetadata(const string& idpDbFilepath)
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
     
+    return hasGeneMetadata(idpDb.connected());
+}
+
+
+bool hasGeneMetadata(sqlite3* idpDbConnection)
+{
+    // open the database
+    sqlite::database idpDb(idpDbConnection, false);
+
     idpDb.execute(IDPICKER_SQLITE_PRAGMA_MMAP);
 
     // if there is at least 1 non-null GeneId, there is embedded gene metadata
@@ -834,7 +835,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
 
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
-    
+
     idpDb.execute("PRAGMA journal_mode=OFF;"
                   "PRAGMA synchronous=OFF;"
                   "PRAGMA cache_size=50000;"

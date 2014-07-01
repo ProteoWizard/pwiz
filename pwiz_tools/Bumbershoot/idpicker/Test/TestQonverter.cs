@@ -66,8 +66,11 @@ namespace Test
         // public static void MyClassCleanup() { }
         //
         // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
+        [TestInitialize()]
+        public void TestInitialize()
+        {
+            Directory.SetCurrentDirectory(TestContext.TestDeploymentDir);
+        }
         //
         // Use TestCleanup to run code after each test has run
         // [TestCleanup()]

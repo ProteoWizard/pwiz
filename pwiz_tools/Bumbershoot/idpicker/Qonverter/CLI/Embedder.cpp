@@ -144,7 +144,8 @@ bool Embedder::HasGeneMetadata(String^ idpDbFilepath)
     {
         return NativeEmbedder::hasGeneMetadata(ToStdString(idpDbFilepath));
     }
-    CATCH_AND_FORWARD
+    CATCH_AND_FORWARD;
+    return false;
 }
 
 

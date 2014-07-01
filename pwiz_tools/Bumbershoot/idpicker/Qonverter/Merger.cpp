@@ -46,13 +46,13 @@ typedef IterationListener::UpdateMessage UpdateMessage;
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include <eh.h>
-bool isPathOnFixedDrive(const std::string& path)
+static bool isPathOnFixedDrive(const std::string& path)
 {
     bfs::path completePath = bfs::system_complete(path);
-    return GetDriveType(completePath.root_path().string().c_str()) == DRIVE_FIXED;
+    return GetDriveTypeA(completePath.root_path().string().c_str()) == DRIVE_FIXED;
 }
 #else
-bool isPathOnFixedDrive(const std::string& path)
+static bool isPathOnFixedDrive(const std::string& path)
 {
     return true;
 }
@@ -373,8 +373,10 @@ struct Merger::Impl
         initializeSqlFormats();
     }
 
-    void merge()
+    void merge(pwiz::util::IterationListenerRegistry* ilr = 0)
     {
+        this->ilr = ilr;
+
         if (mergeSourceConnection != NULL)
             mergeConnection(mergeSourceConnection);
         else
@@ -476,6 +478,7 @@ struct Merger::Impl
 
         FILE* f = fopen(filepath.c_str(), "r");
         while (fread(&buf, 32768, 1, f) > 0) {}
+        fclose(f);
     }
 
     void initializeTarget(sqlite3pp::database& db)
@@ -648,6 +651,8 @@ struct Merger::Impl
         deleteEmptySpectrumSourceGroups(inMemoryDb);
 
         transaction.commit();
+
+        inMemoryDb.execute("DETACH DATABASE merged");
 
         // if merging to a temporary file, copy it back to the real target; TemporaryFile dtor will remove temporary file
         if (tempMergeTargetFilepath != mergeTargetFilepath)
@@ -837,7 +842,7 @@ struct ThreadStatus
     ThreadStatus(const boost::exception_ptr& e) : userCanceled(false), exception(e) {}
 };
 
-void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQueue, ThreadStatus& status, boost::mutex& queueMutex)
+void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQueue, ThreadStatus& status, boost::mutex& queueMutex, size_t& filesMerged, size_t& filesTotal)
 {
     vector<shared_ptr<MergeTask> > mergeTasks(2);
     vector<string> sourceFilepaths(2);
@@ -846,6 +851,9 @@ void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQue
     {
         while (true)
         {
+            string tempMergeTargetFilepath;
+            bool newTemporaryCreated = false;
+
             // pop two sources from the queue; return if the queue only has one source
             {
                 boost::lock_guard<boost::mutex> lock(queueMutex);
@@ -858,15 +866,13 @@ void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQue
                     return;
             }
 
-            string tempMergeTargetFilepath;
-            bool isTemporary = false;
             if (!mergeTasks[0]->isTemporary && !mergeTasks[1]->isTemporary)
             {
                 sourceFilepaths.resize(2);
                 sourceFilepaths[0] = mergeTasks[0]->mergeSourceFilepath;
                 sourceFilepaths[1] = mergeTasks[1]->mergeSourceFilepath;
-                tempMergeTargetFilepath = bfs::unique_path("%%%%%%%%%%%%%%%%.idpDB").string();
-                isTemporary = true;
+                tempMergeTargetFilepath = (bfs::temp_directory_path() / bfs::unique_path("%%%%%%%%%%%%%%%%.idpDB")).string();
+                newTemporaryCreated = true;
             }
             else if (mergeTasks[0]->isTemporary)
             {
@@ -882,19 +888,31 @@ void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQue
             }
 
             /*{
-
                 boost::lock_guard<boost::mutex> lock(queueMutex);
-                cout << "Thread " << boost::this_thread::get_id() << " is merging " << bal::join(sourceFilepaths, " and ") << " to " << tempMergeTargetFilepath << endl;
+                cout << "Thread " << boost::this_thread::get_id() << " starts merging " << bal::join(sourceFilepaths, " and ") << " to " << tempMergeTargetFilepath << endl;
             }*/
 
             Merger::Impl impl(tempMergeTargetFilepath, sourceFilepaths);
             impl.merge();
 
+            /*{
+                boost::lock_guard<boost::mutex> lock(queueMutex);
+                cout << "Thread " << boost::this_thread::get_id() << " finished merging " << bal::join(sourceFilepaths, " and ") << " to " << tempMergeTargetFilepath << endl;
+            }*/
+
             // add the merged target to the queue
             {
                 boost::lock_guard<boost::mutex> lock(queueMutex);
 
-                if (!mergeTasks[0]->isTemporary && !mergeTasks[1]->isTemporary)
+                if (newTemporaryCreated)
+                {
+                    ++filesTotal; // the new temporary file is another file that has to be merged
+                    filesMerged += 2;
+                }
+                else
+                    ++filesMerged;
+
+                if (newTemporaryCreated)
                     sourceQueue.push_front(boost::make_shared<MergeTask>(tempMergeTargetFilepath, true));
                 else if (mergeTasks[0]->isTemporary)
                     sourceQueue.push_front(mergeTasks[0]);
@@ -905,7 +923,7 @@ void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQue
     }
     catch (exception& e)
     {
-        cerr << "[executePairwiseFileMergerTask] error merging \"" + sourceFilepaths[0] + "\" and \"" + sourceFilepaths[1] + "\": " + e.what() << endl;
+        cerr << "[executePairwiseFileMergerTask] " << boost::this_thread::get_id() << " error merging \"" + sourceFilepaths[0] + "\" and \"" + sourceFilepaths[1] + "\": " + e.what() << endl;
         status = boost::copy_exception(runtime_error("[executePairwiseFileMergerTask] error merging \"" + sourceFilepaths[0] + "\" and \"" + sourceFilepaths[1] + "\": " + e.what()));
     }
     catch (...)
@@ -914,9 +932,9 @@ void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQue
     }
 }
 
-void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>& mergeSourceFilepaths, int maxThreads, const ProgressMonitor& progressMonitor)
+void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>& mergeSourceFilepaths, int maxThreads, pwiz::util::IterationListenerRegistry* ilr)
 {
-    // create a worker thread for each processor, up to 4
+    // create a worker thread for each processor, up to maxThreads
     // each worker thread will consume 2 random source filepaths and merge them to a temporary filepath
     // the temporary filepath is added back to the source filepaths queue
     // when there is only one filepath left, the merge to the target is done
@@ -934,42 +952,59 @@ void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>&
 
     int processorCount = min(maxThreads, (int)boost::thread::hardware_concurrency());
 
+    size_t filesTotal = mergeSourceFilepaths.size();
+    size_t filesMerged = 0;
+
+    // prevent boost::path::codecvt facet initialization race condition
+    bfs::unique_path("%%%%%%%%%%%%%%%%.idpDB");
+
     // use list so iterators and references stay valid
     list<pair<boost::shared_ptr<thread>, ThreadStatus> > threads;
     boost::mutex queueMutex;
     for (int i = 0; i < processorCount; ++i)
     {
         threads.push_back(make_pair(boost::shared_ptr<thread>(), IterationListener::Status_Ok));
-        threads.back().first.reset(new thread(executePairwiseFileMergerTask, boost::ref(sourceQueue), boost::ref(threads.back().second), boost::ref(queueMutex)));
+        threads.back().first.reset(new thread(executePairwiseFileMergerTask, boost::ref(sourceQueue), boost::ref(threads.back().second), boost::ref(queueMutex), boost::ref(filesMerged), boost::ref(filesTotal)));
     }
 
-    set<boost::shared_ptr<thread> > finishedThreads;
-    while (finishedThreads.size() < threads.size())
-        BOOST_FOREACH_FIELD((boost::shared_ptr<thread>& t)(ThreadStatus& status), threads)
-        {
-            if (t->timed_join(boost::posix_time::seconds(1)))
-                finishedThreads.insert(t);
+    try
+    {
+        set<boost::shared_ptr<thread> > finishedThreads;
+        while (finishedThreads.size() < threads.size())
+            BOOST_FOREACH_FIELD((boost::shared_ptr<thread>& t)(ThreadStatus& status), threads)
+            {
+                if (t->timed_join(boost::posix_time::seconds(1)))
+                    finishedThreads.insert(t);
 
-            if (status.exception)
-                boost::rethrow_exception(status.exception);
-            else if (status.userCanceled)
-                return;
-        }
+                ITERATION_UPDATE(ilr, filesMerged, filesTotal, "merging")
 
-    if (sourceQueue.size() > 1)
-        throw runtime_error("[Merger::merge] there is more than one file left in the queue: something went wrong with the multi-threaded merge");
+                if (status.exception)
+                    boost::rethrow_exception(status.exception);
+                else if (status.userCanceled)
+                    return;
+            }
 
-    sourceQueue.front()->isTemporary = false;
-    bfs::rename(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
+        if (sourceQueue.size() > 1)
+            throw runtime_error("[Merger::merge] there is more than one file left in the queue: something went wrong with the multi-threaded merge");
+
+        sourceQueue.front()->isTemporary = false;
+        bfs::rename(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
+    }
+    catch (cancellation_exception&)
+    {
+        // clear the queue so the threads will exit after their current merge
+        boost::mutex::scoped_lock lock(queueMutex);
+        sourceQueue.clear();
+    }
 
     //_impl.reset(new Impl(mergeTargetFilepath, mergeSourceFilepaths));
     //_impl->merge();
 }
 
-void Merger::merge(const string& mergeTargetFilepath, sqlite3* mergeSourceConnection, const ProgressMonitor& progressMonitor)
+void Merger::merge(const string& mergeTargetFilepath, sqlite3* mergeSourceConnection, pwiz::util::IterationListenerRegistry* ilr)
 {
     _impl.reset(new Impl(mergeTargetFilepath, mergeSourceConnection));
-    _impl->merge();
+    _impl->merge(ilr);
 }
 
 

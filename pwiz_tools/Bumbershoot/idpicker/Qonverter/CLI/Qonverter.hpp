@@ -26,12 +26,14 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
+#include "../SchemaUpdater.hpp"
 #using <system.dll>
 #pragma warning( pop )
 
 
 #undef CATCH_AND_FORWARD
 #define CATCH_AND_FORWARD \
+    catch (NativeIDPicker::cancellation_exception&) {} \
     catch (std::bad_cast& e) { throw gcnew System::InvalidCastException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
     catch (std::bad_alloc& e) { throw gcnew System::OutOfMemoryException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
     catch (std::out_of_range& e) { throw gcnew System::IndexOutOfRangeException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \

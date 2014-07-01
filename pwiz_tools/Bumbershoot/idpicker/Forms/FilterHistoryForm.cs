@@ -90,9 +90,11 @@ namespace IDPicker.Forms
             {
                 dataGridView.Rows.Add(filter.Id,
                                       filter.MaximumQValue,
-                                      filter.MinimumDistinctPeptidesPerProtein,
-                                      filter.MinimumSpectraPerProtein,
-                                      filter.MinimumAdditionalPeptidesPerProtein,
+                                      filter.MinimumDistinctPeptides,
+                                      filter.MinimumSpectra,
+                                      filter.MinimumAdditionalPeptides,
+                                      filter.GeneLevelFiltering,
+                                      filter.DistinctMatchFormat,
                                       filter.MinimumSpectraPerDistinctMatch,
                                       filter.MinimumSpectraPerDistinctPeptide,
                                       filter.MaximumProteinGroupsPerPeptide,
@@ -196,9 +198,11 @@ namespace IDPicker.Forms
             _columnSettings = new Dictionary<DataGridViewColumn, ColumnProperty>()
             {
                 { maxQValueColumn, new ColumnProperty {Type = typeof(float)}},
-                { minPeptidesPerProteinColumn, new ColumnProperty {Type = typeof(int)}},
-                { minSpectraPerProteinColumn, new ColumnProperty {Type = typeof(int)}},
+                { minPeptidesColumn, new ColumnProperty {Type = typeof(int)}},
+                { minSpectraColumn, new ColumnProperty {Type = typeof(int)}},
                 { minAdditionalPeptidesColumn, new ColumnProperty {Type = typeof(int)}},
+                { geneLevelFilteringColumn, new ColumnProperty {Type = typeof(bool)}},
+                { distinctMatchFormatColumn, new ColumnProperty {Type = typeof(string)}},
                 { minSpectraPerMatchColumn, new ColumnProperty {Type = typeof(int)}},
                 { minSpectraPerPeptideColumn, new ColumnProperty {Type = typeof(int)}},
                 { maxProteinGroupsColumn, new ColumnProperty {Type = typeof(int)}},

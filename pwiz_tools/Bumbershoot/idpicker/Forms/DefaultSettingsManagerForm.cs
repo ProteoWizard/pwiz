@@ -58,8 +58,8 @@ namespace IDPicker.Forms
             minSpectraPerMatchTextBox.Text = settings.DefaultMinSpectraPerDistinctMatch.ToString();
             minSpectraPerPeptideTextBox.Text = settings.DefaultMinSpectraPerDistinctPeptide.ToString();
             maxProteinGroupsTextBox.Text = settings.DefaultMaxProteinGroupsPerPeptide.ToString();
-            minDistinctPeptidesTextBox.Text = settings.DefaultMinDistinctPeptidesPerProtein.ToString();
-            minSpectraPerProteinTextBox.Text = settings.DefaultMinSpectraPerProtein.ToString();
+            minDistinctPeptidesTextBox.Text = settings.DefaultMinDistinctPeptides.ToString();
+            minSpectraTextBox.Text = settings.DefaultMinSpectra.ToString();
             minAdditionalPeptidesTextBox.Text = settings.DefaultMinAdditionalPeptides.ToString();
             defaultDecoyPrefixTextBox.Text = settings.DefaultDecoyPrefix;
             maxImportRankTextBox.Text = settings.DefaultMaxRank.ToString();
@@ -82,8 +82,8 @@ namespace IDPicker.Forms
             settings.DefaultMinSpectraPerDistinctMatch = Convert.ToInt32(minSpectraPerMatchTextBox.Text);
             settings.DefaultMinSpectraPerDistinctPeptide = Convert.ToInt32(minSpectraPerPeptideTextBox.Text);
             settings.DefaultMaxProteinGroupsPerPeptide = Convert.ToInt32(maxProteinGroupsTextBox.Text);
-            settings.DefaultMinDistinctPeptidesPerProtein = Convert.ToInt32(minDistinctPeptidesTextBox.Text);
-            settings.DefaultMinSpectraPerProtein = Convert.ToInt32(minSpectraPerProteinTextBox.Text);
+            settings.DefaultMinDistinctPeptides = Convert.ToInt32(minDistinctPeptidesTextBox.Text);
+            settings.DefaultMinSpectra = Convert.ToInt32(minSpectraTextBox.Text);
             settings.DefaultMinAdditionalPeptides = Convert.ToInt32(minAdditionalPeptidesTextBox.Text);
             settings.DefaultDecoyPrefix = defaultDecoyPrefixTextBox.Text;
             settings.DefaultMaxRank = Convert.ToInt32(maxImportRankTextBox.Text);

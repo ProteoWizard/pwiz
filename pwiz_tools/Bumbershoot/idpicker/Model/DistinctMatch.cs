@@ -78,6 +78,26 @@ namespace IDPicker.DataModel
             double roundToNearest = (double) ModificationMassRoundToNearest.Value;
             return Math.Round(mass / roundToNearest, 0) * roundToNearest;
         }
+
+        public override int GetHashCode()
+        {
+            return IsChargeDistinct.GetHashCode() ^
+                   IsAnalysisDistinct.GetHashCode() ^
+                   AreModificationsDistinct.GetHashCode() ^
+                   ModificationMassRoundToNearest.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+            return GetHashCode() == obj.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return String.Format("{0} {1} {2} {3:0.0###}", IsChargeDistinct ? 1 : 0, IsAnalysisDistinct ? 1 : 0, AreModificationsDistinct ? 1 : 0, ModificationMassRoundToNearest.GetValueOrDefault(1.0m));
+        }
     }
 
     public class DistinctMatchKey : IComparable<DistinctMatchKey>, IComparable

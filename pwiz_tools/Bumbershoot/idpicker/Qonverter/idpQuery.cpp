@@ -28,7 +28,6 @@
 #include "boost/foreach_field.hpp"
 #include "boost/range/algorithm/remove_if.hpp"
 #include "boost/range/adaptor/map.hpp"
-#include "boost/crc.hpp"
 #include "boost/variant.hpp"
 
 #include "SchemaUpdater.hpp"
@@ -36,7 +35,9 @@
 #include "Embedder.hpp"
 #include "sqlite3pp.h"
 #include <iomanip>
-//#include "svnrev.hpp"
+#include "CoreVersion.hpp"
+#include "idpQueryVersion.hpp"
+
 
 using namespace IDPicker;
 namespace sqlite = sqlite3pp;
@@ -152,98 +153,6 @@ FilteredSpectra
 Description
 */
 
-struct Version
-{
-    static int Major();
-    static int Minor();
-    static int Revision();
-    static std::string str();
-    static std::string LastModified();
-};
-
-int Version::Major()                {return 3;}
-int Version::Minor()                {return 0;}
-int Version::Revision()             {return 0;}//SVN_REV;}
-string Version::LastModified()      {return "";}//SVN_REVDATE;}
-string Version::str()
-{
-    std::ostringstream v;
-    v << Major() << "." << Minor() << "." << Revision();
-    return v.str();
-}
-
-
-struct DistinctDoubleArraySum
-{
-    typedef DistinctDoubleArraySum MyType;
-    set<int> arrayIds;
-    vector<double> result;
-    boost::crc_32_type crc32;
-
-    DistinctDoubleArraySum(int arrayLength) : result((size_t) arrayLength, 0.0) {}
-
-    static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
-    {
-        void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
-        if (aggContext == NULL)
-            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
-
-        MyType** ppThis = static_cast<MyType**>(aggContext);
-        MyType* pThis = *ppThis;
-
-        if (numValues > 1 || values[0] == NULL)
-            return;
-
-        int arrayByteCount = sqlite3_value_bytes(values[0]);
-        int arrayLength = arrayByteCount / 8;
-        const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
-        if (arrayBytes == NULL || arrayByteCount % 8 > 0)
-            throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
-
-        if (pThis == NULL)
-            pThis = new DistinctDoubleArraySum(arrayLength);
-        else
-            pThis->crc32.reset();
-
-        // if the arrayId was already in the set, ignore its values
-        pThis->crc32.process_bytes(arrayBytes, arrayByteCount);
-        int arrayId = pThis->crc32.checksum();
-        if (!pThis->arrayIds.insert(arrayId).second)
-            return;
-
-        const double* arrayValues = reinterpret_cast<const double*>(arrayBytes);
-
-        for (int i = 0; i < arrayLength; ++i)
-            pThis->result[i] += arrayValues[i];
-    }
-
-    static void Final(sqlite3_context* context)
-    {
-        void* aggContext = sqlite3_aggregate_context(context, 0);
-        if (aggContext == NULL)
-            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
-
-        MyType** ppThis = static_cast<MyType**>(aggContext);
-        MyType* pThis = *ppThis;
-        
-        if (pThis == NULL)
-            pThis = new DistinctDoubleArraySum(0);
-
-        sqlite3_result_blob(context, &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
-
-        delete pThis;
-    }
-};
-
-
-void createUserSQLiteFunctions(sqlite::database& idpDB)
-{
-    int result = sqlite3_create_function(idpDB.connected(), "distinct_double_array_sum", -1, SQLITE_ANY,
-                                         0, NULL, &DistinctDoubleArraySum::Step, &DistinctDoubleArraySum::Final);
-    if (result != 0)
-        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
-}
-
 
 template <typename ArrayType>
 void writeBlobArray(const void* blob, ostream& os, size_t offset, size_t length)
@@ -347,7 +256,7 @@ int proteinQuery(GroupBy groupBy, const bfs::path& filepath,
 {
     SchemaUpdater::update(filepath.string());
     sqlite::database idpDB(filepath.string());
-    createUserSQLiteFunctions(idpDB);
+    SchemaUpdater::createUserSQLiteFunctions(idpDB.connected());
     //idpDB.execute("PRAGMA mmap_size=70368744177664; -- 2^46");
 
     try {sqlite::query q(idpDB, "SELECT Id FROM Protein LIMIT 1"); q.begin();}
@@ -664,8 +573,8 @@ END_IDPICKER_NAMESPACE
 
 int main(int argc, const char* argv[])
 {
-    cout << "IDPickerQuery " << IDPicker::Version::str() << " (" << IDPicker::Version::LastModified() << ")\n" <<
-            "" << endl;
+    cout << "IDPickerQuery " << idpQuery::Version::str() << " (" << idpQuery::Version::LastModified() << ")\n" <<
+            "IDPickerCore " << IDPicker::Version::str() << " (" << IDPicker::Version::LastModified() << ")\n"  << endl;
 
     string usage = "Usage: idpQuery <group by field> <comma-delimited export column fields> <idpDB filepath>\n"
                    "\nExample: idpQuery ProteinGroup Accession,FilteredSpectra,PercentCoverage,iTRAQ4plex data.idpDB\n";

@@ -210,13 +210,11 @@ namespace IDPicker.Forms
             if (basicFilter != null)
             {
                 filterInfo.Add(new List<string> { "Max Q Value %", (viewFilter.MaximumQValue * 100).ToString() });
-                filterInfo.Add(new List<string> { "Min Distinct Peptides", viewFilter.MinimumDistinctPeptidesPerProtein.ToString() });
-                filterInfo.Add(new List<string>
-                                   {
-                                       "Min Additional Peptides",
-                                       viewFilter.MinimumAdditionalPeptidesPerProtein.ToString()
-                                   });
-                filterInfo.Add(new List<string> { "Min Spectra", viewFilter.MinimumSpectraPerProtein.ToString() });
+                filterInfo.Add(new List<string> { "Min Distinct Peptides", viewFilter.MinimumDistinctPeptides.ToString() });
+                filterInfo.Add(new List<string> { "Min Additional Peptides", viewFilter.MinimumAdditionalPeptides.ToString() });
+                filterInfo.Add(new List<string> { "Min Spectra", viewFilter.MinimumSpectra.ToString() });
+                if (viewFilter.GeneLevelFiltering)
+                    filterInfo.Add(new List<string> { "Filtering by Gene", viewFilter.GeneLevelFiltering.ToString() });
 
                 #region In-depth filters
 

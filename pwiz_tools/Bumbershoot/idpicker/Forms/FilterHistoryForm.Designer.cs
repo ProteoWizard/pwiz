@@ -55,11 +55,24 @@ namespace IDPicker.Forms
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilterHistoryForm));
             this.dataGridView = new IDPicker.Controls.PreviewDataGridView();
+            this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.copyToClipboardSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showInExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.exportButton = new System.Windows.Forms.ToolStripButton();
+            this.displayOptionsButton = new System.Windows.Forms.ToolStripButton();
             this.idColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.maxQValueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.minPeptidesPerProteinColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.minSpectraPerProteinColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.minPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.minSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.minAdditionalPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.geneLevelFilteringColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.distinctMatchFormatColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.minSpectraPerMatchColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.minSpectraPerPeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.maxProteinGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -72,17 +85,6 @@ namespace IDPicker.Forms
             this.proteinFdrColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.peptideFdrColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.spectrumFdrColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.copyToClipboardSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showInExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.exportButton = new System.Windows.Forms.ToolStripButton();
-            this.displayOptionsButton = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.toolStrip.SuspendLayout();
@@ -103,9 +105,11 @@ namespace IDPicker.Forms
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.idColumn,
             this.maxQValueColumn,
-            this.minPeptidesPerProteinColumn,
-            this.minSpectraPerProteinColumn,
+            this.minPeptidesColumn,
+            this.minSpectraColumn,
             this.minAdditionalPeptidesColumn,
+            this.geneLevelFilteringColumn,
+            this.distinctMatchFormatColumn,
             this.minSpectraPerMatchColumn,
             this.minSpectraPerPeptideColumn,
             this.maxProteinGroupsColumn,
@@ -126,121 +130,6 @@ namespace IDPicker.Forms
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.dataGridView.Size = new System.Drawing.Size(1181, 199);
             this.dataGridView.TabIndex = 0;
-            // 
-            // idColumn
-            // 
-            this.idColumn.HeaderText = "Id";
-            this.idColumn.Name = "idColumn";
-            this.idColumn.ReadOnly = true;
-            this.idColumn.Visible = false;
-            // 
-            // maxQValueColumn
-            // 
-            this.maxQValueColumn.HeaderText = "Max. Q Value";
-            this.maxQValueColumn.Name = "maxQValueColumn";
-            this.maxQValueColumn.ReadOnly = true;
-            // 
-            // minPeptidesPerProteinColumn
-            // 
-            this.minPeptidesPerProteinColumn.HeaderText = "Min. Peptides Per Protein";
-            this.minPeptidesPerProteinColumn.Name = "minPeptidesPerProteinColumn";
-            this.minPeptidesPerProteinColumn.ReadOnly = true;
-            this.minPeptidesPerProteinColumn.Width = 95;
-            // 
-            // minSpectraPerProteinColumn
-            // 
-            this.minSpectraPerProteinColumn.HeaderText = "Min. Spectra Per Protein";
-            this.minSpectraPerProteinColumn.Name = "minSpectraPerProteinColumn";
-            this.minSpectraPerProteinColumn.ReadOnly = true;
-            this.minSpectraPerProteinColumn.Width = 95;
-            // 
-            // minAdditionalPeptidesColumn
-            // 
-            this.minAdditionalPeptidesColumn.HeaderText = "Min. Additional Peptides";
-            this.minAdditionalPeptidesColumn.Name = "minAdditionalPeptidesColumn";
-            this.minAdditionalPeptidesColumn.ReadOnly = true;
-            this.minAdditionalPeptidesColumn.Width = 105;
-            // 
-            // minSpectraPerMatchColumn
-            // 
-            this.minSpectraPerMatchColumn.HeaderText = "Min. Spectra Per Match";
-            this.minSpectraPerMatchColumn.Name = "minSpectraPerMatchColumn";
-            this.minSpectraPerMatchColumn.ReadOnly = true;
-            // 
-            // minSpectraPerPeptideColumn
-            // 
-            this.minSpectraPerPeptideColumn.HeaderText = "Min. Spectra Per Peptide";
-            this.minSpectraPerPeptideColumn.Name = "minSpectraPerPeptideColumn";
-            this.minSpectraPerPeptideColumn.ReadOnly = true;
-            // 
-            // maxProteinGroupsColumn
-            // 
-            this.maxProteinGroupsColumn.HeaderText = "Max. Protein Groups Per Peptide";
-            this.maxProteinGroupsColumn.Name = "maxProteinGroupsColumn";
-            this.maxProteinGroupsColumn.ReadOnly = true;
-            this.maxProteinGroupsColumn.Width = 135;
-            // 
-            // clustersColumn
-            // 
-            this.clustersColumn.HeaderText = "Clusters";
-            this.clustersColumn.Name = "clustersColumn";
-            this.clustersColumn.ReadOnly = true;
-            this.clustersColumn.Width = 80;
-            // 
-            // proteinGroupsColumn
-            // 
-            this.proteinGroupsColumn.HeaderText = "Protein Groups";
-            this.proteinGroupsColumn.Name = "proteinGroupsColumn";
-            this.proteinGroupsColumn.ReadOnly = true;
-            this.proteinGroupsColumn.Width = 105;
-            // 
-            // proteinsColumn
-            // 
-            this.proteinsColumn.HeaderText = "Proteins";
-            this.proteinsColumn.Name = "proteinsColumn";
-            this.proteinsColumn.ReadOnly = true;
-            this.proteinsColumn.Width = 80;
-            // 
-            // distinctPeptidesColumn
-            // 
-            this.distinctPeptidesColumn.HeaderText = "Distinct Peptides";
-            this.distinctPeptidesColumn.Name = "distinctPeptidesColumn";
-            this.distinctPeptidesColumn.ReadOnly = true;
-            this.distinctPeptidesColumn.Width = 80;
-            // 
-            // distinctMatchesColumn
-            // 
-            this.distinctMatchesColumn.HeaderText = "Distinct Matches";
-            this.distinctMatchesColumn.Name = "distinctMatchesColumn";
-            this.distinctMatchesColumn.ReadOnly = true;
-            this.distinctMatchesColumn.Width = 80;
-            // 
-            // filteredSpectraColumn
-            // 
-            this.filteredSpectraColumn.HeaderText = "Filtered Spectra";
-            this.filteredSpectraColumn.Name = "filteredSpectraColumn";
-            this.filteredSpectraColumn.ReadOnly = true;
-            this.filteredSpectraColumn.Width = 80;
-            // 
-            // proteinFdrColumn
-            // 
-            this.proteinFdrColumn.HeaderText = "Protein FDR";
-            this.proteinFdrColumn.Name = "proteinFdrColumn";
-            this.proteinFdrColumn.ReadOnly = true;
-            // 
-            // peptideFdrColumn
-            // 
-            this.peptideFdrColumn.HeaderText = "Peptide FDR";
-            this.peptideFdrColumn.Name = "peptideFdrColumn";
-            this.peptideFdrColumn.ReadOnly = true;
-            this.peptideFdrColumn.Visible = false;
-            // 
-            // spectrumFdrColumn
-            // 
-            this.spectrumFdrColumn.HeaderText = "Spectrum FDR";
-            this.spectrumFdrColumn.Name = "spectrumFdrColumn";
-            this.spectrumFdrColumn.ReadOnly = true;
-            this.spectrumFdrColumn.Visible = false;
             // 
             // exportMenu
             // 
@@ -337,6 +226,133 @@ namespace IDPicker.Forms
             this.displayOptionsButton.Text = "Display Options";
             this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
             // 
+            // idColumn
+            // 
+            this.idColumn.HeaderText = "Id";
+            this.idColumn.Name = "idColumn";
+            this.idColumn.ReadOnly = true;
+            this.idColumn.Visible = false;
+            // 
+            // maxQValueColumn
+            // 
+            this.maxQValueColumn.HeaderText = "Max. Q Value";
+            this.maxQValueColumn.Name = "maxQValueColumn";
+            this.maxQValueColumn.ReadOnly = true;
+            // 
+            // minPeptidesColumn
+            // 
+            this.minPeptidesColumn.HeaderText = "Min. Peptides Per Protein/Gene";
+            this.minPeptidesColumn.Name = "minPeptidesColumn";
+            this.minPeptidesColumn.ReadOnly = true;
+            this.minPeptidesColumn.Width = 95;
+            // 
+            // minSpectraColumn
+            // 
+            this.minSpectraColumn.HeaderText = "Min. Spectra Per Protein/Gene";
+            this.minSpectraColumn.Name = "minSpectraColumn";
+            this.minSpectraColumn.ReadOnly = true;
+            this.minSpectraColumn.Width = 95;
+            // 
+            // minAdditionalPeptidesColumn
+            // 
+            this.minAdditionalPeptidesColumn.HeaderText = "Min. Additional Peptides";
+            this.minAdditionalPeptidesColumn.Name = "minAdditionalPeptidesColumn";
+            this.minAdditionalPeptidesColumn.ReadOnly = true;
+            this.minAdditionalPeptidesColumn.Width = 105;
+            // 
+            // geneLevelFilteringColumn
+            // 
+            this.geneLevelFilteringColumn.HeaderText = "Filtering by Gene";
+            this.geneLevelFilteringColumn.Name = "geneLevelFilteringColumn";
+            this.geneLevelFilteringColumn.ReadOnly = true;
+            // 
+            // distinctMatchFormatColumn
+            // 
+            this.distinctMatchFormatColumn.HeaderText = "Distinct Match Format";
+            this.distinctMatchFormatColumn.Name = "distinctMatchFormatColumn";
+            this.distinctMatchFormatColumn.ReadOnly = true;
+            // 
+            // minSpectraPerMatchColumn
+            // 
+            this.minSpectraPerMatchColumn.HeaderText = "Min. Spectra Per Match";
+            this.minSpectraPerMatchColumn.Name = "minSpectraPerMatchColumn";
+            this.minSpectraPerMatchColumn.ReadOnly = true;
+            // 
+            // minSpectraPerPeptideColumn
+            // 
+            this.minSpectraPerPeptideColumn.HeaderText = "Min. Spectra Per Peptide";
+            this.minSpectraPerPeptideColumn.Name = "minSpectraPerPeptideColumn";
+            this.minSpectraPerPeptideColumn.ReadOnly = true;
+            // 
+            // maxProteinGroupsColumn
+            // 
+            this.maxProteinGroupsColumn.HeaderText = "Max. Protein Groups Per Peptide";
+            this.maxProteinGroupsColumn.Name = "maxProteinGroupsColumn";
+            this.maxProteinGroupsColumn.ReadOnly = true;
+            this.maxProteinGroupsColumn.Width = 135;
+            // 
+            // clustersColumn
+            // 
+            this.clustersColumn.HeaderText = "Clusters";
+            this.clustersColumn.Name = "clustersColumn";
+            this.clustersColumn.ReadOnly = true;
+            this.clustersColumn.Width = 80;
+            // 
+            // proteinGroupsColumn
+            // 
+            this.proteinGroupsColumn.HeaderText = "Protein Groups";
+            this.proteinGroupsColumn.Name = "proteinGroupsColumn";
+            this.proteinGroupsColumn.ReadOnly = true;
+            this.proteinGroupsColumn.Width = 105;
+            // 
+            // proteinsColumn
+            // 
+            this.proteinsColumn.HeaderText = "Proteins";
+            this.proteinsColumn.Name = "proteinsColumn";
+            this.proteinsColumn.ReadOnly = true;
+            this.proteinsColumn.Width = 80;
+            // 
+            // distinctPeptidesColumn
+            // 
+            this.distinctPeptidesColumn.HeaderText = "Distinct Peptides";
+            this.distinctPeptidesColumn.Name = "distinctPeptidesColumn";
+            this.distinctPeptidesColumn.ReadOnly = true;
+            this.distinctPeptidesColumn.Width = 80;
+            // 
+            // distinctMatchesColumn
+            // 
+            this.distinctMatchesColumn.HeaderText = "Distinct Matches";
+            this.distinctMatchesColumn.Name = "distinctMatchesColumn";
+            this.distinctMatchesColumn.ReadOnly = true;
+            this.distinctMatchesColumn.Width = 80;
+            // 
+            // filteredSpectraColumn
+            // 
+            this.filteredSpectraColumn.HeaderText = "Filtered Spectra";
+            this.filteredSpectraColumn.Name = "filteredSpectraColumn";
+            this.filteredSpectraColumn.ReadOnly = true;
+            this.filteredSpectraColumn.Width = 80;
+            // 
+            // proteinFdrColumn
+            // 
+            this.proteinFdrColumn.HeaderText = "Protein FDR";
+            this.proteinFdrColumn.Name = "proteinFdrColumn";
+            this.proteinFdrColumn.ReadOnly = true;
+            // 
+            // peptideFdrColumn
+            // 
+            this.peptideFdrColumn.HeaderText = "Peptide FDR";
+            this.peptideFdrColumn.Name = "peptideFdrColumn";
+            this.peptideFdrColumn.ReadOnly = true;
+            this.peptideFdrColumn.Visible = false;
+            // 
+            // spectrumFdrColumn
+            // 
+            this.spectrumFdrColumn.HeaderText = "Spectrum FDR";
+            this.spectrumFdrColumn.Name = "spectrumFdrColumn";
+            this.spectrumFdrColumn.ReadOnly = true;
+            this.spectrumFdrColumn.Visible = false;
+            // 
             // FilterHistoryForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -369,11 +385,14 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem showInExcelSelectToolStripMenuItem;
         protected System.Windows.Forms.ToolStrip toolStrip;
         protected System.Windows.Forms.ToolStripButton exportButton;
+        protected System.Windows.Forms.ToolStripButton displayOptionsButton;
         private System.Windows.Forms.DataGridViewTextBoxColumn idColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn maxQValueColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn minPeptidesPerProteinColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraPerProteinColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn minPeptidesColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn minAdditionalPeptidesColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn geneLevelFilteringColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchFormatColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraPerMatchColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn minSpectraPerPeptideColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn maxProteinGroupsColumn;
@@ -386,6 +405,5 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn proteinFdrColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn peptideFdrColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn spectrumFdrColumn;
-        protected System.Windows.Forms.ToolStripButton displayOptionsButton;
     }
 }

@@ -131,7 +131,9 @@
     <Compile Include="DataModel.cs" />
     <Compile Include="DistinctMatch.cs" />
     <Compile Include="Exporter.cs" />
-    <Compile Include="Merger.cs" />
+    <Compile Include="Merger.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryReader.cs" />
     <Compile Include="SessionFactoryFactory.cs" />

@@ -107,7 +107,7 @@
     </Reference>
     <Reference Include="InteropQonverter, Version=3.0.511.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\$(Platform)\release\InteropQonverter.dll</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="MathNet.Numerics, Version=2011.4.17.0, Culture=neutral, PublicKeyToken=cd8b63ad3d691a37, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -135,7 +135,7 @@
     </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\$(Platform)\release\pwiz_bindings_cli.dll</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>

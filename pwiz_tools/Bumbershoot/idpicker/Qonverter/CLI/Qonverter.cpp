@@ -36,7 +36,7 @@ using namespace System::Runtime::InteropServices;
 typedef NativeIDPicker::Qonverter NativeQonverter;
 
 
-struct ProgressMonitorForwarder : public NativeQonverter::ProgressMonitor
+struct ProgressMonitorForwarder : public pwiz::util::IterationListener
 {
     typedef void (__stdcall *QonversionProgressCallback)(int, int, const char*, bool&);
     QonversionProgressCallback managedFunctionPtr;
@@ -45,14 +45,16 @@ struct ProgressMonitorForwarder : public NativeQonverter::ProgressMonitor
         : managedFunctionPtr(static_cast<QonversionProgressCallback>(managedFunctionPtr))
     {}
 
-    virtual void operator() (UpdateMessage& updateMessage) const
+    virtual Status update(const UpdateMessage& updateMessage)
     {
         if (managedFunctionPtr != NULL)
         {
-            managedFunctionPtr(updateMessage.qonvertedAnalyses,
-                               updateMessage.totalAnalyses,
+            bool cancel = false;
+            managedFunctionPtr(updateMessage.iterationIndex,
+                               updateMessage.iterationCount,
                                updateMessage.message.c_str(),
-                               updateMessage.cancel);
+                               cancel);
+            return cancel ? Status_Cancel : Status_Ok;
         }
     }
 };
@@ -117,8 +119,9 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
         ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
             Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
 
-        try {qonverter.qonvert(ToStdString(idpDbFilepath), *progressMonitor);} CATCH_AND_FORWARD
-        delete progressMonitor;
+        IterationListenerRegistry ilr;
+        ilr.addListener(IterationListenerPtr(progressMonitor), 1);
+        try {qonverter.qonvert(ToStdString(idpDbFilepath), &ilr);} CATCH_AND_FORWARD
 
         GC::KeepAlive(handler);
     }
@@ -159,10 +162,12 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
         ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
             Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
 
+        IterationListenerRegistry ilr;
+        ilr.addListener(IterationListenerPtr(progressMonitor), 1);
+
         sqlite3* foo = (sqlite3*) idpDb.ToPointer();
         pin_ptr<sqlite3> idpDbPtr = foo;
-        try {qonverter.qonvert(idpDbPtr, *progressMonitor);} CATCH_AND_FORWARD
-        delete progressMonitor;
+        try {qonverter.qonvert(idpDbPtr, &ilr);} CATCH_AND_FORWARD
 
         GC::KeepAlive(handler);
     }
@@ -173,17 +178,29 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
 void Qonverter::Reset(String^ idpDbFilepath)
 {
     NativeQonverter qonverter;
+    QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
+    ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
+        Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
 
-    try {qonverter.reset(ToStdString(idpDbFilepath));} CATCH_AND_FORWARD
+    IterationListenerRegistry ilr;
+    ilr.addListener(IterationListenerPtr(progressMonitor), 1);
+
+    try {qonverter.reset(ToStdString(idpDbFilepath), &ilr);} CATCH_AND_FORWARD
 }
 
 void Qonverter::Reset(System::IntPtr idpDb)
 {
     NativeQonverter qonverter;
+    QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
+    ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
+        Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+
+    IterationListenerRegistry ilr;
+    ilr.addListener(IterationListenerPtr(progressMonitor), 1);
 
     sqlite3* foo = (sqlite3*) idpDb.ToPointer();
     pin_ptr<sqlite3> idpDbPtr = foo;
-    try {qonverter.reset(idpDbPtr);} CATCH_AND_FORWARD
+    try {qonverter.reset(idpDbPtr, &ilr);} CATCH_AND_FORWARD
 }
 
 

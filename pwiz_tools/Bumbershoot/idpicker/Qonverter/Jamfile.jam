@@ -83,11 +83,32 @@ lib Merger
         <library>Qonverter
     ;
 
-exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
-exe idpAssemble : idpAssemble.cpp Merger ;
-exe idpQuery : idpQuery.cpp SchemaUpdater /ext/boost//regex ;
+lib Filter
+    : # sources
+        Filter.cpp TotalCounts.cpp SchemaUpdater
+    : # requirements
+        <library>Parser
+    : # default-build
+    : # usage-requirements
+        <library>Parser
+    ;
+
+
+import path ;
+import generate-version ;
+
+generate-version.cpp $(ROOT_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : [ path.glob $(ROOT_PATH)/Qonverter : *.?pp *.h : idp*.cpp Version.cpp ] ;
+generate-version.cpp $(ROOT_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(ROOT_PATH)/Qonverter/idpQonvert.cpp ;
+generate-version.cpp $(ROOT_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(ROOT_PATH)/Qonverter/idpAssemble.cpp ;
+generate-version.cpp $(ROOT_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(ROOT_PATH)/Qonverter/idpQuery.cpp ;
+
+obj CoreVersion : CoreVersion.cpp ;
+
+exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Parser ../freicore ;
+exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Merger Filter ;
+exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp SchemaUpdater /ext/boost//regex ;
 
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test EmbedderTest : EmbedderTest.cpp Parser $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
-
+unit-test FilterTest : FilterTest.cpp Filter : $(TEAMCITY_TEST_DECORATION) ;

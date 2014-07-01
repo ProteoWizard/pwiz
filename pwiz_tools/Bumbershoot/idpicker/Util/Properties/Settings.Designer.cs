@@ -257,24 +257,24 @@ namespace IDPicker.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public int DefaultMinDistinctPeptidesPerProtein {
+        public int DefaultMinDistinctPeptides {
             get {
-                return ((int)(this["DefaultMinDistinctPeptidesPerProtein"]));
+                return ((int)(this["DefaultMinDistinctPeptides"]));
             }
             set {
-                this["DefaultMinDistinctPeptidesPerProtein"] = value;
+                this["DefaultMinDistinctPeptides"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2")]
-        public int DefaultMinSpectraPerProtein {
+        public int DefaultMinSpectra {
             get {
-                return ((int)(this["DefaultMinSpectraPerProtein"]));
+                return ((int)(this["DefaultMinSpectra"]));
             }
             set {
-                this["DefaultMinSpectraPerProtein"] = value;
+                this["DefaultMinSpectra"] = value;
             }
         }
         

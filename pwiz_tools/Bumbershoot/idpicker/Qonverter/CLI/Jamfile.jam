@@ -30,8 +30,8 @@ if [ modules.peek : NT ]
 path-constant THIS_PATH : . ;
 
 generate-AssemblyInfo.cpp $(THIS_PATH)\\AssemblyInfo.cpp :
-    [ path.glob $(THIS_PATH) : Qonverter.?pp Parser.?pp Jamfile.jam ]
-    [ path.glob $(THIS_PATH)/.. : Qonverter.?pp Parser.?pp Jamfile.jam ]
+    [ path.glob $(THIS_PATH) : Qonverter.?pp Parser.?pp Merger.cpp Filter.cpp SchemaUpdater.cpp TotalCounts.cpp Embedder.cpp Jamfile.jam ]
+    [ path.glob $(THIS_PATH)/.. : Qonverter.?pp Parser.?pp Merger.cpp Filter.cpp SchemaUpdater.cpp TotalCounts.cpp Embedder.cpp Jamfile.jam ]
     : : : "IDPicker" "Calculates Q values for peptide identifications in target-decoy database searches." $(COMPANY_AND_PRODUCT) ;
 RESCAN ;
 
@@ -54,8 +54,8 @@ lib NativeQonverter
    <library>../waffles//waffles
  ;
  
-lib NativeParser
- : ../Parser.cpp ../Embedder.cpp
+lib NativeParserEmbedderMergerFilter
+ : ../Parser.cpp ../Embedder.cpp ../Merger.cpp ../Filter.cpp ../TotalCounts.cpp
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <link>static
    <library>NativeQonverter
@@ -74,9 +74,8 @@ lib NativeParser
    <conditional>@pwiz-bindings-dependency
  ;
 
-
 lib InteropQonverter
- : Qonverter.cpp Parser.cpp Embedder.cpp SchemaUpdater.cpp NativeParser
+ : Qonverter.cpp Parser.cpp Embedder.cpp SchemaUpdater.cpp Filter.cpp Merger.cpp NativeParserEmbedderMergerFilter
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <toolset>msvc:<using-clr>true
    <toolset>msvc:<link>shared

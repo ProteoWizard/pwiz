@@ -36,7 +36,9 @@
 #include "idpQonvert.hpp"
 #include "sqlite3pp.h"
 #include <iomanip>
-//#include "svnrev.hpp"
+#include "CoreVersion.hpp"
+#include "idpQonvertVersion.hpp"
+
 
 using namespace freicore;
 using namespace IDPicker;
@@ -48,24 +50,13 @@ using boost::format;
 
 BEGIN_IDPICKER_NAMESPACE
 
-int Version::Major()                {return 3;}
-int Version::Minor()                {return 0;}
-int Version::Revision()             {return 0;}//SVN_REV;}
-string Version::LastModified()      {return "";}//SVN_REVDATE;}
-string Version::str()
-{
-    std::ostringstream v;
-    v << Major() << "." << Minor() << "." << Revision();
-    return v.str();
-}
-
 RunTimeConfig* g_rtConfig;
 
 int InitProcess( argList_t& args )
 {
-    cout << "IDPickerQonvert " << Version::str() << " (" << Version::LastModified() << ")\n" <<
-            "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
-            "" << endl;
+    cout << "IDPickerQonvert " << idpQonvert::Version::str() << " (" << idpQonvert::Version::LastModified() << ")\n" <<
+            "IDPickerCore " << IDPicker::Version::str() << " (" << IDPicker::Version::LastModified() << ")\n" <<
+            "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" << endl;
 
     string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <analyzed data filemask> [<another filemask> ...]\n"
                     "Optional arguments:\n"
@@ -379,18 +370,25 @@ struct UserFeedbackIterationListener : public IterationListener
     }
 };
 
-struct UserFeedbackProgressMonitor : public Qonverter::ProgressMonitor
+struct UserFeedbackProgressMonitor : public IterationListener
 {
     UserFeedbackProgressMonitor(const string& idpDbFilepath) : source(Parser::sourceNameFromFilename(bfs::path(idpDbFilepath).filename().string()))
     {
     }
 
-    virtual void operator() (UpdateMessage& updateMessage) const
+    virtual Status update(const UpdateMessage& updateMessage)
     {
         // create a message for each file like "source (message: index/count)"
-        int index = updateMessage.qonvertedAnalyses;
-        int count = updateMessage.totalAnalyses;
-        const string& message = updateMessage.message;
+        int index = updateMessage.iterationIndex;
+        int count = updateMessage.iterationCount;
+        string message = updateMessage.message;
+        bool isError = bal::contains(message, "error:");
+
+        if (isError)
+        {
+            bal::replace_all(message, "error: ", "");
+            cout << endl;
+        }
 
         if (index == 0 && count == 0)
             cout << (boost::format("%1% (%2%)%|80t|")
@@ -402,7 +400,12 @@ struct UserFeedbackProgressMonitor : public Qonverter::ProgressMonitor
             cout << (boost::format("%1% (%3%: %2%)%|80t|")
                      % source % message % (index+1)).str();
 
-        cout << "\r" << flush;
+        if (isError)
+            cout << endl;
+        else
+            cout << "\r" << flush;
+
+        return Status_Ok;
     }
 
     private:
@@ -459,9 +462,6 @@ int main( int argc, char* argv[] )
     try
     {
 	    argList_t args( argv, argv+argc );
-
-        bfs::path exePath(args[0]);
-        chdir(exePath.parent_path().string().c_str());
 
 	    int rv;
         if( ( rv = InitProcess(args) ) > 0 )
@@ -528,10 +528,13 @@ int main( int argc, char* argv[] )
                 Qonverter qonverter;
                 qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails; 
                 qonverter.settingsByAnalysis[0] = g_rtConfig->getQonverterSettings();
+                qonverter.skipSourceOnError = g_rtConfig->SkipSourceOnError;
 
-                UserFeedbackProgressMonitor progressMonitor(filepath);
-                qonverter.reset(filepath);
-                qonverter.qonvert(filepath, progressMonitor);
+                IterationListenerRegistry ilr;
+                ilr.addListener(IterationListenerPtr(new UserFeedbackProgressMonitor(filepath)), 1);
+
+                qonverter.reset(filepath, &ilr);
+                qonverter.qonvert(filepath, &ilr);
 
                 pair<int, int> spectraPeptidesPair = summarizeQonversion(filepath);
 
@@ -568,11 +571,17 @@ int main( int argc, char* argv[] )
             }
         }
 
+        bfs::path currentPath = bfs::current_path();
+
+        // switch to exe directory to allow embedGeneMetadata to find the gene mappings
+        bfs::path exePath(args[0]);
+        chdir(exePath.parent_path().string().c_str());
+
         if (g_rtConfig->EmbedGeneMetadata)
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
             {
                 cout << "\rEmbedding gene metadata: " << (i+1) << "/" << idpDbFilepaths.size() << flush;
-                Embedder::embedGeneMetadata(idpDbFilepaths[i]);
+                Embedder::embedGeneMetadata(bfs::absolute(idpDbFilepaths[i], currentPath).string());
             }
 
     }

@@ -818,9 +818,9 @@ namespace IDPicker
                            "             [more import filemasks] ...\r\n" +
                            "             --headless (quits after merging/filtering)\r\n" +
                            "             -MaxQValue <real>\r\n" +
-                           "             -MinDistinctPeptidesPerProtein <integer>\r\n" +
-                           "             -MinSpectraPerProtein <integer>\r\n" +
-                           "             -MinAdditionalPeptidesPerProtein <integer>\r\n" +
+                           "             -MinDistinctPeptides <integer>\r\n" +
+                           "             -MinSpectra <integer>\r\n" +
+                           "             -MinAdditionalPeptides <integer>\r\n" +
                            "             -MinSpectraPerDistinctMatch <integer>\r\n" +
                            "             -MinSpectraPerDistinctPeptide <integer>\r\n" +
                            "             -MaxProteinGroupsPerPeptide <integer>\r\n" +
@@ -864,12 +864,12 @@ namespace IDPicker
                 {
                     if (arg == "-MaxQValue")
                         defaultDataFilter.MaximumQValue = Convert.ToDouble(args[i + 1]);
-                    else if (arg == "-MinDistinctPeptidesPerProtein")
-                        defaultDataFilter.MinimumDistinctPeptidesPerProtein = Convert.ToInt32(args[i + 1]);
-                    else if (arg == "-MinSpectraPerProtein")
-                        defaultDataFilter.MinimumSpectraPerProtein = Convert.ToInt32(args[i + 1]);
-                    else if (arg == "-MinAdditionalPeptidesPerProtein")
-                        defaultDataFilter.MinimumAdditionalPeptidesPerProtein = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinDistinctPeptides")
+                        defaultDataFilter.MinimumDistinctPeptides = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinSpectra")
+                        defaultDataFilter.MinimumSpectra = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinAdditionalPeptides")
+                        defaultDataFilter.MinimumAdditionalPeptides = Convert.ToInt32(args[i + 1]);
                     else if (arg == "-MinSpectraPerDistinctMatch")
                         defaultDataFilter.MinimumSpectraPerDistinctMatch = Convert.ToInt32(args[i + 1]);
                     else if (arg == "-MinSpectraPerDistinctPeptide")
@@ -1151,7 +1151,7 @@ namespace IDPicker
 
                 if (idpDB_filepaths.Count() > 1)
                 {
-                    var merger = new Merger(mergeTargetFilepath, idpDB_filepaths);
+                    var merger = new MergerWrapper(mergeTargetFilepath, idpDB_filepaths);
                     toolStripStatusLabel.Text = "Merging results...";
                     merger.MergingProgress += progressMonitor.UpdateProgress;
                     merger.Start();
@@ -1622,9 +1622,17 @@ namespace IDPicker
                         basicFilter = new DataFilter()
                         {
                             MaximumQValue = 0.02,
-                            MinimumDistinctPeptidesPerProtein = 2,
-                            MinimumSpectraPerProtein = 2,
-                            MinimumAdditionalPeptidesPerProtein = 1
+                            MinimumDistinctPeptides = 2,
+                            MinimumSpectra = 2,
+                            MinimumAdditionalPeptides = 1,
+                            GeneLevelFiltering = false,
+                            DistinctMatchFormat = new DistinctMatchFormat
+                            {
+                                IsChargeDistinct = true,
+                                IsAnalysisDistinct = false,
+                                AreModificationsDistinct = true,
+                                ModificationMassRoundToNearest = 1.0m
+                            }
                         };
 
                     basicFilterControl.DataFilter = basicFilter;

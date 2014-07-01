@@ -36,6 +36,7 @@
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include "sqlite3.h"
+#include "pwiz/utility/misc/IterationListener.hpp"
 
 
 #ifndef IDPICKER_NAMESPACE
@@ -227,29 +228,19 @@ struct Qonverter
     /// if true, the qonvert method will create a QonversionDetails table
     bool logQonversionDetails;
 
+    /// skip and warn when qonverting an analysis/source pair results in an error
+    bool skipSourceOnError;
+
     Qonverter();
 
-    struct ProgressMonitor
-    {
-        struct UpdateMessage
-        {
-            int qonvertedAnalyses;
-            int totalAnalyses;
-            string message;
-            bool cancel;
-        };
+    void qonvert(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
+    void qonvert(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr = 0);
 
-        virtual void operator() (UpdateMessage& updateMessage) const {};
-    };
+    static void reset(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
+    static void reset(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr = 0);
 
-    void qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor = ProgressMonitor());
-    void qonvert(sqlite3* idpDb, const ProgressMonitor& progressMonitor = ProgressMonitor());
-
-    static void reset(const string& idpDbFilepath);
-    static void reset(sqlite3* idpDb);
-
-    static void dropFilters(const string& idpFilepath);
-    static void dropFilters(sqlite3* idpDb);
+    static void dropFilters(const string& idpFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
+    static void dropFilters(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr = 0);
 };
 
 

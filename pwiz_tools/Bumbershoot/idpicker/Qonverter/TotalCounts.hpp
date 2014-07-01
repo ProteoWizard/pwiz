@@ -20,20 +20,14 @@
 // Copyright 2014 Vanderbilt University
 //
 // Contributor(s):
-//
 
 
-#ifndef _MERGER_HPP_
-#define _MERGER_HPP_
+#ifndef _TOTALCOUNTS_HPP_
+#define _TOTALCOUNTS_HPP_
 
-#include <vector>
-#include <map>
-#include <utility>
-#include <string>
-#include <pwiz/utility/misc/IterationListener.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/exception_ptr.hpp>
+
 #include "sqlite3.h"
+#include <boost/scoped_ptr.hpp>
 
 
 #ifndef IDPICKER_NAMESPACE
@@ -48,29 +42,29 @@
 
 BEGIN_IDPICKER_NAMESPACE
 
-
-using std::vector;
-using std::map;
-using std::pair;
-using std::string;
-
-
-/// an object responsible for merging two or more idpDBs into a single output idpDB
-struct Merger
+class TotalCounts
 {
-    Merger();
-    ~Merger();
+    public:
 
-    void merge(const string& mergeTargetFilepath, const std::vector<string>& mergeSourceFilepaths, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0);
-    void merge(const string& mergeTargetFilepath, sqlite3* mergeSourceConnection, pwiz::util::IterationListenerRegistry* ilr = 0);
+    TotalCounts(sqlite3* idpDbConnection);
+    ~TotalCounts();
 
-    struct Impl;
+    int clusters() const;
+    int proteinGroups() const;
+    int proteins() const;
+    int distinctPeptides() const;
+    int distinctMatches() const;
+    sqlite3_int64 filteredSpectra() const;
+    double proteinFDR() const;
+    double peptideFDR() const;
+    double spectrumFDR() const;
 
     private:
+    class Impl;
     boost::scoped_ptr<Impl> _impl;
 };
 
 END_IDPICKER_NAMESPACE
 
 
-#endif // _MERGER_HPP_
+#endif // _TOTALCOUNTS_HPP_

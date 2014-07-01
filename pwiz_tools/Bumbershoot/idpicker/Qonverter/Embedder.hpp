@@ -121,6 +121,9 @@ void embedScanTime(const string& idpDbFilepath,
 /// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
 bool hasGeneMetadata(const string& idpDbFilepath);
 
+/// checks whether the given idpDB connection has embedded gene metadata (although it may not necessarily be the most up-to-date)
+bool hasGeneMetadata(sqlite3* idpDbConnection);
+
 /// embed gene metadata in the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
 void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
 

@@ -228,7 +228,7 @@ Qonverter::Qonverter()
     logQonversionDetails = false;
 }
 
-void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor)
+void Qonverter::qonvert(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
@@ -237,10 +237,10 @@ void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& prog
                "PRAGMA cache_size=50000;"
                IDPICKER_SQLITE_PRAGMA_MMAP);
 
-    qonvert(db.connected(), progressMonitor);
+    qonvert(db.connected(), ilr);
 }
 
-void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
+void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* ilr)
 {
     // do not disconnect on close
     sqlite::database db(dbPtr, false);
@@ -254,26 +254,13 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
           "WHERE psm.QValue > 1 AND Rank = 1 "
           "GROUP BY psm.Analysis, s.Source";
     
-    ProgressMonitor::UpdateMessage updateMessage;
-    updateMessage.qonvertedAnalyses = 0;
-    updateMessage.totalAnalyses = 0;
-    updateMessage.cancel = false;
-    updateMessage.message = "counting analysis/source pairs";
-    progressMonitor(updateMessage);
-    if (updateMessage.cancel)
-        return;
+    ITERATION_UPDATE(ilr, 0, 0, "counting analysis/source pairs")
 
     vector<AnalysisSourcePair> analysisSourcePairs;
     CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), getAnalysisSourcePairs, &analysisSourcePairs, &errorBuf));
 
     // send initial progress update to indicate how many qonversion steps there are
-    updateMessage.qonvertedAnalyses = 0;
-    updateMessage.totalAnalyses = analysisSourcePairs.size();
-    updateMessage.message = "validating qonversion settings";
-    updateMessage.cancel = false;
-    progressMonitor(updateMessage);
-    if (updateMessage.cancel)
-        return;
+    ITERATION_UPDATE(ilr, 0, analysisSourcePairs.size(), "validating qonversion settings")
 
     // validate global settings
     if (settingsByAnalysis.count(0) > 0)
@@ -297,12 +284,10 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
             validateSettings(settingsByAnalysis[analysis]);
     }
 
-    updateMessage.message = "qonverting";
-    progressMonitor(updateMessage);
-    if (updateMessage.cancel)
-        return;
+    ITERATION_UPDATE(ilr, 0, analysisSourcePairs.size(), "qonverting")
 
     set<string> handledAnalyses;
+    int finishedAnalyses = 0;
 
     // qonvert each analysis/source pair independently
     BOOST_FOREACH(const AnalysisSourcePair& analysisSourcePair, analysisSourcePairs)
@@ -335,26 +320,30 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
               (rerankMatches ? " " : " AND Rank = 1 ") +
               "GROUP BY psm.Id;"
               "CREATE INDEX PsmPeptideInfo_Id ON PsmPeptideInfo (Id);";
-        
-        updateMessage.message = "collecting PSM protein info";
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "collecting PSM protein info")
 
         CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), NULL, NULL, &errorBuf));
 
         // verify that the decoyPrefix occurs in the PSM subset
         sql = "SELECT COUNT(*) FROM PsmPeptideInfo WHERE DecoyState > 0 ";
 
-        updateMessage.message = "checking for decoy prefix";
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "checking for decoy prefix")
 
         bool decoyPrefixOccurs = true;
         CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), verifyDecoyPrefixOccurs, &decoyPrefixOccurs, &errorBuf));
         if (!decoyPrefixOccurs)
-            throw runtime_error("[Qonverter::Qonvert] decoy prefix '" + decoyPrefix + "' does not occur in analysis " + analysisId);
+        {
+            string error = "decoy prefix '" + decoyPrefix + "' does not occur in analysis " + analysisId + " of source " + spectrumSourceId + " (" + sourceName + ")";
+            if (skipSourceOnError)
+            {
+                ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "error: " + error)
+                ++finishedAnalyses;
+                continue;
+            }
+            else
+                throw runtime_error(error);
+        }
 
         // get the set of expected score names
         set<string> expectedScoreNames;
@@ -372,6 +361,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
         vector<string> actualScoreNames;
         map<string, string> actualScoreIdByName;
 
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "checking for scores")
         CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), getScoreNames, &actualScoreIdNamePairs, &errorBuf));
 
         BOOST_FOREACH(const string& idName, actualScoreIdNamePairs)
@@ -384,12 +374,15 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
 
         if (actualScoreNames.empty())
         {
-            ++updateMessage.qonvertedAnalyses;
-            progressMonitor(updateMessage);
-            if (updateMessage.cancel)
-                return;
-            
-            throw runtime_error("[Qonverter::Qonvert] no scores in the PSMs of analysis " + analysisId);
+            string error = "no scores in the PSMs of analysis " + analysisId + " of source " + spectrumSourceId + " (" + sourceName + ")";
+            if (skipSourceOnError)
+            {
+                ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "error: " + error)
+                ++finishedAnalyses;
+                continue;
+            }
+            else
+                throw runtime_error(error);
         }
 
         sort(actualScoreNames.begin(), actualScoreNames.end()); // set_intersection input must be sorted
@@ -446,18 +439,12 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
               scoreJoins +
               " GROUP BY psm.Id";
 
-        updateMessage.message = "reading PSMs";
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "reading PSMs")
 
         PsmRowReader psmRowReader(scoreIdSet);
         psmRowReader.read(db, sql.c_str());
 
-        updateMessage.message = "normalizing scores";
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "normalizing scores")
 
         // normalize scores (according to qonverterSettings)
         normalize(qonverterSettings, actualScoreIdByName, psmRowReader.psmRows);
@@ -466,11 +453,8 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
              << qonverterSettings.decoyPrefix << endl;
         BOOST_FOREACH_FIELD((const string& name)(const Qonverter::Settings::ScoreInfo& scoreInfo), qonverterSettings.scoreInfoByName)
             cout << name << " " << scoreInfo.weight << " " << scoreInfo.order << " " << scoreInfo.normalizationMethod << endl;*/
-        
-        updateMessage.message = "calculating Q values";
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "calculating Q values")
 
         switch (qonverterSettings.qonverterMethod.index())
         {
@@ -508,11 +492,8 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
                 cout << " " << psm.scores[j];
             cout << endl;
         }*/
-        
-        updateMessage.message = "updating Q values";
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+
+        ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "updating Q values")
 
         // update the database with the new Q values
         updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
@@ -540,18 +521,14 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
 
         handledAnalyses.insert(analysisId);
 
-        ++updateMessage.qonvertedAnalyses;
-        updateMessage.message.clear();
-        progressMonitor(updateMessage);
-        if (updateMessage.cancel)
-            return;
+        ITERATION_UPDATE(ilr, ++finishedAnalyses, analysisSourcePairs.size(), "")
     }
 }
 
 
-void Qonverter::reset(const string& idpDbFilepath)
+void Qonverter::reset(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
 {
-    SchemaUpdater::update(idpDbFilepath);
+    SchemaUpdater::update(idpDbFilepath, ilr);
 
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
@@ -560,18 +537,18 @@ void Qonverter::reset(const string& idpDbFilepath)
                "PRAGMA cache_size=50000;"
                IDPICKER_SQLITE_PRAGMA_MMAP);
 
-    reset(db.connected());
+    reset(db.connected(), ilr);
 }
 
-void Qonverter::reset(sqlite3* idpDb)
+void Qonverter::reset(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr)
 {
-    // drop FilteringCriteria
-    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS FilteringCriteria", NULL, NULL, &errorBuf));
+    // drop FilterHistory
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS FilterHistory", NULL, NULL, &errorBuf));
 
     // drop old QonversionDetails
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS QonversionDetails", NULL, NULL, &errorBuf));
 
-    dropFilters(idpDb);
+    dropFilters(idpDb, ilr);
 
     // reset Q values
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "UPDATE PeptideSpectrumMatch SET QValue = 2", NULL, NULL, &errorBuf));
@@ -581,9 +558,9 @@ void Qonverter::reset(sqlite3* idpDb)
 }
 
 
-void Qonverter::dropFilters(const string& idpDbFilepath)
+void Qonverter::dropFilters(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr)
 {
-    SchemaUpdater::update(idpDbFilepath);
+    SchemaUpdater::update(idpDbFilepath, ilr);
 
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
@@ -592,11 +569,11 @@ void Qonverter::dropFilters(const string& idpDbFilepath)
                "PRAGMA cache_size=50000;"
                IDPICKER_SQLITE_PRAGMA_MMAP);
 
-    dropFilters(db.connected());
+    dropFilters(db.connected(), ilr);
 }
 
 
-void Qonverter::dropFilters(sqlite3* idpDb)
+void Qonverter::dropFilters(sqlite3* idpDb, pwiz::util::IterationListenerRegistry* ilr)
 {
     // drop Filtered* tables
     string dropFilteredTables = "DROP TABLE IF EXISTS FilteredProtein;"

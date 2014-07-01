@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "boost/crc.hpp"
 
 
 using namespace pwiz::util;
@@ -36,15 +37,111 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 8;
+const int CURRENT_SCHEMA_REVISION = 9;
 
 namespace SchemaUpdater {
 
 
 namespace {
 
+struct DistinctDoubleArraySum
+{
+    typedef DistinctDoubleArraySum MyType;
+    set<int> arrayIds;
+    vector<double> result;
+    boost::crc_32_type crc32;
+
+    DistinctDoubleArraySum(int arrayLength) : result((size_t)arrayLength, 0.0) {}
+
+    static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
+    {
+        void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
+        if (aggContext == NULL)
+            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+        MyType** ppThis = static_cast<MyType**>(aggContext);
+        MyType* pThis = *ppThis;
+
+        if (numValues > 1 || values[0] == NULL)
+            return;
+
+        int arrayByteCount = sqlite3_value_bytes(values[0]);
+        int arrayLength = arrayByteCount / 8;
+        const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
+        if (arrayBytes == NULL || arrayByteCount % 8 > 0)
+            throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
+
+        if (pThis == NULL)
+            pThis = new DistinctDoubleArraySum(arrayLength);
+        else
+            pThis->crc32.reset();
+
+        // if the arrayId was already in the set, ignore its values
+        pThis->crc32.process_bytes(arrayBytes, arrayByteCount);
+        int arrayId = pThis->crc32.checksum();
+        if (!pThis->arrayIds.insert(arrayId).second)
+            return;
+
+        const double* arrayValues = reinterpret_cast<const double*>(arrayBytes);
+
+        for (int i = 0; i < arrayLength; ++i)
+            pThis->result[i] += arrayValues[i];
+    }
+
+    static void Final(sqlite3_context* context)
+    {
+        void* aggContext = sqlite3_aggregate_context(context, 0);
+        if (aggContext == NULL)
+            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+        MyType** ppThis = static_cast<MyType**>(aggContext);
+        MyType* pThis = *ppThis;
+
+        if (pThis == NULL)
+            pThis = new DistinctDoubleArraySum(0);
+
+        sqlite3_result_blob(context, &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+
+        delete pThis;
+    }
+};
+
+
+void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    ITERATION_UPDATE(ilr, 8, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    try
+    {
+        // add GeneLevelFiltering and DistinctMatchFormat columns to FilterHistory
+        db.execute("ALTER TABLE FilterHistory ADD COLUMN GeneLevelFiltering INT;"
+                   "UPDATE FilterHistory SET GeneLevelFiltering = 0;");
+        db.execute("ALTER TABLE FilterHistory ADD COLUMN DistinctMatchFormat TEXT;"
+                   "UPDATE FilterHistory SET DistinctMatchFormat = '1 0 1 1.0000000';");
+
+        // rename old columns to remove "PerProtein" name (there is no easy, safe way to do this);
+        // note that the new columns must go at the end in the order they were added
+        db.execute("PRAGMA writable_schema = 1;\n"
+                   "UPDATE SQLITE_MASTER SET SQL = 'CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT,\n"
+                   "                                                                          MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
+                   "                                                                          Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT,\n"
+                   "                                                                          ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC,\n"
+                   "                                                                          GeneLevelFiltering INT, DistinctMatchFormat TEXT)' WHERE NAME = 'FilterHistory';\n"
+                   "PRAGMA writable_schema = 0;");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such") && !bal::contains(e.what(), "duplicate column")) // column or table
+            throw runtime_error(e.what());
+    }
+
+    //update_9_to_10(db, ilr);
+}
+
 void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 7, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     try
     {
         // add gene columns to protein tables
@@ -64,10 +161,14 @@ void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr)
         if (!bal::contains(e.what(), "no such") && !bal::contains(e.what(), "duplicate column")) // column or table
             throw runtime_error(e.what());
     }
+
+    update_8_to_9(db, ilr);
 }
 
 void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 6, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     // refactor FilteringCriteria table as FilterHistory table
     db.execute("CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, "
                                                          "MaximumQValue NUMERIC, "
@@ -199,6 +300,8 @@ void update_6_to_7(sqlite::database& db, IterationListenerRegistry* ilr)
 
 void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 5, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     // force the basic filters to be reapplied
     db.execute("DROP TABLE IF EXISTS FilteringCriteria");
 
@@ -207,6 +310,8 @@ void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
 
 void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 4, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     db.execute("UPDATE SpectrumSource SET QuantitationMethod = IFNULL(QuantitationMethod, 0),"
                "                          TotalSpectraMS1 = IFNULL(TotalSpectraMS1, 0),"
                "                          TotalSpectraMS2 = IFNULL(TotalSpectraMS2, 0),"
@@ -218,6 +323,8 @@ void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
 
 void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 3, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     try
     {
         db.execute("CREATE TABLE SpectrumSourceMetadata (Id INTEGER PRIMARY KEY, MsDataBytes BLOB);"
@@ -240,6 +347,8 @@ void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
 
 void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 2, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     // add empty quantitation tables and quantitative columns to SpectrumSource
     db.execute("CREATE TABLE IF NOT EXISTS SpectrumQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                "CREATE TABLE IF NOT EXISTS DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
@@ -257,6 +366,8 @@ void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
 
 void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 1, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     try
     {
         {
@@ -288,6 +399,8 @@ void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
 
 void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
 {
+    ITERATION_UPDATE(ilr, 0, CURRENT_SCHEMA_REVISION, "updating schema version")
+
     db.execute("CREATE TABLE About (Id INTEGER PRIMARY KEY, SoftwareName TEXT, SoftwareVersion TEXT, StartTime DATETIME, SchemaRevision INT);"
                "INSERT INTO About VALUES (1, 'IDPicker', '3.0', datetime('now'), " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + ");");
 
@@ -363,8 +476,20 @@ void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
 
 bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
 {
-    int schemaRevision;
     sqlite::database db(idpDbFilepath);
+
+    db.execute("PRAGMA journal_mode=OFF;"
+        "PRAGMA synchronous=OFF;"
+        "PRAGMA cache_size=50000;"
+        IDPICKER_SQLITE_PRAGMA_MMAP);
+
+    return update(db.connected());
+}
+
+bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
+{
+    int schemaRevision;
+    sqlite::database db(idpDbConnection, false);
 
     try
     {
@@ -375,6 +500,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
     {
         schemaRevision = 0;
     }
+
+    //sqlite::transaction transaction(db);
 
     if (schemaRevision == 0)
         update_0_to_1(db, ilr);
@@ -392,16 +519,30 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_6_to_7(db, ilr);
     else if (schemaRevision == 7)
         update_7_to_8(db, ilr);
+    else if (schemaRevision == 8)
+        update_8_to_9(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +
                             "; the latest compatible revision is " +
                             lexical_cast<string>(CURRENT_SCHEMA_REVISION));
     else
+    {
+        ITERATION_UPDATE(ilr, CURRENT_SCHEMA_REVISION-1, CURRENT_SCHEMA_REVISION, "schema is current; no update necessary")
         return false; // no update needed
+    }
+
+    //transaction.commit();
 
     // update the schema revision
     db.execute("UPDATE About SET SchemaRevision = " + lexical_cast<string>(CURRENT_SCHEMA_REVISION));
+    
+    // necessary for schema updates that change column names using UPDATE SQLITE_MASTER
+    try
+    {
+        db.execute("VACUUM");
+    }
+    catch (sqlite::database_error&) {}
 
     return true; // an update was done
 }
@@ -431,6 +572,15 @@ bool isValidFile(const string& idpDbFilepath)
 string getSQLiteUncCompatiblePath(const string& path)
 {
     return bal::starts_with(path, "\\\\") ? "\\" + path : path;
+}
+
+
+void createUserSQLiteFunctions(sqlite3* idpDbConnection)
+{
+    int result = sqlite3_create_function(idpDbConnection, "distinct_double_array_sum", -1, SQLITE_ANY,
+                                         0, NULL, &DistinctDoubleArraySum::Step, &DistinctDoubleArraySum::Final);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
 }
 
 

@@ -546,6 +546,8 @@ namespace Test
         [TestInitialize()]
         public void TestInitialize ()
         {
+            Directory.SetCurrentDirectory(TestContext.TestDeploymentDir);
+
             var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB");
             session = sessionFactory.OpenSession();
         }

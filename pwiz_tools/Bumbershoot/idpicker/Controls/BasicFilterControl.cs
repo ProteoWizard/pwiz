@@ -59,10 +59,18 @@ namespace IDPicker.Controls
                 return new DataFilter()
                 {
                     MaximumQValue = maxQValue / 100,
-                    MinimumDistinctPeptidesPerProtein = minDistinctPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minDistinctPeptidesTextBox.Text),
+                    MinimumDistinctPeptides = minDistinctPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minDistinctPeptidesTextBox.Text),
                     //MinDistinctMatchesPerProtein
-                    MinimumAdditionalPeptidesPerProtein = minAdditionalPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minAdditionalPeptidesTextBox.Text),
-                    MinimumSpectraPerProtein = minSpectraPerProteinTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraPerProteinTextBox.Text),
+                    MinimumAdditionalPeptides = minAdditionalPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minAdditionalPeptidesTextBox.Text),
+                    MinimumSpectra = minSpectraTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraTextBox.Text),
+                    GeneLevelFiltering = filterByGeneCheckBox.Checked,
+                    DistinctMatchFormat = new DistinctMatchFormat
+                    {
+                        IsChargeDistinct = chargeIsDistinctCheckBox.Checked,
+                        IsAnalysisDistinct = analysisIsDistinctCheckBox.Checked,
+                        AreModificationsDistinct = modificationsAreDistinctCheckbox.Checked,
+                        ModificationMassRoundToNearest = modificationRoundToMassTextBox.Text.Length == 0 ? 1.0m : Convert.ToDecimal(modificationRoundToMassTextBox.Text)
+                    },
                     MinimumSpectraPerDistinctPeptide = minSpectraPerPeptideTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraPerPeptideTextBox.Text),
                     MinimumSpectraPerDistinctMatch = minSpectraPerMatchTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraPerMatchTextBox.Text),
                     MaximumProteinGroupsPerPeptide = maxProteinGroupsTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(maxProteinGroupsTextBox.Text),
@@ -76,10 +84,15 @@ namespace IDPicker.Controls
                 maxQValueComboBox.SelectedIndex = presetIndex;
                 if (presetIndex == -1)
                     maxQValueComboBox.Text = (value.MaximumQValue * 100).ToString();
-                minDistinctPeptidesTextBox.Text = value.MinimumDistinctPeptidesPerProtein.ToString();
+                minDistinctPeptidesTextBox.Text = value.MinimumDistinctPeptides.ToString();
                 //minDistinctMatches
-                minAdditionalPeptidesTextBox.Text = value.MinimumAdditionalPeptidesPerProtein.ToString();
-                minSpectraPerProteinTextBox.Text = value.MinimumSpectraPerProtein.ToString();
+                minAdditionalPeptidesTextBox.Text = value.MinimumAdditionalPeptides.ToString();
+                filterByGeneCheckBox.Checked = value.GeneLevelFiltering;
+                chargeIsDistinctCheckBox.Checked = value.DistinctMatchFormat.IsChargeDistinct;
+                analysisIsDistinctCheckBox.Checked = value.DistinctMatchFormat.IsAnalysisDistinct;
+                modificationsAreDistinctCheckbox.Checked = value.DistinctMatchFormat.AreModificationsDistinct;
+                modificationRoundToMassTextBox.Text = value.DistinctMatchFormat.ModificationMassRoundToNearest.ToString();
+                minSpectraTextBox.Text = value.MinimumSpectra.ToString();
                 minSpectraPerPeptideTextBox.Text = value.MinimumSpectraPerDistinctPeptide.ToString();
                 minSpectraPerMatchTextBox.Text = value.MinimumSpectraPerDistinctMatch.ToString();
                 maxProteinGroupsTextBox.Text = value.MaximumProteinGroupsPerPeptide.ToString();
@@ -115,6 +128,12 @@ namespace IDPicker.Controls
                 e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
                 e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
                 e.SuppressKeyPress = true;
+        }
+
+        void filterControl_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!settingDataFilter && BasicFilterChanged != null)
+                BasicFilterChanged(this, EventArgs.Empty);
         }
 
         void filterControl_TextChanged (object sender, EventArgs e)

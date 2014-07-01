@@ -173,7 +173,8 @@ String^ Parser::ParseSource(String^ inputFilepath)
 {
     string nativeInputFilepath = ToStdString(inputFilepath);	
 
-    try {return ToSystemString(NativeIDPicker::Parser::parseSource(nativeInputFilepath));} CATCH_AND_FORWARD
+    try {return ToSystemString(NativeIDPicker::Parser::parseSource(nativeInputFilepath));} CATCH_AND_FORWARD;
+    return "";
 }
 
 

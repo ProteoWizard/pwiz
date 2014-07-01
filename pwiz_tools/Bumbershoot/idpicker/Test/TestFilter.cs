@@ -66,8 +66,12 @@ namespace Test
         // public static void MyClassCleanup() { }
         //
         // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
+        [TestInitialize()]
+        public void TestInitialize()
+        {
+            Directory.SetCurrentDirectory(TestContext.TestDeploymentDir);
+        }
+
         //
         // Use TestCleanup to run code after each test has run
         // [TestCleanup()]
@@ -219,9 +223,9 @@ namespace Test
             var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 1,
-                MinimumSpectraPerProtein = 1,
-                MinimumAdditionalPeptidesPerProtein = 0
+                MinimumDistinctPeptides = 1,
+                MinimumSpectra = 1,
+                MinimumAdditionalPeptides = 0
             };
             dataFilter.ApplyBasicFilters(session);
             
@@ -247,8 +251,8 @@ namespace Test
             Assert.AreEqual(9, session.Query<Peptide>().Count());
             Assert.AreEqual(35 * (numSources + numAnalyses), session.Query<PeptideSpectrumMatch>().Count());
 
-            dataFilter.MinimumDistinctPeptidesPerProtein = 3;
-            dataFilter.MinimumSpectraPerProtein = 1;
+            dataFilter.MinimumDistinctPeptides = 3;
+            dataFilter.MinimumSpectra = 1;
             dataFilter.ApplyBasicFilters(session);
             session.Clear();
 
@@ -282,8 +286,8 @@ namespace Test
             // test that protein filters cascade to PSMs 
             Assert.AreEqual(13 * (numSources + numAnalyses), session.Query<PeptideSpectrumMatch>().Count());
 
-            dataFilter.MinimumDistinctPeptidesPerProtein = 1;
-            dataFilter.MinimumSpectraPerProtein = 4 * numSources;
+            dataFilter.MinimumDistinctPeptides = 1;
+            dataFilter.MinimumSpectra = 4 * numSources;
             dataFilter.ApplyBasicFilters(session);
             session.Clear();
 
@@ -295,8 +299,8 @@ namespace Test
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING"));
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
 
-            dataFilter.MinimumDistinctPeptidesPerProtein = 1;
-            dataFilter.MinimumSpectraPerProtein = 1;
+            dataFilter.MinimumDistinctPeptides = 1;
+            dataFilter.MinimumSpectra = 1;
             dataFilter.MinimumSpectraPerDistinctMatch = 2 * numSources;
             dataFilter.ApplyBasicFilters(session);
             session.Clear();
@@ -443,9 +447,9 @@ namespace Test
             var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 2,
-                MinimumSpectraPerProtein = 3 * numSources,
-                MinimumAdditionalPeptidesPerProtein = 0
+                MinimumDistinctPeptides = 2,
+                MinimumSpectra = 3 * numSources,
+                MinimumAdditionalPeptides = 0
             };
             dataFilter.ApplyBasicFilters(session);
 
@@ -513,7 +517,7 @@ namespace Test
                 TestModel.CreateTestData(session, testPsmSummary);
             }
 
-            var dataFilter = new DataFilter() { MinimumAdditionalPeptidesPerProtein = 0 };
+            var dataFilter = new DataFilter() { MinimumAdditionalPeptides = 0 };
             dataFilter.ApplyBasicFilters(session);
 
             // clear session so objects are loaded from database
@@ -873,177 +877,178 @@ namespace Test
             var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 0,
-                MinimumSpectraPerProtein = 0,
-                MinimumAdditionalPeptidesPerProtein = 0
+                MinimumDistinctPeptides = 0,
+                MinimumSpectra = 0,
+                MinimumAdditionalPeptides = 1
             };
             dataFilter.ApplyBasicFilters(session);
 
             // clear session so objects are loaded from database
             session.Clear();
 
-            var dataFilterPrivateType = new PrivateType(typeof(DataFilter));
-            var additionalPeptidesByProteinId = (Map<long, long>) dataFilterPrivateType.InvokeStatic("CalculateAdditionalPeptides", session);
+            var additionalPeptidesByProteinId = new Map<long, int>();
+            foreach (object[] row in session.CreateSQLQuery("SELECT ProteinId, AdditionalMatches FROM AdditionalMatches").List<object[]>())
+                additionalPeptidesByProteinId[Convert.ToInt64(row[0])] = Convert.ToInt32(row[1]);
 
             // 1 protein to 1 peptide to 1 spectrum = 1 additional peptide
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO1").Id.GetValueOrDefault()]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[1]);
 
             // 1 protein to 1 peptide to 2 spectra = 1 additional peptide
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO2").Id.GetValueOrDefault()]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[2]);
 
             // 1 protein to 2 peptides to 1 spectrum (each) = 2 additional peptides
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO3").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[3]);
 
             // 1 protein to 2 peptides to 2 spectra (each) = 2 additional peptides
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO4").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[4]);
 
             // 2 proteins to 1 peptide to 1 spectrum = 1 additional peptide (ambiguous protein group)
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO5").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO6").Id.GetValueOrDefault()]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[5]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[6]);
 
             // 2 proteins to 1 peptide to 2 spectra = 1 additional peptide (ambiguous protein group)
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO7").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO8").Id.GetValueOrDefault()]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[7]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[8]);
 
             // 2 proteins to 2 peptides to 1 spectrum (each) = 2 additional peptides (ambiguous protein group)
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO9").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO10").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[9]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[10]);
 
             // 2 proteins to 2 peptides to 2 spectra (each) = 2 additional peptides (ambiguous protein group)
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO11").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO12").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[11]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[12]);
 
             // 1 protein to 2 peptides to 1 spectrum (each) = 2 additional peptide
             // 1 protein to 1 of the above peptides = 0 additional peptides (subsumed protein)
             // 1 protein to the other above peptide = 0 additional peptides (subsumed protein)
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO13").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO14").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO15").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[13]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[14]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[15]);
 
             // 1 protein to 2 peptides to 1 spectrum (each) = 2 additional peptide
             // 2 proteins to 1 of the above peptides = 0 additional peptides (subsumed ambiguous protein group)
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO16").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO17").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO18").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[16]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[17]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[18]);
 
             // 2 proteins to 2 peptides to 1 spectrum (each) = 2 additional peptide (ambiguous protein group)
             // 1 protein to 1 of the above peptides = 0 additional peptides (subsumed protein)
             // 1 protein to the other above peptide = 0 additional peptides (subsumed protein)
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO19").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO20").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO21").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO22").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[19]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[20]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[21]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[22]);
 
             // 2 proteins to 2 peptides to 1 spectrum (each) = 2 additional peptides (ambiguous protein group)
             // 2 proteins to 1 of the above peptides = 0 additional peptides (subsumed ambiguous protein group)
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO23").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO24").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO25").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO26").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[23]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[24]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[25]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[26]);
 
             // 1 protein to 3 peptides to 1 spectrum (each) = 3 additional peptides
             // 1 protein to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO27").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO28").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[27]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[28]);
 
             // 1 protein to 3 peptides to 1 spectrum (each) = 3 additional peptides
             // 2 proteins to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides (ambiguous protein group)
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO29").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO30").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO31").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[29]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[30]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[31]);
 
             // 2 proteins to 3 peptides to 1 spectrum (each) = 3 additional peptides (ambiguous protein group)
             // 1 protein to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO32").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO33").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO34").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[32]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[33]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[34]);
 
             // 2 proteins to 3 peptides to 1 spectrum (each) = 3 additional peptides (ambiguous protein group)
             // 2 proteins to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides (ambiguous protein group)
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO35").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO36").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO37").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO38").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[35]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[36]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[37]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[38]);
 
             // 1 protein (PRO39) to 5 peptides = 5 additional peptides
             // 1 protein (PRO40) to 4 of the above peptides = 0 additional peptides
             // 1 protein (PRO41) to 3 of the above peptides and 1 extra peptides = 1 additional peptides
             // 1 protein (PRO42) to 2 of the above peptides and 2 extra peptides = 2 additional peptides
             // 1 protein (PRO43) to 1 of the above peptides and 3 extra peptides = 3 additional peptides
-            Assert.AreEqual(5, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO39").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO40").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO41").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO42").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO43").Id.GetValueOrDefault()]);
+            Assert.AreEqual(5, additionalPeptidesByProteinId[39]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[40]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[41]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[42]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[43]);
 
             // 1 protein (PRO44) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
             // 1 protein (PRO45) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO44").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO45").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[44]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[45]);
                     
             // 2 proteins (PRO46,47) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
             // 1 protein (PRO48) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO46").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO47").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO48").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[46]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[47]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[48]);
             
             // 1 protein (PRO49) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
             // 2 proteins (PRO50,51) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO49").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO50").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO51").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[49]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[50]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[51]);
 
             // 1 protein (PRO52) to 3 peptides, 2 of which are evidenced by ambiguous spectra = 3 additional peptides
             // 1 protein (PRO53) to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide = 1 additional peptides
             // 1 protein (PRO54) to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO52").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO53").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO54").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[52]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[53]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[54]);
             
             // PRO55 -> QQQQSSSS, SSSSUUUU = 2 additional peptides
             // PRO56 -> UUUUYYYY, SSSSUUUU = 2 additional peptides
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO55").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO56").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[55]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[56]);
 
             // PRO57 -> RRRRTTTT, WWWWZZZZ, TTTTWWWW = 3 additional peptides
             // PRO58 -> QQQQKKKK, WWWWZZZZ, TTTTWWWW = 3 additional peptides
             // PRO59 -> RRRRTTTT, TTTTZZZZ, TTTTWWWW = 3 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO57").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO58").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO59").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[57]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[58]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[59]);
 
             // PRO60 -> AAAADDDD, DDDDGGGG, GGGGKKKK = 3 additional peptides
             // PRO61 -> DDDDGGGG, GGGGKKKK, KKKKNNNN = 3 additional peptides
             // PRO62 -> AAAADDDD, KKKKNNNN = 0 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO60").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO61").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO62").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[60]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[61]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[62]);
 
             // PRO63 -> BBBBEEEE, EEEEHHHH = 2 additional peptides
             // PRO64 -> EEEEHHHH, HHHHLLLL = 0 additional peptides
             // PRO65 -> HHHHLLLL, LLLLPPPP = 2 additional peptides
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO63").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO64").Id.GetValueOrDefault()]);
-            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO65").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[63]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[64]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[65]);
 
             // PRO66 -> CCCCFFFF, CFFFFI, FFFFIIII = 3 additional peptides
             // PRO67 -> FFFFIIII, FIIIIM, IIIIMMMM = 1 additional peptides
             // PRO68 -> IIIIMMMM, IMMMMQ, MMMMQQQQ = 3 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO66").Id.GetValueOrDefault()]);
-            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO67").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO68").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[66]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[67]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[68]);
 
             // PRO69 -> NNNNRRRR, RRRRUUUU, RRRRUUU = 3 additional peptides
             // PRO70 -> RRRRUUUU, RRRRUUU, UUUUZZZZ = 0 additional peptides
             // PRO71 -> UUUUZZZZ, UZZZZC, ZZZZCCCC = 3 additional peptides
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO69").Id.GetValueOrDefault()]);
-            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO70").Id.GetValueOrDefault()]);
-            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO71").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[69]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[70]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[71]);
 
             // test that the MinimumAdditionalPeptidesPerProtein filter is applied correctly;
             // proteins filtered out by it should cascade to PeptideInstances, Peptides, and PSMs
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 1;
+            dataFilter.MinimumAdditionalPeptides = 1;
             dataFilter.ApplyBasicFilters(session);
 
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO55"));
@@ -1079,7 +1084,7 @@ namespace Test
             Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "RRRRUUU"));
             Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "UUUUZZZZ"));
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 2;
+            dataFilter.MinimumAdditionalPeptides = 2;
             dataFilter.ApplyBasicFilters(session);
 
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO55"));
@@ -1111,7 +1116,7 @@ namespace Test
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO71"));
             Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO70"));
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 3;
+            dataFilter.MinimumAdditionalPeptides = 3;
             dataFilter.ApplyBasicFilters(session);
 
             Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO55"));
@@ -1159,7 +1164,7 @@ namespace Test
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO71"));
             Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO70"));
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 4;
+            dataFilter.MinimumAdditionalPeptides = 4;
             dataFilter.ApplyBasicFilters(session);
 
             Assert.AreEqual(1, session.Query<Protein>().Count());
@@ -1173,14 +1178,14 @@ namespace Test
             Assert.AreNotEqual(0, session.Query<PeptideSpectrumMatch>().Count(o => remainingPeptides.Contains(o.Peptide.Sequence)));
             Assert.AreEqual(0, session.Query<PeptideSpectrumMatch>().Count(o => !remainingPeptides.Contains(o.Peptide.Sequence)));
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 5;
+            dataFilter.MinimumAdditionalPeptides = 5;
             dataFilter.ApplyBasicFilters(session);
 
             Assert.AreEqual(1, session.Query<Protein>().Count());
             Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO39"));
             Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession != "PRO39"));
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 6;
+            dataFilter.MinimumAdditionalPeptides = 6;
             dataFilter.ApplyBasicFilters(session);
 
             Assert.AreEqual(0, session.Query<Protein>().Count());
@@ -1359,9 +1364,9 @@ namespace Test
             var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 0,
-                MinimumSpectraPerProtein = 0,
-                MinimumAdditionalPeptidesPerProtein = 0
+                MinimumDistinctPeptides = 0,
+                MinimumSpectra = 0,
+                MinimumAdditionalPeptides = 0
             };
             dataFilter.ApplyBasicFilters(session);
 
@@ -1534,9 +1539,9 @@ namespace Test
             var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 1,
-                MinimumSpectraPerProtein = 1,
-                MinimumAdditionalPeptidesPerProtein = 0
+                MinimumDistinctPeptides = 1,
+                MinimumSpectra = 1,
+                MinimumAdditionalPeptides = 0
             };
             dataFilter.ApplyBasicFilters(session);
 
@@ -1719,9 +1724,9 @@ namespace Test
             var dataFilter = new DataFilter()
                                  {
                                      MaximumQValue = 1,
-                                     MinimumDistinctPeptidesPerProtein = 1,
-                                     MinimumSpectraPerProtein = 1,
-                                     MinimumAdditionalPeptidesPerProtein = 1
+                                     MinimumDistinctPeptides = 1,
+                                     MinimumSpectra = 1,
+                                     MinimumAdditionalPeptides = 1
                                  };
             dataFilter.ApplyBasicFilters(session);
 

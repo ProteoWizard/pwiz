@@ -65,9 +65,11 @@
     <class name="PersistentDataFilter" table="FilterHistory">
         <id name="Id"><generator class="native"/></id>
         <property name="MaximumQValue"/>
-        <property name="MinimumDistinctPeptidesPerProtein"/>
-        <property name="MinimumSpectraPerProtein"/>
-        <property name="MinimumAdditionalPeptidesPerProtein"/>
+        <property name="MinimumDistinctPeptides"/>
+        <property name="MinimumSpectra"/>
+        <property name="MinimumAdditionalPeptides"/>
+        <property name="GeneLevelFiltering"/>
+        <property name="DistinctMatchFormat" type="DistinctMatchFormatUserType"/>
         <property name="MinimumSpectraPerDistinctMatch"/>
         <property name="MinimumSpectraPerDistinctPeptide"/>
         <property name="MaximumProteinGroupsPerPeptide"/>

@@ -521,5 +521,105 @@ namespace IDPicker.DataModel
             return true;
         }
     }
+
+    public class DistinctMatchFormatUserType : NHibernate.UserTypes.IUserType
+    {
+        #region IUserType Members
+
+        public object Assemble(object cached, object owner)
+        {
+            if (cached == null)
+                return null;
+
+            if (cached == DBNull.Value)
+                return null;
+
+            if (!(cached is string))
+                throw new ArgumentException();
+
+            var serializedString = cached as string;
+            string[] serializedTokens = serializedString.Split(' ');
+
+            var result = new DistinctMatchFormat
+            {
+                IsChargeDistinct = Convert.ToInt32(serializedTokens[0]) != 0 ? true : false,
+                IsAnalysisDistinct = Convert.ToInt32(serializedTokens[1]) != 0 ? true : false,
+                AreModificationsDistinct = Convert.ToInt32(serializedTokens[2]) != 0 ? true : false,
+                ModificationMassRoundToNearest = Convert.ToDecimal(serializedTokens[3])
+            };
+
+            return result;
+        }
+
+        public object DeepCopy(object value)
+        {
+            if (value == null)
+                return null;
+            return value as DistinctMatchFormat;
+        }
+
+        public object Disassemble(object value)
+        {
+            if (value == null)
+                return DBNull.Value;
+
+            if (value == DBNull.Value)
+                return DBNull.Value;
+
+            if (!(value is DistinctMatchFormat))
+                throw new ArgumentException();
+
+            var dmf = value as DistinctMatchFormat;
+            return String.Join(" ", dmf.IsChargeDistinct ? 1 : 0, dmf.IsAnalysisDistinct ? 1 : 0, dmf.AreModificationsDistinct ? 1 : 0, dmf.ModificationMassRoundToNearest);
+        }
+
+        public int GetHashCode(object x)
+        {
+            return x.GetHashCode();
+        }
+
+        public object NullSafeGet(IDataReader rs, string[] names, object owner)
+        {
+            return Assemble(rs.GetValue(rs.GetOrdinal(names[0])), owner);
+        }
+
+        public void NullSafeSet(IDbCommand cmd, object value, int index)
+        {
+            (cmd.Parameters[index] as IDataParameter).Value = Disassemble(value);
+        }
+
+        public object Replace(object original, object target, object owner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type ReturnedType
+        {
+            get { return typeof(DistinctMatchFormat); }
+        }
+
+        public NHibernate.SqlTypes.SqlType[] SqlTypes
+        {
+            get { return new NHibernate.SqlTypes.SqlType[] { NHibernate.SqlTypes.SqlTypeFactory.GetString(1) }; }
+        }
+
+        public bool IsMutable
+        {
+            get { return false; }
+        }
+
+        bool NHibernate.UserTypes.IUserType.Equals(object x, object y)
+        {
+            if (x == null && y == null)
+                return true;
+            else if (x == null || y == null)
+                return false;
+            var dmf1 = x as DistinctMatchFormat;
+            var dmf2 = y as DistinctMatchFormat;
+            return dmf1 == dmf2;
+        }
+
+        #endregion
+    }
     #endregion
 }

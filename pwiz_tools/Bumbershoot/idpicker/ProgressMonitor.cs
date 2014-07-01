@@ -88,7 +88,7 @@ namespace IDPicker
             e.Cancel = progressUpdate.Cancel;
         }*/
 
-        public void UpdateProgress (object sender, Merger.MergingProgressEventArgs e)
+        public void UpdateProgress (object sender, MergerWrapper.MergingProgressEventArgs e)
         {
             if (e.MergingException != null)
                 Program.HandleException(e.MergingException);

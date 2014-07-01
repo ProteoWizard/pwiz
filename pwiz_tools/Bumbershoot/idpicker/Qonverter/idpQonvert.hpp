@@ -36,6 +36,7 @@
     RTCONFIG_VARIABLE( bool,     WriteQonversionDetails,     false  ) \
     RTCONFIG_VARIABLE( bool,     OverwriteExistingFiles,     false  ) \
     RTCONFIG_VARIABLE( bool,     IgnoreUnmappedPeptides,     false  ) \
+    RTCONFIG_VARIABLE( bool,     SkipSourceOnError,          false  ) \
     RTCONFIG_VARIABLE( string,   ProteinDatabase,            ""     ) \
     RTCONFIG_VARIABLE( string,   DecoyPrefix,                "rev_" ) \
     RTCONFIG_VARIABLE( string,   SourceSearchPath,           ".;.." ) \
@@ -69,15 +70,6 @@
 
 BEGIN_IDPICKER_NAMESPACE
 
-
-struct PWIZ_API_DECL Version
-{
-    static int Major();
-    static int Minor();
-    static int Revision();
-    static std::string str();
-    static std::string LastModified();
-};
 
 enum QonvertErrorCode
 {

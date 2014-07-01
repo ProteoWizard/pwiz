@@ -22,32 +22,30 @@
 // Contributor(s):
 //
 
-#include "SchemaUpdater.hpp"
-#include "../SchemaUpdater.hpp"
-#include "pwiz/utility/misc/IterationListener.hpp"
-#include "pwiz/utility/misc/Std.hpp"
+
+#pragma warning( push )
+#pragma warning( disable : 4634 4635 )
+#include "Qonverter.hpp"
+#using <system.dll>
+#pragma warning( pop )
 
 
 namespace IDPicker {
 
 
-using namespace pwiz::CLI::util;
-namespace NativeSchemaUpdater = NativeIDPicker::SchemaUpdater;
+using namespace System;
+using namespace System::Collections::Generic;
 
 
-int SchemaUpdater::CurrentSchemaRevision::get() { return NativeIDPicker::CURRENT_SCHEMA_REVISION; }
-
-
-bool SchemaUpdater::Update(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr)
+public ref struct Merger abstract
 {
-    try
-    {
-        return NativeSchemaUpdater::update(ToStdString(idpDbFilepath),
-                                           ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
-    }
-    CATCH_AND_FORWARD;
-    return false;
-}
+
+static void Merge(String^ mergeTargetFilepath, IList<String^>^ mergeSourceFilepaths, int maxThreads, pwiz::CLI::util::IterationListenerRegistry^ ilr);
+static void Merge(String^ mergeTargetFilepath, IList<String^>^ mergeSourceFilepaths);
+
+static void Merge(String^ mergeTargetFilepath, IntPtr mergeSourceConnection, pwiz::CLI::util::IterationListenerRegistry^ ilr);
+
+};
 
 
 } // namespace IDPicker

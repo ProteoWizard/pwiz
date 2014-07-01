@@ -44,14 +44,6 @@
 #include "boost/range/algorithm/set_algorithm.hpp"
 
 
-// convenient macro for one-line status and cancellation updates
-#define ITERATION_UPDATE(ilr, index, count, message) \
-{ \
-    if (ilr && ilr->broadcastUpdateMessage(UpdateMessage((index), (count), (message))) == IterationListener::Status_Cancel) \
-        {status = IterationListener::Status_Cancel; return;} \
-}
-
-
 using namespace pwiz::identdata;
 using namespace pwiz::chemistry;
 using namespace pwiz::util;
@@ -299,7 +291,6 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
     set<string> differingParameters;
 
     int iterationIndex = 0;
-    IterationListener::Status status;
     BOOST_FOREACH(const string& filepath, inputFilepaths)
     {
         ITERATION_UPDATE(ilr, iterationIndex++, inputFilepaths.size(), "finding distinct analyses");
@@ -438,8 +429,9 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS PeptideQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS ProteinQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS QonverterSettings (Id INTEGER PRIMARY KEY, QonverterMethod INT, DecoyPrefix TEXT, RerankMatches INT, Kernel INT, MassErrorHandling INT, MissedCleavagesHandling INT, TerminalSpecificityHandling INT, ChargeStateHandling INT, ScoreInfoByName TEXT);"
-                      "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptidesPerProtein INT, MinimumSpectraPerProtein INT,  MinimumAdditionalPeptidesPerProtein INT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT, "
-                                                                "Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);"
+                      "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT,\n"
+                      "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
+                      "                                          Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);"
 
                       "DELETE FROM SpectrumSource;"
                       "DELETE FROM SpectrumSourceMetadata;"
