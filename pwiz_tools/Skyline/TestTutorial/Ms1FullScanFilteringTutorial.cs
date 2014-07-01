@@ -251,8 +251,8 @@ namespace pwiz.SkylineTestTutorial
             const int TIB_L = 0; // index for Tib_L
             const int TIP3 = 1; // index for Tip3
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 51, 52, 156);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 47, 48, 0, 142, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 49, 50, 0, 143, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 51, 52, 0, 156, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 51, 52, 0, 156, 0);
             string Tib_LFilename = searchFiles[TIB_L].Replace(".group.xml", PreferedExtAbWiff);
             string Tip3Filename = searchFiles[TIP3].Replace(".group.xml", PreferedExtAbWiff);
 
@@ -289,11 +289,13 @@ namespace pwiz.SkylineTestTutorial
                 });
             RestoreViewOnScreen(13);
             PauseForScreenShot("Main window with imported data", 14);
- 
-            RunUIWithDocumentWait(() =>
-            {
-                SkylineWindow.ToggleIntegrateAll();
 
+//            RunUIWithDocumentWait(() =>
+//            {
+//                SkylineWindow.ToggleIntegrateAll(); // TODO: No longer necessary.  Change in tutorial
+//            });
+            RunUI(() =>
+            {
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);

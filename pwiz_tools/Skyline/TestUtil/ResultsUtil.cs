@@ -168,7 +168,6 @@ namespace pwiz.SkylineTestUtil
             {
                 peptidesActual += nodePep.Results[index].Sum(chromInfo => chromInfo.PeakCountRatio >= 0.5 ? 1 : 0);
             }
-            Assert.AreEqual(peptides, peptidesActual);
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
             foreach (var nodeGroup in document.TransitionGroups.Where(nodeGroup => nodeGroup.Results[index] != null))
@@ -184,8 +183,6 @@ namespace pwiz.SkylineTestUtil
                         tranGroupsHeavyActual++;
                 }
             }
-            Assert.AreEqual(tranGroups, tranGroupsActual);
-            Assert.AreEqual(tranGroupsHeavy, tranGroupsHeavyActual);
             int transitionsActual = 0;
             int transitionsHeavyActual = 0;
             foreach (var nodeTran in document.Transitions.Where(nodeTran => nodeTran.Results[index] != null))
@@ -201,6 +198,9 @@ namespace pwiz.SkylineTestUtil
                         transitionsHeavyActual++;
                 }
             }
+            Assert.AreEqual(peptides, peptidesActual);
+            Assert.AreEqual(tranGroups, tranGroupsActual);
+            Assert.AreEqual(tranGroupsHeavy, tranGroupsHeavyActual);
             Assert.AreEqual(transitions, transitionsActual);
             Assert.AreEqual(transitionsHeavy, transitionsHeavyActual);
         }

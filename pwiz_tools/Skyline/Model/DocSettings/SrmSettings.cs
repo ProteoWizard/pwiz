@@ -331,6 +331,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeTransitionSettings(TransitionSettings prop)
         {
+            // If changing to only MS1 filtering, make sure Integrat All is on
+            if (IsOnlyMsEnabled(prop.FullScan) && !IsOnlyMsEnabled(TransitionSettings.FullScan))
+            {
+                if (!prop.Integration.IsIntegrateAll)
+                    prop = prop.ChangeIntegration(prop.Integration.ChangeIntegrateAll(true));
+            }
+
             SrmSettings settings = ChangeProp(ImClone(this), im => im.TransitionSettings = prop);
 
             if (prop.Prediction.PrecursorMassType != TransitionSettings.Prediction.PrecursorMassType)
@@ -339,6 +346,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 settings.CreateFragmentMassCalcs();
 
             return settings;
+        }
+
+        private static bool IsOnlyMsEnabled(TransitionFullScan fullScan)
+        {
+            return fullScan.IsEnabledMs && !fullScan.IsEnabledMsMs;
         }
 
         public SrmSettings ChangeDataSettings(DataSettings prop)

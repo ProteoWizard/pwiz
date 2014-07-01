@@ -203,8 +203,10 @@ namespace pwiz.SkylineTestA.Results
 
             // Add M-1 transitions, and verify that they have chromatogram data also, but
             // empty peaks in all cases
-            var docMs1All = docMs1Isotopes.ChangeSettings(docMs1Isotopes.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, IsotopeEnrichments.DEFAULT)));
+            var docMs1All = docMs1Isotopes.ChangeSettings(docMs1Isotopes.Settings
+                .ChangeTransitionFullScan(fs => fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent,
+                                                                           0, IsotopeEnrichments.DEFAULT))
+                .ChangeTransitionIntegration(i => i.ChangeIntegrateAll(false)));    // For compatibility with v2.5 and earlier
             AssertEx.IsDocumentState(docMs1All, null, 2, 2, 10);
             AssertResult.IsDocumentResultsState(docMs1All, rep1, 1, 1, 0, 4, 0);
             AssertResult.IsDocumentResultsState(docMs1All, rep2, 1, 1, 0, 4, 0);
