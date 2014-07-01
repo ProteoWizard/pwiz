@@ -339,7 +339,6 @@ namespace pwiz.SkylineTestTutorial
             }
 
             ImportResults("CEO", paths, ExportOptimize.CE);
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.ElementAt(0).IsLoaded);
 
             RestoreViewOnScreen(43);
             RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
@@ -350,7 +349,6 @@ namespace pwiz.SkylineTestTutorial
                 GetTestPath("Tutorial-4_Parameters\\CE_plus10.wiff"),
                 GetTestPath("Tutorial-4_Parameters\\CE_minus10.wiff")
             }, ExportOptimize.NONE, false);
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.ElementAt(1).IsLoaded);
 
             RunUI(() =>
             {
@@ -395,7 +393,6 @@ namespace pwiz.SkylineTestTutorial
             };
 
             ImportResults("", paths2, null, false);
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].IsLoaded);
             RestoreViewOnScreen(48);
             RunUI(() => SkylineWindow.AutoZoomBestPeak());
             PauseForScreenShot("Skyline Window", 8);
@@ -432,6 +429,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm(keepPrefixDlg);
                 WaitForClosedForm(importResultsDlg);
             }
+            WaitForDocumentLoaded();
         }
     }
 }
