@@ -195,10 +195,14 @@ namespace pwiz.Skyline.Controls.Startup
                     {
                         Program.MainWindow.OpenFile(skyFileToOpen);
                     }
+                    else
+                    {
+                        Program.MainWindow.NewDocument(true);
+                    }
                     if (string.IsNullOrEmpty(SkyFileLocationInZip))
                     {
                         MessageDlg.Show(Program.MainWindow,
-                   string.Format(Resources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_, extractDir));
+                            string.Format(Resources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_, extractDir));
                     }
                     Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
                 }));

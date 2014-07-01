@@ -31,6 +31,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -111,10 +112,30 @@ namespace pwiz.Skyline
             }
         }
 
-        private void newMenuItem_Click(object sender, EventArgs e) { NewDocument(); }
-        public void NewDocument()
+        private void startPageMenuItem_Click(object sender, EventArgs e)
         {
             if (!CheckSaveDocument())
+                return;
+
+            using (var startupForm = new StartPage())
+            {
+                if (startupForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    startupForm.Action(this);
+                }
+            }
+        }
+
+        private void newMenuItem_Click(object sender, EventArgs e) { NewDocument(); }
+
+        public void NewDocument()
+        {
+            NewDocument(false);
+        }
+
+        public void NewDocument(bool forced)
+        {
+            if (!forced && !CheckSaveDocument())
                 return;
 
             // Create a new document with the default settings.

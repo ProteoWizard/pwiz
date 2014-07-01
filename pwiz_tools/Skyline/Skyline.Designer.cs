@@ -220,6 +220,7 @@ namespace pwiz.Skyline
             this.redoToolBarButton = new System.Windows.Forms.ToolStripSplitButton();
             this.menuMain = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startPageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1762,6 +1763,7 @@ namespace pwiz.Skyline
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.startPageMenuItem,
             this.newMenuItem,
             this.openMenuItem,
             this.saveMenuItem,
@@ -1777,6 +1779,13 @@ namespace pwiz.Skyline
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             resources.ApplyResources(this.fileToolStripMenuItem, "fileToolStripMenuItem");
             this.fileToolStripMenuItem.DropDownOpening += new System.EventHandler(this.fileMenu_DropDownOpening);
+            // 
+            // startPageMenuItem
+            // 
+            this.startPageMenuItem.Image = global::pwiz.Skyline.Properties.Resources.HomeIcon1;
+            resources.ApplyResources(this.startPageMenuItem, "startPageMenuItem");
+            this.startPageMenuItem.Name = "startPageMenuItem";
+            this.startPageMenuItem.Click += new System.EventHandler(this.startPageMenuItem_Click);
             // 
             // newMenuItem
             // 
@@ -3557,6 +3566,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByPreferredNameToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByGeneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem compareModelsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem startPageMenuItem;
     }
 }
 

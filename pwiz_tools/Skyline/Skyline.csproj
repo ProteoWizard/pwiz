@@ -1834,6 +1834,7 @@
     </EmbeddedResource>
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <Content Include="Resources\HomeIcon.bmp" />
     <Content Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
     <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_thumb.jpg" />

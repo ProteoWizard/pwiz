@@ -67,12 +67,14 @@ namespace pwiz.Skyline.Controls.Startup
         {
             LocalizationHelper.InitThread();
 
-            InitializeComponent();
-
-            // Get placement values before changing anything.
             Point location = Settings.Default.StartPageLocation;
             Size size = Settings.Default.StartPageSize;
-            bool maximize = Settings.Default.StartPageMaximized || Program.DemoMode;
+            bool maximize = Settings.Default.StartPageMaximized;
+
+            InitializeComponent();
+
+            checkBoxShowStartup.Checked = Settings.Default.ShowStartupForm;
+            // Get placement values before changing anything.
 
             // Restore window placement.
             if (!location.IsEmpty)
@@ -80,9 +82,13 @@ namespace pwiz.Skyline.Controls.Startup
                 StartPosition = FormStartPosition.Manual;
                 Location = location;
             }
-            else
+            else if (Owner == null)
             {
                 CenterToScreen();
+            }
+            else
+            {
+                CenterToParent();
             }
             if (!size.IsEmpty)
                 Size = size;
@@ -93,6 +99,8 @@ namespace pwiz.Skyline.Controls.Startup
             PopulateWizardPanel();
             PopulateTutorialPanel();
         }
+
+        public StartupAction Action { get; private set; }
        
         private void PopulateLeftPanel()
         {
@@ -502,8 +510,14 @@ namespace pwiz.Skyline.Controls.Startup
 
         public void DoAction(StartupAction action)
         {
-            MainWindow = new SkylineWindow();
-            action(MainWindow);
+            Action = action;
+
+            var window = Owner as SkylineWindow;
+            if (window == null)
+            {
+                MainWindow = new SkylineWindow();
+                action(MainWindow);
+            }
             DialogResult = DialogResult.OK;
         }
 
@@ -511,7 +525,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             using (var startupForm = new StartPage())
             {
-                if (DialogResult.OK == startupForm.ShowDialog())
+                if (startupForm.ShowDialog() == DialogResult.OK)
                 {
                     return startupForm.MainWindow;
                 }

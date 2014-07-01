@@ -2827,7 +2827,17 @@ namespace pwiz.Skyline
 
         private void tutorialsMenuItem_Click(object sender, EventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/tutorials.html"); // Not L10N
+            if (!CheckSaveDocument())
+                return;
+
+            using (var startupForm = new StartPage())
+            {
+                startupForm.SelectedTab = StartPage.TABS.Tutorial;
+                if (startupForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    startupForm.Action(this);
+                }
+            }
         }
 
         private void supportMenuItem_Click(object sender, EventArgs e)
