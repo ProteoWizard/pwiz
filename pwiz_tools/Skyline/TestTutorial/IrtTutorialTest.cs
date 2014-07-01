@@ -404,7 +404,7 @@ namespace pwiz.SkylineTestTutorial
 //            RunUI(() => findAllForm.ActivateItem(3));
 //            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (3 of 3)", 15);
 
-            RunUI(SkylineWindow.IntegrateAll);
+            RunUI(SkylineWindow.ToggleIntegrateAll);
             RunUI(findAllForm.Close);
             WaitForClosedForm(findAllForm);
 

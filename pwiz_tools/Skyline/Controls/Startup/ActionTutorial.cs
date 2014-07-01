@@ -85,6 +85,7 @@ namespace pwiz.Skyline.Controls.Startup
 
         public void LongWaitDlgAction(object sender, EventArgs args, SkylineWindow skylineWindow)
         {
+            skylineWindow.ResetDefaultSettings();
             using (var longWaitDlg = new LongWaitDlg
             {
                 Text = Resources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File,

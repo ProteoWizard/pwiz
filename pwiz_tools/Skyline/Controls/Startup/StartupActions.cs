@@ -52,15 +52,23 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void OpenSkylineStartupSettingsUI(SkylineWindow skylineWindow)
         {
-            using (var settingsUI = new StartPageSettingsUI(skylineWindow.ShowPeptideSettingsUI, skylineWindow.ShowTransitionSettingsUI))
+            if (ImportType == DataType.peptide_search)
+            {
+                if (FilePath != null)
+                    skylineWindow.LoadFile(FilePath);
+                skylineWindow.ResetDefaultSettings();
+                skylineWindow.ShowImportPeptideSearchDlg();
+                return;
+            }
+
+            using (var settingsUI = new StartPageSettingsUI(skylineWindow))
             {
                 if (settingsUI.ShowDialog(skylineWindow) == DialogResult.OK)
                 {
+                    skylineWindow.SetIntegrateAll(settingsUI.IsIntegrateAll);
+
                     switch (ImportType)
                     {
-                        case DataType.peptide_search:
-                            skylineWindow.ShowImportPeptideSearchDlg();
-                            break;
                         case DataType.fasta:
                             skylineWindow.OpenPasteFileDlg(PasteFormat.fasta);
                             break;

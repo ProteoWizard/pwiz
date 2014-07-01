@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestTutorial
  
             RunUIWithDocumentWait(() =>
             {
-                SkylineWindow.IntegrateAll();
+                SkylineWindow.ToggleIntegrateAll();
 
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowPeakAreaReplicateComparison();

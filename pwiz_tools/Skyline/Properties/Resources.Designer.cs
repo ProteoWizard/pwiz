@@ -19208,6 +19208,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset default settings.
+        /// </summary>
+        public static string SkylineWindow_ResetDefaultSettings_Reset_default_settings {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ResetDefaultSettings_Reset_default_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to restore document.
         /// </summary>
         public static string SkylineWindow_RestoreDocument_Failed_to_restore_document {
@@ -20630,6 +20639,25 @@ namespace pwiz.Skyline.Properties {
         public static string StartPage_Tutorial_Zip_Files {
             get {
                 return ResourceManager.GetString("StartPage_Tutorial_Zip_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The settings have been reset to the default values..
+        /// </summary>
+        public static string StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_ {
+            get {
+                return ResourceManager.GetString("StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_de" +
+                        "fault_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Integrate all: on.
+        /// </summary>
+        public static string StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on {
+            get {
+                return ResourceManager.GetString("StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on", resourceCulture);
             }
         }
         

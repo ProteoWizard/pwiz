@@ -7808,4 +7808,14 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__" xml:space="preserve">
     <value>An error occurred attempting to create the proteome file {0}.</value>
   </data>
+  <data name="SkylineWindow_ResetDefaultSettings_Reset_default_settings" xml:space="preserve">
+    <value>Reset default settings</value>
+  </data>
+  <data name="StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on" xml:space="preserve">
+    <value>Integrate all: on</value>
+  </data>
+  <data name="StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_" xml:space="preserve">
+    <value>The settings have been reset to the default values.</value>
+  </data>
 </root>
+

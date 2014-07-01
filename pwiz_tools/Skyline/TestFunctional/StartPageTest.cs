@@ -206,7 +206,6 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new PasteDlgTab(ActionImport.DataType.fasta, typeof(PasteDlg.FastaTab)),
                     new PasteDlgTab(ActionImport.DataType.proteins, typeof(PasteDlg.ProteinListTab)),
-                    new PasteDlgTab(ActionImport.DataType.peptides, typeof(PasteDlg.PeptideListTab)),
                     new PasteDlgTab(ActionImport.DataType.transition_list, typeof(PasteDlg.TransitionListTab)),
                 };
                 var random = new Random(DateTime.UtcNow.Millisecond);
@@ -260,12 +259,11 @@ namespace pwiz.SkylineTestFunctional
             Directory.CreateDirectory(TestContext.TestDir);
 
             var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.TestImportAction(ActionImport.DataType.peptide_search));
-            var skyline = WaitForOpenForm<SkylineWindow>();
-            RunUI(() => skyline.OpenFile(TestFilesDir.GetTestPath("StartPageTest.sky")));
-            var settings = WaitForOpenForm<StartPageSettingsUI>();
-            RunDlg<ImportPeptideSearchDlg>(settings.AcceptButton.PerformClick,
-                peptideSearch => peptideSearch.CancelDialog());
+            RunUI(() => startPage.TestImportAction(ActionImport.DataType.peptide_search,
+                TestFilesDir.GetTestPath("StartPageTest.sky")));
+            WaitForOpenForm<SkylineWindow>();
+            var peptideSearchDlg = WaitForOpenForm<ImportPeptideSearchDlg>();
+            OkDialog(peptideSearchDlg, peptideSearchDlg.CancelDialog);
         }
     }
 

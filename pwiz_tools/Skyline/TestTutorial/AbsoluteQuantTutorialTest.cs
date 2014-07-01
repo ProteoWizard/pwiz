@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.IntegrateAll();
+                SkylineWindow.ToggleIntegrateAll();
                 SkylineWindow.ArrangeGraphsTabbed();
                 SkylineWindow.ShowRTReplicateGraph();
                 SkylineWindow.ShowPeakAreaReplicateComparison();

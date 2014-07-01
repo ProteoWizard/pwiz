@@ -521,9 +521,10 @@ namespace pwiz.Skyline.Controls.Startup
 
         private SkylineWindow MainWindow { get; set; }
 
-        public void TestImportAction(ActionImport.DataType type)
+        public void TestImportAction(ActionImport.DataType type, string filePath = null)
         {
-            DoAction(new ActionImport(type).DoStartupAction); // Not L10N
+            var action = new ActionImport(type) {FilePath = filePath};
+            DoAction(action.DoStartupAction);
         }
 
         public void TestTutorialAction(ActionTutorial.TutorialType type)

@@ -40,6 +40,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -2456,6 +2457,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ResetDefaultSettings()
+        {
+            var defaultSettings = SrmSettingsList.GetDefault();
+            if (!Equals(defaultSettings, DocumentUI.Settings))
+                ChangeSettings(defaultSettings, false, Resources.SkylineWindow_ResetDefaultSettings_Reset_default_settings);
+        }
+
         public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null)
         {
             if (store)
@@ -2490,14 +2498,21 @@ namespace pwiz.Skyline
 
         private void integrateAllMenuItem_Click(object sender, EventArgs e)
         {
-            IntegrateAll();
+            ToggleIntegrateAll();
         }
 
-        public void IntegrateAll()
+        public void ToggleIntegrateAll()
         {
-            bool integrateAll = DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll;
-            ModifyDocument(integrateAll ? Resources.SkylineWindow_IntegrateAll_Set_integrate_all : Resources.SkylineWindow_IntegrateAll_Clear_integrate_all,
-                doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(!integrateAll))));
+            SetIntegrateAll(!DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll);
+        }
+
+        public void SetIntegrateAll(bool integrateAll)
+        {
+            if (integrateAll != DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll)
+            {
+                ModifyDocument(integrateAll ? Resources.SkylineWindow_IntegrateAll_Set_integrate_all : Resources.SkylineWindow_IntegrateAll_Clear_integrate_all,
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(integrateAll))));
+            }
         }
 
         #endregion // Settings menu

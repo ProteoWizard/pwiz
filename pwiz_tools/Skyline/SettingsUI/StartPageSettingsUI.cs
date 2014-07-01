@@ -18,35 +18,71 @@
  */
 
 using System;
-using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
     public partial class StartPageSettingsUI : FormEx
     {
-        public delegate void ShowForm(IWin32Window parent);
+        private readonly SkylineWindow _skylineWindow;
+        private readonly string integrateAllOffText;
+        private readonly string integrateAllOnText;
 
-        private readonly ShowForm _showPeptideSettingsUI;
-        private readonly ShowForm _showTransitionSettingsUI;
-
-        public StartPageSettingsUI(ShowForm showPeptideSettingsUI, ShowForm showTransitionSettingsUI)
+        public StartPageSettingsUI(SkylineWindow skylineWindow)
         {
+            _skylineWindow = skylineWindow;
+
             InitializeComponent();
+
             AcceptButton = nextBtn;
             CenterToParent();
-            _showPeptideSettingsUI = showPeptideSettingsUI;
-            _showTransitionSettingsUI = showTransitionSettingsUI;
+            if (_skylineWindow.DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll)
+                radioBtnQuant.Checked = true;
+
+            integrateAllOffText = labelIntegrateAll.Text;
+            integrateAllOnText = Resources.StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on;
+        }
+
+        public bool IsIntegrateAll 
+        {
+            get { return radioBtnQuant.Checked; }
         }
 
         private void peptideSettingsBtn_Click(object sender, EventArgs e)
         {
-            _showPeptideSettingsUI(this);
+            showPeptideSettingsUI();
         }
 
         private void transitionSettingsBtn_Click(object sender, EventArgs e)
         {
-            _showTransitionSettingsUI(this);
+            showTransitionSettingsUI();
+        }
+
+        private void btnResetDefaults_Click(object sender, EventArgs e)
+        {
+            _skylineWindow.ResetDefaultSettings();
+            MessageDlg.Show(this, Resources.StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_);
+        }
+
+        private void radioBtnQuant_CheckedChanged(object sender, EventArgs e)
+        {
+            labelIntegrateAll.Text = radioBtnQuant.Checked
+                ? integrateAllOnText
+                : integrateAllOffText;
+        }
+
+        // Test Methods
+
+        public void showPeptideSettingsUI()
+        {
+            _skylineWindow.ShowPeptideSettingsUI(this);
+        }
+
+        public void showTransitionSettingsUI()
+        {
+            _skylineWindow.ShowTransitionSettingsUI(this);
         }
     }
 }

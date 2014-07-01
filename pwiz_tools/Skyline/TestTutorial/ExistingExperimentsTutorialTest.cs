@@ -370,7 +370,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     Assert.AreEqual((int)SequenceTree.StateImageId.peak, selNodeGroup.StateImageIndex);
-                    SkylineWindow.IntegrateAll();
+                    SkylineWindow.ToggleIntegrateAll();
                 });
             RunUI(() =>
             {
