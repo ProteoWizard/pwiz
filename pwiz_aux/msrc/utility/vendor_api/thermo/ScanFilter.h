@@ -74,6 +74,7 @@ class PWIZ_API_DECL ScanFilter
 	TriBool dependentActive_; // t: data-dependent active; f: non active
     TriBool supplementalCIDOn_;
 	TriBool widebandOn_; // wideband activation
+    TriBool ultraOn_;
     TriBool lockMassOn_;
     TriBool faimsOn_;
 	AccurateMassType accurateMassType_;

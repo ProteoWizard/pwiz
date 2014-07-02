@@ -657,6 +657,23 @@ ScanFilter::parse(const string& filterLine)
 		    advance = false;
 	    }
 
+	    // ultra mode
+	    if (w == "!U") {
+		    ultraOn_ = TriBool_False;
+		    advance = true;
+	    }
+	    else if (w == "U") {
+            ultraOn_ = TriBool_True;
+		    advance = true;
+	    }
+	    if (advance) {
+		    if (s.eof())
+			    return;
+
+		    s >> w;
+		    advance = false;
+	    }
+
         // supplemental CID activation
         if (w == "SA") {
             supplementalCIDOn_ = TriBool_True;
