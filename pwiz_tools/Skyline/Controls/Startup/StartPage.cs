@@ -365,13 +365,13 @@ namespace pwiz.Skyline.Controls.Startup
             if (fileToOpen == null)
             {
                 fileToOpen = OpenFileDlg();
+                if (fileToOpen == null)
+                    return;
             }
-            else
-            {
-                DialogResult = DialogResult.OK;
-            }
+
+            DialogResult = DialogResult.OK;
+
             DoAction(new ActionOpenDocument(fileToOpen).DoStartupAction);
-            
         }
 
         private void Import(ActionImport.DataType type)
@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Controls.Startup
         {
             using (var openNewFileDlg = new OpenFileDialog
             {
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC),
+                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP),
                 FilterIndex = 1
             })
             {

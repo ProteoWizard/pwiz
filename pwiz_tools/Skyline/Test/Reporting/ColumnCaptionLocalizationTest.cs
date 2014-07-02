@@ -49,7 +49,7 @@ namespace pwiz.SkylineTest.Reporting
         {
             var documentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
-            GenerateResXFile(Console.Out, new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT), new[]{typeof(SkylineDocument)});
+            GenerateResXFile(new StringWriter() /* Console.Out */, new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT), new[]{typeof(SkylineDocument)});
         }
 
         /// <summary>

@@ -267,7 +267,14 @@ namespace pwiz.Skyline
             if (!string.IsNullOrEmpty(uri.Host))
                 pathOpen = "//" + uri.Host + pathOpen; // Not L10N
 
-            return OpenFile(pathOpen);
+            if (pathOpen.EndsWith(SrmDocumentSharing.EXT))
+            {
+                return OpenSharedFile(pathOpen);
+            }
+            else
+            {
+                return OpenFile(pathOpen);
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)

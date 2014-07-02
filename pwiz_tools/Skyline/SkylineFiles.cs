@@ -173,13 +173,13 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        OpenFile(dlg.FileName); // Sets ActiveDirectory
+                        OpenFile(dlg.FileName);
                     }
                 }
             }
         }
 
-        public void OpenSharedFile(string zipPath)
+        public bool OpenSharedFile(string zipPath)
         {
             try
             {
@@ -192,20 +192,20 @@ namespace pwiz.Skyline
                 {
                     longWaitDlg.PerformWork(this, 1000, sharing.Extract);
                     if (longWaitDlg.IsCanceled)
-                        return;
+                        return false;
                 }
 
                 // Remember the directory containing the newly extracted file
                 // as the active directory for the next open command.
                 Settings.Default.ActiveDirectory = Path.GetDirectoryName(sharing.DocumentPath);
 
-                OpenFile(sharing.DocumentPath);
+                return OpenFile(sharing.DocumentPath);
             }
             catch (ZipException)
             {
-                MessageDlg.Show(this,
-                                string.Format(Resources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
-                                              zipPath));
+                MessageDlg.Show(this, string.Format(Resources.SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read,
+                                                    zipPath));
+                return false;
             }
             catch (Exception e)
             {
@@ -213,6 +213,7 @@ namespace pwiz.Skyline
                         Resources.SkylineWindow_OpenSharedFile_Failure_extracting_Skyline_document_from_zip_file__0__,
                         zipPath), e.Message);
                 MessageDlg.Show(this, message);
+                return false;
             }
         }
 
