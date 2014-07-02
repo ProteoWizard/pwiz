@@ -93,6 +93,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public char PreviousAa
+        {
+            get { return DocNode.Peptide.PrevAA; }
+        }
+
+        public char NextAa
+        {
+            get { return DocNode.Peptide.NextAA; }
+        }
+
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? BeginPos
         {

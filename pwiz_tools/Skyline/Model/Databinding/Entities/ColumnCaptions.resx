@@ -366,6 +366,9 @@
   <data name="ModifiedTime">
     <value>Modified Time</value>
   </data>
+  <data name="NextAa">
+    <value>Next Aa</value>
+  </data>
   <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
   </data>
@@ -443,6 +446,9 @@
   </data>
   <data name="PredictedRetentionTime">
     <value>Predicted Retention Time</value>
+  </data>
+  <data name="PreviousAa">
+    <value>Previous Aa</value>
   </data>
   <data name="ProductCharge">
     <value>Product Charge</value>

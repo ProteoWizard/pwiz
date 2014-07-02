@@ -2467,7 +2467,7 @@
     <value>183, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>Document Grid</value>
+    <value>&amp;Document Grid</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>

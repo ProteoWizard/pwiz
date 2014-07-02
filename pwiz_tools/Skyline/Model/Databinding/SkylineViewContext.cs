@@ -282,6 +282,8 @@ namespace pwiz.Skyline.Model.Databinding
                 else if (columnDescriptor.PropertyType == typeof(Entities.Peptide))
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("NextAa"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Precursor))
