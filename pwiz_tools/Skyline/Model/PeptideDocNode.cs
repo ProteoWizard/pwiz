@@ -886,14 +886,14 @@ namespace pwiz.Skyline.Model
                                              transition.DecoyMassShift);
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
                 double massH;
-                if (Transition.IsCustom(tranNew.IonType))
+                if (tranNew.IsCustom())
                 {
-                    massH = (settings.TransitionSettings.Prediction.FragmentMassType == MassType.Average
-                        ? tranNew.CustomIon.AverageMass
-                        : tranNew.CustomIon.MonoisotopicMass) ?? 0;
+                    massH = tranNew.GetCustomMass(settings.TransitionSettings.Prediction.FragmentMassType);
                 }
                 else
+                {
                     massH = calc.GetFragmentMass(tranNew, isotopeDist);
+                }
                 var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
                 listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, libInfo));
             }

@@ -2045,14 +2045,21 @@ namespace pwiz.Skyline.Properties
         public static readonly MeasuredIon TMT_129 = new MeasuredIon("TMT-129", "C5C'3H16N", null, null, new[] { 1 });// Not L10N
         public static readonly MeasuredIon TMT_130 = new MeasuredIon("TMT-130", "C4C'4H16N", null, null, new[] { 1 });// Not L10N
         public static readonly MeasuredIon TMT_131 = new MeasuredIon("TMT-131", "C4C'4H16N'", null, null, new[] { 1 });// Not L10N
-        
+
+        public override int RevisionIndexCurrent { get { return 1; } }
+
         public override IEnumerable<MeasuredIon> GetDefaults(int revisionIndex)
         {
-            return new[]
+            var listDefaults = new List<MeasuredIon>(new[] {NTERM_PROLINE, CTERM_GLU_ASP});
+            if (revisionIndex < 1)
+                return listDefaults;
+
+            listDefaults.AddRange(new[]
             {
-                NTERM_PROLINE, CTERM_GLU_ASP, ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117, TMT_126, TMT_127, TMT_128,
-                TMT_129, TMT_130, TMT_131
-            };
+                ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
+                TMT_126, TMT_127, TMT_128, TMT_129, TMT_130, TMT_131
+            });
+            return listDefaults;
         }
 
         public override MeasuredIon EditItem(Control owner, MeasuredIon item,

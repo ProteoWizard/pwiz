@@ -268,6 +268,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods,
                                       Transition transition, IsotopeDistInfo isotopeDist)
         {
+            if (transition.IsCustom())
+                return transition.GetCustomMass(TransitionSettings.Prediction.FragmentMassType);
+
             return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }
 

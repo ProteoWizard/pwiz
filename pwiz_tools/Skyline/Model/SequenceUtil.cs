@@ -842,10 +842,7 @@ namespace pwiz.Skyline.Model
 
         public double GetFragmentMass(Transition transition, IsotopeDistInfo isotopeDist, ExplicitSequenceMods mods)
         {
-            if (Transition.IsCustom(transition.IonType))
-            {
-                return transition.CustomIon.UsedMass ?? 0;
-            }
+            Assume.IsFalse(transition.IsCustom());
             return GetFragmentMass(transition.Group.Peptide.Sequence,
                 transition.IonType, transition.Ordinal, transition.MassIndex, isotopeDist, mods);
         }

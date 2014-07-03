@@ -313,6 +313,11 @@ namespace pwiz.Skyline.Model
             return massH - (losses != null ? losses.Mass : 0);
         }
 
+        public double GetCustomMass(MassType massType)
+        {
+            return (massType == MassType.Average ? CustomIon.AverageMass : CustomIon.MonoisotopicMass).Value;
+        }
+
         private void Validate()
         {
             if (IsPrecursor())

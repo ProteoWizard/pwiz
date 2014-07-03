@@ -122,7 +122,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// is either PR or PK)
         /// </summary>
         public int? MinFragmentLength { get; private set; }
-        public double? UsedMass { get; set; }
         public bool IsNTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.N; }
         public bool IsCTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.C; }
 
