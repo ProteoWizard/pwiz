@@ -1994,7 +1994,7 @@ namespace pwiz.Skyline.Model
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
-            int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+            int countRatios = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
             return new TransitionGroupChromInfo(fileId,
                                                 optimizationStep,
                                                 peakCountRatio,
@@ -2341,7 +2341,7 @@ namespace pwiz.Skyline.Model
                     reader.ReadStartElement();
                     annotations = ReadAnnotations(reader);
                 }
-                int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+                int countRatios = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
                 return new TransitionChromInfo(fileId,
                                                optimizationStep,
                                                massError,

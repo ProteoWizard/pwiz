@@ -18,7 +18,7 @@
  */
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Scoring
@@ -75,19 +75,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         protected LegacyCountScoreCalc(string headerName) : base(headerName) {}
 
-        protected abstract bool IsIncludedGroup(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData);
+        protected abstract IEnumerable<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData);
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            if (!summaryPeakData.TransitionGroupPeakData.Where(IsIncludedGroup).Any())
-                return float.NaN;
-            return (float) summaryPeakData.TransitionGroupPeakData.Where(IsIncludedGroup).Sum(pd => CalcCountScore(pd));
+            float max = float.MinValue;
+            foreach (var peakData in GetIncludedGroups(summaryPeakData))
+            {
+                max = Math.Max(max, (float) CalcCountScore(peakData));
+            }
+            return max != float.MinValue ? max : float.NaN;
         }
 
         private double CalcCountScore(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData)
         {
-            return GetPeakCountScore(transitionGroupPeakData.TranstionPeakData.Count(p => !p.PeakData.IsForcedIntegration),
-                                     transitionGroupPeakData.TranstionPeakData.Count);
+            int count = 0, unforced = 0;
+            foreach (var peakData in GetIonTypes(transitionGroupPeakData.TranstionPeakData))
+            {
+                count++;
+                if (!peakData.PeakData.IsForcedIntegration)
+                    unforced++;
+            }
+            return GetPeakCountScore(unforced, count);
         }
 
         public static double GetPeakCountScore(double peakCount, double totalCount)
@@ -96,6 +105,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                        ? 4.0 * peakCount / totalCount
                        : peakCount;
         }
+
+        protected abstract IEnumerable<ITransitionPeakData<TData>> GetIonTypes<TData>(IEnumerable<ITransitionPeakData<TData>> tranPeakDatas);
 
         public override bool IsReversedScore { get { return false; } }
     }
@@ -109,9 +120,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.LegacyUnforcedCountScoreCalc_LegacyUnforcedCountScoreCalc_Legacy_unforced_count; }
         }
 
-        protected override bool IsIncludedGroup(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData)
+        protected override IEnumerable<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            return !transitionGroupPeakData.IsStandard;
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override IEnumerable<ITransitionPeakData<TData>> GetIonTypes<TData>(IEnumerable<ITransitionPeakData<TData>> tranPeakDatas)
+        {
+            return MQuestHelpers.GetDefaultIonTypes(tranPeakDatas);
         }
     }
 
@@ -124,9 +140,34 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard; }
         }
 
-        protected override bool IsIncludedGroup(ITransitionGroupPeakData<ISummaryPeakData> transitionGroupPeakData)
+        protected override IEnumerable<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            return transitionGroupPeakData.IsStandard;
+            return MQuestHelpers.GetStandardGroups(summaryPeakData);
+        }
+
+        protected override IEnumerable<ITransitionPeakData<TData>> GetIonTypes<TData>(IEnumerable<ITransitionPeakData<TData>> tranPeakDatas)
+        {
+            return MQuestHelpers.GetDefaultIonTypes(tranPeakDatas);
+        }
+    }
+
+    public class LegacyUnforcedCountScoreDefaultCalc : LegacyCountScoreCalc
+    {
+        public LegacyUnforcedCountScoreDefaultCalc() : base("Default co-elution count") { }  // Not L10N
+
+        public override string Name
+        {
+            get { return Resources.LegacyUnforcedCountScoreDefaultCalc_Name_Default_co_elution_count; }
+        }
+
+        protected override IEnumerable<ITransitionGroupPeakData<ISummaryPeakData>> GetIncludedGroups(IPeptidePeakData<ISummaryPeakData> summaryPeakData)
+        {
+            return MQuestHelpers.GetBestAvailableGroups(summaryPeakData);
+        }
+
+        protected override IEnumerable<ITransitionPeakData<TData>> GetIonTypes<TData>(IEnumerable<ITransitionPeakData<TData>> tranPeakDatas)
+        {
+            return MQuestHelpers.GetDefaultIonTypes(tranPeakDatas);
         }
     }
 
@@ -141,8 +182,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            return summaryPeakData.TransitionGroupPeakData.Count(
-                pd => pd.TranstionPeakData.Any(p => p.PeakData.Identified != PeakIdentification.FALSE));
+            foreach (var groupPeakData in summaryPeakData.TransitionGroupPeakData)
+            {
+                foreach (var peakData in groupPeakData.TranstionPeakData)
+                {
+                    if (peakData.PeakData.Identified != PeakIdentification.FALSE)
+                        return 1;
+                }                
+            }
+            return 0;
         }
 
         public override bool IsReversedScore { get { return false; } }

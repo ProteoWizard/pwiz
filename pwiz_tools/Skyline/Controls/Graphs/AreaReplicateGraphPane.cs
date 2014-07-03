@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (areaView == AreaNormalizeToView.area_ratio_view)
             {
                 ratioIndex = GraphSummary.RatioIndex;
-                standardType = document.Settings.PeptideSettings.Modifications.InternalStandardTypes[ratioIndex];                
+                standardType = document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[ratioIndex];                
             }
             else if (areaView == AreaNormalizeToView.area_global_standard_view)
             {

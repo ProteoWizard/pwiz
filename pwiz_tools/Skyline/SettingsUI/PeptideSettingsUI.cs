@@ -359,12 +359,6 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
 
             var standardTypes = _driverLabelType.InternalStandardTypes;
-            if (standardTypes.Count < 1)
-            {
-                MessageDlg.Show(this, Resources.PeptideSettingsUI_ValidateNewSettings_Choose_at_least_one_internal_standard_type);
-                e.Cancel = true;
-                return null;
-            }
             PeptideModifications modifications = new PeptideModifications(
                 _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
                 _driverLabelType.GetHeavyModifications(), standardTypes);
@@ -1180,7 +1174,7 @@ namespace pwiz.Skyline.SettingsUI
                 get
                 {
                     if (_singleStandard)
-                        return new[] {(IsotopeLabelType) ComboIS.SelectedItem};
+                        return Equals(ComboIS.SelectedItem, Resources.LabelTypeComboDriver_LoadList_none) ? new IsotopeLabelType[0] : new[] { (IsotopeLabelType)ComboIS.SelectedItem };
                     
                     var listStandardTypes = new List<IsotopeLabelType>();
                     foreach (IsotopeLabelType labelType in ListBoxIS.CheckedItems)
@@ -1203,9 +1197,12 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
                         ComboIS.Items.Clear();
+                        ComboIS.Items.Add(Resources.LabelTypeComboDriver_LoadList_none);
                         ComboIS.Items.Add(IsotopeLabelType.light);
-                        if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                        if (!internalStandardTypes.Any())
                             ComboIS.SelectedIndex = 0;
+                        if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                            ComboIS.SelectedIndex = 1;
                         ComboIS.Visible = true;
                         ListBoxIS.Visible = false;
                         ComboIS.Parent.Parent.Parent.Height +=
@@ -1251,9 +1248,7 @@ namespace pwiz.Skyline.SettingsUI
                         Combo.SelectedIndex = 0;
                     // If no internal standard selected yet, use the first heavy mod type
                     if (_singleStandard && ComboIS.SelectedIndex == -1)
-                        ComboIS.SelectedIndex = (ComboIS.Items.Count > 1 ? 1 : 0);
-                    if (!_singleStandard && ListBoxIS.CheckedItems.Count == 0)
-                        ListBoxIS.SetItemChecked(ListBoxIS.Items.Count > 1 ? 1 : 0, true);
+                        ComboIS.SelectedIndex = (ComboIS.Items.Count > 2 ? 2 : 1);
                 }
                 finally
                 {

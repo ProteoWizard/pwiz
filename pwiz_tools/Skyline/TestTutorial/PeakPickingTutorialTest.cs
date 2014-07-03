@@ -87,8 +87,8 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "0.6109|-1.4593|0.3128|2.3078|2.2117|0.0668|0.1490|-0.2437| null |-0.7363|1.5011|-0.1049|0.4372|-0.0388| null |-0.0496| null |7.7481|-0.0035| null | null | null | null ", // Not L10N
-            "0.0590| null | null | null |3.1377|-0.0459|0.6183|0.5442| null | null | null | null | null |0.0590| null |0.5442| null |3.1377|-0.0459| null | null | null | null ", // Not L10N
+            "-0.2207|-1.3318|0.4076|2.9034|1.7098|0.0402|0.1721|0.0844| null |-0.0521|6.2034|-0.0706|0.4605|0.8511| null | null | null | null | null | null | null | null | null ", // Not L10N
+            "0.1270| null | null | null |6.2157|-0.0723|0.7088|1.1199| null | null | null | null | null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
-            RunUI(() => Assert.AreEqual(0.297, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
+            RunUI(() => Assert.AreEqual(0.703, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
             PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
@@ -253,18 +253,23 @@ namespace pwiz.SkylineTestTutorial
             // Open up the model again for editing, re-train with second best peaks and removing some scores
             RunUI(() => editListLibrary.SelectItem("test1")); // Not L10N
             var editDlgNew = ShowDialog<EditPeakScoringModelDlg>(editListLibrary.EditItem);
-
             RunUI(() =>
                 {
                     Assert.IsFalse(editDlgNew.UsesSecondBest);
                     Assert.IsTrue(editDlgNew.UsesDecoys);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[7].IsEnabled);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[7].PercentContribution < 0);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[9].IsEnabled);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[9].PercentContribution < 0);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[5].IsEnabled);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[5].PercentContribution < 0);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].IsEnabled);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].PercentContribution < 0);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[0].IsEnabled);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[0].PercentContribution < 0);
                     editDlgNew.UsesSecondBest = true;
-                    editDlgNew.PeakCalculatorsGrid.Items[7].IsEnabled = false;
+                    editDlgNew.PeakCalculatorsGrid.Items[9].IsEnabled = false;
                     editDlgNew.PeakCalculatorsGrid.Items[5].IsEnabled = false;
+                    editDlgNew.PeakCalculatorsGrid.Items[2].IsEnabled = false;
+                    editDlgNew.PeakCalculatorsGrid.Items[0].IsEnabled = false;
                     editDlgNew.TrainModel(true);
                     // Check that these cells are still active even though they've been unchecked
                     Assert.IsTrue(editDlgNew.IsActiveCell(7, 0));

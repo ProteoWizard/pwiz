@@ -4844,9 +4844,6 @@
   <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
     <value>参考共洗脱计数</value>
   </data>
-  <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
-    <value>库亮度点积</value>
-  </data>
   <data name="MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation" xml:space="preserve">
     <value>参考亮度点积</value>
   </data>

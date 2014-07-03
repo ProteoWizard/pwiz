@@ -4838,9 +4838,6 @@ Are you sure you want to continue?</value>
   <data name="LegacyUnforcedCountScoreStandardCalc_LegacyUnforcedCountScoreStandardCalc_Legacy_unforced_count_standard" xml:space="preserve">
     <value>Reference co-elution count</value>
   </data>
-  <data name="MQuestIntensityCorrelationCalc_MQuestIntensityCorrelationCalc_mQuest_intensity_correlation" xml:space="preserve">
-    <value>Library intensity dot-product</value>
-  </data>
   <data name="MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation" xml:space="preserve">
     <value>Reference intensity dot-product</value>
   </data>
@@ -7792,6 +7789,24 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_" xml:space="preserve">
     <value>Multiplex graphing is not supported.</value>
   </data>
+  <data name="LabelTypeComboDriver_LoadList_none" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="MQuestDefaultIntensityCalc_Name_Default_Intensity" xml:space="preserve">
+    <value>Default intensity</value>
+  </data>
+  <data name="LegacyUnforcedCountScoreDefaultCalc_Name_Default_co_elution_count" xml:space="preserve">
+    <value>Default co-elution count</value>
+  </data>
+  <data name="MQuestDefaultWeightedCoElutionCalc_Name_Default_co_elution__weighted_" xml:space="preserve">
+    <value>Default co-elution (weighted)</value>
+  </data>
+  <data name="MQuestIntensityCorrelationCalc_Name_Library_intensity_dot_product" xml:space="preserve">
+    <value>Library intensity dot-product</value>
+  </data>
+  <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
+    <value>Default dotp or idotp</value>
+  </data>
   <data name="ActionTutorial_DownloadTutorials_Error__0_" xml:space="preserve">
     <value>Error {0}</value>
   </data>
@@ -7822,6 +7837,9 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="HomeIcon1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\HomeIcon.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MQuestDefaultWeightedShapeCalc_Name_Default_shape__weighted_" xml:space="preserve">
+    <value>Default shape (weighted)</value>
   </data>
 </root>
 

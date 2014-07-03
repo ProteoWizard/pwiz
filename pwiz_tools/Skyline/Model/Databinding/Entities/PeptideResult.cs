@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get 
             {
                 var mods = SrmDocument.Settings.PeptideSettings.Modifications;
-                var standardType = mods.InternalStandardTypes.FirstOrDefault();
+                var standardType = mods.RatioInternalStandardTypes.FirstOrDefault();
                 var labelType = mods.GetModificationTypes().FirstOrDefault();
                 foreach (var labelRatio in ChromInfo.LabelRatios)
                 {

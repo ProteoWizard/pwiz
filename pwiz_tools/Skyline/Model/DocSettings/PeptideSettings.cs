@@ -1100,7 +1100,6 @@ namespace pwiz.Skyline.Model.DocSettings
             modifications.AddRange(heavyMods);
             _modifications = MakeReadOnly(modifications.ToArray());
 
-            Assume.IsTrue(internalStandardTypes.Count > 0);
             InternalStandardTypes = internalStandardTypes;
 
             DoValidate();
@@ -1114,6 +1113,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return _internalStandardTypes; }
             private set { _internalStandardTypes = MakeReadOnly(value); }
+        }
+
+        /// <summary>
+        /// If the user has selected "none" for internal standard types,
+        /// we still want to calculate ratios for all of the types
+        /// </summary>
+        public IList<IsotopeLabelType> RatioInternalStandardTypes
+        {
+            get { return InternalStandardTypes.Count > 0 ? InternalStandardTypes : GetHeavyModificationTypes().ToList() ; }
         }
 
         public IList<StaticMod> StaticModifications

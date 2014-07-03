@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestA
             var calcShape = new MQuestReferenceShapeCalc();
             var calcCoelution = new MQuestReferenceCoElutionCalc();
             var calcWeightedShape = new MQuestWeightedReferenceShapeCalc();
-            var calcWeightedCoelution = new MQuestWeightedCoElutionCalc();
+            var calcWeightedCoelution = new MQuestWeightedReferenceCoElutionCalc();
             // These scores are the same with or without an extra MS1 transition
             foreach (var peptideData in peptidePeakDatas)
             {

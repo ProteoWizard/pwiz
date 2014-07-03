@@ -3202,7 +3202,7 @@ namespace pwiz.Skyline
             ratiosContextMenuItem.Visible =
                 settings.HasResults &&
                     (settings.HasGlobalStandardArea ||
-                    (settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
+                    (settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count > 1 &&
                      settings.PeptideSettings.Modifications.HasHeavyModifications));
             contextMenuTreeNode.Show(SequenceTree, pt);
         }
@@ -3211,7 +3211,7 @@ namespace pwiz.Skyline
         {
             ToolStripMenuItem menu = ratiosContextMenuItem;
             menu.DropDownItems.Clear();
-            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
                 SelectRatioHandler.Create(this, menu, standardTypes[i].Title, i);

@@ -3658,7 +3658,7 @@ namespace pwiz.Skyline
             var areaView = AreaGraphController.AreaView;
             var settings = DocumentUI.Settings;
             var mods = settings.PeptideSettings.Modifications;
-            var standardTypes = mods.InternalStandardTypes;
+            var standardTypes = mods.RatioInternalStandardTypes;
 
             // Add the Heavy option to the areaNormalizeContextMenuItem if there are heavy modifications
             if (mods.HasHeavyModifications)

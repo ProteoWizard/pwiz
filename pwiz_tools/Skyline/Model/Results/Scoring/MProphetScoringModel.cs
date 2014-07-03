@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private ReadOnlyCollection<IPeakFeatureCalculator> _peakFeatureCalculators;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
-        private const int MAX_ITERATIONS = 20;
+        private const int MAX_ITERATIONS = 30;
         public const double DEFAULT_R_LAMBDA = 0.4;    // Lambda for pi-zero from original R mProphet
 
         /// <summary>
@@ -179,15 +179,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                 preTrainedWeights[i] = double.NaN;
                             }
                         }
-                        var calculators = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators;
-                        for (int i = 0; i < calculators.Count; ++i)
+                        int standardIndex = PeakFeatureCalculators.IndexOf(calc => calc.GetType() == typeof (MQuestStandardIntensityCalc));
+                        bool hasStandards = !double.IsNaN(initParameters.Weights[standardIndex]);
+                        var calculators = hasStandards ? LegacyScoringModel.StandardFeatureCalculators : LegacyScoringModel.AnalyteFeatureCalculators;
+                        for (int i = 0; i < calculators.Length; ++i)
                         {
-                            var calculator = LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators[i];
-                            SetCalculatorValue(calculator.GetType(), LegacyScoringModel.DEFAULT_WEIGHTS[i], preTrainedWeights);
+                            if (calculators[i].GetType() == typeof (MQuestRetentionTimePredictionCalc))
+                                continue;
+                            SetCalculatorValue(calculators[i].GetType(), LegacyScoringModel.DEFAULT_WEIGHTS[i], preTrainedWeights);
                         }
-                        // Legacy doesn't have analyte or standard intensity, so add these in
-                        SetCalculatorValue(typeof(MQuestIntensityCalc), 1.0, preTrainedWeights);
-                        SetCalculatorValue(typeof(MQuestStandardIntensityCalc), 2.0, preTrainedWeights);
                         targetTransitionGroups.ScorePeaks(preTrainedWeights);
                         decoyTransitionGroups.ScorePeaks(preTrainedWeights);
                     }

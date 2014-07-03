@@ -537,8 +537,8 @@ namespace pwiz.SkylineTestTutorial
             // Review regression and outliers, p. 24
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.385, 25.033, 0.9637);
-                          Assert.AreEqual(1, SkylineWindow.RTGraphController.Outliers.Length);
+                          VerifyRTRegression(0.358, 25.920, 0.9162);
+                          Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
                       });
 
             RunDlg<RegressionRTThresholdDlg>(SkylineWindow.ShowRegressionRTThresholdDlg, thresholdDlg =>
@@ -549,11 +549,11 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 24);
 
-            // Verify 6 outliers highlighed and removed, p. 25
+            // Verify 2 outliers highlighed and removed, p. 25
             WaitForConditionUI(() => SkylineWindow.RTGraphController.Outliers.Length == 2);
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.394, 24.86, 0.9985);
+                          VerifyRTRegression(0.393, 24.85, 0.9989);
 
                           SkylineWindow.RemoveRTOutliers();
                       });
@@ -564,7 +564,7 @@ namespace pwiz.SkylineTestTutorial
             // Check outlier removal, p. 25
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.394, 24.86, 0.9985);
+                          VerifyRTRegression(0.393, 24.85, 0.9989);
                           Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
                       });
 

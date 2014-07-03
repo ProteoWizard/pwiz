@@ -400,7 +400,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 PeptideChromInfo chromInfo)
         {
             var mods = docInfo.Settings.PeptideSettings.Modifications;
-            var standardTypes = mods.InternalStandardTypes;
+            var standardTypes = mods.RatioInternalStandardTypes;
             var labelTypes = mods.GetModificationTypes().ToArray();
             bool firstRatio = true;
             foreach (var standardType in standardTypes)
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // optimization data will join with those with it.
                             OptStep = chromInfo.OptimizationStep,
                         };
-                        var standardTypes = docInfo.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                        var standardTypes = docInfo.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
                         if (standardTypes.Count > 1)
                         {
                             for (int j = 0; j < standardTypes.Count; j++)
@@ -739,7 +739,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             UserSetPeak = chromInfo.UserSet,
                             PrecursorResult = precursorResults[new ResultKey(resultFile,chromInfo.OptimizationStep)],
                         };
-                        var standardTypes = docInfo.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                        var standardTypes = docInfo.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
                         if (standardTypes.Count > 1)
                         {
                             for (int j = 0; j < standardTypes.Count; j++)

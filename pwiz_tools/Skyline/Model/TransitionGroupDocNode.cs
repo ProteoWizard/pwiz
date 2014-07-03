@@ -1086,7 +1086,7 @@ namespace pwiz.Skyline.Model
                                         // in use before.
                                         if (chromInfo == null || !chromInfo.Equivalent(fileId, step, peak))
                                         {
-                                            int ratioCount = settingsNew.PeptideSettings.Modifications.InternalStandardTypes.Count;
+                                            int ratioCount = settingsNew.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
                                             chromInfo = CreateTransionChromInfo(chromInfo, fileId, step, peak, ratioCount, userSet);
                                         }
                                     }
@@ -1964,7 +1964,7 @@ namespace pwiz.Skyline.Model
                                   double retentionTime,
                                   UserSet userSet)
         {
-            int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+            int ratioCount = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
             
             // Find the index of the peak group referenced by this retention time.
             int indexPeakBest = -1;
@@ -2074,7 +2074,7 @@ namespace pwiz.Skyline.Model
             if (startTime != null && endTime == null)
                 throw new ArgumentException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak));
 
-            int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+            int ratioCount = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
 
             // Recalculate peaks based on new boundaries
             var listChildrenNew = new List<DocNode>();

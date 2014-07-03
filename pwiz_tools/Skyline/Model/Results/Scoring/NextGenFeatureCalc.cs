@@ -208,37 +208,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = MQuestHelpers.GetAnalyteGroups(summaryPeakData).ToArray();
-
-            if (tranGroupPeakDatas.Length == 0)
-                return float.NaN;
-
-            var isotopeDotProducts = new List<double>();
-            var weights = new List<double>();
-            foreach (var pdGroup in tranGroupPeakDatas)
-            {
-                var pds = pdGroup.TranstionPeakData.Where(pd => pd.NodeTran != null && pd.NodeTran.HasDistInfo).ToList();
-                if (!pds.Any())
-                    continue;
-                var peakAreas = pds.Select(pd => (double)pd.PeakData.Area);
-                var isotopeProportions = pds.Select(pd => (double)pd.NodeTran.IsotopeDistInfo.Proportion);
-                var statPeakAreas = new Statistics(peakAreas);
-                var statIsotopeProportions = new Statistics(isotopeProportions);
-                var isotopeDotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statIsotopeProportions);
-                double weight = statPeakAreas.Sum();
-                if (double.IsNaN(isotopeDotProduct))
-                    isotopeDotProduct = 0;
-                isotopeDotProducts.Add(isotopeDotProduct);
-                weights.Add(weight);
-            }
-            if (isotopeDotProducts.Count == 0)
-                return float.NaN;
-            // If all weights are zero, return zero instead of NaN
-            if (weights.All(weight => weight == 0))
-                return 0;
-            var idotpStats = new Statistics(isotopeDotProducts);
-            var weightsStats = new Statistics(weights);
-            return (float)idotpStats.Mean(weightsStats);
+            return MQuestHelpers.CalculateIdotp(context, summaryPeakData);
         }
 
         public override bool IsReversedScore { get { return false; } }

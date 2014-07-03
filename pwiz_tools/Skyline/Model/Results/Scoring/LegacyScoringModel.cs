@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel_DEFAULT_NAME_Default;
 
-        public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6, W7, W8, W9};
+        public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6};
 
         public static LinearModelParams DEFAULT_PARAMS { get { return new LinearModelParams(DEFAULT_WEIGHTS); } }
 
@@ -44,16 +44,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         // Weighting coefficients.
-        private const double W0 = 1.0;  // Log unforced area
+        private const double W0 = 1.0;  // Log intensity
         private const double W1 = 1.0;  // Unforced count score
-        private const double W2 = LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Unforced count score standard
-        private const double W3 = 20.0; // Identified count
-        private const double W4 = 3.0; // Library intensity correlation
-        private const double W5 = 4.0; // Shape score
-        private const double W6 = -0.05; // Co-elution (weighted)
-        private const double W7 = W4 * LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Library intensity for standard
-        private const double W8 = W5 * LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Shape score for standard
-        private const double W9 = W6 * LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER; // Co-elution (weighted) for standard
+        private const double W2 = 20.0; // Identified count
+        private const double W3 = 3.0; // Library intensity correlation
+        private const double W4 = 4.0; // Shape score
+        private const double W5 = -0.05; // Co-elution (weighted)
+        private const double W6 = -0.7; // Retention time score
 
 
         public static double Score(double logUnforcedArea,
@@ -64,8 +61,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return 
                 W0*logUnforcedArea + 
                 W1*unforcedCountScore + 
-                W2*unforcedCountScoreStandard + 
-                W3*identifiedCount;
+                W1*LegacyLogUnforcedAreaCalc.STANDARD_MULTIPLIER *unforcedCountScoreStandard + 
+                W2*identifiedCount;
         }
 
         private ReadOnlyCollection<IPeakFeatureCalculator> _calculators;
@@ -88,18 +85,37 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             _calculators = MakeReadOnly(new IPeakFeatureCalculator[]
                 {
-                    new LegacyLogUnforcedAreaCalc(),
-                    new LegacyUnforcedCountScoreCalc(),
-                    new LegacyUnforcedCountScoreStandardCalc(),
+                    new MQuestDefaultIntensityCalc(), 
+                    new LegacyUnforcedCountScoreDefaultCalc(), 
                     new LegacyIdentifiedCountCalc(),
-                    new MQuestIntensityCorrelationCalc(),
-                    new MQuestWeightedShapeCalc(),
-                    new MQuestWeightedCoElutionCalc(),
-                    new MQuestStandardIntensityCorrelationCalc(), 
-                    new MQuestStandardWeightedShapeCalc(), 
-                    new MQuestStandardWeightedCoElutionCalc(),
+                    new MQuestDefaultIntensityCorrelationCalc(),
+                    new MQuestDefaultWeightedShapeCalc(),
+                    new MQuestDefaultWeightedCoElutionCalc(),
+                    new MQuestRetentionTimePredictionCalc(), 
                 });
-        } 
+        }
+
+        public static IPeakFeatureCalculator[] AnalyteFeatureCalculators =
+        {
+            new MQuestIntensityCalc(),
+            new LegacyUnforcedCountScoreCalc(),
+            new LegacyIdentifiedCountCalc(),
+            new MQuestIntensityCorrelationCalc(),
+            new MQuestWeightedShapeCalc(),
+            new MQuestWeightedCoElutionCalc(),
+            new MQuestRetentionTimePredictionCalc(),
+        };
+
+        public static IPeakFeatureCalculator[] StandardFeatureCalculators =
+        {
+            new MQuestStandardIntensityCalc(),
+            new LegacyUnforcedCountScoreStandardCalc(),
+            new LegacyIdentifiedCountCalc(),
+            new MQuestStandardIntensityCorrelationCalc(),
+            new MQuestStandardWeightedShapeCalc(),
+            new MQuestStandardWeightedCoElutionCalc(),
+            new MQuestRetentionTimePredictionCalc(),
+        };
 
         public override IPeakScoringModel Train(IList<IList<double[]>> targets, IList<IList<double[]>> decoys, LinearModelParams initParameters, bool includeSecondBest = false, bool preTrain = true)
         {

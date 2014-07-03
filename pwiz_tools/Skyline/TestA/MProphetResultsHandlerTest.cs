@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestA
     public class MProphetResultsHandlerTest : AbstractUnitTest
     {
         private const string ZIP_FILE = @"TestA\MProphetResultsHandlerTest.zip"; // Not L10N
-        private const double Q_CUTOFF = 0.01;
+        private const double Q_CUTOFF = 0.005;
         private const double Q_CUTOFF_HIGH = 0.20;
         private const string REPORT_EXPECTED = "ReportExpected.csv";
         private const string REPORT_ACTUAL = "ReportActual.csv";
@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestA
                 foreach(var chromInfo in transitionNode.ChromInfos)
                     Assert.IsTrue(chromInfo.IsEmpty || transitionNode.IsDecoy);
 
-            // 6. Reintegration adjusts example peak to null at q=0.01 cutoff, but adjusts it to a non-null peak at q=0.05
+            // 6. Reintegration adjusts example peak to null at q=0.005 cutoff, but adjusts it to a non-null peak at q=0.20
             const int groupNum = 11;
             var midQNode = resultsHandler.Document.TransitionGroups.ToList()[groupNum];
             foreach (var chromInfo in midQNode.Transitions.SelectMany(transition => transition.ChromInfos))

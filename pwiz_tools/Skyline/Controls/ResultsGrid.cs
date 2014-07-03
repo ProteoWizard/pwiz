@@ -1147,7 +1147,7 @@ namespace pwiz.Skyline.Controls
             var newRatioColumns = new Dictionary<string, DataGridViewColumn>();
             var settings = DocumentUiContainer.DocumentUI.Settings;
             var mods = settings.PeptideSettings.Modifications;
-            var standardTypes = mods.InternalStandardTypes;
+            var standardTypes = mods.RatioInternalStandardTypes;
             var labelTypes = mods.GetModificationTypes().ToArray();
             // Add special ratio columns in order after the default ratio columns
             // for their element type.

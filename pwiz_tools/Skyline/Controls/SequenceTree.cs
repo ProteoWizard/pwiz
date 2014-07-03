@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Controls
                         ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
                         : 0;
                     var mods = settings.PeptideSettings.Modifications;
-                    _ratioIndex = Math.Min(_ratioIndex, mods.InternalStandardTypes.Count-1);
+                    _ratioIndex = Math.Min(_ratioIndex, mods.RatioInternalStandardTypes.Count-1);
                     if (!settings.HasGlobalStandardArea && _ratioIndex == ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS)
                         _ratioIndex = 0;
                 }

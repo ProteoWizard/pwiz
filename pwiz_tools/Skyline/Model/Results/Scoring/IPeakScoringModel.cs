@@ -507,6 +507,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new NextGenPrecursorMassErrorCalc(),
             new NextGenIsotopeDotProductCalc(),
             new LegacyIdentifiedCountCalc(),
+
+            // Default calculators for scoring on import
+            new MQuestDefaultIntensityCalc(), 
+            new MQuestDefaultIntensityCorrelationCalc(), 
+            new MQuestDefaultWeightedCoElutionCalc(), 
+            new MQuestDefaultWeightedShapeCalc(), 
         };
 
         public static IEnumerable<IPeakFeatureCalculator> Calculators

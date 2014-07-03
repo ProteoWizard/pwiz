@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Hibernate
             var mappingTran = configuration.GetClassMapping(typeof(DbTransitionResult));
 
             var mods = settings.PeptideSettings.Modifications;
-            var standardTypes = mods.InternalStandardTypes;
+            var standardTypes = mods.RatioInternalStandardTypes;
             var labelTypes = mods.GetModificationTypes().ToArray();
             if (labelTypes.Length > 2)
             {

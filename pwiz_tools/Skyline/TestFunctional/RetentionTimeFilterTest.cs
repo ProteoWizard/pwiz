@@ -128,6 +128,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var document = WaitForDocumentLoaded();
                 var chromatogramSet = document.Settings.MeasuredResults.Chromatograms.First(cs => cs.Name == "40fmol");
+                int countNull = 0;
                 foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                 {
                     var prediction = new PeptidePrediction(null, null, true, 1, false, 0);
@@ -142,10 +143,12 @@ namespace pwiz.SkylineTestFunctional
                         null, ExportSchedulingAlgorithm.Average, true, out windowRtIgnored);
                     if (!predictedRt.HasValue)
                     {
-                        Assert.IsNotNull(predictedRt);
+                        countNull++;
+                        continue;
                     }
                     AssertChromatogramWindow(document, chromatogramSet, predictedRt.Value - FILTER_LENGTH, predictedRt.Value + FILTER_LENGTH, tuple.Item3);
                 }
+                Assert.AreEqual(countNull, 1);
             }
 
             // Test using iRT with auto-calculated regression

@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     string standardColumnPart = parts[1];
-                    var standardType = FindLabel(modifications.InternalStandardTypes, standardColumnPart);
+                    var standardType = FindLabel(modifications.RatioInternalStandardTypes, standardColumnPart);
                     if (prefix == RATIO_PREFIX)
                     {
                         getterFunc = peptideResult =>
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     string labelColumnPart = parts[0];
-                    int ratioIndex = IndexOf(modifications.InternalStandardTypes, labelColumnPart);
+                    int ratioIndex = IndexOf(modifications.RatioInternalStandardTypes, labelColumnPart);
                     if (prefix == RATIO_PREFIX)
                     {
                         getterFunc = precursorResult =>
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     string labelColumnPart = parts[0];
-                    int ratioIndex = IndexOf(modifications.InternalStandardTypes, labelColumnPart);
+                    int ratioIndex = IndexOf(modifications.RatioInternalStandardTypes, labelColumnPart);
                     getterFunc = transitionResult =>
                     {
                         if (ratioIndex < 0 || ratioIndex >= transitionResult.ChromInfo.Ratios.Count)
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Model.Databinding
             var propertyNames = new List<string>();
             if (componentType == typeof (PeptideResult))
             {
-                var standardTypes = modifications.InternalStandardTypes;
+                var standardTypes = modifications.RatioInternalStandardTypes;
                 var labelTypes = modifications.GetModificationTypes().ToArray();
                 foreach (var standardType in standardTypes)
                 {
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             if (componentType == typeof (PrecursorResult) || componentType == typeof (TransitionResult))
             {
-                var standardTypes = modifications.InternalStandardTypes;
+                var standardTypes = modifications.RatioInternalStandardTypes;
                 if (standardTypes.Count > 1)
                 {
                     foreach (var standardType in standardTypes)

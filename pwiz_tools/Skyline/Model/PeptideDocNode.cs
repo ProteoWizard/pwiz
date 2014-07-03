@@ -1102,7 +1102,7 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 var listInfoNew = new List<TransitionChromInfo>();
-                var standardTypes = Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                var standardTypes = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
                 foreach (var info in listInfo)
                 {
                     PeptideChromInfoCalculator calc;
@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 var listInfoNew = new List<TransitionGroupChromInfo>();
-                var standardTypes = Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                var standardTypes = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
                 foreach (var info in listInfo)
                 {
                     PeptideChromInfoCalculator calc;
@@ -1257,7 +1257,7 @@ namespace pwiz.Skyline.Model
                 var mods = Settings.PeptideSettings.Modifications;
                 var listRatios = new List<PeptideLabelRatio>();
                 // First add ratios to reference peptides
-                foreach (var standardType in mods.InternalStandardTypes)
+                foreach (var standardType in mods.RatioInternalStandardTypes)
                 {
                     foreach (var labelType in mods.GetModificationTypes())
                     {

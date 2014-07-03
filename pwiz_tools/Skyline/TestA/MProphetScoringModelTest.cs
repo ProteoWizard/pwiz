@@ -187,16 +187,13 @@ namespace pwiz.SkylineTestA
             // Round-trip serialization.
             const string testRoundTrip = @"
                 <legacy_peak_scoring_model name=""TestRoundTrip"" uses_decoys=""true"" uses_second_best=""false"" bias=""1.2"">
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyLogUnforcedAreaCalc"" weight=""7.77""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc"" weight=""4.44""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc"" weight=""5.55""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""6.66""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc"" weight=""7.77""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc"" weight=""7.77""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc"" weight=""8.88""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCorrelationCalc"" weight=""9.99""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedShapeCalc"" weight=""9.99""/>
-                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedCoElutionCalc"" weight=""9.99""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreDefaultCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc"" weight=""7.77""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCorrelationCalc"" weight=""4.44""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedShapeCalc"" weight=""6.66""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedCoElutionCalc"" weight=""5.55""/>
+                    <peak_feature_calculator type=""pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimePredictionCalc"" weight=""7.77""/>
                 </legacy_peak_scoring_model>";
             AssertEx.Serialization<LegacyScoringModel>(testRoundTrip, AssertEx.Cloned);
 

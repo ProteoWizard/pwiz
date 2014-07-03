@@ -177,13 +177,13 @@ namespace pwiz.SkylineTestFunctional
 
             matchedUserSetGroups = new[]
             {
-                new UserSetCount(UserSet.FALSE, 362),
-                new UserSetCount(UserSet.REINTEGRATED, 154),    // TODO: Exclude decoys
+                new UserSetCount(UserSet.FALSE, 398),
+                new UserSetCount(UserSet.REINTEGRATED, 118),    // TODO: Exclude decoys
             };
             matchedUserSetTrans = new[]
             {
-                new UserSetCount(UserSet.FALSE, 1628),
-                new UserSetCount(UserSet.REINTEGRATED, 732),    // TODO: Exclude decoys
+                new UserSetCount(UserSet.FALSE, 1796),
+                new UserSetCount(UserSet.REINTEGRATED, 564),    // TODO: Exclude decoys
             };
 
             VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans);

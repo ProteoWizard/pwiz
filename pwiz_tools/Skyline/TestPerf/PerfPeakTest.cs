@@ -28,7 +28,10 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace TestPerf
 {
@@ -53,6 +56,7 @@ namespace TestPerf
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HeartFailure.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/MikeBHigh.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/LudovicN14N15.zip"
             };
             // IsPauseForScreenShots = true;
@@ -61,9 +65,14 @@ namespace TestPerf
 
         public readonly static string[] MODEL_NAMES = {"Skyline w/ mProphet", "Skyline Default", "Skyline Legacy", "Skyline w/ mProphet + Decoys"};
 
+        public const double LOW_SIG = 0.01;
+
+        public const double HIGH_SIG = 0.05;
+
         protected override void DoTest()
         {
             const string outDir = @"D:\Results\PeakCompare";
+            string resultsTable = Path.Combine(outDir, "results.txt");
             var none = new List<string>();
             var openSwath = new List<string> { "OpenSwath.csv" };
             var spectronaut = new List<string> { "Spectronaut.csv" };
@@ -75,37 +84,75 @@ namespace TestPerf
             var secondOnly = MODEL_NAMES.Take(3).ToList();
 
             int i = 0;
-            // Hasmik Swath Heavy only
-            AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, new List<int> { 1, 1, 1 });
-            // Hasmik Qe Heavy only
-            AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, new List<int> { 1 });
-            // Hasmik SWATH
-            AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, new List<int> { 1, 1, 1 });
-            // Hasmik QE
-            AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, new List<int> { 1 });
-            // Hasmik Swath Light only
-            AnalyzeDirectory(i++, peakViewSpectronaut, outDir, secondOnly, new List<int> { 0, 1 });
-            // Hasmik Qe Light only
-            AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, new List<int> { 1 });
-            // OpenSwath_Water
-            AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, new List<int> { 2, 1 });
-            // OpenSwath_Yeast
-            AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, new List<int> { 1, 1 });
-            // OpenSwath_Human
-            AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, new List<int> { 2, 1 });
-            // Olga SRM Course vantage
-            AnalyzeDirectory(i++, none, outDir, decoysAndSecond);
-            // Olga SRM Course
-            AnalyzeDirectory(i++, none, outDir, decoysAndSecond);
-            // Heart Failure
-            AnalyzeDirectory(i++, none, outDir, secondOnly);
-            // Ovarian cancer
-            AnalyzeDirectory(i++, none, outDir, secondOnly);
-            // Ludovic N14N15
-            AnalyzeDirectory(i++, none, outDir, secondOnly);
+            using (var fs = new FileSaver(resultsTable))
+            using (var resultsWriter = new StreamWriter(fs.SafeName))
+            {
+                WriteHeader(resultsWriter);
+                // Hasmik Swath Heavy only
+                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, resultsWriter, new List<int> { 1, 1, 1 });
+                // Hasmik Qe Heavy only
+                AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                // Hasmik SWATH
+                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, resultsWriter, new List<int> { 1, 1, 1 });
+                // Hasmik QE
+                AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                // Hasmik Swath Light only
+                AnalyzeDirectory(i++, peakViewSpectronaut, outDir, secondOnly, resultsWriter, new List<int> { 0, 1 });
+                // Hasmik Qe Light only
+                AnalyzeDirectory(i++, spectronaut, outDir, secondOnly, resultsWriter, new List<int> { 1 });
+                // OpenSwath_Water
+                AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 2, 1 });
+                // OpenSwath_Yeast
+                AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 1, 1 });
+                // OpenSwath_Human
+                AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 2, 1 });
+                // Olga SRM Course vantage
+                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
+                // Olga SRM Course
+                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
+                // Heart Failure
+                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                // Ovarian cancer
+                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                // MikeB high (DDA dilution top 12 runs)
+                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                // Ludovic N14N15
+                //AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                resultsWriter.Close();
+                fs.Commit();
+            }
+
         }
 
-        public void AnalyzeDirectory(int index, IEnumerable<string> externals, string outDir, IList<string> modelNames, IList<int> dialogSkips = null)
+        public void WriteHeader(TextWriter writer)
+        {
+            const char separator = TextUtil.SEPARATOR_TSV;
+            // ReSharper disable NonLocalizedString
+            var namesArray = new List<string>
+                {
+                    "DataSet",
+                    "ToolName",
+                    "Peptides01",
+                    "Peptides05",
+                    "PeptdesAll",
+                    "QValue01",
+                    "QValue05"
+                };
+            // ReSharper restore NonLocalizedString
+
+            bool first = true;
+            foreach (var name in namesArray)
+            {
+                if (first)
+                    first = false;
+                else
+                    writer.Write(separator);
+                writer.WriteDsvField(name, separator);
+            }
+            writer.WriteLine();
+        }
+
+        public void AnalyzeDirectory(int index, IEnumerable<string> externals, string outDir, IList<string> modelNames, TextWriter resultsWriter, IList<int> dialogSkips = null)
         {
             if(dialogSkips == null)
                 dialogSkips = new List<int>();
@@ -121,7 +168,7 @@ namespace TestPerf
             var skylineDoc = Path.Combine(directoryPath, skylineName);
             var externalsPaths = externals.Select(name => Path.Combine(directoryPath, name));
 // ReSharper disable UnusedVariable
-            DataSetAnalyzer dataSetAnalyzer = new DataSetAnalyzer(skylineDoc, modelNames, externalsPaths, outDir, dialogSkips);
+            DataSetAnalyzer dataSetAnalyzer = new DataSetAnalyzer(skylineDoc, modelNames, externalsPaths, outDir, dialogSkips, resultsWriter);
 // ReSharper restore UnusedVariable
         }
 
@@ -152,7 +199,7 @@ namespace TestPerf
 
         protected class DataSetAnalyzer
         {
-            public DataSetAnalyzer(string skylineDocument, IList<string> modelNames, IEnumerable<string> filePaths, string outDir, IList<int> dialogSkips)
+            public DataSetAnalyzer(string skylineDocument, IList<string> modelNames, IEnumerable<string> filePaths, string outDir, IList<int> dialogSkips, TextWriter resultsWriter)
             {
                 Settings.Default.PeakScoringModelList.Clear();
                 RunUI(() => SkylineWindow.OpenFile(skylineDocument));
@@ -176,6 +223,19 @@ namespace TestPerf
                     ++i;
                 }
                 var trimmedDoc = Path.GetFileNameWithoutExtension(skylineDocument);
+                foreach (var comparePeakBoundaries in comparePeakPickingDlg.ComparePeakBoundariesList)
+                {
+                    PointPairList rocPoints;
+                    PointPairList qqPoints;
+                    ComparePeakPickingDlg.MakeRocLists(comparePeakBoundaries, out rocPoints);
+                    ComparePeakPickingDlg.MakeQValueLists(comparePeakBoundaries, out qqPoints);
+                    double peptides01 = GetCurveThreshold(rocPoints, LOW_SIG);
+                    double peptides05 = GetCurveThreshold(rocPoints, HIGH_SIG);
+                    double peptidesAll = GetCurveThreshold(rocPoints, double.MaxValue);
+                    double qValue01 = GetCurveThreshold(qqPoints, LOW_SIG);
+                    double qValue05 = GetCurveThreshold(qqPoints, HIGH_SIG);
+                    WriteLine(resultsWriter, trimmedDoc, comparePeakBoundaries.Name, peptides01, peptides05, peptidesAll, qValue01, qValue05);
+                }
                 var sbRoc = new StringBuilder(trimmedDoc);
                 sbRoc.Append("-roc.bmp");
                 comparePeakPickingDlg.ZedGraphRoc.MasterPane.GetImage().Save(Path.Combine(outDir, sbRoc.ToString()));
@@ -184,6 +244,44 @@ namespace TestPerf
                 comparePeakPickingDlg.ZedGraphQq.MasterPane.GetImage().Save(Path.Combine(outDir, sbQq.ToString()));
                 // TODO: How can I copy the data using commands?
                 OkDialog(comparePeakPickingDlg, comparePeakPickingDlg.OkDialog);
+            }
+
+            public double GetCurveThreshold(PointPairList points, double cutoff)
+            {
+                var peptidesThreshPt = points.LastOrDefault(point => point.X < cutoff);
+                return peptidesThreshPt == null ? points.First().Y : peptidesThreshPt.Y;
+            }
+
+            public void WriteLine(TextWriter writer,
+                          string dataset,
+                          string toolName,
+                          double peptides01,
+                          double peptides05,
+                          double peptidesAll,
+                          double qValue01,
+                          double qValue05)
+            {
+                const char separator = TextUtil.SEPARATOR_TSV;
+                var fieldsArray = new List<string>
+                {
+                    dataset,
+                    toolName,
+                    Convert.ToString(peptides01),
+                    Convert.ToString(peptides05),
+                    Convert.ToString(peptidesAll),
+                    Convert.ToString(qValue01),
+                    Convert.ToString(qValue05),
+                };
+                bool first = true;
+                foreach (var name in fieldsArray)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        writer.Write(separator);
+                    writer.WriteDsvField(name, separator);
+                }
+                writer.WriteLine();
             }
 
             public void CreateModels()
@@ -215,6 +313,7 @@ namespace TestPerf
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[6].IsEnabled = false;
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[5].IsEnabled = false;
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[4].IsEnabled = false;
+                    editPeakScoringModelDlg.PeakCalculatorsGrid.Items[3].IsEnabled = false;
                     editPeakScoringModelDlg.TrainModel(true);
                     editPeakScoringModelDlg.OkDialog();
                 });

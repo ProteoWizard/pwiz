@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Controls.Graphs
             //           one in the sequence tree, but at least this will keep the UI
             //           from crashing with IndexOutOfBoundsException.
             var mods = DocumentUIContainer.DocumentUI.Settings.PeptideSettings.Modifications;
-            _ratioIndex = Math.Min(_ratioIndex, mods.InternalStandardTypes.Count - 1);
+            _ratioIndex = Math.Min(_ratioIndex, mods.RatioInternalStandardTypes.Count - 1);
 
             // Only show ratios if document changes to have valid ratios
             if (AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view && !mods.HasHeavyModifications)
