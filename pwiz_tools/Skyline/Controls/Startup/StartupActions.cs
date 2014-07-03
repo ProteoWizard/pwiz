@@ -47,7 +47,14 @@ namespace pwiz.Skyline.Controls.Startup
 
         public void DoStartupAction(SkylineWindow skylineWindow)
         {
-            skylineWindow.Shown += (sender, eventArgs) => OpenSkylineStartupSettingsUI(skylineWindow);
+            if (skylineWindow.Visible)
+            {
+                OpenSkylineStartupSettingsUI(skylineWindow);
+            }
+            else
+            {
+                skylineWindow.Shown += (sender, eventArgs) => OpenSkylineStartupSettingsUI(skylineWindow);
+            }
         }
 
         private void OpenSkylineStartupSettingsUI(SkylineWindow skylineWindow)

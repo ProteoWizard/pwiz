@@ -70,7 +70,14 @@ namespace pwiz.Skyline.Controls.Startup
         private double Progress { get; set; }
         public void DoStartupAction(SkylineWindow skylineWindow)
         {
-            skylineWindow.Shown += (sender, eventArgs) => LongWaitDlgAction(sender, eventArgs, skylineWindow);
+            if (skylineWindow.Visible)
+            {
+                LongWaitDlgAction(skylineWindow);
+            }
+            else
+            {
+                skylineWindow.Shown += (sender, eventArgs) => LongWaitDlgAction(skylineWindow);
+            }
         }
 
         private string getTempPath()
@@ -83,7 +90,7 @@ namespace pwiz.Skyline.Controls.Startup
             return ExtractPath;
         }
 
-        public void LongWaitDlgAction(object sender, EventArgs args, SkylineWindow skylineWindow)
+        public void LongWaitDlgAction(SkylineWindow skylineWindow)
         {
             skylineWindow.ResetDefaultSettings();
             using (var longWaitDlg = new LongWaitDlg
