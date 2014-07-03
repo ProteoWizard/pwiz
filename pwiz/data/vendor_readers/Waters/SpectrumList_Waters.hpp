@@ -76,8 +76,9 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     mutable boost::container::flat_map<double, vector<pair<int, int> > > scanTimeToFunctionAndBlockMap_;
 
     void initializeCoefficients() const;
-    double calibrate(double mz) const;
+    double calibrate(const double &mz) const;
     mutable vector<double> calibrationCoefficients_;
+    mutable vector<double> imsCalibratedMasses_;
     mutable vector<float> imsMasses_;
     mutable vector<int> massIndices_;
     mutable vector<float> imsIntensities_;
