@@ -489,7 +489,16 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     curMaxQuantPSM_->unmodSeq = entry.sequence;
     curMaxQuantPSM_->mz = entry.mz;
     curMaxQuantPSM_->charge = entry.charge;
-    addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
+    try
+    {
+        addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
+    }
+    catch (const MaxQuantWrongSequenceException& e)
+    {
+        Verbosity::warn(e.what());
+        delete curMaxQuantPSM_;
+        return;
+    }
     addLabelModsToVector(curMaxQuantPSM_->mods, entry.rawFile, entry.sequence, entry.labelingState);
     curMaxQuantPSM_->retentionTime = entry.retentionTime;
     curMaxQuantPSM_->score = entry.score;
@@ -608,7 +617,7 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
 
     if (modsFound < (int)modNames.size())
     {
-        Verbosity::warn("Found %d exceptions but expected at least %d in sequence %s (%d)",
+        Verbosity::warn("Found %d modifications but expected at least %d in sequence %s (%d)",
                         modsFound, modNames.size(), modSequence.c_str(), lineNum_);
     }
 }
@@ -748,9 +757,9 @@ SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence
         }
     }
 
-    throw BlibException(false, "No matching mod for %s in sequence %s (line %d)",
-                               modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
-
+    // This may occur due to a bug in MaxQuant where the wrong sequence
+    // (2nd best) is reported instead of the best one
+    throw MaxQuantWrongSequenceException(modAbbreviation, modSequence, lineNum_);
 }
 
 /**

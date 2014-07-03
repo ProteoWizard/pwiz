@@ -26,6 +26,8 @@
 #include <algorithm>
 #include <boost/tokenizer.hpp>
 #include <iterator>
+#include <sstream>
+#include <stdexcept>
 
 using namespace std;
 using namespace boost;
@@ -210,6 +212,22 @@ private:
     vector<SeqMod> getFixedMods(char aa, int aaPosition, const vector<const MaxQuantModification*>& mods);
 
     const escaped_list_separator<char> separator_;
+};
+
+class MaxQuantWrongSequenceException : public std::exception {
+public:
+    MaxQuantWrongSequenceException(const std::string& mod, const std::string& seq, int line) {
+        std::stringstream ss;
+        ss << "No matching mod for " << mod << " in sequence " << seq << " (line " << line << ")";
+        message_ = ss.str();
+    }
+    virtual ~MaxQuantWrongSequenceException() throw () {
+    }
+    virtual const char* what() const throw () {
+        return message_.c_str();
+    }
+private:
+    std::string message_;
 };
 
 } // namespace
