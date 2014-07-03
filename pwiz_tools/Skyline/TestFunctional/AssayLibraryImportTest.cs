@@ -808,6 +808,26 @@ namespace pwiz.SkylineTestFunctional
                 var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
                 Assert.AreEqual(peptideNode.ModifiedSequence, "PVIC[+57.0]ATQMLESM[+16.0]TYNPR");
             });
+
+
+            // Test a difficult case containing modifications of the same peptide at two different sites, make sure Skyline handles it correctly
+            var documentToughCase = TestFilesDir.GetTestPath("ToughModCase.sky");
+            var textToughCase = TestFilesDir.GetTestPath("ToughModCase.csv");
+            LoadDocument(documentToughCase);
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textToughCase), importIrt => importIrt.Btn1Click());
+            SkipLibraryDlg();
+            WaitForDocumentLoaded();
+            RunUI(() =>
+            {
+                var peptides = SkylineWindow.DocumentUI.Peptides.ToList();
+                Assert.AreEqual(peptides.Count, 2);
+                Assert.AreEqual(peptides[0].ModifiedSequence, "AALIM[+16.0]QVLQLTADQIAMLPPEQR");
+                Assert.AreEqual(peptides[1].ModifiedSequence, "AALIMQVLQLTADQIAM[+16.0]LPPEQR");
+                Assert.AreEqual(peptides[0].TransitionGroupCount, 1);
+                Assert.AreEqual(peptides[1].TransitionGroupCount, 1);
+                Assert.AreEqual(peptides[0].TransitionCount, 6);
+                Assert.AreEqual(peptides[1].TransitionCount, 6);
+            });
         }
 
         public static RCalcIrt ValidateDocAndIrt(SrmDocument doc, int peptides, int irtTotal, int irtStandards)

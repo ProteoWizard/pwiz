@@ -540,6 +540,7 @@ namespace pwiz.Skyline.Model
                         nodeForModPep = ModMatcher.CreateDocNodeFromSettings(modifiedSequence, null, SrmSettingsDiff.ALL, out nodeGroupMatched);
                         NodeDictionary.Add(modifiedSequence, nodeForModPep);
                     }
+                    info.ModifiedSequence = nodeForModPep == null ? info.PeptideSequence : nodeForModPep.ModifiedSequence;
                 }
                 var nodesToConsider = nodeForModPep != null ? 
                                       new List<PeptideDocNode> {nodeForModPep} :
@@ -1363,7 +1364,7 @@ namespace pwiz.Skyline.Model
 
         public string ProteinName { get; private set; }
         public string PeptideSequence { get; private set; }
-        public string ModifiedSequence { get; private set; }
+        public string ModifiedSequence { get; set; }
         public double PrecursorMz { get; private set; }
 
         public bool IsDecoy { get; private set; }
@@ -1540,6 +1541,7 @@ namespace pwiz.Skyline.Model
 
         private FastaSequence _activeFastaSeq;
         private Peptide _activePeptide;
+        private string _activeModifiedSequence;
         // Order is important to making the variable modification choice deterministic
         // when more than one potential set of variable modifications work to explain
         // the contents of the active peptide.
@@ -1573,6 +1575,7 @@ namespace pwiz.Skyline.Model
             _irtPeptides = new List<KeyValuePair<string, double>>();
             _librarySpectra = new List<SpectrumMzInfo>();
             _activeLibraryIntensities = new List<SpectrumPeaksInfo.MI>();
+            _activeModifiedSequence = null;
         }
 
         public PeptideGroupBuilder(string line, bool peptideList, SrmSettings settings)
@@ -1690,9 +1693,10 @@ namespace pwiz.Skyline.Model
                 _activeFastaSeq = new FastaSequence(Name, Description, Alternatives, AA);
 
             string sequence = info.PeptideSequence;
+            string modifiedSequence = info.ModifiedSequence;
             if (_activePeptide != null)
             {
-                if (!Equals(sequence, _activePeptide.Sequence))
+                if (!Equals(modifiedSequence, _activeModifiedSequence))
                 {
                     CompletePeptide(true);
                 }
@@ -1710,7 +1714,7 @@ namespace pwiz.Skyline.Model
                         intersectVariableMods = new List<ExplicitMods>(info.PotentialVarMods);
                         foreach (var infoActive in _activeTransitionInfos)
                         {
-                            intersectVariableMods = new List<ExplicitMods>(_activeVariableMods.Intersect(
+                            intersectVariableMods = new List<ExplicitMods>(intersectVariableMods.Intersect(
                                 infoActive.PotentialVarMods));
                         }
                         
@@ -1748,6 +1752,7 @@ namespace pwiz.Skyline.Model
                     end = begin + sequence.Length;
                 }
                 _activePeptide = new Peptide(_activeFastaSeq, sequence, begin, end, _enzyme.CountCleavagePoints(sequence), info.TransitionExps[0].IsDecoy);
+                _activeModifiedSequence = info.ModifiedSequence;
                 _activePrecursorMz = info.PrecursorMz;
                 _activeVariableMods = new List<ExplicitMods>(info.PotentialVarMods.Distinct());
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));

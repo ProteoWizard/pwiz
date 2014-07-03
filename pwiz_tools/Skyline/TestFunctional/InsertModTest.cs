@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
                 // Bad peptide
                 VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters, 9, 0);
                 // No mods explain all transitions
-                VerifyTransitionListError(insertTransDlg, insertPart1 + insertPart2, null, null, Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0__with_a_single_precursor, 3, 0, 1);
+                VerifyTransitionListError(insertTransDlg, insertPart1 + insertPart2, null, null, Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications, 3, 0, 2);
                 // Finally a working set of transitions
                 SetClipboardText(insertPart1 + insertSep + insertPart2);
                 insertTransDlg.PasteTransitions();
