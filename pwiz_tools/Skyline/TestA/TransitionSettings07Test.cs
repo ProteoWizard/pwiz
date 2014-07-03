@@ -106,7 +106,8 @@ namespace pwiz.SkylineTestA
             var docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] { MeasuredIonList.NTERM_PROLINE,reporterIon})));
             Assert.AreEqual(7,docReporterIon.TransitionCount);
-            docReporterIon.Settings.TransitionSettings.Prediction.ChangeFragmentMassType(MassType.Monoisotopic);
+            
+            //Check With Monoisotopic
             double mass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, "H2O");
             for (int i = 0; i < 3; i ++)
             {
@@ -116,6 +117,23 @@ namespace pwiz.SkylineTestA
                 Assert.AreEqual(tran.Charge,i+1);
                 Assert.AreEqual(SequenceMassCalc.GetMZ(mass,i +1), tranNode.Mz);
             }
+
+            //Check with Average
+            TransitionPrediction predSettings = docReporterIon.Settings.TransitionSettings.Prediction.ChangeFragmentMassType(MassType.Average);
+            TransitionSettings tranSettings = docReporterIon.Settings.TransitionSettings.ChangePrediction(predSettings);
+            SrmSettings srmSettings = docReporterIon.Settings.ChangeTransitionSettings(tranSettings);
+            SrmDocument averageDocument = docReporterIon.ChangeSettings(srmSettings);
+            mass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, "H2O");
+            for (int i = 0; i < 3; i++)
+            {
+                TransitionDocNode tranNode = averageDocument.Transitions.ElementAt(i);
+                Transition tran = tranNode.Transition;
+                Assert.AreEqual(reporterIon, tran.CustomIon);
+                Assert.AreEqual(tran.Charge, i + 1);
+                Assert.AreEqual(SequenceMassCalc.GetMZ(mass, i + 1), tranNode.Mz);
+            }
+
+            //Make sure the rest of the transitions aren't reporter ions
             for (int i = 3; i < 7; i ++)
             {
                 Transition tran = docReporterIon.Transitions.ElementAt(i).Transition;
