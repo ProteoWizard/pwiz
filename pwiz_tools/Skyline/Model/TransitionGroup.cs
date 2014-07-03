@@ -181,6 +181,18 @@ namespace pwiz.Skyline.Model
                     yield return nodeTran;
             }
 
+            foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsReporter))
+            {
+                foreach (int charge in measuredIon.Charges)
+                {
+                    var tran = new Transition(this, charge, measuredIon);
+                    double massH = (double) (tranSettings.Prediction.FragmentMassType == MassType.Average
+                        ? measuredIon.AverageMass
+                        : measuredIon.MonoisotopicMass);
+                    yield return new TransitionDocNode(tran, null, massH, null, null);
+                }
+            }
+
             // If picking relies on library information
             if (useFilter && pick != TransitionLibraryPick.none)
             {
@@ -480,7 +492,14 @@ namespace pwiz.Skyline.Model
             // First return no losses
             yield return null;
 
-            if (potentialLosses != null)
+            if (type.Equals(IonType.custom))
+            {
+                foreach (var potentialLoss in potentialLosses)
+                {
+                    yield return GetCustomTransitionLosses(potentialLoss, massType);
+                }    
+            }
+            else if (potentialLosses != null)
             {
                 // Try to avoid allocating a whole list for this, as in many cases
                 // there should be only one loss
@@ -545,6 +564,16 @@ namespace pwiz.Skyline.Model
             if (listLosses == null)
                 return null;
             return  new TransitionLosses(listLosses, massType);
+        }
+
+        private static TransitionLosses GetCustomTransitionLosses(IEnumerable<ExplicitLoss> losses,MassType massType)
+        {
+            List<TransitionLoss> listLosses = new List<TransitionLoss>();
+            foreach (var loss in losses)
+            {
+                listLosses.Add(loss.TransitionLoss);            
+            }
+            return new TransitionLosses(listLosses,massType);
         }
 
         public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool useFilter,

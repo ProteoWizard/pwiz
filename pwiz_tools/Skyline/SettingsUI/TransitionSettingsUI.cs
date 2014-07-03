@@ -447,6 +447,8 @@ namespace pwiz.Skyline.SettingsUI
                 _transitionSettings = settings;
             }
 
+            UpdateUsedCustomIonMasses();
+
             DialogResult = DialogResult.OK;
         }
 
@@ -486,6 +488,16 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void UpdateUsedCustomIonMasses()
+        {
+            foreach (var ion in Filter.MeasuredIons.Where(ion => ion.IsReporter))
+            {
+                ion.UsedMass = Prediction.FragmentMassType == MassType.Average
+                    ? ion.UsedMass = ion.AverageMass
+                    : ion.UsedMass = ion.MonoisotopicMass;
+            }
+        }
+
         private void cbLibraryPick_CheckedChanged(object sender, EventArgs e)
         {
             panelPick.Visible = cbLibraryPick.Checked;
@@ -514,6 +526,7 @@ namespace pwiz.Skyline.SettingsUI
         private void btnEditSpecialTransitions_Click(object sender, EventArgs e)
         {
             _driverIons.EditList();
+            UpdateUsedCustomIonMasses();
         }
 
         private void btnOk_Click(object sender, EventArgs e)

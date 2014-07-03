@@ -663,7 +663,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\">" +
                 "<measured_ion name=\"N-terminal to Proline\" cut=\"P\" sense=\"N\"/>" +
-                "<measured_ion name=\"Reporter Test\" formula=\"C4H2O\"/>" +
+                "<measured_ion name=\"Reporter Test\" formula=\"C4H2O\" charges=\"1\"/>" +
                 "</transition_filter>");
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" precursor_mz_window=\"" + TransitionFilter.MAX_EXCLUSION_WINDOW + "\"/>");
@@ -715,9 +715,9 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
                 " cut=\"P\" sense=\"N\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"H4P2O5\"/>");
+                " formula=\"H4P2O5\" charges=\"1\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\"/>");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\" charges=\"1\"/>");
 
             // No name
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion" +
@@ -745,24 +745,24 @@ namespace pwiz.SkylineTest
                 " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + 1) + "\"/>");
             // Reporter with bad formulas
             AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"\"/>");
+                " formula=\"\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"He3\"/>");
+                " formula=\"He3\" charges=\"1\"/>");
             // Reporter with formulas producing out of range masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"H2O\"/>");
+                " formula=\"H2\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"HP23O15\"/>");
+                " formula=\"HP23O15\" charges=\"1\"/>");
             // Reporter without formula and without both masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" />");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\"/>");
+                " mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\" charges=\"1\"/>");
             // Reporter without formula and out of range masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + (MeasuredIon.MIN_REPORTER_MASS - 0.1) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\"/>");
+                " mass_monoisotopic=\"" + (MeasuredIon.MIN_REPORTER_MASS - 0.1) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS + 0.1) + "\"/>");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS + 0.1) + "\" charges=\"1\"/>");
         }
 
         private const string LEGACY_LOW_ACCURACY = "Low Accuracy";

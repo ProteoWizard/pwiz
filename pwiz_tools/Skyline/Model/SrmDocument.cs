@@ -57,6 +57,7 @@ using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
@@ -233,7 +234,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_5 = 1.5;
         public const double FORMAT_VERSION_1_6 = 1.6;   // Adds richer protein metadata
         public const double FORMAT_VERSION_1_7 = 1.7;   // Adds Ion Mobility handling
-        public const double FORMAT_VERSION = FORMAT_VERSION_1_7;
+        public const double FORMAT_VERSION_1_8 = 1.8;   //Adds Reporter Ions and non proteomic transitions
+        public const double FORMAT_VERSION = FORMAT_VERSION_1_8;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
@@ -1353,6 +1355,7 @@ namespace pwiz.Skyline.Model
             public const string collision_energy = "collision_energy";
             public const string declustering_potential = "declustering_potential";
             public const string standard_type = "standard_type";
+            public const string measured_ion_name = "measured_ion_name";
 
             // Results
             public const string replicate = "replicate";
@@ -2119,6 +2122,10 @@ namespace pwiz.Skyline.Model
             Transition transition;
             if (Transition.IsPrecursor(info.IonType))
                 transition = new Transition(group, IonType.precursor, group.Peptide.Length - 1, info.MassIndex, group.PrecursorCharge, info.DecoyMassShift);
+            else if (Transition.IsCustom(info.IonType))
+            {
+                transition = new Transition(group, info.Charge, info.MeasuredIon);
+            }
             else
             {
                 int offset = Transition.OrdinalToOffset(info.IonType,
@@ -2127,12 +2134,27 @@ namespace pwiz.Skyline.Model
             }
 
             var losses = info.Losses;
-            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
+            double massH;
+            if (transition.IsCustom())
+            {
+                massH = (double) (Settings.TransitionSettings.Prediction.FragmentMassType.Equals(MassType.Average)
+                    ? transition.CustomIon.AverageMass
+                    : transition.CustomIon.MonoisotopicMass);
+            }
+            else
+            {
+                massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
+            }
+
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
 
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
 
+            if (transition.IsCustom())
+            {
+                return new TransitionDocNode(transition, null, massH, isotopeDistInfo, null);
+            }
             return new TransitionDocNode(transition, info.Annotations, losses,
                 massH, isotopeDistInfo, info.LibInfo, info.Results);
         }
@@ -2180,6 +2202,7 @@ namespace pwiz.Skyline.Model
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
+            public MeasuredIon MeasuredIon { get; private set; }
 
             public void ReadXml(XmlReader reader, SrmSettings settings)
             {
@@ -2192,9 +2215,19 @@ namespace pwiz.Skyline.Model
                 PrecursorCharge = reader.GetIntAttribute(ATTR.precursor_charge);
                 Charge = reader.GetIntAttribute(ATTR.product_charge);
                 DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
-
+                string measuredIonName = reader.GetAttribute(ATTR.measured_ion_name);
+                if (measuredIonName != null)
+                {
+                    MeasuredIon = settings.TransitionSettings.Filter.MeasuredIons.SingleOrDefault(
+                        i => i.Name.Equals(measuredIonName));
+                    if (MeasuredIon == null)
+                        throw new InvalidDataException(string.Format(TutorialLinkResources.TransitionInfo_ReadXml_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_, measuredIonName));
+                    IonType = IonType.custom;
+                }
                 if (reader.IsEmptyElement)
+                {
                     reader.Read();
+                }
                 else
                 {
                     reader.ReadStartElement();
@@ -2218,7 +2251,7 @@ namespace pwiz.Skyline.Model
                     if (reader.IsStartElement(EL.stop_rt))
                         reader.ReadElementContentAsDoubleInvariant();
 
-                    reader.ReadEndElement();                                    
+                    reader.ReadEndElement();
                 }
             }
 
@@ -2793,6 +2826,14 @@ namespace pwiz.Skyline.Model
                                         TransitionDocNode nodeTransition)
         {
             Transition transition = nodeTransition.Transition;
+            if (transition.IsCustom())
+            {
+                writer.WriteAttributeString(ATTR.measured_ion_name, transition.CustomIon.Name);
+                writer.WriteAttribute(ATTR.product_charge,transition.Charge);
+                writer.WriteElementString(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz));
+                writer.WriteElementString(EL.product_mz, SequenceMassCalc.PersistentMZ(nodeTransition.Mz));
+                return;
+            }
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             writer.WriteAttributeNullable(ATTR.decoy_mass_shift, transition.DecoyMassShift);
 

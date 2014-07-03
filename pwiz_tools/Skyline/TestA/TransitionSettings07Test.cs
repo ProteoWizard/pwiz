@@ -88,6 +88,40 @@ namespace pwiz.SkylineTestA
                 nodeTran.Transition.Ordinal == 2 || // not y2
                 nodeTran.Transition.Ordinal == 8)); // not y8
         }
+        /// <summary>
+        /// Test reporter ion support in MeasuredIons in TransitionFilter
+        /// </summary>
+        [TestMethod]
+        public void ReporterIonTest()
+        {
+            var docOriginal = new SrmDocument(SrmSettingsList.GetDefault());
+            IdentityPath path;
+            var docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
+                true, IdentityPath.ROOT, out path);
+            // One of the prolines should have caused an extra transition
+            Assert.AreEqual(4, docPeptide.TransitionCount);
+            Assert.IsTrue(docPeptide.Transitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8));
+
+            MeasuredIon reporterIon = new MeasuredIon("Water","H2O",null,null,new []{1,2,3});
+            var docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
+                filter.ChangeMeasuredIons(new[] { MeasuredIonList.NTERM_PROLINE,reporterIon})));
+            Assert.AreEqual(7,docReporterIon.TransitionCount);
+            docReporterIon.Settings.TransitionSettings.Prediction.ChangeFragmentMassType(MassType.Monoisotopic);
+            double mass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, "H2O");
+            for (int i = 0; i < 3; i ++)
+            {
+                TransitionDocNode tranNode = docReporterIon.Transitions.ElementAt(i);
+                Transition tran = tranNode.Transition;
+                Assert.AreEqual(reporterIon, tran.CustomIon);
+                Assert.AreEqual(tran.Charge,i+1);
+                Assert.AreEqual(SequenceMassCalc.GetMZ(mass,i +1), tranNode.Mz);
+            }
+            for (int i = 3; i < 7; i ++)
+            {
+                Transition tran = docReporterIon.Transitions.ElementAt(i).Transition;
+                Assert.AreNotEqual(tran.CustomIon,reporterIon);
+            }
+        }
 
         /// <summary>
         /// Test support for the new dynamic minimum m/z flag in TransitionInstrument

@@ -633,7 +633,7 @@ for calculating potential product ions</value>
     <value>True</value>
   </data>
   <data name="cbAutoSelect.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 332</value>
+    <value>21, 394</value>
   </data>
   <data name="cbAutoSelect.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 17</value>
@@ -661,11 +661,14 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;cbAutoSelect.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="label28.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="label28.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label28.Location" type="System.Drawing.Point, System.Drawing">
-    <value>98, 208</value>
+    <value>98, 275</value>
   </data>
   <data name="label28.Size" type="System.Drawing.Size, System.Drawing">
     <value>25, 13</value>
@@ -688,8 +691,11 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;label28.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="textExclusionWindow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="textExclusionWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 205</value>
+    <value>16, 272</value>
   </data>
   <data name="textExclusionWindow.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
@@ -714,11 +720,14 @@ within 10 on either side of the precursor m/z.</value>
   <data name="&gt;&gt;textExclusionWindow.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="label19.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="label19.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 189</value>
+    <value>13, 256</value>
   </data>
   <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
     <value>162, 13</value>
@@ -795,11 +804,14 @@ within 10 on either side of the precursor m/z.</value>
   <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="listAlwaysAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left</value>
+  </data>
   <data name="listAlwaysAdd.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 103</value>
   </data>
   <data name="listAlwaysAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 64</value>
+    <value>187, 124</value>
   </data>
   <data name="listAlwaysAdd.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -926,7 +938,7 @@ the filtered range</value>
     <value>21, 83</value>
   </data>
   <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 238</value>
+    <value>321, 305</value>
   </data>
   <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>

@@ -2035,10 +2035,24 @@ namespace pwiz.Skyline.Properties
             new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3); // Not L10N
         public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
             new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1); // Not L10N
-
+        public static readonly MeasuredIon ITRAQ_114 = new MeasuredIon("iTRAQ-114", "C5C'H13N2", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon ITRAQ_115 = new MeasuredIon("iTRAQ-115", "C5C'H13NN'", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon ITRAQ_116 = new MeasuredIon("iTRAQ-116", "C4C'2H13NN'", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon ITRAQ_117 = new MeasuredIon("iTRAQ-117", "C3C'3H13NN'", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon TMT_126 = new MeasuredIon("TMT-126", "C8H16N", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon TMT_127 = new MeasuredIon("TMT-127", "C7C'H16N", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon TMT_128 = new MeasuredIon("TMT-128", "C6C'2H16N", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon TMT_129 = new MeasuredIon("TMT-129", "C5C'3H16N", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon TMT_130 = new MeasuredIon("TMT-130", "C4C'4H16N", null, null, new[] { 1 });// Not L10N
+        public static readonly MeasuredIon TMT_131 = new MeasuredIon("TMT-131", "C4C'4H16N'", null, null, new[] { 1 });// Not L10N
+        
         public override IEnumerable<MeasuredIon> GetDefaults(int revisionIndex)
         {
-            return new[] { NTERM_PROLINE, CTERM_GLU_ASP };
+            return new[]
+            {
+                NTERM_PROLINE, CTERM_GLU_ASP, ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117, TMT_126, TMT_127, TMT_128,
+                TMT_129, TMT_130, TMT_131
+            };
         }
 
         public override MeasuredIon EditItem(Control owner, MeasuredIon item,

@@ -29,24 +29,24 @@ namespace pwiz.Skyline.Model
 {
     public enum IonType
     {
-        precursor = -1, a, b, c, x, y, z
+         precursor = -2, custom = -1, a, b, c, x, y, z
     }
 
     public static class IonTypeExtension
     {
-        private static readonly string[] VALUES = { string.Empty, "a", "b", "c", "x", "y", "z"}; // Not L10N
+        private static readonly string[] VALUES = {string.Empty, string.Empty, "a", "b", "c", "x", "y", "z"}; // Not L10N
 
         private static string[] LOCALIZED_VALUES
         {
             get
             {
-                VALUES[0] = Resources.IonTypeExtension_LOCALIZED_VALUES_precursor;
+                   VALUES[0] = Resources.IonTypeExtension_LOCALIZED_VALUES_precursor;
                 return VALUES;
             }
         }
         public static string GetLocalizedString(this IonType val)
         {
-            return LOCALIZED_VALUES[(int) val + 1]; // To include precursor
+            return LOCALIZED_VALUES[(int) val + 2]; // To include precursor
         }
 
         public static IonType GetEnum(string enumValue)
@@ -118,6 +118,11 @@ namespace pwiz.Skyline.Model
         public static bool IsPrecursor(IonType type)
         {
             return type == IonType.precursor;
+        }
+
+        public static bool IsCustom(IonType type)
+        {
+            return type == IonType.custom;
         }
 
         public static IonType[] GetTypePairs(ICollection<IonType> types)
@@ -214,6 +219,14 @@ namespace pwiz.Skyline.Model
         {
         }
 
+        public Transition(TransitionGroup group,int charge, MeasuredIon customIon)
+        {
+            _group = group;
+            IonType = IonType.custom;
+            Charge = charge;
+            CustomIon = customIon;
+        }
+
         public Transition(TransitionGroup group, IonType type, int offset, int massIndex, int charge, int? decoyMassShift)
         {
             _group = group;
@@ -240,9 +253,12 @@ namespace pwiz.Skyline.Model
 
         public int Charge { get; private set; }
         public IonType IonType { get; private set; }
+
         public int CleavageOffset { get; private set; }
         public int MassIndex { get; private set; }
         public int? DecoyMassShift { get; private set; }
+
+        public MeasuredIon CustomIon;
 
         // Derived values
         public int Ordinal { get; private set; }
@@ -275,6 +291,11 @@ namespace pwiz.Skyline.Model
         public bool IsPrecursor()
         {
             return IsPrecursor(IonType);
+        }
+
+        public bool IsCustom()
+        {
+            return IsCustom(IonType);
         }
 
         public char FragmentNTermAA
@@ -342,6 +363,12 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool Equivalent(Transition obj)
         {
+            if (IsCustom() && obj.IsCustom())
+            {
+                return Equals(obj.IonType, IonType) &&
+                       Equals(Charge, obj.Charge) &&
+                       Equals(CustomIon, obj.CustomIon);
+            }
             return Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
                 obj.Charge == Charge &&
@@ -358,6 +385,10 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
+            if (IsCustom())
+                return Equals(CustomIon, obj.CustomIon) &&
+                       Equals(Charge, obj.Charge);
+            
             return Equals(obj._group, _group) &&
                 Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
@@ -384,6 +415,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ MassIndex;
                 result = (result*397) ^ Charge;
                 result = (result*397) ^ (DecoyMassShift.HasValue ? DecoyMassShift.Value : 0);
+                result = (result*397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return result;
             }
         }

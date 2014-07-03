@@ -331,9 +331,9 @@
             // 
             // listAlwaysAdd
             // 
+            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.CheckOnClick = true;
             this.listAlwaysAdd.FormattingEnabled = true;
-            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.Name = "listAlwaysAdd";
             this.helpTip.SetToolTip(this.listAlwaysAdd, resources.GetString("listAlwaysAdd.ToolTip"));
             // 

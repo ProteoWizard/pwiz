@@ -63,6 +63,8 @@
             this.o18ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.labelCharges = new System.Windows.Forms.Label();
+            this.textCharges = new System.Windows.Forms.TextBox();
             this.panelLossFormula.SuspendLayout();
             this.contextFormula.SuspendLayout();
             this.SuspendLayout();
@@ -275,12 +277,24 @@
             resources.ApplyResources(this.sContextMenuItem, "sContextMenuItem");
             this.sContextMenuItem.Click += new System.EventHandler(this.sContextMenuItem_Click);
             // 
+            // labelCharges
+            // 
+            resources.ApplyResources(this.labelCharges, "labelCharges");
+            this.labelCharges.Name = "labelCharges";
+            // 
+            // textCharges
+            // 
+            resources.ApplyResources(this.textCharges, "textCharges");
+            this.textCharges.Name = "textCharges";
+            // 
             // EditMeasuredIonDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textCharges);
+            this.Controls.Add(this.labelCharges);
             this.Controls.Add(this.textMinAas);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.labelFormula);
@@ -349,5 +363,7 @@
         private System.Windows.Forms.ToolStripMenuItem o18ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sContextMenuItem;
+        private System.Windows.Forms.Label labelCharges;
+        private System.Windows.Forms.TextBox textCharges;
     }
 }

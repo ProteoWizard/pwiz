@@ -557,7 +557,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        private static ReadOnlyCollection<int> MakeChargeCollection(IList<int> charges)
+        public static ReadOnlyCollection<int> MakeChargeCollection(IList<int> charges)
         {
             var arrayCharges = charges.ToArrayStd();
             Array.Sort(arrayCharges);
@@ -713,7 +713,7 @@ namespace pwiz.Skyline.Model.DocSettings
             auto_select
         }
 
-        private static void ValidateCharges(string label, ICollection<int> charges, int min, int max)
+        public static void ValidateCharges(string label, ICollection<int> charges, int min, int max)
         {
             if (charges == null || charges.Count == 0)
                 throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges__0__cannot_be_empty, label));
@@ -754,8 +754,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read start tag attributes
-            PrecursorCharges = ParseInts(reader.GetAttribute(ATTR.precursor_charges));
-            ProductCharges = ParseInts(reader.GetAttribute(ATTR.product_charges));
+            PrecursorCharges = TextUtil.ParseInts(reader.GetAttribute(ATTR.precursor_charges));
+            ProductCharges = TextUtil.ParseInts(reader.GetAttribute(ATTR.product_charges));
             IonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types), new[] { IonType.y });
             FragmentRangeFirstName = reader.GetAttribute(ATTR.fragment_range_first);
             FragmentRangeLastName = reader.GetAttribute(ATTR.fragment_range_last);
@@ -808,11 +808,6 @@ namespace pwiz.Skyline.Model.DocSettings
             if (spaces)
                 sep += TextUtil.SEPARATOR_SPACE;
             return IonTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
-        }
-
-        private static int[] ParseInts(string s)
-        {
-            return ArrayUtil.Parse(s, Convert.ToInt32, TextUtil.SEPARATOR_CSV, new int[0]);
         }
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)

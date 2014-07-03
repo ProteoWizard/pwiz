@@ -17,11 +17,15 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -41,10 +45,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_MIN_FRAGMENT_LENGTH = 1;
         public const int MAX_MIN_FRAGMENT_LENGTH = 10;
 
-        public const double MIN_REPORTER_MASS = 50;
-        public const double MAX_REPORTER_MASS = 300;
+        public const double MIN_REPORTER_MASS = 5;
+        public const double MAX_REPORTER_MASS = 500;
 
         private string _formula;
+        private ReadOnlyCollection<int> _charges;
 
         /// <summary>
         /// Constructor for a special fragment
@@ -65,7 +70,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Restrict = restrict;
             Terminus = terminus;
             MinFragmentLength = minFragmentLength;
-
+            Charges = new[] {1};
             Validate();
         }
 
@@ -76,18 +81,22 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="formula">Chemical formula of the ion</param>
         /// <param name="monoisotopicMass">Constant monoisotopic mass of the ion, if formula is not given</param>
         /// <param name="averageMass">Constant average mass of the ion, if formula is not given</param>
+        /// <param name="charges">The possible charges for this custom ion</param>
         public MeasuredIon(string name,
                            string formula,
                            double? monoisotopicMass,
-                           double? averageMass)
+                           double? averageMass,
+                           IList<int> charges)
             : base(name)
         {
             MonoisotopicMass = monoisotopicMass;
             AverageMass = averageMass;
+            Charges = charges;
             Formula = formula;
 
             Validate();
         }
+
 
         /// <summary>
         /// Set of amino acid residues with an especially weak bond, causing
@@ -113,7 +122,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// is either PR or PK)
         /// </summary>
         public int? MinFragmentLength { get; private set; }
-
+        public double? UsedMass { get; set; }
         public bool IsNTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.N; }
         public bool IsCTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.C; }
 
@@ -157,6 +166,17 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? MonoisotopicMass { get; private set; }
         public double? AverageMass { get; private set; }
 
+        public IList<int> Charges
+        {
+            get { return _charges; }
+            private set
+            {
+                TransitionFilter.ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, value,
+                    Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
+                _charges = TransitionFilter.MakeChargeCollection(value);
+            }
+        }
+
         public bool IsFragment { get { return Fragment != null; } }
         public bool IsReporter { get { return !IsFragment; } }
 
@@ -167,11 +187,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IXmlSerializable
 
+
         /// <summary>
         /// For serialization
         /// </summary>
         private MeasuredIon()
         {
+            Charges = new[] {1};
         }
 
         private enum ATTR
@@ -184,7 +206,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Reporter
             formula,
             mass_monoisotopic,
-            mass_average
+            mass_average,
+            charges
         }
 
         private void Validate()
@@ -241,6 +264,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.mass_monoisotopic) ?? 0;
                 AverageMass = reader.GetNullableDoubleAttribute(ATTR.mass_average) ?? 0;
+                Charges = TextUtil.ParseInts(reader.GetAttribute(ATTR.charges));
                 Formula = reader.GetAttribute(ATTR.formula);
             }
             // Consume tag
@@ -267,7 +291,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     writer.WriteAttribute(ATTR.mass_monoisotopic, MonoisotopicMass);
                     writer.WriteAttribute(ATTR.mass_average, AverageMass);
-                }                
+                }
+                writer.WriteAttributeString(ATTR.charges, Charges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
             }
         }
 
@@ -280,13 +305,14 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
-                Equals(other._formula, _formula) &&
-                Equals(other.Fragment, Fragment) &&
-                Equals(other.Restrict, Restrict) &&
-                other.Terminus.Equals(Terminus) &&
-                other.MinFragmentLength.Equals(MinFragmentLength) &&
-                other.MonoisotopicMass.Equals(MonoisotopicMass) &&
-                other.AverageMass.Equals(AverageMass);
+                   Equals(other._formula, _formula) &&
+                   Equals(other.Fragment, Fragment) &&
+                   Equals(other.Restrict, Restrict) &&
+                   other.Terminus.Equals(Terminus) &&
+                   other.MinFragmentLength.Equals(MinFragmentLength) &&
+                   other.MonoisotopicMass.Equals(MonoisotopicMass) &&
+                   other.AverageMass.Equals(AverageMass) &&
+                   ArrayUtil.EqualsDeep(other.Charges, Charges);
         }
 
         public override bool Equals(object obj)
@@ -308,6 +334,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MinFragmentLength.HasValue ? MinFragmentLength.Value : 0);
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
+                result = (result*397) ^ (Charges != null ? Charges.GetHashCodeDeep() : 0);
                 return result;
             }
         }

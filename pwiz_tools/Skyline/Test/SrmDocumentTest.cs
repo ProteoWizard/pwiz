@@ -50,6 +50,13 @@ namespace pwiz.SkylineTest
             AssertEx.Serializable(AssertEx.Deserialize<SrmDocument>(DOC_0_1_PEPTIDES), 3, AssertEx.DocumentCloned);
         }
 
+        [TestMethod]
+        public void ReporterIonDocumentSerializeTest()
+        {
+            AssertEx.Serializable(AssertEx.Deserialize<SrmDocument>(DOC_REPORTER_IONS),3,AssertEx.DocumentCloned);
+            AssertEx.DeserializeError<SrmDocument>(DOC_REPORTER_IONS_INCORRECT_NAME);
+        }
+
         /// <summary>
         /// A test for SrmDocument deserialization of v0.1 documents and
         /// general serialization.
@@ -641,6 +648,140 @@ namespace pwiz.SkylineTest
             "    </protein>\n" +
             "  </selected_proteins>\n" +
             "</srm_settings>";
+
+        private const string DOC_REPORTER_IONS = "<srm_settings format_version=\"1.7\" software_version=\"Skyline \">\n" +
+                "  <settings_summary name=\"Default\">\n" +
+                "    <peptide_settings>\n" +
+                "      <enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"C\" />\n" +
+                "      <digest_settings max_missed_cleavages=\"0\" />\n" +
+                "      <peptide_prediction use_measured_rts=\"true\" measured_rt_window=\"2\" use_spectral_library_drift_times=\"false\" />\n" +
+                "      <peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\">\n" +
+                "        <peptide_exclusions />\n" +
+                "      </peptide_filter>\n" +
+                "      <peptide_libraries pick=\"library\" />\n" +
+                "      <peptide_modifications max_variable_mods=\"3\" max_neutral_losses=\"1\">\n" +
+                "        <static_modifications>\n" +
+                "          <static_modification name=\"Carbamidomethyl (C)\" aminoacid=\"C\" formula=\"H3C2NO\" unimod_id=\"4\" short_name=\"CAM\" />\n" +
+                "        </static_modifications>\n" +
+                "        <heavy_modifications />\n" +
+                "      </peptide_modifications>\n" +
+                "    </peptide_settings>\n" +
+                "    <transition_settings>\n" +
+                "      <transition_prediction precursor_mass_type=\"Monoisotopic\" fragment_mass_type=\"Monoisotopic\" optimize_by=\"None\">\n" +
+                "        <predict_collision_energy name=\"Thermo TSQ Vantage\" step_size=\"1\" step_count=\"5\">\n" +
+                "          <regression_ce charge=\"2\" slope=\"0.03\" intercept=\"2.905\" />\n" +
+                "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
+                "        </predict_collision_energy>\n" +
+                "      </transition_prediction>\n" +
+                "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1,2\" />\n" +
+                "      </transition_filter>\n" +
+                "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
+                "      <transition_integration />\n" +
+                "      <transition_instrument min_mz=\"50\" max_mz=\"1500\" mz_match_tolerance=\"0.055\" />\n" +
+                "    </transition_settings>\n" +
+                "    <data_settings />\n" +
+                "  </settings_summary>\n" +
+                "  <peptide_list label_name=\"peptides1\" label_description=\"Bacteriocin amylovorin-L (Amylovorin-L471) (Lactobin-A)\" accession=\"P80696\" gene=\"amyL\" species=\"Lactobacillus amylovorus\" preferred_name=\"AMYL_LACAM\" websearch_status=\"X#Upeptides1\" auto_manage_children=\"false\">\n" +
+                "    <peptide sequence=\"EFPDVAVFSGGR\" modified_sequence=\"EFPDVAVFSGGR\" calc_neutral_pep_mass=\"1279.619701\" num_missed_cleavages=\"0\">\n" +
+                "      <precursor charge=\"2\" calc_neutral_mass=\"1279.619701\" precursor_mz=\"640.817127\" collision_energy=\"22.129514\" modified_sequence=\"EFPDVAVFSGGR\">\n" +
+                "        <transition measured_ion_name=\"Water\" product_charge=\"1\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>50.000394</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"Water\" product_charge=\"2\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>25.503835</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"9\" calc_neutral_mass=\"906.45593\" product_charge=\"1\" cleavage_aa=\"D\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>907.463206</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"8\" calc_neutral_mass=\"791.428987\" product_charge=\"1\" cleavage_aa=\"V\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>792.436263</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"7\" calc_neutral_mass=\"692.360573\" product_charge=\"1\" cleavage_aa=\"A\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>693.367849</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "      </precursor>\n" +
+                "    </peptide>\n" +
+                "  </peptide_list>\n" +
+                "</srm_settings>";
+
+        private const string DOC_REPORTER_IONS_INCORRECT_NAME = "<srm_settings format_version=\"1.7\" software_version=\"Skyline \">\n" +
+                "  <settings_summary name=\"Default\">\n" +
+                "    <peptide_settings>\n" +
+                "      <enzyme name=\"Trypsin\" cut=\"KR\" no_cut=\"P\" sense=\"C\" />\n" +
+                "      <digest_settings max_missed_cleavages=\"0\" />\n" +
+                "      <peptide_prediction use_measured_rts=\"true\" measured_rt_window=\"2\" use_spectral_library_drift_times=\"false\" />\n" +
+                "      <peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\">\n" +
+                "        <peptide_exclusions />\n" +
+                "      </peptide_filter>\n" +
+                "      <peptide_libraries pick=\"library\" />\n" +
+                "      <peptide_modifications max_variable_mods=\"3\" max_neutral_losses=\"1\">\n" +
+                "        <static_modifications>\n" +
+                "          <static_modification name=\"Carbamidomethyl (C)\" aminoacid=\"C\" formula=\"H3C2NO\" unimod_id=\"4\" short_name=\"CAM\" />\n" +
+                "        </static_modifications>\n" +
+                "        <heavy_modifications />\n" +
+                "      </peptide_modifications>\n" +
+                "    </peptide_settings>\n" +
+                "    <transition_settings>\n" +
+                "      <transition_prediction precursor_mass_type=\"Monoisotopic\" fragment_mass_type=\"Monoisotopic\" optimize_by=\"None\">\n" +
+                "        <predict_collision_energy name=\"Thermo TSQ Vantage\" step_size=\"1\" step_count=\"5\">\n" +
+                "          <regression_ce charge=\"2\" slope=\"0.03\" intercept=\"2.905\" />\n" +
+                "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
+                "        </predict_collision_energy>\n" +
+                "      </transition_prediction>\n" +
+                "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1,2\" />\n" +
+                "      </transition_filter>\n" +
+                "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
+                "      <transition_integration />\n" +
+                "      <transition_instrument min_mz=\"50\" max_mz=\"1500\" mz_match_tolerance=\"0.055\" />\n" +
+                "    </transition_settings>\n" +
+                "    <data_settings />\n" +
+                "  </settings_summary>\n" +
+                "  <peptide_list label_name=\"peptides1\" label_description=\"Bacteriocin amylovorin-L (Amylovorin-L471) (Lactobin-A)\" accession=\"P80696\" gene=\"amyL\" species=\"Lactobacillus amylovorus\" preferred_name=\"AMYL_LACAM\" websearch_status=\"X#Upeptides1\" auto_manage_children=\"false\">\n" +
+                "    <peptide sequence=\"EFPDVAVFSGGR\" modified_sequence=\"EFPDVAVFSGGR\" calc_neutral_pep_mass=\"1279.619701\" num_missed_cleavages=\"0\">\n" +
+                "      <precursor charge=\"2\" calc_neutral_mass=\"1279.619701\" precursor_mz=\"640.817127\" collision_energy=\"22.129514\" modified_sequence=\"EFPDVAVFSGGR\">\n" +
+                "        <transition measured_ion_name=\"Water\" product_charge=\"1\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>50.000394</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\""+
+                
+                //Incoret Measured Ion Name
+                "Incorrect"
+                //*************************
+                +"\" product_charge=\"2\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>25.503835</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"9\" calc_neutral_mass=\"906.45593\" product_charge=\"1\" cleavage_aa=\"D\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>907.463206</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"8\" calc_neutral_mass=\"791.428987\" product_charge=\"1\" cleavage_aa=\"V\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>792.436263</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"7\" calc_neutral_mass=\"692.360573\" product_charge=\"1\" cleavage_aa=\"A\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>640.817127</precursor_mz>\n" +
+                "          <product_mz>693.367849</product_mz>\n" +
+                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        </transition>\n" +
+                "      </precursor>\n" +
+                "    </peptide>\n" +
+                "  </peptide_list>\n" +
+                "</srm_settings>";
+                                                 
 
         /// <summary>
         /// A test for SrmDocument deserialization with absent and empty tags.

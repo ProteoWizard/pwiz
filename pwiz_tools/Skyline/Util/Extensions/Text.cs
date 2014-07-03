@@ -182,6 +182,14 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Parse a list of comma separated integers, as saved to XML.
+        /// </summary>
+        public static int[] ParseInts(string s)
+        {
+            return ArrayUtil.Parse(s, Convert.ToInt32, SEPARATOR_CSV, new int[0]);
+        }
+
+        /// <summary>
         /// This function can be used as a replacement for String.Join("\n", ...)
         /// </summary>
         /// <param name="lines">A set of strings to be on separate lines</param>
@@ -347,7 +355,7 @@ namespace pwiz.Skyline.Util.Extensions
                 // replace with made up column names
                 for (int i = 0; i < fields.Length; ++i)
                 {
-                    fields[i] = String.Format("{0}", i ); // Not L10N
+                    fields[i] = string.Format("{0}", i ); // Not L10N
                 }
             }
             for (int i = 0; i < fields.Length; ++i)

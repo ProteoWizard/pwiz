@@ -223,4 +223,7 @@
   <data name="MethodRefine_sky" xml:space="preserve">
     <value>WormUnrefined.sky</value>
   </data>
+  <data name="TransitionInfo_ReadXml_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_" xml:space="preserve">
+    <value>The reporter ion {0} was not found in the transition filter settings.</value>
+  </data>
 </root>

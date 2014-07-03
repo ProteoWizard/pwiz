@@ -49,7 +49,8 @@ namespace pwiz.Skyline.SettingsUI
             bm.MakeTransparent(Color.Fuchsia);
             btnFormulaPopup.Image = bm;
 
-            Height -= ClientRectangle.Height - comboDirection.Bottom - 16;
+             // Not L10N
+            //Height -= ClientRectangle.Height - comboDirection.Bottom - 16;
         }
 
         public MeasuredIon MeasuredIon
@@ -95,6 +96,7 @@ namespace pwiz.Skyline.SettingsUI
             else if (!string.IsNullOrEmpty(_measuredIon.Formula))
             {
                 textFormula.Text = _measuredIon.Formula;
+                textCharges.Text = _measuredIon.Charges.ToString(", "); // Not L10N
             }
             else
             {
@@ -103,6 +105,7 @@ namespace pwiz.Skyline.SettingsUI
                     _measuredIon.MonoisotopicMass.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
                 textAverageMass.Text = (_measuredIon.AverageMass.HasValue ?
                     _measuredIon.AverageMass.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty);
+                textCharges.Text = _measuredIon.Charges.ToString(", "); // Not L10N
             }
         }
 
@@ -146,6 +149,13 @@ namespace pwiz.Skyline.SettingsUI
                 string formula = textFormula.Text;
                 double? monoMass = null;
                 double? avgMass = null;
+                int[] charges;
+                const int min = TransitionLibraries.MIN_ION_COUNT;
+                const int max = TransitionLibraries.MAX_ION_COUNT;
+                if(!helper.ValidateNumberListTextBox(e,textCharges,min,max,out charges))
+                {
+                    return;
+                }
                 if (!string.IsNullOrEmpty(formula))
                 {
                     try
@@ -187,7 +197,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     helper.ShowTextBoxError(textFormula, Resources.EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
                 }
-                _measuredIon = new MeasuredIon(name, formula, monoMass, avgMass);
+                _measuredIon = new MeasuredIon(name, formula, monoMass, avgMass, charges);
             }
 
             DialogResult = DialogResult.OK;
@@ -249,7 +259,8 @@ namespace pwiz.Skyline.SettingsUI
             btnFormulaPopup.Enabled = !isFragment;
             textMonoMass.Enabled = !isFragment;
             textAverageMass.Enabled = !isFragment;
-            labelFormula.Enabled = label7.Enabled = label8.Enabled = !isFragment;
+            textCharges.Enabled = !isFragment;
+            labelFormula.Enabled = label7.Enabled = label8.Enabled = labelCharges.Enabled = !isFragment;
             if (isFragment)
             {
                 textFormula.Text = textMonoMass.Text = textAverageMass.Text = string.Empty;
