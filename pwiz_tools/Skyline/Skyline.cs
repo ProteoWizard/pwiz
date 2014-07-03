@@ -2835,6 +2835,11 @@ namespace pwiz.Skyline
 
         private void tutorialsMenuItem_Click(object sender, EventArgs e)
         {
+            OpenStartPageTutorial();
+        }
+
+        public void OpenStartPageTutorial()
+        {
             if (!CheckSaveDocument())
                 return;
 

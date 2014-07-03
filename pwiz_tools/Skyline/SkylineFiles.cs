@@ -112,7 +112,11 @@ namespace pwiz.Skyline
             }
         }
 
-        private void startPageMenuItem_Click(object sender, EventArgs e)
+        private void startPageMenuItem_Click(object sender, EventArgs e) { OpenStartPage(); }
+
+        private void newMenuItem_Click(object sender, EventArgs e) { NewDocument(); }
+
+        public void OpenStartPage()
         {
             if (!CheckSaveDocument())
                 return;
@@ -125,8 +129,6 @@ namespace pwiz.Skyline
                 }
             }
         }
-
-        private void newMenuItem_Click(object sender, EventArgs e) { NewDocument(); }
 
         public void NewDocument()
         {

@@ -294,4 +294,41 @@ namespace pwiz.SkylineTestFunctional
             WaitForOpenForm<SkylineWindow>();
         }
     }
+
+    /// <summary>
+    /// Checks that the Import Peptide Search action works correctly.
+    /// </summary>
+    [TestClass]
+    public class StartPageShowFromSkyline : AbstractFunctionalTest
+    {
+        [TestMethod]
+        public void TestStartPageShowFromSkyline()
+        {
+            TestFilesZip = @"TestFunctional\StartPageTest.zip";
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            Directory.CreateDirectory(TestContext.TestDir);
+
+            var skylineWindow = WaitForOpenForm<SkylineWindow>();
+            RunDlg<StartPage>(skylineWindow.OpenStartPage, start =>
+            {
+                Assert.IsNotNull(start);
+                Assert.AreEqual(start.SelectedTab, StartPage.TABS.Wizard);
+                start.TestImportAction(ActionImport.DataType.peptide_search,
+                TestFilesDir.GetTestPath("StartPageTest.sky"));
+                start.Close();
+            });
+            var peptideSearchDlg = WaitForOpenForm<ImportPeptideSearchDlg>();
+            OkDialog(peptideSearchDlg, peptideSearchDlg.CancelDialog);
+            RunDlg<StartPage>(skylineWindow.OpenStartPageTutorial, start =>
+            {
+                Assert.IsNotNull(start);
+                Assert.AreEqual(start.SelectedTab, StartPage.TABS.Tutorial);
+                start.Close();
+            });
+        }
+    }
 }
