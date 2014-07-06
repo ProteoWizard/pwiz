@@ -30,7 +30,7 @@ namespace TestPerf
     [TestClass]
     public class PerfPeakViewConvert : AbstractUnitTest
     {
-        [TestMethod]
+        // [TestMethod]  // disabling this since the test file URLs don't exist
         public void ConvertPeakViewPerf()
         {
             if (!RunPerfTests)

@@ -38,7 +38,7 @@ namespace TestPerf
     [TestClass]
     public class PerfPeakTest : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
     {
-        [TestMethod]
+        // [TestMethod]  // disabling this since the test file URLs don't exist
         public void TestPeakPerf()
         {
             TestFilesZipPaths = new[]
