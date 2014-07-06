@@ -245,15 +245,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            string[] dirs;
+            var dirs = new List<string>();
             try
             {
-                dirs = Directory.GetDirectories(directory);
+                dirs = Directory.GetDirectories(directory).ToList();
             }
             catch (Exception)
             {
                 return;
             }
+
+            // Also handle the case where the file being searched against is in a completely different directory
+            foreach (var file in missingFiles)
+            {
+                var dirname = Path.GetDirectoryName(file.Key);
+                if ((dirname != null) && !directory.Equals(dirname) && !dirs.Contains(dirname))
+                {
+                    dirs.Add(dirname);
+                }
+            }
+
             foreach (string dir in dirs)
             {
                 if (longWaitBroker.IsCanceled)
