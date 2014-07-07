@@ -40,7 +40,8 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                   VALUES[0] = Resources.IonTypeExtension_LOCALIZED_VALUES_precursor;
+                VALUES[0] = Resources.IonTypeExtension_LOCALIZED_VALUES_precursor;
+                VALUES[1] = Resources.IonTypeExtension_LOCALIZED_VALUES_custom;
                 return VALUES;
             }
         }
@@ -271,6 +272,9 @@ namespace pwiz.Skyline.Model
 
         public string GetFragmentIonName(CultureInfo cultureInfo)
         {
+            if (IsCustom())
+                return CustomIon.Name;
+
             string ionName = ReferenceEquals(cultureInfo, CultureInfo.InvariantCulture)
                 ? IonType.ToString() : IonType.GetLocalizedString();
             if (!IsPrecursor())

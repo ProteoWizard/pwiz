@@ -248,6 +248,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
+                if (nodeTran.Transition.IsCustom() && !string.IsNullOrEmpty(nodeTran.Transition.CustomIon.Formula))
+                {
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula, rt);
+                }
 
                 SizeF size = table.CalcDimensions(g);
                 if (draw)

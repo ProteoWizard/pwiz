@@ -106,9 +106,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Transition.IonType; }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int FragmentIonOrdinal
+        public int? FragmentIonOrdinal
         {
-            get { return DocNode.Transition.Ordinal; }
+            get
+            {
+                if (DocNode.Transition.IsCustom())
+                    return null;
+                return DocNode.Transition.Ordinal;
+            }
         }
         public char CleavageAa { get { return DocNode.Transition.AA; }}
         [Format(NullValue = TextUtil.EXCEL_NA)]

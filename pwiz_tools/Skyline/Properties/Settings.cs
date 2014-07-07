@@ -2035,16 +2035,27 @@ namespace pwiz.Skyline.Properties
             new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3); // Not L10N
         public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
             new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1); // Not L10N
-        public static readonly MeasuredIon ITRAQ_114 = new MeasuredIon("iTRAQ-114", "C5C'H13N2", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon ITRAQ_115 = new MeasuredIon("iTRAQ-115", "C5C'H13NN'", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon ITRAQ_116 = new MeasuredIon("iTRAQ-116", "C4C'2H13NN'", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon ITRAQ_117 = new MeasuredIon("iTRAQ-117", "C3C'3H13NN'", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon TMT_126 = new MeasuredIon("TMT-126", "C8H16N", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon TMT_127 = new MeasuredIon("TMT-127", "C7C'H16N", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon TMT_128 = new MeasuredIon("TMT-128", "C6C'2H16N", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon TMT_129 = new MeasuredIon("TMT-129", "C5C'3H16N", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon TMT_130 = new MeasuredIon("TMT-130", "C4C'4H16N", null, null, new[] { 1 });// Not L10N
-        public static readonly MeasuredIon TMT_131 = new MeasuredIon("TMT-131", "C4C'4H16N'", null, null, new[] { 1 });// Not L10N
+        // iTRAQ chemical formulas from http://tools.lifetechnologies.com/content/sfs/manuals/ITRAQchemistry_guide.pdf#page=39
+        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon("iTRAQ-114", "C5C'H13N2");// Not L10N
+        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon("iTRAQ-115", "C5C'H13NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon("iTRAQ-116", "C4C'2H13NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon("iTRAQ-117", "C3C'3H13NN'");// Not L10N
+        // TMT chemical formulas from http://pubs.acs.org/doi/pdf/10.1021/ac500140s#page=2
+        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon("TMT-126", "C8H16N");// Not L10N
+        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon("TMT-127L", "C8H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon("TMT-127H", "C7C'H16N");// Not L10N
+        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon("TMT-128L", "C7C'1H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon("TMT-128H", "C6C'2H16N");// Not L10N
+        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon("TMT-129L", "C6C'2H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon("TMT-129H", "C5C'3H16N");// Not L10N
+        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon("TMT-130L", "C5C'3H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon("TMT-130H", "C4C'4H16N");// Not L10N
+        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon("TMT-131", "C4C'4H16N'");// Not L10N
+
+        private static MeasuredIon CreateMeasuredIon(string name, string formula)
+        {
+            return new MeasuredIon(name, formula, null, null, new []{1});
+        }
 
         public override int RevisionIndexCurrent { get { return 1; } }
 
@@ -2057,7 +2068,7 @@ namespace pwiz.Skyline.Properties
             listDefaults.AddRange(new[]
             {
                 ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
-                TMT_126, TMT_127, TMT_128, TMT_129, TMT_130, TMT_131
+                TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H, TMT_131
             });
             return listDefaults;
         }

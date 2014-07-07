@@ -7841,5 +7841,11 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="MQuestDefaultWeightedShapeCalc_Name_Default_shape__weighted_" xml:space="preserve">
     <value>Default shape (weighted)</value>
   </data>
+    <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
+    <value>custom</value>
+  </data>
+    <data name="TransitionTreeNode_RenderTip_Formula" xml:space="preserve">
+    <value>Formula</value>
+  </data>
 </root>
 
