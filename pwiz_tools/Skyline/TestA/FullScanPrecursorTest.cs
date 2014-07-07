@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestA
                 filter.ChangeIonTypes(new[] { IonType.precursor, IonType.y })));
             AssertEx.IsDocumentState(docLowMs1Y, 5, 1, 4, 5, 33);
 
-            // Turn off MS1 filtering off
+            // Turn off MS1 filtering
             var docNoMs1 = docPrecOnly.ChangeSettings(docPrecOnly.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null)));
             // One of the precursors should have no transitions, since its spectrum has no precursor match

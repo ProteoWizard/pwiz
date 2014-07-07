@@ -7850,5 +7850,11 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_" xml:space="preserve">
     <value>Could not read the pasted transition list.  Transition list must be in separated columns and cannot contain blank lines.</value>
   </data>
+  <data name="TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precusor_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_" xml:space="preserve">
+    <value>Cannot use DIA window for precusor exclusion when 'All Ions' is selected as the isolation scheme.  To use the DIA window for precusor exclusion, change the isolation scheme in the Full Scan settings.</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolation_scheme_with_prespecified_windows_" xml:space="preserve">
+    <value>Cannot use DIA window for precursor exclusion when isolation scheme does not contain prespecified windows.  Please select an isolation scheme with prespecified windows.</value>
+  </data>
 </root>
 

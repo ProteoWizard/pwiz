@@ -12,7 +12,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY C:\proj\pwiz\pwiz\pwiz_tools\Skyline\Model\Lib\Library.csKIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -80,7 +80,8 @@ namespace pwiz.Skyline.Model.Lib
                                     rankTypes = rankTypes,
                                     // Precursor isotopes will not be included in MS/MS, if they will be filtered
                                     // from MS1
-                                    excludePrecursorIsotopes = settings.TransitionSettings.FullScan.IsEnabledMs
+                                    excludePrecursorIsotopes = settings.TransitionSettings.FullScan.IsEnabledMs,
+                                    tranSettings = settings.TransitionSettings
                                 };
 
             // Get necessary mass calculators and masses
@@ -117,7 +118,6 @@ namespace pwiz.Skyline.Model.Lib
             // allowed in the library specturm.
             rp.startFinder = filter.FragmentRangeFirst;
             rp.endFinder = filter.FragmentRangeLast;
-            rp.filter = filter;
 
             // Get library settings
             Tolerance = libraries.IonMatchTolerance;
@@ -319,7 +319,8 @@ namespace pwiz.Skyline.Model.Lib
             public IList<IList<ExplicitLoss>> potentialLosses { get; set; }
             public IStartFragmentFinder startFinder { get; set; }
             public IEndFragmentFinder endFinder { get; set; }
-            public TransitionFilter filter { get; set; }
+            public TransitionSettings tranSettings { get; set; }
+            public TransitionFilter filter { get { return tranSettings.Filter; } }
             public TransitionLibraryPick pick { get; set; }
             public double tolerance { get; set; }
             public double minMz { get; set; }
@@ -525,7 +526,7 @@ namespace pwiz.Skyline.Model.Lib
                         // not be taken from product ions
                         if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
                         {
-                            if (!filter || rp.filter.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
+                            if (!filter || rp.tranSettings.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
                             {
                                 if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
                                                      rp.rankTypes.Contains(type) &&

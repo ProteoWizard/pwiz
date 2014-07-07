@@ -75,6 +75,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
         }
 
+        public bool Accept(string sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        {
+            if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
+            {
+                return false;
+            }
+
+            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
+        }
+
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)
@@ -521,6 +531,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                 string fragmentRangeLastName,
                                 IList<MeasuredIon> measuredIons,
                                 double precursorMzWindow,
+                                bool exclusionUseDIAWindow,
                                 bool autoSelect)
         {
             PrecursorCharges = precursorCharges;
@@ -530,6 +541,7 @@ namespace pwiz.Skyline.Model.DocSettings
             FragmentRangeLastName = fragmentRangeLastName;
             MeasuredIons = measuredIons;
             PrecursorMzWindow = precursorMzWindow;
+            ExclusionUseDIAWindow = exclusionUseDIAWindow;
             AutoSelect = autoSelect;
 
             Validate();
@@ -645,6 +657,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool AutoSelect { get; private set; }
 
+        /// <summary>
+        /// Whether to use the DIA window for exclusion of fragments (exclude fragments falling 
+        /// into the same DIA window as the precursor)
+        /// </summary>
+        public bool ExclusionUseDIAWindow { get; private set; }
+
         #region Property change methods
 
         public TransitionFilter ChangePrecursorCharges(IList<int> prop)
@@ -687,6 +705,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.AutoSelect = prop);
         }
 
+        public TransitionFilter ChangeExclusionUseDIAWindow(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ExclusionUseDIAWindow = prop);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -710,6 +733,7 @@ namespace pwiz.Skyline.Model.DocSettings
             include_n_prolene,
             include_c_glu_asp,
             precursor_mz_window,
+            exclusion_use_dia_window,
             auto_select
         }
 
@@ -739,6 +763,14 @@ namespace pwiz.Skyline.Model.DocSettings
                                       MIN_EXCLUSION_WINDOW, MAX_EXCLUSION_WINDOW));
                 }
             }
+            // It should not be possible to reach this error in the UI -- for development only
+            if (ExclusionUseDIAWindow)
+            {
+                if (PrecursorMzWindow != 0)
+                {
+                    throw new InvalidDataException("Cannot set the precursor exclusion window and also request to use DIA window."); // Not L10N
+                }              
+            }
         }
 
         public static TransitionFilter Deserialize(XmlReader reader)
@@ -765,6 +797,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Second, try correct spelling
             legacyProline = reader.GetBoolAttribute(ATTR.include_n_proline, legacyProline);
             bool lecacyGluAsp = reader.GetBoolAttribute(ATTR.include_c_glu_asp);
+            ExclusionUseDIAWindow = reader.GetBoolAttribute(ATTR.exclusion_use_dia_window);
             AutoSelect = reader.GetBoolAttribute(ATTR.auto_select);
 
             // Consume tag
@@ -796,6 +829,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeString(ATTR.fragment_range_first, FragmentRangeFirstName);
             writer.WriteAttributeString(ATTR.fragment_range_last, FragmentRangeLastName);
             writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
+            writer.WriteAttribute(ATTR.exclusion_use_dia_window, ExclusionUseDIAWindow);
             writer.WriteAttribute(ATTR.auto_select, AutoSelect);
             writer.WriteElements(MeasuredIons);
         }
@@ -831,6 +865,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.FragmentRangeLast, FragmentRangeLast) &&
                    ArrayUtil.EqualsDeep(obj.MeasuredIons, MeasuredIons) &&
                    obj.PrecursorMzWindow.Equals(PrecursorMzWindow) &&
+                   obj.ExclusionUseDIAWindow.Equals(ExclusionUseDIAWindow) &&
                    obj.AutoSelect.Equals(AutoSelect);
         }
 
@@ -853,6 +888,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ FragmentRangeLast.GetHashCode();
                 result = (result*397) ^ MeasuredIons.GetHashCodeDeep();
                 result = (result*397) ^ PrecursorMzWindow.GetHashCode();
+                result = (result*397) ^ ExclusionUseDIAWindow.GetHashCode();
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 return result;
             }

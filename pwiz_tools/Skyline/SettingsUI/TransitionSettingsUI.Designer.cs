@@ -52,9 +52,10 @@
             this.label8 = new System.Windows.Forms.Label();
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label28 = new System.Windows.Forms.Label();
+            this.cbExclusionUseDIAWindow = new System.Windows.Forms.CheckBox();
+            this.lbMZ = new System.Windows.Forms.Label();
             this.textExclusionWindow = new System.Windows.Forms.TextBox();
-            this.label19 = new System.Windows.Forms.Label();
+            this.lbPrecursorMzWindow = new System.Windows.Forms.Label();
             this.btnEditSpecialTransitions = new System.Windows.Forms.Button();
             this.label18 = new System.Windows.Forms.Label();
             this.listAlwaysAdd = new System.Windows.Forms.CheckedListBox();
@@ -132,9 +133,8 @@
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
-            this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
+            this.tabControl1.SelectedIndex = 0;
             // 
             // tabGeneral
             // 
@@ -286,9 +286,10 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.label28);
+            this.groupBox1.Controls.Add(this.cbExclusionUseDIAWindow);
+            this.groupBox1.Controls.Add(this.lbMZ);
             this.groupBox1.Controls.Add(this.textExclusionWindow);
-            this.groupBox1.Controls.Add(this.label19);
+            this.groupBox1.Controls.Add(this.lbPrecursorMzWindow);
             this.groupBox1.Controls.Add(this.btnEditSpecialTransitions);
             this.groupBox1.Controls.Add(this.label18);
             this.groupBox1.Controls.Add(this.listAlwaysAdd);
@@ -300,10 +301,17 @@
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
             // 
-            // label28
+            // cbExclusionUseDIAWindow
             // 
-            resources.ApplyResources(this.label28, "label28");
-            this.label28.Name = "label28";
+            resources.ApplyResources(this.cbExclusionUseDIAWindow, "cbExclusionUseDIAWindow");
+            this.cbExclusionUseDIAWindow.Name = "cbExclusionUseDIAWindow";
+            this.helpTip.SetToolTip(this.cbExclusionUseDIAWindow, resources.GetString("cbExclusionUseDIAWindow.ToolTip"));
+            this.cbExclusionUseDIAWindow.UseVisualStyleBackColor = true;
+            // 
+            // lbMZ
+            // 
+            resources.ApplyResources(this.lbMZ, "lbMZ");
+            this.lbMZ.Name = "lbMZ";
             // 
             // textExclusionWindow
             // 
@@ -311,10 +319,10 @@
             this.textExclusionWindow.Name = "textExclusionWindow";
             this.helpTip.SetToolTip(this.textExclusionWindow, resources.GetString("textExclusionWindow.ToolTip"));
             // 
-            // label19
+            // lbPrecursorMzWindow
             // 
-            resources.ApplyResources(this.label19, "label19");
-            this.label19.Name = "label19";
+            resources.ApplyResources(this.lbPrecursorMzWindow, "lbPrecursorMzWindow");
+            this.lbPrecursorMzWindow.Name = "lbPrecursorMzWindow";
             // 
             // btnEditSpecialTransitions
             // 
@@ -331,9 +339,9 @@
             // 
             // listAlwaysAdd
             // 
-            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.CheckOnClick = true;
             this.listAlwaysAdd.FormattingEnabled = true;
+            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.Name = "listAlwaysAdd";
             this.helpTip.SetToolTip(this.listAlwaysAdd, resources.GetString("listAlwaysAdd.ToolTip"));
             // 
@@ -705,13 +713,13 @@
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.CheckedListBox listAlwaysAdd;
         private System.Windows.Forms.TextBox textExclusionWindow;
-        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label lbPrecursorMzWindow;
         private System.Windows.Forms.Button btnEditSpecialTransitions;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.Label label24;
-        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.Label lbMZ;
         private System.Windows.Forms.TabPage tabFullScan;
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.Label label31;
@@ -723,5 +731,6 @@
         private System.Windows.Forms.TextBox textMaxInclusions;
         private System.Windows.Forms.ComboBox comboOptimizationLibrary;
         private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.CheckBox cbExclusionUseDIAWindow;
     }
 }

@@ -60,6 +60,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
         public const double DEFAULT_TIME_AROUND_PREDICTION = 5;
+        private readonly int _lower_margin;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -109,6 +110,7 @@ namespace pwiz.Skyline.SettingsUI
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
                                            ? Filter.PrecursorMzWindow.ToString(LocalizationHelper.CurrentCulture)
                                            : string.Empty;
+            cbExclusionUseDIAWindow.Checked = Filter.ExclusionUseDIAWindow;
             cbAutoSelect.Checked = Filter.AutoSelect;
 
             _driverIons = new SettingsListBoxDriver<MeasuredIon>(listAlwaysAdd, Settings.Default.MeasuredIonList);
@@ -145,7 +147,72 @@ namespace pwiz.Skyline.SettingsUI
                                               Location = new Point(0, 0),
                                               Size = new Size(363, 491)
                                           };
+            FullScanSettingsControl.IsolationSchemeChangedEvent += IsolationSchemeChanged;
             tabFullScan.Controls.Add(FullScanSettingsControl);
+
+            // VISUAL:
+            // - Store the distance between the cbExclusionDIAWindow and the lower end of the box (to use as margin later)
+            // - Shift the cbExclusionDIAWindow down (it is only higher in the designer for better manipulation)
+            _lower_margin = groupBox1.Height - textExclusionWindow.Location.Y - textExclusionWindow.Height;
+            int pixelShift = cbExclusionUseDIAWindow.Location.Y - lbPrecursorMzWindow.Location.Y;
+            cbExclusionUseDIAWindow.Location = new Point(cbExclusionUseDIAWindow.Location.X, cbExclusionUseDIAWindow.Location.Y - pixelShift);
+
+            DoIsolationSchemeChanged();
+        }
+
+
+        /// <summary>
+        /// Callback function which gets called when the user changes the isolation scheme in the full scan tab
+        /// Note: this function should only be called iff the user manually changed the Isolation Scheme
+        /// </summary>
+        private void IsolationSchemeChanged(object sender, EventArgs e)
+        {
+            DoIsolationSchemeChanged();
+            // Setting default value (true) for ExclusionUseDIAWindow if the setting was changed
+            // and if preselected windows are enabled
+            // (but not if the user simply loaded settings)
+            cbExclusionUseDIAWindow.Checked = FullScanSettingsControl.IsDIAAndPreselectedWindows();
+        }
+
+        /// <summary>
+        /// Perform the visual changes in the Filter tab depending on which acquisition method is selected in the FullScan tab
+        /// - hides the precursor exclusion field and shows the exclusion DIA checkbox for DIA methods 
+        /// - shows the precursor exclusion field and hides the exclusion DIA checkbox for other methods
+        /// </summary>
+        private void DoIsolationSchemeChanged()
+        {
+            if (FullScanSettingsControl.IsDIA())
+            {
+                // VISUAL - Show GUI elements relevant to DIA
+                cbExclusionUseDIAWindow.Visible = true;
+                textExclusionWindow.Visible = false;
+                lbMZ.Visible = false;
+                lbPrecursorMzWindow.Visible = false;
+
+                // VISUAL - Move the lower boundary of the box and the cbAutoSelect up
+                int oldLowerMargin = groupBox1.Height - cbExclusionUseDIAWindow.Location.Y - cbExclusionUseDIAWindow.Height;
+                int pixelShift = oldLowerMargin - _lower_margin;
+                cbAutoSelect.Location = new Point(cbAutoSelect.Location.X, cbAutoSelect.Location.Y - pixelShift);
+                groupBox1.Size = new Size(groupBox1.Size.Width, groupBox1.Size.Height - pixelShift);
+
+                textExclusionWindow.Text = string.Empty; // reset data field
+            }
+            else
+            {
+                // VISUAL - Show GUI elements relevant to non-DIA methods or DIA methods not from results
+                cbExclusionUseDIAWindow.Visible = false;
+                textExclusionWindow.Visible = true;
+                lbMZ.Visible = true;
+                lbPrecursorMzWindow.Visible = true;
+
+                // VISUAL - Move the lower boundary of the box and the cbAutoSelect down
+                int oldLowerMargin = groupBox1.Height - textExclusionWindow.Location.Y - textExclusionWindow.Height;
+                int pixelShift = oldLowerMargin - _lower_margin;
+                cbAutoSelect.Location = new Point(cbAutoSelect.Location.X, cbAutoSelect.Location.Y - pixelShift);
+                groupBox1.Size = new Size(groupBox1.Size.Width, groupBox1.Size.Height - pixelShift);
+
+                cbExclusionUseDIAWindow.Checked = false; // reset data field
+            }
         }
 
         private FullScanSettingsControl FullScanSettingsControl { get; set; }
@@ -268,9 +335,10 @@ namespace pwiz.Skyline.SettingsUI
            
             var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
+            bool exclusionUseDIAWindow = cbExclusionUseDIAWindow.Checked;
             var filter = new TransitionFilter(precursorCharges, productCharges, types,
                                               fragmentRangeFirst, fragmentRangeLast, measuredIons,
-                                              exclusionWindow, autoSelect);
+                                              exclusionWindow, exclusionUseDIAWindow, autoSelect);
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and store library settings
@@ -425,6 +493,24 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
+            if (FullScanSettingsControl.IsDIA() && cbExclusionUseDIAWindow.Checked)
+            {
+                if (FullScanSettingsControl.IsolationScheme.IsAllIons)
+                {
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precusor_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_);
+                    tabControl1.SelectedIndex = (int)TABS.Filter;
+                    cbExclusionUseDIAWindow.Focus();
+                    return;
+                }
+                if (FullScanSettingsControl.IsolationScheme.FromResults)
+                {
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolation_scheme_with_prespecified_windows_);
+                    tabControl1.SelectedIndex = (int)TABS.Filter;
+                    cbExclusionUseDIAWindow.Focus();
+                    return;
+                }
+            }
+
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(e, helper, out fullScan, tabControl1, (int)TABS.FullScan))
                 return;
@@ -562,10 +648,15 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public double ExclusionWindow
+        public double? ExclusionWindow
         {
-            get { return double.Parse(textExclusionWindow.Text); }
-            set { textExclusionWindow.Text = value.ToString(CultureInfo.CurrentCulture); }
+            get
+            {
+                if (string.IsNullOrEmpty(textExclusionWindow.Text))
+                    return null;
+                return double.Parse(textExclusionWindow.Text);
+            }
+            set { textExclusionWindow.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
         public string PrecursorCharges
@@ -726,6 +817,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbAutoSelect.Checked; }
             set { cbAutoSelect.Checked = value; }
+        }
+
+        public bool SetDIAExclusionWindow
+        {
+            get { return cbExclusionUseDIAWindow.Checked; }
+            set { cbExclusionUseDIAWindow.Checked = value; }
         }
 
         public double IonMatchTolerance

@@ -100,9 +100,21 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        /// <summary>
+        /// Returns true if the m/z value fall into at least one window
+        /// </summary>
         public bool IsInRangeMz(double mz)
         {
             return FromResults || PrespecifiedIsolationWindows.Any(window => window.Contains(mz));
+        }
+
+        /// <summary>
+        /// Returns true if both m/z values fall into the same window in at least one configuration
+        /// TODO : should we return if FromResults is true (e.g. no pre-determined windows?)
+        /// </summary>
+        public bool MayFallIntoSameWindow(double mz1, double mz2)
+        {
+            return FromResults || PrespecifiedIsolationWindows.Any(window => window.Contains(mz1) && window.Contains(mz2));
         }
 
         /// <summary>

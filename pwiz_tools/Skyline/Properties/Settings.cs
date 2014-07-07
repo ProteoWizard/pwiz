@@ -2218,8 +2218,9 @@ namespace pwiz.Skyline.Properties
                         TransitionFilter.DEFAULT_START_FINDER,  // FragmentRangeFirst
                         TransitionFilter.DEFAULT_END_FINDER,    // FragmentRangeLast
                         new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon
-                        0,     // PrecursorMzWindow
-                        true   // AutoSelect
+                        0,      // PrecursorMzWindow
+                        false,  // ExclusionUseDIAWindow
+                        true    // AutoSelect
                     ),
                     new TransitionLibraries
                     (

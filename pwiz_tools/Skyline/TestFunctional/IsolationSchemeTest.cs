@@ -957,7 +957,7 @@ namespace pwiz.SkylineTestFunctional
                     //Make sure overlap graphs correctly
                     RunDlg<DiaIsolationWindowsGraphForm>(editDlg.OpenGraph, diaGraph =>
                     {
-                        int windowSize = 19;
+                        const int windowSize = 19;
                         for (int cycle = 0; cycle < diaGraph.CyclesPerGraph - 1; cycle ++)
                         {
                             int startDifferenceMult = cycle%2 == 0 ? -1 : 1;
@@ -1013,6 +1013,8 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editList, editList.OkDialog);
                 OkDialog(fullScanDlg, fullScanDlg.OkDialog);
             }
+
+            TestDiaTransitionExclusionVisual();
         }
 
         private static void VerifyCellValues(EditIsolationSchemeDlg editDlg, double?[][] expectedValues)
@@ -1046,6 +1048,284 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+        }
+
+        private static void TestDiaTransitionExclusionVisual()
+        {
+            // Open a new document, edit transition settings, change to DIA and observe visual changes 
+            {
+                RunDlg<MultiButtonMsgDlg>(SkylineWindow.NewDocument, saveDlg => saveDlg.Btn1Click());
+                var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+
+                RunUI(() =>
+                {
+                    // Set the acquisition method to none 
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.None;
+
+                    // Due to strange behavior of C# we need to first make the Form visible before the changes we 
+                    // made to the visibility of the elements take any effect
+                    // http://stackoverflow.com/questions/11161160/c-sharp-usercontrol-visible-property-not-changing
+                    // A different way of doing this would be:
+                    // http://stackoverflow.com/questions/5980343/how-do-i-determine-visibility-of-a-control
+                    transitionSettings.SelectedTab = TransitionSettingsUI.TABS.Filter;
+                });
+
+                // Test that the precursor exclusion text box is visible (and the check box is not)   
+                RunUI(() =>
+                {
+                    TextBox textBox = (TextBox) transitionSettings.Controls.Find("textExclusionWindow", true).First();
+                    Assert.IsTrue(textBox.Visible);
+                    CheckBox checkbox = (CheckBox)transitionSettings.Controls.Find("cbExclusionUseDIAWindow", true).First();
+                    Assert.IsFalse(checkbox.Visible);
+                });
+
+                // Switch to DIA and fill out the isolation scheme
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogPreSelected(editDlg, "test1_diaexl_v");
+                }
+
+                // Test that the precursor exclusion text box is not visible (and the check box is)
+                RunUI(() =>
+                {
+                    TextBox textBox = (TextBox) transitionSettings.Controls.Find("textExclusionWindow", true).First();
+                    Assert.IsFalse(textBox.Visible);
+                    CheckBox checkbox = (CheckBox) transitionSettings.Controls.Find("cbExclusionUseDIAWindow", true).First();
+                    Assert.IsTrue(checkbox.Visible);
+                });
+
+                // Switching to back to DIA but using an isolation scheme from the results
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogFromResults(editDlg, "test2_diaexl_v");
+                }
+                // The DIA checkbox is still visible
+                RunUI(() =>
+                {
+                    TextBox textBox = (TextBox)transitionSettings.Controls.Find("textExclusionWindow", true).First();
+                    Assert.IsFalse(textBox.Visible);
+                    CheckBox checkbox = (CheckBox)transitionSettings.Controls.Find("cbExclusionUseDIAWindow", true).First();
+                    Assert.IsTrue(checkbox.Visible);
+                });
+
+                // Switch to DIA and fill out the isolation scheme
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogPreSelected(editDlg, "test3_diaexl_v");
+                }
+                RunUI(() =>
+                {
+                    TextBox textBox = (TextBox)transitionSettings.Controls.Find("textExclusionWindow", true).First();
+                    Assert.IsFalse(textBox.Visible);
+                    CheckBox checkbox = (CheckBox)transitionSettings.Controls.Find("cbExclusionUseDIAWindow", true).First();
+                    Assert.IsTrue(checkbox.Visible);
+                });
+
+                // and back again ... 
+                RunUI(() =>
+                {
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.None;
+                    TextBox textBox = (TextBox)transitionSettings.Controls.Find("textExclusionWindow", true).First();
+                    Assert.IsTrue(textBox.Visible);
+                    CheckBox checkbox = (CheckBox)transitionSettings.Controls.Find("cbExclusionUseDIAWindow", true).First();
+                    Assert.IsFalse(checkbox.Visible);
+                });
+
+                OkDialog(transitionSettings, transitionSettings.CancelDialog);
+            }
+
+            // Switching the FullScanAcquisitionMethod to DIA and back should set the GUI input fields properly 
+            // to their default values (checked for DIAExclusionWindow and empty for ExclusionWindow)
+            {
+                RunUI(() => SkylineWindow.NewDocument());
+                var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                //PauseTest();
+                    
+                RunUI(() =>
+                {
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
+                    // Check that the DIAExclusionWindow setting is true by default
+                    Assert.AreEqual(false, transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+
+                // Switch to DIA and fill out the isolation scheme
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogPreSelected(editDlg, "test2_diaexl");
+                }
+                RunUI(() =>
+                {
+                    // Check that the DIAExclusionWindow setting is true by default when using an isolation scheme
+                    Assert.AreEqual(true, transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+
+                // Switching to None should turn off the settting
+                RunUI(() =>
+                {
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.None;
+                    Assert.AreEqual(false, transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+
+                // Set the exclusion window and check it is set
+                RunUI(() =>
+                {
+                    transitionSettings.ExclusionWindow = 3.0;
+                    Assert.AreEqual(false, transitionSettings.SetDIAExclusionWindow);
+                    Assert.AreEqual(3.0, transitionSettings.ExclusionWindow);
+                });
+
+                // Switching to back to DIA and fill out the isolation scheme should set it to the default (true) again
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogPreSelected(editDlg, "test3_diaexl");
+                }
+                RunUI(() =>
+                {
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
+                    // Check that the setting is there by default
+                    Assert.AreEqual(true, transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+
+                // Switching to Targeted should turn off the settting
+                RunUI(() =>
+                {
+                    transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                    Assert.AreEqual(false, transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+
+                // Switching to back to DIA should set it to the default (true) again
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogPreSelected(editDlg, "test4_diaexl");
+                }
+                RunUI(() =>
+                {
+                    // Check that the setting is there by default
+                    Assert.AreEqual(true, transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+
+                // Switching to back to DIA should but using an isolation scheme from the results should behave like non-DIA
+                RunUI(() => transitionSettings.AcquisitionMethod = FullScanAcquisitionMethod.DIA);
+                {
+                    var editDlg = ShowDialog<EditIsolationSchemeDlg>(transitionSettings.AddIsolationScheme);
+                    FillInIsolationSchemeDialogFromResults(editDlg, "test5_diaexl");
+                }
+                RunUI(() =>
+                {
+                    // Check that the setting is there by default
+                    Assert.IsFalse(transitionSettings.SetDIAExclusionWindow);
+                    Assert.IsNull(transitionSettings.ExclusionWindow);
+                });
+                
+                // Check the use DIA window checkbox
+                RunUI(() =>
+                {
+                    transitionSettings.SetDIAExclusionWindow = true;
+                });
+                // Try to close the dialog
+                // Error message will appear because checkbox can't be used with "From Results"
+                RunDlg<MessageDlg>(transitionSettings.OkDialog, messageDlg =>
+                {
+                    Assert.AreEqual(messageDlg.Message, 
+                        Resources.TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolation_scheme_with_prespecified_windows_);
+                    messageDlg.OkDialog();
+                });
+
+                // Switch to "All Ions" but check the DIA exclusion box
+                RunUI(() =>
+                {
+                    ComboBox isolationSchemeBox = (ComboBox)transitionSettings.Controls.Find("comboIsolationScheme", true).First();
+                    isolationSchemeBox.SelectedIndex = 0;
+                    Assert.AreEqual(isolationSchemeBox.SelectedItem, IsolationScheme.SpecialHandlingType.ALL_IONS);
+                    transitionSettings.SetDIAExclusionWindow = true;
+                });
+                // Try to close the dialog
+                // Error message will appear because checkbox can't be used with "All Ions"
+                RunDlg<MessageDlg>(transitionSettings.OkDialog, messageDlg =>
+                {
+                    Assert.AreEqual(messageDlg.Message,
+                        Resources.TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precusor_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_);
+                    messageDlg.OkDialog();
+                });
+
+                // Uncheck the use DIA window checkbox
+                RunUI(() =>
+                {
+                    Assert.IsTrue(transitionSettings.SetDIAExclusionWindow);
+                    transitionSettings.SetDIAExclusionWindow = false;
+                });
+
+                OkDialog(transitionSettings, transitionSettings.CancelDialog);
+            }
+        }
+
+        /// <summary>
+        /// Private helper method to fill out the Isolation scheme dialog with a simple isolation scheme
+        /// </summary>
+        /// <param name="editDlg">The edit dialog to be filled out</param>
+        /// <param name="name">The name of the isolation scheme</param>
+        private static void FillInIsolationSchemeDialogPreSelected(EditIsolationSchemeDlg editDlg, string name)
+        {
+            RunUI(() =>
+            {
+                AssertDefault(editDlg);
+                editDlg.IsolationSchemeName = name;
+
+                editDlg.UseResults = false;
+                editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START, 0);
+                editDlg.IsolationWindowGrid.SetCellValue(100);
+                editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 0);
+                editDlg.IsolationWindowGrid.SetCellValue(250);
+                editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_START, 1);
+                editDlg.IsolationWindowGrid.SetCellValue(250);
+                editDlg.IsolationWindowGrid.SelectCell(EditIsolationSchemeDlg.COLUMN_END, 1);
+                editDlg.IsolationWindowGrid.SetCellValue(500);
+                editDlg.OkDialog();
+            });
+        }
+
+        /// <summary>
+        /// Private helper method to configure the Isolation scheme dialog to obtain windows from results
+        /// </summary>
+        /// <param name="editDlg">The edit dialog to be filled out</param>
+        /// <param name="name">The name of the isolation scheme</param>
+        private static void FillInIsolationSchemeDialogFromResults(EditIsolationSchemeDlg editDlg, string name)
+        {
+            RunUI(() =>
+            {
+                AssertDefault(editDlg);
+                editDlg.IsolationSchemeName = name;
+
+                editDlg.UseResults = true;
+                editDlg.PrecursorFilter = 1;
+                editDlg.PrecursorRightFilter = 2;
+                editDlg.OkDialog();
+            });
+        }
+
+        /// <summary>
+        /// Check that the isolation scheme has default values
+        /// </summary>
+        /// <param name="editDlg"></param>
+        private static void AssertDefault(EditIsolationSchemeDlg editDlg)
+        {
+            Assert.AreEqual(string.Empty, editDlg.IsolationSchemeName);
+            Assert.IsTrue(editDlg.UseResults);
+            Assert.IsFalse(editDlg.AsymmetricFilter);
+            Assert.AreEqual(2, editDlg.PrecursorFilter);
+            Assert.AreEqual(null, editDlg.PrecursorRightFilter);
         }
     }
 }

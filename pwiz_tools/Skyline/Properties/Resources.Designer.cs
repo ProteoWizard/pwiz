@@ -22630,6 +22630,28 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot use DIA window for precursor exclusion when isolation scheme does not contain prespecified windows.  Please select an isolation scheme with prespecified windows..
+        /// </summary>
+        public static string TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolation_scheme_with_prespecified_windows_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_" +
+                        "isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolat" +
+                        "ion_scheme_with_prespecified_windows_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot use DIA window for precusor exclusion when &apos;All Ions&apos; is selected as the isolation scheme.  To use the DIA window for precusor exclusion, change the isolation scheme in the Full Scan settings..
+        /// </summary>
+        public static string TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precusor_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precusor_exclusion_when__" +
+                        "All_Ions__is_selected_as_the_isolation_scheme___To_use_the_DIA_window_for_precus" +
+                        "or_exclusion__change_the_isolation_scheme_in_the_Full_Scan_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported..
         /// </summary>
         public static string TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported {

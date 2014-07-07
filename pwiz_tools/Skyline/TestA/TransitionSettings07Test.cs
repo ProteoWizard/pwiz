@@ -287,6 +287,112 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(3, docLibPlus.Transitions.Count(nodeTran => nodeTran.Mz > precursorMz));
         }
 
+        /// <summary>
+        /// Test support for the DIA precursor exclusion window (exclusion of fragments falling into the precursor window)
+        /// </summary>
+        [TestMethod]
+        public void TransitionLibraryDIAPrecursorExclusionTest()
+        {
+            // Create a document with the necessary library spectrum
+            LibraryManager libraryManager;
+            TestDocumentContainer docContainer;
+            int startRev;
+            SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
+                ">peptide1\nLECTDTLPDILENR",
+                true,
+                TEXT_LIB_YEAST_NIST_PRECURSOR,
+                out libraryManager,
+                out docContainer,
+                out startRev);
+
+            // Open up the transition filter settings and add a new isolation window scheme 
+            List<IsolationWindow> isolationWindows = new List<IsolationWindow>();
+            // Parent mass is 844
+            isolationWindows.Add(new IsolationWindow(600, 700)); // simple windows
+            isolationWindows.Add(new IsolationWindow(700, 800)); // simple windows
+            isolationWindows.Add(new IsolationWindow(800, 900)); // simple windows
+           
+            var settings = document.Settings
+                .ChangeTransitionLibraries(library =>
+                                           library.ChangePick(TransitionLibraryPick.all).
+                                               ChangeIonCount(10))
+                .ChangeTransitionFilter(filter =>
+                                        filter.ChangeIonTypes(new[] { IonType.y, IonType.b })
+                                            .ChangeFragmentRangeFirstName("ion 1")
+                                            .ChangeFragmentRangeLastName("last ion")
+                                            .ChangeExclusionUseDIAWindow(true))
+                .ChangeTransitionFullScan(fs => 
+                                          fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, 
+                                                new IsolationScheme("Test", isolationWindows)));
+            var docLibUnfiltered = document.ChangeSettings(settings);
+    
+            Assert.AreEqual(10, docLibUnfiltered.TransitionCount);
+            Assert.AreEqual(1, docLibUnfiltered.Transitions.Count(nodeTran =>
+                nodeTran.Transition.Ordinal < 4 || nodeTran.Transition.Ordinal > nodeTran.Transition.Group.Peptide.Sequence.Length - 4));
+
+            // Using a precursor filter should have no impact now, since the filter is being ignored
+            var settingsP = settings.ChangeTransitionFilter(filter =>
+                filter.ChangePrecursorMzWindow(TransitionFilter.MAX_EXCLUSION_WINDOW));
+            var docIgnorePrecursorMzWindow = docLibUnfiltered.ChangeSettings(settingsP);
+            Assert.AreSame(docLibUnfiltered.Children, docIgnorePrecursorMzWindow.Children);
+
+            // Should contain ions within the precursor window      
+            const int countInWindow = 2;
+            const int countInOverlapWindow = 5;
+            Assert.AreEqual(countInWindow, docLibUnfiltered.Transitions.Count(nodeTran =>
+                nodeTran.Mz > 800 && nodeTran.Mz < 900));
+            Assert.AreEqual(countInOverlapWindow, docLibUnfiltered.Transitions.Count(nodeTran =>
+                nodeTran.Mz > 750 && nodeTran.Mz < 1250));
+
+            // Switch to filtered picking
+            settings = settings.ChangeTransitionLibraries(library => library.ChangePick(TransitionLibraryPick.filter));
+            var docLibFiltered = docLibUnfiltered.ChangeSettings(settings);
+            Assert.AreEqual(10, docLibFiltered.TransitionCount);
+
+            // Should not contain any more ions in the specified DIA window
+            Assert.AreEqual(0, docLibFiltered.Transitions.Count(nodeTran =>
+                nodeTran.Mz > 800 && nodeTran.Mz < 900));
+
+            // But should contain ions within the extended precursor window
+            const int countInOverlapWindowNew = 4;
+            Assert.AreEqual(countInOverlapWindowNew, docLibFiltered.Transitions.Count(nodeTran =>
+                nodeTran.Mz > 750 && nodeTran.Mz < 1250));
+            // But other transitions remain unchanged
+            Assert.AreEqual(docLibUnfiltered.TransitionCount - countInWindow,
+                docLibFiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
+                    .Intersect(docLibUnfiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
+
+            // Add more windows to the document
+            isolationWindows.Add(new IsolationWindow(750, 850));  // overlapping windows
+            isolationWindows.Add(new IsolationWindow(840, 950));  // overlapping windows
+            isolationWindows.Add(new IsolationWindow(840, 1250)); // overlapping windows
+            var settingsNew = settings.ChangeTransitionFullScan(fs => 
+                                          fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, 
+                                                new IsolationScheme("Test", isolationWindows)));
+            var docFilterAdditionalWindows = docLibFiltered.ChangeSettings(settingsNew);
+            
+            // Check that now no more transitions are between 750 and 1250
+            Assert.AreEqual(8, docFilterAdditionalWindows.TransitionCount);
+            Assert.AreEqual(0, docFilterAdditionalWindows.Transitions.Count(nodeTran =>
+                nodeTran.Mz > 750 && nodeTran.Mz < 1250));
+            // But other transitions remain unchanged
+            Assert.AreEqual(docLibUnfiltered.TransitionCount - countInOverlapWindow,
+                docFilterAdditionalWindows.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)
+                    .Intersect(docLibUnfiltered.Transitions.ToList().ConvertAll(nodeTran => nodeTran.Transition)).Count());
+
+            // Reset the settings, and make sure the transitions return to previous state
+            var docReset = docFilterAdditionalWindows.ChangeSettings(settings);
+            Assert.AreEqual(docLibFiltered, docReset);
+
+            // The filter should be turned off again when setting ExclusionUseDIAWindow to false
+            var settingsNoFilter = settings.ChangeTransitionFilter(filter =>
+                                       filter.ChangeExclusionUseDIAWindow(false));
+            var docNoFilterAgain = docLibFiltered.ChangeSettings(settingsNoFilter);
+            Assert.AreEqual(10, docNoFilterAgain.TransitionCount);
+            Assert.AreEqual(countInOverlapWindow, docNoFilterAgain.Transitions.Count(nodeTran =>
+                nodeTran.Mz > 750 && nodeTran.Mz < 1250));
+        }
+
         private const string TEXT_LIB_YEAST_NIST_PRECURSOR =
             "Name: LECTDTLPDILENR/2\n" +
             "MW: 1689.824\n" +

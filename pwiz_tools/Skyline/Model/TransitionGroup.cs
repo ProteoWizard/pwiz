@@ -265,13 +265,13 @@ namespace pwiz.Skyline.Model
                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
-                                            filter.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
+                                            tranSettings.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
                                     {
                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                     }
                                 }
                             }
-                            else if (filter.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
+                            else if (tranSettings.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
                             {
                                 if (pick == TransitionLibraryPick.none)
                                     yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);

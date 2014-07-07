@@ -2116,6 +2116,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.ja.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.zh-CHS.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>

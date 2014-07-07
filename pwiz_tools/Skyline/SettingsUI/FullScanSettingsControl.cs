@@ -37,7 +37,12 @@ namespace pwiz.Skyline.SettingsUI
     {
         private SettingsListComboDriver<IsotopeEnrichments> _driverEnrichments;
         private SettingsListComboDriver<IsolationScheme> _driverIsolationScheme;
-        
+
+        /// <summary>
+        /// Previous value of the Acquisition Method combo box
+        /// </summary>
+        private IsolationScheme _prevval_comboIsolationScheme;
+
         public FullScanSettingsControl(SkylineWindow skylineWindow)
         {
             SkylineWindow = skylineWindow;
@@ -54,6 +59,8 @@ namespace pwiz.Skyline.SettingsUI
 
             PrecursorIsotopesCurrent = FullScan.PrecursorIsotopes;
             PrecursorMassAnalyzer = FullScan.PrecursorMassAnalyzer;
+
+            _prevval_comboIsolationScheme = IsolationScheme; // initialize previous value to initial value
         }
 
         private SkylineWindow SkylineWindow { get; set; }
@@ -501,9 +508,15 @@ namespace pwiz.Skyline.SettingsUI
             UpdateProductAnalyzerType();
         }
 
+        /// <summary>
+        /// Callback event handler that will get called if the Acquisition method gets changed
+        /// </summary>
+        public EventHandler IsolationSchemeChangedEvent { get; set; }
+
         private void comboAcquisitionMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
             var acquisitionMethod = AcquisitionMethod;
+
             if (acquisitionMethod == FullScanAcquisitionMethod.None)
             {
                 EnableIsolationScheme(false);
@@ -570,6 +583,13 @@ namespace pwiz.Skyline.SettingsUI
         private void comboIsolationScheme_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverIsolationScheme.SelectedIndexChangedEvent(sender, e);
+            
+            // If we have a callback function and the isolation scheme _did_ really change its value, we invoke the handler
+            if (IsolationSchemeChangedEvent != null && _prevval_comboIsolationScheme != IsolationScheme)
+            {
+                IsolationSchemeChangedEvent.Invoke(sender, e);
+            }
+            _prevval_comboIsolationScheme = IsolationScheme; //update previous isolation scheme
         }
 
         public void AddIsolationScheme()
@@ -920,5 +940,26 @@ namespace pwiz.Skyline.SettingsUI
                 tbxTimeAroundPrediction.Enabled = false;
             }
         }
+
+        /// <summary>
+        /// Returns true if the user selected DIA as acquisition method and used an 
+        /// isolation scheme with predefined windows (not taken from the results),
+        /// and did not use the AllIons isolation scheme. This is used to determine 
+        /// whether to show the DIA exclusion checkbox or not.
+        /// </summary>
+        public bool IsDIAAndPreselectedWindows()
+        {
+            return (IsDIA() && !IsolationScheme.FromResults && !IsolationScheme.IsAllIons);
+        }
+
+        /// <summary>
+        /// Returns true if the user selected DIA as acquisition method 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsDIA()
+        {
+            return AcquisitionMethod == FullScanAcquisitionMethod.DIA;
+        }
+
     }
 }
