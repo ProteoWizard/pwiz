@@ -308,19 +308,26 @@ namespace pwiz.Skyline.Model
         public DocNode EnsureChildren(TransitionGroupDocNode parent, SrmSettings settings)
         {
             // Make sure node points to correct parent.
-            return ReferenceEquals(parent.TransitionGroup, Transition.Group)
-                       ? this
-                       : new TransitionDocNode(new Transition(parent.TransitionGroup,
-                                                              Transition.IonType,
-                                                              Transition.CleavageOffset,
-                                                              Transition.MassIndex,
-                                                              Transition.Charge),
-                                               Annotations,
-                                               Losses,
-                                               0.0,
-                                               IsotopeDistInfo,
-                                               LibInfo,
-                                               null) {Mz = Mz};
+            if  (ReferenceEquals(parent.TransitionGroup, Transition.Group))
+                return this;
+
+            var transition = Transition.IsCustom()
+                ? new Transition(parent.TransitionGroup,
+                    Transition.Charge,
+                    Transition.CustomIon)
+                : new Transition(parent.TransitionGroup,
+                                Transition.IonType,
+                                Transition.CleavageOffset,
+                                Transition.MassIndex,
+                                Transition.Charge);
+
+            return new TransitionDocNode(transition,
+                                         Annotations,
+                                         Losses,
+                                         0.0,
+                                         IsotopeDistInfo,
+                                         LibInfo,
+                                         null) {Mz = Mz};
         }
 
         public override string GetDisplayText(DisplaySettings settings)

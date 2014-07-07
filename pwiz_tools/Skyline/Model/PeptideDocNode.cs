@@ -888,7 +888,7 @@ namespace pwiz.Skyline.Model
                 double massH;
                 if (tranNew.IsCustom())
                 {
-                    massH = tranNew.GetCustomMass(settings.TransitionSettings.Prediction.FragmentMassType);
+                    massH = tranNew.CustomIon.GetMassH(settings.TransitionSettings.Prediction.FragmentMassType);
                 }
                 else
                 {

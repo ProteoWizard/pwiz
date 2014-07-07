@@ -165,6 +165,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? MonoisotopicMass { get; private set; }
         public double? AverageMass { get; private set; }
 
+        public double GetMassH(MassType massType)
+        {
+            double? mass = (massType == MassType.Average ? AverageMass : MonoisotopicMass);
+            if (!mass.HasValue)
+                throw new InvalidOperationException("Attempt to access unavailable mass value."); // Not L10N
+            return mass.Value + BioMassCalc.MassProton;
+        }
+
         public IList<int> Charges
         {
             get { return _charges; }
@@ -177,7 +185,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public bool IsFragment { get { return Fragment != null; } }
-        public bool IsReporter { get { return !IsFragment; } }
+        public bool IsCustom { get { return !IsFragment; } }
 
         public MeasuredIonType MeasuredIonType
         {

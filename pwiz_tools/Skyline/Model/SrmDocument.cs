@@ -2134,17 +2134,7 @@ namespace pwiz.Skyline.Model
             }
 
             var losses = info.Losses;
-            double massH;
-            if (transition.IsCustom())
-            {
-                massH = (double) (Settings.TransitionSettings.Prediction.FragmentMassType.Equals(MassType.Average)
-                    ? transition.CustomIon.AverageMass
-                    : transition.CustomIon.MonoisotopicMass);
-            }
-            else
-            {
-                massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
-            }
+            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
 
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
 

@@ -2036,21 +2036,21 @@ namespace pwiz.Skyline.Properties
         public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
             new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1); // Not L10N
         // iTRAQ chemical formulas from http://tools.lifetechnologies.com/content/sfs/manuals/ITRAQchemistry_guide.pdf#page=39
-        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon("iTRAQ-114", "C5C'H13N2");// Not L10N
-        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon("iTRAQ-115", "C5C'H13NN'");// Not L10N
-        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon("iTRAQ-116", "C4C'2H13NN'");// Not L10N
-        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon("iTRAQ-117", "C3C'3H13NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_114 = CreateMeasuredIon("iTRAQ-114", "C5C'H12N2");// Not L10N
+        public static readonly MeasuredIon ITRAQ_115 = CreateMeasuredIon("iTRAQ-115", "C5C'H12NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_116 = CreateMeasuredIon("iTRAQ-116", "C4C'2H12NN'");// Not L10N
+        public static readonly MeasuredIon ITRAQ_117 = CreateMeasuredIon("iTRAQ-117", "C3C'3H12NN'");// Not L10N
         // TMT chemical formulas from http://pubs.acs.org/doi/pdf/10.1021/ac500140s#page=2
-        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon("TMT-126", "C8H16N");// Not L10N
-        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon("TMT-127L", "C8H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon("TMT-127H", "C7C'H16N");// Not L10N
-        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon("TMT-128L", "C7C'1H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon("TMT-128H", "C6C'2H16N");// Not L10N
-        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon("TMT-129L", "C6C'2H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon("TMT-129H", "C5C'3H16N");// Not L10N
-        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon("TMT-130L", "C5C'3H16N'");// Not L10N
-        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon("TMT-130H", "C4C'4H16N");// Not L10N
-        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon("TMT-131", "C4C'4H16N'");// Not L10N
+        public static readonly MeasuredIon TMT_126 = CreateMeasuredIon("TMT-126", "C8H15N");// Not L10N
+        public static readonly MeasuredIon TMT_127_L = CreateMeasuredIon("TMT-127L", "C8H15N'");// Not L10N
+        public static readonly MeasuredIon TMT_127_H = CreateMeasuredIon("TMT-127H", "C7C'H15N");// Not L10N
+        public static readonly MeasuredIon TMT_128_L = CreateMeasuredIon("TMT-128L", "C7C'1H15N'");// Not L10N
+        public static readonly MeasuredIon TMT_128_H = CreateMeasuredIon("TMT-128H", "C6C'2H15N");// Not L10N
+        public static readonly MeasuredIon TMT_129_L = CreateMeasuredIon("TMT-129L", "C6C'2H15N'");// Not L10N
+        public static readonly MeasuredIon TMT_129_H = CreateMeasuredIon("TMT-129H", "C5C'3H15N");// Not L10N
+        public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon("TMT-130L", "C5C'3H15N'");// Not L10N
+        public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon("TMT-130H", "C4C'4H15N");// Not L10N
+        public static readonly MeasuredIon TMT_131 = CreateMeasuredIon("TMT-131", "C4C'4H15N'");// Not L10N
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {

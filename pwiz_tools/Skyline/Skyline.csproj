@@ -1018,6 +1018,12 @@
     <Compile Include="SettingsUI\AddPathsDlg.Designer.cs">
       <DependentUpon>AddPathsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\CustomIonMzDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\CustomIonMzDlg.Designer.cs">
+      <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\DiaIsolationWindowsGraphForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1912,6 +1918,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.zh-CHS.resx">
       <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\CustomIonMzDlg.resx">
+      <DependentUpon>CustomIonMzDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.ja.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>

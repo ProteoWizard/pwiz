@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public Transition(TransitionGroup group,int charge, MeasuredIon customIon)
+        public Transition(TransitionGroup group, int charge, MeasuredIon customIon)
         {
             _group = group;
             IonType = IonType.custom;
@@ -315,11 +315,6 @@ namespace pwiz.Skyline.Model
         public static double CalcMass(double massH, TransitionLosses losses)
         {
             return massH - (losses != null ? losses.Mass : 0);
-        }
-
-        public double GetCustomMass(MassType massType)
-        {
-            return (massType == MassType.Average ? CustomIon.AverageMass : CustomIon.MonoisotopicMass).Value;
         }
 
         private void Validate()

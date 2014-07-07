@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                       Transition transition, IsotopeDistInfo isotopeDist)
         {
             if (transition.IsCustom())
-                return transition.GetCustomMass(TransitionSettings.Prediction.FragmentMassType);
+                return transition.CustomIon.GetMassH(TransitionSettings.Prediction.FragmentMassType);
 
             return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }

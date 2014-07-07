@@ -146,61 +146,75 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                string formula = textFormula.Text;
-                double? monoMass = null;
-                double? avgMass = null;
-                int[] charges;
-                const int min = TransitionLibraries.MIN_ION_COUNT;
-                const int max = TransitionLibraries.MAX_ION_COUNT;
-                if(!helper.ValidateNumberListTextBox(e,textCharges,min,max,out charges))
-                {
+                var customIon = ValidateCustomIon(name);
+                if (customIon == null)
                     return;
-                }
-                if (!string.IsNullOrEmpty(formula))
-                {
-                    try
-                    {
-                        double massMono = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
-                        double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
-                        if (MeasuredIon.MIN_REPORTER_MASS > massMono || MeasuredIon.MIN_REPORTER_MASS > massAverage)
-                        {
-                            helper.ShowTextBoxError(textFormula, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__,
-                                                                               MeasuredIon.MIN_REPORTER_MASS));
-                            return;
-                        }
-                        if (massMono > MeasuredIon.MAX_REPORTER_MASS || massAverage > MeasuredIon.MAX_REPORTER_MASS)
-                        {
-                            helper.ShowTextBoxError(textFormula, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
-                                                                               MeasuredIon.MAX_REPORTER_MASS));
-                            return;
-                        }
-                    }
-                    catch (ArgumentException x)
-                    {
-                        helper.ShowTextBoxError(textFormula, x.Message);
-                        return;
-                    }
-                }
-                else if (!string.IsNullOrEmpty(textMonoMass.Text) ||
-                        !string.IsNullOrEmpty(textAverageMass.Text))
-                {
-                    formula = null;
-                    double mass;
-                    if (!helper.ValidateDecimalTextBox(e, textMonoMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS, out mass))
-                        return;
-                    monoMass = mass;
-                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS, out mass))
-                        return;
-                    avgMass = mass;
-                }
-                else
-                {
-                    helper.ShowTextBoxError(textFormula, Resources.EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
-                }
-                _measuredIon = new MeasuredIon(name, formula, monoMass, avgMass, charges);
+                _measuredIon = customIon;
             }
 
             DialogResult = DialogResult.OK;
+        }
+
+        private MeasuredIon ValidateCustomIon(string name)
+        {
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+            string formula = textFormula.Text;
+            double? monoMass = null;
+            double? avgMass = null;
+            int[] charges;
+            const int min = Transition.MIN_PRODUCT_CHARGE;
+            const int max = Transition.MAX_PRODUCT_CHARGE;
+            if (!helper.ValidateNumberListTextBox(e, textCharges, min, max, out charges))
+            {
+                return null;
+            }
+            if (!string.IsNullOrEmpty(formula))
+            {
+                try
+                {
+                    double massMono = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
+                    double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
+                    if (MeasuredIon.MIN_REPORTER_MASS > massMono || MeasuredIon.MIN_REPORTER_MASS > massAverage)
+                    {
+                        helper.ShowTextBoxError(textFormula, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__,
+                                                                           MeasuredIon.MIN_REPORTER_MASS));
+                        return null;
+                    }
+                    if (massMono > MeasuredIon.MAX_REPORTER_MASS || massAverage > MeasuredIon.MAX_REPORTER_MASS)
+                    {
+                        helper.ShowTextBoxError(textFormula, string.Format(Resources.EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__,
+                                                                           MeasuredIon.MAX_REPORTER_MASS));
+                        return null;
+                    }
+                }
+                catch (ArgumentException x)
+                {
+                    helper.ShowTextBoxError(textFormula, x.Message);
+                    return null;
+                }
+            }
+            else if (!string.IsNullOrEmpty(textMonoMass.Text) ||
+                     !string.IsNullOrEmpty(textAverageMass.Text))
+            {
+                formula = null;
+                double mass;
+                if (!helper.ValidateDecimalTextBox(e, textMonoMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS,
+                                                   out mass))
+                    return null;
+                monoMass = mass;
+                if (!helper.ValidateDecimalTextBox(e, textAverageMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS,
+                                                   out mass))
+                    return null;
+                avgMass = mass;
+            }
+            else
+            {
+                helper.ShowTextBoxError(textFormula,
+                    Resources.EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
+            }
+            return new MeasuredIon(name, formula, monoMass, avgMass, charges);
         }
 
         private static bool ValidateAATextBox(MessageBoxHelper helper, TextBox control, bool allowEmpty, out string aaText)
@@ -260,6 +274,7 @@ namespace pwiz.Skyline.SettingsUI
             textMonoMass.Enabled = !isFragment;
             textAverageMass.Enabled = !isFragment;
             textCharges.Enabled = !isFragment;
+            btnMz.Enabled = !isFragment;
             labelFormula.Enabled = label7.Enabled = label8.Enabled = labelCharges.Enabled = !isFragment;
             if (isFragment)
             {
@@ -387,6 +402,26 @@ namespace pwiz.Skyline.SettingsUI
         private void sContextMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.S);
+        }
+
+        private void btnMz_Click(object sender, EventArgs e)
+        {
+            ShowMzValues();
+        }
+
+        public void ShowMzValues()
+        {
+            var name = textName.Text;
+            if (string.IsNullOrEmpty(name))
+                name = "Custom Ion"; // Not L10N
+            var customIon = ValidateCustomIon(name);
+            if (customIon != null)
+            {
+                using (var customIonMzDlg = new CustomIonMzDlg(customIon))
+                {
+                    customIonMzDlg.ShowDialog(this);
+                }
+            }
         }
     }
 }

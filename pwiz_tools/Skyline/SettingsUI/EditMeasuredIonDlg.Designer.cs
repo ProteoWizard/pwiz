@@ -65,6 +65,7 @@
             this.sContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.labelCharges = new System.Windows.Forms.Label();
             this.textCharges = new System.Windows.Forms.TextBox();
+            this.btnMz = new System.Windows.Forms.Button();
             this.panelLossFormula.SuspendLayout();
             this.contextFormula.SuspendLayout();
             this.SuspendLayout();
@@ -287,12 +288,20 @@
             resources.ApplyResources(this.textCharges, "textCharges");
             this.textCharges.Name = "textCharges";
             // 
+            // btnMz
+            // 
+            resources.ApplyResources(this.btnMz, "btnMz");
+            this.btnMz.Name = "btnMz";
+            this.btnMz.UseVisualStyleBackColor = true;
+            this.btnMz.Click += new System.EventHandler(this.btnMz_Click);
+            // 
             // EditMeasuredIonDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnMz);
             this.Controls.Add(this.textCharges);
             this.Controls.Add(this.labelCharges);
             this.Controls.Add(this.textMinAas);
@@ -365,5 +374,6 @@
         private System.Windows.Forms.ToolStripMenuItem sContextMenuItem;
         private System.Windows.Forms.Label labelCharges;
         private System.Windows.Forms.TextBox textCharges;
+        private System.Windows.Forms.Button btnMz;
     }
 }

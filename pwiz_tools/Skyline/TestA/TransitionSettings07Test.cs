@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestA
                 nodeTran.Transition.Ordinal == 2 || // not y2
                 nodeTran.Transition.Ordinal == 8)); // not y8
         }
+
         /// <summary>
         /// Test reporter ion support in MeasuredIons in TransitionFilter
         /// </summary>
@@ -104,8 +105,8 @@ namespace pwiz.SkylineTestA
 
             MeasuredIon reporterIon = new MeasuredIon("Water","H2O",null,null,new []{1,2,3});
             var docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
-                filter.ChangeMeasuredIons(new[] { MeasuredIonList.NTERM_PROLINE,reporterIon})));
-            Assert.AreEqual(7,docReporterIon.TransitionCount);
+                filter.ChangeMeasuredIons(new[] {MeasuredIonList.NTERM_PROLINE, reporterIon})));
+            Assert.AreEqual(7, docReporterIon.TransitionCount);
             
             //Check With Monoisotopic
             double mass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, "H2O");
@@ -115,7 +116,7 @@ namespace pwiz.SkylineTestA
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge,i+1);
-                Assert.AreEqual(SequenceMassCalc.GetMZ(mass,i +1), tranNode.Mz);
+                Assert.AreEqual(SequenceMassCalc.GetMZ(mass + BioMassCalc.MassProton, i + 1), tranNode.Mz);
             }
 
             //Check with Average
@@ -130,14 +131,14 @@ namespace pwiz.SkylineTestA
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(SequenceMassCalc.GetMZ(mass, i + 1), tranNode.Mz);
+                Assert.AreEqual(SequenceMassCalc.GetMZ(mass + BioMassCalc.MassProton, i + 1), tranNode.Mz);
             }
 
             //Make sure the rest of the transitions aren't reporter ions
             for (int i = 3; i < 7; i ++)
             {
                 Transition tran = docReporterIon.Transitions.ElementAt(i).Transition;
-                Assert.AreNotEqual(tran.CustomIon,reporterIon);
+                Assert.AreNotEqual(tran.CustomIon, reporterIon);
             }
         }
 

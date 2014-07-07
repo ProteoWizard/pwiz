@@ -181,14 +181,12 @@ namespace pwiz.Skyline.Model
                     yield return nodeTran;
             }
 
-            foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsReporter))
+            foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
             {
                 foreach (int charge in measuredIon.Charges)
                 {
                     var tran = new Transition(this, charge, measuredIon);
-                    double massH = (double) (tranSettings.Prediction.FragmentMassType == MassType.Average
-                        ? measuredIon.AverageMass
-                        : measuredIon.MonoisotopicMass);
+                    double massH = settings.GetFragmentMass(IsotopeLabelType.light, null, tran, null);
                     yield return new TransitionDocNode(tran, null, massH, null, null);
                 }
             }

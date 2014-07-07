@@ -784,13 +784,13 @@ within 10 on either side of the precursor m/z.</value>
     <value>13, 87</value>
   </data>
   <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
-    <value>64, 13</value>
+    <value>67, 13</value>
   </data>
   <data name="label18.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="label18.Text" xml:space="preserve">
-    <value>Al&amp;ways add:</value>
+    <value>&amp;Special ions:</value>
   </data>
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
