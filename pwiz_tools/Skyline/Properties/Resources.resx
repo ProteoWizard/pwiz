@@ -7847,5 +7847,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
     <data name="TransitionTreeNode_RenderTip_Formula" xml:space="preserve">
     <value>Formula</value>
   </data>
+  <data name="CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_" xml:space="preserve">
+    <value>Could not read the pasted transition list.  Transition list must be in separated columns and cannot contain blank lines.</value>
+  </data>
 </root>
 

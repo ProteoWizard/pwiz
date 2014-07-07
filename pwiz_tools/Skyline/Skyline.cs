@@ -1188,6 +1188,12 @@ namespace pwiz.Skyline
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
                     ImportMassList(text, provider, separator, Resources.SkylineWindow_Paste_Paste_transition_list);
+                // Handle unusual corner case where data is found to be columnar and contains numbers, 
+                // but first line is missing
+                else if (columnTypes.Length == 0)
+                {
+                    throw new InvalidDataException(Resources.CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
+                }
                 else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)) // Name, Description, Sequence
                 {
                     var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,

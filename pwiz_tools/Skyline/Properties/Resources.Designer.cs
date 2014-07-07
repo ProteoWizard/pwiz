@@ -5455,6 +5455,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not read the pasted transition list.  Transition list must be in separated columns and cannot contain blank lines..
+        /// </summary>
+        public static string CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_ {
+            get {
+                return ResourceManager.GetString("CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_" +
+                        "must_be_in_separated_columns_and_cannot_contain_blank_lines_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not open web Browser to show link:.
         /// </summary>
         public static string Could_not_open_web_Browser_to_show_link_ {
