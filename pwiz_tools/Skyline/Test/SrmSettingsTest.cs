@@ -709,15 +709,15 @@ namespace pwiz.SkylineTest
         {
             // Valid first
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
-                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + "\"/>");
+                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + MeasuredIon.MAX_MIN_FRAGMENT_LENGTH.ToString(CultureInfo.InvariantCulture) + "\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"N-terminal many\"" +
-                " cut=\"ACPESTID\" no_cut=\"ACPESTID\" sense=\"N\" min_length=\"" + MeasuredIon.MIN_MIN_FRAGMENT_LENGTH + "\"/>");
+                " cut=\"ACPESTID\" no_cut=\"ACPESTID\" sense=\"N\" min_length=\"" + MeasuredIon.MIN_MIN_FRAGMENT_LENGTH.ToString(CultureInfo.InvariantCulture) + "\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
                 " cut=\"P\" sense=\"N\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"H4P2O5\" charges=\"1\"/>");
             AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\" charges=\"1\"/>");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
 
             // No name
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion" +
@@ -739,10 +739,10 @@ namespace pwiz.SkylineTest
                 " cut=\"P\" sense=\"x\"/>");
             // Min length too short
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
-                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MIN_MIN_FRAGMENT_LENGTH - 1) + "\"/>");
+                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MIN_MIN_FRAGMENT_LENGTH - 1).ToString(CultureInfo.InvariantCulture) + "\"/>");
             // Min length too long
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
-                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + 1) + "\"/>");
+                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + 1).ToString(CultureInfo.InvariantCulture) + "\"/>");
             // Reporter with bad formulas
             AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"\" charges=\"1\"/>");
@@ -755,14 +755,14 @@ namespace pwiz.SkylineTest
                 " formula=\"HP23O15\" charges=\"1\"/>");
             // Reporter without formula and without both masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" charges=\"1\"/>");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\" charges=\"1\"/>");
+                " mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
             // Reporter without formula and out of range masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + (MeasuredIon.MIN_REPORTER_MASS - 0.1) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\" charges=\"1\"/>");
+                " mass_monoisotopic=\"" + (MeasuredIon.MIN_REPORTER_MASS - 0.1).ToString(CultureInfo.InvariantCulture) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
-                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS + 0.1) + "\" charges=\"1\"/>");
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS + 0.1).ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
         }
 
         private const string LEGACY_LOW_ACCURACY = "Low Accuracy";
