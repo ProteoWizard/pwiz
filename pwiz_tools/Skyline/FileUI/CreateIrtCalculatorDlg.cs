@@ -138,7 +138,12 @@ namespace pwiz.Skyline.FileUI
                     {
                         IdentityPath selectPath;
                         List<KeyValuePair<string, double>> irtPeptides;
-                        docNew = docNew.ImportMassList(readerList, provider, sep, null, out selectPath, out irtPeptides, out _librarySpectra);
+                        List<TransitionImportErrorInfo> errorList;
+                        docNew = docNew.ImportMassList(readerList, provider, sep, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
+                        if (errorList.Any())
+                        {
+                            throw new InvalidDataException(errorList[0].ErrorMessage);
+                        }
                         _dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, true, TimeSource.scan)).ToList();
                     }
                     IrtFile = textImportText.Text;

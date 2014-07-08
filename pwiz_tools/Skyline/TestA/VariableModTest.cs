@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -341,8 +342,18 @@ namespace pwiz.SkylineTestA
             document = document.ChangeSettings(document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(staticMods)));
             IdentityPath pathTo;
-            AssertEx.ThrowsException<InvalidDataException>(() => document.ImportMassList(new StringReader(TEXT_PHOSPHO_TRANSITION_LIST),
-                CultureInfo.InvariantCulture, ',', null, out pathTo));
+            List<KeyValuePair<string, double>> irtPeptides;
+            List<SpectrumMzInfo> librarySpectra;
+            List<TransitionImportErrorInfo> errorList;
+            document.ImportMassList(new StringReader(TEXT_PHOSPHO_TRANSITION_LIST),
+                CultureInfo.InvariantCulture, ',', null, out pathTo, out irtPeptides, out librarySpectra, out errorList);
+            Assert.AreEqual(errorList.Count, 27);
+            AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                                                Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                         errorList[0].ErrorMessage,
+                                         2);
+            Assert.AreEqual(errorList[0].Column, 1);
+            Assert.AreEqual(errorList[0].Row, 40);
 
             var docHighMax = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
             var docList = docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_TRANSITION_LIST),
@@ -356,8 +367,15 @@ namespace pwiz.SkylineTestA
                 Assert.IsTrue(it == IonType.y || it == IonType.b || it == IonType.precursor, "Found unexpected non b, y or precursor ion type.");
             }
 
-            AssertEx.ThrowsException<InvalidDataException>(() => docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_MULTI_LOSS),
-                CultureInfo.InvariantCulture, ',', null, out pathTo));
+
+            docHighMax.ImportMassList(new StringReader(TEXT_PHOSPHO_MULTI_LOSS),
+                    CultureInfo.InvariantCulture, ',', null, out pathTo, out irtPeptides, out librarySpectra, out errorList);
+            Assert.AreEqual(errorList.Count, 5);
+            AssertEx.AreComparableStrings(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion,
+                                         errorList[0].ErrorMessage,
+                                         2);
+            Assert.AreEqual(errorList[0].Column, 1);
+            Assert.AreEqual(errorList[0].Row, 2);
             
             var docMultiLos = docHighMax.ChangeSettings(docHighMax.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxNeutralLosses(2)));

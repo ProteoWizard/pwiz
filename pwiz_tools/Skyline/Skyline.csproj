@@ -549,6 +549,12 @@
     <Compile Include="FileUI\CreateIrtCalculatorDlg.Designer.cs">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\ImportTransitionListErrorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ImportTransitionListErrorDlg.Designer.cs">
+      <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ManageResultsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1425,6 +1431,9 @@
       <DependentUpon>TutorialLinkResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.resx">
+      <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -1692,6 +1701,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportChromatogramDlg.ja.resx">
       <DependentUpon>ExportChromatogramDlg.cs</DependentUpon>

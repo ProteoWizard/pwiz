@@ -32,6 +32,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -627,13 +628,31 @@ namespace pwiz.Skyline.EditUI
             IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes;
             try
             {
+                List<TransitionImportErrorInfo> errorList;
+                List<KeyValuePair<string, double>> irtPeptides;
+                List<SpectrumMzInfo> librarySpectra;
                 var importer = new MassListImporter(document, LocalizationHelper.CurrentCulture, TRANSITION_LIST_SEPARATOR);
                 // TODO: support long-wait broker
                 peptideGroupDocNodes = importer.Import(new StringReader(sbTransitionList.ToString()),
                                                        null,
                                                        -1,
                                                        TRANSITION_LIST_COL_INDICES,
-                                                       dictNameSeq);
+                                                       dictNameSeq,
+                                                       out irtPeptides,
+                                                       out librarySpectra,
+                                                       out errorList);
+                if (errorList.Any())
+                {
+                    var firstError = errorList[0];
+                    if (firstError.Row.HasValue)
+                    {
+                        throw new LineColNumberedIoException(firstError.ErrorMessage, firstError.Row.Value, firstError.Column ?? -1);    
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(firstError.ErrorMessage);
+                    }
+                }
             }
             catch(LineColNumberedIoException x)
             {

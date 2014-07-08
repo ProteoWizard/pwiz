@@ -2137,20 +2137,8 @@
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
     <value>在“离子对设置”中核选“修饰”标签。</value>
   </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__" xml:space="preserve">
-    <value>母离子质核比{0}不匹配最接近的可能值{1}（增量 = {2}）</value>
-  </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-    <value>母离子质核比{0}针对此仪器设置超出范围</value>
-  </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings" xml:space="preserve">
     <value>在“离子对设置”中核选“仪器”标签。</value>
-  </data>
-  <data name="MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__has_no_matching_product_ion" xml:space="preserve">
-    <value>子离子质核比{0}无匹配的子离子</value>
-  </data>
-  <data name="MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-    <value>子离子质核比{0}针对此仪器设置超出范围</value>
   </data>
   <data name="GeneralRowReader_Create_No_valid_precursor_m_z_column_found" xml:space="preserve">
     <value>未发现有效的母离子质核比列。</value>
@@ -2173,9 +2161,6 @@
   </data>
   <data name="PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__" xml:space="preserve">
     <value>序列{1}中未发现肽{0}。</value>
-  </data>
-  <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0__with_a_single_precursor" xml:space="preserve">
-    <value>未能借助单一母离子针对{0}质核比解释所有离子对</value>
   </data>
   <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
     <value>无法解释肽段修饰</value>
@@ -2580,9 +2565,6 @@
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
     <value>蛋白质组文件{0}不存在。</value>
   </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Open__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
-    <value>单击“浏览”按钮来针对您的新蛋白质组文件选择一个有效路径。</value>
-  </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
     <value>蛋白质组文件无效。</value>
   </data>
@@ -2594,9 +2576,6 @@
   </data>
   <data name="BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__" xml:space="preserve">
     <value>尝试添加 FASTA 文件{0}出现错误。</value>
-  </data>
-  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path_for_a_new_proteome_file" xml:space="preserve">
-    <value>单击“浏览”按钮来针对新蛋白质组文件选择一个路径。</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File" xml:space="preserve">
     <value>加载蛋白质组文件</value>

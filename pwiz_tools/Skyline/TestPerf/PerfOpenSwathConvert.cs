@@ -33,43 +33,23 @@ namespace TestPerf
     {
         private static readonly string[] INDIVIDUAL_OUTPUT =
         {
-            "Spectronaut_A01.csv",
-            "Spectronaut_A02.csv",
-            "Spectronaut_A03.csv",
-            "Spectronaut_B01.csv",
-            "Spectronaut_B02.csv",
-            "Spectronaut_B03.csv",
-            "Spectronaut_C01.csv",
-            "Spectronaut_C02.csv",
-            "Spectronaut_C03.csv",
-            "Spectronaut_D01.csv",
-            "Spectronaut_D02.csv",
-            "Spectronaut_D03.csv",
-            "Spectronaut_E01.csv",
-            "Spectronaut_E02.csv",
-            "Spectronaut_E03.csv",
-            "Spectronaut_F01.csv",
-            "Spectronaut_F02.csv",
-            "Spectronaut_F03.csv",
-            "Spectronaut_G01.csv",
-            "Spectronaut_G02.csv",
-            "Spectronaut_G03.csv",
-            "Spectronaut_H01.csv",
-            "Spectronaut_H02.csv",
-            "Spectronaut_H03.csv",
-            "Spectronaut_I01.csv",
-            "Spectronaut_I02.csv",
-            "Spectronaut_I03.csv",
-            "Spectronaut_J01.csv",
-            "Spectronaut_J02.csv",
-            "Spectronaut_J03.csv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleA_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleB_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleC_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleD_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleE_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleF_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleG_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleH_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleI_01.mzXML.gz.tsv",
+            "OpenSwathT20131126_Study9_2_SWATH_sampleJ_01.mzXML.gz.tsv",
         };
 
         private const string TRANSITION_GROUP = "transition_group_id";
         private const string FILE_NAME = "filename";
         private const string RUN_ID = "run_id";
         private const string MS_FILE_TYPE = ".wiff";
-        private const char SEPARATOR = TextUtil.SEPARATOR_CSV;
+        private const char SEPARATOR = TextUtil.SEPARATOR_TSV;
 
         // [TestMethod]  // disabling this since the test file URLs don't exist
         public void ConvertOpenSwathPerf()

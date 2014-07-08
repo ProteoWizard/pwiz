@@ -1507,6 +1507,7 @@ namespace pwiz.Skyline
             IdentityPath selectPath = null;
             List<KeyValuePair<string, double>> irtPeptides = null;
             List<SpectrumMzInfo> librarySpectra = null;
+            List<TransitionImportErrorInfo> errorList = null;
             RetentionTimeRegression retentionTimeRegressionStore = null;
             bool irtsImported = false;
             var docCurrent = DocumentUI;
@@ -1521,8 +1522,24 @@ namespace pwiz.Skyline
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
                     docNew = docCurrent.ImportMassList(reader, longWaitBroker, countLines, provider, separator,
-                        nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra);
+                        nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra, out errorList);
                 });
+            }
+            bool isDocumentSame = ReferenceEquals(docNew, docCurrent);
+            // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
+            if (isDocumentSame && !errorList.Any())
+                return;
+            // Show the errors, giving the option to accept the transitions without errors,
+            // if there are any
+            if (errorList.Any())
+            {
+                using (var errorDlg = new ImportTransitionListErrorDlg(errorList, isDocumentSame))
+                {
+                    if (errorDlg.ShowDialog(this) == DialogResult.Cancel || isDocumentSame)
+                    {
+                        return;
+                    }   
+                }
             }
             var dbIrtPeptides = irtPeptides.Select(pair => new DbIrtPeptide(pair.Key, pair.Value, false, TimeSource.scan)).ToList();
             var dbIrtPeptidesFilter = new List<DbIrtPeptide>();
@@ -1625,13 +1642,29 @@ namespace pwiz.Skyline
                 if (addLibraryResult == DialogResult.Yes)
                 {
                     addLibrary = true;
+                    // Can't name a library after the document if the document is unsaved
+                    // In this case, prompt to save
+                    if (DocumentFilePath == null)
+                    {
+                        string saveDocumentMessage = Resources.SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_;
+                        var saveDocumentResult = MultiButtonMsgDlg.Show(this, saveDocumentMessage, MultiButtonMsgDlg.BUTTON_OK);
+                        if (saveDocumentResult == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            if (!SaveDocumentAs())
+                                return;
+                        }
+                    }
                     string documentLibrary = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
 // ReSharper disable once AssignNullToNotNullAttribute
                     string outputPath = Path.Combine(Path.GetDirectoryName(documentLibrary), 
                                                      Path.GetFileNameWithoutExtension(documentLibrary) + BiblioSpecLiteSpec.ASSAY_NAME + BiblioSpecLiteSpec.EXT);
                     bool libraryExists = File.Exists(outputPath);
                     string name = Path.GetFileNameWithoutExtension(DocumentFilePath) + BiblioSpecLiteSpec.ASSAY_NAME;
-                    indexOldLibrary = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(spec => spec.FilePath == outputPath);
+                    indexOldLibrary = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(spec => spec != null && spec.FilePath == outputPath);
                     bool libraryLinkedToDoc = indexOldLibrary != -1;
                     if (libraryLinkedToDoc)
                     {

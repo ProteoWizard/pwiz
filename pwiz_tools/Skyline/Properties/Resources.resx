@@ -2137,20 +2137,8 @@ Are you sure you want to continue?</value>
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
     <value>Check the Modifications tab in Transition Settings.</value>
   </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__" xml:space="preserve">
-    <value>Precursor m/z {0} does not match the closest possible value {1} (delta = {2})</value>
-  </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-    <value>The precursor m/z {0} is out of range for the instrument settings</value>
-  </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings" xml:space="preserve">
     <value>Check the Instrument tab in the Transition Settings.</value>
-  </data>
-  <data name="MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__has_no_matching_product_ion" xml:space="preserve">
-    <value>Product m/z value {0} has no matching product ion</value>
-  </data>
-  <data name="MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-    <value>The product m/z {0} is out of range for the instrument settings</value>
   </data>
   <data name="GeneralRowReader_Create_No_valid_precursor_m_z_column_found" xml:space="preserve">
     <value>No valid precursor m/z column found.</value>
@@ -2173,9 +2161,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__" xml:space="preserve">
     <value>The peptide {0} was not found in the sequence {1}.</value>
-  </data>
-  <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0__with_a_single_precursor" xml:space="preserve">
-    <value>Failed to explain all transitions for m/z {0} with a single precursor</value>
   </data>
   <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
     <value>Unable to interpret peptide modifications</value>
@@ -6179,9 +6164,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_Paste_Could_not_perform_transition_list_paste___0_" xml:space="preserve">
     <value>Could not perform transition list paste: {0}</value>
   </data>
-  <data name="MassListImporter_AddRow_Invalid_iRT_value_in_column__0__on_line__1_" xml:space="preserve">
-    <value>Invalid iRT value in column {0} on line {1}</value>
-  </data>
   <data name="CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_" xml:space="preserve">
     <value>Import Transition List (iRT standards)</value>
   </data>
@@ -6725,9 +6707,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence" xml:space="preserve">
     <value>Attempted to combine library spectra with incompatible precusor m/z, isotope label, or peptide sequence</value>
   </data>
-  <data name="MassListImporter_AddRow_Invalid_library_intensity_value_in_column__0__on_line__1_" xml:space="preserve">
-    <value>Invalid library intensity value in column {0} on line {1}</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
     <value>Add</value>
   </data>
@@ -6982,9 +6961,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="DocumentGridViewContext_Preview_Preview_New_Report" xml:space="preserve">
     <value>Preview New Report</value>
   </data>
-  <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0_" xml:space="preserve">
-    <value>Missing iRT value for peptide {0}</value>
-  </data>
   <data name="BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_mass_list_" xml:space="preserve">
     <value>Creating spectral library for imported mass list</value>
   </data>
@@ -6999,9 +6975,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides" xml:space="preserve">
     <value>Adding iRT values for imported peptides</value>
-  </data>
-  <data name="PeptideGroupBuilder_AppendTransition_Two_transitions_of_the_same_precursor___0____have_different_iRT_values___1__and__2___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
-    <value>Two transitions of the same precursor, {0} , have different iRT values, {1} and {2}. iRT values must be assigned consistently in an imported transition list.</value>
   </data>
   <data name="OptimizationLibraryList_Title_Edit_Optimization_Databases" xml:space="preserve">
     <value>Edit Optimization Databases</value>
@@ -7856,5 +7829,46 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="TransitionSettingsUI_OkDialog_Cannot_use_DIA_window_for_precursor_exclusion_when_isolation_scheme_does_not_contain_prespecified_windows___Please_select_an_isolation_scheme_with_prespecified_windows_" xml:space="preserve">
     <value>Cannot use DIA window for precursor exclusion when isolation scheme does not contain prespecified windows.  Please select an isolation scheme with prespecified windows.</value>
   </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_" xml:space="preserve">
+    <value>{0} transitions contained errors. Skip these {0} transitions and import the rest?</value>
+  </data>
+  <data name="MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_" xml:space="preserve">
+    <value>Invalid iRT value at precusor m/z {0} for peptide {1}</value>
+  </data>
+  <data name="MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_" xml:space="preserve">
+    <value>Invalid library intensity at precursor {0} for peptide {1}</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
+    <value>The precursor m/z {0} of the peptide {1} is out of range for the instrument settings</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_" xml:space="preserve">
+    <value>Precursor m/z {0} does not match the closest possible value {1} (delta = {2}), peptide {3}</value>
+  </data>
+  <data name="MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion" xml:space="preserve">
+    <value>Product m/z value {0} in peptide {1} has no matching product ion</value>
+  </data>
+  <data name="MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_" xml:space="preserve">
+    <value>The product m/z {0} is out of range for the instrument settings, in the peptide sequence {1}</value>
+  </data>
+  <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor" xml:space="preserve">
+    <value>Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor</value>
+  </data>
+  <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
+    <value>Two transitions of the same precursor, {0} (m/z {1}) , have different iRT values, {2} and {3}. iRT values must be assigned consistently in an imported transition list.</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_" xml:space="preserve">
+    <value>All {0} transitions contained errors.  Please check the transition list for errors and try importing again.</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_and_try_importing_again_" xml:space="preserve">
+    <value>The imported transition contains an error. Please check the transition list and the Skyline settings and try importing again.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_" xml:space="preserve">
+    <value>You must save the Skyline document in order to create a spectral library from a transition list.</value>
+  </data>
+  <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_" xml:space="preserve">
+    <value>Missing iRT value for peptide {0}, precursor m/z {1}</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_" xml:space="preserve">
+    <value>A transition contained an error. Skip this transition and import the rest?</value>
+  </data>
 </root>
-

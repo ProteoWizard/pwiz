@@ -24,10 +24,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
@@ -158,8 +160,17 @@ namespace pwiz.SkylineTest.Results
             {
                 // Product m/z out of range
                 var docError = doc;
-                AssertEx.ThrowsException<InvalidDataException>(
-                    () => docError.ImportMassList(reader, provider, ',', null, out selectPath));
+                List<KeyValuePair<string, double>> irtPeptides;
+                List<SpectrumMzInfo> librarySpectra;
+                List<TransitionImportErrorInfo> errorList;
+                docError.ImportMassList(reader, provider, ',', null, out selectPath, out irtPeptides, out librarySpectra, out errorList);
+                Assert.AreEqual(errorList.Count, 1);
+                AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                             errorList[0].ErrorMessage,
+                                             2);
+                Assert.AreEqual(errorList[0].Column, 1);
+                Assert.AreEqual(errorList[0].Row, 19);
             }
 
             using (var reader = new StreamReader(path))

@@ -2137,20 +2137,8 @@
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
 <value>[トランジション設定] の [修飾] タブを確認してください。</value>
       </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_Precursor_m_z__0__does_not_math_the_closest_possible_value__1__" xml:space="preserve">
-<value>プリカーサーm/z{0}が最も近い値 {1} (delta = {2}) に一致しません</value>
-      </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-<value>プリカーサーm/z{0}が装置設定の範囲外です</value>
-      </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings" xml:space="preserve">
 <value>[トランジション設定] の [装置] タブを確認してください。</value>
-      </data>
-  <data name="MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__has_no_matching_product_ion" xml:space="preserve">
-<value>プロダクトm/z値{0}には一致するプロダクトイオンがありません</value>
-      </data>
-  <data name="MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-<value>プロダクトm/z{0}が装置設定の範囲外です</value>
       </data>
   <data name="GeneralRowReader_Create_No_valid_precursor_m_z_column_found" xml:space="preserve">
 <value>有効なプリカーサーm/z列が見つかりません。</value>
@@ -2173,9 +2161,6 @@
       </data>
   <data name="PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__" xml:space="preserve">
 <value>ペプチド{0}が配列{1}で見つかりませんでした。</value>
-      </data>
-  <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0__with_a_single_precursor" xml:space="preserve">
-<value>単一プリカーサーを持つm/z{0}のすべてのトランジションを説明できませんでした</value>
       </data>
   <data name="PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications" xml:space="preserve">
 <value>ペプチド修飾を解釈できません</value>
@@ -2579,9 +2564,6 @@
       </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
 <value>プロテオームファイル{0}がありません。</value>
-      </data>
-  <data name="BuildBackgroundProteomeDlg_OkDialog_Click_the__Open__button_to_choose_a_valid_path_for_your_new_proteome_file" xml:space="preserve">
-<value>[参照] ボタンをクリックして、新しいプロテオームファイルの有効なパスを選択してください。</value>
       </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
 <value>プロテオームファイルが無効です。</value>

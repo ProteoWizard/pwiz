@@ -254,9 +254,9 @@ namespace pwiz.SkylineTestTutorial
             });
 
             {
-                var messageDlg = ShowDialog<MessageDlg>(SkylineWindow.Paste);
-                PauseForScreenShot<MessageDlg>("Error message form (expected)", 18);
-                OkDialog(messageDlg, messageDlg.OkDialog);
+                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(SkylineWindow.Paste);
+                PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 18);
+                OkDialog(messageDlg, messageDlg.CancelDialog);
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);
