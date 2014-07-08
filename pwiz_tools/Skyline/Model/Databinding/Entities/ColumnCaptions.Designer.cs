@@ -1456,6 +1456,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total Area Fragment.
+        /// </summary>
+        internal static string TotalAreaFragment {
+            get {
+                return ResourceManager.GetString("TotalAreaFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Area MS1.
+        /// </summary>
+        internal static string TotalAreaMs1 {
+            get {
+                return ResourceManager.GetString("TotalAreaMs1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Area Normalized.
         /// </summary>
         internal static string TotalAreaNormalized {
@@ -1479,6 +1497,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string TotalBackground {
             get {
                 return ResourceManager.GetString("TotalBackground", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Background Fragment.
+        /// </summary>
+        internal static string TotalBackgroundFragment {
+            get {
+                return ResourceManager.GetString("TotalBackgroundFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Background MS1.
+        /// </summary>
+        internal static string TotalBackgroundMs1 {
+            get {
+                return ResourceManager.GetString("TotalBackgroundMs1", resourceCulture);
             }
         }
         

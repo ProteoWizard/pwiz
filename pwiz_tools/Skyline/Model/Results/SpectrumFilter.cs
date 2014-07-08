@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Model.Results
                         {
                             filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
                             filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
-                                                     where !IsMS1Precursor(nodeTran)
+                                                     where !nodeTran.IsMs1
                                                      select nodeTran.Mz, calcWindowsQ3);
                         }
                     }
@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Model.Results
             if (isotopePeaks == null)
             {
                 // Return the MS1 transition m/z values, if the precursor has no isotope peaks
-                foreach (var nodeTran in nodeGroup.Children.Cast<TransitionDocNode>().Where(IsMS1Precursor))
+                foreach (var nodeTran in nodeGroup.Children.Cast<TransitionDocNode>().Where(t => t.IsMs1))
                     yield return nodeTran.Mz;
             }
             else
@@ -253,11 +253,6 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < isotopePeaks.CountPeaks; i++)
                     yield return isotopePeaks.GetMZI(isotopePeaks.PeakIndexToMassIndex(i));
             }
-        }
-
-        private bool IsMS1Precursor(TransitionDocNode nodeTran)
-        {
-            return Transition.IsPrecursor(nodeTran.Transition.IonType) && !nodeTran.HasLoss;
         }
 
         public bool EnabledMs { get { return _fullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None; } }

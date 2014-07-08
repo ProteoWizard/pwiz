@@ -1319,6 +1319,7 @@ namespace pwiz.Skyline.Model
 
             public void AddTransitionChromInfo(int iTran, IList<TransitionChromInfo> info)
             {
+                var nodeTran = (TransitionDocNode) _nodeGroup.Children[iTran];
                 var listInfo = _arrayTransitionChromInfoSets[iTran].ChromInfoLists;
                 int iNext = listInfo.Count;
                 listInfo.Add(info);
@@ -1339,7 +1340,7 @@ namespace pwiz.Skyline.Model
                         iResult, transitionCount, listChromInfo));
                 }
                 // Add the iNext entry
-                _listResultCalcs[iNext].AddChromInfoList(info);
+                _listResultCalcs[iNext].AddChromInfoList(nodeTran, info);
             }
 
             private int GetOldPosition(int iResult)
@@ -1627,7 +1628,7 @@ namespace pwiz.Skyline.Model
             private int TransitionCount { get; set; }
             private List<TransitionGroupChromInfoCalculator> Calculators { get; set; }
 
-            public void AddChromInfoList(IEnumerable<TransitionChromInfo> listInfo)
+            public void AddChromInfoList(TransitionDocNode nodeTran, IEnumerable<TransitionChromInfo> listInfo)
             {
                 if (listInfo == null)
                     return;
@@ -1644,7 +1645,7 @@ namespace pwiz.Skyline.Model
                     int step = chromInfo.OptimizationStep;
                     int i = IndexOfCalc(fileOrder, step);
                     if (i >= 0)
-                        Calculators[i].AddChromInfo(chromInfo);
+                        Calculators[i].AddChromInfo(nodeTran, chromInfo);
                     else
                     {
                         var chromInfoGroup = FindChromInfo(fileId, step);
@@ -1655,7 +1656,7 @@ namespace pwiz.Skyline.Model
                                                                           TransitionCount,
                                                                           chromInfo.Ratios.Count,
                                                                           chromInfoGroup);
-                        calc.AddChromInfo(chromInfo);
+                        calc.AddChromInfo(nodeTran, chromInfo);
                         Calculators.Insert(~i, calc);
                     }
                 }
@@ -1776,7 +1777,11 @@ namespace pwiz.Skyline.Model
             private float? EndTime { get; set; }
             private float? Fwhm { get; set; }
             private float? Area { get; set; }
+            private float? AreaMs1 { get; set; }
+            private float? AreaFragment { get; set; }
             private float? BackgroundArea { get; set; }
+            private float? BackgroundAreaMs1 { get; set; }
+            private float? BackgroundAreaFragment { get; set; }
             private float? MassError { get; set; }
             private int? Truncated { get; set; }
             private PeakIdentification Identified { get; set; }
@@ -1791,7 +1796,7 @@ namespace pwiz.Skyline.Model
                 get { return ((float) PeakCount)/TransitionCount; }
             }
 
-            public void AddChromInfo(TransitionChromInfo info)
+            public void AddChromInfo(TransitionDocNode nodeTran, TransitionChromInfo info)
             {
                 if (info == null)
                     return;
@@ -1813,6 +1818,17 @@ namespace pwiz.Skyline.Model
 
                     Area = (Area ?? 0) + info.Area;
                     BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;
+                    switch (Settings.GetChromSource(nodeTran))
+                    {
+                        case ChromSource.ms1:
+                            AreaMs1 = (AreaMs1 ?? 0) + info.Area;
+                            BackgroundAreaMs1 = (BackgroundAreaMs1 ?? 0) + info.BackgroundArea;
+                            break;
+                        case ChromSource.fragment:
+                            AreaFragment = (AreaFragment ?? 0) + info.Area;
+                            BackgroundAreaFragment = (BackgroundAreaFragment ?? 0) + info.BackgroundArea;
+                            break;
+                    }
 
                     if (info.MassError.HasValue)
                     {
@@ -1893,8 +1909,8 @@ namespace pwiz.Skyline.Model
                                                     StartTime,
                                                     EndTime,
                                                     Fwhm,
-                                                    Area,
-                                                    BackgroundArea,
+                                                    Area, AreaMs1, AreaFragment,
+                                                    BackgroundArea, BackgroundAreaMs1, BackgroundAreaFragment,
                                                     MaxHeight,
                                                     Ratios,
                                                     MassError,

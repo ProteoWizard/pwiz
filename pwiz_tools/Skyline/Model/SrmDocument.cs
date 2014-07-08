@@ -2005,8 +2005,8 @@ namespace pwiz.Skyline.Model
                                                 startTime,
                                                 endTime,
                                                 fwhm,
-                                                area,
-                                                backgroundArea,
+                                                area, null, null, // Ms1 and Fragment values calculated later
+                                                backgroundArea, null, null, // Ms1 and Fragment values calculated later
                                                 height,
                                                 new RatioValue[countRatios],
                                                 massError,

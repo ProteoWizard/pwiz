@@ -582,6 +582,12 @@
   <data name="TotalArea">
     <value>Total Area</value>
   </data>
+  <data name="TotalAreaFragment">
+    <value>Total Area Fragment</value>
+  </data>
+  <data name="TotalAreaMs1">
+    <value>Total Area MS1</value>
+  </data>
   <data name="TotalAreaNormalized">
     <value>Total Area Normalized</value>
   </data>
@@ -590,6 +596,12 @@
   </data>
   <data name="TotalBackground">
     <value>Total Background</value>
+  </data>
+  <data name="TotalBackgroundFragment">
+    <value>Total Background Fragment</value>
+  </data>
+  <data name="TotalBackgroundMs1">
+    <value>Total Background MS1</value>
   </data>
   <data name="Transition">
     <value>Transition</value>

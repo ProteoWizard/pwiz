@@ -60,7 +60,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalArea { get { return ChromInfo.Area; } }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? TotalAreaMs1 { get { return ChromInfo.AreaMs1; } }
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? TotalAreaFragment { get { return ChromInfo.AreaFragment; } }
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalBackground { get { return ChromInfo.BackgroundArea; } }
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? TotalBackgroundMs1 { get { return ChromInfo.BackgroundAreaMs1; } }
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? TotalBackgroundFragment { get { return ChromInfo.BackgroundAreaFragment; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? TotalAreaRatio { get { return ChromInfo.Ratio; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]

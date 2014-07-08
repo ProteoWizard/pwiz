@@ -274,6 +274,14 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }
 
+        public ChromSource GetChromSource(TransitionDocNode nodeTran)
+        {
+            if (TransitionSettings.FullScan.IsEnabledMs && nodeTran.IsMs1)
+                return ChromSource.ms1;
+            // TODO: Allow SIM
+            return ChromSource.fragment;
+        }
+
         public string GetModifiedSequence(string seq,
                                           IsotopeLabelType labelType,
                                           ExplicitMods mods,

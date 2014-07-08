@@ -148,7 +148,11 @@ namespace pwiz.Skyline.Model.Results
                                         float? endTime,
                                         float? fwhm,
                                         float? area,
+                                        float? areaMs1,
+                                        float? areaFragment,
                                         float? backgroundArea,
+                                        float? backgroundAreaMs1,
+                                        float? backgroundAreaFragment,
                                         float? height,
                                         IList<RatioValue> ratios,
                                         float? massError,
@@ -167,7 +171,11 @@ namespace pwiz.Skyline.Model.Results
             EndRetentionTime = endTime;
             Fwhm = fwhm;
             Area = area;
+            AreaMs1 = areaMs1;
+            AreaFragment = areaFragment;
             BackgroundArea = backgroundArea;
+            BackgroundAreaMs1 = backgroundAreaMs1;
+            BackgroundAreaFragment = backgroundAreaFragment;
             Height = height;
             Ratios = ratios;
             MassError = massError;
@@ -187,7 +195,11 @@ namespace pwiz.Skyline.Model.Results
         public float? EndRetentionTime { get; private set; }
         public float? Fwhm { get; private set; }
         public float? Area { get; private set; }
+        public float? AreaMs1 { get; private set; }
+        public float? AreaFragment { get; private set; }
         public float? BackgroundArea { get; private set; }
+        public float? BackgroundAreaMs1 { get; private set; }
+        public float? BackgroundAreaFragment { get; private set; }
         public float? Height { get; private set; }
         public float? Ratio { get { return _ratios[0] == null ? (float?) null : _ratios[0].Ratio; } }
         public IList<RatioValue> Ratios
@@ -257,7 +269,11 @@ namespace pwiz.Skyline.Model.Results
                    other.EndRetentionTime.Equals(EndRetentionTime) &&
                    other.Fwhm.Equals(Fwhm) &&
                    other.Area.Equals(Area) &&
+                   other.AreaMs1.Equals(AreaMs1) &&
+                   other.AreaFragment.Equals(AreaFragment) &&
                    other.BackgroundArea.Equals(BackgroundArea) &&
+                   other.BackgroundAreaMs1.Equals(BackgroundAreaMs1) &&
+                   other.BackgroundAreaFragment.Equals(BackgroundAreaFragment) &&
                    other.Height.Equals(Height) &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.Truncated.Equals(Truncated) &&
@@ -288,7 +304,11 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (EndRetentionTime.HasValue ? EndRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
+                result = (result*397) ^ (AreaMs1.HasValue ? AreaMs1.Value.GetHashCode() : 0);
+                result = (result*397) ^ (AreaFragment.HasValue ? AreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);
+                result = (result*397) ^ (BackgroundAreaMs1.HasValue ? BackgroundAreaMs1.Value.GetHashCode() : 0);
+                result = (result*397) ^ (BackgroundAreaFragment.HasValue ? BackgroundAreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
