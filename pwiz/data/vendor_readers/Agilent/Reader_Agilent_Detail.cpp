@@ -29,6 +29,7 @@
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Agilent {
 
 
 PWIZ_API_DECL
@@ -149,9 +150,28 @@ PWIZ_API_DECL int translateAsMSLevel(MSScanType scanType)
 }
 
 
-PWIZ_API_DECL CVID translateAsActivationType(MSScanType scanType)
+PWIZ_API_DECL CVID translateAsActivationType(DeviceType deviceType)
 {
-    return MS_CID;
+    switch (deviceType)
+    {
+        case DeviceType_Mixed:
+            throw runtime_error("[translateAsActivationType] Mixed device types not supported.");
+
+        default:
+        case DeviceType_Unknown:
+            return MS_CID;
+
+        case DeviceType_IonTrap:
+            return MS_trap_type_collision_induced_dissociation;
+
+        case DeviceType_TandemQuadrupole:
+        case DeviceType_Quadrupole:
+        case DeviceType_QuadrupoleTimeOfFlight:
+            return MS_beam_type_collision_induced_dissociation;
+
+        case DeviceType_TimeOfFlight:
+            return MS_in_source_collision_induced_dissociation; // no collision cell, but this kind of activation is still possible
+    }
 }
 
 
@@ -209,6 +229,7 @@ PWIZ_API_DECL CVID translateAsInletType(IonizationMode ionizationMode)
 }
 
 
+} // Agilent
 } // detail
 } // msdata
 } // pwiz

@@ -38,7 +38,8 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-namespace Agilent = pwiz::vendor_api::Agilent;
+using namespace Agilent;
+namespace AgilentAPI = pwiz::vendor_api::Agilent;
 
 SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config)
 :   msd_(msd),
@@ -134,6 +135,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
         lastScanRecord_ = rawfile_->getScanRecord(lastRowNumber_ = ie.rowNumber); // equivalent to frameIndex
     ScanRecordPtr scanRecordPtr = lastScanRecord_;
     MSScanType scanType = scanRecordPtr->getMSScanType();
+    DeviceType deviceType = rawfile_->getDeviceType();
     int msLevel = scanRecordPtr->getMSLevel();
     bool isIonMobilityScan = scanRecordPtr->getIsIonMobilityScan();
     CVID spectrumType = translateAsSpectrumType(scanType);
@@ -185,7 +187,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             precursor.selectedIons.push_back(selectedIon);
         }
 
-        precursor.activation.set(MS_CID); // MSDR provides no access to this, so assume CID
+        CVID activationType = translateAsActivationType(deviceType);
+        if (activationType == CVID_Unknown) // assume CID
+            precursor.activation.set(MS_CID);
+        else
+            precursor.activation.set(activationType);
         precursor.activation.set(MS_collision_energy, scanRecordPtr->getCollisionEnergy(), UO_electronvolt);
 
         result->precursors.push_back(precursor);
@@ -204,7 +210,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
             spectrumType = MS_MSn_spectrum;
             reportMS2ForAllIonsScan = true;
             Precursor precursor;
-            precursor.activation.set(MS_CID); // MSDR provides no access to this, so assume CID
+
+            CVID activationType = translateAsActivationType(deviceType);
+            if (activationType == CVID_Unknown) // assume CID
+                precursor.activation.set(MS_CID);
+            else
+                precursor.activation.set(activationType);
             precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
             // note: can't give isolationWindow or precursor.selectedIons at (detailLevel <  DetailLevel_FullMetadata)
             result->precursors.push_back(precursor);
@@ -217,7 +228,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     if ((int) detailLevel < (int) DetailLevel_FullMetadata)
         return result;
 
-    Agilent::DriftScanPtr driftScan;
+    AgilentAPI::DriftScanPtr driftScan;
     if (isIonMobilityScan)
     {
         if (ie.frameIndex != lastFrameIndex_)
@@ -227,18 +238,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
         else
         {
             driftScan = lastFrame_->getScan(ie.driftBinIndex);
-            scan.userParams.push_back(UserParam("drift time", lexical_cast<string>(driftScan->getDriftTime()), "xsd:double", UO_millisecond));
+            scan.set(MS_ion_mobility_drift_time, driftScan->getDriftTime(), UO_millisecond);
         }
     }
 
     // MHDAC doesn't support centroiding of non-TOF spectra
-    DeviceType deviceType = rawfile_->getDeviceType();
     bool canCentroid = deviceType != DeviceType_Quadrupole &&
                        deviceType != DeviceType_TandemQuadrupole;
 
     bool doCentroid = canCentroid && msLevelsToCentroid.contains(msLevel);
 
-    Agilent::SpectrumPtr spectrumPtr;
+    AgilentAPI::SpectrumPtr spectrumPtr;
     MassRange minMaxMz;
     if (!isIonMobilityScan)
     {

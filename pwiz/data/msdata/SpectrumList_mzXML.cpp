@@ -395,7 +395,6 @@ class HandlerScan : public SAXParser::Handler
             if (scanType.empty() || scanType == "full")
             {
                 spectrum_.set(msLevel == "1" ? MS_MS1_spectrum : MS_MSn_spectrum);
-                scan.set(MS_full_scan);
             } else if (scanType == "zoom")
             {
                 spectrum_.set(MS_MSn_spectrum);

@@ -24,15 +24,30 @@
 #define _READER_BRUKER_DETAIL_HPP_ 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 #include <string>
+#include <boost/shared_ptr.hpp>
+
+
+namespace pwiz {
+namespace vendor_api {
+namespace Bruker {
+
+struct CompassData;
+typedef boost::shared_ptr<CompassData> CompassDataPtr;
+
+}
+}
+}
 
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Bruker {
 
 
-enum Reader_Bruker_Format
+PWIZ_API_DECL enum Reader_Bruker_Format
 {
     Reader_Bruker_Format_Unknown,
     Reader_Bruker_Format_FID,
@@ -45,9 +60,15 @@ enum Reader_Bruker_Format
 
 /// returns Bruker format of 'path' if it is a Bruker directory;
 /// otherwise returns empty string
-Reader_Bruker_Format format(const std::string& path);
+PWIZ_API_DECL Reader_Bruker_Format format(const std::string& path);
 
 
+PWIZ_API_DECL std::vector<InstrumentConfiguration> createInstrumentConfigurations(pwiz::vendor_api::Bruker::CompassDataPtr rawfile);
+PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(pwiz::vendor_api::Bruker::CompassDataPtr rawfile);
+PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(pwiz::vendor_api::Bruker::CompassDataPtr rawfile);
+
+
+} // namespace Bruker
 } // namespace detail
 } // namespace msdata
 } // namespace pwiz

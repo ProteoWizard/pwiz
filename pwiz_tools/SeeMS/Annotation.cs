@@ -158,7 +158,9 @@ namespace seems
         Map<CVID, IonSeries> ionSeriesByDissociationMethod = new Map<CVID, IonSeries>
         {
             {CVID.MS_collision_induced_dissociation, IonSeries.b | IonSeries.y},
-            {CVID.MS_high_energy_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium},
+            {CVID.MS_beam_type_collision_induced_dissociation, IonSeries.y | IonSeries.Immonium}, // HCD
+            {CVID.MS_trap_type_collision_induced_dissociation, IonSeries.b | IonSeries.y},
+            {CVID.MS_higher_energy_beam_type_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium}, // TOF-TOF
             {CVID.MS_electron_transfer_dissociation, IonSeries.c | IonSeries.zRadical},
             {CVID.MS_electron_capture_dissociation, IonSeries.c | IonSeries.z},
         };

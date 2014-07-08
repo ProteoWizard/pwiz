@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2013:11:06 11:40
+date: 2014:06:04 16:11
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -1272,7 +1272,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:43
 name: HexNAc
-def: "N-Acetylhexosamine." [FindMod:GLCN, RESID:AA0151, RESID:AA0154, PMID:3086323, RESID:AA0155, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=43]
+def: "N-Acetylhexosamine." [RESID:AA0155, PMID:3086323, RESID:AA0154, RESID:AA0151, FindMod:GLCN, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=43]
 comment: The amine derivative of a hexose formed by replacing a hydroxyl group with an amino group.(+acetyl group).
 xref: record_id "43"
 xref: delta_mono_mass "203.079373"
@@ -1281,7 +1281,7 @@ xref: delta_composition "HexNAc"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-10-16 15:10:27"
+xref: date_time_modified "2014-04-04 10:41:33"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -1293,11 +1293,19 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "S"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "Other glycosylation"
+xref: spec_2_neutral_loss_204_mono_mass "203.079373"
+xref: spec_2_neutral_loss_204_avge_mass "203.1925"
+xref: spec_2_neutral_loss_204_flag "false"
+xref: spec_2_neutral_loss_204_composition "HexNAc"
 xref: spec_3_group "3"
 xref: spec_3_hidden "1"
 xref: spec_3_site "T"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Other glycosylation"
+xref: spec_3_neutral_loss_204_mono_mass "203.079373"
+xref: spec_3_neutral_loss_204_avge_mass "203.1925"
+xref: spec_3_neutral_loss_204_flag "false"
+xref: spec_3_neutral_loss_204_composition "HexNAc"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -3352,7 +3360,7 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:170
-name: Delta:H(1)O(-1)18O(1)
+name: Delta:H(1)N(-1)18O(1)
 def: "Glycosylated asparagine 18O labeling." [PMID:1443554, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=170]
 comment: Conversion of glycosylated asparagine residues upon deglycosylation with PGNase F in 18O labelled water.
 xref: record_id "170"
@@ -3362,7 +3370,7 @@ xref: delta_composition "H(-1) N(-1) 18O"
 xref: username_of_poster "lobvi"
 xref: group_of_poster "users"
 xref: date_time_posted "2003-12-11 18:24:58"
-xref: date_time_modified "2009-06-26 17:35:41"
+xref: date_time_modified "2014-05-21 08:59:48"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -14234,13 +14242,13 @@ name: cGMP
 def: "S-guanylation." [PMID:17906641, PMID:15063129, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=849]
 comment: Protein which is posttranslationally modified by the attachment of cGMP on the sulfur atom of Cys or hydroxyl group of Ser residues.
 xref: record_id "849"
-xref: delta_mono_mass "344.039610"
-xref: delta_avge_mass "344.1974"
-xref: delta_composition "H(11) C(10) N(5) O(7) P"
+xref: delta_mono_mass "343.031785"
+xref: delta_avge_mass "343.1895"
+xref: delta_composition "H(10) C(10) N(5) O(7) P"
 xref: username_of_poster "atsushiirie"
 xref: group_of_poster ""
 xref: date_time_posted "2008-06-21 09:02:53"
-xref: date_time_modified "2009-05-24 20:01:17"
+xref: date_time_modified "2014-02-08 02:24:10"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -15435,13 +15443,13 @@ id: UNIMOD:936
 name: Chlorination
 def: "Chlorination of tyrosine residues." [PMID:14660678, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=936]
 xref: record_id "936"
-xref: delta_mono_mass "34.968853"
-xref: delta_avge_mass "35.4530"
-xref: delta_composition "Cl"
+xref: delta_mono_mass "33.961028"
+xref: delta_avge_mass "34.4451"
+xref: delta_composition "H(-1) Cl"
 xref: username_of_poster "Bryan"
 xref: group_of_poster ""
 xref: date_time_posted "2009-10-15 17:07:41"
-xref: date_time_modified "2009-10-16 14:40:43"
+xref: date_time_modified "2014-05-19 10:13:05"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -15456,13 +15464,13 @@ id: UNIMOD:937
 name: dichlorination
 def: "Dichlorination." [PMID:11733505, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=937]
 xref: record_id "937"
-xref: delta_mono_mass "69.937705"
-xref: delta_avge_mass "70.9060"
-xref: delta_composition "Cl(2)"
+xref: delta_mono_mass "67.922055"
+xref: delta_avge_mass "68.8901"
+xref: delta_composition "H(-2) Cl(2)"
 xref: username_of_poster "Bryan"
 xref: group_of_poster ""
 xref: date_time_posted "2009-10-15 17:12:42"
-xref: date_time_modified "2012-06-22 14:13:56"
+xref: date_time_modified "2014-05-19 10:13:24"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -24773,6 +24781,189 @@ xref: spec_4_site "Y"
 xref: spec_4_position "Anywhere"
 xref: spec_4_classification "Isotopic label"
 xref: spec_4_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1397
+name: Iodoacetanilide
+def: "Iodoacetanilide derivative." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1397]
+xref: record_id "1397"
+xref: delta_mono_mass "133.052764"
+xref: delta_avge_mass "133.1473"
+xref: delta_composition "H(7) C(8) N O"
+xref: username_of_poster "kcook123"
+xref: group_of_poster ""
+xref: date_time_posted "2013-12-10 04:26:07"
+xref: date_time_modified "2014-03-01 17:35:50"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Artefact"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Any N-term"
+xref: spec_3_classification "Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1398
+name: Iodoacetanilide:13C(6)
+def: "13C labelled iodoacetanilide derivative." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1398]
+xref: record_id "1398"
+xref: delta_mono_mass "139.072893"
+xref: delta_avge_mass "139.1032"
+xref: delta_composition "H(7) C(2) 13C(6) N O"
+xref: username_of_poster "kcook123"
+xref: group_of_poster ""
+xref: date_time_posted "2013-12-10 04:31:00"
+xref: date_time_modified "2014-03-01 17:36:23"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Artefact"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Any N-term"
+xref: spec_3_classification "Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1399
+name: Dap-DSP
+def: "Diaminopimelic acid-DSP monolinked." [URL:http\://www.sigmaaldrich.com/catalog/product/sigma/07036?lang=en&region=GB, URL:http\://www.piercenet.com/product/dsp-lomants-reagent, PMID:http://www.ncbi.nlm.nih.gov/pubmed/322714?dopt=AbstractPlus, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1399]
+comment: Gram negative peptidoglycan amino acid (DAP) mono-linked to DSP.
+xref: record_id "1399"
+xref: delta_mono_mass "328.055148"
+xref: delta_avge_mass "328.4071"
+xref: delta_composition "H(16) C(13) N(2) O(4) S(2)"
+xref: username_of_poster "grigorios"
+xref: group_of_poster ""
+xref: date_time_posted "2014-02-20 11:23:24"
+xref: date_time_modified "2014-03-01 17:37:05"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "A"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Non-standard residue"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Non-standard residue"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1400
+name: MurNAc
+def: "N-Acetylmuramic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1400]
+comment: Gram negative peptidoglycan saccharide amide bonded to Alanine.
+xref: record_id "1400"
+xref: delta_mono_mass "275.100502"
+xref: delta_avge_mass "275.2552"
+xref: delta_composition "H(17) C(11) N O(7)"
+xref: username_of_poster "grigorios"
+xref: group_of_poster ""
+xref: date_time_posted "2014-02-20 12:47:46"
+xref: date_time_modified "2014-03-01 17:39:35"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "A"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other glycosylation"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1401
+name: TransN-biotin
+def: "Transaminated Protein N-terminus biotinylated with biotin-hydrazide." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1401]
+xref: record_id "1401"
+xref: delta_mono_mass "239.096657"
+xref: delta_avge_mass "239.3173"
+xref: delta_composition "H(15) C(10) N(4) O S"
+xref: username_of_poster "zhang19242"
+xref: group_of_poster ""
+xref: date_time_posted "2014-04-04 04:06:24"
+xref: date_time_modified "2014-06-04 16:11:32"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Protein N-term"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1402
+name: Label:2H(7)15N(4)
+def: "Label:2H(7)15N(4)." [URL:http\://shop.isotope.com/productdetails.aspx?id=10032309&itemno=DNLM-7543-PK, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1402]
+comment: For SILAC experiments.
+synonym: "Cambridge Isotopes DNLM-7543-PK" []
+xref: record_id "1402"
+xref: delta_mono_mass "11.032077"
+xref: delta_avge_mass "11.0168"
+xref: delta_composition "H(-7) 2H(7) N(-4) 15N(4)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2014-04-16 12:16:45"
+xref: date_time_modified "2014-04-16 12:16:45"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "R"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1403
+name: Label:2H(6)15N(1)
+def: "Label:2H(6)15N(1)." [URL:http\://shop.isotope.com/productdetails.aspx?id=10032309&itemno=DNLM-7543-PK, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1403]
+comment: For SILAC experiments.
+synonym: "Arg-Pro conversion of Label:2H(7)15N(4)" []
+xref: record_id "1403"
+xref: delta_mono_mass "7.034695"
+xref: delta_avge_mass "7.0304"
+xref: delta_composition "H(-6) 2H(6) N(-1) 15N"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2014-04-16 12:19:06"
+xref: date_time_modified "2014-04-16 12:19:06"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "P"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 

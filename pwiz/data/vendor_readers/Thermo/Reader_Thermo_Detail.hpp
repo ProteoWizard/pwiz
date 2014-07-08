@@ -34,6 +34,7 @@ using namespace pwiz::vendor_api::Thermo;
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Thermo {
 
 using namespace pwiz::cv;
 
@@ -53,6 +54,7 @@ PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(PolarityType polarityType);
 PWIZ_API_DECL void SetActivationType(ActivationType activationType, Activation& activation);
 
+} // Thermo
 } // detail
 } // msdata
 } // pwiz

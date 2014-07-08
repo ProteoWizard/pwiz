@@ -1042,31 +1042,21 @@ struct HandlerSearchSummary : public SAXParser::Handler
         bal::split(tokens, ionSeriesList, bal::is_any_of(","));
         BOOST_FOREACH(const string& ionSeries, tokens)
         {
-            if (ionSeries == "immonium")        _sip->additionalSearchParams.set(MS_param__immonium_ion);
-            else if (ionSeries == "a")          _sip->additionalSearchParams.set(MS_param__a_ion);
-            else if (ionSeries == "a-NH3")      _sip->additionalSearchParams.set(MS_param__a_ion_NH3);
-            else if (ionSeries == "a-H2O")      _sip->additionalSearchParams.set(MS_param__a_ion_H2O);
-            else if (ionSeries == "b")          _sip->additionalSearchParams.set(MS_param__b_ion);
-            else if (ionSeries == "b-NH3")      _sip->additionalSearchParams.set(MS_param__b_ion_NH3);
-            else if (ionSeries == "b-H2O")      _sip->additionalSearchParams.set(MS_param__b_ion_H2O);
-            else if (ionSeries == "c")          _sip->additionalSearchParams.set(MS_param__c_ion);
-            //else if (ionSeries == "c-NH3")      _sip->additionalSearchParams.set(MS_param__c_ion_NH3);
-            //else if (ionSeries == "c-H2O")      _sip->additionalSearchParams.set(MS_param__c_ion_H2O);
-            else if (ionSeries == "x")          _sip->additionalSearchParams.set(MS_param__x_ion);
-            //else if (ionSeries == "x-NH3")      _sip->additionalSearchParams.set(MS_param__x_ion_NH3);
-            //else if (ionSeries == "x-H2O")      _sip->additionalSearchParams.set(MS_param__x_ion_H2O);
-            else if (ionSeries == "y")          _sip->additionalSearchParams.set(MS_param__y_ion);
-            else if (ionSeries == "y-NH3")      _sip->additionalSearchParams.set(MS_param__y_ion_NH3);
-            else if (ionSeries == "y-H2O")      _sip->additionalSearchParams.set(MS_param__y_ion_H2O);
-            else if (ionSeries == "z")          _sip->additionalSearchParams.set(MS_param__z_ion);
-            //else if (ionSeries == "z-NH3")      _sip->additionalSearchParams.set(MS_param__z_ion_NH3);
-            //else if (ionSeries == "z-H2O")      _sip->additionalSearchParams.set(MS_param__z_ion_H2O);
+            if (ionSeries == "immonium")               _sip->additionalSearchParams.set(MS_param__immonium_ion);
+            else if (bal::contains(ionSeries, "NH3"))  _sip->additionalSearchParams.set(MS_NH3_neutral_loss);
+            else if (bal::contains(ionSeries, "H2O"))  _sip->additionalSearchParams.set(MS_H2O_neutral_loss);
+            else if (ionSeries == "a")                 _sip->additionalSearchParams.set(MS_param__a_ion);
+            else if (ionSeries == "b")                 _sip->additionalSearchParams.set(MS_param__b_ion);
+            else if (ionSeries == "c")                 _sip->additionalSearchParams.set(MS_param__c_ion);
+            else if (ionSeries == "x")                 _sip->additionalSearchParams.set(MS_param__x_ion);
+            else if (ionSeries == "y")                 _sip->additionalSearchParams.set(MS_param__y_ion);
+            else if (ionSeries == "z")                 _sip->additionalSearchParams.set(MS_param__z_ion);
             else if (ionSeries == "z+1" ||
-                     ionSeries == "z*")         _sip->additionalSearchParams.set(MS_param__z_1_ion);
-            else if (ionSeries == "z+2")        _sip->additionalSearchParams.set(MS_param__z_2_ion);
-            else if (ionSeries == "d")          _sip->additionalSearchParams.set(MS_param__d_ion);
-            else if (ionSeries == "v")          _sip->additionalSearchParams.set(MS_param__v_ion);
-            else if (ionSeries == "w")          _sip->additionalSearchParams.set(MS_param__w_ion);
+                     ionSeries == "z*")                _sip->additionalSearchParams.set(MS_param__z_1_ion);
+            else if (ionSeries == "z+2")               _sip->additionalSearchParams.set(MS_param__z_2_ion);
+            else if (ionSeries == "d")                 _sip->additionalSearchParams.set(MS_param__d_ion);
+            else if (ionSeries == "v")                 _sip->additionalSearchParams.set(MS_param__v_ion);
+            else if (ionSeries == "w")                 _sip->additionalSearchParams.set(MS_param__w_ion);
         }
     }
 

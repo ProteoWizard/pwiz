@@ -51,14 +51,14 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
 #ifdef PWIZ_READER_BRUKER
     ChromatogramList_Bruker(MSData& msd,
                             const string& rootpath,
-                            Reader_Bruker_Format format,
+                            Bruker::Reader_Bruker_Format format,
                             CompassDataPtr compassDataPtr);
 
     private:
 
     MSData& msd_;
     bfs::path rootpath_;
-    Reader_Bruker_Format format_;
+    Bruker::Reader_Bruker_Format format_;
     CompassDataPtr compassDataPtr_;
     size_t size_;
 

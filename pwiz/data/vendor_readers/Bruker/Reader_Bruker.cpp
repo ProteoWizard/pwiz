@@ -43,15 +43,17 @@ PWIZ_API_DECL
 std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
                                                   const std::string& head) const
 {
-    switch (detail::format(filename))
-    {
-        case pwiz::msdata::detail::Reader_Bruker_Format_FID: return "Bruker FID";
-        case pwiz::msdata::detail::Reader_Bruker_Format_YEP: return "Bruker YEP";
-        case pwiz::msdata::detail::Reader_Bruker_Format_BAF: return "Bruker BAF";
-        case pwiz::msdata::detail::Reader_Bruker_Format_U2: return "Bruker U2";
-        case pwiz::msdata::detail::Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF/U2";
+    using namespace pwiz::msdata::detail::Bruker;
 
-        case pwiz::msdata::detail::Reader_Bruker_Format_Unknown:
+    switch (pwiz::msdata::detail::Bruker::format(filename))
+    {
+        case Reader_Bruker_Format_FID: return "Bruker FID";
+        case Reader_Bruker_Format_YEP: return "Bruker YEP";
+        case Reader_Bruker_Format_BAF: return "Bruker BAF";
+        case Reader_Bruker_Format_U2: return "Bruker U2";
+        case Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF/U2";
+
+        case Reader_Bruker_Format_Unknown:
         default:
             return "";
     }
@@ -71,6 +73,7 @@ namespace msdata {
 
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
+using namespace pwiz::msdata::detail::Bruker;
 using namespace pwiz::vendor_api::Bruker;
 
 
@@ -79,6 +82,35 @@ using namespace pwiz::vendor_api::Bruker;
 //
 
 namespace {
+
+void initializeInstrumentConfigurationPtrs(MSData& msd, CompassDataPtr rawfile, const SoftwarePtr& instrumentSoftware)
+{
+    CVID cvidSeries = translateAsInstrumentSeries(rawfile);
+
+    // set common instrument parameters
+    ParamGroupPtr commonInstrumentParams(new ParamGroup);
+    commonInstrumentParams->id = "CommonInstrumentParams";
+    msd.paramGroupPtrs.push_back(commonInstrumentParams);
+
+    commonInstrumentParams->userParams.push_back(UserParam("instrument model", rawfile->getInstrumentDescription()));
+    commonInstrumentParams->set(cvidSeries);
+
+    // create instrument configuration templates based on the instrument model
+    vector<InstrumentConfiguration> configurations = createInstrumentConfigurations(rawfile);
+    if (configurations.empty())
+        configurations.resize(1); // provide at least one configuration
+
+    for (size_t i = 0; i < configurations.size(); ++i)
+    {
+        InstrumentConfigurationPtr ic = InstrumentConfigurationPtr(new InstrumentConfiguration(configurations[i]));
+
+        ic->id = (boost::format("IC%d") % (i + 1)).str();
+        ic->paramGroupPtrs.push_back(commonInstrumentParams);
+        ic->softwarePtr = instrumentSoftware;
+
+        msd.instrumentConfigurationPtrs.push_back(ic);
+    }
+}
 
 void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format format, CompassDataPtr compassDataPtr)
 {
@@ -89,8 +121,15 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
     SoftwarePtr software(new Software);
     software->id = "CompassXtract";
     software->set(MS_CompassXtract);
-    software->version = "1.0";
+    software->version = "3.1.7";
     msd.softwarePtrs.push_back(software);
+
+    SoftwarePtr acquisitionSoftware(new Software);
+    CVID acquisitionSoftwareCvid = translateAsAcquisitionSoftware(compassDataPtr);
+    acquisitionSoftware->id = cvTermInfo(acquisitionSoftwareCvid).shortName();
+    acquisitionSoftware->set(acquisitionSoftwareCvid);
+    acquisitionSoftware->version = "unknown";
+    msd.softwarePtrs.push_back(acquisitionSoftware);
 
     SoftwarePtr softwarePwiz(new Software);
     softwarePwiz->id = "pwiz_Reader_Bruker";
@@ -129,10 +168,7 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
         }
     }
 
-    // TODO: read instrument "family" from (first) source
-    //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
-    msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
-    msd.instrumentConfigurationPtrs.back()->set(MS_Bruker_Daltonics_instrument_model);
+    initializeInstrumentConfigurationPtrs(msd, compassDataPtr, acquisitionSoftware);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
@@ -153,7 +189,7 @@ void Reader_Bruker::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
 
-    Reader_Bruker_Format format = detail::format(filename);
+    Reader_Bruker_Format format = Bruker::format(filename);
     if (format == Reader_Bruker_Format_Unknown)
         throw ReaderFail("[Reader_Bruker::read] Path given is not a recognized Bruker format");
 

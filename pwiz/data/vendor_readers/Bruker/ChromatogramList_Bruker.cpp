@@ -41,6 +41,8 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace Bruker;
+
 
 PWIZ_API_DECL
 ChromatogramList_Bruker::ChromatogramList_Bruker(MSData& msd,

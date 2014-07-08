@@ -69,6 +69,7 @@ namespace msdata {
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
+using namespace pwiz::msdata::detail::Thermo;
 
 
 //

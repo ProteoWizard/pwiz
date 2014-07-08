@@ -104,6 +104,8 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Q_Exactive,
     InstrumentModelType_Surveyor_PDA,
     InstrumentModelType_Accela_PDA,
+    InstrumentModelType_Orbitrap_Fusion,
+    InstrumentModelType_Orbitrap_Fusion_ETD,
 
     InstrumentModelType_Count,
 };
@@ -171,6 +173,9 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
     else if (bal::contains(type, "Q EXACTIVE")) return InstrumentModelType_Q_Exactive;
     else if (bal::contains(type, "EXACTIVE"))   return InstrumentModelType_Exactive;
+    else if (bal::contains(type, "FUSION"))     return InstrumentModelType_Orbitrap_Fusion;
+    else if (bal::contains(type, "FUSION") &&
+             bal::contains(type, "ETD"))        return InstrumentModelType_Orbitrap_Fusion_ETD;
     else if (type == "SURVEYOR PDA")            return InstrumentModelType_Surveyor_PDA;
     else if (type == "ACCELA PDA")              return InstrumentModelType_Accela_PDA;
     else
@@ -223,6 +228,8 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_LTQ_Orbitrap_Elite:
         case InstrumentModelType_Exactive:
         case InstrumentModelType_Q_Exactive:
+        case InstrumentModelType_Orbitrap_Fusion:
+        case InstrumentModelType_Orbitrap_Fusion_ETD:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
@@ -326,10 +333,18 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Elite:
-            if (scanFilterType == ScanFilterMassAnalyzerType_FTMS)
-                return MassAnalyzerType_Orbitrap;
-            else 
-                return MassAnalyzerType_Linear_Ion_Trap;
+        case InstrumentModelType_Orbitrap_Fusion:
+        case InstrumentModelType_Orbitrap_Fusion_ETD:
+        {
+            switch (scanFilterType)
+            {
+                case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_Orbitrap;
+                //case ScanFilterMassAnalyzerType_SQMS: return MassAnalyzerType_Single_Quadrupole; FIXME: is this possible on the Fusion?
+                default:
+                case ScanFilterMassAnalyzerType_ITMS:
+                    return MassAnalyzerType_Linear_Ion_Trap;
+            }
+        }
 
         case InstrumentModelType_LTQ_FT:
         case InstrumentModelType_LTQ_FT_Ultra:
@@ -422,6 +437,8 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Elite:
+        case InstrumentModelType_Orbitrap_Fusion: // has a quadrupole but only for mass filtering, not analysis
+        case InstrumentModelType_Orbitrap_Fusion_ETD: // has a quadrupole but only for mass filtering, not analysis
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
@@ -538,6 +555,8 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Elite:
+        case InstrumentModelType_Orbitrap_Fusion:
+        case InstrumentModelType_Orbitrap_Fusion_ETD:
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;

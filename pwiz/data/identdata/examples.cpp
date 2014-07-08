@@ -233,11 +233,9 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
     sip->additionalSearchParams.set(MS_parent_mass_type_mono);
     sip->additionalSearchParams.set(MS_fragment_mass_type_mono);
     sip->additionalSearchParams.set(MS_param__a_ion);
-    sip->additionalSearchParams.set(MS_param__a_ion_NH3);
     sip->additionalSearchParams.set(MS_param__b_ion);
-    sip->additionalSearchParams.set(MS_param__b_ion_NH3);
     sip->additionalSearchParams.set(MS_param__y_ion);
-    sip->additionalSearchParams.set(MS_param__y_ion_NH3);
+    sip->additionalSearchParams.set(MS_NH3_neutral_loss);
     sip->additionalSearchParams.userParams.push_back(UserParam("INSTRUMENT", "Default"));
     sip->additionalSearchParams.userParams.push_back(UserParam("MASS", "Monoisotopic"));
     sip->additionalSearchParams.userParams.push_back(UserParam("PFA", "1"));

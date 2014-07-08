@@ -29,12 +29,12 @@
 
 #ifdef PWIZ_READER_WATERS
 #include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
+using namespace pwiz::vendor_api::Waters;
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
-
-using namespace pwiz::vendor_api::Waters;
+namespace Waters {
 
 PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawDataPtr rawdata);
@@ -48,6 +48,7 @@ PWIZ_API_DECL CVID translate(PwizPolarityType polarityType);
 PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(ActivationType activationType);*/
 
+} // Waters
 } // detail
 } // msdata
 } // pwiz

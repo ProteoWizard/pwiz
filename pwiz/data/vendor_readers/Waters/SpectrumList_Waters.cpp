@@ -37,6 +37,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace Waters;
 
 SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config)
     : msd_(msd), rawdata_(rawdata), config_(config)
@@ -121,7 +122,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (detailLevel == DetailLevel_InstantMetadata)
         return result;
 
-    using Waters::Lib::MassLynxRaw::MSScanStats;
+    using ::Waters::Lib::MassLynxRaw::MSScanStats;
     const MSScanStats& scanStats = rawdata_->GetScanStats(ie.function, ie.block >= 0 ? ie.block : ie.scan);
 
     scan.set(MS_scan_start_time, scanStats.rt, UO_minute);
@@ -160,9 +161,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     // block >= 0 is ion mobility
     if (ie.block >= 0)
     {
-        // TODO: get drift time in the CV and change this to a CV param
         double driftTime = rawdata_->GetDriftTime(ie.function, ie.block, ie.scan);
-        scan.userParams.push_back(UserParam("drift time", lexical_cast<string>(driftTime), "xsd:double", UO_millisecond));
+        scan.set(MS_ion_mobility_drift_time, driftTime, UO_millisecond);
     }
 
     if (msLevel > 1)
@@ -179,7 +179,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 SelectedIon selectedIon(setMass);
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, MS_m_z);
 
-                precursor.activation.set(MS_CID);
+                precursor.activation.set(MS_beam_type_collision_induced_dissociation); // AFAIK there is no Waters instrument with a trap collision cell
 
                 RawData::ExtendedScanStatsByName::const_iterator ceItr = extendedScanStatsByName.find("Collision Energy");
                 if (ceItr != extendedScanStatsByName.end() &&
@@ -210,7 +210,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
             // CDC masses are uncalibrated, so we have to get calibration coefficients and do it ourselves
             initializeCoefficients();
             cdc.getMassAxisLength(axisLength);
-            if (axisLength != imsMasses.size())
+            if (axisLength != (int) imsMasses.size())
             {
                 imsMasses_.resize(axisLength);
                 imsCalibratedMasses_.resize(axisLength);
@@ -352,7 +352,7 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
         // CDC masses are uncalibrated, so we have to get calibration coefficients and do it ourselves
         initializeCoefficients();
         cdc.getMassAxisLength(axisLength);
-        if (axisLength != imsMasses.size())
+        if (axisLength != (int) imsMasses.size())
         {
             imsMasses_.resize(axisLength);
             imsCalibratedMasses_.resize(axisLength);
@@ -456,7 +456,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
                     ie.scan = j;
                     ie.index = index_.size()-1;
 
-                    std::back_insert_iterator<string> sink(ie.id);
+                    std::back_insert_iterator<std::string> sink(ie.id);
                     generate(sink,
                                 "function=" << int_ << " process=" << int_ << " scan=" << int_,
                                 (ie.function+1), ie.process, ((numScansInBlock*ie.block)+ie.scan+1));
@@ -476,7 +476,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
                 ie.scan = i;
                 ie.index = index_.size()-1;
 
-                std::back_insert_iterator<string> sink(ie.id);
+                std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink,
                             "function=" << int_ << " process=" << int_ << " scan=" << int_,
                             (ie.function+1), ie.process, (ie.scan+1));

@@ -59,6 +59,8 @@ void test()
                 cvTermInfo(MS_instrument_model).parentsPartOf[0] == MS_instrument);
 
     unit_assert(cvTermInfo(MS_None____OBSOLETE).isObsolete);
+
+    unit_assert(cvTermInfo(MS_regular_expressions_for_a_GUID).def == "([A-Fa-f0-9]\\{8\\}-([A-Fa-f0-9]\\{4\\}-)\\{3\\}[A-Fa-f0-9]\\{12\\}).");
 }
 
 

@@ -33,6 +33,7 @@
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace ABI {
 
 using namespace pwiz::vendor_api::ABI;
 
@@ -44,6 +45,7 @@ PWIZ_API_DECL CVID translateAsIonSource(IonSourceType ionSourceType);
 PWIZ_API_DECL CVID translateAsSpectrumType(ExperimentType scanType);
 PWIZ_API_DECL CVID translate(Polarity polarity);
 
+} // ABI
 } // detail
 } // msdata
 } // pwiz

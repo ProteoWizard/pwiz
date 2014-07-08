@@ -120,6 +120,17 @@ size_t enumValue(const Term& term, size_t index)
 }
 
 
+// OBO format can use C-style escape characters; these need to be escaped when writing a quoted string
+string escape_copy(const string& str)
+{
+    string copy(str);
+    bal::replace_all(copy, "\\", "\\\\");
+    bal::replace_all(copy, "\"", "\\\"");
+    return copy;
+}
+
+
+
 vector< map<Term::id_type, const Term*> > termMaps;
 vector< map<Term::id_type, string> > correctedEnumNameMaps;
 
@@ -286,9 +297,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             correctName += " (" + term.prefix + ":" + lexical_cast<string>(enumValue(term, obo-obos.begin())) + ")";
 
         os << "    {" << eName << ", "
-           << "\"" << term.prefix << ":" << (term.prefix != "UNIMOD" ? setw(7) : setw(1) )  << setfill('0') << term.id << "\", "
-           << "\"" << correctName << "\", "
-           << "\"" << term.def << "\", "
+           << "\"" << term.prefix << ":" << (term.prefix != "UNIMOD" ? setw(7) : setw(1) ) << setfill('0') << term.id << "\", "
+           << "\"" << escape_copy(correctName) << "\", "
+           << "\"" << escape_copy(term.def) << "\", "
            << (term.isObsolete ? "true" : "false") // setw(7) screws up direct output
            << "},\n";
     }

@@ -61,13 +61,11 @@ void test()
     ParamGroupPtr pg1(new ParamGroup);
     pg1->id = "CommonMS1SpectrumParams";
     pg1->cvParams.push_back(MS_positive_scan);
-    pg1->cvParams.push_back(MS_full_scan);
     dummy.paramGroupPtrs.push_back(pg1);
 
     ParamGroupPtr pg2(new ParamGroup);
     pg2->id = "CommonMS2SpectrumParams";
     pg2->cvParams.push_back(MS_positive_scan);
-    pg2->cvParams.push_back(MS_full_scan);
     dummy.paramGroupPtrs.push_back(pg2);
 
     // so we don't have any dangling references

@@ -41,6 +41,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace Thermo;
 
 ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config)
 :   msd_(msd), rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy), config_(config)

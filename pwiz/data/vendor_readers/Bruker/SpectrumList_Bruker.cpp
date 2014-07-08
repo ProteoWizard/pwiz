@@ -46,6 +46,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace Bruker;
 
 const char* parameterAlternativeNames[] =
 {

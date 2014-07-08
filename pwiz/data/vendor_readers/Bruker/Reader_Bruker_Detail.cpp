@@ -27,10 +27,13 @@
 #include "boost/filesystem/convenience.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 
+using namespace pwiz::vendor_api::Bruker;
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Bruker {
+
 
 using namespace pwiz::util;
 
@@ -110,6 +113,136 @@ Reader_Bruker_Format format(const string& path)
     return Reader_Bruker_Format_Unknown;
 }
 
+
+#ifdef PWIZ_READER_BRUKER
+
+std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataPtr rawfile)
+{
+    vector<InstrumentConfiguration> configurations;
+    
+    MSSpectrumPtr firstSpectrum = rawfile->getMSSpectrum(1);
+    MSSpectrumParameterListPtr parametersPtr = firstSpectrum->parameters();
+    const MSSpectrumParameterList& parameters = *parametersPtr;
+
+    map<string, string> parameterMap;
+    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
+        parameterMap[p.name] = p.value;
+
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap:
+        case InstrumentFamily_OTOF:
+        case InstrumentFamily_OTOFQ:
+        case InstrumentFamily_maXis:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            break;
+
+        case InstrumentFamily_MaldiTOF:
+        case InstrumentFamily_BioTOF:
+        case InstrumentFamily_BioTOFQ:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_MALDI, 1));
+            break;
+
+        case InstrumentFamily_FTMS:
+            configurations.push_back(InstrumentConfiguration());
+            if (parameterMap["Mobile Hexapole Position"] == "MALDI") // HACK: I haven't seen enough data to know whether this is robust.
+                configurations.back().componentList.push_back(Component(MS_MALDI, 1));
+            else
+                configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            break;
+
+        default:
+        case InstrumentFamily_Unknown:
+            break; // unknown configuration
+    }
+
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap:
+            configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentFamily_OTOF:
+        case InstrumentFamily_MaldiTOF:
+            configurations.back().componentList.push_back(Component(MS_time_of_flight, 2));
+            configurations.back().componentList.push_back(Component(MS_multichannel_plate, 3));
+            configurations.back().componentList.push_back(Component(MS_photomultiplier, 4));
+            break;
+
+        case InstrumentFamily_OTOFQ:
+        case InstrumentFamily_BioTOFQ:
+        case InstrumentFamily_maXis:
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 3));
+            configurations.back().componentList.push_back(Component(MS_time_of_flight, 4));
+            configurations.back().componentList.push_back(Component(MS_multichannel_plate, 5));
+            configurations.back().componentList.push_back(Component(MS_photomultiplier, 6));
+            break;
+
+        case InstrumentFamily_FTMS:
+            configurations.back().componentList.push_back(Component(MS_FT_ICR, 2));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
+            break;
+
+        default:
+        case InstrumentFamily_Unknown:
+            break; // unknown configuration
+    }
+
+    return configurations;
+}
+
+PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile)
+{
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap: return MS_Bruker_Daltonics_HCT_Series; // or amazon
+        case InstrumentFamily_OTOF: return MS_Bruker_Daltonics_micrOTOF_series;
+        case InstrumentFamily_OTOFQ: return MS_Bruker_Daltonics_micrOTOF_series; // or ultroTOF
+        case InstrumentFamily_BioTOF: return MS_Bruker_Daltonics_BioTOF_series;
+        case InstrumentFamily_BioTOFQ: return MS_Bruker_Daltonics_BioTOF_series;
+        case InstrumentFamily_MaldiTOF: return MS_Bruker_Daltonics_flex_series;
+        case InstrumentFamily_FTMS: return MS_Bruker_Daltonics_apex_series; // or solarix
+        case InstrumentFamily_maXis: return MS_Bruker_Daltonics_maXis_series;
+
+        default:
+        case InstrumentFamily_Unknown:
+            return MS_Bruker_Daltonics_instrument_model;
+    }
+}
+
+PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile)
+{
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap: return MS_HCTcontrol;
+        case InstrumentFamily_OTOF: return MS_micrOTOFcontrol;
+        case InstrumentFamily_OTOFQ: return MS_micrOTOFcontrol;
+        case InstrumentFamily_BioTOF: return MS_Compass;
+        case InstrumentFamily_BioTOFQ: return MS_Compass;
+        case InstrumentFamily_MaldiTOF: return MS_FlexControl;
+        case InstrumentFamily_FTMS: return MS_apexControl;
+        case InstrumentFamily_maXis: return MS_Compass;
+
+        default:
+        case InstrumentFamily_Unknown:
+            return MS_Compass;
+    }
+}
+
+#else
+
+PWIZ_API_DECL std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataPtr rawfile) { throw runtime_error("Reader_Bruker not implemented"); }
+PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile) { throw runtime_error("Reader_Bruker not implemented"); }
+PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile) { throw runtime_error("Reader_Bruker not implemented"); }
+
+#endif
+
+
+} // namespace Bruker
 } // namespace detail
 } // namespace msdata
 } // namespace pwiz

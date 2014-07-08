@@ -38,6 +38,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace Waters;
 
 PWIZ_API_DECL ChromatogramList_Waters::ChromatogramList_Waters(RawDataPtr rawdata)
 :   rawdata_(rawdata),

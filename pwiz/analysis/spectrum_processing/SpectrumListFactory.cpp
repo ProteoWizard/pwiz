@@ -989,7 +989,8 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     if (activationType == "CID") // HACK: CID means neither of HCD or ETD
     {
         hasNot = true;
-        cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+        cvIDs.insert(MS_higher_energy_beam_type_collision_induced_dissociation);
+        cvIDs.insert(MS_HCD);
         cvIDs.insert(MS_BIRD);
         cvIDs.insert(MS_ECD);
         cvIDs.insert(MS_ETD);
@@ -1005,7 +1006,8 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
         cvIDs.insert(MS_ETD);
         cvIDs.insert(MS_CID);
     }
-    else if (activationType == "HCD") cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    else if (activationType == "HECID") cvIDs.insert(MS_higher_energy_beam_type_collision_induced_dissociation);
+    else if (activationType == "HCD") cvIDs.insert(MS_HCD);
     else if (activationType == "BIRD") cvIDs.insert(MS_BIRD);
     else if (activationType == "ECD") cvIDs.insert(MS_ECD);
     else if (activationType == "ETD") cvIDs.insert(MS_ETD);
@@ -1025,7 +1027,7 @@ UsageInfo usage_activation = { "<precursor_activation_type>",
     "Keeps only spectra whose precursors have the specifed activation type.  It doesn't affect non-MS spectra, and doesn't "
     "affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes "
     "have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).\n"
-    "   <precursor_activation_type> is any one of: ETD CID SA HCD BIRD ECD IRMPD PD PSD PQD SID or SORI."
+    "   <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI."
     };
 
 SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg)
@@ -1164,7 +1166,7 @@ UsageInfo usage_polarity = { "<polarity>",
 struct JumpTableEntry
 {
     const char* command;
-    UsageInfo &usage; // {const char *usage,const char &details}
+    const UsageInfo& usage; // {const char *usage,const char &details}
     FilterCreator creator;
 };
 
@@ -1189,19 +1191,19 @@ JumpTableEntry jumpTable_[] =
     {"mzPrecursors", usage_mzPrecursors, filterCreator_mzPrecursors},
     {"defaultArrayLength", usage_defaultArrayLength, filterCreator_defaultArrayLength},
     {"zeroSamples", usage_zeroSamples , filterCreator_ZeroSamples},
-    {"mzPresent", usage_mzPresent , filterCreator_mzPresent},
+    {"mzPresent", usage_mzPresent, filterCreator_mzPresent},
     {"scanSumming", usage_scanSummer, filterCreator_scanSummer},
 
     // MSn Spectrum Processing/Filtering
-    {"MS2Denoise", usage_MS2Denoise , filterCreator_MS2Denoise},
-    {"MS2Deisotope", usage_MS2Deisotope , filterCreator_MS2Deisotope},
-    {"ETDFilter", usage_ETDFilter , filterCreator_ETDFilter},
-    {"chargeStatePredictor", usage_chargeStatePredictor , filterCreator_chargeStatePredictor},
-    {"turbocharger",usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
-    {"activation", usage_activation , filterCreator_ActivationType},
-    {"analyzer", usage_analyzerType , filterCreator_AnalyzerType},
-    {"analyzerType", usage_analyzerTypeOld , filterCreator_AnalyzerType},
-    {"polarity", usage_polarity , filterCreator_polarityFilter}
+    {"MS2Denoise", usage_MS2Denoise, filterCreator_MS2Denoise},
+    {"MS2Deisotope", usage_MS2Deisotope, filterCreator_MS2Deisotope},
+    {"ETDFilter", usage_ETDFilter, filterCreator_ETDFilter},
+    {"chargeStatePredictor", usage_chargeStatePredictor, filterCreator_chargeStatePredictor},
+    {"turbocharger", usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
+    {"activation", usage_activation, filterCreator_ActivationType},
+    {"analyzer", usage_analyzerType, filterCreator_AnalyzerType},
+    {"analyzerType", usage_analyzerTypeOld, filterCreator_AnalyzerType},
+    {"polarity", usage_polarity, filterCreator_polarityFilter}
 };
 
 

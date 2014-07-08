@@ -57,7 +57,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
 #ifdef PWIZ_READER_BRUKER
     SpectrumList_Bruker(MSData& msd,
                         const string& rootpath,
-                        Reader_Bruker_Format format,
+                        Bruker::Reader_Bruker_Format format,
                         CompassDataPtr compassDataPtr);
 
     MSSpectrumPtr getMSSpectrumPtr(size_t index, vendor_api::Bruker::DetailLevel detailLevel) const;
@@ -77,7 +77,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
 
     MSData& msd_;
     bfs::path rootpath_;
-    Reader_Bruker_Format format_;
+    Bruker::Reader_Bruker_Format format_;
     mutable CompassDataPtr compassDataPtr_;
     mutable map<int, ParameterCache> parameterCacheByMsLevel_;
     size_t size_;

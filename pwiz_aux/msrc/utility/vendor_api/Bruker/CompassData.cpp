@@ -31,6 +31,7 @@
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
+using namespace pwiz::msdata::detail::Bruker;
 
 
 using System::String;
@@ -349,13 +350,12 @@ struct LCSpectrumImpl : public LCSpectrum
 
 struct CompassDataImpl : public CompassData
 {
-    CompassDataImpl(const string& rawpath, msdata::detail::Reader_Bruker_Format format_)
+    CompassDataImpl(const string& rawpath, Reader_Bruker_Format format_)
     {
-        using namespace msdata::detail;
         try
         {
             if (format_ == Reader_Bruker_Format_Unknown)
-                format_ = format(rawpath);
+                format_ = pwiz::msdata::detail::Bruker::format(rawpath);
             if (format_ == Reader_Bruker_Format_Unknown)
                 throw runtime_error("[CompassData::ctor] unknown file format");
 
@@ -506,7 +506,7 @@ struct CompassDataImpl : public CompassData
 
 
 PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
-                                                 msdata::detail::Reader_Bruker_Format format)
+                                                 Reader_Bruker_Format format)
 {
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }

@@ -76,6 +76,7 @@ PWIZ_API_DECL enum InstrumentFamily
     InstrumentFamily_BioTOFQ = 4,
     InstrumentFamily_MaldiTOF = 5,
     InstrumentFamily_FTMS = 6,
+    InstrumentFamily_maXis = 7,
     InstrumentFamily_Unknown = 255
 };
 
@@ -208,7 +209,7 @@ struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
     static Ptr create(const std::string& rawpath,
-                      msdata::detail::Reader_Bruker_Format format = msdata::detail::Reader_Bruker_Format_Unknown);
+                      msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown);
 
     virtual ~CompassData() {}
 

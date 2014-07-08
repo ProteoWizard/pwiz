@@ -23,16 +23,15 @@
 #ifndef _CPP_CLI_UTILITIES_HPP_
 #define _CPP_CLI_UTILITIES_HPP_
 
-
 #include <gcroot.h>
 #include <vcclr.h>
+#include <comdef.h> // _com_error
 #include <vector>
 #include <string>
 #include <stdexcept>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include "automation_vector.h"
-
 
 namespace pwiz {
 namespace util {
@@ -116,6 +115,8 @@ void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation
 /// e.g. "Reader::read()" instead of "pwiz::data::msdata::Reader::read()"
 #define CATCH_AND_FORWARD \
     catch (std::exception&) {throw;} \
+    catch (_com_error& e) {throw std::runtime_error(string("COM error: ") + e.ErrorMessage());} \
+    /*catch (CException* e) {std::auto_ptr<CException> exceptionDeleter(e); char message[1024]; e->GetErrorMessage(message, 1024); throw std::runtime_error(string("MFC error: ") + message);}*/ \
     catch (System::Exception^ e) \
     { \
         std::vector<boost::iterator_range<std::string::const_iterator> > tokens; \

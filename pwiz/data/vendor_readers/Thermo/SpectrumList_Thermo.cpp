@@ -41,6 +41,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace Thermo;
 
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config)
 :   msd_(msd), rawfile_(rawfile), config_(config),

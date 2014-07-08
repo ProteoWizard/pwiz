@@ -28,6 +28,7 @@
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Waters {
 
 
 PWIZ_API_DECL
@@ -160,6 +161,7 @@ PWIZ_API_DECL CVID translate(PwizPolarityType polarityType)
 }
 
 
+} // Waters
 } // detail
 } // msdata
 } // pwiz

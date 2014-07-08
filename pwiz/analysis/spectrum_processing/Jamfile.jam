@@ -57,6 +57,8 @@ lib pwiz_analysis_spectrum_processing
         <library>../common//pwiz_analysis_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
         <library>$(PWIZ_ROOT_PATH)//svm
+        <toolset>msvc:<cxxflags>/wd4510   # default constructor could not be generated
+        <toolset>msvc:<cxxflags>/wd4610   # JumpTableEntry can never be instantiated - user defined constructor required
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata

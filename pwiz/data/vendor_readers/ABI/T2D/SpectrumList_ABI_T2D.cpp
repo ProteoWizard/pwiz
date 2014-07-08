@@ -134,7 +134,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI_T2D::spectrum(size_t index, bool getB
 
         selectedIon.set(MS_selected_ion_m_z, precursorMz, MS_m_z);
 
-        precursor.activation.set(MS_CID); // assume CID
+        precursor.activation.set(MS_higher_energy_beam_type_collision_induced_dissociation); // assume higher energy beam-type collision for TOF-TOF
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);

@@ -820,10 +820,16 @@ namespace pwiz.ProteowizardWrapper
             if (spectrum.scanList.scans.Count == 0)
                 return null;
             var scan = spectrum.scanList.scans[0];
-            UserParam param = scan.userParam(USERPARAM_DRIFT_TIME);  // CONSIDER: this will eventually be a proper CVParam
-            if (param.empty())
-                return null;
-            return param.timeInSeconds() * 1000.0;
+            CVParam driftTime = scan.cvParam(CVID.MS_ion_mobility_drift_time);
+            if (driftTime.empty())
+            {
+                UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
+                if (param.empty())
+                    return null;
+                return param.timeInSeconds() * 1000.0;
+            }
+            else
+                return driftTime.timeInSeconds() * 1000.0;
         }
 
         public double? GetStartTime(int scanIndex)

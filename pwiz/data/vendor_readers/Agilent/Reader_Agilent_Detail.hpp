@@ -31,6 +31,7 @@
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Agilent {
 
 using namespace pwiz::vendor_api::Agilent;
 
@@ -40,12 +41,13 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(MassHunterDa
 PWIZ_API_DECL CVID translateAsInstrumentModel(DeviceType deviceType);
 PWIZ_API_DECL CVID translateAsSpectrumType(MSScanType scanType);
 PWIZ_API_DECL int translateAsMSLevel(MSScanType scanType);
-PWIZ_API_DECL CVID translateAsActivationType(MSScanType scanType);
+PWIZ_API_DECL CVID translateAsActivationType(DeviceType deviceType);
 PWIZ_API_DECL CVID translateAsPolarityType(IonPolarity polarity);
 PWIZ_API_DECL CVID translateAsIonizationType(IonizationMode ionizationMode);
 PWIZ_API_DECL CVID translateAsInletType(IonizationMode ionizationMode);
 
 
+} // Agilent
 } // detail
 } // msdata
 } // pwiz

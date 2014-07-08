@@ -392,10 +392,8 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPr
     BOOST_FOREACH(const CVID cvid, cvFilterItems_)
     {
         CVTermInfo info = cvTermInfo(cvid); 
-        if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), MS_dissociation_method) == info.parentsIsA.end())
-        {
+        if (!cvIsA(cvid, MS_dissociation_method))
             throw runtime_error("first argument not an activation type");
-        }
 
         cvFilterItems.insert(cvid);
     }

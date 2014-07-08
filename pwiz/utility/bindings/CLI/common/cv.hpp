@@ -38,8 +38,8 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 3.60.0
-//   date: 18:02:2014 08:37
+//   data-version: 3.65.0
+//   date: 02:07:2014 08:55
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.3
 //   import: http://pato.googlecode.com/svn/trunk/quality.obo
@@ -47,14 +47,15 @@
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   remark: namespace: MS
-//   remark: version: 3.60.0
-//   remark: release date: 2014-02-18
+//   remark: version: 3.65.0
+//   remark: release date: 2014-07-02
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 //   remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
 //   remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
 //   remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
+//   remark: creator: Pierre-Alain Binz <pierre-alain.binz <-at-> chuv.ch>
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
@@ -65,7 +66,7 @@
 //
 // ["unimod.obo"]
 //   format-version: 1.2
-//   date: 2013:11:06 11:40
+//   date: 2014:06:04 16:11
 //
 // ["unit.obo"]
 //   format-version: 1.2
@@ -130,7 +131,7 @@ public enum class CVID
     MS_resolution_measurement_method = 1000012,
 
     /// <summary>resolution type: Specify the nature of resolution for the mass analyzer. Resolution is usually either constant with respect to m/z or proportional to m/z.</summary>
-    MS_resolution_type = 1000013,
+    MS_resolution_type_OBSOLETE = 1000013,
 
     /// <summary>accuracy: Accuracy is the degree of conformity of a measured mass to its actual value.</summary>
     MS_accuracy = 1000014,
@@ -151,7 +152,7 @@ public enum class CVID
     MS_scan_law = 1000019,
 
     /// <summary>scanning method: Describes the acquisition data type produced by a tandem mass spectrometry experiment.</summary>
-    MS_scanning_method = 1000020,
+    MS_scanning_method_OBSOLETE = 1000020,
 
     /// <summary>reflectron state: Status of the reflectron, turned on or off.</summary>
     MS_reflectron_state = 1000021,
@@ -297,10 +298,10 @@ public enum class CVID
     /// <summary>membrane separator: A device to separate carrier molecules from analyte molecules on the basis of ease of diffusion across a semipermeable membrane.</summary>
     MS_membrane_separator = 1000062,
 
-    /// <summary>moving belt: Continuous moving surface in the form of a belt which passes through an ionsource carrying analyte molecules.</summary>
+    /// <summary>moving belt: Continuous moving surface in the form of a belt which passes through an ion source carrying analyte molecules.</summary>
     MS_moving_belt = 1000063,
 
-    /// <summary>moving wire: Continuous moving surface in the form of a wire which passes through an ionsource carrying analyte molecules.</summary>
+    /// <summary>moving wire: Continuous moving surface in the form of a wire which passes through an ion source carrying analyte molecules.</summary>
     MS_moving_wire = 1000064,
 
     /// <summary>open split: A division of flowing stream of liquid into two streams.</summary>
@@ -312,7 +313,7 @@ public enum class CVID
     /// <summary>reservoir: A sample inlet method involving a reservoir.</summary>
     MS_reservoir = 1000067,
 
-    /// <summary>septum: A disc composed of a flexible material that seals the entrance to the reservoir. Can also be enterance to the vaccum chamber.</summary>
+    /// <summary>septum: A disc composed of a flexible material that seals the entrance to the reservoir. Can also be entrance to the vacuum chamber.</summary>
     MS_septum = 1000068,
 
     /// <summary>thermospray inlet: A method for generating gas phase ions from a solution of an analyte by rapid heating of the sample.</summary>
@@ -409,10 +410,10 @@ public enum class CVID
     MS_ten_percent_valley = 1000087,
 
     /// <summary>constant: When resolution is constant with respect to m/z.</summary>
-    MS_constant = 1000088,
+    MS_constant_OBSOLETE = 1000088,
 
     /// <summary>proportional: When resolution is proportional with respect to m/z.</summary>
-    MS_proportional = 1000089,
+    MS_proportional_OBSOLETE = 1000089,
 
     /// <summary>mass scan: A variation of instrument where a selected mass is scanned.</summary>
     MS_mass_scan = 1000090,
@@ -585,8 +586,8 @@ public enum class CVID
     /// <summary>CAD: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.</summary>
     MS_CAD = MS_collision_induced_dissociation,
 
-    /// <summary>collision activated dissociation: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.</summary>
-    MS_collision_activated_dissociation = MS_collision_induced_dissociation,
+    /// <summary>collisionally activated dissociation: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.</summary>
+    MS_collisionally_activated_dissociation = MS_collision_induced_dissociation,
 
     /// <summary>plasma desorption: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.</summary>
     MS_plasma_desorption = 1000134,
@@ -889,15 +890,15 @@ public enum class CVID
     MS_IE = MS_ionization_energy,
 
     /// <summary>isotope dilution mass spectrometry: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.</summary>
-    MS_isotope_dilution_mass_spectrometry = 1000220,
+    MS_isotope_dilution_mass_spectrometry_OBSOLETE = 1000220,
 
     /// <summary>IDMS: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.</summary>
-    MS_IDMS = MS_isotope_dilution_mass_spectrometry,
+    MS_IDMS_OBSOLETE = MS_isotope_dilution_mass_spectrometry_OBSOLETE,
 
-    /// <summary>magnetic deflection: The deflection of charged particles in a magnetic field due to a force equal to qv B where q is the particle charge, v its velocity and B the magnetic field. Magnetic deflection of an ion beam is used for m/z separation in a magnetic sector mass spectrometer.</summary>
+    /// <summary>magnetic deflection: The deflection of charged particles in a magnetic field due to a force equal to qvxB where q is the particle charge, v its velocity and B the magnetic field. Magnetic deflection of an ion beam is used for m/z separation in a magnetic sector mass spectrometer.</summary>
     MS_magnetic_deflection = 1000221,
 
-    /// <summary>mass defect: The difference between the monoisotipic and nominal mass of a molecule or atom.</summary>
+    /// <summary>mass defect: The difference between the monoisotopic and nominal mass of a molecule or atom.</summary>
     MS_mass_defect = 1000222,
 
     /// <summary>mass number: The sum of the protons and neutrons in an atom, molecule or ion.</summary>
@@ -1111,10 +1112,10 @@ public enum class CVID
     MS_IRMPD = MS_infrared_multiphoton_dissociation,
 
     /// <summary>isotope ratio mass spectrometry: The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.</summary>
-    MS_isotope_ratio_mass_spectrometry = 1000263,
+    MS_isotope_ratio_mass_spectrometry_OBSOLETE = 1000263,
 
     /// <summary>IRMS: The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.</summary>
-    MS_IRMS = MS_isotope_ratio_mass_spectrometry,
+    MS_IRMS_OBSOLETE = MS_isotope_ratio_mass_spectrometry_OBSOLETE,
 
     /// <summary>ion trap: A device for spatially confining ions using electric and magnetic fields alone or in combination.</summary>
     MS_ion_trap = 1000264,
@@ -1144,10 +1145,10 @@ public enum class CVID
     MS_MIKES = MS_mass_analyzed_ion_kinetic_energy_spectrometry,
 
     /// <summary>mass spectrometry: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.</summary>
-    MS_mass_spectrometry = 1000268,
+    MS_mass_spectrometry_OBSOLETE = 1000268,
 
     /// <summary>MS: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.</summary>
-    MS_MS = MS_mass_spectrometry,
+    MS_MS_OBSOLETE = MS_mass_spectrometry_OBSOLETE,
 
     /// <summary>mass spectrometry/mass spectrometry: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.</summary>
     MS_mass_spectrometry_mass_spectrometry = 1000269,
@@ -1396,19 +1397,19 @@ public enum class CVID
     MS_e_2_mass_spectrum = 1000328,
 
     /// <summary>linked scan: A scan in an instrument with two or more m/z analysers or in a sector mass spectrometer that incorporates at least one magnetic sector and one electric sector. Two or more of the analyzers are scanned simultaneously so as to preserve a predetermined relationship between scan parameters to produce a product ion, precursor ion or constant neutral loss spectrum.</summary>
-    MS_linked_scan = 1000329,
+    MS_linked_scan_OBSOLETE = 1000329,
 
     /// <summary>linked scan at constant b/e: A linked scan at constant B/E may be performed on a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector. The magnetic field B and the electric field E are scanned simultaneously while the accelerating voltage V is held constant, so as to maintain the ratio of the two fields constant. This linked scan may record a product ion spectrum of dissociation or other reactions occurring in a field free region preceding the two sectors.</summary>
-    MS_linked_scan_at_constant_b_e = 1000330,
+    MS_linked_scan_at_constant_b_e_OBSOLETE = 1000330,
 
     /// <summary>Linked Scan at Constant E2/V: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector. The electric sector field, E, and the accelerating voltage, V, are scanned simultaneously, so as to maintain the ratio E2/V at a constant value. This linked scan recordss a product ion spectrum of dissociation or other reactions occurring in a field free region (FFR) preceding the two sectors.</summary>
-    MS_Linked_Scan_at_Constant_E2_V = 1000331,
+    MS_Linked_Scan_at_Constant_E2_V_OBSOLETE = 1000331,
 
     /// <summary>Linked Scan at Constant B2/E: A linked scan performed on a sector mass spectrometer that incorporates at least one electric sector plus one magnetic sector in either order. The accelerating voltage is fixed and the magnetic field, B, and the electric field, E, are scanned simultaneously so as to maintain the ratio B2/E at a constant value. This linked scan records a precursor ion spectrum of dissociation or other reactions occurring in the field free region preceding the two sectors. The term B2/E linked scan is not recommended.</summary>
-    MS_Linked_Scan_at_Constant_B2_E = 1000332,
+    MS_Linked_Scan_at_Constant_B2_E_OBSOLETE = 1000332,
 
     /// <summary>Linked Scan at Constant B[1-(E/E0)]^1/2 / E: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector placed in either order. The accelerating voltage is fixed while scanning the magnetic field, B, and electric field, E, simultaneously, so as to maintain the quantity B[1-(E/E0)]1/2/E at a constant value. This linked scan records a constant neutral mass loss (or gain) spectrum of dissociation or other reactions occurring in a field free region preceding the two sectors. E0 is the electric field required to transmit the singly charged analog of the desired neutral fragment. The term B[1-(E/E0)]1/2/E linked scan.</summary>
-    MS_Linked_Scan_at_Constant_B_1__E_E0___1_2___E = 1000333,
+    MS_Linked_Scan_at_Constant_B_1__E_E0___1_2___E_OBSOLETE = 1000333,
 
     /// <summary>MS/MS in Time: A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discreet steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time.</summary>
     MS_MS_MS_in_Time = 1000334,
@@ -1428,7 +1429,7 @@ public enum class CVID
     /// <summary>nth generation product ion spectrum: The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions.</summary>
     MS_nth_generation_product_ion_spectrum_OBSOLETE = 1000339,
 
-    /// <summary>precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.</summary>
+    /// <summary>precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is deprecated.</summary>
     MS_precursor_ion = 1000340,
 
     /// <summary>precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z.</summary>
@@ -1473,7 +1474,7 @@ public enum class CVID
     /// <summary>adduct ion: Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules.</summary>
     MS_adduct_ion = 1000353,
 
-    /// <summary>aromatic ion: A planar cyclic ion that obeys the Hckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure.</summary>
+    /// <summary>aromatic ion: A planar cyclic ion that obeys the Hueckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure.</summary>
     MS_aromatic_ion = 1000354,
 
     /// <summary>analog ion: Ions that have similar chemical valence, for example the acetyl cation CH3-CO+ and the thioacetyl cation CH3-CS+.</summary>
@@ -1560,7 +1561,7 @@ public enum class CVID
     /// <summary>atmospheric pressure photoionization: Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.</summary>
     MS_atmospheric_pressure_photoionization = 1000382,
 
-    /// <summary>autodetachment: The formation of a neutral when a negative ion in a disrtete state with an energy greater than the detachment threshold loses an electron spontaneously without further interaction with an energy source.</summary>
+    /// <summary>autodetachment: The formation of a neutral when a negative ion in a discrete state with an energy greater than the detachment threshold loses an electron spontaneously without further interaction with an energy source.</summary>
     MS_autodetachment = 1000383,
 
     /// <summary>autoionization: The formation of an ion when an atom or molecule in a discrete state with an energy greater than the ionization threshold loses an electron spontaneously without further interaction with an energy source.</summary>
@@ -1599,7 +1600,7 @@ public enum class CVID
     /// <summary>membrane inlet: A semi-permeable membrane separator that permits the passage of gas sample directly to the mass spectrometer ion source.</summary>
     MS_membrane_inlet = 1000396,
 
-    /// <summary>microelectrospray: Electrospray ionization at a solvent flow rate of 300-800 nL/min where the flow is a result of a mechanical pump. See nanaoelectrospray.</summary>
+    /// <summary>microelectrospray: Electrospray ionization at a solvent flow rate of 300-800 nL/min where the flow is a result of a mechanical pump. See nanoelectrospray.</summary>
     MS_microelectrospray = 1000397,
 
     /// <summary>nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.</summary>
@@ -1677,11 +1678,11 @@ public enum class CVID
     /// <summary>high energy collision: Collision-induced dissociation process wherein the projectile ion has laboratory-frame translational energy higher than 1 keV.</summary>
     MS_high_energy_collision = 1000421,
 
-    /// <summary>high-energy collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.</summary>
-    MS_high_energy_collision_induced_dissociation = 1000422,
+    /// <summary>beam-type collision-induced dissociation: A collision-induced dissociation process that occurs in a beam-type collision cell.</summary>
+    MS_beam_type_collision_induced_dissociation = 1000422,
 
-    /// <summary>HCD: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.</summary>
-    MS_HCD = MS_high_energy_collision_induced_dissociation,
+    /// <summary>HCD: A collision-induced dissociation process that occurs in a beam-type collision cell.</summary>
+    MS_HCD = MS_beam_type_collision_induced_dissociation,
 
     /// <summary>homolytic cleavage: Fragmentation of an odd electron ion that results from one of a pair of electrons that form a bond between two atoms moving to form a pair with the odd electron on the atom at the apparent charge site. Fragmentation results in the formation of an even electron ion and a radical. This reaction involves the movement of a single electron and is symbolized by a single-barbed arrow. Synonymous with Homolysis.</summary>
     MS_homolytic_cleavage = 1000423,
@@ -1810,7 +1811,7 @@ public enum class CVID
     MS_source = 1000458,
 
     /// <summary>spectrum instrument description: Terms used to describe the spectrum.</summary>
-    MS_spectrum_instrument_description = 1000459,
+    MS_spectrum_instrument_description_OBSOLETE = 1000459,
 
     /// <summary>unit: Terms to describe units.</summary>
     MS_unit_OBSOLETE = 1000460,
@@ -1932,14 +1933,14 @@ public enum class CVID
     /// <summary>instrument attribute: Instrument properties that are associated with a value.</summary>
     MS_instrument_attribute = 1000496,
 
-    /// <summary>zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.</summary>
+    /// <summary>zoom scan: Special scan mode, where data with improved resolution is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.</summary>
     MS_zoom_scan = 1000497,
 
-    /// <summary>enhanced resolution scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.</summary>
+    /// <summary>enhanced resolution scan: Special scan mode, where data with improved resolution is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.</summary>
     MS_enhanced_resolution_scan = MS_zoom_scan,
 
     /// <summary>full scan: Feature of the ion trap mass spectrometer where MS data is acquired over a mass range.</summary>
-    MS_full_scan = 1000498,
+    MS_full_scan_OBSOLETE = 1000498,
 
     /// <summary>spectrum attribute: Spectrum properties that are associated with a value.</summary>
     MS_spectrum_attribute = 1000499,
@@ -2550,7 +2551,7 @@ public enum class CVID
     /// <summary>MassHunter Qualitative Analysis: Software for data analysis of data from 6000 series instruments.</summary>
     MS_MassHunter_Qualitative_Analysis = 1000680,
 
-    /// <summary>MassHunter Quantitative Analysis: Software for quantitation of Triple Quadruople and Quadrupole Time-of-Flight data.</summary>
+    /// <summary>MassHunter Quantitative Analysis: Software for quantitation of Triple Quadrupole and Quadrupole Time-of-Flight data.</summary>
     MS_MassHunter_Quantitative_Analysis = 1000681,
 
     /// <summary>MassHunter Metabolite ID: Software for identification of metabolites.</summary>
@@ -2847,7 +2848,7 @@ public enum class CVID
     /// <summary>charge state calculation: A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm.</summary>
     MS_charge_state_calculation = 1000778,
 
-    /// <summary>below precursor intensity dominance charge state calculation: Infers charge state as single or amibiguously multiple by determining the fraction of intensity below the precursor m/z.</summary>
+    /// <summary>below precursor intensity dominance charge state calculation: Infers charge state as single or ambiguously multiple by determining the fraction of intensity below the precursor m/z.</summary>
     MS_below_precursor_intensity_dominance_charge_state_calculation = 1000779,
 
     /// <summary>precursor recalculation: A process that recalculates existing precursor selected ions with one or more algorithmically determined precursor selected ions.</summary>
@@ -2859,7 +2860,7 @@ public enum class CVID
     /// <summary>Savitzky-Golay smoothing: Reduces intensity spikes by applying local polynomial regression (of degree k) on a distribution (of at least k+1 equally spaced points) to determine the smoothed value for each point. It tends to preserve features of the distribution such as relative maxima, minima and width, which are usually 'flattened' by other adjacent averaging techniques.</summary>
     MS_Savitzky_Golay_smoothing = 1000782,
 
-    /// <summary>LOWESS smoothing: Reduces intensity spikes by applying a modeling method known as locally weighted polynomial regression. At each point in the data set a low-degree polynomial is fit to a subset of the data, with explanatory variable values near the point whose response is being estimated. The polynomial is fit using weighted least squares, giving more weight to points near the point whose response is being estimated and less weight to points further away. The value of the regression function for the point is then obtained by evaluating the local polynomial using the explanatory variable values for that data point. The LOESS fit is complete after regression function values have been computed for each of the n data points. Many of the details of this method, such as the degree of the polynomial model and the weights, are flexible.</summary>
+    /// <summary>LOWESS smoothing: Reduces intensity spikes by applying a modelling method known as locally weighted polynomial regression. At each point in the data set a low-degree polynomial is fit to a subset of the data, with explanatory variable values near the point whose response is being estimated. The polynomial is fit using weighted least squares, giving more weight to points near the point whose response is being estimated and less weight to points further away. The value of the regression function for the point is then obtained by evaluating the local polynomial using the explanatory variable values for that data point. The LOESS fit is complete after regression function values have been computed for each of the n data points. Many of the details of this method, such as the degree of the polynomial model and the weights, are flexible.</summary>
     MS_LOWESS_smoothing = 1000783,
 
     /// <summary>Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.</summary>
@@ -3108,7 +3109,7 @@ public enum class CVID
     /// <summary>run attribute: Properties of the described run.</summary>
     MS_run_attribute = 1000857,
 
-    /// <summary>fraction identifier: Identier string that describes the sample fraction. This identifer should contain the fraction number(s) or similar information.</summary>
+    /// <summary>fraction identifier: Identier string that describes the sample fraction. This identifier should contain the fraction number(s) or similar information.</summary>
     MS_fraction_identifier = 1000858,
 
     /// <summary>molecule: A molecules is a fundamental component of a chemical compound that is the smallest part of the compound that can participate in a chemical reaction.</summary>
@@ -3162,7 +3163,7 @@ public enum class CVID
     /// <summary>peptide attribute calculation software: Software used to predict or calculate numerical attributes of peptides.</summary>
     MS_peptide_attribute_calculation_software = 1000873,
 
-    /// <summary>SSRCalc: Sequence Specific Retention Calculator esimates the retention time of peptides based on their sequence.</summary>
+    /// <summary>SSRCalc: Sequence Specific Retention Calculator estimates the retention time of peptides based on their sequence.</summary>
     MS_SSRCalc = 1000874,
 
     /// <summary>declustering potential: Potential difference between the orifice and the skimmer in volts.</summary>
@@ -3201,7 +3202,7 @@ public enum class CVID
     /// <summary>protein name: A long name describing the function of the protein.</summary>
     MS_protein_name = 1000886,
 
-    /// <summary>peptide attribute: An nonphysical attribute that can be used to describe a peptide.</summary>
+    /// <summary>peptide attribute: A nonphysical attribute that can be used to describe a peptide.</summary>
     MS_peptide_attribute = 1000887,
 
     /// <summary>unmodified peptide sequence: A sequence of letter symbols denoting the order of amino acids that compose the peptide, without encoding any amino acid mass modifications that might be present.</summary>
@@ -3213,13 +3214,13 @@ public enum class CVID
     /// <summary>peptide labeling state: A state description of how a peptide might be isotopically or isobarically labelled.</summary>
     MS_peptide_labeling_state = 1000890,
 
-    /// <summary>heavy labeled peptide: A peptide that has been created or labeled with some heavier-than-usual isotopes.</summary>
+    /// <summary>heavy labeled peptide: A peptide that has been created or labelled with some heavier-than-usual isotopes.</summary>
     MS_heavy_labeled_peptide = 1000891,
 
-    /// <summary>unlabeled peptide: A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".</summary>
+    /// <summary>unlabeled peptide: A peptide that has not been labelled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".</summary>
     MS_unlabeled_peptide = 1000892,
 
-    /// <summary>light labeled peptide: A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".</summary>
+    /// <summary>light labeled peptide: A peptide that has not been labelled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".</summary>
     MS_light_labeled_peptide = MS_unlabeled_peptide,
 
     /// <summary>peptide group label: An arbitrary string label used to mark a set of peptides that belong together in a set, whereby the members are differentiated by different isotopic labels. For example, the heavy and light forms of the same peptide will both be assigned the same peptide group label.</summary>
@@ -3294,10 +3295,10 @@ public enum class CVID
     /// <summary>retention time window attribute: An attribute of a window in time about which a peptide might elute from the column.</summary>
     MS_retention_time_window_attribute = 1000915,
 
-    /// <summary>retention time window lower offset: The extent of the retention time window in time units below the target retention time. The lower and upper offsets may be asymetric about the target time.</summary>
+    /// <summary>retention time window lower offset: The extent of the retention time window in time units below the target retention time. The lower and upper offsets may be asymmetric about the target time.</summary>
     MS_retention_time_window_lower_offset = 1000916,
 
-    /// <summary>retention time window upper offset: The extent of the retention time window in time units above the target retention time. The lower and upper offsets may be asymetric about the target time.</summary>
+    /// <summary>retention time window upper offset: The extent of the retention time window in time units above the target retention time. The lower and upper offsets may be asymmetric about the target time.</summary>
     MS_retention_time_window_upper_offset = 1000917,
 
     /// <summary>target list: A list of peptides or compounds and their expected m/z coordinates that can be used to cause a mass spectrometry to obtain spectra of those molecules specifically.</summary>
@@ -3372,7 +3373,7 @@ public enum class CVID
     /// <summary>search database details: Details about the database searched.</summary>
     MS_search_database_details = 1001011,
 
-    /// <summary>database source: The organisation, project or laboratory from where the database is obtained (uniprot, ncbi, ebi, other).</summary>
+    /// <summary>database source: The organisation, project or laboratory from where the database is obtained (UniProt, NCBI, EBI, other).</summary>
     MS_database_source = 1001012,
 
     /// <summary>database name: The name of the search database (nr, SwissProt or est_human).</summary>
@@ -3468,22 +3469,22 @@ public enum class CVID
     /// <summary>SEQUEST:sort by dM: Sort order of SEQUEST search results by the difference between a theoretically calculated and the corresponding experimentally measured molecular mass M.</summary>
     MS_SEQUEST_sort_by_dM = 1001047,
 
-    /// <summary>SEQUEST:sort by Ions: </summary>
+    /// <summary>SEQUEST:sort by Ions: Sort order of SEQUEST search results given by the ions.</summary>
     MS_SEQUEST_sort_by_Ions = 1001048,
 
-    /// <summary>SEQUEST:sort by MH+: </summary>
+    /// <summary>SEQUEST:sort by MH+: Sort order of SEQUEST search results given by the mass of the protonated ion.</summary>
     MS_SEQUEST_sort_by_MH_ = 1001049,
 
-    /// <summary>SEQUEST:sort by P: </summary>
+    /// <summary>SEQUEST:sort by P: Sort order of SEQUEST search results given by the probability.</summary>
     MS_SEQUEST_sort_by_P = 1001050,
 
     /// <summary>multiple enzyme combination rules: OBSOLETE: use attribute independent in mzIdentML instead. Description of multiple enzyme digestion protocol, if any.</summary>
     MS_multiple_enzyme_combination_rules_OBSOLETE = 1001051,
 
-    /// <summary>SEQUEST:sort by PreviousAminoAcid: </summary>
+    /// <summary>SEQUEST:sort by PreviousAminoAcid: Sort order of SEQUEST search results given by the previous amino acid.</summary>
     MS_SEQUEST_sort_by_PreviousAminoAcid = 1001052,
 
-    /// <summary>SEQUEST:sort by Ref: </summary>
+    /// <summary>SEQUEST:sort by Ref: Sort order of SEQUEST search results given by the reference.</summary>
     MS_SEQUEST_sort_by_Ref = 1001053,
 
     /// <summary>modification parameters: Modification parameters for the search engine run.</summary>
@@ -3498,7 +3499,7 @@ public enum class CVID
     /// <summary>quality estimation by manual validation: The quality estimation was done manually.</summary>
     MS_quality_estimation_by_manual_validation = 1001058,
 
-    /// <summary>SEQUEST:sort by RSp: </summary>
+    /// <summary>SEQUEST:sort by RSp: Sort order of SEQUEST search results given by the result 'Sp' of 'Rank/Sp' in the out file (peptide).</summary>
     MS_SEQUEST_sort_by_RSp = 1001059,
 
     /// <summary>quality estimation method details: Method for quality estimation (manually or with decoy database).</summary>
@@ -3513,28 +3514,28 @@ public enum class CVID
     /// <summary>TODOscoring model: OBSOLETE: There is Phenyx:ScoringModel for Phenyx! Scoring model (more detailed granularity). TODO: add some child terms.</summary>
     MS_TODOscoring_model_OBSOLETE = 1001065,
 
-    /// <summary>ions series considered in search: The description of the ion fragment series (including charges and neutral losses) that are considered by the search engine.</summary>
+    /// <summary>ions series considered in search: The description of the DEPRECATED ion fragment series (including charges and neutral losses) that are considered by the search engine.</summary>
     MS_ions_series_considered_in_search = 1001066,
 
     /// <summary>SEQUEST:sort by Sp: Sort order of SEQUEST search results by the Sp score.</summary>
     MS_SEQUEST_sort_by_Sp = 1001068,
 
-    /// <summary>SEQUEST:sort by TIC: </summary>
+    /// <summary>SEQUEST:sort by TIC: Sort order of SEQUEST search results given by the total ion current.</summary>
     MS_SEQUEST_sort_by_TIC = 1001069,
 
-    /// <summary>SEQUEST:sort by Scan: </summary>
+    /// <summary>SEQUEST:sort by Scan: Sort order of SEQUEST search results given by the scan number.</summary>
     MS_SEQUEST_sort_by_Scan = 1001070,
 
-    /// <summary>SEQUEST:sort by Sequence: </summary>
+    /// <summary>SEQUEST:sort by Sequence: Sort order of SEQUEST search results given by the sequence.</summary>
     MS_SEQUEST_sort_by_Sequence = 1001071,
 
-    /// <summary>SEQUEST:sort by Sf: </summary>
+    /// <summary>SEQUEST:sort by Sf: Sort order of SEQUEST search results given by the SEQUEST result 'Sf'.</summary>
     MS_SEQUEST_sort_by_Sf = 1001072,
 
     /// <summary>database type amino acid: Database contains amino acid sequences.</summary>
     MS_database_type_amino_acid = 1001073,
 
-    /// <summary>database type nucleotide: Database contains nucleid acid sequences.</summary>
+    /// <summary>database type nucleotide: Database contains nucleic acid sequences.</summary>
     MS_database_type_nucleotide = 1001079,
 
     /// <summary>search type: Enumeration of type of search value (i.e. from PMF, sequence tag, MS-MS).</summary>
@@ -3579,7 +3580,7 @@ public enum class CVID
     /// <summary>sequence coverage: The percent coverage for the protein based upon the matched peptide sequences (can be calculated).</summary>
     MS_sequence_coverage = 1001093,
 
-    /// <summary>SEQUEST:sort by z: </summary>
+    /// <summary>SEQUEST:sort by z: Sort order of SEQUEST search results given by the charge.</summary>
     MS_SEQUEST_sort_by_z = 1001094,
 
     /// <summary>SEQUEST:ProcessAll: </summary>
@@ -3633,7 +3634,7 @@ public enum class CVID
     /// <summary>SEQUEST:Full: </summary>
     MS_SEQUEST_Full = 1001111,
 
-    /// <summary>n-terminal flanking residue: The residue preceeding the first amino acid in the peptide sequence as it occurs in the protein. Use 'N-term' to denote if the peptide starts at the N terminus of the protein.</summary>
+    /// <summary>n-terminal flanking residue: The residue preceding the first amino acid in the peptide sequence as it occurs in the protein. Use 'N-term' to denote if the peptide starts at the N terminus of the protein.</summary>
     MS_n_terminal_flanking_residue = 1001112,
 
     /// <summary>c-terminal flanking residue: The residue following the last amino acid in the peptide sequence as it occurs in the protein. Use 'C-term' to denote if the peptide ends at the C terminus of the protein.</summary>
@@ -3663,7 +3664,7 @@ public enum class CVID
     /// <summary>number of matched peaks: The number of peaks that were matched as qualified by the ion series considered field. If a peak matches multiple ions then only 1 would be added the count.</summary>
     MS_number_of_matched_peaks = 1001121,
 
-    /// <summary>ions series considered: The ion series that were used during the calculation of the count (e.g. b, y, a, b, c, y, z, b, b-NH3, b-H20, b+, z, z-, z+, y-H3PO4, immonium).</summary>
+    /// <summary>ions series considered: The ion series that were used during the calculation of the count (e.g. a, b, c, d, v, w, x, y, z, a-H2O, a-NH3, b-H2O, b-NH3, y-H2O, y-NH3, b-H20, b+, z-, z+1, z+2, b-H3PO4, y-H3PO4, immonium, internal ya, internal yb).</summary>
     MS_ions_series_considered = 1001122,
 
     /// <summary>number of peaks used: The number of peaks from the original peak list that are used to calculate the scores for a particular search engine. All ions that have the opportunity to match or be counted even if they don't.</summary>
@@ -3735,26 +3736,26 @@ public enum class CVID
     /// <summary>SEQUEST:SelectAdvancedCV: SEQUEST Select Advanced Input Parameters.</summary>
     MS_SEQUEST_SelectAdvancedCV = 1001145,
 
-    /// <summary>param: a ion-NH3: Parameter information, type of product: a ion with lost ammonium.</summary>
-    MS_param__a_ion_NH3 = 1001146,
+    /// <summary>param: a ion-NH3 DEPRECATED: Ion a-NH3 parameter information, type of product: a ion with lost ammonia.</summary>
+    MS_param__a_ion_NH3_DEPRECATED = 1001146,
 
     /// <summary>protein ambiguity group result details: </summary>
     MS_protein_ambiguity_group_result_details = 1001147,
 
-    /// <summary>param: a ion-H2O: Ion a - H2O if a significant and fragment includes STED.</summary>
-    MS_param__a_ion_H2O = 1001148,
+    /// <summary>param: a ion-H2O DEPRECATED: Ion a-H2O if a significant and fragment includes STED.</summary>
+    MS_param__a_ion_H2O_DEPRECATED = 1001148,
 
-    /// <summary>param: b ion-NH3: Parameter information, type of product: b ion with lost ammonium.</summary>
-    MS_param__b_ion_NH3 = 1001149,
+    /// <summary>param: b ion-NH3 DEPRECATED: Ion b-NH3 parameter information, type of product: b ion with lost ammonia.</summary>
+    MS_param__b_ion_NH3_DEPRECATED = 1001149,
 
-    /// <summary>param: b ion-H2O: Ion b - H2O if b significant and fragment includes STED.</summary>
-    MS_param__b_ion_H2O = 1001150,
+    /// <summary>param: b ion-H2O DEPRECATED: Ion b-H2O if b significant and fragment includes STED.</summary>
+    MS_param__b_ion_H2O_DEPRECATED = 1001150,
 
-    /// <summary>param: y ion-NH3: Parameter information, type of product: y ion with lost ammonium.</summary>
-    MS_param__y_ion_NH3 = 1001151,
+    /// <summary>param: y ion-NH3 DEPRECATED: Ion y-NH3 parameter information, type of product: y ion with lost ammonia.</summary>
+    MS_param__y_ion_NH3_DEPRECATED = 1001151,
 
-    /// <summary>param: y ion-H2O: Ion y - H2O if y significant and fragment includes STED.</summary>
-    MS_param__y_ion_H2O = 1001152,
+    /// <summary>param: y ion-H2O DEPRECATED: </summary>
+    MS_param__y_ion_H2O_DEPRECATED = 1001152,
 
     /// <summary>search engine specific score: Search engine specific scores.</summary>
     MS_search_engine_specific_score = 1001153,
@@ -3822,10 +3823,10 @@ public enum class CVID
     /// <summary>Mascot:total ions: The Mascot result 'Total ions'.</summary>
     MS_Mascot_total_ions = 1001174,
 
-    /// <summary>peptide shared in multiple proteins: </summary>
+    /// <summary>peptide shared in multiple proteins: A peptide matching multiple proteins.</summary>
     MS_peptide_shared_in_multiple_proteins = 1001175,
 
-    /// <summary>(?<=[KR])(?!P): </summary>
+    /// <summary>(?<=[KR])(?!P): Regular expression for Trypsin.</summary>
     MS______KR_____P_ = 1001176,
 
     /// <summary>number of molecular hypothesis considered: Number of Molecular Hypothesis Considered - This is the number of molecules (e.g. peptides for proteomics) considered for a particular search.</summary>
@@ -3966,16 +3967,16 @@ public enum class CVID
     /// <summary>frag: c ion: Fragmentation information, type of product: c ion.</summary>
     MS_frag__c_ion = 1001231,
 
-    /// <summary>frag: b ion - NH3: Fragmentation information, type of product: b ion without ammonium ion.</summary>
+    /// <summary>frag: b ion - NH3: Ion b-NH3 fragmentation information, type of product: b ion without ammonia.</summary>
     MS_frag__b_ion___NH3 = 1001232,
 
-    /// <summary>frag: y ion - NH3: Fragmentation information, type of product: y ion without ammonium ion.</summary>
+    /// <summary>frag: y ion - NH3: Ion y-NH3 fragmentation information, type of product: y ion without ammonia.</summary>
     MS_frag__y_ion___NH3 = 1001233,
 
     /// <summary>frag: a ion - H2O: Fragmentation information, type of product: a ion without water.</summary>
     MS_frag__a_ion___H2O = 1001234,
 
-    /// <summary>frag: a ion - NH3: Fragmentation information, type of product: a ion without ammonium.</summary>
+    /// <summary>frag: a ion - NH3: Ion a-NH3 fragmentation information, type of product: a ion without ammonia.</summary>
     MS_frag__a_ion___NH3 = 1001235,
 
     /// <summary>frag: d ion: Fragmentation information, type of product: d ion.</summary>
@@ -4074,13 +4075,13 @@ public enum class CVID
     /// <summary>researcher: Researcher role.</summary>
     MS_researcher = 1001271,
 
-    /// <summary>(?<=R)(?!P): </summary>
+    /// <summary>(?<=R)(?!P): Regular expression for Arg-C.</summary>
     MS_____R____P_ = 1001272,
 
-    /// <summary>(?=[BD]): </summary>
+    /// <summary>(?=[BD]): Regular expression for Asp-N.</summary>
     MS_____BD__ = 1001273,
 
-    /// <summary>(?=[DE]): </summary>
+    /// <summary>(?=[DE]): Regular expression for Asp-N-ambic.</summary>
     MS_____DE__ = 1001274,
 
     /// <summary>ProteinScape SearchEvent: Source data for this mzIdentML was a ProteinScape SearchEvent.</summary>
@@ -4173,22 +4174,22 @@ public enum class CVID
     /// <summary>Lys-C: Endoproteinase Lys-C.</summary>
     MS_Lys_C = 1001309,
 
-    /// <summary>Lys-C/P: </summary>
+    /// <summary>Lys-C/P: Proteinase Lys-C/P.</summary>
     MS_Lys_C_P = 1001310,
 
-    /// <summary>PepsinA: </summary>
+    /// <summary>PepsinA: PepsinA proteinase.</summary>
     MS_PepsinA = 1001311,
 
-    /// <summary>TrypChymo: </summary>
+    /// <summary>TrypChymo: Cleavage agent TrypChymo.</summary>
     MS_TrypChymo = 1001312,
 
-    /// <summary>Trypsin/P: </summary>
+    /// <summary>Trypsin/P: Cleavage agent Trypsin/P.</summary>
     MS_Trypsin_P = 1001313,
 
-    /// <summary>V8-DE: </summary>
+    /// <summary>V8-DE: Cleavage agent V8-DE.</summary>
     MS_V8_DE = 1001314,
 
-    /// <summary>V8-E: </summary>
+    /// <summary>V8-E: Cleavage agent V8-E.</summary>
     MS_V8_E = 1001315,
 
     /// <summary>Mascot:SigThreshold: Significance threshold below which the p-value of a peptide match must lie to be considered statistically significant (default 0.05).</summary>
@@ -4236,34 +4237,34 @@ public enum class CVID
     /// <summary>X!Tandem:hyperscore: The X!Tandem hyperscore.</summary>
     MS_X_Tandem_hyperscore = 1001331,
 
-    /// <summary>(?<=[FYWL])(?!P): </summary>
+    /// <summary>(?<=[FYWL])(?!P): Regular expression for Chymotrypsin.</summary>
     MS______FYWL_____P_ = 1001332,
 
-    /// <summary>(?<=M): </summary>
+    /// <summary>(?<=M): Regular expression for CNBr.</summary>
     MS_____M_ = 1001333,
 
-    /// <summary>((?<=D))|((?=D)): </summary>
+    /// <summary>((?<=D))|((?=D)): Regular expression for formic acid.</summary>
     MS______D_______D__ = 1001334,
 
-    /// <summary>(?<=K)(?!P): </summary>
+    /// <summary>(?<=K)(?!P): Regular expression for Lys-C.</summary>
     MS_____K____P_ = 1001335,
 
-    /// <summary>(?<=K): </summary>
+    /// <summary>(?<=K): Regular expression for Lys-C/P.</summary>
     MS_____K_ = 1001336,
 
-    /// <summary>(?<=[FL]): </summary>
+    /// <summary>(?<=[FL]): Regular expression for PepsinA.</summary>
     MS______FL__ = 1001337,
 
-    /// <summary>(?<=[FYWLKR])(?!P): </summary>
+    /// <summary>(?<=[FYWLKR])(?!P): Regular expression for TrypChymo.</summary>
     MS______FYWLKR_____P_ = 1001338,
 
-    /// <summary>(?<=[KR]): </summary>
+    /// <summary>(?<=[KR]): Regular expression for Trypsin/P.</summary>
     MS______KR__ = 1001339,
 
-    /// <summary>(?<=[BDEZ])(?!P): </summary>
+    /// <summary>(?<=[BDEZ])(?!P): Regular expression for V8-DE.</summary>
     MS______BDEZ_____P_ = 1001340,
 
-    /// <summary>(?<=[EZ])(?!P): </summary>
+    /// <summary>(?<=[EZ])(?!P): Regular expression for V8-E.</summary>
     MS______EZ_____P_ = 1001341,
 
     /// <summary>database sequence details: Details about a single database sequence.</summary>
@@ -4329,7 +4330,7 @@ public enum class CVID
     /// <summary>number of unmatched peaks: The number of unmatched peaks.</summary>
     MS_number_of_unmatched_peaks = 1001362,
 
-    /// <summary>peptide unique to one protein: </summary>
+    /// <summary>peptide unique to one protein: A peptide matching only one.</summary>
     MS_peptide_unique_to_one_protein = 1001363,
 
     /// <summary>distinct peptide-level global FDR: Estimation of the global false discovery rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
@@ -4464,7 +4465,7 @@ public enum class CVID
     /// <summary>translation start codons: The translation start codons used to translate the nucleotides to amino acids.</summary>
     MS_translation_start_codons = 1001410,
 
-    /// <summary>search tolerance specification: </summary>
+    /// <summary>search tolerance specification: Specification of the search tolerance.</summary>
     MS_search_tolerance_specification = 1001411,
 
     /// <summary>search tolerance plus value: </summary>
@@ -4503,31 +4504,31 @@ public enum class CVID
     /// <summary>translation table description: A URL that describes the translation table used to translate the nucleotides to amino acids.</summary>
     MS_translation_table_description = 1001423,
 
-    /// <summary>ProteinExtractor:Methodname: </summary>
+    /// <summary>ProteinExtractor:Methodname: Name of the used method in the ProteinExtractor algorithm.</summary>
     MS_ProteinExtractor_Methodname = 1001424,
 
-    /// <summary>ProteinExtractor:GenerateNonRedundant: </summary>
+    /// <summary>ProteinExtractor:GenerateNonRedundant: Flag indicating if a non redundant scoring should be generated.</summary>
     MS_ProteinExtractor_GenerateNonRedundant = 1001425,
 
-    /// <summary>ProteinExtractor:IncludeIdentified: </summary>
+    /// <summary>ProteinExtractor:IncludeIdentified: Flag indicating if identified proteins should be included.</summary>
     MS_ProteinExtractor_IncludeIdentified = 1001426,
 
-    /// <summary>ProteinExtractor:MaxNumberOfProteins: </summary>
+    /// <summary>ProteinExtractor:MaxNumberOfProteins: The maximum number of proteins to consider.</summary>
     MS_ProteinExtractor_MaxNumberOfProteins = 1001427,
 
-    /// <summary>ProteinExtractor:MaxProteinMass: </summary>
+    /// <summary>ProteinExtractor:MaxProteinMass: The maximum considered mass for a protein.</summary>
     MS_ProteinExtractor_MaxProteinMass = 1001428,
 
-    /// <summary>ProteinExtractor:MinNumberOfPeptides: </summary>
+    /// <summary>ProteinExtractor:MinNumberOfPeptides: The minimum number of proteins to consider.</summary>
     MS_ProteinExtractor_MinNumberOfPeptides = 1001429,
 
-    /// <summary>ProteinExtractor:UseMascot: Flag indicating to include Mascot scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:UseMascot: Flag indicating to include Mascot scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_UseMascot = 1001430,
 
-    /// <summary>ProteinExtractor:MascotPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in Mascot scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:MascotPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in Mascot scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_MascotPeptideScoreThreshold = 1001431,
 
-    /// <summary>ProteinExtractor:MascotUniqueScore: In the final result each protein must have at least one peptide above this Mascot score threshold in ProteinExtractor metascore calculation.</summary>
+    /// <summary>ProteinExtractor:MascotUniqueScore: In the final result each protein must have at least one peptide above this Mascot score threshold in ProteinExtractor meta score calculation.</summary>
     MS_ProteinExtractor_MascotUniqueScore = 1001432,
 
     /// <summary>ProteinExtractor:MascotUseIdentityScore: </summary>
@@ -4536,37 +4537,37 @@ public enum class CVID
     /// <summary>ProteinExtractor:MascotWeighting: Influence of Mascot search engine in the process of merging the search engine specific protein lists into the global protein list of ProteinExtractor.</summary>
     MS_ProteinExtractor_MascotWeighting = 1001434,
 
-    /// <summary>ProteinExtractor:UseSequest: Flag indicating to include SEQUEST scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:UseSequest: Flag indicating to include SEQUEST scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_UseSequest = 1001435,
 
-    /// <summary>ProteinExtractor:SequestPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in SEQUEST scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:SequestPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in SEQUEST scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_SequestPeptideScoreThreshold = 1001436,
 
-    /// <summary>ProteinExtractor:SequestUniqueScore: In the final result each protein must have at least one peptide above this SEQUEST score threshold in ProteinExtractor metascore calculation.</summary>
+    /// <summary>ProteinExtractor:SequestUniqueScore: In the final result each protein must have at least one peptide above this SEQUEST score threshold in ProteinExtractor meta score calculation.</summary>
     MS_ProteinExtractor_SequestUniqueScore = 1001437,
 
     /// <summary>ProteinExtractor:SequestWeighting: Influence of SEQUEST search engine in the process of merging the search engine specific protein lists into the global protein list of ProteinExtractor.</summary>
     MS_ProteinExtractor_SequestWeighting = 1001438,
 
-    /// <summary>ProteinExtractor:UseProteinSolver: Flag indicating to include ProteinSolver scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:UseProteinSolver: Flag indicating to include ProteinSolver scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_UseProteinSolver = 1001439,
 
-    /// <summary>ProteinExtractor:ProteinSolverPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in ProteinSolver scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:ProteinSolverPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in ProteinSolver scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_ProteinSolverPeptideScoreThreshold = 1001440,
 
-    /// <summary>ProteinExtractor:ProteinSolverUniqueScore: In the final result each protein must have at least one peptide above this ProteinSolver score threshold in ProteinExtractor metascore calculation.</summary>
+    /// <summary>ProteinExtractor:ProteinSolverUniqueScore: In the final result each protein must have at least one peptide above this ProteinSolver score threshold in ProteinExtractor meta score calculation.</summary>
     MS_ProteinExtractor_ProteinSolverUniqueScore = 1001441,
 
     /// <summary>ProteinExtractor:ProteinSolverWeighting: Influence of ProteinSolver search engine in the process of merging the search engine specific protein lists into the global protein list of ProteinExtractor.</summary>
     MS_ProteinExtractor_ProteinSolverWeighting = 1001442,
 
-    /// <summary>ProteinExtractor:UsePhenyx: Flag indicating to include Phenyx scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:UsePhenyx: Flag indicating to include Phenyx scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_UsePhenyx = 1001443,
 
-    /// <summary>ProteinExtractor:PhenyxPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in Phenyx scoring for calculation of the ProteinExtractor metascore.</summary>
+    /// <summary>ProteinExtractor:PhenyxPeptideScoreThreshold: Only peptides with scores higher than that threshold are taken into account in Phenyx scoring for calculation of the ProteinExtractor meta score.</summary>
     MS_ProteinExtractor_PhenyxPeptideScoreThreshold = 1001444,
 
-    /// <summary>ProteinExtractor:PhenyxUniqueScore: In the final result each protein must have at least one peptide above this Phenyx score threshold in ProteinExtractor metascore calculation.</summary>
+    /// <summary>ProteinExtractor:PhenyxUniqueScore: In the final result each protein must have at least one peptide above this Phenyx score threshold in ProteinExtractor meta score calculation.</summary>
     MS_ProteinExtractor_PhenyxUniqueScore = 1001445,
 
     /// <summary>ProteinExtractor:PhenyxWeighting: Influence of Phenyx search engine in the process of merging the search engine specific protein lists into the global protein list of ProteinExtractor.</summary>
@@ -4965,7 +4966,7 @@ public enum class CVID
     /// <summary>Scaffold: Minimum Peptide Probability: Minimum probability a peptide must have to be accepted for protein scoring.</summary>
     MS_Scaffold__Minimum_Peptide_Probability = 1001577,
 
-    /// <summary>minimum number of enzymatic termini: Minimum number of enzymatic termini a pepide must have to be accepted.</summary>
+    /// <summary>minimum number of enzymatic termini: Minimum number of enzymatic termini a peptide must have to be accepted.</summary>
     MS_minimum_number_of_enzymatic_termini = 1001578,
 
     /// <summary>Scaffold:Protein Probability: Scaffold protein probability score.</summary>
@@ -5673,7 +5674,7 @@ public enum class CVID
     /// <summary>technical replicate: The study variable is 'technical replicate'. The string value denotes the category of technical replicate, e.g. 'run generated from same sample'.</summary>
     MS_technical_replicate = 1001808,
 
-    /// <summary>biological replicate: The study variable is 'biological replicate'. This means, the run was generated from another individuum or sample.</summary>
+    /// <summary>biological replicate: The study variable is 'biological replicate'. This means, the run was generated from another individual or sample.</summary>
     MS_biological_replicate = 1001809,
 
     /// <summary>experimental condition 'case': The experimental condition is 'case' in contrast to 'control'.</summary>
@@ -5703,7 +5704,7 @@ public enum class CVID
     /// <summary>one sample run: The raw file contains the run of one sample (e.g. spectral counting, LC-MS label-free).</summary>
     MS_one_sample_run = 1001818,
 
-    /// <summary>two sample run: The raw file contains the run of two samples (e.g. SILAC, metabolic labeling).</summary>
+    /// <summary>two sample run: The raw file contains the run of two samples (e.g. SILAC, metabolic labelling).</summary>
     MS_two_sample_run = 1001819,
 
     /// <summary>three sample run: The raw file contains the run of three samples (e.g. 3-plex SILAC).</summary>
@@ -5727,7 +5728,7 @@ public enum class CVID
     /// <summary>mass trace reporting: rectangles: The mass trace of the features of this feature list specifies rectangles. Each mass trace has the syntax (RT_start,MZ_start,RT_end,MZ_end), i.e. opposite corners are given.</summary>
     MS_mass_trace_reporting__rectangles = 1001826,
 
-    /// <summary>mass trace reporting: polygons: The mass trace of the features of this feature list specifies polygons. Each mass trace has the syntax (RT_1, MZ_1, RT_2, MZ_2, ... , RT_i, MZ_i, ... , RT_n, MZ_n), where the line (RT_n, MZ_n)->(RT_1, MZ_1) is implicite.</summary>
+    /// <summary>mass trace reporting: polygons: The mass trace of the features of this feature list specifies polygons. Each mass trace has the syntax (RT_1, MZ_1, RT_2, MZ_2, ... , RT_i, MZ_i, ... , RT_n, MZ_n), where the line (RT_n, MZ_n)->(RT_1, MZ_1) is implicit.</summary>
     MS_mass_trace_reporting__polygons = 1001827,
 
     /// <summary>feature attribute: Attribute describing a feature.</summary>
@@ -5757,7 +5758,7 @@ public enum class CVID
     /// <summary>spectral counting quantitation analysis: Spectral counting workflow (number of identified MS/MS spectra as approximation of peptide / protein quant).</summary>
     MS_spectral_counting_quantitation_analysis = 1001836,
 
-    /// <summary>iTRAQ quantitation analysis: Quantification analysis using the AB SCIEX iTRAQ isobaric labeling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z.</summary>
+    /// <summary>iTRAQ quantitation analysis: Quantification analysis using the AB SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z.</summary>
     MS_iTRAQ_quantitation_analysis = 1001837,
 
     /// <summary>SRM quantitation analysis: Selected Reaction Monitoring workflow (XIC quantitation of precursor / fragment mass pair).</summary>
@@ -5889,7 +5890,7 @@ public enum class CVID
     /// <summary>in-source collision-induced dissociation: The dissociation of an ion as a result of collisional excitation during ion transfer from an atmospheric pressure ion source and the mass spectrometer vacuum.</summary>
     MS_in_source_collision_induced_dissociation = 1001880,
 
-    /// <summary>mz5 format: mz5 file format, modeled after mzML.</summary>
+    /// <summary>mz5 format: mz5 file format, modelled after mzML.</summary>
     MS_mz5_format = 1001881,
 
     /// <summary>transition validation attribute: Attributes of the quality of a transition that affect its selection as appropriate.</summary>
@@ -6015,8 +6016,11 @@ public enum class CVID
     /// <summary>ProteomeXchange accession number version number: Version number of a ProteomeXchange accession number.</summary>
     MS_ProteomeXchange_accession_number_version_number = 1001921,
 
-    /// <summary>Digital Object Identifier (DOI): DOI unique identifier.</summary>
+    /// <summary>Digital Object Identifier (DOI): DOI unique identifier of a publication.</summary>
     MS_Digital_Object_Identifier__DOI_ = 1001922,
+
+    /// <summary>doi: DOI unique identifier of a publication.</summary>
+    MS_doi = MS_Digital_Object_Identifier__DOI_,
 
     /// <summary>external reference keyword: Free text attribute that can enrich the information about an entity.</summary>
     MS_external_reference_keyword = 1001923,
@@ -6123,16 +6127,16 @@ public enum class CVID
     /// <summary>unspecific cleavage: Unspecific cleavage.</summary>
     MS_unspecific_cleavage = 1001956,
 
-    /// <summary>(?<=[ALIV])(?!P): </summary>
+    /// <summary>(?<=[ALIV])(?!P): Regular expression for leukocyte elastase.</summary>
     MS______ALIV_____P_ = 1001957,
 
-    /// <summary>(?<=[HKR]P)(?!P): </summary>
+    /// <summary>(?<=[HKR]P)(?!P): Regular expression for proline endopeptidase.</summary>
     MS______HKR_P____P_ = 1001958,
 
-    /// <summary>(?<=[^E]E): </summary>
+    /// <summary>(?<=[^E]E): Regular expression for glutamyl endopeptidase.</summary>
     MS_______E_E_ = 1001959,
 
-    /// <summary>(?<=W): </summary>
+    /// <summary>(?<=W): Regular expression for 2-iodobenzoate.</summary>
     MS_____W_ = 1001960,
 
     /// <summary>peptide spectrum match scoring algorithm: Algorithm used to score the match between a spectrum and a peptide ion.</summary>
@@ -6154,7 +6158,7 @@ public enum class CVID
     MS_product_ion_mobility = 1001966,
 
     /// <summary>product ion drift time: The ion drift time of an MS2 product ion.</summary>
-    MS_product_ion_drift_time = 1001967,
+    MS_product_ion_drift_time_OBSOLETE = 1001967,
 
     /// <summary>PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence.</summary>
     MS_PTM_localization_score = 1001968,
@@ -6297,10 +6301,10 @@ public enum class CVID
     /// <summary>decoy MRM transition: A transition not expected to be present in the sample and used to calculate statistical confidence of target transition detections in some workflows.</summary>
     MS_decoy_MRM_transition = MS_decoy_SRM_transition,
 
-    /// <summary>isobaric label quantitation analysis: Quantitation analysis using an isobaric labeling workflow.</summary>
+    /// <summary>isobaric label quantitation analysis: Quantitation analysis using an isobaric labelling workflow.</summary>
     MS_isobaric_label_quantitation_analysis = 1002009,
 
-    /// <summary>TMT quantitation analysis: Quantitation analysis using the Thermo Fisher tandem mass tag (TMT) labeling workflow.</summary>
+    /// <summary>TMT quantitation analysis: Quantitation analysis using the Thermo Fisher tandem mass tag (TMT) labelling workflow.</summary>
     MS_TMT_quantitation_analysis = 1002010,
 
     /// <summary>desorption electrospray ionization: Combination of electrospray and desorption ionization method that ionizes gases, liquids and solids in open air under atmospheric pressure.</summary>
@@ -6627,7 +6631,7 @@ public enum class CVID
     /// <summary>peptide consensus attribute: Attribute describing a peptide consensus.</summary>
     MS_peptide_consensus_attribute = 1002116,
 
-    /// <summary>small molecule list attribute: Attribute describing a small mollecule list.</summary>
+    /// <summary>small molecule list attribute: Attribute describing a small molecule list.</summary>
     MS_small_molecule_list_attribute = 1002117,
 
     /// <summary>small molecule attribute: Attribute describing a small molecule.</summary>
@@ -6708,7 +6712,7 @@ public enum class CVID
     /// <summary>TOPP SpectraFilterScaler: Applies a filter to peak spectra after intensity scaling according to rank.</summary>
     MS_TOPP_SpectraFilterScaler = 1002143,
 
-    /// <summary>TOPP SpectraFilterSqrtMower: Applies a filter to peak spectra after intensity scaling to the squareroot.</summary>
+    /// <summary>TOPP SpectraFilterSqrtMower: Applies a filter to peak spectra after intensity scaling to the square root.</summary>
     MS_TOPP_SpectraFilterSqrtMower = 1002144,
 
     /// <summary>TOPP SpectraFilterThresholdMower: Applies a filter of peaks below a given threshold to peak spectra.</summary>
@@ -6813,7 +6817,7 @@ public enum class CVID
     /// <summary>TOPP CompNovo: Performs a peptide/protein identification with the CompNovo engine.</summary>
     MS_TOPP_CompNovo = 1002178,
 
-    /// <summary>TOPP CompNovoCID: Performs a peptide/protein identification with the CompNovo engine in collission-induced dissociation (CID) mode.</summary>
+    /// <summary>TOPP CompNovoCID: Performs a peptide/protein identification with the CompNovo engine in collision-induced dissociation (CID) mode.</summary>
     MS_TOPP_CompNovoCID = 1002179,
 
     /// <summary>TOPP software adaptor: Software adaptor to an external program in the TOPP software.</summary>
@@ -6912,7 +6916,7 @@ public enum class CVID
     /// <summary>Variance stabilizing normalization: The model incorporates data calibration (normalization), a model for the dependence of the variance on the mean intensity, and a variance stabilizing data transformation.</summary>
     MS_Variance_stabilizing_normalization = 1002211,
 
-    /// <summary>IPTL quantitation analysis: Quantification analysis using a labeling strategy where both peptide termini are labeled so that the peptides from different labeling schema are isobaric.</summary>
+    /// <summary>IPTL quantitation analysis: Quantification analysis using a labelling strategy where both peptide termini are labelled so that the peptides from different labelling schema are isobaric.</summary>
     MS_IPTL_quantitation_analysis = 1002212,
 
     /// <summary>PAnalyzer:conclusive protein: A protein identified by at least one unique (distinct, discrete) peptide (peptides are considered different only if they can be distinguished by evidence in mass spectrum).</summary>
@@ -6969,13 +6973,13 @@ public enum class CVID
     /// <summary>ProteomeDiscoverer:Mascot:Significance High: Calculated relaxed significance when performing a decoy search for medium-confidence peptides.</summary>
     MS_ProteomeDiscoverer_Mascot_Significance_High = 1002230,
 
-    /// <summary>([A-Fa-f0-9]{8}-([A-Fa-f0-9]{4}-){3}[A-Fa-f0-9]{12}): </summary>
-    MS___A_Fa_f0_9__8____A_Fa_f0_9__4____3__A_Fa_f0_9__12__ = 1002231,
+    /// <summary>regular expressions for a GUID: ([A-Fa-f0-9]\{8\}-([A-Fa-f0-9]\{4\}-)\{3\}[A-Fa-f0-9]\{12\}).</summary>
+    MS_regular_expressions_for_a_GUID = 1002231,
 
-    /// <summary>ProteomeDiscoverer:Default FDR calculator: The default FDR calculator.</summary>
+    /// <summary>ProteomeDiscoverer:Default FDR calculator: The default FDR calculator as globally unique identifier (GUID).</summary>
     MS_ProteomeDiscoverer_Default_FDR_calculator = 1002232,
 
-    /// <summary>ProteomeDiscoverer:SEQUEST:Low resolution spectra contained: Flag indicating if low-resolution speatra are taken into consideration.</summary>
+    /// <summary>ProteomeDiscoverer:SEQUEST:Low resolution spectra contained: Flag indicating if low-resolution spectra are taken into consideration.</summary>
     MS_ProteomeDiscoverer_SEQUEST_Low_resolution_spectra_contained = 1002233,
 
     /// <summary>selected precursor m/z: Mass-to-charge ratio of a precursor ion selected for fragmentation.</summary>
@@ -7017,7 +7021,7 @@ public enum class CVID
     /// <summary>mzidLib:CombineSearchEngines: A tool for combining results analysed in parallel in two or three search engines into a single mzIdentML file.</summary>
     MS_mzidLib_CombineSearchEngines = 1002246,
 
-    /// <summary>mzidLib:InsertMetaDataFromFasta: A tool for adding additional metadata from a FASTA file to DBSequence entries (sequence and description) in mzIdentML files.</summary>
+    /// <summary>mzidLib:InsertMetaDataFromFasta: A tool for adding additional meta data from a FASTA file to DBSequence entries (sequence and description) in mzIdentML files.</summary>
     MS_mzidLib_InsertMetaDataFromFasta = 1002247,
 
     /// <summary>SEQUEST:spscore: The SEQUEST result 'SpScore'.</summary>
@@ -7086,7 +7090,7 @@ public enum class CVID
     /// <summary>Byonic:Best Score: Best (largest) Byonic score of a PSM.</summary>
     MS_Byonic_Best_Score = 1002269,
 
-    /// <summary>chromatography separation: A technique by which molecules are separated by chemical and physical properties such as hydrophobicity or vapor pressure.</summary>
+    /// <summary>chromatography separation: A technique by which molecules are separated by chemical and physical properties such as hydrophobicity or vapour pressure.</summary>
     MS_chromatography_separation = 1002270,
 
     /// <summary>liquid chromatography separation: Liquid chromatography (LC) is a separation technique in which the mobile phase is a liquid.</summary>
@@ -7149,7 +7153,7 @@ public enum class CVID
     /// <summary>ProteinProphet: A program in the TPP that calculates protein-level probabilities based on input PSM or peptide-level probabilities from PeptideProphet or iProphet. The output is written in the protXML format.</summary>
     MS_ProteinProphet = 1002289,
 
-    /// <summary>XPRESS: A program in the TPP that calculates PSM-level abundances based on 2-channel isotope-labeled data such as ICAT, SILAC, etc.</summary>
+    /// <summary>XPRESS: A program in the TPP that calculates PSM-level abundances based on 2-channel isotope-labelled data such as ICAT, SILAC, etc.</summary>
     MS_XPRESS = 1002290,
 
     /// <summary>Libra: A program in the TPP that calculates PSM, peptide, and protein-level abundances based on N-channel isobaric label peptide data such as iTRAQ, TMT, etc.</summary>
@@ -7296,7 +7300,7 @@ public enum class CVID
     /// <summary>Andromeda:score: The probability based score of the Andromeda search engine.</summary>
     MS_Andromeda_score = 1002338,
 
-    /// <summary>site:global FDR: Estimation of global false discovery rate of peptides with a posttranslational modification.</summary>
+    /// <summary>site:global FDR: Estimation of global false discovery rate of peptides with a post-translational modification.</summary>
     MS_site_global_FDR = 1002339,
 
     /// <summary>ProteomeXchange project tag: Tag that can be added to a ProteomeXchange dataset, to enable the grouping of datasets. One tag can be used for indicating that a given dataset is part of a bigger project, like e.g. the Human Proteome Project.</summary>
@@ -7545,7 +7549,7 @@ public enum class CVID
     /// <summary>Paragon input parameter: Search engine input parameters specific to Paragon.</summary>
     MS_Paragon_input_parameter = 1002421,
 
-    /// <summary>Paragon: sample type: The Paragon method setting indicating the type of sample at the high level, generally meaning the type of quantitation labeling or lack thereof. 'Identification' is indicated for samples without any labels for quantitation.</summary>
+    /// <summary>Paragon: sample type: The Paragon method setting indicating the type of sample at the high level, generally meaning the type of quantitation labelling or lack thereof. 'Identification' is indicated for samples without any labels for quantitation.</summary>
     MS_Paragon__sample_type = 1002422,
 
     /// <summary>Paragon: cysteine alkylation: The Paragon method setting indicating the actual cysteine alkylation agent; 'None' is indicated if there was no cysteine alkylation.</summary>
@@ -7592,6 +7596,252 @@ public enum class CVID
 
     /// <summary>number of decoy sequences: The number of decoy sequences, if the concatenated target-decoy approach is used.</summary>
     MS_number_of_decoy_sequences = 1002437,
+
+    /// <summary>spectrum identification list result details: Information about the list of PSMs (SpectrumIdentificationList).</summary>
+    MS_spectrum_identification_list_result_details = 1002438,
+
+    /// <summary>final PSM list UNDER DISCUSSION: A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is the final set of identifications to be interpreted by consuming software. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum must not be referenced from more than one SpectrumIdentificationResult.</summary>
+    MS_final_PSM_list_UNDER_DISCUSSION = 1002439,
+
+    /// <summary>intermediate PSM list UNDER DISCUSSION: A flag on a list of PSMs (SpectrumIdentificationList) to indicate that this is not the final set of identifications to be interpreted by consuming software. This term should be used when results are provided from multiple search engines for the results from each search engine before they are combined to give consensus identifications. Amongst the set of SpectrumIdentificationList(s) that are flagged with the term, each spectrum may be referenced from more than one SpectrumIdentificationResult.</summary>
+    MS_intermediate_PSM_list_UNDER_DISCUSSION = 1002440,
+
+    /// <summary>Andi-MS format: AIA Analytical Data Interchange file format for mass spectrometry data.</summary>
+    MS_Andi_MS_format = 1002441,
+
+    /// <summary>chromatograph file format: The format of the chromatography file being used. This could be a instrument or vendor specific proprietary file format or a converted open file format.</summary>
+    MS_chromatograph_file_format = 1002442,
+
+    /// <summary>Andi-CHROM format: AIA Analytical Data Interchange file format for chromatography data.</summary>
+    MS_Andi_CHROM_format = 1002443,
+
+    /// <summary>6420 Triple Quadrupole LC/MS: The 6420 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer.</summary>
+    MS_6420_Triple_Quadrupole_LC_MS = 1002444,
+
+    /// <summary>6460 Triple Quadrupole LC/MS: The 6460 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. It is similar to the 6420 but adds Agilent Jet Stream (AJS) technology to increase sensitivity.</summary>
+    MS_6460_Triple_Quadrupole_LC_MS = 1002445,
+
+    /// <summary>6490 Triple Quadrupole LC/MS: The 6490 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. It is similar to the 6420 but adds the Agilent iFunnel technology to increase sensitivity.</summary>
+    MS_6490_Triple_Quadrupole_LC_MS = 1002446,
+
+    /// <summary>Paragon:special factor: The Paragon method setting indicating a list of one or more 'special factors', which generally capture secondary effects (relative to other settings) as a set of probabilities of modification features that override the assumed levels. For example the 'gel-based ID' special factor causes an increase probability of oxidation on several resides because of the air exposure impact on a gel, in addition to other effects.</summary>
+    MS_Paragon_special_factor = 1002447,
+
+    /// <summary>PEAKS:inChorusPeptideScore: The PEAKS inChorus peptide score.</summary>
+    MS_PEAKS_inChorusPeptideScore = 1002448,
+
+    /// <summary>PEAKS:inChorusProteinScore: The PEAKS inChorus protein score.</summary>
+    MS_PEAKS_inChorusProteinScore = 1002449,
+
+    /// <summary>param: b ion-H3PO4 DEPRECATED: Ion b-H3PO4: b ion with lost phosphoric acid.</summary>
+    MS_param__b_ion_H3PO4_DEPRECATED = 1002450,
+
+    /// <summary>param: y ion-H3PO4 DEPRECATED: Ion y-H3PO4: y ion with lost phosphoric acid.</summary>
+    MS_param__y_ion_H3PO4_DEPRECATED = 1002451,
+
+    /// <summary>Maui: The Maltcms Graphical User Interface.</summary>
+    MS_Maui = 1002452,
+
+    /// <summary>No fixed modifications searched: No fixed modifications are included as a parameter for the search, and therefore they are not reported.</summary>
+    MS_No_fixed_modifications_searched = 1002453,
+
+    /// <summary>No variable modifications searched: No variable modifications are included as a parameter for the search, and therefore they are not reported.</summary>
+    MS_No_variable_modifications_searched = 1002454,
+
+    /// <summary>H2O neutral loss: Neutral loss of water.</summary>
+    MS_H2O_neutral_loss = 1002455,
+
+    /// <summary>NH3 neutral loss: Neutral loss of ammonia.</summary>
+    MS_NH3_neutral_loss = 1002456,
+
+    /// <summary>H3PO4 neutral loss: Neutral loss of phosphoric acid.</summary>
+    MS_H3PO4_neutral_loss = 1002457,
+
+    /// <summary>PeptideShaker: PeptideShaker is a software for the interpretation of proteomics identification results.</summary>
+    MS_PeptideShaker = 1002458,
+
+    /// <summary>MS Amanda csv format: MS Amanda csv output format.</summary>
+    MS_MS_Amanda_csv_format = 1002459,
+
+    /// <summary>protein group-level global FNR: Estimation of the global false negative rate of protein groups.</summary>
+    MS_protein_group_level_global_FNR = 1002460,
+
+    /// <summary>protein group-level confidence: Estimation of the global confidence of protein groups.</summary>
+    MS_protein_group_level_confidence = 1002461,
+
+    /// <summary>distinct peptide-level global FNR: Estimation of the global false negative rate for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_global_FNR = 1002462,
+
+    /// <summary>distinct peptide-level global confidence: Estimation of the global confidence for distinct peptides once redundant identifications of the same peptide have been removed (id est multiple PSMs have been collapsed to one entry).</summary>
+    MS_distinct_peptide_level_global_confidence = 1002463,
+
+    /// <summary>PSM-level global FNR: Estimation of the global false negative rate of peptide spectrum matches.</summary>
+    MS_PSM_level_global_FNR = 1002464,
+
+    /// <summary>PSM-level global confidence: Estimation of the global confidence of peptide spectrum matches.</summary>
+    MS_PSM_level_global_confidence = 1002465,
+
+    /// <summary>PeptideShaker PSM score: The probability based PeptideShaker PSM score.</summary>
+    MS_PeptideShaker_PSM_score = 1002466,
+
+    /// <summary>PeptideShaker PSM confidence: The probability based PeptideShaker PSM confidence.</summary>
+    MS_PeptideShaker_PSM_confidence = 1002467,
+
+    /// <summary>PeptideShaker peptide score: The probability based PeptideShaker peptide score.</summary>
+    MS_PeptideShaker_peptide_score = 1002468,
+
+    /// <summary>PeptideShaker peptide confidence: The probability based PeptideShaker peptide confidence.</summary>
+    MS_PeptideShaker_peptide_confidence = 1002469,
+
+    /// <summary>PeptideShaker protein group score: The probability based PeptideShaker protein group score.</summary>
+    MS_PeptideShaker_protein_group_score = 1002470,
+
+    /// <summary>PeptideShaker protein group confidence: The probability based PeptideShaker protein group confidence.</summary>
+    MS_PeptideShaker_protein_group_confidence = 1002471,
+
+    /// <summary>trap-type collision-induced dissociation: A collision-induced dissociation process that occurs in a trap-type collision cell.</summary>
+    MS_trap_type_collision_induced_dissociation = 1002472,
+
+    /// <summary>ion series considered in search: The description of the ion fragment series (including charges and neutral losses) that are considered by the search engine.</summary>
+    MS_ion_series_considered_in_search = 1002473,
+
+    /// <summary>ProteoAnnotator:non-canonical gene model score: The sum of peptide-level scores for peptides mapped only to non-canonical gene models within the group.</summary>
+    MS_ProteoAnnotator_non_canonical_gene_model_score = 1002474,
+
+    /// <summary>ProteoAnnotator:count alternative peptides: The count of the number of peptide sequences mapped to non-canonical gene models only within the group.</summary>
+    MS_ProteoAnnotator_count_alternative_peptides = 1002475,
+
+    /// <summary>ion mobility drift time: Drift time of an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This time might refer to the central value of a bin into which all ions within a narrow range of drift time have been aggregated.</summary>
+    MS_ion_mobility_drift_time = 1002476,
+
+    /// <summary>mean drift time array: Array of drift times, averaged from a matrix of binned m/z and drift time values, corresponding to spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_mean_drift_time_array = 1002477,
+
+    /// <summary>mean charge array: Array of mean charge values where the mean charge is calculated as a weighted mean of the charges of individual peaks that are aggregated into a processed spectrum.</summary>
+    MS_mean_charge_array = 1002478,
+
+    /// <summary>regular expression: Regular expression.</summary>
+    MS_regular_expression = 1002479,
+
+    /// <summary>regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?!["&\'<>])\S)+).</summary>
+    MS_regular_expression_for_a_digital_object_identifier__DOI_ = 1002480,
+
+    /// <summary>higher energy beam-type collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.</summary>
+    MS_higher_energy_beam_type_collision_induced_dissociation = 1002481,
+
+    /// <summary>statistical threshold: Estimated statistical threshold.</summary>
+    MS_statistical_threshold = 1002482,
+
+    /// <summary>PSM-level statistical threshold: Estimated statistical threshold at PSM-level.</summary>
+    MS_PSM_level_statistical_threshold = 1002483,
+
+    /// <summary>peptide-level statistical threshold: Estimated statistical threshold at peptide-level.</summary>
+    MS_peptide_level_statistical_threshold = 1002484,
+
+    /// <summary>protein-level statistical threshold: Estimated statistical threshold at protein-level.</summary>
+    MS_protein_level_statistical_threshold = 1002485,
+
+    /// <summary>protein group-level statistical threshold: Estimated statistical threshold at protein group-level.</summary>
+    MS_protein_group_level_statistical_threshold = 1002486,
+
+    /// <summary>MassIVE dataset identifier: Dataset identifier issued by the MassIVE repository. A dataset can refer to either a single sample as part of a study, or all samples that are part of the study corresponding to a publication.</summary>
+    MS_MassIVE_dataset_identifier = 1002487,
+
+    /// <summary>MassIVE dataset URI: URI that allows the access to one dataset in the MassIVE repository. A dataset can refer to either a single sample as part of a study, or all samples that are part of the study corresponding to a publication.</summary>
+    MS_MassIVE_dataset_URI = 1002488,
+
+    /// <summary>special processing: Details describing a special processing.</summary>
+    MS_special_processing = 1002489,
+
+    /// <summary>peptide-level scoring: Peptide-level scoring performed.</summary>
+    MS_peptide_level_scoring = 1002490,
+
+    /// <summary>modification localization scoring: Modification localization scoring performed.</summary>
+    MS_modification_localization_scoring = 1002491,
+
+    /// <summary>consensus scoring: Consensus multiple search engine approach performed.</summary>
+    MS_consensus_scoring = 1002492,
+
+    /// <summary>sample pre-fractionation: Sample pre-fractionation performed.</summary>
+    MS_sample_pre_fractionation = 1002493,
+
+    /// <summary>cross-linking search: Cross-linking search performed.</summary>
+    MS_cross_linking_search = 1002494,
+
+    /// <summary>no special processing: No special processing performed.</summary>
+    MS_no_special_processing = 1002495,
+
+    /// <summary>group PSMs by sequence: Group PSMs by distinct peptide sequence ignoring modifications.</summary>
+    MS_group_PSMs_by_sequence = 1002496,
+
+    /// <summary>group PSMs by sequence with modifications: Group PSMs by distinct peptide sequence with taking modifications into account.</summary>
+    MS_group_PSMs_by_sequence_with_modifications = 1002497,
+
+    /// <summary>group PSMs by sequence with modifications and charge: Group PSMs by distinct peptide sequence with taking modifications and charge into account.</summary>
+    MS_group_PSMs_by_sequence_with_modifications_and_charge = 1002498,
+
+    /// <summary>peptide level score: Peptide level score.</summary>
+    MS_peptide_level_score = 1002499,
+
+    /// <summary>peptide passes threshold: A Boolean attribute to determine whether the peptide has passed the threshold indicated in the file.</summary>
+    MS_peptide_passes_threshold = 1002500,
+
+    /// <summary>no PSM threshold: Indicating that no PSM threshold was used.</summary>
+    MS_no_PSM_threshold = 1002501,
+
+    /// <summary>no peptide-level threshold: Indicating that no peptide-level threshold was used.</summary>
+    MS_no_peptide_level_threshold = 1002502,
+
+    /// <summary>PSM is used for peptide-level scoring: Flags a PSM that it is used for peptide-level scoring.</summary>
+    MS_PSM_is_used_for_peptide_level_scoring = 1002503,
+
+    /// <summary>order: The order of modifications to be referenced elsewhere in the document.</summary>
+    MS_order = 1002504,
+
+    /// <summary>regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+:[:digit:]+[|:digit:]*:(true|false)\{1\}).</summary>
+    MS_regular_expression_for_modification_localization_scoring = 1002505,
+
+    /// <summary>modification position score: Modification position score.</summary>
+    MS_modification_position_score = 1002506,
+
+    /// <summary>modification rescoring:false localization rate: Mod position score: false localization rate.</summary>
+    MS_modification_rescoring_false_localization_rate = 1002507,
+
+    /// <summary>cross-linking attribute: Cross-linking attribute.</summary>
+    MS_cross_linking_attribute = 1002508,
+
+    /// <summary>cross-link donor: The Cross-linking donor, assigned according to the following rules: the export software SHOULD use the following rules to choose the cross-link donor as the: longer peptide, then higher peptide neutral mass, then alphabetical order.</summary>
+    MS_cross_link_donor = 1002509,
+
+    /// <summary>cross-link receiver: Cross-linking receiver, assigned according to the following rules: the export software SHOULD use the following rules to choose the cross-link donor as the: longer peptide, then higher peptide neutral mass, then alphabetical order.</summary>
+    MS_cross_link_receiver = 1002510,
+
+    /// <summary>cross-link spectrum identification item: Cross-linked spectrum identification item.</summary>
+    MS_cross_link_spectrum_identification_item = 1002511,
+
+    /// <summary>cross-linking score: Cross-linking scoring value.</summary>
+    MS_cross_linking_score = 1002512,
+
+    /// <summary>molecules per cell: The absolute abundance of protein in a cell.</summary>
+    MS_molecules_per_cell = 1002513,
+
+    /// <summary>absolute quantitation analysis: Absolute quantitation analysis.</summary>
+    MS_absolute_quantitation_analysis = 1002514,
+
+    /// <summary>internal peptide reference used: States whether an internal peptide reference is used or not in absolute quantitation analysis.</summary>
+    MS_internal_peptide_reference_used = 1002515,
+
+    /// <summary>internal protein reference used: States whether an internal protein reference is used or not in absolute quantitation analysis.</summary>
+    MS_internal_protein_reference_used = 1002516,
+
+    /// <summary>internal reference abundance: The absolute abundance of the spiked in reference peptide or protein used for absolute quantitation analysis.</summary>
+    MS_internal_reference_abundance = 1002517,
+
+    /// <summary>Progenesis:protein group normalised abundance: The data type normalised abundance for protein groups produced by Progenesis LC-MS.</summary>
+    MS_Progenesis_protein_group_normalised_abundance = 1002518,
+
+    /// <summary>Progenesis:protein group raw abundance: The data type raw abundance for protein groups produced by Progenesis LC-MS.</summary>
+    MS_Progenesis_protein_group_raw_abundance = 1002519,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 100000000,
@@ -7938,8 +8188,8 @@ public enum class CVID
     /// <summary>Delta:S(-1)Se(1): Selenium replaces sulfur.</summary>
     UNIMOD_Delta_S__1_Se_1_ = 100000162,
 
-    /// <summary>Delta:H(1)O(-1)18O(1): Glycosylated asparagine 18O labeling.</summary>
-    UNIMOD_Delta_H_1_O__1_18O_1_ = 100000170,
+    /// <summary>Delta:H(1)N(-1)18O(1): Glycosylated asparagine 18O labeling.</summary>
+    UNIMOD_Delta_H_1_N__1_18O_1_ = 100000170,
 
     /// <summary>NBS:13C(6): Shimadzu NBS-13C.</summary>
     UNIMOD_NBS_13C_6_ = 100000171,
@@ -10545,6 +10795,27 @@ public enum class CVID
     /// <summary>DiART6plex118: Accurate mass for DiART6plex 118.</summary>
     UNIMOD_DiART6plex118 = 100001396,
 
+    /// <summary>Iodoacetanilide: Iodoacetanilide derivative.</summary>
+    UNIMOD_Iodoacetanilide = 100001397,
+
+    /// <summary>Iodoacetanilide:13C(6): 13C labelled iodoacetanilide derivative.</summary>
+    UNIMOD_Iodoacetanilide_13C_6_ = 100001398,
+
+    /// <summary>Dap-DSP: Diaminopimelic acid-DSP monolinked.</summary>
+    UNIMOD_Dap_DSP = 100001399,
+
+    /// <summary>MurNAc: N-Acetylmuramic acid.</summary>
+    UNIMOD_MurNAc = 100001400,
+
+    /// <summary>TransN-biotin: Transaminated Protein N-terminus biotinylated with biotin-hydrazide.</summary>
+    UNIMOD_TransN_biotin = 100001401,
+
+    /// <summary>Label:2H(7)15N(4): Label:2H(7)15N(4).</summary>
+    UNIMOD_Label_2H_7_15N_4_ = 100001402,
+
+    /// <summary>Label:2H(6)15N(1): Label:2H(6)15N(1).</summary>
+    UNIMOD_Label_2H_6_15N_1_ = 100001403,
+
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 200000000,
 
@@ -11429,17 +11700,17 @@ public ref class CVTermInfo
     /// <summary>
     /// returns the accession id of the term in the form: "prefix:number", e.g. "MS:1000001"
     /// </summary>
-    property System::String^ id { System::String^ get() {return gcnew System::String(base_->id.c_str());} }
+    property System::String^ id { System::String^ get() {return ToSystemString(base_->id);} }
 
     /// <summary>
     /// the full name of the term, e.g. "sample number"
     /// </summary>
-    property System::String^ name { System::String^ get() {return gcnew System::String(base_->name.c_str());} }
+    property System::String^ name { System::String^ get() {return ToSystemString(base_->name);} }
 
     /// <summary>
     /// returns the full text definition of the term
     /// </summary>
-    property System::String^ def { System::String^ get() {return gcnew System::String(base_->def.c_str());} }
+    property System::String^ def { System::String^ get() {return ToSystemString(base_->def);} }
 
     /// <summary>
     /// returns true if the term is obsolete
@@ -11476,12 +11747,12 @@ public ref class CVTermInfo
     /// <summary>
     /// returns the shortest synonym from exactSynonyms()
     /// </summary>
-    System::String^ shortName() {return gcnew System::String(base_->shortName().c_str());}
+    System::String^ shortName() {return ToSystemString(base_->shortName());}
 
     /// <summary>
     /// returns the prefix of the id, e.g. "MS" for PSI-MS terms
     /// </summary>
-    System::String^ prefix() {return gcnew System::String(base_->prefix().c_str());}
+    System::String^ prefix() {return ToSystemString(base_->prefix());}
 };
 
 

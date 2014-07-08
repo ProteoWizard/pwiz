@@ -75,6 +75,20 @@ rule vendor-api-requirements ( properties * )
     return $(result) ;
 }
 
+rule has-bruker-reader ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ bruker-dll-location $(API_PATH) : $(properties) ] &&
+       ! [ without-binary-msdata $(properties) ] &&
+       ! <vendor-api-support>off in $(properties)
+    {
+        result += <define>PWIZ_READER_BRUKER ;
+    }
+    return $(result) ;
+}
+
 rule filesystem-shared ( properties * )
 {
     # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
@@ -89,7 +103,7 @@ rule filesystem-shared ( properties * )
 }
 
 # shared with pwiz_vendor_api_bruker
-obj Reader_Bruker_Detail : Reader_Bruker_Detail.cpp : <conditional>@filesystem-shared : : <conditional>@filesystem-shared ;
+obj Reader_Bruker_Detail : Reader_Bruker_Detail.cpp : <conditional>@has-bruker-reader <conditional>@filesystem-shared : : <conditional>@filesystem-shared ;
 
 
 lib pwiz_reader_bruker
@@ -99,12 +113,12 @@ lib pwiz_reader_bruker
         ChromatogramList_Bruker.cpp
         Reader_Bruker_Detail
     : # requirements
-		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-		<conditional>@vendor-api-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
-		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-		<conditional>@vendor-api-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-requirements
     ;
 
 

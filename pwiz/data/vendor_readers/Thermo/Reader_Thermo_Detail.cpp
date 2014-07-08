@@ -30,6 +30,7 @@
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace Thermo {
 
 
 PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentModelType)
@@ -100,6 +101,8 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Q_Exactive:                return MS_Q_Exactive;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
+        case InstrumentModelType_Orbitrap_Fusion:           return MS_Orbitrap_Fusion;
+        case InstrumentModelType_Orbitrap_Fusion_ETD:       return MS_Orbitrap_Fusion_ETD;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -165,6 +168,21 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
             configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentModelType_Orbitrap_Fusion:
+        case InstrumentModelType_Orbitrap_Fusion_ETD:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_orbitrap, 3));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 4));
+
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 3));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 4));
             break;
 
         case InstrumentModelType_LTQ_Orbitrap:
@@ -285,8 +303,6 @@ PWIZ_API_DECL CVID translateAsScanningMethod(ScanType scanType)
 {
     switch (scanType)
     {
-        case ScanType_Full:
-            return MS_full_scan;
         case ScanType_Zoom:
             return MS_zoom_scan;
         case ScanType_SIM:
@@ -295,6 +311,7 @@ PWIZ_API_DECL CVID translateAsScanningMethod(ScanType scanType)
             return MS_SRM;
         case ScanType_CRM:
             return MS_CRM_OBSOLETE;
+        case ScanType_Full:
         case ScanType_Unknown:
         default:
             return CVID_Unknown;
@@ -408,12 +425,13 @@ PWIZ_API_DECL void SetActivationType(ActivationType activationType, Activation& 
     if (activationType & ActivationType_PQD)
         activation.set(MS_pulsed_q_dissociation);
     if (activationType & ActivationType_HCD)
-        activation.set(MS_high_energy_collision_induced_dissociation);
+        activation.set(MS_HCD);
     // ActivationType_PTR: // what does this map to?
     // ActivationType_MPD: // what does this map to?
     // ActivationType_Unknown:
 }
 
+} // Thermo
 } // detail
 } // msdata
 } // pwiz

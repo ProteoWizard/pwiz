@@ -111,7 +111,7 @@ SpectrumListPtr createSpectrumList()
         }
         else if (i==4) // HCD
         {
-            spectrum->precursors[0].activation.set(MS_high_energy_collision_induced_dissociation);
+            spectrum->precursors[0].activation.set(MS_HCD);
         }
         else if (i==8) // IRMPD
         {
@@ -466,7 +466,7 @@ void testMS2Activation(SpectrumListPtr sl)
     set<CVID> cvIDs;
     // CID
     cvIDs.insert(MS_electron_transfer_dissociation);
-    cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    cvIDs.insert(MS_HCD);
     cvIDs.insert(MS_IRMPD);
     SpectrumList_Filter filter(ms2filter,
                         SpectrumList_FilterPredicate_ActivationType(cvIDs, true));
@@ -513,7 +513,7 @@ void testMS2Activation(SpectrumListPtr sl)
 
     // HCD
     cvIDs.clear();
-    cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    cvIDs.insert(MS_HCD);
     SpectrumList_Filter filter3(ms2filter, 
                         SpectrumList_FilterPredicate_ActivationType(cvIDs, false));
     if (os_) 

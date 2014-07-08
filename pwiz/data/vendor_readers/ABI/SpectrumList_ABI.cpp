@@ -38,6 +38,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace ABI;
 
 PWIZ_API_DECL SpectrumList_ABI::SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile,
                                                  const ExperimentsMap& experimentsMap, int sample,
@@ -206,7 +207,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             if (charge > 0)
                 selectedIon.set(MS_charge_state, charge);
 
-            precursor.activation.set(MS_CID); // assume CID
+            precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
 
             precursor.selectedIons.push_back(selectedIon);
             result->precursors.push_back(precursor);

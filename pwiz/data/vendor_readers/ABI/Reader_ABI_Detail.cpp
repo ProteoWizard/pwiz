@@ -32,6 +32,7 @@ using namespace pwiz::vendor_api::ABI;
 namespace pwiz {
 namespace msdata {
 namespace detail {
+namespace ABI {
 
 
 PWIZ_API_DECL
@@ -193,6 +194,7 @@ PWIZ_API_DECL CVID translate(Polarity polarity)
     }
 }
 
+} // ABI
 } // detail
 } // msdata
 } // pwiz

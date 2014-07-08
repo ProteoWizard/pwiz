@@ -16,10 +16,10 @@ set name=%1
 set readerpath=%2
 
 echo Building Reader_%name% and running its unit test...
-call quickbuild.bat -q toolset=msvc --i-agree-to-the-vendor-licenses %readerpath% -j4 > nul
+call quickbuild.bat -q toolset=msvc --i-agree-to-the-vendor-licenses --abbreviate-paths %readerpath% -j4 > nul
 if %ERRORLEVEL% EQU 0 GOTO SKIP
 echo The mzML for Reader_%name% is out of date. Regenerating mzML...
-call quickbuild.bat -q toolset=msvc --i-agree-to-the-vendor-licenses --incremental --generate-mzML -j4 %readerpath%
+call quickbuild.bat -q toolset=msvc --i-agree-to-the-vendor-licenses --abbreviate-paths --incremental --generate-mzML -j4 %readerpath%
 if %ERRORLEVEL% NEQ 0 GOTO ERROR
 echo Tarballing Reader_%name% test data...
 call scripts\test\tar_test_data.bat %readerpath% %PWIZ_ROOT% Reader_%name%_Test.data > nul
