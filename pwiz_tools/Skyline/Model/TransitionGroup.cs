@@ -183,6 +183,8 @@ namespace pwiz.Skyline.Model
 
             foreach (var measuredIon in tranSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
             {
+                if(useFilter && measuredIon.IsOptional)
+                    continue;
                 foreach (int charge in measuredIon.Charges)
                 {
                     var tran = new Transition(this, charge, measuredIon);

@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -97,17 +99,17 @@ namespace pwiz.SkylineTestA
         {
             var docOriginal = new SrmDocument(SrmSettingsList.GetDefault());
             IdentityPath path;
-            var docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
+            SrmDocument docPeptide = docOriginal.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"),
                 true, IdentityPath.ROOT, out path);
             // One of the prolines should have caused an extra transition
             Assert.AreEqual(4, docPeptide.TransitionCount);
             Assert.IsTrue(docPeptide.Transitions.Contains(nodeTran => nodeTran.Transition.Ordinal == 8));
 
-            MeasuredIon reporterIon = new MeasuredIon("Water","H2O",null,null,new []{1,2,3});
-            var docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
+            var reporterIon = new MeasuredIon("Water", "H2O", null, null, new[] {1, 2, 3});
+            SrmDocument docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] {MeasuredIonList.NTERM_PROLINE, reporterIon})));
             Assert.AreEqual(7, docReporterIon.TransitionCount);
-            
+
             //Check With Monoisotopic
             double mass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, "H2O");
             for (int i = 0; i < 3; i ++)
@@ -115,12 +117,13 @@ namespace pwiz.SkylineTestA
                 TransitionDocNode tranNode = docReporterIon.Transitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIon, tran.CustomIon);
-                Assert.AreEqual(tran.Charge,i+1);
+                Assert.AreEqual(tran.Charge, i + 1);
                 Assert.AreEqual(SequenceMassCalc.GetMZ(mass + BioMassCalc.MassProton, i + 1), tranNode.Mz);
             }
 
             //Check with Average
-            TransitionPrediction predSettings = docReporterIon.Settings.TransitionSettings.Prediction.ChangeFragmentMassType(MassType.Average);
+            TransitionPrediction predSettings =
+                docReporterIon.Settings.TransitionSettings.Prediction.ChangeFragmentMassType(MassType.Average);
             TransitionSettings tranSettings = docReporterIon.Settings.TransitionSettings.ChangePrediction(predSettings);
             SrmSettings srmSettings = docReporterIon.Settings.ChangeTransitionSettings(tranSettings);
             SrmDocument averageDocument = docReporterIon.ChangeSettings(srmSettings);
@@ -140,6 +143,36 @@ namespace pwiz.SkylineTestA
                 Transition tran = docReporterIon.Transitions.ElementAt(i).Transition;
                 Assert.AreNotEqual(tran.CustomIon, reporterIon);
             }
+            var optionalIon = new MeasuredIon("Water", "H2O", null, null, new[] {1}, true);
+            SrmDocument optionalDoc = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
+                filter.ChangeMeasuredIons(new[] {optionalIon})));
+            Assert.AreEqual(3, optionalDoc.TransitionCount);
+            optionalDoc = optionalDoc.ChangeSettings(optionalDoc.Settings.ChangeTransitionFilter(filter =>
+                filter.ChangeMeasuredIons(new[] {optionalIon.ChangeIsOptional(false)})));
+            Assert.AreEqual(4, optionalDoc.TransitionCount);
+            Assert.AreEqual(optionalIon.ChangeIsOptional(false),
+                optionalDoc.Transitions.ElementAt(0).Transition.CustomIon);
+            optionalDoc =
+                optionalDoc.ChangeSettings(
+                    optionalDoc.Settings.ChangeTransitionFilter(
+                        filter => filter.ChangeMeasuredIons(new[] {optionalIon.ChangeIsOptional(true)})));
+
+
+            TransitionGroupDocNode nodeGroup = optionalDoc.TransitionGroups.ElementAt(0);
+            var filteredNodes =
+                TransitionGroupTreeNode.GetChoices(nodeGroup, optionalDoc.Settings,
+                    optionalDoc.Peptides.ElementAt(0).ExplicitMods, true)
+                    .Cast<TransitionDocNode>()
+                    .Where(node => Equals(node.Transition.CustomIon, optionalIon));
+
+            var unfilteredNodes =
+                TransitionGroupTreeNode.GetChoices(nodeGroup, optionalDoc.Settings,
+                    optionalDoc.Peptides.ElementAt(0).ExplicitMods, false)
+                    .Cast<TransitionDocNode>()
+                    .Where(node => Equals(node.Transition.CustomIon, optionalIon));
+
+            Assert.AreEqual(0,filteredNodes.Count());
+            Assert.AreEqual(1,unfilteredNodes.Count());
         }
 
         /// <summary>

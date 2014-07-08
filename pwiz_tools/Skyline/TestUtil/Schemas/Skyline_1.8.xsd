@@ -327,6 +327,7 @@
                 <xs:attribute name="mass_monoisotopic" type="xs:double"/>
                 <xs:attribute name="mass_average" type="xs:double"/>
                 <xs:attribute name="charges" type="xs:string"/>
+                <xs:attribute name="optional" type="xs:boolean"/>
               </xs:complexType>
             </xs:element>
           </xs:sequence>

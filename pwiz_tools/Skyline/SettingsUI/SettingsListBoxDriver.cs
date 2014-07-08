@@ -41,7 +41,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public TItem[] Chosen { get { return GetChosen(null); } }
 
-        public TItem[] GetChosen(ItemCheckEventArgs e)
+        public virtual TItem[] GetChosen(ItemCheckEventArgs e)
         {
             if (CheckedListBox == null)
                 return new TItem[0];
@@ -75,7 +75,7 @@ namespace pwiz.Skyline.SettingsUI
             LoadList(selectedItemLast, chosen);
         }
 
-        public void LoadList(string selectedItemLast, IList<TItem> chosen)
+        public virtual void LoadList(string selectedItemLast, IList<TItem> chosen)
         {
             ListBox.BeginUpdate();
             ListBox.Items.Clear();

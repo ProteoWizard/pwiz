@@ -82,18 +82,20 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="monoisotopicMass">Constant monoisotopic mass of the ion, if formula is not given</param>
         /// <param name="averageMass">Constant average mass of the ion, if formula is not given</param>
         /// <param name="charges">The possible charges for this custom ion</param>
+        /// <param name="isOptional">Whether or not the reporter ion will automatically be added to all proteins</param>
         public MeasuredIon(string name,
                            string formula,
                            double? monoisotopicMass,
                            double? averageMass,
-                           IList<int> charges)
+                           IList<int> charges,
+                           bool isOptional = false)
             : base(name)
         {
             MonoisotopicMass = monoisotopicMass;
             AverageMass = averageMass;
             Charges = charges;
             Formula = formula;
-
+            IsOptional = isOptional;
             Validate();
         }
 
@@ -192,6 +194,17 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return IsFragment ? MeasuredIonType.fragment : MeasuredIonType.reporter; }
         }
 
+        public bool IsOptional { get; private set; }
+
+        #region Property change methods
+
+        public MeasuredIon ChangeIsOptional(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsOptional = prop);
+        }
+
+        #endregion
+
         #region Implementation of IXmlSerializable
 
 
@@ -214,7 +227,8 @@ namespace pwiz.Skyline.Model.DocSettings
             formula,
             mass_monoisotopic,
             mass_average,
-            charges
+            charges,
+            optional
         }
 
         private void Validate()
@@ -273,6 +287,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 AverageMass = reader.GetNullableDoubleAttribute(ATTR.mass_average) ?? 0;
                 Charges = TextUtil.ParseInts(reader.GetAttribute(ATTR.charges));
                 Formula = reader.GetAttribute(ATTR.formula);
+                IsOptional = reader.GetBoolAttribute(ATTR.optional);
             }
             // Consume tag
             reader.Read();
@@ -300,6 +315,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     writer.WriteAttribute(ATTR.mass_average, AverageMass);
                 }
                 writer.WriteAttributeString(ATTR.charges, Charges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
+                writer.WriteAttribute(ATTR.optional,IsOptional);
             }
         }
 
@@ -319,7 +335,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    other.MinFragmentLength.Equals(MinFragmentLength) &&
                    other.MonoisotopicMass.Equals(MonoisotopicMass) &&
                    other.AverageMass.Equals(AverageMass) &&
-                   ArrayUtil.EqualsDeep(other.Charges, Charges);
+                   ArrayUtil.EqualsDeep(other.Charges, Charges) &&
+                   other.IsOptional == IsOptional;
         }
 
         public override bool Equals(object obj)
@@ -342,6 +359,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Charges != null ? Charges.GetHashCodeDeep() : 0);
+                result = (result*397) ^ IsOptional.GetHashCode();
                 return result;
             }
         }

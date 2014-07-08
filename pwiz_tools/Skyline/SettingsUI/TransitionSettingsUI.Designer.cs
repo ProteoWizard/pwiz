@@ -344,6 +344,7 @@
             resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.Name = "listAlwaysAdd";
             this.helpTip.SetToolTip(this.listAlwaysAdd, resources.GetString("listAlwaysAdd.ToolTip"));
+            this.listAlwaysAdd.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listAlwaysAdd_ItemCheck);
             // 
             // comboRangeFrom
             // 

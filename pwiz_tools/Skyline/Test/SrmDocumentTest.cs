@@ -24,6 +24,7 @@ using System.Linq;
 using System.Xml;
 using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.V01;
 using pwiz.SkylineTestUtil;
 
@@ -53,7 +54,18 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ReporterIonDocumentSerializeTest()
         {
-            AssertEx.Serializable(AssertEx.Deserialize<SrmDocument>(DOC_REPORTER_IONS),3,AssertEx.DocumentCloned);
+            SrmDocument document = AssertEx.Deserialize<SrmDocument>(DOC_REPORTER_IONS);
+            Assert.AreEqual(1,document.PeptideCount);
+            Assert.AreEqual(5,document.TransitionCount);
+            MeasuredIon customIon = new MeasuredIon("Water","H2O3",null,null, new [] {1,2});
+            Assert.AreEqual(customIon,
+                document.Settings.TransitionSettings.Filter.MeasuredIons.Where(ion => ion.Name.Equals("Water"))
+                    .ElementAt(0));
+            for (int i = 0; i < 2; i ++)
+            {
+                Assert.AreEqual(document.Transitions.ElementAt(i).Transition.CustomIon,customIon);
+            }
+
             AssertEx.DeserializeError<SrmDocument>(DOC_REPORTER_IONS_INCORRECT_NAME);
         }
 

@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -113,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
             cbExclusionUseDIAWindow.Checked = Filter.ExclusionUseDIAWindow;
             cbAutoSelect.Checked = Filter.AutoSelect;
 
-            _driverIons = new SettingsListBoxDriver<MeasuredIon>(listAlwaysAdd, Settings.Default.MeasuredIonList);
+            _driverIons = new MeasuredIonListBoxDriver(listAlwaysAdd, Settings.Default.MeasuredIonList);
             _driverIons.LoadList(Filter.MeasuredIons);
 
             // Initialize library settings
@@ -888,6 +890,33 @@ namespace pwiz.Skyline.SettingsUI
             listAlwaysAdd.SetItemChecked(index, check);
         }
 
+        public bool ValidateIonCheckBoxes(IList<CheckState> predictedValues)
+        {
+            return !predictedValues.Where((t, i) => _driverIons.CheckedListBox.GetItemCheckState(i) != t).Any();
+        }
+
         #endregion
+
+        private void listAlwaysAdd_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            var measuredIon = _driverIons.List[e.Index];
+            if (! measuredIon.IsCustom)
+                return;
+
+            switch (e.CurrentValue)
+            {
+                case CheckState.Checked:
+                    e.NewValue = CheckState.Unchecked;
+                    break;
+
+                case CheckState.Indeterminate:
+                    e.NewValue = CheckState.Checked;
+                    break;
+
+                case CheckState.Unchecked:
+                    e.NewValue = CheckState.Indeterminate;
+                    break;
+            }
+        }
     }
 }
