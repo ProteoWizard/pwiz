@@ -202,7 +202,9 @@ namespace pwiz.Skyline
                 try
                 {
                     var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
-                    if ((activationArgs != null && activationArgs.ActivationData.Length != 0) ||
+                    if ((activationArgs != null &&
+                        activationArgs.ActivationData != null &&
+                        activationArgs.ActivationData.Length != 0) ||
                         !Settings.Default.ShowStartupForm)
                     {
                         MainWindow = new SkylineWindow();
