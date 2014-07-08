@@ -237,6 +237,10 @@ namespace SkylineTester
                 if (line.StartsWith("[MLRAW:"))
                     return false;
 
+                // Filter out false error from Waters DLL (it's looking .ind, ultimately finds and uses .idx)
+                if (line.StartsWith("Error opening index file") && line.EndsWith(".ind"))
+                    return false;
+
                 if (line.StartsWith("#@ "))
                 {
                     // Update status.
