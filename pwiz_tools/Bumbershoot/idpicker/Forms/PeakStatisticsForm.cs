@@ -334,6 +334,8 @@ namespace IDPicker.Forms
             this.dataFilter = new DataFilter(dataFilter);
 
             ClearData();
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
         }
 
         public void ClearData ()
@@ -346,15 +348,17 @@ namespace IDPicker.Forms
 
             Text = TabText = "Peak Statistics";
 
-            //dataGridView.Rows.Clear();
-            //dataGridView.Refresh();
             Refresh();
         }
 
         public void ClearData (bool clearBasicFilter)
         {
             if (clearBasicFilter)
+            {
                 basicDataFilter = null;
+                Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+            }
+
             ClearData();
         }
 
@@ -384,11 +388,9 @@ namespace IDPicker.Forms
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
-            Text = TabText = "Peak Statistics";           
+            Text = TabText = "Peak Statistics";  
 
-            //dataGridView.Rows.Clear();
-            //dataGridView.Rows.Add(fragmentationStatistics.Cast<object>().ToArray());
-            //dataGridView.Refresh();
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
         }
 
         #region Export stuff
@@ -527,7 +529,7 @@ namespace IDPicker.Forms
 
         public void ClearSession()
         {
-            ClearData();
+            ClearData(true);
             if (session != null && session.IsOpen)
             {
                 session.Close();

@@ -419,6 +419,7 @@ namespace IDPicker.Forms
 
                 var percentTicByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
                 var percentPeakCountByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
+                var matchCountByFragmentType = new List<int>(Enumerable.Repeat(0, (int) IonSeries.Count));
                 var meanMzErrorByFragmentType = new List<double>(Enumerable.Repeat(Double.NaN, (int) IonSeries.Count));
 
                 seems.PointMap.Enumerator itr;
@@ -439,6 +440,7 @@ namespace IDPicker.Forms
                     {
                         percentTicByFragmentType[(int)series] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[(int)series];
+                        ++matchCountByFragmentType[(int)series];
                         if (Double.IsNaN(meanMzErrorByFragmentType[(int)series])) meanMzErrorByFragmentType[(int)series] = 0;
                         meanMzErrorByFragmentType[(int)series] += mzError(itr.Current.Key, expected);
                     }
@@ -450,7 +452,7 @@ namespace IDPicker.Forms
                 {
                     // convert sum to mean
                     if (percentPeakCountByFragmentType[i] > 0)
-                        meanMzErrorByFragmentType[i] /= percentPeakCountByFragmentType[i];
+                        meanMzErrorByFragmentType[i] /= matchCountByFragmentType[i];
 
                     // convert to percentages
                     percentTicByFragmentType[i] /= tic / 100;
@@ -460,8 +462,8 @@ namespace IDPicker.Forms
                     maxPercentPeakCount = Math.Max(maxPercentPeakCount, percentPeakCountByFragmentType[i]);
 
                     double jitter = (rng.NextDouble() - 0.5);
-                    percentTicBySpectrumByFragmentType[i].Add(jitter, percentTicByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentTicByFragmentType[i]));
-                    percentPeakCountBySpectrumByFragmentType[i].Add(jitter, percentPeakCountByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentPeakCountByFragmentType[i]));
+                    percentTicBySpectrumByFragmentType[i].Add(jitter, percentTicByFragmentType[i], String.Format("{0}: {1:G4}% ({2} matches)", spectrumId, percentTicByFragmentType[i], matchCountByFragmentType[i]));
+                    percentPeakCountBySpectrumByFragmentType[i].Add(jitter, percentPeakCountByFragmentType[i], String.Format("{0}: {1:G4}% ({2} matches)", spectrumId, percentPeakCountByFragmentType[i], matchCountByFragmentType[i]));
 
                     percentTicListByFragmentType[i].Add(percentTicByFragmentType[i]);
                     percentPeakCountListByFragmentType[i].Add(percentPeakCountByFragmentType[i]);
@@ -538,6 +540,8 @@ namespace IDPicker.Forms
             this.dataFilter = new DataFilter(dataFilter);
 
             ClearData();
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
         }
 
         public void ClearData ()
@@ -566,7 +570,11 @@ namespace IDPicker.Forms
         public void ClearData (bool clearBasicFilter)
         {
             if (clearBasicFilter)
+            {
                 basicDataFilter = null;
+                Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+            }
+
             ClearData();
         }
 
@@ -585,6 +593,8 @@ namespace IDPicker.Forms
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             Text = TabText = "Fragmentation Statistics";
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
 
             if (e.Result is Exception)
             {
@@ -738,7 +748,7 @@ namespace IDPicker.Forms
 
         public void ClearSession()
         {
-            ClearData();
+            ClearData(true);
             if (session != null && session.IsOpen)
             {
                 session.Close();

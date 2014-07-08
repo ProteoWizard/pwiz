@@ -718,7 +718,7 @@ namespace IDPicker
 
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
-            distributionStatisticsForm.ClearData();
+            distributionStatisticsForm.ClearData(true);
 
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearData());
         }
@@ -1385,6 +1385,14 @@ namespace IDPicker
                 dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
                 dockPanel.ResumeLayout(true, true);
             }
+            catch(IndexOutOfRangeException e)
+            {
+                if (userLayout.Name == "System Default")
+                    throw new IndexOutOfRangeException("error setting system default layout", e);
+
+                MessageBox.Show(this, "Error loading layout. Reverting to system default.", "Layout Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _layoutManager.CurrentLayout = _layoutManager.DefaultSystemLayout;
+            }
             finally
             {
                 File.Delete(tempFilepath);
@@ -1411,6 +1419,12 @@ namespace IDPicker
                 return filterHistoryForm;
             if (persistantString == typeof(RescuePSMsForm).ToString())
                 return reassignPSMsForm;
+            if (persistantString == typeof(FragmentationStatisticsForm).ToString())
+                return fragmentationStatisticsForm;
+            if (persistantString == typeof(PeakStatisticsForm).ToString())
+                return peakStatisticsForm;
+            if (persistantString == typeof(DistributionStatisticsForm).ToString())
+                return distributionStatisticsForm;
             
             return null;
         }

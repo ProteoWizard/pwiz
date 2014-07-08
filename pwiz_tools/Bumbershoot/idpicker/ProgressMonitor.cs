@@ -145,8 +145,8 @@ namespace IDPicker
             progressUpdate.Total = e.TotalFilters;
             progressUpdate.Current = e.CompletedFilters;
 
-            progressUpdate.Message = String.Format("{0} ({1}/{2})",
-                                                   e.FilteringStage,
+            progressUpdate.Message = String.Format("{0}{1} ({2}/{3})",
+                                                   e.FilteringStage[0].ToString().ToUpper(), e.FilteringStage.Substring(1),
                                                    e.CompletedFilters,
                                                    e.TotalFilters);
 

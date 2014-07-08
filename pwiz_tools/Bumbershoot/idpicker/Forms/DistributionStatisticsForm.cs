@@ -193,6 +193,8 @@ namespace IDPicker.Forms
             this.dataFilter = new DataFilter(dataFilter);
 
             ClearData();
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
         }
 
         public void ClearData ()
@@ -218,9 +220,20 @@ namespace IDPicker.Forms
             Refresh();
         }
 
+        public void ClearData(bool clearBasicFilter)
+        {
+            if (clearBasicFilter)
+            {
+                viewFilter = dataFilter = null;
+                Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+            }
+
+            ClearData();
+        }
+
         public void ClearSession ()
         {
-            ClearData();
+            ClearData(true);
             if (session != null && session.IsOpen)
             {
                 session.Close();
@@ -401,6 +414,8 @@ namespace IDPicker.Forms
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             Text = TabText = "Distribution Statistics";
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
 
             if (e.Result is Exception)
             {
