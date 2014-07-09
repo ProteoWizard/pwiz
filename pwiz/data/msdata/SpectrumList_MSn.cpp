@@ -301,7 +301,18 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
             
             size_t first_space_pos = lineStr.find_first_of(" \t");
             size_t first_num_pos = lineStr.find_first_of("0123456789", first_space_pos);
-            charges.push_back(lexical_cast<int>(lineStr.substr(first_num_pos, 1)));  // assume one digit
+            size_t next_space_pos = lineStr.find_first_of(" \t", first_num_pos);
+            int charge = lexical_cast<int>(lineStr.substr(first_num_pos, next_space_pos-first_num_pos));
+            charges.push_back(charge);
+
+            size_t last_num_pos = lineStr.find_last_of("0123456789");
+            size_t last_space_pos = lineStr.find_last_of(" \t", last_num_pos);
+            double z_precursor_mz = calculateMassOverCharge(
+                lexical_cast<double>(lineStr.substr(last_space_pos, last_num_pos-last_space_pos+1)), charge, 1);
+            stringstream ss;
+            ss << charge << ' ' << z_precursor_mz;
+            // Store Z line information in UserParams, in the format "<charge> <m/z calculated from Z line mass>"
+            spectrum.userParams.push_back(UserParam("ms2 file charge state", ss.str()));
         }
         else if (lineStr.find("I") == 0)
         {
