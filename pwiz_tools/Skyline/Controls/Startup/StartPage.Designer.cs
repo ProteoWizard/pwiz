@@ -48,8 +48,6 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFilePanel = new System.Windows.Forms.Panel();
             this.openFileIcon = new System.Windows.Forms.PictureBox();
             this.openFileLabel = new System.Windows.Forms.Label();
-            this.shapeContainer3 = new Microsoft.VisualBasic.PowerPacks.ShapeContainer();
-            this.leftSeparator = new Microsoft.VisualBasic.PowerPacks.RectangleShape();
             this.tabControlMain.SuspendLayout();
             this.wizardTabPage.SuspendLayout();
             this.tutorialsTabPage.SuspendLayout();
@@ -133,7 +131,6 @@ namespace pwiz.Skyline.Controls.Startup
             this.leftBottomPanel.BackColor = System.Drawing.Color.Transparent;
             this.leftBottomPanel.Controls.Add(this.checkBoxShowStartup);
             this.leftBottomPanel.Controls.Add(this.openFilePanel);
-            this.leftBottomPanel.Controls.Add(this.shapeContainer3);
             resources.ApplyResources(this.leftBottomPanel, "leftBottomPanel");
             this.leftBottomPanel.Name = "leftBottomPanel";
             // 
@@ -176,19 +173,6 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFileLabel.MouseEnter += new System.EventHandler(this.openFile_MouseHover);
             this.openFileLabel.MouseLeave += new System.EventHandler(this.openFile_MouseLeave);
             // 
-            // shapeContainer3
-            // 
-            resources.ApplyResources(this.shapeContainer3, "shapeContainer3");
-            this.shapeContainer3.Name = "shapeContainer3";
-            this.shapeContainer3.Shapes.AddRange(new Microsoft.VisualBasic.PowerPacks.Shape[] {
-            this.leftSeparator});
-            this.shapeContainer3.TabStop = false;
-            // 
-            // leftSeparator
-            // 
-            resources.ApplyResources(this.leftSeparator, "leftSeparator");
-            this.leftSeparator.Name = "leftSeparator";
-            // 
             // StartPage
             // 
             resources.ApplyResources(this, "$this");
@@ -227,8 +211,6 @@ namespace pwiz.Skyline.Controls.Startup
         private System.Windows.Forms.Label openFileLabel;
         private System.Windows.Forms.Panel openFilePanel;
         private System.Windows.Forms.Panel leftBottomPanel;
-        private Microsoft.VisualBasic.PowerPacks.ShapeContainer shapeContainer3;
-        private Microsoft.VisualBasic.PowerPacks.RectangleShape leftSeparator;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelWizard;
         private System.Windows.Forms.Timer actionBoxFadeInTimer;
         private System.Windows.Forms.TabControl tabControlMain;

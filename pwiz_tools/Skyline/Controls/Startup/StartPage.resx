@@ -468,52 +468,6 @@
   <data name="&gt;&gt;openFilePanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="shapeContainer3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="shapeContainer3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="leftSeparator.BorderColor" type="System.Drawing.Color, System.Drawing">
-    <value>Transparent</value>
-  </data>
-  <data name="leftSeparator.FillColor" type="System.Drawing.Color, System.Drawing">
-    <value>White</value>
-  </data>
-  <data name="leftSeparator.FillGradientColor" type="System.Drawing.Color, System.Drawing">
-    <value>White</value>
-  </data>
-  <assembly alias="Microsoft.VisualBasic.PowerPacks.Vs" name="Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="leftSeparator.FillStyle" type="Microsoft.VisualBasic.PowerPacks.FillStyle, Microsoft.VisualBasic.PowerPacks.Vs">
-    <value>Solid</value>
-  </data>
-  <data name="leftSeparator.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 22</value>
-  </data>
-  <data name="leftSeparator.SelectionColor" type="System.Drawing.Color, System.Drawing">
-    <value>White</value>
-  </data>
-  <data name="leftSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>300, 1</value>
-  </data>
-  <data name="shapeContainer3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>242, 68</value>
-  </data>
-  <data name="shapeContainer3.TabIndex" type="System.Int32, mscorlib">
-    <value>57</value>
-  </data>
-  <data name="&gt;&gt;shapeContainer3.Name" xml:space="preserve">
-    <value>shapeContainer3</value>
-  </data>
-  <data name="&gt;&gt;shapeContainer3.Type" xml:space="preserve">
-    <value>Microsoft.VisualBasic.PowerPacks.ShapeContainer, Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="&gt;&gt;shapeContainer3.Parent" xml:space="preserve">
-    <value>leftBottomPanel</value>
-  </data>
-  <data name="&gt;&gt;shapeContainer3.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="leftBottomPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 333</value>
   </data>
@@ -588,12 +542,6 @@
   </data>
   <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;leftSeparator.Name" xml:space="preserve">
-    <value>leftSeparator</value>
-  </data>
-  <data name="&gt;&gt;leftSeparator.Type" xml:space="preserve">
-    <value>Microsoft.VisualBasic.PowerPacks.RectangleShape, Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>StartPage</value>
