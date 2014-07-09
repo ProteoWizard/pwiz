@@ -57,6 +57,9 @@ namespace IDPicker
             }
         }
 
+        public LayoutProperty DefaultSystemLayout { get { return _userLayoutList.Single(o => o.Name == "System Default"); } }
+        public LayoutProperty DefaultUserLayout { get { return _userLayoutList.Single(o => o.Name == "User Default"); } }
+
         private LayoutProperty _currentLayout;
         private NHibernate.ISession _session;
         private List<LayoutProperty> _userLayoutList;
