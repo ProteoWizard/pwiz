@@ -530,6 +530,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// <returns>IEnumerable of the proteins it actually populated (some don't need it, some have to wait for a decent web connection)</returns>
         public IEnumerable<DbProteinName> DoWebserviceLookup(IEnumerable<DbProteinName> proteinsToSearch, IProgressMonitor progressMonitor, bool singleBatch)
         {
+            const int SINGLE_BATCH_SIZE = 500; // If caller has indicated that it wants to do a single batch and return for more later, stop after this many successes
             const int ENTREZ_BATCHSIZE = 100; // they'd like 500, but it's really boggy at that size
             const int UNIPROTKB_BATCHSIZE = 50; 
             const int ENTREZ_RATELIMIT = 333; // 1/3 second between requests on Entrez
@@ -611,6 +612,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             bool cancelled = false;
             var politeStopwatch = new Stopwatch();
             politeStopwatch.Start();
+            int consecutiveFailures = 0; // Guard against getting mired in some user-defined format that can't succeed
             foreach (var searchType in searchOrder)
             {
                 cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
@@ -618,9 +620,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                     break;
                 int politenessIntervalMsec = ratelimit[searchType];
                 int idealBatchsize = batchSize[searchType];
-                int batchsize = idealBatchsize;           // in case of ambiguous results, reduce batchsize until ambiguity goes away
+                int batchsize = 1; // Managing for ambiguous responses: start with pessimistic batch size, then grow it with success.
                 int batchsizeIncreaseThreshold = 2;  // if you can do this many in a row at reduced batchsize, try increasing it
-                int successCountAtThisBatchsize = 0;
+                int successCountAtThisBatchsize = 0;  
                 int successCount = 0;
                 bool completedSearchType = false;
                 while (!completedSearchType)
@@ -655,10 +657,12 @@ namespace pwiz.ProteomeDatabase.Fasta
                             cancelled |= ((progressMonitor != null) && progressMonitor.IsCanceled);
                             if (cancelled)
                                 break;
-                            if (DoWebserviceLookup(searches, searchType, progressMonitor)) // Returns true on web access error
+                            int lookupCount = DoWebserviceLookup(searches, searchType, progressMonitor);
+                            if (lookupCount < 0) // Returns negative on web access error
                             {
                                 // Some error, we should just try again later so don't retry now
                                 completedSearchType = true; // Done with this search type
+                                consecutiveFailures = 0; // Reset - failure isn't due to input
                                 break;
                             }
                             bool success = false;
@@ -667,9 +671,17 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 if (s.GetProteinMetadata().GetPendingSearchTerm().Length == 0)
                                 {
                                     yield return s; // We've processed it
-                                    success = true;
-                                    successCount++;
-                                    successCountAtThisBatchsize++;
+                                    if (lookupCount > 0)
+                                    {
+                                        success = true;
+                                        successCount++;
+                                        successCountAtThisBatchsize++;
+                                        consecutiveFailures = 0; // Reset
+                                    }
+                                    else
+                                    {
+                                        consecutiveFailures++;
+                                    }
                                 }
                                 else
                                 {
@@ -680,12 +692,13 @@ namespace pwiz.ProteomeDatabase.Fasta
                                         success = true; // Entrez search worked, leads us to a UniprotKB search
                                         successCount++;
                                         successCountAtThisBatchsize++;
+                                        consecutiveFailures = 0; // Reset
                                     }
                                 }
                             }
                             if (success)
                             {
-                                if (singleBatch && (successCount >= idealBatchsize))
+                                if (singleBatch && (successCount >= SINGLE_BATCH_SIZE))
                                 {  // Probably called from a background loader that's trying to be polite
                                     completedSearchType = true; // Done with this search type for the moment
                                     break;
@@ -693,7 +706,28 @@ namespace pwiz.ProteomeDatabase.Fasta
                             }
                             else
                             {
-                                batchsize = Math.Max(1, batchsize/2);
+                                if (batchsize == 1)
+                                {
+                                    // No ambiguity is possible at batchsize==1, this one just plain didn't work
+                                    searchListIndex++; // For better or worse, it's processed
+                                    if (consecutiveFailures > (MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES + successCount))
+                                    {
+                                        // We have failed a bunch in a row, assume the rest are the same as this streak, and bail.
+                                        // That  "+ successCount" term above guards against the case where we're a few hundred successes in then 
+                                        // we hit a bad patch (though this is unlikely - FASTA files tend to be internally consistent).
+                                        while (searchListIndex < searchlist.Count)
+                                        {
+                                            searchlist[searchListIndex].SetWebSearchCompleted(); // Just tag this as having been tried
+                                            yield return searchlist[searchListIndex++]; // And move on
+                                        }
+                                    }
+                                }
+                                int oldBatchsize = batchsize;
+                                batchsize = Math.Max(1, batchsize / 2);
+                                if (oldBatchsize != batchsize)
+                                {
+                                    consecutiveFailures = 0; // Perhaps we will do better at smaller batch size
+                                }
                                 successCountAtThisBatchsize = 0;
                                 batchsizeIncreaseThreshold *= 2; // Get increasingly pessimistic
                                 nextSearch = searchListIndex; // Try again at lower batch size
@@ -738,6 +772,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const string KNOWNGOOD_GENINFO_SEARCH_TARGET = "15834432"; // Not L10N
         public const string KNOWNGOOD_ENTREZ_SEARCH_TARGET = "XP_915497"; // Not L10N
         public const string KNOWNGOOD_UNIPROT_SEARCH_TARGET = "Q08641"; // Not L10N
+        public const int MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES = 20; // If we fail on several in a row, assume all are doomed to fail.
 
         private bool SimilarSearchTerms(string a, string b)
         {
@@ -747,22 +782,21 @@ namespace pwiz.ProteomeDatabase.Fasta
         }
 
         /// <summary>
-        /// handles web access for deriving missing protein metadata
-        /// returns true if we need to just try again later
+        /// Handles web access for deriving missing protein metadata
         /// </summary>
         /// <param name="proteins">items to search - we use DbProteinName as a convenient 
         /// container for the immutable ProteinMetadata</param>
         /// <param name="searchType">Uniprot or Entrez</param>
         /// <param name="progressMonitor">For detecting operation cancellation</param>
-        /// <returns>true if we need to try again later</returns>
+        /// <returns>negative value if we need to try again later, else number of proteins looked up</returns>
         /// 
-        private bool DoWebserviceLookup(IList<DbProteinName> proteins, char searchType, IProgressMonitor progressMonitor)
+        private int DoWebserviceLookup(IList<DbProteinName> proteins, char searchType, IProgressMonitor progressMonitor)
         {
-
+            int lookupCount = 0;
             var searchterms = _webSearchProvider.ListSearchTerms(proteins);
                 
             if (searchterms.Count == 0)
-                return false; // no work, but not error either
+                return 0; // no work, but not error either
             var responses = new List<DbProteinName>();
             for (var retries = _webSearchProvider.WebRetryCount();retries-->0;)  // be patient with the web
             {
@@ -931,7 +965,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         catch (Exception)
                         {
                             if (retries == 0)
-                                return true; // just try again later
+                                return -1; // just try again later
                             Thread.Sleep(1000);
                             continue;
                         }
@@ -1016,7 +1050,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                             catch (Exception)
                             {
                                 if (retries==0)
-                                    return true; // just try again later
+                                    return -1; // just try again later
                                 Thread.Sleep(1000);
                                 continue;
                             }
@@ -1083,26 +1117,26 @@ namespace pwiz.ProteomeDatabase.Fasta
                         catch (WebException)
                         {
                             if (retries == 0)
-                                return true;  // just try again later
+                                return -1;  // just try again later
                             Thread.Sleep(1000);
                             continue;
                         }
                         catch (Exception)
                         {
-                            return true;  // just try again later
+                            return -1;  // just try again later
                         }
                     }
                 }
                 catch (WebException)
                 {
                     if (retries==0)
-                        return true;  // just try again later
+                        return -1;  // just try again later
                     Thread.Sleep(1000);
                     continue;
                 }
                 catch
                 {
-                    return true;  // just try again later
+                    return -1;  // just try again later
                 }
 
                 if (responses.Count>0)
@@ -1118,6 +1152,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         // prefer the data we got from web search to anything we parsed.
                         var oldMetadata = proteins[0].GetProteinMetadata();
                         proteins[0].ChangeProteinMetadata(MergeSearchResult(responses[0].GetProteinMetadata(), oldMetadata)); // use the first, if more than one, as the primary
+                        lookupCount++; // Succcess!
                         if (Equals(searchType, proteins[0].GetProteinMetadata().GetSearchType())) // did we reassign search from Entrez to UniprotKB? If so don't mark as resolved yet.
                             proteins[0].SetWebSearchCompleted(); // no more need for lookup
                     }
@@ -1134,7 +1169,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 if (Equals(searchType, proteins[n].GetProteinMetadata().GetSearchType())) // did we reassign search from Entrez to UniprotKB?
                                     oldMetadata = oldMetadata.SetWebSearchCompleted();  // no more need for lookup
                                 // use oldMetadata to fill in any holes in response, then take oldMetadata name and description
-                                proteins[n++].ChangeProteinMetadata(MergeSearchResult(response.GetProteinMetadata(), oldMetadata)); 
+                                proteins[n++].ChangeProteinMetadata(MergeSearchResult(response.GetProteinMetadata(), oldMetadata));
+                                lookupCount++; // Succcess!
                             }
                         }
                         else // but sometimes with gaps
@@ -1164,7 +1200,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                                         if (Equals(searchType, proteins[0].GetProteinMetadata().GetSearchType())) // did we reassign search from Entrez to UniprotKB?
                                             oldMetadata = oldMetadata.SetWebSearchCompleted();  // no more need for lookup
                                         // use oldMetadata to fill in any holes in response, then take oldMetadata name and description
-                                        proteins[n].ChangeProteinMetadata(MergeSearchResult(response.GetProteinMetadata(), oldMetadata)); 
+                                        proteins[n].ChangeProteinMetadata(MergeSearchResult(response.GetProteinMetadata(), oldMetadata));
+                                        lookupCount++; // Succcess!
                                         break;
                                     }
                                     n++;
@@ -1204,7 +1241,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 var oldMetadata = p.GetProteinMetadata();
                                 oldMetadata = oldMetadata.SetWebSearchCompleted();  // no more need for lookup
                                 // use oldMetadata to fill in any holes in response, then take oldMetadata name and description
-                                p.ChangeProteinMetadata(MergeSearchResult(results.First().GetProteinMetadata(), oldMetadata)); 
+                                p.ChangeProteinMetadata(MergeSearchResult(results.First().GetProteinMetadata(), oldMetadata));
+                                lookupCount++; // Succcess!
                             }
                         }
                     }
@@ -1216,7 +1254,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
                 break; // No need for retry
             }
-            return false; // No problems encountered
+            return lookupCount; // No problems encountered
         }
     }
 }

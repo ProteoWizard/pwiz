@@ -99,7 +99,8 @@ namespace CommonTest
     [TestClass]
     public class FastaImporterTest : AbstractUnitTest
     {
-        private const string NEGTEST = @">this is meant to fail"; // for use in negative test - Not L10N
+        private const string NEGTEST_NAME = @"Q9090909090"; // For use in negative test
+        private const string NEGTEST_DESCRIPTION = @"this is meant to fail"; // For use in negative test
         private const string novalue = null;
 
 
@@ -114,6 +115,38 @@ namespace CommonTest
 
             public string Header { get; private set; }
             public FastaHeaderReaderResult[] ExpectedResults { get; private set; }
+        }
+
+        /// <summary>
+        /// Return a list of fasta entries, the first bunch of which can't possibly work, to 
+        /// exercise the logic that keeps us from trying against hopeless data and bogging down the user.
+        /// </summary>
+        private static List<FastaHeaderParserTest> GetNegativeTests()
+        {
+            var result = new List<FastaHeaderParserTest>();
+
+            for (int i = 0; i < 2 * WebEnabledFastaImporter.MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES; i++) 
+            {
+                var nonsense = string.Format("Q999999{0}", i);
+                result.Add(new FastaHeaderParserTest(@">" + nonsense,
+                     new[]
+                    {
+                        new FastaHeaderReaderResult(name: nonsense, accession:novalue, preferredname: novalue,
+                            description: novalue, species: novalue, gene: novalue)
+                    }));
+            }
+
+            // This search target should not be attempted due to those above already failing
+            // So if it comes up with these metadata values, we aren't working properly
+            result.Add(new FastaHeaderParserTest(
+                @">"+NEGTEST_NAME+@" "+NEGTEST_DESCRIPTION,
+                new[]
+                {
+                    new FastaHeaderReaderResult(name: NEGTEST_NAME, accession: "fish",
+                        preferredname: "badnews", description:NEGTEST_DESCRIPTION, species: "sandwich", gene: "baseball")
+                }));
+
+            return result;
         }
 
         private static List<FastaHeaderParserTest> GetTests()
@@ -349,7 +382,7 @@ namespace CommonTest
 
                // keep these negative tests at end, it ensures more code coverage in the retry code
                 new FastaHeaderParserTest( // this one is a negative test
-                    NEGTEST,
+                    @">"+NEGTEST_NAME+@" "+NEGTEST_DESCRIPTION,
                     new[]
                     {
                         // no, this is not the right answer - it's a negative test
@@ -386,6 +419,18 @@ namespace CommonTest
         /// </summary>
         public class PlaybackProvider : WebEnabledFastaImporter.WebSearchProvider
         {
+            private readonly List<FastaHeaderParserTest> _tests; // We mine this for mimicry of web response
+
+            public PlaybackProvider(List<FastaHeaderParserTest> tests)
+            {
+                _tests = tests;
+            }
+
+            public PlaybackProvider()
+            {
+                _tests = GetTests(); // The default set of fasta header tests
+            }
+
             public override XmlTextReader GetXmlTextReader(string url)
             {
                 // should look something like "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=15834432,15834432&tool=%22skyline%22&email=%22johnqdeveloper@proteinms.net%22&retmode=xml"
@@ -492,7 +537,7 @@ namespace CommonTest
             {
                 if (!string.IsNullOrEmpty(keyword))
                 {
-                    foreach (var test in GetTests())
+                    foreach (var test in _tests)
                     {
                         foreach (var expectedResult in test.ExpectedResults)
                         {
@@ -508,7 +553,7 @@ namespace CommonTest
                     }
                     // no joy yet - see if its buried in name or description, as in our GI->Uniprot scenario
                     keyword = keyword.Split('.')[0]; // drop .n from xp_mmmmmmm.n
-                    foreach (var test in GetTests())
+                    foreach (var test in _tests)
                     {
                         foreach (var expectedResult in test.ExpectedResults)
                         {
@@ -586,7 +631,7 @@ namespace CommonTest
                 {
                     var actual = new DbProteinName(null, name.GetProteinMetadata());
                     var expected = new DbProteinName(null, tests[testnum].ExpectedResults[n++].Protein);
-                    if (NEGTEST == tests[testnum].Header)
+                    if (tests[testnum].Header.Contains(NEGTEST_NAME))
                     {
                         Assert.AreNotEqual(expected.Name, actual.Name);
                         Assert.AreNotEqual(expected.Description, actual.Description);
@@ -622,7 +667,8 @@ namespace CommonTest
         [TestMethod]
         public void TestFastaImport()
         {
-            DoTestFastaImport(false);  // run with simulated web access
+            DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
+            DoTestFastaImport(false, false);  // Run with simulated web access
         }
 
         [TestMethod]
@@ -630,18 +676,19 @@ namespace CommonTest
         {
             if (AllowInternetAccess) // Only run this if SkylineTester has enabled web access
             {
-                DoTestFastaImport(true); // run with actual web access
+                DoTestFastaImport(true, false); // run with actual web access
+                DoTestFastaImport(true, true); // run with actual web access, using negative tests
             }
         }
 
 
-        public void DoTestFastaImport(bool useActualWebAcess) // call with true from perf test
+        public void DoTestFastaImport(bool useActualWebAccess, bool doNegTests) // call with useActualWebAccess==true from perf test
         {
 
             var fastaLines = new StringBuilder();
             int testnum = 0;
             const string deadeels = "EATDEADEELS";
-            var tests = GetTests();
+            var tests = doNegTests ? GetNegativeTests() : GetTests();
             foreach (var t in tests)
             {
                 fastaLines.Append(t.Header);
@@ -672,8 +719,8 @@ namespace CommonTest
                 if (test == 1) // first, test poor internet access
                     fastaImporter = new WebEnabledFastaImporter(new DoomedWebSearchProvider()); // intentionally messes up the URLs
                 else  // then test web search code - either live in a perf test, or using playback object
-                    fastaImporter = new WebEnabledFastaImporter(useActualWebAcess? new WebEnabledFastaImporter.WebSearchProvider() : new PlaybackProvider());
-                var results = fastaImporter.DoWebserviceLookup(dbProteinNames, null, false).ToList(); // No progress moniotr, and don't be polite get it all at once
+                    fastaImporter = new WebEnabledFastaImporter(useActualWebAccess? new WebEnabledFastaImporter.WebSearchProvider() : new PlaybackProvider(tests));
+                var results = fastaImporter.DoWebserviceLookup(dbProteinNames, null, false).ToList(); // No progress monitor, and don't be polite get it all at once
                 foreach (var result in results)
                 {
                     if (result != null)
@@ -708,11 +755,11 @@ namespace CommonTest
                     actual.ClearWebSearchInfo();
                     expected.ClearWebSearchInfo(); // this is not a comparison we care about
 
-                    if (NEGTEST == tests[testnum].Header)
+                    if (tests[testnum].Header.Contains(NEGTEST_NAME))
                     {
                         if (Equals(expected.GetProteinMetadata(), actual.GetProteinMetadata()))
-                            // negtest should fail
-                            errors.Add(new Tuple<string, string>(expected.GetProteinMetadata().ToString(),
+                            // If we are working properly, this protein metadata should not be populated due to previous streak of failures.
+                            errors.Add(new Tuple<string, string>(@"anything but "+expected.GetProteinMetadata(),
                                 actual.GetProteinMetadata().ToString()));
                     }
                     else
