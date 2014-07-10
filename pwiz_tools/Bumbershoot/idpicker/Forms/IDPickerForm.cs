@@ -1217,7 +1217,7 @@ namespace IDPicker
                     // if not, disable gene-related features, else enable gene-related features
                     if (!Program.IsHeadless && !Embedder.HasGeneMetadata(mergeTargetFilepath))
                     {
-                        if (MessageBox.Show("In order to enable gene-related features, IDPicker needs to embed gene " +
+                        if (MessageBox.Show(this, "In order to enable gene-related features, IDPicker needs to embed gene " +
                                             "metadata in the idpDB file. It may also download/update the mapping file first. " +
                                             "If you skip this step, these features will be disabled until you do " +
                                             "the embed operation from the Tools menu.",
@@ -1872,6 +1872,7 @@ namespace IDPicker
             };
         }
 
+        #region Tutorial menu handlers
         private void glossaryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialGlossary.html");
@@ -1886,6 +1887,17 @@ namespace IDPicker
         {
             Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialProteinView.html");
         }
+
+        private void geneFeaturesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialGeneFeatures.html");
+        }
+
+        private void netGestaltToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://fenchurch.mc.vanderbilt.edu/bumbershoot/idpicker/TutorialNetGestalt.html");
+        }
+        #endregion
 
         private void loadRefSeqGeneMetadata()
         {
@@ -1913,6 +1925,7 @@ namespace IDPicker
 
             if (File.Exists(g2pPath))
             {
+                // if the file exists, check its timestamp and compare it to the timestamp on the server
                 var con = new SQLiteConnection(@"Data Source=" + g2pPath + ";Version=3");
                 con.Open();
                 g2pTimestamp = con.ExecuteQuery("SELECT Timestamp FROM About").Single().GetString(0);
@@ -2066,6 +2079,12 @@ namespace IDPicker
         private void garbageCollectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GC.Collect();
+        }
+
+        private void reapplyFiltersToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            session.CreateSQLQuery("DROP TABLE FilterHistory").ExecuteUpdate();
+            ApplyBasicFilter();
         }
     }
 

@@ -623,9 +623,20 @@ namespace IDPicker.Forms
                 foreach (var group in groupById.OrderBy(o => o.Value.Name))
                 {
                     if (group.Value.Name == "/")
-                        continue;
+                    {
+                        // if / is the only group, give it a NetGestalt-friendly name; otherwise skip it
+                        if (groupById.Count > 1)
+                            continue;
+                        else
+                        {
+                            pivotGroupNames.Add("Root Group");
+                            break;
+                        }
+                    }
+                    else if (groupById.Values.Count(o => o.Name.Contains(group.Value.Name)) > 1)
+                        continue; // skip non-leaf groups
 
-                    string netgestaltValidName = group.Value.Name.TrimStart('/').Replace(' ', '-');
+                    string netgestaltValidName = group.Value.Name.TrimStart('/').Replace('/', '_').Replace(' ', '-');
 
                     if (reporterIonColumns != null)
                         foreach (var column in reporterIonColumns)
@@ -636,7 +647,7 @@ namespace IDPicker.Forms
             else
                 foreach (var source in sourceById.OrderBy(o => o.Value.Name))
                 {
-                    string netgestaltValidName = source.Value.Name.TrimStart('/').Replace(' ', '-');
+                    string netgestaltValidName = source.Value.Name.TrimStart('/').Replace('/', '_').Replace(' ', '-');
 
                     if (reporterIonColumns != null)
                         foreach (var column in reporterIonColumns)
@@ -753,7 +764,11 @@ namespace IDPicker.Forms
                         if (group.Value.Name == "/")
                             continue;
 
-                        string netgestaltValidName = group.Value.Name.TrimStart('/').Replace(' ', '-');
+                        // skip non-leaf groups
+                        if (groupById.Values.Count(o => o.Name.Contains(group.Value.Name)) > 1)
+                            continue;
+
+                        string netgestaltValidName = group.Value.Name.TrimStart('/').Replace('/', '_').Replace(' ', '-');
 
                         if (reporterIonColumns != null)
                             foreach (var column in reporterIonColumns)
@@ -765,7 +780,7 @@ namespace IDPicker.Forms
                 else
                     foreach (var source in sourceById.OrderBy(o => o.Value.Name))
                     {
-                        string netgestaltValidName = source.Value.Name.TrimStart('/').Replace(' ', '-');
+                        string netgestaltValidName = source.Value.Name.TrimStart('/').Replace('/', '_').Replace(' ', '-');
 
                         if (reporterIonColumns != null)
                             foreach (var column in reporterIonColumns)
@@ -774,7 +789,7 @@ namespace IDPicker.Forms
                             fileStream.Write("\t{0}", netgestaltValidName);
                         columnIds.Add(source.Key);
                     }
-                fileStream.WriteLine();
+                fileStream.Write("\n");
 
                 foreach (var kvp in pivotData)
                 {
@@ -787,7 +802,7 @@ namespace IDPicker.Forms
                                                        .Sum(o => o.Convert.ToDouble(o.Value)) /
                                                        (pivotIsOnSourceGroup ? kvp.Value.Values.Count-1 : kvp.Value.Values.Count);
                     */
-                    fileStream.Write(geneId);
+                    fileStream.Write(geneId); // NetGestalt doesn't support CRLF line endings!
                     foreach (var column in columnIds)
                     {
                         var findItr = kvp.Value.Find(column);
@@ -827,7 +842,7 @@ namespace IDPicker.Forms
                             fileStream.Write("\t{0}", value);
                         }
                     }
-                    fileStream.WriteLine();
+                    fileStream.Write("\n");
                 }
             }
         }

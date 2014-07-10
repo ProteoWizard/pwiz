@@ -296,7 +296,7 @@ quasitelgui <- function(inputfile = NULL) {
             csv=function(x){write.csv(x, filename, row.names=row.names, ...)},
             tsv=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
             txt=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, ...)},
-            sct=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, quote=F, ...)},
+            sct=function(x){write.table(x, filename, sep="\t", row.names=row.names, col.names=col.names, eol = "\n", quote=F, ...)}, # NetGestalt doesn't work with CRLF
             function(x){write.csv(x, filename, row.names=row.names, ...)})(data.frame(x))
     }
 

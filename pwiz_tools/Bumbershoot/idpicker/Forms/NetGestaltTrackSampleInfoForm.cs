@@ -108,7 +108,7 @@ namespace IDPicker.Forms
         private void fillByRegExToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (var input = new TextInputPrompt("Fill Column by Regular Expression on Group Name", false, "") { InputFormat = null })
-            using (var replace = new TextInputPrompt("Enter Replacement Expression", false, "\\1") { InputFormat = null })
+            using (var replace = new TextInputPrompt("Enter Replacement Expression", false, "$1") { InputFormat = null })
             {
                 Regex regex;
                 while (true)
