@@ -1275,12 +1275,22 @@ namespace pwiz.Skyline.Model.Lib
         /// Combine two spectra, for when transition list import has alternating light-heavy transitions,
         /// that need to be re-united with their groups at the end.
         /// </summary>
-        public SpectrumMzInfo CombineSpectrumInfo(SpectrumMzInfo infoOther)
+        public SpectrumMzInfo CombineSpectrumInfo(SpectrumMzInfo infoOther, out List<TransitionImportErrorInfo> spectrumErrors)
         {
+            spectrumErrors = new List<TransitionImportErrorInfo>();
             if (infoOther == null)
                 return this;
-            if ((PrecursorMz - infoOther.PrecursorMz) > PRECURSOR_MZ_TOL || !Equals(Label, infoOther.Label) || !Equals(Key, infoOther.Key))
-                throw new InvalidDataException(Resources.SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence);
+            if ((PrecursorMz - infoOther.PrecursorMz) > PRECURSOR_MZ_TOL || !Equals(Label, infoOther.Label) ||
+                !Equals(Key, infoOther.Key))
+            {
+                for (int i = 0; i < infoOther.SpectrumPeaks.Peaks.Length; ++i)
+                {
+                    spectrumErrors.Add(new TransitionImportErrorInfo(Resources.SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence,
+                                                                     null,
+                                                                     null));    
+                }
+                return this;
+            }
             var peaks = SpectrumPeaks.Peaks;
             var peaksOther = infoOther.SpectrumPeaks.Peaks;
             var newPeaks = peaks.Concat(peaksOther).ToArray();

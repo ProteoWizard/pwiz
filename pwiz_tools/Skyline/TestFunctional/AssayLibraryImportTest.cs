@@ -26,6 +26,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -177,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(textIrtGroupConflict), messageDlg =>
             {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                            "AAAAAAAAAAAAAAAGAAGK", 492.938,  53, 54);
+                                                            "AAAAAAAAAAAAAAAGAAGK", 492.9385,  53, 54);
                 Assert.AreEqual(messageDlg.ErrorList.Count, 3);
                 var firstError = messageDlg.ErrorList.First();
                 Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
@@ -191,7 +192,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportMassList(textIrtGroupConflictAccept), messageDlg =>
             {
                 var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                            "AAAAAAAAAAAAAAAGAAGK", 492.938, 53, 54);
+                                                            "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54);
                 Assert.AreEqual(messageDlg.ErrorList.Count, 3);
                 var firstError = messageDlg.ErrorList.First();
                 Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
@@ -794,6 +795,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(irtValue);
             Assert.AreEqual(irtValue.Value, 52.407, 1e-3);
 
+            // Make sure all the iRT magic works even when no spectral library info is present
+            // (regression test in response to crash when libraries not present)
+            var textInterleavedIrtNoLib = TestFilesDir.GetTestPath("InterleavedDiffIrt.csv");
+            RunUI(() => SkylineWindow.OpenFile(documentInterleavedIrt));
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleavedIrtNoLib), addIrtDlg => addIrtDlg.Btn0Click());
+            var irtOverwriteNoLib = WaitForOpenForm<MultiButtonMsgDlg>();
+            OkDialog(irtOverwriteNoLib, irtOverwriteNoLib.Btn1Click);
+            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 6);
+            var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence("AAAAAAAAAAAAAAAGAAGK");
+            Assert.IsNotNull(irtValueNoLib);
+            Assert.AreEqual(irtValueNoLib.Value, 52.407, 1e-3);
+
         }
 
         public void TestModificationMatcher()
@@ -808,7 +821,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.Paste(), messageDlg =>
             {
                 var expectedMessage = TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_,
-                                                             1005.9, 1013.9734, 8.0734, "PVIC[+57.0]ATQM[+16.0]LESMTYNPR"),
+                                                             1005.9, 1013.9734, 8.0734, "PVICATQMLESMTYNPR"),
                                                              Resources.MzMatchException_suggestion);
                 Assert.AreEqual(messageDlg.ErrorList.Count, 1);
                 var firstError = messageDlg.ErrorList.First();
@@ -870,21 +883,46 @@ namespace pwiz.SkylineTestFunctional
             // Test a difficult case containing modifications of the same peptide at two different sites, make sure Skyline handles it correctly
             var documentToughCase = TestFilesDir.GetTestPath("ToughModCase.sky");
             var textToughCase = TestFilesDir.GetTestPath("ToughModCase.csv");
-            LoadDocument(documentToughCase);
-            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textToughCase), importIrt => importIrt.Btn1Click());
-            SkipLibraryDlg();
-            WaitForDocumentLoaded();
+            for (int i = 0; i < 2; ++i)
+            {
+                LoadDocument(documentToughCase);
+                if (i == 1)
+                {
+                    // Works even when none of these transitions are allowed by the settings
+                    SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangeIonTypes(new [] {IonType.z});
+                    SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePrecursorCharges(new[] { 5 });
+                }
+                RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textToughCase), importIrt => importIrt.Btn1Click());
+                SkipLibraryDlg();
+                WaitForDocumentLoaded();
+                RunUI(() =>
+                {
+                    var peptides = SkylineWindow.DocumentUI.Peptides.ToList();
+                    Assert.AreEqual(peptides.Count, 2);
+                    Assert.AreEqual(peptides[0].ModifiedSequence, "AALIM[+16.0]QVLQLTADQIAMLPPEQR");
+                    Assert.AreEqual(peptides[1].ModifiedSequence, "AALIMQVLQLTADQIAM[+16.0]LPPEQR");
+                    Assert.AreEqual(peptides[0].TransitionGroupCount, 1);
+                    Assert.AreEqual(peptides[1].TransitionGroupCount, 1);
+                    Assert.AreEqual(peptides[0].TransitionCount, 6);
+                    Assert.AreEqual(peptides[1].TransitionCount, 6);
+                });    
+            }
+            RunUI(() => SkylineWindow.SaveDocument());
+
+            // Show we can import data (response to issue preventing data import on assay libraries)
+            // Import the raw data
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
             {
-                var peptides = SkylineWindow.DocumentUI.Peptides.ToList();
-                Assert.AreEqual(peptides.Count, 2);
-                Assert.AreEqual(peptides[0].ModifiedSequence, "AALIM[+16.0]QVLQLTADQIAMLPPEQR");
-                Assert.AreEqual(peptides[1].ModifiedSequence, "AALIMQVLQLTADQIAM[+16.0]LPPEQR");
-                Assert.AreEqual(peptides[0].TransitionGroupCount, 1);
-                Assert.AreEqual(peptides[1].TransitionGroupCount, 1);
-                Assert.AreEqual(peptides[0].TransitionCount, 6);
-                Assert.AreEqual(peptides[1].TransitionCount, 6);
+                string fileName = TestFilesDir.GetTestPath("OverlapTest.mzML");
+                importResultsDlg.RadioAddNewChecked = true;
+                var path = new KeyValuePair<string, MsDataFileUri[]>[1];
+                path[0] = new KeyValuePair<string, MsDataFileUri[]>(fileName,
+                                            new[] { MsDataFileUri.Parse(fileName) });
+                importResultsDlg.NamedPathSets = path;
             });
+            OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 2 minutes
             RunUI(() => SkylineWindow.SaveDocument());
         }
 

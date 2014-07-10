@@ -158,6 +158,9 @@ namespace pwiz.Skyline.Model.Lib
             // Create the SQLite connection without actually connecting
             _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
             _streamManager = streamManager;
+
+            // Create an empty list for _librarySource files, will be updated when library is loaded
+            _librarySourceFiles = new BiblioLiteSourceInfo[0];
         }
 
         public override LibrarySpec CreateSpec(string path)

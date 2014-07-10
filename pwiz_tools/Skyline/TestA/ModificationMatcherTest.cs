@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -178,6 +179,11 @@ namespace pwiz.SkylineTestA
             Assert.IsNull(node.ExplicitMods.StaticModifications);
             Assert.IsTrue(node.ExplicitMods.HeavyModifications.Contains(mod =>
                 Equals(mod.Modification, N_TERM_LABEL)));
+            UpdateMatcherWithNoSequences(new[] { carbC }, new[] { N_TERM_LABEL }, new[] { METHIONINE_OXIDATION, MET_OX_ROUNDED }, null);
+            var nodeNew = MATCHER.GetModifiedNode(STR_UNIMOD_LABEL);
+            Assert.IsNotNull(nodeNew);
+            Assert.IsTrue(nodeNew.TransitionGroups.Any(group => Equals(group.TransitionGroup.LabelType, IsotopeLabelType.heavy)));
+            UpdateMatcher(new[] { carbC }, null, new[] { METHIONINE_OXIDATION, MET_OX_ROUNDED }, null);
             
             // Test case where there are lots of unimod labels
             var nodeUniAll = MATCHER.GetModifiedNode(STR_UNIMOD_ALL);
@@ -284,6 +290,13 @@ namespace pwiz.SkylineTestA
             AssertEx.ThrowsException<InvalidDataException>(() =>
                 UpdateMatcher(null, null, null, null));
             _seqs.Remove(seq);
+        }
+
+        private static void UpdateMatcherWithNoSequences(
+            StaticMod[] docStatMods, StaticMod[] docHeavyMods,
+            StaticMod[] globalStatMods, StaticMod[] globalHeavyMods)
+        {
+            UpdateMatcher(docStatMods, docHeavyMods, globalStatMods, globalHeavyMods, new List<string>());
         }
 
         private static void UpdateMatcher(

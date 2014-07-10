@@ -409,9 +409,9 @@ namespace pwiz.Skyline.Model
                         != -1))
                         modMatch = modifications.StaticModifications[index];
                     if (!structural &&
-                        ((index = modifications.StaticModifications.IndexOf(mod => Equals(mod.Name, info1.Name)))
+                        ((index = modifications.HeavyModifications.IndexOf(mod => Equals(mod.Name, info1.Name)))
                         != -1))
-                        modMatch = modifications.StaticModifications[index];
+                        modMatch = modifications.HeavyModifications[index];
 
                     if (modMatch == null)
                         return false;

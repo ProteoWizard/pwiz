@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 context.AddInfo(crossCorrMatrix);
             }
             if (!crossCorrMatrix.CrossCorrelations.Any())
-                return float.NaN;
+                return DefaultScore;
             MaxPossibleShift = lightTransitionPeakData.Max(pd => pd.PeakData.Length);
 
             var statValues = crossCorrMatrix.GetStats(GetValue, FilterIons);
@@ -590,6 +590,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// For assigning the worst possible score when all weights are zero
         /// </summary>
         protected int MaxPossibleShift { get; set; }
+
+        protected virtual float DefaultScore { get { return float.NaN; }}
     }
 
     /// <summary>
@@ -603,7 +605,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths);
             if (double.IsNaN(result))
-                return 0;
+                return DefaultScore;
             return (float) result;
         }
 
@@ -614,6 +616,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return xcorr.MaxCorr;
         }
 
+        protected override float DefaultScore { get { return 0; } }
     }
 
     public class MQuestWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<MQuestAnalyteCrossCorrelations>
@@ -704,7 +707,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             double result = statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
             if (double.IsNaN(result))
-                return MaxPossibleShift;
+                return DefaultScore;
             return (float) result;
         }
 
@@ -714,6 +717,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return Math.Abs(xcorr.MaxShift);
         }
+
+        protected override float DefaultScore { get { return MaxPossibleShift; } }
     }
 
     public class MQuestWeightedCoElutionCalc : AbstractMQuestWeightedCoElutionCalc<MQuestAnalyteCrossCorrelations>
