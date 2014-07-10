@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 
 namespace pwiz.Common.DataBinding.RowSources
 {
@@ -110,7 +111,7 @@ namespace pwiz.Common.DataBinding.RowSources
         {
             if (null != _eventHandlers)
             {
-                foreach (var eventHandler in _eventHandlers)
+                foreach (var eventHandler in _eventHandlers.ToArray())
                 {
                     eventHandler(this, listChangedEventArgs);
                 }

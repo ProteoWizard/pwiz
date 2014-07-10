@@ -91,15 +91,15 @@ namespace pwiz.Common.DataBinding.Internal
                 if (_cancellationTokenSource == null)
                 {
                     _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(new[]{QueryRequest.CancellationToken});
-                    Task.Factory.StartNew(Run, _cancellationTokenSource.Token);
+                    var token = _cancellationTokenSource.Token;
+                    Task.Factory.StartNew(() => Run(token), token);
                 }
             }
         }
-        private void Run()
+        private void Run(CancellationToken cancellationToken)
         {
             try
             {
-                var cancellationToken = _cancellationTokenSource.Token;
                 var queryResults = QueryRequest.InitialQueryResults
                     .SetSourceRows(SourceRowItems);
                 queryResults = RunAll(new Pivoter.TickCounter(cancellationToken), queryResults);

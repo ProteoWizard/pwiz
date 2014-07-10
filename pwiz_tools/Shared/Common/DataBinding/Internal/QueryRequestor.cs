@@ -99,7 +99,7 @@ namespace pwiz.Common.DataBinding.Internal
                 _request.Dispose();
                 _request = null;
             }
-            if (null == QueryParameters.ViewInfo)
+            if (null == QueryParameters || null == QueryParameters.ViewInfo)
             {
                 return;
             }

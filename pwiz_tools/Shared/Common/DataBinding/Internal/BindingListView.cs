@@ -131,6 +131,7 @@ namespace pwiz.Common.DataBinding.Internal
         private void RowSourceListChanged(object sender, ListChangedEventArgs args)
         {
             OnAllRowsChanged();
+            _queryRequestor.Requery();
         }
 
         public void ApplySort(ListSortDescriptionCollection sorts)
