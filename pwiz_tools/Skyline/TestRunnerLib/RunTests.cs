@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,7 +103,30 @@ namespace TestRunnerLib
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
-            Skyline.Get<string>("Name");
+            try
+            {
+                Skyline.Get<string>("Name");
+            }
+            catch (Exception getNameException)
+            {
+                // ReSharper disable NonLocalizedString
+                StringBuilder message = new StringBuilder();
+                message.AppendLine("Error initializing settings");
+                var exeConfig =
+                    System.Configuration.ConfigurationManager.OpenExeConfiguration(
+                        System.Configuration.ConfigurationUserLevel.None);
+                message.AppendLine("Exe Config:" + exeConfig.FilePath);
+                var localConfig =
+                    System.Configuration.ConfigurationManager.OpenExeConfiguration(
+                        System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal);
+                message.AppendLine("Local Config:" + localConfig.FilePath);
+                var roamingConfig =
+                    System.Configuration.ConfigurationManager.OpenExeConfiguration(
+                        System.Configuration.ConfigurationUserLevel.PerUserRoaming);
+                message.AppendLine("Roaming Config:" + roamingConfig.FilePath);
+                throw new Exception(message.ToString(), getNameException);
+                // ReSharper restore NonLocalizedString
+            }
             Skyline.Run("Init");
 
             AccessInternet = internet;
