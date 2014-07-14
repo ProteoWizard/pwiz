@@ -98,6 +98,7 @@
 <Component Feature="MainFeature"><File Id="_InteropQonverter.dll" Name="InteropQonverter.dll" Source="msvc-release\InteropQonverter.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_idpQonvert.exe" Name="idpQonvert.exe" Source="msvc-release\idpQonvert.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_idpQuery.exe" Name="idpQuery.exe" Source="msvc-release\idpQuery.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_idpAssemblle.exe" Name="idpAssemblle.exe" Source="msvc-release\idpAssemblle.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="msvc-release\MathNet.Numerics.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Microsoft.WindowsAPICodePack.dll" Name="Microsoft.WindowsAPICodePack.dll" Source="msvc-release\Microsoft.WindowsAPICodePack.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Microsoft.WindowsAPICodePack.Shell.dll" Name="Microsoft.WindowsAPICodePack.Shell.dll" Source="msvc-release\Microsoft.WindowsAPICodePack.Shell.dll" KeyPath="yes"/></Component>
