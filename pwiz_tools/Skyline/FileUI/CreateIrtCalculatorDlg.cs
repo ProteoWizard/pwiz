@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -39,17 +41,31 @@ namespace pwiz.Skyline.FileUI
         public List<DbIrtPeptide> DbIrtPeptides { get { return _dbIrtPeptides; } } 
         public string IrtFile { get; private set; }
 
-        private List<SpectrumMzInfo> _librarySpectra;
-        private List<DbIrtPeptide> _dbIrtPeptides; 
+        /// <summary>
+        /// In the case where we specify one of the imported proteins as the iRT protein, make a list of its peptides
+        /// </summary>
+        public List<string> IrtPeptideSequences { get; private set; }
 
-        public CreateIrtCalculatorDlg(SrmDocument document, IList<RetentionScoreCalculatorSpec> existing)
+        private List<SpectrumMzInfo> _librarySpectra;
+        private List<DbIrtPeptide> _dbIrtPeptides;
+
+        private static int CompareNames(PeptideGroupDocNode group1, PeptideGroupDocNode group2)
+        {
+            return String.Compare(group1.Name, group2.Name, CultureInfo.CurrentCulture, CompareOptions.None);
+        }
+
+        public CreateIrtCalculatorDlg(SrmDocument document, IList<RetentionScoreCalculatorSpec> existing, IEnumerable<PeptideGroupDocNode> peptideGroups)
         {
             _existing = existing;
             Document = document;
             InitializeComponent();
             _librarySpectra = new List<SpectrumMzInfo>();
             _dbIrtPeptides = new List<DbIrtPeptide>();
-            UpdateSelection(true);
+            IrtPeptideSequences = new List<string>();
+            var possibleStandardProteins = peptideGroups.Where(group => group.PeptideCount > CalibrateIrtDlg.MIN_STANDARD_PEPTIDES).ToList();
+            possibleStandardProteins.Sort(CompareNames);
+            comboBoxProteins.Items.AddRange(possibleStandardProteins.ToArray());
+            UpdateSelection(IrtType.existing);
         }
 
         public SrmDocument Document { get; private set; }
@@ -63,7 +79,7 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            bool useExisting = radioUseExisting.Checked;
+            IrtType irtType = GetIrtType();
             if (textCalculatorName.Text.Length == 0)
             {
                 MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Calculator_name_cannot_be_empty);
@@ -78,13 +94,14 @@ namespace pwiz.Skyline.FileUI
                 if (replaceResult == DialogResult.No)
                     return;
             }
-            if (useExisting)
+            if (irtType == IrtType.existing)
             {
                 try
                 {
                     if (!File.Exists(textOpenDatabase.Text))
                     {
                         MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_contain_a_path_to_a_valid_file_);
+                        textOpenDatabase.Focus();
                         return;
                     }
                     var db = IrtDb.GetIrtDb(textOpenDatabase.Text, null);
@@ -99,24 +116,45 @@ namespace pwiz.Skyline.FileUI
                     return;
                 }
             }
-            else
+            else if (irtType == IrtType.separate_list)
             {
                 if (textNewDatabase.Text.Length == 0)
                 {
                     MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_);
+                    textNewDatabase.Focus();
                     return;
                 }
                 if (!CreateDatabase(textNewDatabase.Text))
                     return;
             }
+            else
+            {
+                if (textNewDatabaseProteins.Text.Length == 0)
+                {
+                    MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_);
+                    textNewDatabaseProteins.Focus();
+                    return;
+                }
+                if (comboBoxProteins.SelectedIndex == -1)
+                {
+                    MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
+                    comboBoxProteins.Focus();
+                    return;
+                }
+                if (!CreateDatabase(textNewDatabaseProteins.Text))
+                    return;
+            }
             // Make a version of the document with the new calculator in it
-            var calculator = new RCalcIrt(textCalculatorName.Text, useExisting ? textOpenDatabase.Text : textNewDatabase.Text);
+            var databaseFileName = irtType == IrtType.existing ? textOpenDatabase.Text : 
+                                   irtType == IrtType.separate_list ? textNewDatabase.Text :
+                                    textNewDatabaseProteins.Text;
+            var calculator = new RCalcIrt(textCalculatorName.Text, databaseFileName);
             // CONSIDER: Probably can't use just a static default like 10 below
             var retentionTimeRegression = new RetentionTimeRegression(calculator.Name, calculator, null, null, 10, new List<MeasuredRetentionTime>());
             var docNew = Document.ChangeSettings(Document.Settings.ChangePeptidePrediction(prediction =>
                 prediction.ChangeRetentionTime(retentionTimeRegression)));
             // Import transition list of standards, if applicable
-            if (!useExisting)
+            if (irtType == IrtType.separate_list)
             {
                 try
                 {
@@ -153,6 +191,13 @@ namespace pwiz.Skyline.FileUI
                     MessageDlg.Show(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message));
                     return;
                 }
+            }
+            else if (irtType == IrtType.protein)
+            {
+                PeptideGroupDocNode selectedGroup = comboBoxProteins.SelectedItem as PeptideGroupDocNode;
+// ReSharper disable PossibleNullReferenceException
+                IrtPeptideSequences = selectedGroup.Peptides.Select(pep => pep.ModifiedSequence).ToList();
+// ReSharper restore PossibleNullReferenceException
             }
             Document = docNew;
             DialogResult = DialogResult.OK;
@@ -216,10 +261,15 @@ namespace pwiz.Skyline.FileUI
 
         private void btnCreateDb_Click(object sender, EventArgs e)
         {
-            CreateDb();
+            CreateDb(textNewDatabase);
         }
 
-        public void CreateDb()
+        private void btnCreateDbProteins_Click(object sender, EventArgs e)
+        {
+            CreateDb(textNewDatabaseProteins);
+        }
+
+        public void CreateDb(TextBox textBox)
         {
             using (var dlg = new SaveFileDialog
             {
@@ -233,8 +283,8 @@ namespace pwiz.Skyline.FileUI
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-                    textNewDatabase.Text = dlg.FileName;
-                    textNewDatabase.Focus();
+                    textBox.Text = dlg.FileName;
+                    textBox.Focus();
                 }
             }
         }
@@ -266,24 +316,46 @@ namespace pwiz.Skyline.FileUI
 
         private void radioUseExisting_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateSelection(radioUseExisting.Checked);
+            UpdateSelection(IrtType.existing);
         }
 
         private void radioCreateNew_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateSelection(radioUseExisting.Checked);
+            UpdateSelection(IrtType.separate_list);
         }
 
-        public void UpdateSelection(bool useExisting)
+        private void radioUseProtein_CheckedChanged(object sender, EventArgs e)
         {
-            textImportText.Enabled = !useExisting;
-            textNewDatabase.Enabled = !useExisting;
-            btnBrowseText.Enabled = !useExisting;
-            btnCreateDb.Enabled = !useExisting;
-
-            textOpenDatabase.Enabled = useExisting;
-            btnBrowseDb.Enabled = useExisting;
+            UpdateSelection(IrtType.protein);
         }
+
+        public void UpdateSelection(IrtType irtType)
+        {
+            bool existing = irtType == IrtType.existing;
+            bool separate = irtType == IrtType.separate_list;
+            bool protein = irtType == IrtType.protein;
+
+            textNewDatabaseProteins.Enabled = protein;
+            comboBoxProteins.Enabled = protein;
+            btnCreateDbProteins.Enabled = protein;
+
+            textImportText.Enabled = separate;
+            textNewDatabase.Enabled = separate;
+            btnBrowseText.Enabled = separate;
+            btnCreateDb.Enabled = separate;
+
+            textOpenDatabase.Enabled = existing;
+            btnBrowseDb.Enabled = existing;
+        }
+
+        private IrtType GetIrtType()
+        {
+            return radioUseExisting.Checked ? IrtType.existing :
+                   radioUseList.Checked ? IrtType.separate_list :
+                                            IrtType.protein;
+        }
+
+        public enum IrtType { existing, separate_list, protein}
 
         #region test helpers
 
@@ -305,22 +377,50 @@ namespace pwiz.Skyline.FileUI
             set { textNewDatabase.Text = value; }
         }
 
+        public string NewDatabaseNameProtein
+        {
+            get { return textNewDatabaseProteins.Text; }
+            set { textNewDatabaseProteins.Text = value; }
+        }
+
         public string TextFilename
         {
             get { return textImportText.Text; }
             set { textImportText.Text = value; }
         }
 
-        public bool UseExisting
+        public IrtType IrtImportType
         {
-            get { return radioUseExisting.Checked; }
+            get { return GetIrtType(); }
             set
             {
-                radioUseExisting.Checked = value;
-                radioCreateNew.Checked = !value;
+                radioUseExisting.Checked = value == IrtType.existing;
+                radioUseList.Checked = value == IrtType.separate_list;
+                radioUseProtein.Checked = value == IrtType.protein;
                 UpdateSelection(value);
             }
         }
+
+        public string SelectedProtein
+        {
+            get { return comboBoxProteins.SelectedItem.ToString(); }
+            set
+            {
+                foreach (var item in comboBoxProteins.Items)
+                {
+                    var node = item as PeptideGroupDocNode;
+// ReSharper disable once PossibleNullReferenceException
+                    if (node.Name == value)
+                    {
+                        comboBoxProteins.SelectedItem = item;
+                        return;
+                    }
+                }
+                throw new ArgumentException("Invalid protein selection"); // Not L10N
+            }
+        }
+
+        public int CountProteins { get { return comboBoxProteins.Items.Count; } }
 
         #endregion
     }

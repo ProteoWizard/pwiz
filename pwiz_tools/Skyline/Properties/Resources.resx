@@ -2131,9 +2131,6 @@ Are you sure you want to continue?</value>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
     <value>Invalid peptide sequence {0} found</value>
   </data>
-  <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
-    <value>Isotope labeled entry found without matching settings</value>
-  </data>
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
     <value>Check the Modifications tab in Transition Settings.</value>
   </data>
@@ -6704,9 +6701,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Gene" xml:space="preserve">
     <value>Targets by Gene</value>
   </data>
-  <data name="SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence" xml:space="preserve">
-    <value>Attempted to combine library spectra with incompatible precusor m/z, isotope label, or peptide sequence</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
     <value>Add</value>
   </data>
@@ -7833,25 +7827,19 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
     <value>{0} transitions contained errors. Skip these {0} transitions and import the rest?</value>
   </data>
   <data name="MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_" xml:space="preserve">
-    <value>Invalid iRT value at precusor m/z {0} for peptide {1}</value>
+    <value>Invalid iRT value at precusor m/z {0} for peptide {1}.</value>
   </data>
   <data name="MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_" xml:space="preserve">
-    <value>Invalid library intensity at precursor {0} for peptide {1}</value>
-  </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings" xml:space="preserve">
-    <value>The precursor m/z {0} of the peptide {1} is out of range for the instrument settings</value>
-  </data>
-  <data name="MassListRowReader_CalcPrecursorExplanations_" xml:space="preserve">
-    <value>Precursor m/z {0} does not match the closest possible value {1} (delta = {2}), peptide {3}</value>
+    <value>Invalid library intensity at precursor {0} for peptide {1}.</value>
   </data>
   <data name="MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion" xml:space="preserve">
-    <value>Product m/z value {0} in peptide {1} has no matching product ion</value>
+    <value>Product m/z value {0} in peptide {1} has no matching product ion.</value>
   </data>
   <data name="MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_" xml:space="preserve">
-    <value>The product m/z {0} is out of range for the instrument settings, in the peptide sequence {1}</value>
+    <value>The product m/z {0} is out of range for the instrument settings, in the peptide sequence {1}.</value>
   </data>
   <data name="PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor" xml:space="preserve">
-    <value>Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor</value>
+    <value>Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor.</value>
   </data>
   <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_" xml:space="preserve">
     <value>Two transitions of the same precursor, {0} (m/z {1}) , have different iRT values, {2} and {3}. iRT values must be assigned consistently in an imported transition list.</value>
@@ -7866,9 +7854,30 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
     <value>You must save the Skyline document in order to create a spectral library from a transition list.</value>
   </data>
   <data name="PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_" xml:space="preserve">
-    <value>Missing iRT value for peptide {0}, precursor m/z {1}</value>
+    <value>Missing iRT value for peptide {0}, precursor m/z {1}.</value>
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_" xml:space="preserve">
     <value>A transition contained an error. Skip this transition and import the rest?</value>
+  </data>
+  <data name="SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__" xml:space="preserve">
+    <value>Two incompatible transition groups for sequence {0}, precursor m/z {1}.</value>
+  </data>
+  <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_" xml:space="preserve">
+    <value>Isotope labeled entry found without matching settings.</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_" xml:space="preserve">
+    <value>Precursor m/z {0} does not match the closest possible value {1} (delta = {2}), peptide {3}.</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_" xml:space="preserve">
+    <value>The precursor m/z {0} of the peptide {1} is out of range for the instrument settings.</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_" xml:space="preserve">
+    <value>Check the isolation scheme in the full scan tab of the transition settings.</value>
+  </data>
+  <data name="CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_" xml:space="preserve">
+    <value>Please select a protein containing the list of standard peptides for the iRT calculator.</value>
+  </data>
+  <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_" xml:space="preserve">
+    <value>The precursor m/z {0} of the peptide {1} is outside the range covered by the DIA isolation scheme.</value>
   </data>
 </root>

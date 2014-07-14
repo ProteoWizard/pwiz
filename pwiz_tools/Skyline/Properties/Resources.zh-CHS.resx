@@ -2131,9 +2131,6 @@
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
     <value>发现无效的肽序列{0}</value>
   </data>
-  <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
-    <value>同位素标记的条目经发现没有匹配设置</value>
-  </data>
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
     <value>在“离子对设置”中核选“修饰”标签。</value>
   </data>

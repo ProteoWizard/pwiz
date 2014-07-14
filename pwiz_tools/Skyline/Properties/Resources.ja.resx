@@ -2131,9 +2131,6 @@
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
 <value>無効なペプチド配列{0}が見つかりました</value>
       </data>
-  <data name="MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings" xml:space="preserve">
-<value>同位体標識エントリでマッチする設定のないものが見つかりました</value>
-      </data>
   <data name="MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
 <value>[トランジション設定] の [修飾] タブを確認してください。</value>
       </data>

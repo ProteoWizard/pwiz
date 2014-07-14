@@ -1508,6 +1508,7 @@ namespace pwiz.Skyline
             List<KeyValuePair<string, double>> irtPeptides = null;
             List<SpectrumMzInfo> librarySpectra = null;
             List<TransitionImportErrorInfo> errorList = null;
+            List<PeptideGroupDocNode> peptideGroups = null;
             RetentionTimeRegression retentionTimeRegressionStore = null;
             bool irtsImported = false;
             var docCurrent = DocumentUI;
@@ -1522,7 +1523,7 @@ namespace pwiz.Skyline
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
                     docNew = docCurrent.ImportMassList(reader, longWaitBroker, countLines, provider, separator,
-                        nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra, out errorList);
+                        nodePaste != null ? nodePaste.Path : null, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
                 });
             }
             bool isDocumentSame = ReferenceEquals(docNew, docCurrent);
@@ -1573,13 +1574,21 @@ namespace pwiz.Skyline
                     if (calculatorMissing)
                     {
                         // If there is no iRT calculator, ask the user to create one
-                        using (CreateIrtCalculatorDlg dlg = new CreateIrtCalculatorDlg(docNew, Settings.Default.RTScoreCalculatorList))
+                        using (CreateIrtCalculatorDlg dlg = new CreateIrtCalculatorDlg(docNew, Settings.Default.RTScoreCalculatorList, peptideGroups))
                         {
                             if (dlg.ShowDialog(this) == DialogResult.OK)
                             {
                                 docNew = dlg.Document;
                                 librarySpectra.AddRange(dlg.LibrarySpectra);
                                 dbIrtPeptidesFilter.AddRange(dlg.DbIrtPeptides);
+                                // For case where we specify an iRT protein
+                                foreach (string modifiedSequence in dlg.IrtPeptideSequences)
+                                {
+// ReSharper disable once AccessToForEachVariableInClosure
+                                    var index = dbIrtPeptidesFilter.IndexOf(pep => Equals(pep.PeptideModSeq, modifiedSequence));
+                                    if (index != -1)
+                                        dbIrtPeptidesFilter[index].Standard = true;
+                                }
                                 retentionTimeRegression = docNew.Settings.PeptideSettings.Prediction.RetentionTime;
                                 irtFile = dlg.IrtFile;
                             }

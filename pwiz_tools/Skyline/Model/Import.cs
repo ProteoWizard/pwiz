@@ -308,11 +308,14 @@ namespace pwiz.Skyline.Model
                 int decoyColumn = -1;
                 int irtColumn = -1;
                 int libraryColumn = -1;
+                var irtNames = new[] { "tr_recalibrated", "irt" }; // Not L10N
+                var libraryNames = new[] { "libraryintensity", "relativeintensity", "relative_intensity", "library_intensity" }; // Not L10N
+                var decoyNames = new[] { "decoy" }; // Not L10N
                 if (headers != null)
                 {
-                    decoyColumn = headers.IndexOf(col => Equals(col.ToLowerInvariant(), "decoy"));   // Not L10N
-                    irtColumn = headers.IndexOf(col => Equals(col.ToLowerInvariant(), "tr_recalibrated"));  // Not L10N
-                    libraryColumn = headers.IndexOf(col => Equals(col.ToLowerInvariant(), "libraryintensity"));  // Not L10N
+                    decoyColumn = headers.IndexOf(col => decoyNames.Contains(col.ToLowerInvariant()));
+                    irtColumn = headers.IndexOf(col => irtNames.Contains(col.ToLowerInvariant()));
+                    libraryColumn = headers.IndexOf(col => libraryNames.Contains(col.ToLowerInvariant()));  
                     line = reader.ReadLine();
                     fields = line != null ? line.ParseDsvFields(Separator) : new string[0];
                 }
@@ -549,7 +552,7 @@ namespace pwiz.Skyline.Model
                 }
                 if (!info.DefaultLabelType.IsLight && !IsHeavyTypeAllowed(info.DefaultLabelType))
                 {
-                    return new TransitionImportErrorInfo(TextUtil.SpaceSeparate(Resources.MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings,
+                    return new TransitionImportErrorInfo(TextUtil.SpaceSeparate(Resources.MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_,
                                                                                 Resources.MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings),
                                                          LabelTypeColumn,
                                                          lineNum);
@@ -644,12 +647,22 @@ namespace pwiz.Skyline.Model
                                                               lineNum);
                     
                 }
+                else if (!Settings.TransitionSettings.Instrument.IsMeasurable(precursorMz))
+                {
+                    precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
+                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_,
+                                                                                                  precursorMz, info.PeptideSequence),
+                                                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                                              PrecursorColumn,
+                                                              lineNum);
+                }
+                // If it's within the instrument settings but not measurable, problem must be in the isolation scheme
                 else if (!Settings.TransitionSettings.IsMeasurablePrecursor(precursorMz))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
-                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings,
+                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_,
                                                                                                   precursorMz, info.PeptideSequence),
-                                                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_),
                                                               PrecursorColumn,
                                                               lineNum);
                 }

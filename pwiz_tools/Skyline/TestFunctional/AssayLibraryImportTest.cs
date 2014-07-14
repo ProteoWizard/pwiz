@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
             TestAssayImportGeneral();
             TestModificationMatcher();
             TestBlankDocScenario();
+            TestEmbeddedIrts();
         }
 
         protected void TestAssayImportGeneral()
@@ -241,7 +242,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 10. iRT blank leads to error
-            const string textIrtBlank = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
+            const string textIrtBlank = "PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textIrtBlank));
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.Paste(), messageDlg =>
             {
@@ -257,7 +258,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 11. Library not a number leads to error
-            const string textLibraryNan = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\tBAD_LIBRARY\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
+            const string textLibraryNan = "PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\tBAD_LIBRARY\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textLibraryNan));
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.Paste(), messageDlg =>
             {
@@ -273,7 +274,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 12. Library blank leads to error
-            const string textLibraryBlank = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\t\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
+            const string textLibraryBlank = "PrecursorMz\tProductMz\tTr_recalibrated\tRelaTive_IntEnsity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\t\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textLibraryBlank));
             RunDlg<ImportTransitionListErrorDlg>(() => SkylineWindow.Paste(), messageDlg =>
             {
@@ -359,7 +360,7 @@ namespace pwiz.SkylineTestFunctional
             var createIrtError = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
             {
-                createIrtError.UseExisting = true;
+                createIrtError.IrtImportType = CreateIrtCalculatorDlg.IrtType.existing;
             });
             RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
             {
@@ -419,7 +420,7 @@ namespace pwiz.SkylineTestFunctional
             string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             RunUI(() =>
             {
-                createIrtError.UseExisting = false;
+                createIrtError.IrtImportType = CreateIrtCalculatorDlg.IrtType.separate_list;
                 createIrtError.TextFilename = textIrt;
             });
             RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
@@ -453,6 +454,30 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg.OkDialog();
             });
 
+            // Test creation of iRT calculator from protein embedded in the imported transition list
+            
+            // 24.1 Empty database name for creating from protein shows error message
+            RunUI(() =>
+            {
+                createIrtError.IrtImportType = CreateIrtCalculatorDlg.IrtType.protein;
+            });
+            RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, Resources.CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_);
+                messageDlg.OkDialog();
+            });
+
+            // 24.2 No protein selected shows error message for import from protein
+            RunUI(() =>
+            {
+                createIrtError.NewDatabaseNameProtein = newDatabase;
+            });
+            RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
+            {
+                Assert.AreEqual(messageDlg.Message, Resources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
+                messageDlg.OkDialog();
+            });
+
             OkDialog(createIrtError, createIrtError.CancelDialog);
             WaitForDocumentLoaded();
             // Document hasn't changed
@@ -467,7 +492,7 @@ namespace pwiz.SkylineTestFunctional
             var createIrtCalcGood = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
             {
-                createIrtCalcGood.UseExisting = false;
+                createIrtCalcGood.IrtImportType = CreateIrtCalculatorDlg.IrtType.separate_list;
                 createIrtCalcGood.CalculatorName = "test1";
                 createIrtCalcGood.TextFilename = textIrt;
                 createIrtCalcGood.NewDatabaseName = newDatabase;
@@ -536,7 +561,7 @@ namespace pwiz.SkylineTestFunctional
             var createIrtCalcExisting = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
             {
-                createIrtCalcExisting.UseExisting = true;
+                createIrtCalcExisting.IrtImportType = CreateIrtCalculatorDlg.IrtType.existing;
                 createIrtCalcExisting.CalculatorName = "test2";
                 createIrtCalcExisting.ExistingDatabaseName = irtOriginal;
             });
@@ -600,7 +625,7 @@ namespace pwiz.SkylineTestFunctional
             var createIrtCalcExistingOverwrite = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
             {
-                createIrtCalcExistingOverwrite.UseExisting = true;
+                createIrtCalcExistingOverwrite.IrtImportType = CreateIrtCalculatorDlg.IrtType.existing;
                 createIrtCalcExistingOverwrite.CalculatorName = "test2";
                 createIrtCalcExistingOverwrite.ExistingDatabaseName = irtOriginal;
             });
@@ -946,6 +971,28 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(ReferenceEquals(docOld, SkylineWindow.Document));
 
             // TODO: test a successful save of the document.  Current issue is that SaveDocument Dlg can't be used in functional tests...
+        }
+
+        protected void TestEmbeddedIrts()
+        {
+            var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
+            LoadDocument(documentBlank);
+            string textEmbedded = TestFilesDir.GetTestPath("OpenSWATH_SM4_Combined.csv");
+            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textEmbedded), importIrt => importIrt.Btn0Click());
+            var createIrtDlg = WaitForOpenForm<CreateIrtCalculatorDlg>();
+            string newDatabase = TestFilesDir.GetTestPath("irtEmbedded.irtdb");
+            RunUI(() =>
+            {
+                createIrtDlg.CalculatorName = "irtEmbedded";
+                createIrtDlg.IrtImportType = CreateIrtCalculatorDlg.IrtType.protein;
+                createIrtDlg.NewDatabaseNameProtein = newDatabase;
+                createIrtDlg.SelectedProtein = "IRT";
+                Assert.AreEqual(createIrtDlg.CountProteins, 14);
+            });
+            OkDialog(createIrtDlg, createIrtDlg.OkDialog);
+            SkipLibraryDlg();
+            WaitForDocumentLoaded();
+            ValidateDocAndIrt(SkylineWindow.Document, 294, 294, 10);
         }
 
         public static RCalcIrt ValidateDocAndIrt(SrmDocument doc, int peptides, int irtTotal, int irtStandards)

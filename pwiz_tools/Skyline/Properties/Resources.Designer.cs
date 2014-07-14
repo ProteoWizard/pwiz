@@ -1970,6 +1970,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [参照] ボタンをクリックして、新しいプロテオームファイルのパスを選択してください。.
+        /// </summary>
+        public static string BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path_for_a_new_proteome_file {
+            get {
+                return ResourceManager.GetString("BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Browse_button_to_choose_a_path" +
+                        "_for_a_new_proteome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click the &apos;Open&apos; button to choose an existing proteome file, or click the &apos;Create&apos; button to create a new proteome file..
         /// </summary>
         public static string BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file {
@@ -5553,6 +5563,16 @@ namespace pwiz.Skyline.Properties {
         public static string CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_ {
             get {
                 return ResourceManager.GetString("CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a protein containing the list of standard peptides for the iRT calculator..
+        /// </summary>
+        public static string CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_ {
+            get {
+                return ResourceManager.GetString("CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_st" +
+                        "andard_peptides_for_the_iRT_calculator_", resourceCulture);
             }
         }
         
@@ -12051,7 +12071,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid iRT value at precusor m/z {0} for peptide {1}.
+        ///   Looks up a localized string similar to Invalid iRT value at precusor m/z {0} for peptide {1}..
         /// </summary>
         public static string MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_ {
             get {
@@ -12060,7 +12080,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid library intensity at precursor {0} for peptide {1}.
+        ///   Looks up a localized string similar to Invalid library intensity at precursor {0} for peptide {1}..
         /// </summary>
         public static string MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_ {
             get {
@@ -12107,7 +12127,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor m/z {0} does not match the closest possible value {1} (delta = {2}), peptide {3}.
+        ///   Looks up a localized string similar to Precursor m/z {0} does not match the closest possible value {1} (delta = {2}), peptide {3}..
         /// </summary>
         public static string MassListRowReader_CalcPrecursorExplanations_ {
             get {
@@ -12126,17 +12146,37 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The precursor m/z {0} of the peptide {1} is out of range for the instrument settings.
+        ///   Looks up a localized string similar to Check the isolation scheme in the full scan tab of the transition settings..
         /// </summary>
-        public static string MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings {
+        public static string MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_ {
             get {
-                return ResourceManager.GetString("MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide_" +
-                        "_1__is_out_of_range_for_the_instrument_settings", resourceCulture);
+                return ResourceManager.GetString("MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_ful" +
+                        "l_scan_settings_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Product m/z value {0} in peptide {1} has no matching product ion.
+        ///   Looks up a localized string similar to The precursor m/z {0} of the peptide {1} is out of range for the instrument settings..
+        /// </summary>
+        public static string MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_ {
+            get {
+                return ResourceManager.GetString("MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide_" +
+                        "_1__is_out_of_range_for_the_instrument_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The precursor m/z {0} of the peptide {1} is outside the range covered by the DIA isolation scheme..
+        /// </summary>
+        public static string MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_ {
+            get {
+                return ResourceManager.GetString("MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide_" +
+                        "_1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product m/z value {0} in peptide {1} has no matching product ion..
         /// </summary>
         public static string MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion {
             get {
@@ -12146,7 +12186,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The product m/z {0} is out of range for the instrument settings, in the peptide sequence {1}.
+        ///   Looks up a localized string similar to The product m/z {0} is out of range for the instrument settings, in the peptide sequence {1}..
         /// </summary>
         public static string MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_ {
             get {
@@ -12174,11 +12214,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isotope labeled entry found without matching settings.
+        ///   Looks up a localized string similar to Isotope labeled entry found without matching settings..
         /// </summary>
-        public static string MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings {
+        public static string MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_ {
             get {
-                return ResourceManager.GetString("MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings", resourceCulture);
+                return ResourceManager.GetString("MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_", resourceCulture);
             }
         }
         
@@ -14807,7 +14847,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor.
+        ///   Looks up a localized string similar to Failed to explain all transitions for m/z {0} (peptide {1}) with a single precursor..
         /// </summary>
         public static string PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor {
             get {
@@ -14827,7 +14867,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing iRT value for peptide {0}, precursor m/z {1}.
+        ///   Looks up a localized string similar to Missing iRT value for peptide {0}, precursor m/z {1}..
         /// </summary>
         public static string PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_ {
             get {
@@ -20173,12 +20213,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempted to combine library spectra with incompatible precusor m/z, isotope label, or peptide sequence.
+        ///   Looks up a localized string similar to Two incompatible transition groups for sequence {0}, precursor m/z {1}..
         /// </summary>
-        public static string SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_incompatible_precusor_m_z__isotope_label__or_peptide_sequence {
+        public static string SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__ {
             get {
-                return ResourceManager.GetString("SpectrumMzInfo_CombineSpectrumInfo_Attempted_to_combine_library_spectra_with_inco" +
-                        "mpatible_precusor_m_z__isotope_label__or_peptide_sequence", resourceCulture);
+                return ResourceManager.GetString("SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequenc" +
+                        "e__0___precursor_m_z__1__", resourceCulture);
             }
         }
         

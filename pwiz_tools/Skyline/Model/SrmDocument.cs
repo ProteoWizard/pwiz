@@ -804,7 +804,8 @@ namespace pwiz.Skyline.Model
             List<KeyValuePair<string, double>> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
-            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList);
+            List<PeptideGroupDocNode> peptideGroups;
+            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
         }
 
         public SrmDocument ImportMassList(TextReader reader,
@@ -816,7 +817,8 @@ namespace pwiz.Skyline.Model
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList)
         {
-            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList);
+            List<PeptideGroupDocNode> peptideGroups;
+            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
         }
 
         public SrmDocument ImportMassList(TextReader reader, 
@@ -828,11 +830,13 @@ namespace pwiz.Skyline.Model
                                           out IdentityPath firstAdded,
                                           out List<KeyValuePair<string, double>> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
-                                          out List<TransitionImportErrorInfo> errorList)
+                                          out List<TransitionImportErrorInfo> errorList,
+                                          out List<PeptideGroupDocNode> peptideGroups)
         {
             MassListImporter importer = new MassListImporter(this, provider, separator);
             IdentityPath nextAdd;
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines, out irtPeptides, out librarySpectra, out errorList), false,
+            peptideGroups = importer.Import(reader, longWaitBroker, lines, out irtPeptides, out librarySpectra, out errorList).ToList();
+            return AddPeptideGroups(peptideGroups, false,
                 to, out firstAdded, out nextAdd);
         }
 
