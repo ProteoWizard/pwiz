@@ -509,25 +509,29 @@ namespace pwiz.SkylineTestUtil
             IsDocumentState(document, revision, groups, peptides, peptides, transitions);
         }
 
-        static void DocumentStateAssertAreEqual(string itemName, object expected, object actual)
+        static string DocumentStateAssertAreEqual(string itemName, object expected, object actual)
         {
             if (!Equals(expected, actual))
             {
-                Assert.Fail(itemName + " mismatch: expected {0}, actual {1}", expected, actual);
+                return string.Format(itemName + " mismatch: expected {0}, actual {1}.  ", expected, actual);
             }
+            return string.Empty;
         }
 
         public static void IsDocumentState(SrmDocument document, int? revision, int groups, int peptides,
                                            int tranGroups, int transitions)
         {
+            string errmsg = string.Empty;
             if (revision != null)
             {
-                DocumentStateAssertAreEqual("RevisionIndex", revision, document.RevisionIndex);
+                errmsg += DocumentStateAssertAreEqual("RevisionIndex", revision, document.RevisionIndex);
             }
-            DocumentStateAssertAreEqual("PeptideGroupCount", groups, document.PeptideGroupCount);
-            DocumentStateAssertAreEqual("PeptideCount", peptides, document.PeptideCount);
-            DocumentStateAssertAreEqual("TransitionGroupCount", tranGroups, document.TransitionGroupCount);
-            DocumentStateAssertAreEqual("TransitionCount", transitions, document.TransitionCount);
+            errmsg += DocumentStateAssertAreEqual("PeptideGroupCount", groups, document.PeptideGroupCount);
+            errmsg += DocumentStateAssertAreEqual("PeptideCount", peptides, document.PeptideCount);
+            errmsg += DocumentStateAssertAreEqual("TransitionGroupCount", tranGroups, document.TransitionGroupCount);
+            errmsg += DocumentStateAssertAreEqual("TransitionCount", transitions, document.TransitionCount);
+            if (errmsg.Length > 0)
+                Assert.Fail(errmsg);
 
             // Verify that no two nodes in the document tree have the same global index
             var setIndexes = new HashSet<int>();
