@@ -727,6 +727,8 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.FilePath, FilePath) &&
                    other.FileWriteTime.Equals(FileWriteTime) &&
                    other.RunStartTime.Equals(RunStartTime) &&
+                   other.MaxIntensity.Equals(MaxIntensity) &&
+                   other.MaxRetentionTime.Equals(MaxRetentionTime) &&
                    ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList) &&
                    ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments);
         }
@@ -751,6 +753,8 @@ namespace pwiz.Skyline.Model.Results
                          (InstrumentInfoList != null ? InstrumentInfoList.GetHashCodeDeep() : 0);
                 result = (result*397) ^
                          (RetentionTimeAlignments == null ? 0 : RetentionTimeAlignments.GetHashCodeDeep());
+                result = (result * 397) ^ MaxIntensity.GetHashCode();
+                result = (result * 397) ^ MaxRetentionTime.GetHashCode();
                 return result;
             }
         }
