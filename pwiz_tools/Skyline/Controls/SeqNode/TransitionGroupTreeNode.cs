@@ -224,7 +224,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static string GetMzLabel(TransitionGroup tranGroup, double precursorMz)
         {
             int? massShift = tranGroup.DecoyMassShift;
-            return string.Format("{0:F04}{1}", precursorMz - (massShift ?? 0), // Not L10N
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return string.Format("{0:F04}{1}", precursorMz - shift, // Not L10N
                 Transition.GetDecoyText(massShift));
         }
 

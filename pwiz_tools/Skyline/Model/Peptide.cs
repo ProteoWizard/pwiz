@@ -29,6 +29,11 @@ namespace pwiz.Skyline.Model
     {
         private readonly FastaSequence _fastaSequence;
 
+        public Peptide(string sequence)
+            :this(null, sequence, null, null, 0)
+        {
+        }
+
         public Peptide(FastaSequence fastaSequence, string sequence, int? begin, int? end, int missedCleavages)
             :this(fastaSequence, sequence, begin, end, missedCleavages, false)
         {
@@ -534,6 +539,48 @@ namespace pwiz.Skyline.Model
             {
                 return (Sequence.GetHashCode() * 397) ^
                     (Modifications != null ? Modifications.GetHashCode() : 0);
+            }
+        }
+
+        #endregion
+    }
+
+    public sealed class ModifiedSequenceMods
+    {
+        public ModifiedSequenceMods(string modifiedSequence, ExplicitMods explicitMods)
+        {
+            ModifiedSequence = modifiedSequence;
+            // Strip explicit mods of protein identification information
+            ExplicitMods = explicitMods != null
+                ? explicitMods.ChangePeptide(new Peptide(explicitMods.Peptide.Sequence))
+                :null;
+        }
+
+        public string Sequence { get { return FastaSequence.StripModifications(ModifiedSequence); }}
+        public string ModifiedSequence { get; private set; }
+        public ExplicitMods ExplicitMods { get; private set; }
+
+        #region object overrides
+
+        private bool Equals(ModifiedSequenceMods other)
+        {
+            return string.Equals(ModifiedSequence, other.ModifiedSequence) &&
+                Equals(ExplicitMods, other.ExplicitMods);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is ModifiedSequenceMods && Equals((ModifiedSequenceMods) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (ModifiedSequence.GetHashCode()*397) ^
+                    (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
             }
         }
 

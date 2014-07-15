@@ -178,13 +178,14 @@ namespace pwiz.Skyline.Model.Results
             return ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz;
         }
 
-        public double GetMassI(int massIndex)
+        public double GetMassI(int massIndex, int? decoyMassShift = null)
         {
             // Return the original monoisotopic mass + H, if requested to maintain an exact match.
-            if (massIndex == 0)
+            if (massIndex == 0 && !decoyMassShift.HasValue)
                 return _monoisotopicMassH;
             // Otherwize use the charge to convert from the peak center m/z values
-            return SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz, _charge);
+            double shift = SequenceMassCalc.GetPeptideInterval(decoyMassShift);    // Correct for shift applied to the distribution
+            return SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge);
         }
 
         #region object overrides

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -609,15 +610,18 @@ namespace pwiz.Skyline.Model
             IsotopeLabelType labelType = TransitionGroup.LabelType;
             var calc = settings.GetPrecursorCalc(labelType, mods);
             double massH = calc.GetPrecursorMass(seq);
-            double mz = SequenceMassCalc.GetMZ(massH, charge);
+            double mz = SequenceMassCalc.GetMZ(massH, charge) +
+                SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
             if (TransitionGroup.DecoyMassShift.HasValue)
-                mz += TransitionGroup.DecoyMassShift.Value;
+                massH = SequenceMassCalc.GetMH(mz, charge);
 
             isotopeDist = null;
             var fullScan = settings.TransitionSettings.FullScan;
             if (fullScan.IsHighResPrecursor)
             {
                 var massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
+                if (TransitionGroup.DecoyMassShift.HasValue)
+                    massDist = ShiftMzDistribution(massDist, TransitionGroup.DecoyMassShift.Value);
                 isotopeDist = new IsotopeDistInfo(massDist, massH, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
                     // Centering resolution must be inversely proportional to charge state
@@ -627,6 +631,13 @@ namespace pwiz.Skyline.Model
                     TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
             }
             return mz;
+        }
+
+        private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)
+        {
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return MassDistribution.NewInstance(massDist.ToDictionary(p => p.Key + shift, p => p.Value),
+                massDist.MassResolution, massDist.MinimumAbundance);
         }
 
         private RelativeRT CalcRelativeRT(SrmSettings settings, ExplicitMods mods)

@@ -195,7 +195,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static string GetMzLabel(TransitionDocNode nodeTran)
         {
             int? massShift = nodeTran.Transition.DecoyMassShift;
-            return string.Format("{0:F04}{1}", nodeTran.Mz - (massShift ?? 0), // Not L10N
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return string.Format("{0:F04}{1}", nodeTran.Mz - shift, // Not L10N
                 Transition.GetDecoyText(massShift));
         }
 

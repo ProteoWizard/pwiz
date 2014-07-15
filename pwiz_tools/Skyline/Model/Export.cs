@@ -1647,8 +1647,7 @@ namespace pwiz.Skyline.Model
                                         settings.PeptideSettings.Modifications.StaticModifications,
                                         Settings.Default.StaticModList,
                                         new List<TypedModifications>(),
-                                        null,
-                                        false);
+                                        null);
 
             
             if (nodePep.ExplicitMods != null)

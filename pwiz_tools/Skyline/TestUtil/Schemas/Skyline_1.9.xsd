@@ -501,7 +501,7 @@
           <xs:attribute name="library" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="file_rt_alignments">
+      <xs:element name="file_rt_alignments" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="rt_alignment" minOccurs="0" maxOccurs="unbounded">
@@ -647,6 +647,55 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+          <xs:element name="lookup_modifications" minOccurs="0" maxOccurs="1">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="variable_modifications" minOccurs="0" maxOccurs="1">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="variable_modification" type="modification_type"
+                          minOccurs="1" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="explicit_modifications" minOccurs="0" maxOccurs="1">
+                  <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="explicit_static_modifications" minOccurs="0"
+                           maxOccurs="1">
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name="explicit_modification"
+                                type="modification_type" minOccurs="0"
+                                maxOccurs="unbounded"/>
+                          </xs:sequence>
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element name="explicit_heavy_modifications" minOccurs="0"
+                          maxOccurs="unbounded">
+                        <xs:complexType>
+                          <xs:sequence>
+                            <xs:element name="explicit_modification" minOccurs="0"
+                                maxOccurs="unbounded">
+                              <xs:complexType>
+                                <xs:complexContent>
+                                  <xs:extension base="modification_type">
+                                    <xs:attribute name="isotope_label"
+                                        type="xs:string"/>
+                                  </xs:extension>
+                                </xs:complexContent>
+                              </xs:complexType>
+                            </xs:element>
+                          </xs:sequence>
+                          <xs:attribute name="isotope_label" type="xs:string"/>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:sequence>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
           <xs:element name="peptide_results" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
@@ -660,6 +709,7 @@
         </xs:sequence>
         <xs:attribute name="sequence" type="sequence_type" use="required"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
+        <xs:attribute name="lookup_sequence" type="xs:string"/>
         <xs:attribute name="start" type="xs:positiveInteger"/>
         <xs:attribute name="end" type="xs:positiveInteger"/>
         <xs:attribute name="prev_aa" type="prev_next_amino_acid_type"/>

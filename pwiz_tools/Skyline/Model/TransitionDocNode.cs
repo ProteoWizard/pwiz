@@ -54,9 +54,7 @@ namespace pwiz.Skyline.Model
             Losses = losses;
             if (losses != null)
                 massH -= losses.Mass;
-            Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
-            if (id.DecoyMassShift.HasValue)
-                Mz += id.DecoyMassShift.Value;
+            Mz = SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift);
             IsotopeDistInfo = isotopeDistInfo;
             LibInfo = libInfo;
             Results = results;

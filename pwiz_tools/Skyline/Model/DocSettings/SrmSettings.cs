@@ -297,6 +297,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return nodePep.ModifiedSequence;
         }
 
+        public string GetLookupSequence(PeptideDocNode nodePep)
+        {
+            Assume.IsNotNull(nodePep.LookupModifiedSequence);
+            return nodePep.LookupModifiedSequence;
+        }
+
         private static readonly SequenceMassCalc MONOISOTOPIC_MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);
 
         /// <summary>
@@ -696,13 +702,30 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
+        {
+            string lookupSequence = nodePep.LookupSequence;
+            var lookupMods = nodePep.LookupMods;
+            if (filePath != null)
+            {
+                var times = GetRetentionTimes(filePath, lookupSequence, lookupMods);
+                if (times.Length > 0)
+                    return times;
+                times = GetAllRetentionTimes(filePath, lookupSequence, lookupMods);
+                if (times.Length > 0)
+                    return times;
+            }
+            return GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+        }
+
         public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods,
             RetentionTimeAlignmentIndex alignmentIndex = null)
         {
             return GetRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods, alignmentIndex);
         }
 
-        public double[] GetRetentionTimes(MsDataFileUri filePath, string peptideSequence, ExplicitMods explicitMods, RetentionTimeAlignmentIndex alignmentIndex = null)
+        public double[] GetRetentionTimes(MsDataFileUri filePath, string peptideSequence, ExplicitMods explicitMods,
+            RetentionTimeAlignmentIndex alignmentIndex = null)
         {
             string basename = filePath.GetFileNameWithoutExtension();
             var source = DocumentRetentionTimes.RetentionTimeSources.Find(basename);

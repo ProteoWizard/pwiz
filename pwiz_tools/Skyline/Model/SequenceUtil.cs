@@ -139,6 +139,13 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static double MassAveragine { get { return 111.1254; } }
 
+        public const double MASS_PEPTIDE_INTERVAL = 1.00045475;
+
+        public static double GetPeptideInterval(int? massShift)
+        {
+            return massShift.HasValue ? massShift.Value*MASS_PEPTIDE_INTERVAL : 0.0;
+        }
+
         /// <summary>
         /// Returns a mass + H value that has been correctly rounded,
         /// to allow it to be persisted to XML that can be reloaded,
@@ -844,7 +851,12 @@ namespace pwiz.Skyline.Model
         {
             Assume.IsFalse(transition.IsCustom());
             return GetFragmentMass(transition.Group.Peptide.Sequence,
-                transition.IonType, transition.Ordinal, transition.MassIndex, isotopeDist, mods);
+                                   transition.IonType,
+                                   transition.Ordinal,
+                                   transition.DecoyMassShift,
+                                   transition.MassIndex,
+                                   isotopeDist,
+                                   mods);
         }
 
         public double GetPrecursorFragmentMass(string seq)
@@ -854,11 +866,16 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorFragmentMass(string seq, ExplicitSequenceMods mods)
         {
-            return GetFragmentMass(seq, IonType.precursor, seq.Length, 0, null, mods);
+            return GetFragmentMass(seq, IonType.precursor, seq.Length, null, 0, null, mods);
         }
 
-        public double GetFragmentMass(string seq, IonType type, int ordinal,
-            int massIndex, IsotopeDistInfo isotopeDists, ExplicitSequenceMods mods)
+        private double GetFragmentMass(string seq,
+                                       IonType type,
+                                       int ordinal,
+                                       int? decoyMassShift,
+                                       int massIndex,
+                                       IsotopeDistInfo isotopeDists,
+                                       ExplicitSequenceMods mods)
         {
             if (Transition.IsPrecursor(type))
             {
@@ -872,7 +889,7 @@ namespace pwiz.Skyline.Model
                                           GetMassIDescripion(massIndex), isotopeDists.PeakIndexToMassIndex(0),
                                           isotopeDists.PeakIndexToMassIndex(isotopeDists.CountPeaks - 1)));
                     }
-                    return isotopeDists.GetMassI(massIndex);
+                    return isotopeDists.GetMassI(massIndex, decoyMassShift);
                 }
                 return GetPrecursorMass(seq, mods);                
             }

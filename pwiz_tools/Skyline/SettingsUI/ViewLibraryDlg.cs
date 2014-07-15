@@ -648,6 +648,7 @@ namespace pwiz.Skyline.SettingsUI
                                                                           transitionGroup.LabelType,
                                                                           transitionGroup,
                                                                           settings,
+                                                                          transitionGroup.Peptide.Sequence,
                                                                           mods,
                                                                           charges,
                                                                           types,

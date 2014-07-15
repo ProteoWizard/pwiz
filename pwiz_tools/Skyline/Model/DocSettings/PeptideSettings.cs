@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // variable scheduling windows
                 if (!useMeasured || !singleWindow || MeasuredRTWindow == RetentionTime.TimeWindow)
                 {
-                    string modifiedSequence = document.Settings.GetModifiedSequence(nodePep);
+                    string modifiedSequence = document.Settings.GetLookupSequence(nodePep);
                     if (null != replicateFilter && document.Settings.HasResults)
                     {
                         var retentionTimes = new List<double>();

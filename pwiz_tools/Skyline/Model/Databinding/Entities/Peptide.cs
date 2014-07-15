@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return retentionTimeRegression.GetRetentionTime(SrmDocument.Settings.GetModifiedSequence(DocNode));
+                return retentionTimeRegression.GetRetentionTime(SrmDocument.Settings.GetLookupSequence(DocNode));
             }
         }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]

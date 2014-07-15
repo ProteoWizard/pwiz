@@ -234,8 +234,9 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_1_5 = 1.5;
         public const double FORMAT_VERSION_1_6 = 1.6;   // Adds richer protein metadata
         public const double FORMAT_VERSION_1_7 = 1.7;   // Adds Ion Mobility handling
-        public const double FORMAT_VERSION_1_8 = 1.8;   //Adds Reporter Ions and non proteomic transitions
-        public const double FORMAT_VERSION = FORMAT_VERSION_1_8;
+        public const double FORMAT_VERSION_1_8 = 1.8;   // Adds Reporter Ions and non proteomic transitions
+        public const double FORMAT_VERSION_1_9 = 1.9;   // Adds sequence lookup key for decoys
+        public const double FORMAT_VERSION = FORMAT_VERSION_1_9;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
@@ -1072,15 +1073,16 @@ namespace pwiz.Skyline.Model
             if (!identified.HasValue)
             {
                 IdentityPath peptidePath = groupPath.Parent;
-                var nodePepGroup = (PeptideDocNode) FindNode(peptidePath);
+                var nodePep = (PeptideDocNode) FindNode(peptidePath);
                 var nodeGroup = (TransitionGroupDocNode) FindNode(groupPath);
                 if (nodeGroup == null)
                     throw new IdentityNotFoundException(groupPath.Child);
+                string lookupSequence = nodePep.LookupSequence;
+                var lookupMods = nodePep.LookupMods;
                 IsotopeLabelType labelType;
                 double[] retentionTimes;
-                Settings.TryGetRetentionTimes(nodeGroup.TransitionGroup.Peptide.Sequence,
-                                              nodeGroup.TransitionGroup.PrecursorCharge,
-                                              nodePepGroup.ExplicitMods, filePath, out labelType, out retentionTimes);
+                Settings.TryGetRetentionTimes(lookupSequence, nodeGroup.TransitionGroup.PrecursorCharge, lookupMods,
+                                              filePath, out labelType, out retentionTimes);
                 if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
                     identified = PeakIdentification.TRUE;
@@ -1088,7 +1090,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(filePath,
-                        nodeGroup.TransitionGroup.Peptide.Sequence, nodePepGroup.ExplicitMods);
+                        lookupSequence, lookupMods);
                     identified = ContainsTime(alignedRetentionTimes, startTime.Value, endTime.Value)
                         ? PeakIdentification.ALIGNED
                         : PeakIdentification.FALSE;
@@ -1193,6 +1195,7 @@ namespace pwiz.Skyline.Model
                     nodePeptide = new PeptideDocNode((Peptide)nodePeptide.Peptide.Copy(),
                                                         Settings,
                                                         nodePeptide.ExplicitMods,
+                                                        nodePeptide.SourceKey,
                                                         nodePeptide.GlobalStandardType,
                                                         nodePeptide.Rank,
                                                         Annotations.EMPTY,
@@ -1287,6 +1290,7 @@ namespace pwiz.Skyline.Model
             public const string implicit_modification = "implicit_modification";
             public const string implicit_static_modifications = "implicit_static_modifications";
             public const string implicit_heavy_modifications = "implicit_heavy_modifications";
+            public const string lookup_modifications = "lookup_modifications";
             public const string losses = "losses";
             public const string neutral_loss = "neutral_loss";
             public const string peptide_results = "peptide_results";
@@ -1357,6 +1361,7 @@ namespace pwiz.Skyline.Model
             public const string isotope_dist_rank = "isotope_dist_rank";
             public const string isotope_dist_proportion = "isotope_dist_proportion";
             public const string modified_sequence = "modified_sequence";
+            public const string lookup_sequence = "lookup_sequence";
             public const string cleavage_aa = "cleavage_aa";
             public const string loss_neutral_mass = "loss_neutral_mass";
             public const string collision_energy = "collision_energy";
@@ -1704,6 +1709,7 @@ namespace pwiz.Skyline.Model
             int? start = reader.GetNullableIntAttribute(ATTR.start);
             int? end = reader.GetNullableIntAttribute(ATTR.end);
             string sequence = reader.GetAttribute(ATTR.sequence);
+            string lookupSequence = reader.GetAttribute(ATTR.lookup_sequence);
             // If the group has no sequence, then this is a v0.1 peptide list
             if (group.Sequence == null)
             {
@@ -1721,7 +1727,7 @@ namespace pwiz.Skyline.Model
             Peptide peptide = new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
 
             var annotations = Annotations.EMPTY;
-            ExplicitMods mods = null;
+            ExplicitMods mods = null, lookupMods = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
 
@@ -1733,6 +1739,7 @@ namespace pwiz.Skyline.Model
                 annotations = ReadAnnotations(reader);
                 mods = ReadExplicitMods(reader, peptide);
                 SkipImplicitModsElement(reader);
+                lookupMods = ReadLookupMods(reader, lookupSequence);
 
                 results = ReadPeptideResults(reader);
 
@@ -1756,8 +1763,23 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();
             }
 
-            return new PeptideDocNode(peptide, Settings, mods, standardType, rank,
+            ModifiedSequenceMods sourceKey = null;
+            if (lookupSequence != null)
+                sourceKey = new ModifiedSequenceMods(lookupSequence, lookupMods);
+
+            return new PeptideDocNode(peptide, Settings, mods, sourceKey, standardType, rank,
                 annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
+        }
+
+        private ExplicitMods ReadLookupMods(XmlReader reader, string lookupSequence)
+        {
+            if (!reader.IsStartElement(EL.lookup_modifications))
+                return null;
+            reader.Read();
+            string sequence = FastaSequence.StripModifications(lookupSequence);
+            var mods = ReadExplicitMods(reader, new Peptide(sequence));
+            reader.ReadEndElement();
+            return mods;
         }
 
         private void SkipImplicitModsElement(XmlReader reader)
@@ -2137,7 +2159,7 @@ namespace pwiz.Skyline.Model
             {
                 int offset = Transition.OrdinalToOffset(info.IonType,
                     info.Ordinal, group.Peptide.Length);
-                transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge,info.DecoyMassShift);
+                transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge, info.DecoyMassShift);
             }
 
             var losses = info.Losses;
@@ -2555,6 +2577,8 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeString(ATTR.sequence, sequence);
             string modSeq = Settings.GetModifiedSequence(node);
             writer.WriteAttributeString(ATTR.modified_sequence, modSeq);
+            if (node.SourceKey != null)
+                writer.WriteAttributeString(ATTR.lookup_sequence, node.SourceKey.ModifiedSequence);
             if (peptide.Begin.HasValue && peptide.End.HasValue)
             {
                 writer.WriteAttribute(ATTR.start, peptide.Begin.Value);
@@ -2591,8 +2615,9 @@ namespace pwiz.Skyline.Model
 
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
-            WriteExplicitMods(writer, node);
+            WriteExplicitMods(writer, node.Peptide.Sequence, node.ExplicitMods);
             WriteImplicitMods(writer, node);
+            WriteLookupMods(writer, node);
 
             if (node.HasResults)
             {
@@ -2608,15 +2633,23 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void WriteExplicitMods(XmlWriter writer, PeptideDocNode node)
+        private void WriteLookupMods(XmlWriter writer, PeptideDocNode node)
         {
-            if (node.ExplicitMods == null)
+            if (node.SourceKey == null || node.SourceKey.ExplicitMods == null)
                 return;
-            var mods = node.ExplicitMods;
+            writer.WriteStartElement(EL.lookup_modifications);
+            WriteExplicitMods(writer, node.SourceKey.Sequence, node.SourceKey.ExplicitMods);
+            writer.WriteEndElement();
+        }
+
+        private void WriteExplicitMods(XmlWriter writer, string sequence,  ExplicitMods mods)
+        {
+            if (mods == null)
+                return;
             if (mods.IsVariableStaticMods)
             {
                 WriteExplicitMods(writer, EL.variable_modifications,
-                    EL.variable_modification, null, node.ExplicitMods.StaticModifications, node.Peptide.Sequence);                
+                    EL.variable_modification, null, mods.StaticModifications, sequence);
 
                 // If no heavy modifications, then don't write an <explicit_modifications> tag
                 if (!mods.HasHeavyModifications)
@@ -2626,16 +2659,16 @@ namespace pwiz.Skyline.Model
             if (!mods.IsVariableStaticMods)
             {
                 WriteExplicitMods(writer, EL.explicit_static_modifications,
-                    EL.explicit_modification, null, node.ExplicitMods.StaticModifications, node.Peptide.Sequence);                
+                    EL.explicit_modification, null, mods.StaticModifications, sequence);
             }
-            foreach (var heavyMods in node.ExplicitMods.GetHeavyModifications())
+            foreach (var heavyMods in mods.GetHeavyModifications())
             {
                 IsotopeLabelType labelType = heavyMods.LabelType;
                 if (Equals(labelType, IsotopeLabelType.heavy))
                     labelType = null;
 
                 WriteExplicitMods(writer, EL.explicit_heavy_modifications,
-                    EL.explicit_modification, labelType, heavyMods.Modifications, node.Peptide.Sequence);                
+                    EL.explicit_modification, labelType, heavyMods.Modifications, sequence);
             }
             writer.WriteEndElement();
         }
@@ -2650,17 +2683,17 @@ namespace pwiz.Skyline.Model
                 Properties.Settings.Default.HeavyModList,
                 true);
 
-		    bool hasStaticMods = implicitMods.StaticModifications.Count != 0 && node.CanHaveImplicitStaticMods;
-		    bool hasHeavyMods = implicitMods.HasHeavyModifications &&
-		                        Settings.PeptideSettings.Modifications.GetHeavyModifications().Any(
-		                            mod => node.CanHaveImplicitHeavyMods(mod.LabelType));
+            bool hasStaticMods = implicitMods.StaticModifications.Count != 0 && node.CanHaveImplicitStaticMods;
+            bool hasHeavyMods = implicitMods.HasHeavyModifications &&
+                                Settings.PeptideSettings.Modifications.GetHeavyModifications().Any(
+                                     mod => node.CanHaveImplicitHeavyMods(mod.LabelType));
 
             if (!hasStaticMods && !hasHeavyMods)
             {
                 return;
             }
 
-		    writer.WriteStartElement(EL.implicit_modifications);
+            writer.WriteStartElement(EL.implicit_modifications);
             
             // implicit static modifications.
             if (hasStaticMods)
@@ -2881,7 +2914,7 @@ namespace pwiz.Skyline.Model
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
-                    nodePep.ModifiedSequence, nodeGroup.PrecursorCharge, nodeTransition.Mz);
+                    Settings.GetLookupSequence(nodePep), nodeGroup.PrecursorCharge, nodeTransition.Mz);
                 if (optimization != null)
                 {
                     ce = optimization.Value;
@@ -2947,7 +2980,7 @@ namespace pwiz.Skyline.Model
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
-                    nodePep.ModifiedSequence, nodeGroup.PrecursorCharge, nodeTransition.Mz);
+                    Settings.GetLookupSequence(nodePep), nodeGroup.PrecursorCharge, nodeTransition.Mz);
                 if (optimization != null)
                 {
                     return optimization.Value;

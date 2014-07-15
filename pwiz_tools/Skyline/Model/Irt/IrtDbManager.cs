@@ -145,7 +145,10 @@ namespace pwiz.Skyline.Model.Irt
             var dictSeqToPeptide = new Dictionary<string, PeptideDocNode>();
             foreach (var nodePep in document.Peptides)
             {
-                string seqMod = document.Settings.GetModifiedSequence(nodePep);
+                if (nodePep.IsDecoy)
+                    continue;
+
+                string seqMod = document.Settings.GetLookupSequence(nodePep);
                 if (!dictSeqToPeptide.ContainsKey(seqMod))
                     dictSeqToPeptide.Add(seqMod, nodePep);
             }

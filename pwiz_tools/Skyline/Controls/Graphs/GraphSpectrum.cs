@@ -371,7 +371,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeptideLibraries libraries = settings.PeptideSettings.Libraries;
                 TransitionGroup group = nodeGroup.TransitionGroup;
                 TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
-                ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
+                string lookupSequence = group.Peptide.Sequence;
+                ExplicitMods lookupMods = null;
+                if (nodePepTree != null)
+                {
+                    lookupSequence = nodePepTree.DocNode.LookupSequence;
+                    lookupMods = nodePepTree.DocNode.LookupMods;
+                }
                 try
                 {
                     // Try to load a list of spectra matching the criteria for
@@ -382,7 +388,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             try
                             {
-                                UpdateSpectra(group, mods);
+                                UpdateSpectra(group, lookupSequence, lookupMods);
                                 UpdateToolbar();
                             }
                             catch (Exception)
@@ -424,7 +430,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                               typeInfo,
                                                                               group,
                                                                               settings,
-                                                                              mods,
+                                                                              lookupSequence,
+                                                                              lookupMods,
                                                                               charges,
                                                                               types,
                                                                               rankCharges,
@@ -617,17 +624,16 @@ namespace pwiz.Skyline.Controls.Graphs
             return index;
         }
 
-        private void UpdateSpectra(TransitionGroup group, ExplicitMods mods)
+        private void UpdateSpectra(TransitionGroup group, string lookupSequence, ExplicitMods lookupMods)
         {
-            _spectra = GetSpectra(group, mods);
+            _spectra = GetSpectra(group, lookupSequence, lookupMods);
         }
 
-        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroup group, ExplicitMods mods)
+        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroup group, string lookupSequence, ExplicitMods lookupMods)
         {
             var settings = DocumentUI.Settings;
-            string sequence = group.Peptide.Sequence;
             int charge = group.PrecursorCharge;
-            var spectra = settings.GetBestSpectra(sequence, charge, mods).Select(s => new SpectrumDisplayInfo(s)).ToList();
+            var spectra = settings.GetBestSpectra(lookupSequence, charge, lookupMods).Select(s => new SpectrumDisplayInfo(s)).ToList();
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
             if (!settings.TransitionSettings.FullScan.IsEnabled || !settings.HasResults)
@@ -637,7 +643,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var spectraRedundant = new List<SpectrumDisplayInfo>();
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(sequence, charge, group.LabelType, mods))
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, group.LabelType, lookupMods))
                 {
                     var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)

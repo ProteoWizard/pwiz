@@ -913,7 +913,7 @@ namespace pwiz.Skyline.SettingsUI
                         strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
                     else if (document.Peptides.All(
-                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.Peptide.Sequence, peptide.ExplicitMods).Length == 0))
+                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.LookupSequence, peptide.LookupMods).Length == 0))
                     {
                         strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
                     }

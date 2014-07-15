@@ -615,9 +615,11 @@ namespace pwiz.Skyline.Model.Results
             TruncateChromatograms(peptideChromDataSets, predictedRetentionTime);
             peptideChromDataSets.PredictedRetentionTime = predictedRetentionTime;
 
+            string lookupSequence = nodePep.LookupSequence;
+            var lookupMods = nodePep.LookupMods;
             double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePaths[_currentFileIndex],
-                                                                           nodePep.Peptide.Sequence,
-                                                                           nodePep.ExplicitMods);
+                                                                           lookupSequence,
+                                                                           lookupMods);
             bool isAlignedTimes = (retentionTimes.Length == 0);
             if (isAlignedTimes)
             {
@@ -631,8 +633,8 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 retentionTimes = _document.Settings.GetAlignedRetentionTimes(alignmentIndices,
-                                                                             nodePep.Peptide.Sequence,
-                                                                             nodePep.ExplicitMods);
+                                                                             lookupSequence,
+                                                                             lookupMods);
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
@@ -721,7 +723,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (_conversion != null)
                 {
-                    double? score = _calculator.ScoreSequence(nodePep.ModifiedSequence);
+                    double? score = _calculator.ScoreSequence(nodePep.LookupModifiedSequence);
                     if (!score.HasValue)
                         return null;
                     return _conversion.GetY(score.Value);

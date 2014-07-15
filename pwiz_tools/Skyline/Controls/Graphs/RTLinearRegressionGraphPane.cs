@@ -422,7 +422,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         rt = 0;
 
                     _peptidesIndexes.Add(new PeptideDocumentIndex(nodePeptide, index));
-                    string modSeq = _document.Settings.GetModifiedSequence(nodePeptide);
+                    string modSeq = _document.Settings.GetLookupSequence(nodePeptide);
                     _peptidesTimes.Add(new MeasuredRetentionTime(modSeq, rt.Value));
                 }
 

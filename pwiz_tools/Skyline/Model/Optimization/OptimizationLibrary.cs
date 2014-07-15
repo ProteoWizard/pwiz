@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Optimization
                     {
                         foreach (TransitionGroupDocNode group in peptide.Children)
                         {
-                            string sequence = peptide.ModifiedSequence;
+                            string sequence = document.Settings.GetLookupSequence(peptide);
                             int charge = group.PrecursorCharge;
                             foreach (TransitionDocNode transition in group.Children)
                             {

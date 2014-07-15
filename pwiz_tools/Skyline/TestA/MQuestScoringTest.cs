@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestA
                 MQuestScoreEquals(calcCoelution, 3.0, peptideData);
                 MQuestScoreEquals(calcWeightedShape, 0.3969832, peptideData);
                 MQuestScoreEquals(calcWeightedCoelution, 3.0, peptideData);
-                MQuestScoreEquals(calcSignalNoise, double.NaN, peptideData);
+                MQuestScoreEquals(calcSignalNoise, 1.3086293, peptideData);
             }
             // The MS1-MS2 cross score differs when an MS1 transition is added
             MQuestScoreEquals(calcWeightedCrossShape, 0.94669, peptidePeakDataMs1);

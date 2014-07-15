@@ -250,6 +250,7 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="document_library" type="xs:boolean"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="peptide_modifications">
@@ -528,6 +529,7 @@
         </xs:sequence>
         <xs:attribute name="label_description" type="xs:string"/>
         <xs:attribute name="label_name" type="xs:string"/>
+        <xs:attribute name="decoy" type="xs:boolean"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -554,7 +556,6 @@
         <xs:attribute name="label_description" type="xs:string"/>
         <!-- protein details that may be derived from identity object's name and description -->
         <xs:attributeGroup ref="protein_details_type"/>
-        <xs:attribute name="decoy" type="xs:boolean"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

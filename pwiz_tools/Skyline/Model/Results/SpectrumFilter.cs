@@ -170,21 +170,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                             else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
                             {
-                                var times = document.Settings.GetRetentionTimes(msDataFileUri,
-                                    nodePep.Peptide.Sequence,
-                                    nodePep.ExplicitMods);
-                                if (times.Length == 0)
-                                {
-                                    times = document.Settings.GetAllRetentionTimes(msDataFileUri,
-                                        nodePep.Peptide.Sequence,
-                                        nodePep.ExplicitMods);
-                                }
-                                if (times.Length == 0)
-                                {
-                                    times = document.Settings.GetUnalignedRetentionTimes(
-                                        nodePep.Peptide.Sequence,
-                                        nodePep.ExplicitMods);
-                                }
+                                var times = document.Settings.GetBestRetentionTimes(nodePep, msDataFileUri);
                                 if (times.Length > 0)
                                 {
                                     minTime = Math.Max(minTime ?? 0, times.Min() - _fullScan.RetentionTimeFilterLength);

@@ -596,14 +596,14 @@ namespace pwiz.Skyline.SettingsUI
                 var newOptimizations = new HashSet<DbOptimization>();
                 foreach (PeptideGroupDocNode seq in document.PeptideGroups)
                 {
-                    // Skip peptide groups with no transitions
-                    if (seq.TransitionCount == 0)
+                    // Skip peptide groups with no transitions and skip decoys
+                    if (seq.TransitionCount == 0 || seq.IsDecoy)
                         continue;
                     foreach (PeptideDocNode peptide in seq.Children)
                     {
                         foreach (TransitionGroupDocNode group in peptide.Children)
                         {
-                            string sequence = peptide.ModifiedSequence;
+                            string sequence = document.Settings.GetLookupSequence(peptide);
                             int charge = group.PrecursorCharge;
                             foreach (TransitionDocNode transition in group.Children)
                             {

@@ -703,7 +703,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
 
             PeptideDocNode[] nodePeps = null;
-            ExplicitMods mods = null;
+            string lookupSequence = null;
+            ExplicitMods lookupMods = null;
             TransitionGroupDocNode[] nodeGroups = null;
             IdentityPath[] groupPaths = null;
             PeptideTreeNode nodePepTree;
@@ -721,7 +722,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePepTree != null)
                 {
                     nodePeps = new[] {nodePepTree.DocNode};
-                    mods = nodePepTree.DocNode.ExplicitMods;
+                    lookupSequence = nodePepTree.DocNode.LookupSequence;
+                    lookupMods = nodePepTree.DocNode.LookupMods;
                 }
                 nodeGroups = new[] {nodeGroupTree.DocNode};
                 groupPaths = new[] {nodeGroupTree.Path};
@@ -743,7 +745,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroups[i] = nodeGroup;
                         groupPaths[i] = new IdentityPath(pathParent, nodeGroup.Id);
                     }
-                    mods = nodePepTree.DocNode.ExplicitMods;
+                    lookupSequence = nodePepTree.DocNode.LookupSequence;
+                    lookupMods = nodePepTree.DocNode.LookupMods;
                 }
             }
 
@@ -799,7 +802,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             foreach (var chromGraphItem in _graphHelper.ListPrimaryGraphItems())
                             {
-                                SetRetentionTimeIdIndicators(chromGraphItem.Value, settings, nodeGroups, mods);
+                                SetRetentionTimeIdIndicators(chromGraphItem.Value, settings, nodeGroups,
+                                    lookupSequence, lookupMods);
                             }
                         }
                     }
@@ -939,8 +943,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     foreach (var chromGraphItem in _graphHelper.ListPrimaryGraphItems())
                     {
-                        SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms,
-                                                    nodeGroups, mods);
+                        SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms, nodeGroups,
+                            lookupSequence, lookupMods);
                     }
                 }
             }
@@ -1987,23 +1991,28 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 SrmSettings settings,
                                                 ChromatogramSet chromatograms,
                                                 TransitionGroupDocNode[] nodeGroups,
-                                                ExplicitMods mods)
+                                                string lookupSequence,
+                                                ExplicitMods lookupMods)
         {
-            SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms, nodeGroups, mods);
-            SetRetentionTimeIdIndicators(chromGraphPrimary, settings, nodeGroups, mods);
+            SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms,
+                nodeGroups, lookupSequence, lookupMods);
+            SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
+                nodeGroups, lookupSequence, lookupMods);
         }
 
-        private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary, SrmSettings settings,
+        private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
+                                                               SrmSettings settings,
                                                                ChromatogramSet chromatograms,
-                                                               TransitionGroupDocNode[] nodeGroups, ExplicitMods mods)
+                                                               TransitionGroupDocNode[] nodeGroups,
+                                                               string lookupSequence,
+                                                               ExplicitMods lookupMods)
         {
             // Set predicted retention time on the first graph item to make
             // line, label and shading show.
             var regression = settings.PeptideSettings.Prediction.RetentionTime;
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
-                string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
-                string modSeq = settings.GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
+                string modSeq = settings.GetModifiedSequence(lookupSequence, IsotopeLabelType.light, lookupMods);
                 var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram);
                 double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
                 double window = regression.TimeWindow;
@@ -2014,8 +2023,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
 
-        private void SetRetentionTimeIdIndicators(ChromGraphItem chromGraphPrimary, SrmSettings settings,
-                                                  IEnumerable<TransitionGroupDocNode> nodeGroups, ExplicitMods mods)
+        private void SetRetentionTimeIdIndicators(ChromGraphItem chromGraphPrimary,
+                                                  SrmSettings settings,
+                                                  IEnumerable<TransitionGroupDocNode> nodeGroups,
+                                                  string lookupSequence,
+                                                  ExplicitMods lookupMods)
         {
             // Set any MS/MS IDs on the first graph item also
             if (settings.TransitionSettings.FullScan.IsEnabled &&
@@ -2029,8 +2041,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         IsotopeLabelType labelType;
                         double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(group.Peptide.Sequence, group.PrecursorCharge,
-                                                          mods, FilePath, out labelType, out retentionTimes))
+                        if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorCharge,
+                                                          lookupMods, FilePath, out labelType, out retentionTimes))
                         {
                             listTimes.AddRange(retentionTimes);
                             var selectedSpectrum = _stateProvider.SelectedSpectrum;
@@ -2045,11 +2057,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowAlignedPeptideIdTimes)
                 {
-                    var listTimes = new List<double>();
-                    foreach (var group in transitionGroups)
-                    {
-                        listTimes.AddRange(settings.GetAlignedRetentionTimes(FilePath, group.Peptide.Sequence, mods));
-                    }
+                    var listTimes = new List<double>(settings.GetAlignedRetentionTimes(FilePath, lookupSequence, lookupMods));
                     if (listTimes.Count > 0)
                     {
                         var sortedTimes = listTimes.Distinct().ToArray();
@@ -2059,11 +2067,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowUnalignedPeptideIdTimes)
                 {
-                    var listTimes = new List<double>();
-                    foreach (var group in transitionGroups)
-                    {
-                        listTimes.AddRange(settings.GetRetentionTimesNotAlignedTo(FilePath, group.Peptide.Sequence, mods));
-                    }
+                    var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(FilePath, lookupSequence, lookupMods));
                     if (listTimes.Count > 0)
                     {
                         var sortedTimes = listTimes.Distinct().ToArray();

@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model
         public int MassIndex { get; private set; }
         public int? DecoyMassShift { get; private set; }
 
-        public MeasuredIon CustomIon;
+        public MeasuredIon CustomIon { get; private set; }
 
         // Derived values
         public int Ordinal { get; private set; }

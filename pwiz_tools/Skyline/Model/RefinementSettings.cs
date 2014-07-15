@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model
 
         public static IEnumerable<string> Methods
         {
-            get { return new[] { ADD_RANDOM, SHUFFLE_SEQUENCE, REVERSE_SEQUENCE }; }
+            get { return new[] { SHUFFLE_SEQUENCE, REVERSE_SEQUENCE, ADD_RANDOM }; }
         }
     }
 
@@ -613,8 +613,8 @@ namespace pwiz.Skyline.Model
             int count = 0;
             foreach (var nodePep in document.Peptides)
             {
-                // Exclude standard peptides
-                if (nodePep.GlobalStandardType != null)
+                // Exclude any existing decoys and standard peptides
+                if (nodePep.IsDecoy || nodePep.GlobalStandardType != null)
                     continue;
 
                 count += PeakFeatureEnumerator.ComparableGroups(nodePep).Count();
@@ -626,6 +626,9 @@ namespace pwiz.Skyline.Model
                                                       Func<SequenceMods, SequenceMods> genDecoySequence)
         {
             // Loop through the existing tree in random order creating decoys
+            var settings = document.Settings;
+            var enzyme = settings.PeptideSettings.Enzyme;
+
             var decoyNodePepList = new List<PeptideDocNode>();
             var setDecoyKeys = new HashSet<PeptideModKey>();
             while (numDecoys > 0)
@@ -644,16 +647,25 @@ namespace pwiz.Skyline.Model
                     if (genDecoySequence != null)
                         seqMods = genDecoySequence(seqMods);
                     var peptide = nodePep.Peptide;
-                    var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, peptide.MissedCleavages, true);
+                    var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, enzyme.CountCleavagePoints(seqMods.Sequence), true);
+                    if (seqMods.Mods != null)
+                        seqMods.Mods = seqMods.Mods.ChangePeptide(decoyPeptide);
 
                     foreach (var comparableGroups in PeakFeatureEnumerator.ComparableGroups(nodePep))
                     {
-                        var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, comparableGroups, document,
+                        var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, seqMods.Mods, comparableGroups, document,
                                                                     Equals(seqMods.Sequence, peptide.Sequence));
                         if (decoyNodeTranGroupList.Count == 0)
                             continue;
-                        var nodePepNew = new PeptideDocNode(decoyPeptide, document.Settings, seqMods.Mods,
-                            decoyNodeTranGroupList.ToArray(), false);
+
+                        var nodePepNew = new PeptideDocNode(decoyPeptide, settings, seqMods.Mods,
+                            null, decoyNodeTranGroupList.ToArray(), false);
+
+                        if (!Equals(nodePep.ModifiedSequence, nodePepNew.ModifiedSequence))
+                        {
+                            var sourceKey = new ModifiedSequenceMods(nodePep.ModifiedSequence, nodePep.ExplicitMods);
+                            nodePepNew = nodePepNew.ChangeSourceKey(sourceKey);
+                        }
 
                         // Avoid adding duplicate peptides
                         if (setDecoyKeys.Contains(nodePepNew.Key))
@@ -676,7 +688,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide,
-            IEnumerable<TransitionGroupDocNode> comparableGroups, SrmDocument document, bool shiftMass)
+            ExplicitMods mods, IEnumerable<TransitionGroupDocNode> comparableGroups, SrmDocument document, bool shiftMass)
         {
             var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
 
@@ -707,13 +719,13 @@ namespace pwiz.Skyline.Model
                                                         transGroup.LabelType, false, precursorMassShift);
 
                 var decoyNodeTranList = nodeGroupPrimary != null
-                    ? PeptideDocNode.GetMatchingTransitions(decoyGroup, nodeGroupPrimary, document.Settings, nodePep.ExplicitMods)
+                    ? PeptideDocNode.GetMatchingTransitions(decoyGroup, nodeGroupPrimary, document.Settings, mods)
                     : GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass);
 
                 var nodeGroupDecoy = new TransitionGroupDocNode(decoyGroup,
                                                                 Annotations.EMPTY,
                                                                 document.Settings,
-                                                                nodePep.ExplicitMods,
+                                                                mods,
                                                                 nodeGroup.LibInfo,
                                                                 nodeGroup.Results,
                                                                 decoyNodeTranList,
@@ -736,7 +748,11 @@ namespace pwiz.Skyline.Model
             foreach (var nodeTran in nodeGroup.Transitions)
             {
                 var transition = nodeTran.Transition;
-                int productMassShift = (shiftMass ? GetProductMassShift() : 0);
+                int productMassShift = 0;
+                if (shiftMass)
+                    productMassShift = GetProductMassShift();
+                else if (transition.IsPrecursor() && decoyGroup.DecoyMassShift.HasValue)
+                    productMassShift = decoyGroup.DecoyMassShift.Value;
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
                                                      transition.MassIndex, transition.Charge, productMassShift);
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, 0,
@@ -763,6 +779,13 @@ namespace pwiz.Skyline.Model
             return massShift < 0 ? massShift : massShift + 1;
         }
 
+        private static TypedExplicitModifications GetStaticTypedMods(Peptide peptide, IList<ExplicitMod> staticMods)
+        {
+            return staticMods != null
+                ? new TypedExplicitModifications(peptide, IsotopeLabelType.light, staticMods)
+                : null;
+        }
+
         private static SequenceMods GetReversedPeptideSequence(SequenceMods seqMods)
         {
             string sequence = seqMods.Sequence;
@@ -775,9 +798,11 @@ namespace pwiz.Skyline.Model
             seqMods.Sequence = new string(reversedArray) + finalA;
             if (seqMods.Mods != null)
             {
+                var reversedStaticMods = GetReversedMods(seqMods.Mods.StaticModifications, lenSeq);
+                var typedStaticMods = GetStaticTypedMods(seqMods.Peptide, reversedStaticMods);
                 seqMods.Mods = new ExplicitMods(seqMods.Peptide,
-                    GetReversedMods(seqMods.Mods.StaticModifications, lenSeq),
-                    GetReversedHeavyMods(seqMods, lenSeq),
+                    reversedStaticMods,
+                    GetReversedHeavyMods(seqMods, typedStaticMods, lenSeq),
                     seqMods.Mods.IsVariableStaticMods);
             }
 
@@ -789,11 +814,16 @@ namespace pwiz.Skyline.Model
             return GetRearrangedMods(mods, lenSeq, i => lenSeq - i - 1);
         }
 
-        private static IEnumerable<TypedExplicitModifications> GetReversedHeavyMods(SequenceMods seqMods, int lenSeq)
+        private static IEnumerable<TypedExplicitModifications> GetReversedHeavyMods(SequenceMods seqMods,
+            TypedExplicitModifications typedStaticMods, int lenSeq)
         {
-            return seqMods.Mods.GetHeavyModifications().Select(typedMod =>
+            var reversedHeavyMods = seqMods.Mods.GetHeavyModifications().Select(typedMod =>
                 new TypedExplicitModifications(seqMods.Peptide, typedMod.LabelType,
                                                GetReversedMods(typedMod.Modifications, lenSeq)));
+            foreach (var typedMods in reversedHeavyMods)
+            {
+                yield return typedMods.AddModMasses(typedStaticMods);
+            }
         }
 
         private static SequenceMods GetShuffledPeptideSequence(SequenceMods seqMods)
@@ -818,9 +848,11 @@ namespace pwiz.Skyline.Model
             seqMods.Sequence = new string(shuffledArray) + finalA;
             if (seqMods.Mods != null)
             {
+                var shuffledStaticMods = GetShuffledMods(seqMods.Mods.StaticModifications, lenSeq, newIndices);
+                var typedStaticMods = GetStaticTypedMods(seqMods.Peptide, shuffledStaticMods);
                 seqMods.Mods = new ExplicitMods(seqMods.Peptide,
-                    GetShuffledMods(seqMods.Mods.StaticModifications, lenSeq, newIndices),
-                    GetShuffledHeavyMods(seqMods, lenSeq, newIndices),
+                    shuffledStaticMods,
+                    GetShuffledHeavyMods(seqMods, typedStaticMods, lenSeq, newIndices),
                     seqMods.Mods.IsVariableStaticMods);
             }
 
@@ -833,11 +865,15 @@ namespace pwiz.Skyline.Model
         }
 
         private static IEnumerable<TypedExplicitModifications> GetShuffledHeavyMods(SequenceMods seqMods,
-            int lenSeq, int[] newIndices)
+            TypedExplicitModifications typedStaticMods, int lenSeq, int[] newIndices)
         {
-            return seqMods.Mods.GetHeavyModifications().Select(typedMod =>
+            var shuffledHeavyMods = seqMods.Mods.GetHeavyModifications().Select(typedMod =>
                 new TypedExplicitModifications(seqMods.Peptide, typedMod.LabelType,
                                                GetShuffledMods(typedMod.Modifications, lenSeq, newIndices)));
+            foreach (var typedMods in shuffledHeavyMods)
+            {
+                yield return typedMods.AddModMasses(typedStaticMods);
+            }
         }
 
         private static IList<ExplicitMod> GetRearrangedMods(IEnumerable<ExplicitMod> mods, int lenSeq,

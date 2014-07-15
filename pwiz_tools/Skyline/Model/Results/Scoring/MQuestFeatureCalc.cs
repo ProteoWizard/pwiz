@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -46,7 +47,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             if (context.Document == null)
                 return float.NaN;
-            var predictor = context.Document.Settings.PeptideSettings.Prediction.RetentionTime;
+            var settings = context.Document.Settings;
+            var predictor = settings.PeptideSettings.Prediction.RetentionTime;
             if (predictor == null)
                 return float.NaN;
 
@@ -70,8 +72,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
             else
             {
                 var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
-                string seqModified = summaryPeakData.NodePep.ModifiedSequence;
+                string seqModified = settings.GetLookupSequence(summaryPeakData.NodePep);
                 predictedRT = predictor.GetRetentionTime(seqModified, fileId);
+                if (!predictedRT.HasValue &&
+                    settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                {
+                    var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
+                    var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
+                    if (times.Length > 0)
+                    {
+                        predictedRT = Statistics.QMedian(times);
+                    }
+                }
+                context.AddInfo(new RetentionTimePrediction(predictedRT));
             }
             if (!predictedRT.HasValue)
                 return float.NaN;

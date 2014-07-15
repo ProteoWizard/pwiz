@@ -51,19 +51,20 @@ namespace pwiz.Skyline.Model
         }
 
         public PeptideDocNode(Peptide id, ExplicitMods mods = null)
-            : this(id, null, mods, null, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
+            : this(id, null, mods, null, null, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
 
-        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods,
+        public PeptideDocNode(Peptide id, SrmSettings settings, ExplicitMods mods, ModifiedSequenceMods sourceKey,
             TransitionGroupDocNode[] children, bool autoManageChildren)
-            : this(id, settings, mods, null, null, Annotations.EMPTY, null, children, autoManageChildren)
+            : this(id, settings, mods, sourceKey, null, null, Annotations.EMPTY, null, children, autoManageChildren)
         {
         }
 
         public PeptideDocNode(Peptide id,
                               SrmSettings settings,
                               ExplicitMods mods,
+                              ModifiedSequenceMods sourceKey,
                               string standardType,
                               int? rank,
                               Annotations annotations,
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Model
             : base(id, annotations, children, autoManageChildren)
         {
             ExplicitMods = mods;
+            SourceKey = sourceKey;
             GlobalStandardType = standardType;
             Rank = rank;
             Results = results;
@@ -82,7 +84,7 @@ namespace pwiz.Skyline.Model
             {
                 var calcPre = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
                 ModifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
-                ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);                
+                ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);
             }
         }
 
@@ -96,11 +98,19 @@ namespace pwiz.Skyline.Model
 
         public ExplicitMods ExplicitMods { get; private set; }
 
+        public ModifiedSequenceMods SourceKey { get; private set; }
+
         public string GlobalStandardType { get; private set; }
 
         public string ModifiedSequence { get; private set; }
 
         public string ModifiedSequenceDisplay { get; private set; }
+
+        public string LookupSequence { get { return SourceKey != null ? SourceKey.Sequence : Peptide.Sequence; } }
+
+        public ExplicitMods LookupMods { get { return SourceKey != null ? SourceKey.ExplicitMods : ExplicitMods; }}
+
+        public string LookupModifiedSequence { get { return SourceKey != null ? SourceKey.ModifiedSequence : ModifiedSequence; } }
 
         public bool HasExplicitMods { get { return ExplicitMods != null; } }
 
@@ -398,6 +408,11 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
         {
             return ChangeProp(ImClone(this), im => im.ExplicitMods = prop);
+        }
+
+        public PeptideDocNode ChangeSourceKey(ModifiedSequenceMods prop)
+        {
+            return ChangeProp(ImClone(this), im => im.SourceKey = prop);
         }
 
         public PeptideDocNode ChangeStandardType(string prop)
@@ -744,7 +759,7 @@ namespace pwiz.Skyline.Model
             if (peptideList && Peptide.FastaSequence != null)
             {
                 result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages), settings,
-                                            result.ExplicitMods, new TransitionGroupDocNode[0], result.AutoManageChildren); 
+                                            result.ExplicitMods, result.SourceKey, new TransitionGroupDocNode[0], result.AutoManageChildren); 
             }
             // Create a new child list, using existing children where GlobalIndexes match.
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
@@ -806,13 +821,20 @@ namespace pwiz.Skyline.Model
             // Drop explicit mods if matching implicit mods are found in the target document.
             IList<TypedExplicitModifications> newExplicitHeavyMods = new List<TypedExplicitModifications>();
             // For each heavy label type, add explicit mods if static mods not found in the target document.
+            var newTypedStaticMods = newExplicitStaticMods != null
+                ? new TypedExplicitModifications(Peptide, IsotopeLabelType.light, newExplicitStaticMods)
+                : null;
             foreach (TypedExplicitModifications targetDocMod in targetImplicitMods.GetHeavyModifications())
             {
                 // Use explicit modifications when available.  Otherwise, compare against new implicit modifications
                 IList<ExplicitMod> heavyMods = (HasExplicitMods ? ExplicitMods.GetModifications(targetDocMod.LabelType) : null) ??
                     sourceImplicitMods.GetModifications(targetDocMod.LabelType);
                 if (heavyMods != null && !ArrayUtil.EqualsDeep(heavyMods, targetDocMod.Modifications) && heavyMods.Count > 0)
-                    newExplicitHeavyMods.Add(new TypedExplicitModifications(Peptide, targetDocMod.LabelType, heavyMods));
+                {
+                    var newTypedHeavyMods = new TypedExplicitModifications(Peptide, targetDocMod.LabelType, heavyMods);
+                    newTypedHeavyMods = newTypedHeavyMods.AddModMasses(newTypedStaticMods);
+                    newExplicitHeavyMods.Add(newTypedHeavyMods);
+                }
             }
 
             if (newExplicitStaticMods != null || newExplicitHeavyMods.Count > 0)
@@ -878,12 +900,13 @@ namespace pwiz.Skyline.Model
                 var transition = nodeTran.Transition;
                 var losses = nodeTran.Losses;
                 var libInfo = nodeTran.LibInfo;
+                int? decoyMassShift = transition.IsPrecursor() ? tranGroup.DecoyMassShift : transition.DecoyMassShift;
                 var tranNew = new Transition(tranGroup,
                                              transition.IonType,
                                              transition.CleavageOffset,
                                              transition.MassIndex,
                                              transition.Charge,
-                                             transition.DecoyMassShift);
+                                             decoyMassShift);
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
                 double massH;
                 if (tranNew.IsCustom())
@@ -1470,6 +1493,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
                 Equals(other.ExplicitMods, ExplicitMods) &&
+                Equals(other.SourceKey, SourceKey) &&
                 other.Rank.Equals(Rank) &&
                 Equals(other.Results, Results) &&
                 other.BestResult == BestResult;
@@ -1488,6 +1512,7 @@ namespace pwiz.Skyline.Model
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
+                result = (result*397) ^ (SourceKey != null ? SourceKey.GetHashCode() : 0);
                 result = (result*397) ^ (Rank.HasValue ? Rank.Value : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 result = (result*397) ^ BestResult;

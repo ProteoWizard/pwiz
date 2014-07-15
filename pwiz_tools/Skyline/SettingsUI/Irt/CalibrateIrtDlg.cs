@@ -284,7 +284,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 List<MeasuredPeptide> docPeptides = new List<MeasuredPeptide>();
                 foreach (var pep in doc.Peptides)
                 {
-                    if (pep.SchedulingTime.HasValue)
+                    if (pep.SchedulingTime.HasValue && !pep.IsDecoy)
                     {
                         docPeptides.Add(new MeasuredPeptide(doc.Settings.GetModifiedSequence(pep), pep.SchedulingTime.Value));
 

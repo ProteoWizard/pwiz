@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Model
                     {
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
                         {
-                            double precursorMS1Mass = isotopeDist.GetMassI(i);
+                            double precursorMS1Mass = isotopeDist.GetMassI(i, DecoyMassShift);
                             ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorCharge);
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;

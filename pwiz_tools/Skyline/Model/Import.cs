@@ -1898,7 +1898,7 @@ namespace pwiz.Skyline.Model
             _groupLibTriples.Sort(TransitionGroupLibraryIrtTriple.CompareTriples);
             var finalGroupLibTriples = FinalizeTransitionGroups(_groupLibTriples);
             var finalTransitionGroups = finalGroupLibTriples.Select(triple => triple.NodeGroup).ToArray();
-            var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0],
+            var docNode = new PeptideDocNode(_activePeptide, _settings, _activeVariableMods[0], null,
                 finalTransitionGroups, false);
             var finalLibrarySpectra = new List<SpectrumMzInfo>();
             double? peptideIrt = GetPeptideIrt(finalGroupLibTriples);

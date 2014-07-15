@@ -1244,6 +1244,8 @@ namespace pwiz.Skyline.Util
                 double pos = (ordered.Length - 1) * p;
                 int j = (int)pos;
                 double g = pos - j;
+                if (g == 0)
+                    return ordered[j];
 
                 return (1 - g) * ordered[j] + g * ordered[j + 1];
             }
@@ -1274,6 +1276,73 @@ namespace pwiz.Skyline.Util
             {
                 return double.NaN;
             }
+        }
+
+        public static double QMedian(IList<double> list)
+        {
+            return QPercentile(list, 0.5);
+        }
+
+        /// <summary>
+        /// Quick percentile function that gives percentiles in linear time.
+        /// (See http://www.i-programmer.info/babbages-bag/505-quick-median.html?start=1)
+        /// Calculates a percentile based on the Excel method.
+        /// (See http://www.haiweb.org/medicineprices/manual/quartiles_iTSS.pdf)
+        /// For highest performance, this is a static function that takes a list
+        /// in which it modifies the order of the values, to avoid extra allocation.
+        /// </summary>
+        /// <param name="list">List of numbers</param>
+        /// <param name="p">Percentile in decimal form (e.g. 0.25)</param>
+        /// <returns>Data value such that p percent are below the value</returns>
+        public static double QPercentile(IList<double> list, double p)
+        {
+            double pos = (list.Count - 1) * p;
+            int j = (int)pos;
+            double value = QNthItem(list, j);
+            double g = pos - j;
+            if (g == 0)
+                return value;
+            double value2 = QNthItem(list, j + 1);
+            return (1 - g) * value + g * value2;
+        }
+
+        private static double QNthItem(IList<double> list, int elementIndex)
+        {
+            int left = 0;
+            int right = list.Count - 1;
+            while (left < right)
+            {
+                double value = list[elementIndex];
+                int splitLeft = left, splitRight = right;
+                Split(list, value, ref splitLeft, ref splitRight);
+                if (splitRight < elementIndex)
+                    left = splitLeft;
+                if (elementIndex < splitLeft)
+                    right = splitRight;
+            }
+            return list[elementIndex];
+        }
+
+        private static void Split(IList<double> list, double value, ref int left, ref int right)
+        {
+            // Left and right scan until the pointers cross
+            do
+            {
+                while (list[left] < value)
+                    left++;
+                while (value < list[right])
+                    right--;
+
+                if (left <= right)
+                {
+                    double temp = list[left];
+                    list[left] = list[right];
+                    list[right] = temp;
+
+                    left++;
+                    right--;
+                }
+            } while (left <= right);
         }
 
         /// <summary>

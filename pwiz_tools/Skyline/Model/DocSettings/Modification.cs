@@ -680,14 +680,12 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         private ReadOnlyCollection<TypedExplicitModifications> _modifications;
 
+        /// <summary>
+        /// Create a new set of explicit or variable modifications.  Assumes that
+        /// static modifications have already been added to the heavy mods.
+        /// </summary>
         public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
-            IEnumerable<TypedExplicitModifications> heavyMods)
-            : this(peptide, staticMods, heavyMods, false)
-        {
-            
-        }
-        public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
-            IEnumerable<TypedExplicitModifications> heavyMods, bool isVariable)
+            IEnumerable<TypedExplicitModifications> heavyMods, bool isVariable = false)
         {
             Peptide = peptide;
             IsVariableStaticMods = isVariable;
@@ -704,18 +702,20 @@ namespace pwiz.Skyline.Model.DocSettings
             _modifications = MakeReadOnly(modifications.ToArray());
         }
 
-        public ExplicitMods(PeptideDocNode nodePep,
-            IList<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
-            IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods)
-            :this(nodePep, staticMods, listStaticMods, heavyMods, listHeavyMods, false)
-        {
-            
-        }
-
+        /// <summary>
+        /// Create a new set of explicit modifications on a peptide from a list of desired
+        /// modifications of each type, and the global lists of available modifications.
+        /// </summary>
+        /// <param name="nodePep">The peptide to modify</param>
+        /// <param name="staticMods">Static modifications to be applied</param>
+        /// <param name="listStaticMods">Global static modifications</param>
+        /// <param name="heavyMods">All sets of isotope labeled mods to be applied</param>
+        /// <param name="listHeavyMods">Global isotope labeled mods</param>
+        /// <param name="implicitOnly">True to create an explicit expression of the implicit modifications</param>
         public ExplicitMods(PeptideDocNode nodePep,
             IList<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
             IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods,
-            bool implicitOnly)
+            bool implicitOnly = false)
         {
             Peptide = nodePep.Peptide;
 
@@ -969,6 +969,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #region Property change methods
+
+        public ExplicitMods ChangePeptide(Peptide prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Peptide = prop);
+        }
 
         public ExplicitMods ChangeStaticModifications(IList<ExplicitMod> prop)
         {

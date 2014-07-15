@@ -32,17 +32,18 @@ namespace pwiz.Skyline.Model.Lib
 
         public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info,
                                          IsotopeLabelType labelType, TransitionGroup group,
-                                         SrmSettings settings, ExplicitMods mods,
+                                         SrmSettings settings, string lookupSequence, ExplicitMods lookupMods,
                                          IEnumerable<int> charges, IEnumerable<IonType> types,
                                          IEnumerable<int> rankCharges, IEnumerable<IonType> rankTypes)
-            : this(info, labelType, group, settings, mods, charges, types, rankCharges, rankTypes, false, true, -1)
+            : this(info, labelType, group, settings, lookupSequence, lookupMods,
+                   charges, types, rankCharges, rankTypes, false, true, -1)
         {
         }
 
         public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
-                                         TransitionGroup group, SrmSettings settings, ExplicitMods mods,
+                                         TransitionGroup group, SrmSettings settings, ExplicitMods lookupMods,
                                          bool useFilter, int minPeaks)
-            : this(info, labelType, group, settings, mods,
+            : this(info, labelType, group, settings, group.Peptide.Sequence, lookupMods,
                    null, // charges
                    null, // types
                    // ReadOnlyCollection enumerators are too slow, and show under a profiler
@@ -53,7 +54,8 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         private LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
-                                          TransitionGroup group, SrmSettings settings, ExplicitMods mods,
+                                          TransitionGroup group, SrmSettings settings,
+                                          string lookupSequence, ExplicitMods lookupMods,
                                           IEnumerable<int> charges, IEnumerable<IonType> types,
                                           IEnumerable<int> rankCharges, IEnumerable<IonType> rankTypes,
                                           bool useFilter, bool matchAll, int minPeaks)
@@ -71,7 +73,7 @@ namespace pwiz.Skyline.Model.Lib
 
             RankParams rp = new RankParams
                                 {
-                                    sequence = group.Peptide.Sequence,
+                                    sequence = lookupSequence,
                                     precursorCharge = group.PrecursorCharge,
                                     charges = charges ?? rankCharges,
                                     types = types ?? rankTypes,
@@ -85,9 +87,9 @@ namespace pwiz.Skyline.Model.Lib
                                 };
 
             // Get necessary mass calculators and masses
-            var calcMatchPre = settings.GetPrecursorCalc(labelType, mods);
-            var calcMatch = settings.GetFragmentCalc(labelType, mods);
-            var calcPredict = settings.GetFragmentCalc(group.LabelType, mods);
+            var calcMatchPre = settings.GetPrecursorCalc(labelType, lookupMods);
+            var calcMatch = settings.GetFragmentCalc(labelType, lookupMods);
+            var calcPredict = settings.GetFragmentCalc(group.LabelType, lookupMods);
             rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(rp.sequence),
                                                     rp.precursorCharge);
             rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(rp.sequence);
@@ -110,7 +112,7 @@ namespace pwiz.Skyline.Model.Lib
             // Get potential losses to all fragments in this peptide
             rp.massType = predict.FragmentMassType;
             rp.potentialLosses = TransitionGroup.CalcPotentialLosses(rp.sequence,
-                                                                     settings.PeptideSettings.Modifications, mods,
+                                                                     settings.PeptideSettings.Modifications, lookupMods,
                                                                      rp.massType);
 
             // Create arrays because ReadOnlyCollection enumerators are too slow
