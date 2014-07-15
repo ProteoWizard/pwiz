@@ -30,7 +30,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf
+namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
     /// Verify consistent import of Waters IMS data as we work on various code optimizations.
@@ -38,7 +38,7 @@ namespace TestPerf
     /// from the raw files (this was actually broken when this test was written).
     /// </summary>
     [TestClass]
-    public class ImportWatersIMSTest : AbstractFunctionalTest, IPerfTest // IPerfTests only run when the global "allow perf tests" flag is set
+    public class ImportWatersIMSTest : AbstractFunctionalTest
     {
         private string _skyFile;
         private TestFilesDir _testFilesDir;

@@ -31,15 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    /// <summary>
-    /// Perf tests (long running, huge-data-downloading) should be declared
-    /// as IPerfTest so that they can be skipped when the allowPerfTests flag 
-    /// is unset.
-    /// </summary>
-    public interface IPerfTest
-    {
-    }
-
+   
     /// <summary>
     /// This is the base class for every unit test in Skyline.  It enables logging
     /// and also provides quick information about the running time of the test.
@@ -64,6 +56,16 @@ namespace pwiz.SkylineTestUtil
         protected bool RunPerfTests
         {
             get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+        }
+
+        /// <summary>
+        /// Perf tests (long running, huge-data-downloading) should be declared
+        /// in the TestPerf namespace so that they can be skipped when the RunPerfTests 
+        /// flag is unset.
+        /// </summary>
+        public bool IsPerfTest
+        {
+            get { return ("TestPerf".Equals(GetType().Namespace)); }
         }
 
         protected bool GetBoolValue(string property, bool defaultValue)
@@ -112,7 +114,7 @@ namespace pwiz.SkylineTestUtil
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
                         string zipFilePath = Path.Combine(targetFolder, fileName);
                         if (!File.Exists(zipFilePath) &&
-                           (((this as IPerfTest) == null) || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
+                           (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
 
                         {
                             if (!Directory.Exists(targetFolder))

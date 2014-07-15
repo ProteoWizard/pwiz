@@ -29,13 +29,13 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf
+namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
     /// Verify consistent import of Agilent IMS data as we work on various code optimizations.
     /// </summary>
     [TestClass]
-    public class ImportAgilentIMSTest : AbstractFunctionalTest, IPerfTest // IPerfTests only run when the global "allow perf tests" flag is set
+    public class ImportAgilentIMSTest : AbstractFunctionalTest
     {
         private string _skyFile;
         private TestFilesDir _testFilesDir;
@@ -48,8 +48,7 @@ namespace TestPerf
 
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsAgilentIMS.zip";
             TestFilesPersistent = new[] { "19pep_1700V_pos_3May14_Legolas.d", "19pep_1700V_CE22_pos_5May14_Legolas.d" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-            _skyFile = _testFilesDir.GetTestPath("Erin 19pep test subset.sky");
+            _testFilesDir = null;
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // turn on performance measurement
 
@@ -64,6 +63,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
+            _skyFile = _testFilesDir.GetTestPath("Erin 19pep test subset.sky");
             RunUI(() => SkylineWindow.OpenFile(_skyFile));
 
             const int chromIndex = 1;

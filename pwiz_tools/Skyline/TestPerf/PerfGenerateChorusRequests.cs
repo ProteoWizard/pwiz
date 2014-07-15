@@ -28,13 +28,13 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf
+namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
     /// Summary description for PerfGenerateChorusRequests
     /// </summary>
     [TestClass]
-    public class PerfGenerateChorusRequests : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
+    public class PerfGenerateChorusRequests : AbstractFunctionalTest
     {
         public const string CHORUS_DATASET_URL = "http://proteome.gs.washington.edu/~nicksh/chorus/SkylineFiles/";
 

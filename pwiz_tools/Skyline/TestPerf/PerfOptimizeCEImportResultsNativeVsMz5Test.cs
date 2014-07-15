@@ -26,13 +26,13 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace TestPerf
+namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
     /// Compare performance of vendor readers vs mz5 for results import.
     /// </summary>
     [TestClass]
-    public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
+    public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTest
     {
         private string _skyFile;
         private string _replicatesDirName;
@@ -75,7 +75,7 @@ namespace TestPerf
         public void AllVsMz5OptimzeCeImportPerformanceTests()
         {
             if (!RunPerfTests)
-                return; // PerfTests only run when the global "allow perf tests" flag is set
+                return; // PerfTests only run when the global RunPerfTests flag is set
 
             _loopCount = 3;
             Log.AddMemoryAppender();

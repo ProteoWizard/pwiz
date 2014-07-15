@@ -566,13 +566,10 @@ namespace pwiz.SkylineTestUtil
             try
             {
 
-                IPerfTest test = this as IPerfTest;
-                if (test != null)
+                if (IsPerfTest && !RunPerfTests)
                 {
-                    if (!RunPerfTests)
-                        return;  // Don't want to run this lengthy test right now
+                    return;  // Don't want to run this lengthy test right now
                 }
-
                 Program.FunctionalTest = true;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();

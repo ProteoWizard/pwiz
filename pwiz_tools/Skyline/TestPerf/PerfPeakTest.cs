@@ -33,10 +33,10 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
-namespace TestPerf
+namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     [TestClass]
-    public class PerfPeakTest : AbstractFunctionalTest, IPerfTest  // IPerfTests only run when the global "allow perf tests" flag is set
+    public class PerfPeakTest : AbstractFunctionalTest
     {
         // [TestMethod]  // disabling this since the test file URLs don't exist
         public void TestPeakPerf()
