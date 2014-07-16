@@ -77,6 +77,14 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetMsLevel(index);
             }
 
+            public double? GetRetentionTime(int index)
+            {
+                if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
+                    return _lookAheadDataSpectrum.RetentionTime;
+                else
+                    return _dataFile.GetStartTime(index);  // Returns 0 if retrieval is too expensive
+            }
+
             public MsDataSpectrum GetSpectrum(int index)
             {
                 if (index == _lookAheadIndex)
@@ -261,8 +269,6 @@ namespace pwiz.Skyline.Model.Results
 
                 var lookaheadContext = new LookaheadContext(filter, dataFile);
 
-                // CONSIDER: could we get a performance boost by determining the min and max
-                // retention times of interest, and entering and exiting this loop based on that?
                 for (int i = 0; i < lenSpectra; i = lookaheadContext.NextIndex(i))
                 {
                     int scanId = i;
@@ -327,6 +333,17 @@ namespace pwiz.Skyline.Model.Results
                         if (!filter.EnabledMsMs && lookaheadContext.GetMsLevel(i) != 1)
                             continue;
 
+                        // Skip quickly through the chromatographic lead-in and tail when possible 
+                        double? rtCheck = lookaheadContext.GetRetentionTime(i);
+                        if (filter.IsOutsideRetentionTimeRange(rtCheck))
+                        {
+                            // Leave an update cue for the chromatogram painter then move on
+                            if (allChromData != null)
+                                allChromData.CurrentTime = (float)rtCheck.Value;
+                            continue;
+                        }
+
+                        // Inexpensive checks are complete, now actually get the spectrum data
                         var dataSpectrum = lookaheadContext.GetSpectrum(i);
                         if (dataSpectrum.Mzs.Length == 0)
                             continue;

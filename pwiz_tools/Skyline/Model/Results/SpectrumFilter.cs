@@ -37,8 +37,10 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isHighAccMsFilter;
         private readonly bool _isHighAccProductFilter;
         private readonly bool _isSharedTime;
-        private readonly double? _minTime;
-        private readonly double? _maxTime;
+        private readonly double? _minTime;  // Copied from _instrument.MinTime
+        private readonly double? _maxTime;  // Copied from _instrument.MaxTime
+        private readonly double _minFilterPairsRT; // Min of range of RT filter values across FilterPairs 
+        private readonly double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
         private readonly SpectrumFilterPair[] _filterMzValues;
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
@@ -210,6 +212,39 @@ namespace pwiz.Skyline.Model.Results
                 }
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
             }
+
+            // Determine min and max range across all retention time filters, if any
+            _maxFilterPairsRT = double.MaxValue;
+            _minFilterPairsRT = double.MinValue;
+            if (FilterPairs != null)
+            { 
+                double? maxRT = null;
+                double? minRT = null;
+                foreach (var fp in FilterPairs)
+                {
+                    if ((fp.MaxTime ?? double.MinValue) > (maxRT ?? double.MinValue))
+                        maxRT = fp.MaxTime.Value;
+                    if ((fp.MinTime ?? double.MaxValue) < (minRT ?? double.MaxValue))
+                        minRT = fp.MinTime.Value;  
+                }
+                if (maxRT.HasValue)
+                    _maxFilterPairsRT = maxRT.Value;
+                if (minRT.HasValue && !IsMseData()) // For MSe data, just start from the beginning lest we drop in mid-cycle
+                    _minFilterPairsRT = minRT.Value;
+            }
+        }
+
+        public bool IsOutsideRetentionTimeRange(double? rtCheck)
+        {
+            if ((!rtCheck.HasValue) || (rtCheck.Value == 0)) // Consider these both as meaning "unknown"
+                return false; // Can't reject an as-yet-unknown value
+            return ((rtCheck.Value < _minFilterPairsRT || _maxFilterPairsRT < rtCheck.Value));
+        }
+
+        public bool IsMseData()
+        {
+            return (EnabledMsMs && _fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
+                    _fullScan.IsolationScheme.IsAllIons);
         }
 
         /*

@@ -88,8 +88,8 @@ namespace pwiz.Skyline.Model.Results
         public bool HighAccQ3 { get; private set; }
         public string ModifiedSequence { get; private set; }
         public double Q1 { get; private set; }
-        private double? MinTime { get; set; }
-        private double? MaxTime { get; set; }
+        public double? MinTime { get; private set; }
+        public double? MaxTime { get; private set; }
         private double? MinDriftTimeMsec { get; set; }
         private double? MaxDriftTimeMsec { get; set; }
         // Q1 values for when precursor ions are filtered from MS1
