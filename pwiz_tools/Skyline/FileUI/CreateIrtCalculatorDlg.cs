@@ -37,6 +37,18 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class CreateIrtCalculatorDlg : FormEx
     {
+        private static readonly string[] COMMON_IRT_STANDARDS = { "ADVTPADFSEWSK", 
+                                                                  "DGLDAASYYAPVR", 
+                                                                  "GAGSSEPVTGLDAK", 
+                                                                  "GTFIIDPAAVIR",
+                                                                  "GTFIIDPGGVIR",
+                                                                  "LFLQFGAQGSPFLK", 
+                                                                  "LGGNEQVTR", 
+                                                                  "TPVISGGPYEYR",
+                                                                  "TPVITGAPYEYR",
+                                                                  "VEATFGVDESNAK",
+                                                                  "YILAGVENSK"};
+
         public List<SpectrumMzInfo> LibrarySpectra { get { return _librarySpectra; } } 
         public List<DbIrtPeptide> DbIrtPeptides { get { return _dbIrtPeptides; } } 
         public string IrtFile { get; private set; }
@@ -54,6 +66,11 @@ namespace pwiz.Skyline.FileUI
             return String.Compare(group1.Name, group2.Name, CultureInfo.CurrentCulture, CompareOptions.None);
         }
 
+        private static bool ContainsCommonIrts(PeptideGroupDocNode protein)
+        {
+            return protein.Peptides.Select(pep => pep.ModifiedSequence).Intersect(COMMON_IRT_STANDARDS).Count() > CalibrateIrtDlg.MIN_STANDARD_PEPTIDES;
+        }
+
         public CreateIrtCalculatorDlg(SrmDocument document, IList<RetentionScoreCalculatorSpec> existing, IEnumerable<PeptideGroupDocNode> peptideGroups)
         {
             _existing = existing;
@@ -63,8 +80,11 @@ namespace pwiz.Skyline.FileUI
             _dbIrtPeptides = new List<DbIrtPeptide>();
             IrtPeptideSequences = new List<string>();
             var possibleStandardProteins = peptideGroups.Where(group => group.PeptideCount > CalibrateIrtDlg.MIN_STANDARD_PEPTIDES).ToList();
+            var proteinsContainingCommonIrts = possibleStandardProteins.Where(ContainsCommonIrts);
+            var proteinsNotContainingCommonIrts = possibleStandardProteins.Where(group => !ContainsCommonIrts(group));
             possibleStandardProteins.Sort(CompareNames);
-            comboBoxProteins.Items.AddRange(possibleStandardProteins.ToArray());
+            comboBoxProteins.Items.AddRange(proteinsContainingCommonIrts.ToArray());
+            comboBoxProteins.Items.AddRange(proteinsNotContainingCommonIrts.ToArray());
             UpdateSelection(IrtType.existing);
         }
 
@@ -421,6 +441,13 @@ namespace pwiz.Skyline.FileUI
         }
 
         public int CountProteins { get { return comboBoxProteins.Items.Count; } }
+
+        public string GetProtein(int index)
+        {
+            var node = comboBoxProteins.Items[index] as PeptideGroupDocNode;
+// ReSharper disable once PossibleNullReferenceException
+            return node.Name.ToString(CultureInfo.CurrentCulture);
+        }
 
         #endregion
     }

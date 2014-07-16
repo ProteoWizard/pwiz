@@ -986,6 +986,7 @@ namespace pwiz.SkylineTestFunctional
                 createIrtDlg.CalculatorName = "irtEmbedded";
                 createIrtDlg.IrtImportType = CreateIrtCalculatorDlg.IrtType.protein;
                 createIrtDlg.NewDatabaseNameProtein = newDatabase;
+                Assert.AreEqual(createIrtDlg.GetProtein(0), "IRT");
                 createIrtDlg.SelectedProtein = "IRT";
                 Assert.AreEqual(createIrtDlg.CountProteins, 14);
             });
