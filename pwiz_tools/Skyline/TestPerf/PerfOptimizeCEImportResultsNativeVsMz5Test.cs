@@ -34,6 +34,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerformanceOptimizeCeImportVsMz5Test : AbstractFunctionalTest
     {
+
+        // Note to developers considering this as a template for new tests:
+        // The use of a private TestFilesDir instead of the one provided by
+        // AbstractFunctionalTest is useful for the purposes of this test,
+        // which is trying to string together a bunch of results into a CSV
+        // compatible output, but doesn't really follow the AbstractFunctionalTest
+        // model and thus probably isn't what you really want.  
+        // Something like ImportAgilentIMSTest probably makes for a better starting point.
+
         private string _skyFile;
         private string _replicatesDirName;
         private int _loopCount;

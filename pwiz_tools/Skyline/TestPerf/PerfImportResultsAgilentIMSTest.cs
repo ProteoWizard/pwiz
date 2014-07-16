@@ -37,9 +37,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class ImportAgilentIMSTest : AbstractFunctionalTest
     {
-        private string _skyFile;
-        private TestFilesDir _testFilesDir;
-
 
         [TestMethod] 
         public void AgilentIMSImportTest()
@@ -48,7 +45,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportResultsAgilentIMS.zip";
             TestFilesPersistent = new[] { "19pep_1700V_pos_3May14_Legolas.d", "19pep_1700V_CE22_pos_5May14_Legolas.d" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            _testFilesDir = null;
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // turn on performance measurement
 
@@ -57,15 +53,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var logs = Log.GetMemoryAppendedLogEvents();
             var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary
             var log = new Log("Summary");
-            if (_testFilesDir != null)
-                log.Info(stats.Replace(_testFilesDir.PersistentFilesDir, ""));
+            if (TestFilesDirs != null)
+                log.Info(stats.Replace(TestFilesDir.PersistentFilesDir, "")); // Remove tempfile info from log
         }
 
         protected override void DoTest()
         {
-            _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-            _skyFile = _testFilesDir.GetTestPath("Erin 19pep test subset.sky");
-            RunUI(() => SkylineWindow.OpenFile(_skyFile));
+            string skyFile = TestFilesDir.GetTestPath("Erin 19pep test subset.sky");
+            RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             const int chromIndex = 1;
             var doc0 = WaitForDocumentLoaded();

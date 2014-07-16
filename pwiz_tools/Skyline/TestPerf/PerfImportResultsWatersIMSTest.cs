@@ -40,9 +40,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class ImportWatersIMSTest : AbstractFunctionalTest
     {
-        private string _skyFile;
-        private TestFilesDir _testFilesDir;
-
 
         [TestMethod] 
         public void WatersIMSImportTest()
@@ -58,8 +55,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var logs = Log.GetMemoryAppendedLogEvents();
             var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // Show summary
             var log = new Log("Summary");
-            if (_testFilesDir != null)
-                log.Info(stats.Replace(_testFilesDir.PersistentFilesDir, ""));
+            if (TestFilesDirs != null)
+                log.Info(stats.Replace(TestFilesDir.PersistentFilesDir, "")); // Remove tempfile info from log
         }
 
         private string GetTestPath(string relativePath)
@@ -70,10 +67,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            _testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
-            _skyFile = _testFilesDir.GetTestPath("Mix1_SkylineIMS_Test-reimport_RP50.sky");
+            string skyfile = TestFilesDir.GetTestPath("Mix1_SkylineIMS_Test-reimport_RP50.sky");
 
-            RunUI(() => SkylineWindow.OpenFile(_skyFile));
+            RunUI(() => SkylineWindow.OpenFile(skyfile));
 
             var doc0 = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc0, null, 4, 218, 429, 3176);
@@ -102,7 +98,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             doc = WaitForDocumentChange(doc);
 
             // Verify document library was built
-            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(_skyFile);
+            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(skyfile);
             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
             Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
