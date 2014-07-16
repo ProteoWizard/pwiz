@@ -227,7 +227,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
-                       FindDataFiles(longWaitBroker, missingFiles, dirSearch, ref numMissingFiles));
+                    FindDataFilesStartingWith(longWaitBroker, missingFiles, dirSearch, ref numMissingFiles)
+                );
             }
             catch (Exception x)
             {
@@ -235,6 +236,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             return numMissingFiles == 0;
+        }
+
+        private void FindDataFilesStartingWith(ILongWaitBroker longWaitBroker,
+            Dictionary<string, ResultsFileFindInfo> missingFiles, string initialDirectory, ref int numMissingFiles)
+        {
+            var dirs = new List<string> { initialDirectory };
+            // Also handle the case where the file being searched against is in a completely different directory
+            foreach (var missingFile in missingFiles)
+            {
+                var dirname = Path.GetDirectoryName(missingFile.Key);
+                if (dirname != null && !dirs.Contains(dirname))
+                {
+                    dirs.Add(dirname);
+                }
+            }
+            foreach (var directory in dirs)
+            {
+                FindDataFiles(longWaitBroker, missingFiles, directory, ref numMissingFiles);
+            }
         }
 
         private void FindDataFiles(ILongWaitBroker longWaitBroker, Dictionary<string, ResultsFileFindInfo> missingFiles, string directory, ref int numMissingFiles)
@@ -245,24 +265,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            var dirs = new List<string>();
+            string[] dirs;
             try
             {
-                dirs = Directory.GetDirectories(directory).ToList();
+                dirs = Directory.GetDirectories(directory);
             }
             catch (Exception)
             {
                 return;
-            }
-
-            // Also handle the case where the file being searched against is in a completely different directory
-            foreach (var file in missingFiles)
-            {
-                var dirname = Path.GetDirectoryName(file.Key);
-                if ((dirname != null) && !directory.Equals(dirname) && !dirs.Contains(dirname))
-                {
-                    dirs.Add(dirname);
-                }
             }
 
             foreach (string dir in dirs)
@@ -293,8 +303,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private bool CheckBasenameMatch(string fileName, Dictionary<string, ResultsFileFindInfo> missingFiles, ref int numMissingFiles)
+        private bool CheckBasenameMatch(string filePath, Dictionary<string, ResultsFileFindInfo> missingFiles, ref int numMissingFiles)
         {
+            var fileName = Path.GetFileName(filePath);
             foreach (var item in missingFiles.Keys.Where(item => !missingFiles[item].Found))
             {
                 if (null == item) // For ReSharper
@@ -305,7 +316,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         Path.GetFileNameWithoutExtension(fileName)))
                 {
                     missingFiles[item].Found = true;
-                    missingFiles[item].Path = new MsDataFilePath(fileName);
+                    missingFiles[item].Path = new MsDataFilePath(filePath);
                     numMissingFiles--;
                     return true;
                 }
@@ -336,9 +347,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     continue;
 
                 // Check to see if the file matches any of the missing files
-                string fileName = Path.GetFileName(file);
-
-                if (CheckBasenameMatch(fileName, missingFiles, ref numMissingFiles))
+                if (CheckBasenameMatch(file, missingFiles, ref numMissingFiles))
                 {
                     if (numMissingFiles == 0)
                     {
