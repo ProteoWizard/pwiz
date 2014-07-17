@@ -594,20 +594,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double? SelectedRetentionTimeMsMs
         {
-            get
-            {
-                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag;
-                return graphItem.SelectedRetentionMsMs;
-            }
+            get { return RTGraphItem.SelectedRetentionMsMs; }
         }
 
         public double? PredictedRT
         {
-            get
-            {
-                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag;
-                return graphItem.RetentionPrediction;
-            }
+            get { return RTGraphItem.RetentionPrediction; }
+        }
+
+        private ChromGraphItem RTGraphItem
+        {
+            get { return (ChromGraphItem) graphControl.GraphPane.CurveList.Last().Tag; }
         }
 
         public double? BestPeakTime
@@ -2685,22 +2682,24 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double[] RetentionMsMs
         {
-            get
-            {
-                return (from graphItem in GraphItems
-                        where graphItem.RetentionMsMs != null
-                        select graphItem.RetentionMsMs).FirstOrDefault();
-            }
+            get { return GetTimes(g => g.RetentionMsMs); }
         }
 
         public double[] AlignedRetentionMsMs
         {
-            get
-            {
-                return (from graphItem in GraphItems
-                        where graphItem.AlignedRetentionMsMs != null
-                        select graphItem.AlignedRetentionMsMs).FirstOrDefault();
-            }
+            get { return GetTimes(g => g.AlignedRetentionMsMs); }
+        }
+
+        public double[] UnalignedRetentionMsMs
+        {
+            get { return GetTimes(g => g.UnalignedRetentionMsMs); }
+        }
+
+        private double[] GetTimes(Func<ChromGraphItem, double[]> getProp)
+        {
+            return (from graphItem in GraphItems
+                    where getProp(graphItem) != null
+                    select getProp(graphItem)).FirstOrDefault();
         }
 
         private PeakBoundsDragInfo[] _peakBoundDragInfos;

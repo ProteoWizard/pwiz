@@ -575,11 +575,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 // If it is not, do not save the retention time for this spectrum, and do not
                 // add it to the redundant library. However, if this is the reference (best) spectrum
                 // we must save its retention time. 
-                var matchingFile = document.Settings.HasResults
-                    ? document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrum.FilePath))
-                    : null;
-                if (!spectrum.IsBest && matchingFile == null)
-                    continue;
+                // NOTE: Spectra not used in the results get used for too much now for this to be useful
+//                var matchingFile = document.Settings.HasResults
+//                    ? document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrum.FilePath))
+//                    : null;
+//                if (!spectrum.IsBest && matchingFile == null)
+//                    continue;
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.

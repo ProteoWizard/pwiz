@@ -132,6 +132,7 @@
   <ItemGroup>
     <Compile Include="PerfChorusContentsTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
+    <Compile Include="PerfDecoysMatchTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsWatersIMSTest.cs" />

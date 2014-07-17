@@ -1035,8 +1035,16 @@ namespace pwiz.SkylineTestUtil
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
-            ImportResultsNameDlg importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-            RunUI(importResultsNameDlg.YesDialog);
+            string prefix = ImportResultsDlg.GetCommonPrefix(fileNames.Select(f => f.GetFileName()));
+            if (prefix.Length < ImportResultsDlg.MIN_COMMON_PREFIX_LENGTH)
+            {
+                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+            }
+            else
+            {
+                ImportResultsNameDlg importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
+                RunUI(importResultsNameDlg.YesDialog);
+            }
             WaitForCondition(waitForLoadSeconds * 1000,
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
         }

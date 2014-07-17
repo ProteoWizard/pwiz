@@ -35,6 +35,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ImportResultsDlg : FormEx
     {
+        public const int MIN_COMMON_PREFIX_LENGTH = 3;
 
         // Number of transitions below which the user gets a warning about
         // multiple injection features.
@@ -197,7 +198,7 @@ namespace pwiz.Skyline.FileUI
             if (NamedPathSets.Length > 1)
             {
                 string prefix = GetCommonPrefix(Array.ConvertAll(NamedPathSets, ns => ns.Key));
-                if (prefix.Length > 2)
+                if (prefix.Length >= MIN_COMMON_PREFIX_LENGTH)
                 {
                     using (var dlgName = new ImportResultsNameDlg(prefix))
                     {

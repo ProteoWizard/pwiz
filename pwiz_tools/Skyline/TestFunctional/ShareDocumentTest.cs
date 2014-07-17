@@ -139,11 +139,11 @@ namespace pwiz.SkylineTestFunctional
             string blibPath1 = GetPathToBlibFile(shareMinPath2, blibName);
             string blibPath2 = GetPathToBlibFile(shareMinPath3, blibName);
             Assert.AreNotSame(blibPath1, blibPath2);
-            Assert.IsTrue(GetCount(blibPath1, "RetentionTimes") >
+            // Retention times no longer discarded, as they can be useful
+            // later for peak picking and scheduling, nor are their redundant spectra
+            Assert.AreEqual(GetCount(blibPath1, "RetentionTimes"),
                           GetCount(blibPath2, "RetentionTimes"));
-
-
-            Assert.IsTrue(origFileSet2[redundantBlibName].UncompressedSize >
+            Assert.AreEqual(origFileSet2[redundantBlibName].UncompressedSize,
                           newFileSet[redundantBlibName].UncompressedSize);
             // This does not work.  Both the original and new files are the same size even though
             // the number of entries in the RetentionTimes table is smaller in the new file.

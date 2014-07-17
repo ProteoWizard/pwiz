@@ -236,7 +236,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         if (ImportResultsControl.FoundResultsFiles.Count > 1)
                         {
                             string prefix = ImportResultsDlg.GetCommonPrefix(ImportResultsControl.FoundResultsFilesNames);
-                            if (prefix.Length > 2)
+                            if (prefix.Length >= ImportResultsDlg.MIN_COMMON_PREFIX_LENGTH)
                             {
                                 using (var dlgName = new ImportResultsNameDlg(prefix))
                                 {

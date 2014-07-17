@@ -61,7 +61,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             // Set initial decoys number
-            textNumberOfDecoys.Text = RefinementSettings.CountDecoys(document).ToString(LocalizationHelper.CurrentCulture);
+            textNumberOfDecoys.Text = RefinementSettings.SuggestDecoyCount(document).ToString(LocalizationHelper.CurrentCulture);
 
             // Fill method type combo box
             comboDecoysGenerationMethod.Items.AddRange(DecoyGeneration.Methods.Cast<object>().ToArray());

@@ -608,7 +608,7 @@ namespace pwiz.Skyline.Model
             public ExplicitMods Mods { get; set; }
         }
 
-        public static int CountDecoys(SrmDocument document)
+        public static int SuggestDecoyCount(SrmDocument document)
         {
             int count = 0;
             foreach (var nodePep in document.Peptides)
