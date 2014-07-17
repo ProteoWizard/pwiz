@@ -18,9 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
@@ -35,8 +32,6 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class StatisticsTest : AbstractUnitTest
     {
-        private readonly ReadOnlyCollection<double> _xList;
-        private readonly ReadOnlyCollection<double> _yList;
         private readonly Statistics _xValues;
         private readonly Statistics _yValues;
         private readonly double _xMember;
@@ -332,8 +327,6 @@ namespace pwiz.SkylineTest
                 xList.Add((double) peptideResults[i, 1]);
                 yList.Add((double) peptideResults[i, 2]);
             }
-            _xList = new ReadOnlyCollection<double>(xList);
-            _yList = new ReadOnlyCollection<double>(yList);
             _xValues = new Statistics(xList.ToArray());
             _yValues = new Statistics(yList);
             _xMember = (double) peptideResults[10, 1];
@@ -481,10 +474,8 @@ namespace pwiz.SkylineTest
             for (int i = 1; i < 10; i++)
             {
                 double p = i*0.1;
-                var xList = _xList.ToList();
-                var yList = _yList.ToList();
-                Assert.AreEqual(_xValues.Percentile(p), Statistics.QPercentile(xList, p));
-                Assert.AreEqual(_yValues.Percentile(p), Statistics.QPercentile(yList, p));
+                Assert.AreEqual(_xValues.PercentileExcelSorted(p), _xValues.Percentile(p));
+                Assert.AreEqual(_yValues.PercentileExcelSorted(p), _yValues.QPercentile(p));
             }
         }
 
@@ -564,14 +555,14 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void MedianTest()
         {
+            Assert.AreEqual(23.805, _xValues.PercentileExcelSorted(0.5));
+            Assert.AreEqual(49, _yValues.PercentileExcelSorted(0.5));
+            Assert.AreEqual(25.5, new Statistics(new []{25.5}).PercentileExcelSorted(0.5));
             Assert.AreEqual(23.805, _xValues.Median());
             Assert.AreEqual(49, _yValues.Median());
-            Assert.AreEqual(25.5, new Statistics(new []{25.5}).Median());
-            Assert.AreEqual(23.805, Statistics.QMedian(_xList.ToArray()));
-            Assert.AreEqual(49, Statistics.QMedian(_yList.ToArray()));
-            Assert.AreEqual(25.5, Statistics.QMedian(new[] { 25.5 }));
-            Assert.AreEqual(3.0, Statistics.QMedian(new[] { 1.0, 3.0, 5.0 }));
-            Assert.AreEqual(2.5, Statistics.QMedian(new[] { 1.0, 2.0, 3.0, 5.0 }));
+            Assert.AreEqual(25.5, new Statistics(new[] {25.5}).Median());
+            Assert.AreEqual(3.0, new Statistics(new[] {1.0, 3.0, 5.0}).Median());
+            Assert.AreEqual(2.5, new Statistics(new[] {1.0, 2.0, 3.0, 5.0}).Median());
         }
 
         /// <summary>

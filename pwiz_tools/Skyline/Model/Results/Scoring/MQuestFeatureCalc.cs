@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
                     if (times.Length > 0)
                     {
-                        predictedRT = Statistics.QMedian(times);
+                        predictedRT = new Statistics(times).Median();
                     }
                 }
                 context.AddInfo(new RetentionTimePrediction(predictedRT));

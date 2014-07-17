@@ -11,7 +11,7 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class Statistics
     {
-        private double[] _list;
+        private readonly double[] _list;
 
         /// <summary>
         /// Constructor for statistics on a set of numbers.
@@ -28,15 +28,6 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Change the set of numbers for which statistics are to be computed.
-        /// </summary>
-        /// <param name="list">New set of numbers</param>
-        public void Update(params double[] list)
-        {
-            _list = list;
-        }
-
-        /// <summary>
         /// Count of the numbers in the set.
         /// </summary>
         public int Length
@@ -50,10 +41,16 @@ namespace pwiz.Skyline.Util
         /// <returns>A sorted copy of the list of numbers in this object</returns>
         private double[] OrderedList()
         {
-            var ordered = new double[_list.Length];
-            _list.CopyTo(ordered, 0);
+            var ordered = CopyList();
             Array.Sort(ordered);
             return ordered;
+        }
+
+        private double[] CopyList()
+        {
+            var listCopy = new double[_list.Length];
+            _list.CopyTo(listCopy, 0);
+            return listCopy;
         }
 
         private KeyValuePair<double, int>[] OrderedIndexedList(bool desc = false)
@@ -1219,13 +1216,13 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates a percentile using <see cref="PercentileExcel"/>.
+        /// Calculates a percentile using <see cref="QPercentile"/>.
         /// </summary>
         /// <param name="p">Percentile in decimal form (e.g. 0.25)</param>
         /// <returns>Data value such that p percent are below the value</returns>
         public double Percentile(double p)
         {
-            return PercentileExcel(p);
+            return QPercentile(p);
         }
 
         /// <summary>
@@ -1236,7 +1233,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="p">Percentile in decimal form (e.g. 0.25)</param>
         /// <returns>Data value such that p percent are below the value</returns>
-        public double PercentileExcel(double p)
+        public double PercentileExcelSorted(double p)
         {
             try
             {
@@ -1278,11 +1275,6 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public static double QMedian(IList<double> list)
-        {
-            return QPercentile(list, 0.5);
-        }
-
         /// <summary>
         /// Quick percentile function that gives percentiles in linear time.
         /// (See http://www.i-programmer.info/babbages-bag/505-quick-median.html?start=1)
@@ -1291,19 +1283,26 @@ namespace pwiz.Skyline.Util
         /// For highest performance, this is a static function that takes a list
         /// in which it modifies the order of the values, to avoid extra allocation.
         /// </summary>
-        /// <param name="list">List of numbers</param>
         /// <param name="p">Percentile in decimal form (e.g. 0.25)</param>
         /// <returns>Data value such that p percent are below the value</returns>
-        public static double QPercentile(IList<double> list, double p)
+        public double QPercentile(double p)
         {
-            double pos = (list.Count - 1) * p;
-            int j = (int)pos;
-            double value = QNthItem(list, j);
-            double g = pos - j;
-            if (g == 0)
-                return value;
-            double value2 = QNthItem(list, j + 1);
-            return (1 - g) * value + g * value2;
+            try
+            {
+                var list = CopyList();
+                double pos = (list.Length - 1) * p;
+                int j = (int)pos;
+                double value = QNthItem(list, j);
+                double g = pos - j;
+                if (g == 0)
+                    return value;
+                double value2 = QNthItem(list, j + 1);
+                return (1 - g) * value + g * value2;
+            }
+            catch (Exception)
+            {
+                return double.NaN;
+            }
         }
 
         private static double QNthItem(IList<double> list, int elementIndex)
