@@ -314,9 +314,20 @@ namespace TestRunner
                 runTests.LiveReports = false;
                 runTests.RunPerfTests = false;
                 runTests.CheckCrtLeaks = CrtLeakThreshold;
+                bool warnedPass0PerfTest = false;
                 for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                 {
                     var test = testList[testNumber];
+                    if (test.IsPerfTest)
+                    {
+                        // These are largely about vendor and/or internet performance, so not worth doing in pass 0
+                        if (!warnedPass0PerfTest)
+                        {
+                            warnedPass0PerfTest = true;
+                            runTests.Log("# Skipping perf tests for pass 0.\r\n");
+                        }
+                        continue;
+                    }
                     if (!runTests.Run(test, 0, testNumber))
                         removeList.Add(test);
                 }
@@ -336,11 +347,23 @@ namespace TestRunner
             {
                 runTests.Log("\r\n");
                 runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
+                bool warnedPass1PerfTest = false;
 
                 for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                 {
                     var test = testList[testNumber];
                     bool failed = false;
+
+                    if (test.IsPerfTest)
+                    {
+                        // These are generally too lengthy to run multiple times, so not a good fit for pass 1
+                        if (!warnedPass1PerfTest)
+                        {
+                            warnedPass1PerfTest = true;
+                            runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
+                        }
+                        continue;  
+                    }
 
                     // Warm up memory by running the test in each language.
                     for (int i = 0; i < qualityLanguages.Length; i++)
@@ -419,6 +442,9 @@ namespace TestRunner
                 runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
             }
 
+            int perfPass = pass; // We'll run perf tests just once per language
+            bool warnedPass2PerfTest = false;
+
             for (; pass < passEnd; pass++)
             {
                 if (testList.Count == 0)
@@ -436,6 +462,16 @@ namespace TestRunner
                         runTests.Language = new CultureInfo(language);
                         for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                         {
+                            if (test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
+                            {
+                                // Perf Tests are generally too lengthy to run multiple times (but per-language check is useful)
+                                if (!warnedPass2PerfTest)
+                                {
+                                    runTests.Log("# Perf tests will be run only once per language.\r\n");
+                                    warnedPass2PerfTest = true;
+                                }
+                                break;
+                            }
                             if (!runTests.Run(test, pass, testNumber))
                                 removeList.Add(test);
                         }

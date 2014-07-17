@@ -41,6 +41,7 @@ namespace TestRunnerLib
         public readonly MethodInfo SetTestContext;
         public readonly MethodInfo TestInitialize;
         public readonly MethodInfo TestCleanup;
+        public readonly bool IsPerfTest;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -49,6 +50,7 @@ namespace TestRunnerLib
             SetTestContext = testClass.GetMethod("set_TestContext");
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
+            IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
         }
     }
 

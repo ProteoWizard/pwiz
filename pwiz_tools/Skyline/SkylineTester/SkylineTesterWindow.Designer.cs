@@ -34,6 +34,7 @@ namespace SkylineTester
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineTesterWindow));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.mainPanel = new System.Windows.Forms.Panel();
@@ -231,6 +232,7 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -2105,6 +2107,8 @@ namespace SkylineTester
             this.nightlyRunPerfTests.Size = new System.Drawing.Size(181, 17);
             this.nightlyRunPerfTests.TabIndex = 33;
             this.nightlyRunPerfTests.Text = "Include Perf Tests in Nightly Run";
+            this.toolTip1.SetToolTip(this.nightlyRunPerfTests, "Perf tests run only once per language, and only in pass 2 (no leak detection or i" +
+        "nitial novendor check)");
             this.nightlyRunPerfTests.UseVisualStyleBackColor = true;
             // 
             // buttonNow
@@ -2927,6 +2931,7 @@ namespace SkylineTester
         private ToolStripMenuItem optionsToolStripMenuItem;
         private ToolStripMenuItem accessInternet;
         private CheckBox runDemoMode;
+        private ToolTip toolTip1;
     }
 }
 
