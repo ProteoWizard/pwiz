@@ -74,18 +74,9 @@ namespace pwiz.MSGraph
             set { _currentItemType = value; }
         }
 
-        public void SetScale()
+        public virtual void SetScale( Graphics g )
         {
-            SetScale( null );
-        }
-
-        public void SetScale( Graphics g )
-        {
-            int bins;
-            if( g == null )
-                bins = (int) Chart.Rect.Width;
-            else
-                bins = (int) CalcChartRect( g ).Width;
+            int bins = (int) CalcChartRect( g ).Width;
             if( bins < 1 )
                 return;
 

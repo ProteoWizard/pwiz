@@ -63,7 +63,7 @@ namespace ZedGraph
 		/// <see cref="GraphPane"/> after the zoom or pan event</param>
 		/// <seealso cref="ZoomEvent" />
 		public delegate void ZoomEventHandler( ZedGraphControl sender, ZoomState oldState,
-			ZoomState newState );
+			ZoomState newState, PointF mousePosition );
 
 		/// <summary>
 		/// Subscribe to this event to be notified when the <see cref="GraphPane"/> is zoomed or panned by the user,
@@ -880,7 +880,7 @@ namespace ZedGraph
 
 					// Provide Callback to notify the user of zoom events
 					if ( this.ZoomEvent != null )
-						this.ZoomEvent( this, oldState, new ZoomState( pane, ZoomState.StateType.WheelZoom ) );
+						this.ZoomEvent( this, oldState, new ZoomState( pane, ZoomState.StateType.WheelZoom ), pane.CenterPoint );
 
 					this.Refresh();
 
@@ -1074,7 +1074,7 @@ namespace ZedGraph
 				// Provide Callback to notify the user of pan events
 				if ( this.ZoomEvent != null )
 					this.ZoomEvent( this, _zoomState,
-						new ZoomState( _dragPane, ZoomState.StateType.Pan ) );
+						new ZoomState( _dragPane, ZoomState.StateType.Pan ), _dragPane.CenterPoint );
 
 				_zoomState = null;
 			}
@@ -1313,7 +1313,7 @@ namespace ZedGraph
 					// Provide Callback to notify the user of zoom events
 					if ( this.ZoomEvent != null )
 						this.ZoomEvent( this, _zoomState, //oldState,
-							new ZoomState( _dragPane, ZoomState.StateType.Zoom ) );
+							new ZoomState( _dragPane, ZoomState.StateType.Zoom ), _dragPane.CenterPoint );
 
 					using ( Graphics g = this.CreateGraphics() )
 					{

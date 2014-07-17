@@ -360,7 +360,7 @@ namespace pwiz.Skyline.SettingsUI
             zgIsolationGraph.Refresh();
         }
 
-        private void zgIsolationWindow_ZoomEvent(ZedGraphControl sender, ZoomState oldstate, ZoomState newstate)
+        private void zgIsolationWindow_ZoomEvent(ZedGraphControl sender, ZoomState oldstate, ZoomState newstate, PointF mousePosition)
         {
             RescaleGraph();
         }
