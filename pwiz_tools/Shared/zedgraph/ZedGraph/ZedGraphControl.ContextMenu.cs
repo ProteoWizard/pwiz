@@ -670,7 +670,7 @@ namespace ZedGraph
 
 					// Provide Callback to notify the user of zoom events
 					if ( this.ZoomEvent != null )
-						this.ZoomEvent(this, oldState, new ZoomState(primaryPane, ZoomState.StateType.Zoom), primaryPane.CenterPoint);
+						this.ZoomEvent( this, oldState, new ZoomState( primaryPane, ZoomState.StateType.Zoom ) );
 
 					//g.Dispose();
 				}
@@ -810,7 +810,7 @@ namespace ZedGraph
 
 				// Provide Callback to notify the user of zoom events
 				if ( this.ZoomEvent != null )
-                    this.ZoomEvent(this, oldState, newState, primaryPane.CenterPoint);
+					this.ZoomEvent( this, oldState, newState );
 
 				Refresh();
 			}
@@ -869,7 +869,7 @@ namespace ZedGraph
 
 				// Provide Callback to notify the user of zoom events
 				if ( this.ZoomEvent != null )
-                    this.ZoomEvent(this, oldState, newState, primaryPane.CenterPoint);
+					this.ZoomEvent( this, oldState, newState );
 
 				Refresh();
 			}

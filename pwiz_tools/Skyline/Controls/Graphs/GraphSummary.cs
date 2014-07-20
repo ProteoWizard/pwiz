@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return null != graphPane && graphPane.HandleMouseDownEvent(sender, e);
         }
 
-        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
         {
             foreach (var pane in GraphPanes)
             {

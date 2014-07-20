@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check zoomed spectrum.
             SetZoom(false);
-            TestScale(0, 2000, 0, 5100);
+            TestScale(0, 2500, 0, 6000);
             SetZoom(true);
             TestScale(452, 456, 0, 400);
 
@@ -79,9 +79,9 @@ namespace pwiz.SkylineTestFunctional
             SetFilter(true);
             TestScale(452, 456, 3.2, 3.8);
             SetZoom(false);
-            TestScale(0, 2000, 3.2, 3.8);
+            TestScale(0, 2500, 3.2, 3.8);
             SetFilter(false);
-            TestScale(0, 2000, 0, 15);
+            TestScale(0, 2500, 0, 16);
             SetZoom(true);
             TestScale(452, 456, 2.8, 4.2);
 
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             SetSpectrum(true);
             SetZoom(false);
             SetScanType(ChromSource.fragment, 33.23, 27.9);
-            ClickFullScan(517, 1000);
+            ClickFullScan(517, 1125);
             TestScale(516, 520, 0, 80);
 
             // Check split graph
@@ -134,17 +134,13 @@ namespace pwiz.SkylineTestFunctional
                 double yAxisMax = SkylineWindow.GraphFullScan.YAxisMax;
 
                 Assert.IsTrue(xMin - xAxisMin >= 0 &&
-                              xMin - xAxisMin < (xMax - xMin)/4,
-                              "Expected x minimum {0}, got {1}", xMin, xAxisMin);
+                              xMin - xAxisMin < (xMax - xMin)/4);
                 Assert.IsTrue(xAxisMax - xMax >= 0 &&
-                              xAxisMax - xMax < (xMax - xMin)/4,
-                              "Expected x maximum {0}, got {1}", xMax, xAxisMax);
+                              xAxisMax - xMax < (xMax - xMin)/4);
                 Assert.IsTrue(yMin - yAxisMin >= 0 &&
-                              yMin - yAxisMin < (yMax - yMin)/4,
-                              "Expected y minimum {0}, got {1}", yMin, yAxisMin);
+                              yMin - yAxisMin < (yMax - yMin)/4);
                 Assert.IsTrue(yAxisMax - yMax >= 0 &&
-                              yAxisMax - yMax < (yMax - yMin)/4,
-                              "Expected y maximum {0}, got {1}", yMax, yAxisMax);
+                              yAxisMax - yMax < (yMax - yMin)/4);
             });
         }
 
