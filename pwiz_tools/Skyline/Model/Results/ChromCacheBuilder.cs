@@ -427,7 +427,7 @@ namespace pwiz.Skyline.Model.Results
                 _readCompleted = false;
             }
 
-            var dictPeptideChromData = new Dictionary<int, PeptideChromDataSets>();
+            var dictPeptideChromData = new Dictionary<PeptideSequenceModKey, PeptideChromDataSets>();
             var listChromData = new List<PeptideChromDataSets>();
 
             var listMzPrecursors = new List<PeptidePrecursorMz>(Precursors);
@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model.Results
         private void AddChromDataSet(bool isProcessedScans,
                                             ChromDataSet chromDataSet,
                                             PeptidePrecursorMz peptidePrecursorMz,
-                                            IDictionary<int, PeptideChromDataSets> dictPeptideChromData,
+                                            IDictionary<PeptideSequenceModKey, PeptideChromDataSets> dictPeptideChromData,
                                             ICollection<PeptideChromDataSets> listChromData,
                                             ChromFileInfo fileInfo)
         {
@@ -594,15 +594,15 @@ namespace pwiz.Skyline.Model.Results
             // Otherwise, add it to the dictionary by its peptide GlobalIndex to make
             // sure precursors are grouped by peptide
             var nodePep = peptidePrecursorMz.NodePeptide;
-            int id = nodePep.Peptide.GlobalIndex;
-            if (!dictPeptideChromData.TryGetValue(id, out pepDataSets))
+            var key = nodePep.SequenceKey;
+            if (!dictPeptideChromData.TryGetValue(key, out pepDataSets))
             {
                 pepDataSets = new PeptideChromDataSets(nodePep,
                     _document, fileInfo, DetailedPeakFeatureCalculators, isProcessedScans);
-                dictPeptideChromData.Add(id, pepDataSets);
+                dictPeptideChromData.Add(key, pepDataSets);
             }
             chromDataSet.NodeGroup = peptidePrecursorMz.NodeGroup;
-            pepDataSets.DataSets.Add(chromDataSet);
+            pepDataSets.Add(nodePep, chromDataSet);
         }
 
         private void GetPeptideRetentionTimes(PeptideChromDataSets peptideChromDataSets)
@@ -782,7 +782,7 @@ namespace pwiz.Skyline.Model.Results
                 i = ~i;
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
-            var listMatchingGroups = new List<KeyValuePair<PeptidePrecursorMz, IList<ChromData>>>();
+            var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
@@ -790,9 +790,17 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
+                if (listMatchingGroups.Count > 0)
+                {
+                    // If the current chromDataSet has already been used, make a copy.
+                    chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
+                        chromDataSet.Chromatograms.Select(c => c.CloneForWrite()).ToArray());
+                }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet);
                 if (groupData != null)
-                    listMatchingGroups.Add(new KeyValuePair<PeptidePrecursorMz, IList<ChromData>>(peptidePrecursorMz, groupData));
+                {
+                    listMatchingGroups.Add(new Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>(peptidePrecursorMz, chromDataSet, groupData));
+                }
             }
 
             // Only use this method of finding potential matching groups, if multiple
@@ -811,7 +819,7 @@ namespace pwiz.Skyline.Model.Results
                 // If only one match is found, return product ions for the precursor, whether they
                 // all match or not.
                 yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
-                    listMatchingGroups[0].Key, chromDataSet);
+                    listMatchingGroups[0].Item1, listMatchingGroups[0].Item2);
             }
             else
             {
@@ -826,7 +834,7 @@ namespace pwiz.Skyline.Model.Results
                     double matchMz = chromDataSet.PrecursorMz;
                     foreach (var match in listMatchingGroups)
                     {
-                        float currentMz = (float) match.Key.PrecursorMz;
+                        float currentMz = (float) match.Item1.PrecursorMz;
                         if (!bestMz.HasValue || Math.Abs(matchMz - currentMz) < Math.Abs(matchMz - bestMz.Value))
                             bestMz = currentMz;
                     }
@@ -836,9 +844,9 @@ namespace pwiz.Skyline.Model.Results
                 // may end up processing it at the same time.
                 var setChromData = new HashSet<ChromData>();
                 foreach (var match in listMatchingGroups.Where(match =>
-                    !bestMz.HasValue || bestMz.Value == (float) match.Key.PrecursorMz))
+                    !bestMz.HasValue || bestMz.Value == (float) match.Item1.PrecursorMz))
                 {
-                    var arrayChromData = match.Value.ToArray();
+                    var arrayChromData = match.Item3.ToArray();
                     for (int j = 0; j < arrayChromData.Length; j++)
                     {
                         var chromData = arrayChromData[j];
@@ -848,20 +856,20 @@ namespace pwiz.Skyline.Model.Results
                     }
                     var chromDataPart = new ChromDataSet(isTimeNormalArea, arrayChromData);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
-                        match.Key, chromDataPart);
+                        match.Item1, chromDataPart);
                 }
             }
         }
 
         private static void FilterMatchingGroups(
-                List<KeyValuePair<PeptidePrecursorMz, IList<ChromData>>> listMatchingGroups)
+                List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>> listMatchingGroups)
         {
             if (listMatchingGroups.Count < 2)
                 return;
             // Filter for only matches that do not match a strict subset of another match.
             // That is, if there is a precursor that matches 4 product ions, and another that
             // matches 2 of those same 4, then we want to discard the one with only 2.
-            var listFiltered = new List<KeyValuePair<PeptidePrecursorMz, IList<ChromData>>>();
+            var listFiltered = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             foreach (var match in listMatchingGroups)
             {
                 var subset = match;
@@ -872,11 +880,11 @@ namespace pwiz.Skyline.Model.Results
             listMatchingGroups.AddRange(listFiltered);
         }
 
-        private static bool IsMatchSubSet(KeyValuePair<PeptidePrecursorMz, IList<ChromData>> subset,
-            KeyValuePair<PeptidePrecursorMz, IList<ChromData>> superset)
+        private static bool IsMatchSubSet(Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>> subset,
+            Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>> superset)
         {
-            var subList = subset.Value;
-            var superList = superset.Value;
+            var subList = subset.Item3;
+            var superList = superset.Item3;
             // Can't be a subset, if it doesn't have fewer element in its list
             if (subList.Count >= superList.Count)
                 return false;

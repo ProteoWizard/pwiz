@@ -330,6 +330,54 @@ namespace pwiz.SkylineTest.Results
             docContainer.Release();
         }
 
+        /// <summary>
+        /// Verifies import code for handling multiple instances of peptides in documents
+        /// with various mixed up precursors and transitions
+        /// </summary>
+        [TestMethod]
+        public void ThermoMixedPeptidesTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath;
+            SrmDocument docMixed = InitMixedDocument(testFilesDir, out docPath);
+            FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
+            SrmDocument docUnmixed = InitUnmixedDocument(testFilesDir, out docPath);
+            FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
+            string extRaw = ExtensionTestContext.ExtThermoRaw;
+            var listChromatograms = new List<ChromatogramSet>
+                                        {
+                                            new ChromatogramSet("rep03", new[]
+                                                                             {
+                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
+                                                                             }),
+                                            new ChromatogramSet("rep05", new[]
+                                                                             {
+                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                     "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
+                                                                             })
+                                        };
+            var docResults = docMixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            var docContainerMixed = new ResultsTestDocumentContainer(docMixed, docPath);
+            Assert.IsTrue(docContainerMixed.SetDocument(docResults, docMixed, true));
+            docContainerMixed.AssertComplete();
+            docMixed = docContainerMixed.Document;
+            SrmDocument docMixedUnmixed = (SrmDocument) docMixed.ChangeChildren(new DocNode[0]);
+            IdentityPath tempPath;
+            docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
+                out tempPath, out tempPath);
+
+            docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            var docContainerUnmixed = new ResultsTestDocumentContainer(docUnmixed, docPath);
+            Assert.IsTrue(docContainerUnmixed.SetDocument(docResults, docUnmixed, true));
+            docContainerUnmixed.AssertComplete();
+            docUnmixed = docContainerUnmixed.Document;
+            AssertEx.DocumentCloned(docMixedUnmixed, docUnmixed);
+
+            docContainerMixed.Release();
+            docContainerUnmixed.Release();
+        }
+
         private static bool IsCacheOrTempFile(string path)
         {
             string fileName = Path.GetFileName(path);
@@ -343,6 +391,22 @@ namespace pwiz.SkylineTest.Results
             docPath = testFilesDir.GetTestPath("Site20_Study9p.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, 0, 2, 10, 18, 54);
+            return doc;
+        }
+
+        private static SrmDocument InitMixedDocument(TestFilesDir testFilesDir, out string docPath)
+        {
+            docPath = testFilesDir.GetTestPath("Site20_Study9p_mixed.sky");
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            AssertEx.IsDocumentState(doc, 0, 2, 8, 13, 31);
+            return doc;
+        }
+
+        private static SrmDocument InitUnmixedDocument(TestFilesDir testFilesDir, out string docPath)
+        {
+            docPath = testFilesDir.GetTestPath("Site20_Study9p_unmixed.sky");
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            AssertEx.IsDocumentState(doc, 0, 1, 4, 8, 24);
             return doc;
         }
     }

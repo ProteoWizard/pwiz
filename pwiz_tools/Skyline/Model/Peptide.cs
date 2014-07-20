@@ -503,17 +503,19 @@ namespace pwiz.Skyline.Model
 
     public sealed class PeptideSequenceModKey
     {
-        public PeptideSequenceModKey(string sequence, ExplicitMods modifications)
+        public PeptideSequenceModKey(Peptide peptide, ExplicitMods modifications)
         {
-            Sequence = sequence;
+            Sequence = peptide.Sequence;
             // For consistent keys in peptide matching, clear the variable flag, if it is present.
             Modifications = modifications != null && modifications.IsVariableStaticMods
                 ? modifications.ChangeIsVariableStaticMods(false)
                 : modifications;
+            IsDecoy = peptide.IsDecoy;
         }
 
         private string Sequence { get; set; }
         private ExplicitMods Modifications { get; set; }
+        private bool IsDecoy { get; set; }
 
         #region object overrides
 
@@ -522,7 +524,8 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Sequence, Sequence) &&
-                Equals(other.Modifications, Modifications);
+                Equals(other.Modifications, Modifications) &&
+                Equals(other.IsDecoy, IsDecoy);
         }
 
         public override bool Equals(object obj)
@@ -537,8 +540,10 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                return (Sequence.GetHashCode() * 397) ^
-                    (Modifications != null ? Modifications.GetHashCode() : 0);
+                int hashCode = (Sequence != null ? Sequence.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Modifications != null ? Modifications.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ IsDecoy.GetHashCode();
+                return hashCode;
             }
         }
 

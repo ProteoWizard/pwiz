@@ -81,7 +81,8 @@ namespace pwiz.SkylineTestA
                     Assert.IsNull(nodePep.SourceKey);
                 else
                 {
-                    Assert.IsNotNull(nodePep.SourceKey);
+                    Assert.IsNotNull(nodePep.SourceKey, string.Format("Source key for {0}{1} is null", nodePep.ModifiedSequence,
+                        nodePep.IsDecoy ? " - decoy" : string.Empty));
                     Assert.IsTrue(FastaSequence.IsExSequence(nodePep.SourceKey.Sequence));
                     Assert.AreEqual(nodePep.SourceKey.ModifiedSequence,
                         SequenceMassCalc.NormalizeModifiedSequence(nodePep.SourceKey.ModifiedSequence));

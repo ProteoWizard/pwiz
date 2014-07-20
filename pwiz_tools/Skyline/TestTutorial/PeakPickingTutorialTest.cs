@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestTutorial
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
             "-0.2207|-1.3318|0.4076|2.9034|1.7098|0.0402|0.1721|0.0844| null |-0.0521|6.2034|-0.0706|0.4605|0.8511| null | null | null | null | null | null | null | null | null ", // Not L10N
-            "0.1270| null | null | null |6.2157|-0.0723|0.7088|1.1199| null | null | null | null | null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
+            "0.1236| null | null | null |6.2507|-0.0719|0.7086|1.1183| null | null | null | null | null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()

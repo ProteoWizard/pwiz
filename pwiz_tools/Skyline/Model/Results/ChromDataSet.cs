@@ -204,6 +204,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public void Merge(ChromDataSet chromDataSet)
+        {
+            var setKeys = new HashSet<ChromKey>(_listChromData.Select(d => d.Key));
+            foreach (var chromData in chromDataSet._listChromData)
+            {
+                if (!setKeys.Contains(chromData.Key))
+                    Add(chromData);
+            }
+        }
+
         public bool Load(ChromDataProvider provider)
         {
             foreach (var chromData in _listChromData.ToArray())

@@ -690,15 +690,56 @@ namespace pwiz.Skyline.Model.Results
             return allPeaks;
         }
 
-        public void TruncateChromatograms(double startTime, double endTime)
+        public void Add(PeptideDocNode nodePep, ChromDataSet chromDataSet)
         {
-            foreach (var dataSet in DataSets)
+            // If this is coming from the same PeptideDocNode, then just add it, otherwise
+            // a merged copy of the PeptideDocNode needs to be created that includes
+            // this new precursor.
+            if (ReferenceEquals(nodePep, NodePep))
+                DataSets.Add(chromDataSet);
+            // Unless we already have one of these
+            else if (!HasEquivalentGroupNode(chromDataSet.NodeGroup))
             {
-                if (IsComparable(dataSet))
+                if (!FindAndMerge(chromDataSet))
+                    DataSets.Add(chromDataSet);
+                var childrenNew = DataSets.Select(d => d.NodeGroup).ToArray();
+                NodePep = (PeptideDocNode)NodePep.ChangeChildren(childrenNew);
+            }
+        }
+
+        private bool FindAndMerge(ChromDataSet chromDataSet)
+        {
+            for (int i = 0; i < DataSets.Count; i++)
+            {
+                var nodeGroup = DataSets[i].NodeGroup;
+                if (AreEquivalentGroups(nodeGroup, chromDataSet.NodeGroup))
                 {
-                    dataSet.Truncate(startTime, endTime);
+                    DataSets[i].NodeGroup = nodeGroup.Merge(chromDataSet.NodeGroup);
+                    DataSets[i].Merge(chromDataSet);
+                    return true;
                 }
             }
+            return false;
+        }
+
+        private bool HasEquivalentGroupNode(TransitionGroupDocNode nodeGroup)
+        {
+            return DataSets.Any(d => AreEquivalentGroupNodes(d.NodeGroup, nodeGroup));
+        }
+
+        private static bool AreEquivalentGroupNodes(TransitionGroupDocNode nodeGroup1, TransitionGroupDocNode nodeGroup2)
+        {
+            return AreEquivalentGroups(nodeGroup1, nodeGroup2) && nodeGroup1.EquivalentChildren(nodeGroup2);
+        }
+
+        private static bool AreEquivalentGroups(TransitionGroupDocNode nodeGroup1, TransitionGroupDocNode nodeGroup2)
+        {
+            if (nodeGroup1 == null && nodeGroup2 == null)
+                return true;
+            if (nodeGroup1 == null || nodeGroup2 == null)
+                return false;
+            return nodeGroup1.TransitionGroup.PrecursorCharge == nodeGroup2.TransitionGroup.PrecursorCharge &&
+                   ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType);
         }
     }
 

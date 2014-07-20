@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods); } }
 
-        public PeptideSequenceModKey SequenceKey { get { return new PeptideSequenceModKey(Peptide.Sequence, ExplicitMods); } }
+        public PeptideSequenceModKey SequenceKey { get { return new PeptideSequenceModKey(Peptide, ExplicitMods); } }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 

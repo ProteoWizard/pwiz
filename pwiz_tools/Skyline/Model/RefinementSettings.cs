@@ -830,29 +830,35 @@ namespace pwiz.Skyline.Model
         {
             string sequence = seqMods.Sequence;
             char finalA = sequence.Last();
-            sequence = sequence.Substring(0, sequence.Length - 1);
-            int lenSeq = sequence.Length;
+            string sequencePrefix = sequence.Substring(0, sequence.Length - 1);
+            int lenPrefix = sequencePrefix.Length;
 
             // Calculate a random shuffling of the current positions
-            int[] newIndices = new int[lenSeq];
-            for (int i = 0; i < lenSeq; i++)
-                newIndices[i] = i;
-            for (int i = 0; i < lenSeq; i++)
-                Helpers.Swap(ref newIndices[0], ref newIndices[RANDOM.Next(newIndices.Length)]);
+            int[] newIndices = new int[lenPrefix];
+            do
+            {
+                for (int i = 0; i < lenPrefix; i++)
+                    newIndices[i] = i;
+                for (int i = 0; i < lenPrefix; i++)
+                    Helpers.Swap(ref newIndices[RANDOM.Next(newIndices.Length)], ref newIndices[RANDOM.Next(newIndices.Length)]);
 
-            // Move the amino acids to their new positions
-            char[] shuffledArray = new char[lenSeq];
-            for (int i = 0; i < lenSeq; i++)
-                shuffledArray[newIndices[i]] = sequence[i];
+                // Move the amino acids to their new positions
+                char[] shuffledArray = new char[lenPrefix];
+                for (int i = 0; i < lenPrefix; i++)
+                    shuffledArray[newIndices[i]] = sequencePrefix[i];
 
-            seqMods.Sequence = new string(shuffledArray) + finalA;
+                seqMods.Sequence = new string(shuffledArray) + finalA;
+            }
+            // Make sure random shuffling did not just result in the same sequence
+            while (seqMods.Sequence.Equals(sequence));
+
             if (seqMods.Mods != null)
             {
-                var shuffledStaticMods = GetShuffledMods(seqMods.Mods.StaticModifications, lenSeq, newIndices);
+                var shuffledStaticMods = GetShuffledMods(seqMods.Mods.StaticModifications, lenPrefix, newIndices);
                 var typedStaticMods = GetStaticTypedMods(seqMods.Peptide, shuffledStaticMods);
                 seqMods.Mods = new ExplicitMods(seqMods.Peptide,
                     shuffledStaticMods,
-                    GetShuffledHeavyMods(seqMods, typedStaticMods, lenSeq, newIndices),
+                    GetShuffledHeavyMods(seqMods, typedStaticMods, lenPrefix, newIndices),
                     seqMods.Mods.IsVariableStaticMods);
             }
 
