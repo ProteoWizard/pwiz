@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Controls.Graphs
         [Browsable(true)]
         public event EventHandler<ZoomEventArgs> ZoomAll;
 
-        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
             if (Settings.Default.AutoZoomAllChromatograms && ZoomAll != null)
                 ZoomAll.Invoke(this, new ZoomEventArgs(newState));

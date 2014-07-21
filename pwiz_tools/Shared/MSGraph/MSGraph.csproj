@@ -75,6 +75,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HeatMapData.cs" />
+    <Compile Include="HeatMapGraphPane.cs" />
     <Compile Include="LabelBoundsCache.cs" />
     <Compile Include="MSGraphItem.cs" />
     <Compile Include="MSGraphControl.cs">

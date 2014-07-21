@@ -36,12 +36,17 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class GraphFullScan : DockableFormEx, IGraphContainer
     {
-        private const float DRIFT_SAMPLE_RADIUS = 10.0f;
+        private const int MIN_DOT_RADIUS = 4;
+        private const int MAX_DOT_RADIUS = 13;
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
         private readonly BackgroundScanProvider _scanProvider;
         private MsDataSpectrum[] _fullScans;
+        private HeatMapData _heatMapData;
+        private double _maxMz;
+        private double _maxIntensity;
+        private double _maxDriftTime;
         private string _fileName;
         private int _transitionIndex;
         private int _scanIndex;
@@ -53,6 +58,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
+
+            graphControl.GraphPane = new HeatMapGraphPane
+            {
+                MinDotRadius = MIN_DOT_RADIUS,
+                MaxDotRadius = MAX_DOT_RADIUS
+            };
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -79,17 +90,29 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetScans(MsDataSpectrum[] scans)
         {
             _fullScans = scans;
+            _heatMapData = null;
+            if (_fullScans == null)
+                return;
+
+            // Find max values.
+            _maxMz = 0;
+            _maxIntensity = 0;
+            GetMaxMzIntensity(out _maxMz, out _maxIntensity);
+            _maxDriftTime = 0;
+            foreach (var scan in scans)
+                _maxDriftTime = Math.Max(_maxDriftTime, scan.DriftTimeMsec ?? 0);
+
             if (_zoomXAxis)
             {
                 _zoomXAxis = false;
                 ZoomXAxis();
             }
-            CreateGraph();
             if (_zoomYAxis)
             {
                 _zoomYAxis = false;
                 ZoomYAxis();
             }
+            CreateGraph();
             UpdateUI();
         }
 
@@ -306,67 +329,24 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.YAxis.Title.Text = Resources.GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_;
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = true;
 
-            var fullScans = GetFilteredScans();
-
-            // Find the maximum intensity.
-            double max = double.MinValue;
-            for (int i = 0; i < fullScans.Length; i++)
+            if (_heatMapData == null)
             {
-                var scan = fullScans[i];
-                for (int j = 0; j < scan.Mzs.Length; j++)
+                var points = new List<Point3D>(5000);
+                foreach (var scan in _fullScans)
                 {
-                    double intensity = scan.Intensities[j];
-                    max = Math.Max(max, intensity);
+                    if (!scan.DriftTimeMsec.HasValue)
+                        continue;
+                    for (int j = 0; j < scan.Mzs.Length; j++)
+                        points.Add(new Point3D(scan.Mzs[j], scan.DriftTimeMsec.Value, scan.Intensities[j]));
                 }
-            }
-            if (max <= 0)
-                return;
-            double scale = (_heatMapColors.Length - 1) / Math.Log(max);
-
-            // Create curves for each intensity color.
-            var curves = new LineItem[_heatMapColors.Length];
-            for (int i = 0; i < curves.Length; i++)
-            {
-                var color = _heatMapColors[i];
-                curves[i] = new LineItem(string.Empty)
-                {
-                    Line = new Line {IsVisible = false},
-                    Symbol = new Symbol
-                    {
-                        Border = new Border { IsVisible = false }, 
-                        Size = DRIFT_SAMPLE_RADIUS, 
-                        Fill = new Fill(color), 
-                        Type = SymbolType.Circle
-                    }
-                };
-                if ((i + 1)%(_heatMapColors.Length/4) == 0)
-                {
-                    double intensity = Math.Pow(Math.E, i/scale);
-                    curves[i].Label.Text = intensity.ToString("F0"); // Not L10N
-                }
-                GraphPane.CurveList.Insert(0, curves[i]);
+                _heatMapData = new HeatMapData(points);
             }
 
-            // Place each point in the proper intensity/color bin.
-            for (int i = 0; i < fullScans.Length; i++)
-            {
-                var scan = fullScans[i];
-                for (int j = 0; j < scan.Mzs.Length; j++)
-                {
-                    if (scan.Intensities[j] > 0)
-                    {
-                        // A log scale produces a better visual display.
-                        int intensity = (int)(Math.Log(scan.Intensities[j]) * scale);
-                        if (intensity > 0)
-                            curves[intensity].AddPoint(scan.Mzs[j], scan.DriftTimeMsec ?? 0);
-                    }
-                }
-            }
-
-            double minDrift, maxDrift;
+            double minDrift;
+            double maxDrift;
             GetDriftRange(out minDrift, out maxDrift);
 
-            if (minDrift > double.MinValue && maxDrift < double.MaxValue)
+            if (minDrift > 0 && maxDrift < double.MaxValue)
             {
                 // Add gray shaded box behind heat points.
                 var driftTimeBox = new BoxObj(
@@ -399,6 +379,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 GraphPane.GraphObjList.Add(driftTimeOutline);
             }
+
+            if (!Settings.Default.FilterDriftTimesFullScan)
+            {
+                minDrift = 0;
+                maxDrift = double.MaxValue;
+            }
+            var heatMapGraphPane = (HeatMapGraphPane)GraphPane;
+            heatMapGraphPane.SetPoints(_heatMapData, minDrift, maxDrift);
         }
 
         /// <summary>
@@ -467,23 +455,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (transition.Source != _source)
                     continue;
                 var item = new SpectrumItem(pointLists[i], transition.Color, 2);
-                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item);
+                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
 
             // Add points that aren't associated with a transition.
             {
                 var item = new SpectrumItem(defaultPointList, Color.Gray);
-                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item);
+                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
 
             // Create curve for all points to provide shading behind stick graph.
             {
                 var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150));
-                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item);
+                var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
+
+            GraphPane.SetScale(CreateGraphics());
         }
 
         private MsDataSpectrum[] GetFilteredScans()
@@ -550,6 +540,22 @@ namespace pwiz.Skyline.Controls.Graphs
             return intensity;
         }
 
+        private void GetMaxMzIntensity(out double maxMz, out double maxIntensity)
+        {
+            var fullScans = GetFilteredScans();
+            maxMz = 0;
+            maxIntensity = 0;
+
+            double minMz;
+            var indices = new int[fullScans.Length];
+            while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
+            {
+                maxMz = Math.Max(maxMz, minMz);
+                double intensity = SumIntensities(fullScans, minMz, indices);
+                maxIntensity = Math.Max(maxIntensity, intensity);
+            }
+        }
+
         private Color Blend(Color baseColor, Color blendColor, double blendAmount)
         {
             return Color.FromArgb(
@@ -611,10 +617,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             var xScale = GraphPane.XAxis.Scale;
+            xScale.MinAuto = xScale.MaxAuto = false;
 
             if (magnifyBtn.Checked)
             {
-                xScale.MinAuto = xScale.MaxAuto = false;
                 double mz = _source == ChromSource.ms1
                     ? _scanProvider.Transitions[_transitionIndex].PrecursorMz
                     : _scanProvider.Transitions[_transitionIndex].ProductMz;
@@ -623,8 +629,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                xScale.MinAuto = xScale.MaxAuto = true;
-                graphControl.GraphPane.AxisChange();
+                xScale.Min = 0;
+                xScale.Max = _maxMz * 1.1;
             }
         }
 
@@ -634,19 +640,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             var yScale = GraphPane.YAxis.Scale;
-            yScale.MinAuto = false;
-            yScale.Min = 0;
+            yScale.MinAuto = yScale.MaxAuto = false;
             GraphPane.LockYAxisAtZero = spectrumBtn.Checked;
             
-            // Auto scale graph for spectrum view or no zoom.
-            if (spectrumBtn.Checked || (!filterBtn.Checked && !magnifyBtn.Checked))
+            // Auto scale graph for spectrum view.
+            if (spectrumBtn.Checked)
             {
-                yScale.MaxAuto = true;
-                graphControl.GraphPane.AxisChange();
+                yScale.Min = 0;
+                yScale.Max = _maxIntensity * 1.1;
+                if (magnifyBtn.Checked)
+                {
+                    yScale.MaxAuto = true;
+                }
+            }
+            else if (!filterBtn.Checked && !magnifyBtn.Checked)
+            {
+                yScale.Min = 0;
+                yScale.Max = _maxDriftTime * 1.1;
             }
             else
             {
-                yScale.MaxAuto = false;
                 double minDriftTime, maxDriftTime;
                 GetDriftRange(out minDriftTime, out maxDriftTime);
                 if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
@@ -657,7 +670,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     yScale.Min = minDriftTime - range;
                     yScale.Max = maxDriftTime + range;
                 }
+                else
+                {
+                    yScale.Min = 0;
+                    yScale.Max = _maxDriftTime * 1.1;
+                }
             }
+            GraphPane.AxisChange();
         }
 
         public void UpdateUI(bool selectionChanged = true)
@@ -672,6 +691,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 leftButton.Enabled = (_scanIndex > 0);
                 rightButton.Enabled = (_scanIndex < _scanProvider.Times.Length-1);
                 lblScanId.Text = GetScanId().ToString("D"); // Not L10N
+                if (!spectrumBtn.Checked)
+                    GraphPane.SetScale(CreateGraphics());
             }
             else
             {
@@ -786,15 +807,18 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             Settings.Default.AutoZoomFullScanGraph = magnifyBtn.Checked = zoom;
             ZoomXAxis();
-            CreateGraph();
             ZoomYAxis();
+            CreateGraph();
             UpdateUI();
         }
 
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
         {
+            HeatMapGraphPane.ShowHeatMap = !spectrumBtn.Checked;
             SumScans(spectrumBtn.Checked);
         }
+
+        private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
 
         public void SumScans(bool sum)
         {
@@ -812,9 +836,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void FilterDriftTimes(bool filter)
         {
             Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
-            CreateGraph();            
-            ZoomYAxis();
-            UpdateUI();
+            _zoomYAxis = true;
+            SetScans(_fullScans);
         }
 
         private void btnIsolationWindow_Click(object sender, EventArgs e)

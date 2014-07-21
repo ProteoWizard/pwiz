@@ -368,6 +368,14 @@ namespace ZedGraph
 			get { return _zoomStack; }
 		}
 
+		/// <summary>
+		/// Return the center point of the GraphPane.
+		/// </summary>
+		public PointF CenterPoint
+		{
+			get { return GeneralTransform(0.5, 0.5, CoordType.PaneFraction); }
+		}
+
 	#endregion
 
 	#region Constructors
