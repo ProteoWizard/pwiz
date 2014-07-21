@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             for (int i = peakData.EndIndex; i < endNoiseCalc; ++i)
                 intensityList.Add(peakData.Intensities[i]);
             if (intensityList.Count == 0)
-                return null;
+                return 0;
             double peakHeight = Math.Max(peakData.Intensities[peakData.TimeIndex], 1);
             // If there is no medianNoise, set it to 1.0
             double medianNoise = Math.Max(GetMedian(intensityList), 1);

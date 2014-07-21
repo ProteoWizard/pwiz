@@ -1162,7 +1162,9 @@ namespace pwiz.Skyline.SettingsUI
                 // Determine which calculators will be used to score peaks in this document.
                 var document = Program.ActiveDocumentUI;
                 FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
-                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators).ToArray();
+                _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators)
+                    .Where(feature => feature.PeakGroupFeatures.Any())
+                    .ToArray();
                 PopulateDictionary();
 
                 EligibleScores = new bool[FeatureCalculators.Count];
