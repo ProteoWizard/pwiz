@@ -36,14 +36,11 @@ namespace TestPerf
             if (!RunPerfTests)
                 return; // PerfTests only run when the global "allow perf tests" flag is set
 
-            TestFilesZip =
-                @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip";
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);                 
-
-            string rtFile = testFilesDir.GetTestPath( "PeakViewRtK6R6.txt");
-            string scoreFile = testFilesDir.GetTestPath( "PeakViewScoreK6R6.txt");
-            string qValueFile = testFilesDir.GetTestPath( "PeakViewFDRK6R6.txt");
-            string combinedFile = testFilesDir.GetTestPath( "PeakViewK6R6.txt");
+            const string testFilesDir = @"D:\Processing\Ludwig_ABRF_sPRG_study\PeakView";
+            string rtFile = Path.Combine(testFilesDir, "PeakViewRt.txt");
+            string scoreFile = Path.Combine(testFilesDir, "PeakViewScore.txt");
+            string qValueFile = Path.Combine(testFilesDir, "PeakViewFDR.txt");
+            string combinedFile = Path.Combine(testFilesDir, "PeakView.txt");
             RunConversion(rtFile, scoreFile, qValueFile, combinedFile);
         }
 

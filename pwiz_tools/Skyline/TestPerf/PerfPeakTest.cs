@@ -23,8 +23,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -38,11 +43,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfPeakTest : AbstractFunctionalTest
     {
-        // [TestMethod]  // disabling this since the test file URLs don't exist
+        [TestMethod]
         public void TestPeakPerf()
         {
             TestFilesZipPaths = new[]
             {
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/LudwigSPRG.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeHeavy.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwath.zip",
@@ -57,11 +63,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/HeartFailure.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
                  @"http://proteome.gs.washington.edu/software/test/skyline-perf/MikeBHigh.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/LudovicN14N15.zip"
+                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/SchillingDDA.zip",
             };
             // IsPauseForScreenShots = true;
             RunFunctionalTest();
         }
+
+        /// <summary>
+        /// Do we rescore the peaks before running the test?
+        /// </summary>
+        public bool RescorePeaks { get { return false; } }
 
         public readonly static string[] MODEL_NAMES = {"Skyline w/ mProphet", "Skyline Default", "Skyline Legacy", "Skyline w/ mProphet + Decoys"};
 
@@ -71,8 +82,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            const string outDir = @"D:\Results\PeakCompare";
-            string resultsTable = Path.Combine(outDir, "results.txt");
+            // Comment out the next two lines and comment in the bottom two to direct output to a specific 
+            // place on the hard drive (not portable across machines)
+            const string outDir = null;
+            var directoryName = Path.GetFileNameWithoutExtension(TestFilesZipPaths[0]);
+            TestFilesPersistent = new[] { directoryName };
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[0], null, TestFilesPersistent);
+            var directoryPath = testFilesDir.GetTestPath(directoryName);
+            string resultsTable = Path.Combine(directoryPath,"results.txt");
             var none = new List<string>();
             var openSwath = new List<string> { "OpenSwath.csv" };
             var spectronaut = new List<string> { "Spectronaut.csv" };
@@ -88,6 +105,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             using (var resultsWriter = new StreamWriter(fs.SafeName))
             {
                 WriteHeader(resultsWriter);
+                // Ludwig sPRG
+                AnalyzeDirectory(i++, peakView, outDir, secondOnly, resultsWriter, new List<int> { 1 });
                 // Hasmik Swath Heavy only
                 AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, secondOnly, resultsWriter, new List<int> { 1, 1, 1 });
                 // Hasmik Qe Heavy only
@@ -115,6 +134,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // Ovarian cancer
                 AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
                 // MikeB high (DDA dilution top 12 runs)
+                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
+                // Schilling DDA (DDA dilution 15 runs)
                 AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
                 // Ludovic N14N15
                 //AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
@@ -168,42 +189,29 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var skylineDoc = Path.Combine(directoryPath, skylineName);
             var externalsPaths = externals.Select(name => Path.Combine(directoryPath, name));
 // ReSharper disable UnusedVariable
-            DataSetAnalyzer dataSetAnalyzer = new DataSetAnalyzer(skylineDoc, modelNames, externalsPaths, outDir, dialogSkips, resultsWriter);
+            DataSetAnalyzer dataSetAnalyzer = new DataSetAnalyzer(skylineDoc, modelNames, externalsPaths, outDir, dialogSkips, resultsWriter, RescorePeaks);
 // ReSharper restore UnusedVariable
         }
 
-        protected static void RunEditPeakScoringDlg(string editName, bool cancelReintegrate, Action<EditPeakScoringModelDlg> act)
-        {
-            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            if (editName != null)
-            {
-                var editList = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
-                    reintegrateDlg.EditPeakScoringModel);
-                RunUI(() => editList.SelectItem(editName)); // Not L10N
-                RunDlg(editList.EditItem, act);
-                OkDialog(editList, editList.OkDialog);
-            }
-            else
-            {
-                RunDlg(reintegrateDlg.AddPeakScoringModel, act);
-            }
-            if (cancelReintegrate)
-            {
-                OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
-            }
-            else
-            {
-                OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
-            }
-        }
 
         protected class DataSetAnalyzer
         {
-            public DataSetAnalyzer(string skylineDocument, IList<string> modelNames, IEnumerable<string> filePaths, string outDir, IList<int> dialogSkips, TextWriter resultsWriter)
+            public string OutDir { get; private set; }
+
+            public DataSetAnalyzer(string skylineDocument, 
+                                   IList<string> modelNames, 
+                                   IEnumerable<string> filePaths,
+                                   string outDir,
+                                   IList<int> dialogSkips,
+                                   TextWriter resultsWriter,
+                                   bool rescorePeaks)
             {
+                OutDir = outDir;
                 Settings.Default.PeakScoringModelList.Clear();
                 RunUI(() => SkylineWindow.OpenFile(skylineDocument));
                 WaitForDocumentLoaded();
+                if (rescorePeaks)
+                    RescorePeaks();
                 CreateModels();
                 foreach (var modelName in modelNames)
                 {
@@ -231,7 +239,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     ComparePeakPickingDlg.MakeQValueLists(comparePeakBoundaries, out qqPoints);
                     double peptides01 = GetCurveThreshold(rocPoints, LOW_SIG);
                     double peptides05 = GetCurveThreshold(rocPoints, HIGH_SIG);
-                    double peptidesAll = GetCurveThreshold(rocPoints, double.MaxValue);
+                    double peptidesAll = GetCurveThreshold(rocPoints, Double.MaxValue);
                     double qValue01 = GetCurveThreshold(qqPoints, LOW_SIG);
                     double qValue05 = GetCurveThreshold(qqPoints, HIGH_SIG);
                     WriteLine(resultsWriter, trimmedDoc, comparePeakBoundaries.Name, peptides01, peptides05, peptidesAll, qValue01, qValue05);
@@ -331,6 +339,50 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
 
+            public void RescorePeaks()
+            {
+                var peakBoundariesFile = Path.Combine(OutDir, "PeakBoundaries.csv");
+                // Export the peak boundaries
+                ReportToCsv(MakeReportSpec(), SkylineWindow.Document, peakBoundariesFile);
+
+                // Do the actual rescore
+                var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                var rescoreResultsDlg = ShowDialog<RescoreResultsDlg>(manageResults.Rescore);
+                RunUI(() => rescoreResultsDlg.Rescore(false));
+                WaitForCondition(20 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 20 minutes
+                WaitForClosedForm(rescoreResultsDlg);
+                WaitForClosedForm(manageResults);
+
+                // Re-import peak boundaries
+                RunUI(() => SkylineWindow.ImportPeakBoundariesFile(peakBoundariesFile));
+                WaitForCondition(5 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 5 minutes
+            }
+
+            protected static void RunEditPeakScoringDlg(string editName, bool cancelReintegrate, Action<EditPeakScoringModelDlg> act)
+            {
+                var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+                if (editName != null)
+                {
+                    var editList = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
+                        reintegrateDlg.EditPeakScoringModel);
+                    RunUI(() => editList.SelectItem(editName)); // Not L10N
+                    RunDlg(editList.EditItem, act);
+                    OkDialog(editList, editList.OkDialog);
+                }
+                else
+                {
+                    RunDlg(reintegrateDlg.AddPeakScoringModel, act);
+                }
+                if (cancelReintegrate)
+                {
+                    OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
+                }
+                else
+                {
+                    OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
+                }
+            }
+
             public static void AddModel(ComparePeakPickingDlg dlg, string modelName)
             {
                 var addPeakCompareDlg = ShowDialog<AddPeakCompareDlg>(dlg.Add);
@@ -378,6 +430,30 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     editPeakScoringModelDlg.TrainModel(true);
                     editPeakScoringModelDlg.OkDialog();
                 });
+            }
+
+            private static ReportSpec MakeReportSpec()
+            {
+                var specList = new ReportSpecList();
+                var defaults = specList.GetDefaults();
+                return defaults.First(spec => spec.Name == Resources.ReportSpecList_GetDefaults_Peak_Boundaries);
+            }
+
+            public static void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)
+            {
+                Report report = Report.Load(reportSpec);
+                using (var saver = new FileSaver(fileName))
+                using (var writer = new StreamWriter(saver.SafeName))
+                using (var database = new Database(doc.Settings))
+                {
+                    database.AddSrmDocument(doc);
+                    var resultSet = report.Execute(database);
+                    char separator = TextUtil.CsvSeparator;
+                    ResultSet.WriteReportHelper(resultSet, separator, writer, LocalizationHelper.CurrentCulture);
+                    writer.Flush();
+                    writer.Close();
+                    saver.Commit();
+                }
             }
         }
     }
