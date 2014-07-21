@@ -393,6 +393,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 pane.ZoomStack.AddRange(primaryPane.ZoomStack);
                 var zoomState = new ZoomState(primaryPane, ZoomState.StateType.Zoom);
                 zoomState.ApplyState(pane);
+                pane.YAxis.Title.Text = primaryPane.YAxis.Title.Text;
+                pane.XAxis.Title.Text = primaryPane.XAxis.Title.Text;
                 graphControl.MasterPane.PaneList.Insert(iInsert, pane);
                 return pane;
             }
