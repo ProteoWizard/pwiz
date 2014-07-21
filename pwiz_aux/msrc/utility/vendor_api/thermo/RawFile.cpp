@@ -433,10 +433,10 @@ double RawFileImpl::rt(long scanNumber)
 
 InstrumentModelType RawFileImpl::getInstrumentModel()
 {
-    setCurrentController(Controller_MS, 1);
-
     if (instrumentModel_ == InstrumentModelType_Unknown)
     {
+        setCurrentController(Controller_MS, 1);
+
         string modelString = value(InstModel);
         if (modelString == "LTQ Velos") // HACK: disambiguate LTQ Velos and Orbitrap Velos
         {

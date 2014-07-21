@@ -417,6 +417,7 @@ ScanFilter::initialize()
     widebandOn_ = TriBool_Unknown;
     lockMassOn_ = TriBool_Unknown;
     faimsOn_ = TriBool_Unknown;
+    spsOn_ = TriBool_Unknown;
 
     msLevel_ = 0;
     precursorMZs_.clear();
@@ -621,7 +622,22 @@ ScanFilter::parse(const string& filterLine)
 
 		    s >> w;
 		    advance = false;
-	    }
+        }
+
+
+        // SPS mode
+        if (w == "SPS" || w == "K") {
+            spsOn_ = TriBool_True;
+            advance = true;
+        }
+        if (advance) {
+            if (s.eof())
+                return;
+
+            s >> w;
+            advance = false;
+        }
+
 
 	    // dependent type
 	    if (w == "!D") {

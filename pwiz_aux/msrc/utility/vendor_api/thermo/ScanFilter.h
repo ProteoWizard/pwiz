@@ -77,6 +77,7 @@ class PWIZ_API_DECL ScanFilter
     TriBool ultraOn_;
     TriBool lockMassOn_;
     TriBool faimsOn_;
+    TriBool spsOn_;
 	AccurateMassType accurateMassType_;
 	ScanType scanType_;
 	int msLevel_; // n, in MSn: >0; msLevel == -1 for precursor ion scans

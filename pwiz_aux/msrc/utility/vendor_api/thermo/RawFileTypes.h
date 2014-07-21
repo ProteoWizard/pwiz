@@ -173,9 +173,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
     else if (bal::contains(type, "Q EXACTIVE")) return InstrumentModelType_Q_Exactive;
     else if (bal::contains(type, "EXACTIVE"))   return InstrumentModelType_Exactive;
-    else if (bal::contains(type, "FUSION"))     return InstrumentModelType_Orbitrap_Fusion;
-    else if (bal::contains(type, "FUSION") &&
-             bal::contains(type, "ETD"))        return InstrumentModelType_Orbitrap_Fusion_ETD;
+    else if (bal::contains(type, "FUSION"))     return bal::contains(type, "ETD") ? InstrumentModelType_Orbitrap_Fusion_ETD : InstrumentModelType_Orbitrap_Fusion;
     else if (type == "SURVEYOR PDA")            return InstrumentModelType_Surveyor_PDA;
     else if (type == "ACCELA PDA")              return InstrumentModelType_Accela_PDA;
     else
