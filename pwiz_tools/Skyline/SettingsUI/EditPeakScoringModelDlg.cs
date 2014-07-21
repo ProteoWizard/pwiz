@@ -663,7 +663,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="pValueHistograms">Histogram group containing p-value histograms for targets, decoys, and second best peaks</param>
         /// <param name="qValueHistograms">Histogram group containing q-value histograms for targets, decoys, and second best peaks</param>
         /// <param name="piZeroLine">Line showing the expected nulls, for display in p-value plot</param>
-        private void GetPoints(
+        public void GetPoints(
             int selectedCalculator, 
             out HistogramGroup scoreHistograms,
             out HistogramGroup pValueHistograms,
@@ -709,7 +709,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private class HistogramGroup
+        public class HistogramGroup
         {
             public double Min { get; private set; }
             public double Max { get; private set; }
@@ -746,6 +746,36 @@ namespace pwiz.Skyline.SettingsUI
                         BinGroups[i].Add(new PointPair(Max, histogramList[i].CountUnknowns));
                     }
                     Max += binWidth;
+                }
+            }
+
+            protected bool Equals(HistogramGroup other)
+            {
+                return Min.Equals(other.Min) && 
+                    Max.Equals(other.Max) && 
+                    AllUnknownScores.Equals(other.AllUnknownScores) && 
+                    HasUnknownScores.Equals(other.HasUnknownScores) && 
+                    ArrayUtil.EqualsDeep(BinGroups, other.BinGroups);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((HistogramGroup) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hashCode = Min.GetHashCode();
+                    hashCode = (hashCode*397) ^ Max.GetHashCode();
+                    hashCode = (hashCode*397) ^ AllUnknownScores.GetHashCode();
+                    hashCode = (hashCode*397) ^ HasUnknownScores.GetHashCode();
+                    hashCode = (hashCode*397) ^ (BinGroups != null ? BinGroups.GetHashCode() : 0);
+                    return hashCode;
                 }
             }
         }

@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public double? Time { get; private set; }
     }
 
-    abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
+    public abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
     {
         protected AbstractMQuestRetentionTimePredictionCalc(string headerName) : base(headerName) {}
 
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public abstract double RtScoreFunction(double rtValue);
     }
 
-    class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
+    public class MQuestRetentionTimePredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
         public MQuestRetentionTimePredictionCalc() : base("Retention time difference") { }  // Not L10N
 
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
-    class MQuestRetentionTimeSquaredPredictionCalc : AbstractMQuestRetentionTimePredictionCalc
+    public class MQuestRetentionTimeSquaredPredictionCalc : AbstractMQuestRetentionTimePredictionCalc
     {
         public MQuestRetentionTimeSquaredPredictionCalc() : base("Retention time squared difference") { }  // Not L10N
 
@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
-            return MQuestHelpers.GetBestAvailableGroups(summaryPeakData);
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
         }
 
     }

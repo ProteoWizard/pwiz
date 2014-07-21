@@ -197,6 +197,7 @@
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ExportMethodDialogTest.cs" />
+    <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
     <Compile Include="TreeRestorationTest.cs" />
@@ -264,6 +265,7 @@
     <None Include="InstallToolsTest.zip" />
     <None Include="IonMobilityTest.zip" />
     <None Include="IrtTest.zip" />
+    <None Include="LabelPeakPickingTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />

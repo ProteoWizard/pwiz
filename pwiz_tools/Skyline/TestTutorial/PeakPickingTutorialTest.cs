@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "-0.2207|-1.3318|0.4076|2.9034|1.7098|0.0402|0.1721|0.0844| null |-0.0521|6.2034|-0.0706|0.4605|0.8511| null | null | null | null | null | null | null | null | null ", // Not L10N
+            "0.0477|-1.0619|0.1901|1.9631|1.2804|0.0534|0.1950|0.0191| null |0.5059|6.5599|-0.0876|0.4920|0.6180| null | null | null | null | null | null | null | null | null ", // Not L10N
             "0.1236| null | null | null |6.2507|-0.0719|0.7086|1.1183| null | null | null | null | null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
@@ -257,19 +257,13 @@ namespace pwiz.SkylineTestTutorial
                 {
                     Assert.IsFalse(editDlgNew.UsesSecondBest);
                     Assert.IsTrue(editDlgNew.UsesDecoys);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[9].IsEnabled);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[9].PercentContribution < 0);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[5].IsEnabled);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[5].PercentContribution < 0);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].IsEnabled);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].PercentContribution < 0);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[0].IsEnabled);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[0].PercentContribution < 0);
                     editDlgNew.UsesSecondBest = true;
-                    editDlgNew.PeakCalculatorsGrid.Items[9].IsEnabled = false;
                     editDlgNew.PeakCalculatorsGrid.Items[5].IsEnabled = false;
                     editDlgNew.PeakCalculatorsGrid.Items[2].IsEnabled = false;
-                    editDlgNew.PeakCalculatorsGrid.Items[0].IsEnabled = false;
                     editDlgNew.TrainModel(true);
                     // Check that these cells are still active even though they've been unchecked
                     Assert.IsTrue(editDlgNew.IsActiveCell(7, 0));

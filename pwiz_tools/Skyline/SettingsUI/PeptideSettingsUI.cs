@@ -1023,6 +1023,12 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverLabelType.SelectedName = value; }
         }
 
+        public string SelectedInternalStandardTypeName
+        {
+            get { return _driverLabelType.SelectedInternalStandardName; }
+            set { _driverLabelType.SelectedInternalStandardName = value; }
+        }
+
         public int MaxVariableMods
         {
             get { return Convert.ToInt32(textMaxVariableMods.Text); }
@@ -1273,9 +1279,34 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+            public string SelectedInternalStandardName
+            {
+                get { return SelectedInternalStandardType == null ? Resources.LabelTypeComboDriver_LoadList_none : SelectedInternalStandardType.Name; }
+                set
+                {
+                    if (Equals(value, Resources.LabelTypeComboDriver_LoadList_none))
+                    {
+                        ComboIS.SelectedItem = Resources.LabelTypeComboDriver_LoadList_none;
+                    }
+                    for (int i = 1; i < ComboIS.Items.Count; i++)
+                    {
+                        if (Equals(value, ((IsotopeLabelType)ComboIS.Items[i]).Name))
+                        {
+                            ComboIS.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
             private TypedModifications SelectedMods
             {
                 get { return (TypedModifications) Combo.SelectedItem; }
+            }
+
+            private IsotopeLabelType SelectedInternalStandardType
+            {
+                get { return ComboIS.SelectedItem as IsotopeLabelType; }
             }
 
             private TypedModifications SelectedModsLast

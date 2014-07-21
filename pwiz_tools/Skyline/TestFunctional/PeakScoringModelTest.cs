@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
                         {
                             editDlg.PeakCalculatorsGrid.SelectRow(i);
                         }
-                        VerifyBias(editDlg, -15.7061453);
+                        VerifyBias(editDlg, -15.823625);
                     });
                 OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -127,21 +127,21 @@ namespace pwiz.SkylineTestFunctional
                 _format = editDlg.PeakCalculatorWeightFormat;
                 _percentFormat = editDlg.PeakCalculatorPercentContributionFormat;
                 var gridGen = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
-                gridGen.AddRow(true, 0.382942517316037, 0.128627076210894);
+                gridGen.AddRow(true, 0.376718357886433, 0.12738097261231);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
-                gridGen.AddRow(true, 0.827278215324237, 0.0109975203145636);
-                gridGen.AddRow(true, 2.86041559389025, 0.133794233084609);
-                gridGen.AddRow(true, -0.251912499420841, 0.14392065404677);
-                gridGen.AddRow(true, 0.495149585576337, 0.0805515759397253);
+                gridGen.AddRow(true, 3.75161889118086, 0.0528134108610573);
+                gridGen.AddRow(true, 1.42415180479954, 0.070550404796675);
+                gridGen.AddRow(true, -0.326445808613516, 0.191868217277661);
+                gridGen.AddRow(true, 0.341320133589784, 0.0705585315790682);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
-                gridGen.AddRow(true, 4.13092927777122, 0.10907872496981);
-                gridGen.AddRow(true, 9.60141282291844, 0.438116812109939);
-                gridGen.AddRow(true, 0.222046587545859, -0.157529702072592);
-                gridGen.AddRow(true, 0.149909944118646, 0.0373834253398596);
-                gridGen.AddRow(true, 0.203812425696076, 0.0640621597418578);
-                gridGen.AddRow(true, 0.827278215324159, 0.0109975203145625);
+                gridGen.AddRow(true, 4.60440119992202, 0.119164203143345);
+                gridGen.AddRow(true, 10.3736189107134, 0.479720840306219);
+                gridGen.AddRow(true, 0.264034530163442, -0.195893488720119);
+                gridGen.AddRow(true, 0.357881218851266, 0.0686809689909328);
+                gridGen.AddRow(true, 0.121764264085643, 0.0376259684583611);
+                gridGen.AddRow(true, -1.33946954154854, -0.0224700293055111);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
                 gridGen.AddRow(false, double.NaN, double.NaN);
@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Assert.AreEqual(editDlg.PeakScoringModelName, "test1"); // Not L10N
                         VerifyCellValues(editDlg, _cellValuesOriginal);
-                        VerifyBias(editDlg, -15.706145);
+                        VerifyBias(editDlg, -15.823625);
                         // Manually uncheck two of the scores
                         editDlg.SetChecked(3, false);
                         editDlg.SetChecked(6, false);
@@ -194,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.SetChecked(6, true);
                         editDlg.TrainModelClick();
                         VerifyCellValues(editDlg, _cellValuesOriginal);
-                        VerifyBias(editDlg, -15.706145);
+                        VerifyBias(editDlg, -15.823625);
                         editDlg.PeakScoringModelName = "test2"; // Not L10N
                     });
                OkDialog(editDlg, editDlg.OkDialog);
@@ -364,33 +364,33 @@ namespace pwiz.SkylineTestFunctional
                     new MQuestCoElutionCalc()
                 };
             var gridGen = new GridDataGenerator(oldCalcs, _format, _percentFormat);
-            gridGen.AddRow(true, 0.863270635260084, 0.318581790432795);
-            gridGen.AddRow(true, 2.01768291591259, 0.030648912491513);
-            gridGen.AddRow(true, 6.21701653129739, 0.272271568046956);
+            gridGen.AddRow(true, 0.863270635260084, 0.314687951204895);
+            gridGen.AddRow(true, 2.01768291591259, 0.0351323266252936);
+            gridGen.AddRow(true, 6.21701653129739, 0.274275652551134);
             gridGen.AddRow(false, double.NaN, double.NaN);
             gridGen.AddRow(false, double.NaN, double.NaN);
             gridGen.AddRow(false, double.NaN, double.NaN);
-            gridGen.AddRow(true, 7.53518445380051, 0.319096853160788);
-            gridGen.AddRow(true, -0.127723820682657, 0.0594008758679496);
+            gridGen.AddRow(true, 7.53518445380051, 0.317423165021391);
+            gridGen.AddRow(true, -0.127723820682657, 0.0584809045972867);
             gridGen.AddRow(false, double.NaN, double.NaN);
             gridGen.AddRow(false, double.NaN, double.NaN);
             var cellValuesOld = gridGen.Rows;
             var gridGenNew = new GridDataGenerator(_defaultMProphetCalcs, _format, _percentFormat);
-            gridGenNew.AddRow(true, 0.412294733862261, 0.146358520954345);
+            gridGenNew.AddRow(true, 0.680234462539877, 0.241338184217221);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
-            gridGenNew.AddRow(true, 1.05591699541179, 0.0134338629118288);
+            gridGenNew.AddRow(true, 4.19236858652521, 0.0593035736014229);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
-            gridGenNew.AddRow(true, -0.338653641260181, 0.198945542278336);
-            gridGenNew.AddRow(true, 0.385267383364279, 0.0812438848987492);
+            gridGenNew.AddRow(true, -0.366623662909423, 0.22159598356285);
+            gridGenNew.AddRow(true, 0.324832812415825, 0.0688558685884989);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
-            gridGenNew.AddRow(true, 5.280590346473, 0.135473165064042);
-            gridGenNew.AddRow(true, 11.1943150894438, 0.539485707382467);
-            gridGenNew.AddRow(true, 0.286419098955052, -0.219723442922616);
-            gridGenNew.AddRow(true, 0.339000738822918, 0.0703244960450021);
-            gridGenNew.AddRow(true, 0.0643044070046071, 0.0210244004760243);
-            gridGenNew.AddRow(true, 1.05591699541111, 0.0134338629118201);
+            gridGenNew.AddRow(true, 4.86954432733025, 0.130356053331836);
+            gridGenNew.AddRow(true, 10.3903589841153, 0.522736908605601);
+            gridGenNew.AddRow(true, 0.288323730123281, -0.231027880050826);
+            gridGenNew.AddRow(true, 0.383638212337093, 0.0836161627370979);
+            gridGenNew.AddRow(true, -0.225592272068855, -0.0751100609650622);
+            gridGenNew.AddRow(true, -1.23200710188951, -0.0216647936286401);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
             gridGenNew.AddRow(false, double.NaN, double.NaN);
