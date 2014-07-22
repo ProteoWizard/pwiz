@@ -2050,6 +2050,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (idName == null)
                 return;
 
+            if (HasDocumentLibrary && !LibrarySpecs.Any(spec => spec.IsDocumentLibrary))
+            {
+                // Not possible to reconcile until Document Library is loaded.
+                return;
+            }
+
             // Look for the rank ID in the specified LibrarySpecs.
             // They should all have it, or this is not a valid ranking.
             PeptideRankId idFound = null;
