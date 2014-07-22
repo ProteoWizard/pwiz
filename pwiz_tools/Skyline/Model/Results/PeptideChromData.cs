@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly SrmDocument _document;
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
         private readonly List<List<PeptideChromDataPeakList>> _listListPeakSets = new List<List<PeptideChromDataPeakList>>();
-        private double? _predictedRetentionTime;
+        private RetentionTimePrediction _predictedRetentionTime;
         private double[] _retentionTimes;
         private bool _isAlignedTimes;
         private readonly bool _isProcessedScans;
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
-        public double? PredictedRetentionTime { set { _predictedRetentionTime = value; }}
+        public RetentionTimePrediction PredictedRetentionTime { set { _predictedRetentionTime = value; }}
 
         public double[] RetentionTimes { set { _retentionTimes = value; } }
 
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var peakSet in listPeakSets.Where(peakSet => peakSet != null))
                 {
                     var context = new PeakScoringContext(_document);
-                    context.AddInfo(new RetentionTimePrediction(_predictedRetentionTime));
+                    context.AddInfo(_predictedRetentionTime);
                     peakSet.ScorePeptideSets(context, detailedCalcs);
                 }
 

@@ -31,12 +31,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
 {
     sealed class RetentionTimePrediction
     {
-        public RetentionTimePrediction(double? time)
+        public RetentionTimePrediction(double? time, double window)
         {
             Time = time;
+            Window = window;
         }
 
         public double? Time { get; private set; }
+        public double Window { get; private set; }
     }
 
     public abstract class AbstractMQuestRetentionTimePredictionCalc : SummaryPeakFeatureCalculator
@@ -46,10 +48,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             if (context.Document == null)
-                return float.NaN;
-            var settings = context.Document.Settings;
-            var predictor = settings.PeptideSettings.Prediction.RetentionTime;
-            if (predictor == null)
                 return float.NaN;
 
             float maxHeight = float.MinValue;
@@ -65,30 +63,40 @@ namespace pwiz.Skyline.Model.Results.Scoring
             if (!measuredRT.HasValue)
                 return float.NaN;
 
-            double? predictedRT;
             RetentionTimePrediction prediction;
-            if (context.TryGetInfo(out prediction))
-                predictedRT = prediction.Time;
-            else
+            if (!context.TryGetInfo(out prediction))
             {
                 var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
+                var settings = context.Document.Settings;
+                var predictor = settings.PeptideSettings.Prediction.RetentionTime;
                 string seqModified = settings.GetLookupSequence(summaryPeakData.NodePep);
-                predictedRT = predictor.GetRetentionTime(seqModified, fileId);
-                if (!predictedRT.HasValue &&
-                    settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                if (predictor != null)
+                {
+                    prediction = new RetentionTimePrediction(predictor.GetRetentionTime(seqModified, fileId),
+                        predictor.TimeWindow);
+                }
+
+                var fullScan = settings.TransitionSettings.FullScan;
+                if (prediction == null && fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
                 {
                     var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
                     var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
                     if (times.Length > 0)
                     {
-                        predictedRT = new Statistics(times).Median();
+                        var statTimes = new Statistics(times);
+                        double predictedRT = statTimes.Median();
+                        double window = statTimes.Range() + fullScan.RetentionTimeFilterLength*2;
+                        prediction = new RetentionTimePrediction(predictedRT, window);
                     }
                 }
-                context.AddInfo(new RetentionTimePrediction(predictedRT));
+                if (prediction == null)
+                    prediction = new RetentionTimePrediction(null, 0);
+                context.AddInfo(prediction);
             }
-            if (!predictedRT.HasValue)
+            if (prediction == null || !prediction.Time.HasValue)
                 return float.NaN;
-            return (float) RtScoreFunction(measuredRT.Value - predictedRT.Value) / (float) RtScoreNormalizer(predictor.TimeWindow);
+            // CONSIDER: Do the division first, and then the cast
+            return ((float) RtScoreFunction(measuredRT.Value - prediction.Time.Value) / (float) RtScoreNormalizer(prediction.Window));
         }
 
         public double RtScoreNormalizer(double timeWindow)
