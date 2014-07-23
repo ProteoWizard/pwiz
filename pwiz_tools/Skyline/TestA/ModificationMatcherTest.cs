@@ -341,13 +341,13 @@ namespace pwiz.SkylineTestA
         private static string STR_HEAVY_15 { get { return "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}"; } }
         private const string STR_HEAVY_15_F = "VAILIPF{+1}R";
         private static string STR_HEAVY_15_NOT_ALL { get { return "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R"; } }
-        private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT(UniMod:21)YLFMMQAQGILIR";
+        private const string STR_MOD_BY_NAME = "S[PHO]LLYFVYVAPGIVNT(UniMod:21)YLFMMQAQGILIR";
         private const string STR_TERM_ONLY = "VAILIPFR{Label:13C(6) (C-term R)}";
         private const string STR_MOD_BY_NAME_TERMINUS = "SLLAALFFFSLSSSLLYFVYVAPGIVNT[Phospho (ST)]";
         private const string STR_HEAVY_ONLY = "ALSI{+1}GFETC[+57]R"; 
         private const string STR_LIGHT_ONLY = "A{+1}E{+1}I{+1}D{+1}M{+1}[+695]L{+1}D{+1}I{+1}R{+4}";
         private const string STR_CYS_AND_OXI = "AFC(unimod:4)AVPWQGTM[+16]TLSK";
-        private const string STR_CYS_OXI_PHOS = "AFC[UniMod:4]AVPWQGTM[+16]T(UniMod:21)LSK";
+        private const string STR_CYS_OXI_PHOS = "AFC[UniMod:4]AVPWQGTM[oXi]T(UniMod:21)LSK";
         private const string STR_CYS_OXI_PHOS_CAP = "AFC(uNiMoD:4)AVPWQGTM[+16]T(UNIMOD:21)LSK";
         private static string STR_METOX_LONG_MASS { get { return "AFCSFQIYAVPWQGTM[+" + 15.99 + "49151234567890]TLSK"; } }
         private const string STR_AMMONIA_LOSS = "C[-17]AVPWQGTMTLSK";
@@ -364,7 +364,7 @@ namespace pwiz.SkylineTestA
         private const string STR_FAIL_DOUBLE_MOD = "V{+1}{+5}A{+1}I{+1}L{+1}I{+1}P{+1}F{+1}R{+4}{+1}";
         private const string STR_FAIL_OX_ON_D = "PEMGFD[Oxidation (M)]LER";
         private const string STR_FAIL_OX_TERM = "PEM[Oxidation (M) C-term]GFDLER";
-        private const string STR_FAIL_UNIMOD = "AFC[+57]AVPWQGTM[+16]T(UnimodBad:21)LSK";
+        private const string STR_FAIL_UNIMOD = "AFC[+57]AVPWQGTM[OXI]T(UnimodBad:21)LSK";
         private const string STR_UNKNOWN_UNIMOD = "AFC[+57]AVPWQGTM[+16]T(Unimod:123456)LSK";
         private const string STR_FAIL_WRONG_AA_UNIMOD = "AFC[+57]AVPW(Unimod:21)QGTM[+16]TLSK";
         private const string STR_FAIL_UNIMOD_TERMINUS = "PEM(UniMod:298)GFDLER";

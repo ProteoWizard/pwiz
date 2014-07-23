@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -31,6 +32,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static Dictionary<string, StaticMod> DictIsotopeModNames { get; private set; }
         public static Dictionary<string, StaticMod> DictHiddenIsotopeModNames { get; private set; }
         public static Dictionary<UniModIdKey, StaticMod> DictUniModIds { get; private set; }
+        public static Dictionary<string, int> DictShortNamesToUniMod { get; private set; } 
         public static ModMassLookup MassLookup { get; private set; }
 
         public static readonly char[] AMINO_ACIDS = 
@@ -47,6 +49,7 @@ namespace pwiz.Skyline.Model.DocSettings
             DictIsotopeModNames = new Dictionary<string, StaticMod>();
             DictHiddenIsotopeModNames = new Dictionary<string, StaticMod>();
             DictUniModIds = new Dictionary<UniModIdKey, StaticMod>();
+            DictShortNamesToUniMod = new Dictionary<string, int>();
             MassLookup = new ModMassLookup();
 
             INITIALIZING = true;
@@ -66,6 +69,21 @@ namespace pwiz.Skyline.Model.DocSettings
             var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
                                        data.ShortName);
+            if (data.ID.HasValue && data.ShortName != null)
+            {
+                int id;
+                string shortName = data.ShortName.ToLower();
+                if (!DictShortNamesToUniMod.TryGetValue(shortName, out id))
+                {
+                    DictShortNamesToUniMod.Add(shortName, data.ID.Value);    
+                }
+                // Short mods and unimod ID's need to match up
+                // This error should never be seen by users
+                else if (id != data.ID.Value)
+                {
+                    throw new InvalidDataException("Short mod names and unimod ID's must be consistent"); // Not L10N
+                }
+            }
             AddMod(newMod, data.ID, data.Structural, data.Hidden);
         }
 

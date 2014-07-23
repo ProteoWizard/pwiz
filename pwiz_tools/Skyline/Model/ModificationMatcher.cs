@@ -230,16 +230,22 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        /// <summary>
+        /// Tries to get a unimod ID from either a unimod:XXX string or a short name string
+        /// </summary>
+        /// <param name="unimodString">Mod notation to be converted to unimod</param>
+        /// <param name="uniModId">uniMod ID number</param>
+        /// <returns></returns>
         public static bool TryGetIdFromUnimod(string unimodString, out int uniModId)
         {
             const string prefixString = "unimod:"; // Not L10N
-            if (!unimodString.ToLowerInvariant().StartsWith(prefixString))
+            if (unimodString.ToLowerInvariant().StartsWith(prefixString))
             {
-                uniModId = 0;
-                return false;
+                int prefixLength = prefixString.Length;
+                return int.TryParse(unimodString.Substring(prefixLength, unimodString.Length - prefixLength), out uniModId);
             }
-            int prefixLength = prefixString.Length;
-            return int.TryParse(unimodString.Substring(prefixLength, unimodString.Length - prefixLength), out uniModId);
+            // Try short name string
+            return UniMod.DictShortNamesToUniMod.TryGetValue(unimodString.ToLower(), out uniModId);
         }
 
         public string SimplifyUnimodSequence(string seq)
