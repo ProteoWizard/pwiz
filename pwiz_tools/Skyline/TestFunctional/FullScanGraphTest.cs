@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
         private static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null)
         {
             var graphChromatogram = SkylineWindow.GraphChromatograms.First();
-            WaitForConditionUI(() => SkylineWindow.IsGraphFullScanVisible && SkylineWindow.GraphFullScan.IsLoaded);
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
             Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
 

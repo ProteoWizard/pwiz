@@ -95,11 +95,13 @@ namespace pwiz.MSGraph
         /// <summary>
         /// Find the closest curve/point to the cursor.
         /// </summary>
+        /// <param name="curveList">List of curves to check.</param>
         /// <param name="maxDistance">Maximum distance from curve allowed.</param>
         /// <param name="pt">Cursor coordinates.</param>
         /// <param name="closestCurve">Returns the closest curve (or null if none is close enough).</param>
         /// <param name="closestPoint">Returns the closest point on the curve.</param>
-        public void FindClosestCurve(PointF pt, int maxDistance, out CurveItem closestCurve, out PointF closestPoint)
+        public void FindClosestCurve(IEnumerable<CurveItem> curveList, PointF pt, int maxDistance,
+            out CurveItem closestCurve, out PointF closestPoint)
         {
             // Determine boundaries of point search in graph coordinates.
             double xLo, xHi, y;
@@ -111,7 +113,7 @@ namespace pwiz.MSGraph
             double closestDistanceSquared = maxDistance * maxDistance;
 
             // Iterate through each curve, finding the closest one within the distance limit (closestDistanceSquared).
-            foreach (var curve in CurveList)
+            foreach (var curve in curveList)
                 FindClosestPoint(curve, xLo, xHi, pt, ref closestCurve, ref closestPoint, ref closestDistanceSquared);
         }
 
@@ -128,7 +130,7 @@ namespace pwiz.MSGraph
         private void FindClosestPoint(CurveItem curve, double xLo, double xHi, PointF pt,
             ref CurveItem closestCurve, ref PointF closestPoint, ref double closestDistanceSquared)
         {
-            if (!curve.IsVisible || curve.NPts == 0)
+            if (curve.NPts == 0)
                 return;
             var points = curve.Points as MSPointList;
             if (points == null)

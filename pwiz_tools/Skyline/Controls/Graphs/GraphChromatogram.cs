@@ -179,6 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _chromIndex;
         private bool _showPeptideTotals;
         private bool _enableTrackingDot;
+        private bool _showingTrackingDot;
 
         private const int MaxPeptidesDisplayed = 100;
         private const int FullScanPointSize = 12;
@@ -2800,6 +2801,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HideFullScanTrackingPoint()
         {
+            _showingTrackingDot = false;
             if (!_enableTrackingDot)
                 return;
             foreach (var graphPane in GraphPanes)
@@ -2814,9 +2816,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!_enableTrackingDot)
                 return false;
             var graphPane = GraphPaneFromPoint(pt) as MSGraphPane;
-            return (graphPane != null &&
-                graphPane.CurveList.Count > FULLSCAN_TRACKING_INDEX &&
-                graphPane.CurveList[FULLSCAN_TRACKING_INDEX].IsVisible);
+            return graphPane != null && _showingTrackingDot;
         }
 
         private CurveItem _closestCurve;
@@ -2836,7 +2836,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (graphPane != null && showPoint)
             {
                 // Find the closest curve point to the cursor.
-                graphPane.FindClosestCurve(pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
+                graphPane.FindClosestCurve(GetCurvesExcludingDots(graphPane), pt, 20, out _closestCurve, out _fullScanTrackingPointLocation);
 
                 // Display the highlight point.
                 if (_closestCurve != null)
@@ -2852,10 +2852,17 @@ namespace pwiz.Skyline.Controls.Graphs
                         (int)(_closestCurve.Color.G * 0.6),
                         (int)(_closestCurve.Color.B * 0.6));
                     lineItem.IsVisible = true;
+                    _showingTrackingDot = true;
                 }
             }
 
             Refresh();
+        }
+
+        private IEnumerable<CurveItem> GetCurvesExcludingDots(GraphPane graphPane)
+        {
+            for (int i = FULLSCAN_SELECTED_INDEX + 1; i < graphPane.CurveList.Count; i++)
+                yield return graphPane.CurveList[i];
         }
        
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)

@@ -1113,11 +1113,6 @@ namespace pwiz.Skyline
         }
 
         // Testing
-        public bool IsGraphFullScanVisible
-        {
-            get { return _graphFullScan != null && _graphFullScan.Visible; }
-        }
-
         public GraphFullScan GraphFullScan
         {
             get { return _graphFullScan; }

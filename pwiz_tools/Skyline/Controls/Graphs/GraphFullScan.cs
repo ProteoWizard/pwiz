@@ -815,18 +815,13 @@ namespace pwiz.Skyline.Controls.Graphs
         private void spectrumBtn_CheckedChanged(object sender, EventArgs e)
         {
             HeatMapGraphPane.ShowHeatMap = !spectrumBtn.Checked;
-            SumScans(spectrumBtn.Checked);
-        }
-
-        private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
-
-        public void SumScans(bool sum)
-        {
-            Settings.Default.SumScansFullScan = spectrumBtn.Checked = sum;
+            Settings.Default.SumScansFullScan = spectrumBtn.Checked;
             CreateGraph();
             ZoomYAxis();
             UpdateUI();
         }
+
+        private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
 
         private void filterBtn_CheckedChanged(object sender, EventArgs e)
         {
@@ -944,109 +939,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #endregion Test support
 
-        private static readonly Color[] _heatMapColors =
-        {
-            Color.FromArgb(0, 0, 255),
-            Color.FromArgb(0, 1, 255),
-            Color.FromArgb(0, 2, 255),
-            Color.FromArgb(0, 4, 255),
-            Color.FromArgb(0, 5, 255),
-            Color.FromArgb(0, 7, 255),
-            Color.FromArgb(0, 9, 255),
-            Color.FromArgb(0, 11, 255),
-            Color.FromArgb(0, 13, 255),
-            Color.FromArgb(0, 15, 255),
-            Color.FromArgb(0, 18, 253),
-            Color.FromArgb(0, 21, 251),
-            Color.FromArgb(0, 24, 250),
-            Color.FromArgb(0, 27, 248),
-            Color.FromArgb(0, 30, 245),
-            Color.FromArgb(0, 34, 243),
-            Color.FromArgb(0, 37, 240),
-            Color.FromArgb(0, 41, 237),
-            Color.FromArgb(0, 45, 234),
-            Color.FromArgb(0, 49, 230),
-            Color.FromArgb(0, 53, 226),
-            Color.FromArgb(0, 57, 222),
-            Color.FromArgb(0, 62, 218),
-            Color.FromArgb(0, 67, 214),
-            Color.FromArgb(0, 71, 209),
-            Color.FromArgb(0, 76, 204),
-            Color.FromArgb(0, 82, 199),
-            Color.FromArgb(0, 87, 193),
-            Color.FromArgb(0, 93, 188),
-            Color.FromArgb(0, 98, 182),
-            Color.FromArgb(0, 104, 175),
-            Color.FromArgb(0, 110, 169),
-            Color.FromArgb(0, 116, 162),
-            Color.FromArgb(7, 123, 155),
-            Color.FromArgb(21, 129, 148),
-            Color.FromArgb(34, 136, 141),
-            Color.FromArgb(47, 142, 133),
-            Color.FromArgb(60, 149, 125),
-            Color.FromArgb(71, 157, 117),
-            Color.FromArgb(83, 164, 109),
-            Color.FromArgb(93, 171, 100),
-            Color.FromArgb(104, 179, 91),
-            Color.FromArgb(113, 187, 92),
-            Color.FromArgb(123, 195, 73),
-            Color.FromArgb(132, 203, 63),
-            Color.FromArgb(140, 211, 53),
-            Color.FromArgb(148, 220, 43),
-            Color.FromArgb(156, 228, 33),
-            Color.FromArgb(163, 237, 22),
-            Color.FromArgb(170, 246, 11),
-            Color.FromArgb(176, 255, 0),
-            Color.FromArgb(183, 248, 0),
-            Color.FromArgb(188, 241, 0),
-            Color.FromArgb(194, 234, 0),
-            Color.FromArgb(199, 227, 0),
-            Color.FromArgb(204, 220, 0),
-            Color.FromArgb(209, 214, 0),
-            Color.FromArgb(213, 207, 0),
-            Color.FromArgb(217, 200, 0),
-            Color.FromArgb(221, 194, 0),
-            Color.FromArgb(224, 188, 0),
-            Color.FromArgb(227, 181, 0),
-            Color.FromArgb(230, 175, 0),
-            Color.FromArgb(233, 169, 0),
-            Color.FromArgb(236, 163, 0),
-            Color.FromArgb(238, 157, 0),
-            Color.FromArgb(240, 151, 0),
-            Color.FromArgb(243, 145, 0),
-            Color.FromArgb(244, 140, 0),
-            Color.FromArgb(246, 134, 0),
-            Color.FromArgb(248, 129, 0),
-            Color.FromArgb(249, 123, 0),
-            Color.FromArgb(250, 118, 0),
-            Color.FromArgb(251, 112, 0),
-            Color.FromArgb(252, 107, 0),
-            Color.FromArgb(253, 102, 0),
-            Color.FromArgb(254, 97, 0),
-            Color.FromArgb(255, 92, 0),
-            Color.FromArgb(255, 87, 0),
-            Color.FromArgb(255, 82, 0),
-            Color.FromArgb(255, 78, 0),
-            Color.FromArgb(255, 73, 0),
-            Color.FromArgb(255, 68, 0),
-            Color.FromArgb(255, 64, 0),
-            Color.FromArgb(255, 59, 0),
-            Color.FromArgb(255, 55, 0),
-            Color.FromArgb(255, 51, 0),
-            Color.FromArgb(255, 47, 0),
-            Color.FromArgb(255, 43, 0),
-            Color.FromArgb(255, 39, 0),
-            Color.FromArgb(255, 35, 0),
-            Color.FromArgb(255, 31, 0),
-            Color.FromArgb(255, 27, 0),
-            Color.FromArgb(255, 23, 0),
-            Color.FromArgb(255, 20, 0),
-            Color.FromArgb(255, 16, 0),
-            Color.FromArgb(255, 13, 0),
-            Color.FromArgb(255, 10, 0),
-            Color.FromArgb(255, 8, 0),
-            Color.FromArgb(255, 3, 0)
-        };
 
         /// <summary>
         /// Provides a constant background thread with responsibility for all interactions

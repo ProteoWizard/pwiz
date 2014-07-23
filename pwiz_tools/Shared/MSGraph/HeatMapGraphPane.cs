@@ -43,11 +43,16 @@ namespace pwiz.MSGraph
                 return;
             }
 
+            CurveList.Clear();
+            double cellWidth = Math.Abs(XAxis.Scale.ReverseTransform(MinDotRadius) - XAxis.Scale.ReverseTransform(0));
+            double cellHeight = Math.Abs(YAxis.Scale.ReverseTransform(MinDotRadius) - YAxis.Scale.ReverseTransform(0));
+            if (cellWidth <= 0 || cellHeight <= 0)
+                return;
+
             // Use log scale for heat intensity.
             double scale = (_heatMapColors.Length - 1) / Math.Log(_heatMapData.MaxPoint.Z);
 
             // Create curves for each intensity color.
-            CurveList.Clear();
             var curves = new LineItem[_heatMapColors.Length];
             for (int i = 0; i < curves.Length; i++)
             {
@@ -73,8 +78,6 @@ namespace pwiz.MSGraph
             }
 
             // Get points within bounds of graph/filter, with density appropriate for the current display resolution.
-            double cellWidth = Math.Abs(XAxis.Scale.ReverseTransform(MinDotRadius) - XAxis.Scale.ReverseTransform(0));
-            double cellHeight = Math.Abs(YAxis.Scale.ReverseTransform(MinDotRadius) - YAxis.Scale.ReverseTransform(0));
             var points = _heatMapData.GetPoints(
                 XAxis.Scale.Min,
                 XAxis.Scale.Max,
