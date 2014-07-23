@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
         try{
             
             char* result_file = inFiles.at(i);
+            builder.setCurFile(i);
             
             Verbosity::comment(V_STATUS, "Reading results from %s.", 
                                result_file);

@@ -245,10 +245,18 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     sqlite3_int64 fileId = sqlite3_last_insert_rowid(blibMaker_.getDb());
 
     const int MAX_SPECTRUM_FILES = 500;
-
-    if (fileId > MAX_SPECTRUM_FILES)
+    int curFile = blibMaker_.getCurFile();
+    map<int, int>::iterator inputLookup = inputToSpec_.find(curFile);
+    if (inputLookup == inputToSpec_.end())
+    {
+        inputLookup = inputToSpec_.insert(pair<int, int>(curFile, 1)).first;
+    }
+    else if (++(inputLookup->second) > MAX_SPECTRUM_FILES)
+    {
         throw BlibException(false, "Maximum limit of %d spectrum source files was exceeded. There "
                             "was most likely a problem reading the filenames.", MAX_SPECTRUM_FILES);
+    }
+    Verbosity::debug("Input file %d has had %d spectrum source files inserted", curFile, inputLookup->second);
 
     return fileId;
 }

@@ -110,6 +110,14 @@ vector<char*> BlibBuilder::getInputFiles() {
     return input_files;
 }
 
+void BlibBuilder::setCurFile(int i) {
+    curFile = i;
+}
+
+int BlibBuilder::getCurFile() const {
+    return curFile;
+}
+
 string BlibBuilder::getMaxQuantModsPath() {
     return maxQuantModsPath;
 }

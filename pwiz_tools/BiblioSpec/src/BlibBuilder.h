@@ -93,6 +93,8 @@ class BlibBuilder : public BlibMaker
   double getScoreThreshold(BUILD_INPUT fileType); // replaces getProbabilityCutoff()
   int getLevelCompress();
   vector<char*> getInputFiles();
+  void setCurFile(int i);
+  int getCurFile() const;
   string getMaxQuantModsPath();
   double getPusherInterval() const;
   const set<string>* getTargetSequences();
@@ -119,6 +121,7 @@ class BlibBuilder : public BlibMaker
   int level_compress;
   int fileSizeThresholdForCaching; // for parsing .dat files
   vector<char*> input_files;
+  int curFile;
   string maxQuantModsPath;
   double forcedPusherInterval;
   set<string>* targetSequences;

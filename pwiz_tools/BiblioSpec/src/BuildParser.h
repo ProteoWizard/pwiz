@@ -81,6 +81,7 @@ class BuildParser : protected SAXHandler{
   ProgressIndicator* specProgress_;  ///< progress of each spectrum in a file
   int fileProgressIncrement_; ///< when file progress is by pepxml size instead 
                               // of number of spec files
+  map<int, int> inputToSpec_; ///< map of input file index to spectrum file count for that input file
 
   void insertSpectrum(PSM* psm, SpecData& curSpectrum, 
                       sqlite3_int64 fileId, PSM_SCORE_TYPE scoreType);
