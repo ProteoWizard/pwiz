@@ -507,7 +507,7 @@ namespace pwiz.SkylineTestFunctional
             else
             {
                 double biasNum;
-                double.TryParse(bias, out biasNum);
+                Assert.IsTrue(double.TryParse(bias, NumberStyles.Float, CultureInfo.InvariantCulture, out biasNum));
                 Assert.AreEqual(editDlg.PeakScoringModel.Parameters.Bias, biasNum, 1e-5);
             }
         }
