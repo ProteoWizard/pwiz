@@ -1038,7 +1038,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Find button is visible on the right side of graph, if some scores are unknown, but not if all scores are unknown
             bool isMouseOverUnknown = _hasUnknownScores && !_allUnknownScores && e.X > sender.Width - 100;
-            toolStripFind.Visible = isMouseOverUnknown;
+            // It is also unconditionally visible if calculator is ineligible but without unknown scores, if the unknown scores aren't for the best peak
+            bool isEligibleCalculator = _selectedCalculator == -1 || _targetDecoyGenerator.EligibleScores[_selectedCalculator];
+            bool overrideVisible = !isEligibleCalculator && !_hasUnknownScores;
+            toolStripFind.Visible = isMouseOverUnknown || overrideVisible;
             return true;
         }
         #endregion

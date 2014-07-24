@@ -251,6 +251,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                          () => crossCorrMatrix.Where(xcorr => xcorr.TranPeakData1.NodeTran != null && xcorr.TranPeakData2.NodeTran != null));
         }
 
+        public static double GetMaximumProductMassError(PeakScoringContext context)
+        {
+            var productMz = context.Document.Settings.TransitionSettings.Instrument.MaxMz;
+            return context.Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(productMz) / 2.0;
+        }
+
+        public static double GetMaximumPrecursorMassError(PeakScoringContext context)
+        {
+            var precursorMz = context.Document.Settings.TransitionSettings.Instrument.MaxMz;
+            return context.Document.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(precursorMz) / 2.0;
+        }
+
         public static float CalculateIdotp(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             var tranGroupPeakDatas = GetAnalyteGroups(summaryPeakData).ToArray();

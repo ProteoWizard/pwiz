@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Find
 
         private static bool IsUnknownScore(PeakTransitionGroupFeatures features, int selectedCalculator)
         {
-            return features.PeakGroupFeatures.All(groupFeatures => double.IsNaN(groupFeatures.Features[selectedCalculator]));
+            return features.PeakGroupFeatures.Any(groupFeatures => double.IsNaN(groupFeatures.Features[selectedCalculator]));
         }
     }
 }

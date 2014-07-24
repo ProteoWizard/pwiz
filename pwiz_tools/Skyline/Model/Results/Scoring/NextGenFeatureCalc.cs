@@ -40,10 +40,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             var massErrors = new List<double>();
             var weights = new List<double>();
+            bool noTransitions = true;
             foreach (var pdTran in tranGroupPeakDatas.SelectMany(pd => pd.TranstionPeakData))
             {
                 if (!IsIonType(pdTran.NodeTran))
                     continue;
+                noTransitions = false;
                 var peakData = pdTran.PeakData;
                 double? massError = peakData.MassError;
                 if (massError.HasValue)
@@ -52,8 +54,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     weights.Add(GetWeight(peakData));
                 }
             }
-            if (massErrors.Count == 0)
+            // If there are no qualifying transitions, return NaN
+            if (noTransitions)
                 return float.NaN;
+            // If there are qualifying tranistions but they all have null mass error,
+            // then return maximum possible mass error
+            if (massErrors.Count == 0)
+                return (float) MaximumValue(context);
             if (weights.All(weight => weight == 0))
                 weights = weights.ConvertAll(weight => 1.0);
             var massStats = new Statistics(massErrors);
@@ -74,6 +81,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected abstract IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData);
+
+        protected abstract double MaximumValue(PeakScoringContext context);
     }
 
     /// <summary>
@@ -102,6 +111,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override double MaximumValue(PeakScoringContext context)
+        {
+            return MQuestHelpers.GetMaximumProductMassError(context);
         }
     }
 
@@ -132,6 +146,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetStandardGroups(summaryPeakData);
         }
+
+        protected override double MaximumValue(PeakScoringContext context)
+        {
+            return MQuestHelpers.GetMaximumProductMassError(context);
+        }
     }
 
     /// <summary>
@@ -161,6 +180,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
         }
+
+        protected override double MaximumValue(PeakScoringContext context)
+        {
+            return MQuestHelpers.GetMaximumProductMassError(context);
+        }
     }
 
     /// <summary>
@@ -189,6 +213,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override double MaximumValue(PeakScoringContext context)
+        {
+            return MQuestHelpers.GetMaximumPrecursorMassError(context);
         }
     }
 
