@@ -163,7 +163,13 @@ namespace pwiz.MSGraph
                 for (int i = 0; i < 4; i++)
                 {
                     if (pointLists[i].Count > 0)
-                        cells[i] = new Cell(pointLists[i]);
+                    {
+                        var newCell = new Cell(pointLists[i]);
+                        // Make sure there was a maximum point, or the boundaries
+                        // will end up float.MinValue and float.MaxValue
+                        if (newCell.MaxPoint != null)
+                            cells[i] = newCell;
+                    }
                 }
 
                 return cells;

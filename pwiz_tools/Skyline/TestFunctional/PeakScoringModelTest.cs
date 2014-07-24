@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return true; } }
+        private bool IsRecordMode { get { return false; } }
 
         private readonly string[] SCORES_AND_WEIGHTS =
         {

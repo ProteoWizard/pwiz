@@ -46,7 +46,7 @@ namespace pwiz.MSGraph
             CurveList.Clear();
             double cellWidth = Math.Abs(XAxis.Scale.ReverseTransform(MinDotRadius) - XAxis.Scale.ReverseTransform(0));
             double cellHeight = Math.Abs(YAxis.Scale.ReverseTransform(MinDotRadius) - YAxis.Scale.ReverseTransform(0));
-            if (cellWidth <= 0 || cellHeight <= 0)
+            if (cellWidth <= 0 || double.IsNaN(cellWidth) || cellHeight <= 0 || double.IsNaN(cellHeight))
                 return;
 
             // Use log scale for heat intensity.
