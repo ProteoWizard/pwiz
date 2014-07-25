@@ -511,6 +511,10 @@ void TandemNativeParser::saveSpectrum(){
     // create a new SpecData
     SpecData* curSpec = new SpecData();
     curSpec->mz = mz;
+
+    if (boost::iequals(boost::filesystem::path(curFilename_).extension().string(), ".mgf")) {
+        retentionTime_ /= 60;
+    }
     curSpec->retentionTime = retentionTime_;
     curSpec->numPeaks = numMzs_;
     curSpec->mzs = mzs_;
