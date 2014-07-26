@@ -142,10 +142,13 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(pepSettings, pepSettings.OkDialog);
 
             WaitForCondition(
-                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('{')[0]));
+                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('{').First()) &&
+                      SkylineWindow.Status.Contains(Resources.BackgroundProteomeSpec_Digest_Digesting__0__.Split('}').Last()));
             WaitForCondition(
-                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome.Split('{')[0]));
+                () => SkylineWindow.Status.Contains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome.Split('{').First()) &&
+                      SkylineWindow.Status.Contains(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome.Split('}').Last()));
             WaitForCondition(() => SkylineWindow.Status.Contains(Resources.SkylineWindow_UpdateProgressUI_Ready));
+            WaitForDocumentLoaded();
 
             var transitionDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>

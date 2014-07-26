@@ -110,11 +110,11 @@ namespace pwiz.SkylineTestFunctional
             
             // Use heavy as internal standards
             LoadDocument(documentHeavyLight);
-            SetStandardType("heavy");
+            SetStandardType(IsotopeLabelType.light.Name);
             ImportFiles();
             RunEditPeakScoringDlg(null, editDlg =>
             {
-                editDlg.SelectedModelItem = "mProphet";
+                editDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, true, ANALYTE_TYPES);
@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, false, MS1_TYPES);
                 var analyteHistograms = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 var standardHistograms = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, DEFAULT_TYPES);
                 var defaultHistograms = DEFAULT_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
@@ -135,11 +135,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Use light as internal standards
             RemoveImportedResults();
-            SetStandardType("light");
+            SetStandardType(IsotopeLabelType.light.Name);
             ImportFiles();
             RunEditPeakScoringDlg(null, editDlg =>
             {
-                editDlg.SelectedModelItem = "mProphet";
+                editDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, true, ANALYTE_TYPES);
@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, false, MS1_TYPES);
                 var analyteHistograms = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 var standardHistograms = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, DEFAULT_TYPES);
                 var defaultHistograms = DEFAULT_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
@@ -160,11 +160,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Use no internal standards
             RemoveImportedResults();
-            SetStandardType("none");
+            SetStandardType(Resources.LabelTypeComboDriver_LoadList_none);
             ImportFiles();
             RunEditPeakScoringDlg(null, editDlg =>
             {
-                editDlg.SelectedModelItem = "mProphet";
+                editDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, true, ANALYTE_TYPES);
@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, false, MS1_TYPES);
                 var analyteHistograms = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 var standardHistograms = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, DEFAULT_TYPES);
                 var defaultHistograms = DEFAULT_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
@@ -187,12 +187,12 @@ namespace pwiz.SkylineTestFunctional
             // Show that scoring handles everything correctly in this case too
             RemoveImportedResults();
             RemoveHeavyPeptides();
-            SetStandardType("heavy");
+            SetStandardType(IsotopeLabelType.heavy.Name);
             ImportFiles();
             EditPeakScoringModelDlg.HistogramGroup[] analyteHeavyHistogramsOnly = null;
             RunEditPeakScoringDlg(null, editDlg =>
             {
-                editDlg.SelectedModelItem = "mProphet";
+                editDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, true, ANALYTE_TYPES);
@@ -201,7 +201,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, false, MS1_TYPES);
                 analyteHeavyHistogramsOnly = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 var standardHistograms = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, DEFAULT_TYPES);
                 var defaultHistograms = DEFAULT_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
@@ -212,12 +212,12 @@ namespace pwiz.SkylineTestFunctional
             });
 
             RemoveImportedResults();
-            SetStandardType("light");
+            SetStandardType(IsotopeLabelType.light.Name);
             ImportFiles();
             EditPeakScoringModelDlg.HistogramGroup[] standardLightHistogramsOnly = null;
             RunEditPeakScoringDlg(null, editDlg =>
             {
-                editDlg.SelectedModelItem = "mProphet";
+                editDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, false, ANALYTE_TYPES);
@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, false, MS1_TYPES);
                 var analyteHistograms = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 standardLightHistogramsOnly = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, DEFAULT_TYPES);
                 var defaultHistograms = DEFAULT_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
@@ -237,12 +237,12 @@ namespace pwiz.SkylineTestFunctional
             });
 
             RemoveImportedResults();
-            SetStandardType("none");
+            SetStandardType(Resources.LabelTypeComboDriver_LoadList_none);
             ImportFiles();
             EditPeakScoringModelDlg.HistogramGroup[] analyteNoneHistogramsOnly = null;
             RunEditPeakScoringDlg(null, editDlg =>
             {
-                editDlg.SelectedModelItem = "mProphet";
+                editDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, RT_TYPES);
                 VerifyScores(editDlg, true, ANALYTE_TYPES);
@@ -251,7 +251,7 @@ namespace pwiz.SkylineTestFunctional
                 VerifyScores(editDlg, false, MS1_TYPES);
                 analyteNoneHistogramsOnly = ANALYTE_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
                 var standardHistograms = STANDARD_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();
-                editDlg.SelectedModelItem = "Default";
+                editDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                 editDlg.TrainModelClick();
                 VerifyScores(editDlg, true, DEFAULT_TYPES);
                 var defaultHistograms = DEFAULT_TYPES.Select(type => GetHistogramForScore(editDlg, type)).ToArray();

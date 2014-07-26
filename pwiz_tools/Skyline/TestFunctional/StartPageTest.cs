@@ -313,16 +313,13 @@ namespace pwiz.SkylineTestFunctional
             Directory.CreateDirectory(TestContext.TestDir);
 
             var skylineWindow = WaitForOpenForm<SkylineWindow>();
-            RunDlg<StartPage>(skylineWindow.OpenStartPage, start =>
-            {
-                Assert.IsNotNull(start);
-                Assert.AreEqual(start.SelectedTab, StartPage.TABS.Wizard);
-                start.TestImportAction(ActionImport.DataType.peptide_search,
-                TestFilesDir.GetTestPath("StartPageTest.sky"));
-                start.Close();
-            });
-            var peptideSearchDlg = WaitForOpenForm<ImportPeptideSearchDlg>();
+            var startPage = ShowDialog<StartPage>(skylineWindow.OpenStartPage);
+            RunUI(() => Assert.AreEqual(startPage.SelectedTab, StartPage.TABS.Wizard));
+            var peptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(() =>
+                startPage.TestImportAction(ActionImport.DataType.peptide_search,
+                    TestFilesDir.GetTestPath("StartPageTest.sky")));
             OkDialog(peptideSearchDlg, peptideSearchDlg.CancelDialog);
+            RunUI(() => SkylineWindow.SaveDocument());
             RunDlg<StartPage>(skylineWindow.OpenStartPageTutorial, start =>
             {
                 Assert.IsNotNull(start);
