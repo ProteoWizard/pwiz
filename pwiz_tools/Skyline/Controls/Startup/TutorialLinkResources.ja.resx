@@ -130,7 +130,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MethodRefine_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodRefine-1_4.pdf</value>
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/Japanese/MethodRefine-1_4_ja.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="ExistingQuant_zip" xml:space="preserve">
@@ -138,7 +138,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="ExistingQuant_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-1_4.pdf</value>
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/Japanese/ExistingQuant-1_4_ja.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="AbsoluteQuant_zip" xml:space="preserve">
@@ -154,7 +154,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MS1Filtering_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf</value>
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/Japanese/MS1Filtering-2_5_ja.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_zip" xml:space="preserve">
@@ -162,7 +162,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf</value>
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/Japanese/TargetedMSMS-2_5_ja.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="CustomReports_zip" xml:space="preserve">
@@ -186,7 +186,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="iRT_pdf" xml:space="preserve">
-    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-1_4.pdf</value>
+    <value>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/Japanese/iRT-2_5_ja.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="OptimizeCE_zip" xml:space="preserve">

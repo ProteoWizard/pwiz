@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-1_4.pdf.
+        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-2_5.pdf.
         /// </summary>
         internal static string iRT_pdf {
             get {
