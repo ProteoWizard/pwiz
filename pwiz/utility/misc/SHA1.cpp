@@ -152,29 +152,38 @@ bool CSHA1::HashFile(const TCHAR* tszFileName)
 
 	using namespace boost::nowide;
 
+	const INT_64 fileSize = (INT_64)boost::filesystem::file_size(tszFileName);
+
+	// don't use a 32-bit process's entire address space, but 64-bit processes can just use the file size
+	const INT_64 maxRegionSize = sizeof(void*) == 8 ? fileSize : (1 << 30);
+	const INT_64 lMaxBuf = SHA1_MAX_FILE_BUFFER;
+
 	using namespace boost::interprocess;
 	file_mapping mmFile(tszFileName, read_only);
-	mapped_region mmRegion(mmFile, read_only);
+	INT_64 totalRemaining = fileSize;
 
-	void* addr = mmRegion.get_address();
-	const INT_64 lFileSize = mmRegion.get_size();
-	unsigned char* currentOffset = reinterpret_cast<unsigned char*>(addr);
-
-	const INT_64 lMaxBuf = SHA1_MAX_FILE_BUFFER;
-	INT_64 lRemaining = lFileSize;
-
-	while(lRemaining > 0)
+	for (INT_64 offset = 0; offset < fileSize; offset += maxRegionSize)
 	{
-		const size_t uMaxRead = static_cast<size_t>((lRemaining > lMaxBuf) ?
-			lMaxBuf : lRemaining);
+		INT_64 currentRegionSize = std::min(maxRegionSize, totalRemaining);
+		mapped_region mmRegion(mmFile, read_only, offset, currentRegionSize);
 
-		Update(currentOffset, static_cast<UINT_32>(uMaxRead));
+		void* addr = mmRegion.get_address();
+		unsigned char* currentOffset = reinterpret_cast<unsigned char*>(addr);
+		INT_64 regionRemaining = currentRegionSize;
 
-		currentOffset += uMaxRead;
-		lRemaining -= static_cast<INT_64>(uMaxRead);
+		while (regionRemaining > 0)
+		{
+			const size_t uMaxRead = static_cast<size_t>((regionRemaining > lMaxBuf) ? lMaxBuf : regionRemaining);
+
+			Update(currentOffset, static_cast<UINT_32>(uMaxRead));
+
+			currentOffset += uMaxRead;
+			regionRemaining -= static_cast<INT_64>(uMaxRead);
+		}
+		totalRemaining -= currentRegionSize;
 	}
 
-	return (lRemaining == 0);
+	return (totalRemaining == 0);
 }
 #endif
 

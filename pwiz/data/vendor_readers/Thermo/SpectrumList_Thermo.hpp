@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
+#include <boost/container/flat_map.hpp>
 
 
 #ifdef PWIZ_READER_THERMO
@@ -85,7 +86,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     };
 
     vector<IndexEntry> index_;
-    map<string, size_t> idToIndexMap_;
+    boost::container::flat_map<string, size_t> idToIndexMap_;
 
     void createIndex();
     size_t findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const;

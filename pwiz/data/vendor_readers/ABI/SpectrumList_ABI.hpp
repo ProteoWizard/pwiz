@@ -23,8 +23,10 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 #include <boost/thread/mutex.hpp>
+#include <boost/container/flat_map.hpp>
 
 #ifdef PWIZ_READER_ABI
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
@@ -51,8 +53,8 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     
 #ifdef PWIZ_READER_ABI
     SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile,
-        const ExperimentsMap& experimentsMap, int sample,
-        const Reader::Config& config);
+                     const ExperimentsMap& experimentsMap, int sample,
+                     const Reader::Config& config);
 
     private:
 
@@ -76,7 +78,7 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     };
 
     mutable std::vector<IndexEntry> index_;
-    mutable std::map<std::string, size_t> idToIndexMap_;
+    mutable boost::container::flat_map<std::string, size_t> idToIndexMap_;
 
     // Cache last accessed spectrum for fast in order access
     mutable boost::mutex spectrum_mutex;

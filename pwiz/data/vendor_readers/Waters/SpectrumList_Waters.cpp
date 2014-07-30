@@ -460,6 +460,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
                     generate(sink,
                                 "function=" << int_ << " process=" << int_ << " scan=" << int_,
                                 (ie.function+1), ie.process, ((numScansInBlock*ie.block)+ie.scan+1));
+                    idToIndexMap_[ie.id] = ie.index;
                 }
             }
         }
@@ -480,6 +481,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
                 generate(sink,
                             "function=" << int_ << " process=" << int_ << " scan=" << int_,
                             (ie.function+1), ie.process, (ie.scan+1));
+                idToIndexMap_[ie.id] = ie.index;
             }
         }
     }

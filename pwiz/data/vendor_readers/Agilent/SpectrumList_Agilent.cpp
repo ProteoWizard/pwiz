@@ -83,13 +83,10 @@ PWIZ_API_DECL size_t SpectrumList_Agilent::find(const string& id) const
     }
     catch (bad_lexical_cast&)
     {
-        try
-        {
-            size_t scanNumber = lexical_cast<size_t>(id::value(id, "scan"));
-            if (scanNumber>=1 && scanNumber<=size())
-                return scanNumber-1;
-        }
-        catch (bad_lexical_cast&) {}
+        boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+        if (scanItr == idToIndexMap_.end())
+            return size_;
+        return scanItr->second;
     }
 
     return size();
@@ -488,7 +485,7 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(dou
     FramePtr frame = rawfile_->getIonMobilityFrame(findItr->second);
     int driftBinsPerFrame = frame->getDriftBinsPresent();
     (*result).reserve(driftBinsPerFrame);
-    for (size_t driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
+    for (int driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
     {
         DriftScanPtr driftScan = frame->getScan(driftBinIndex);
         if (driftTimeRanges.find(driftScan->getDriftTime()) == driftTimeRanges.end())
@@ -530,12 +527,16 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
                 ie.rowNumber = ie.frameIndex = (int)i;
                 ie.scanId = i + 1;
                 ie.index = index_.size() - 1;
+
+                std::back_insert_iterator<std::string> sink(ie.id);
+                generate(sink, "scanId=" << int_, ie.scanId);
+                idToIndexMap_[ie.id] = ie.index;
             }
             else
             {
                 if (config_.acceptZeroLengthSpectra)
                 {
-                    for (size_t driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
+                    for (int driftBinIndex = 0; driftBinIndex < driftBinsPerFrame; ++driftBinIndex)
                     {
                         /*if (scan->getScanId() == 0)
                         continue;*/ // BUG or empty bin?
@@ -549,6 +550,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                         std::back_insert_iterator<std::string> sink(ie.id);
                         generate(sink, "scanId=" << int_, ie.scanId);
+                        idToIndexMap_[ie.id] = ie.index;
                     }
                 }
                 else
@@ -575,6 +577,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                         std::back_insert_iterator<std::string> sink(ie.id);
                         generate(sink, "scanId=" << int_, ie.scanId);
+                        idToIndexMap_[ie.id] = ie.index;
 			        }
                 }
             }
@@ -612,6 +615,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink, "scanId=" << int_, ie.scanId);
+                idToIndexMap_[ie.id] = ie.index;
 			}
 		}
 	}

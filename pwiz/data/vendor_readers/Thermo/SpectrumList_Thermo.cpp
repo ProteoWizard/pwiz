@@ -76,13 +76,10 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     }
     catch (bad_lexical_cast&)
     {
-        try
-        {
-            size_t scanNumber = lexical_cast<size_t>(id::value(id, "scan"));
-            if (scanNumber>=1 && scanNumber<=size())
-                return scanNumber-1;
-        }
-        catch (bad_lexical_cast&) {}
+        boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+        if (scanItr == idToIndexMap_.end())
+            return size_;
+        return scanItr->second;
     }
 
     return size();
@@ -700,6 +697,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                                " controllerNumber=" << ie.controllerNumber <<
                                " scan=" << ie.scan;
                         ie.id = oss.str();
+                        idToIndexMap_[ie.id] = ie.index;
 
                         ie.scanType = scanType;
                         ie.msOrder = msOrder;
@@ -724,6 +722,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                                " controllerNumber=" << ie.controllerNumber <<
                                " scan=" << ie.scan;
                         ie.id = oss.str();
+                        idToIndexMap_[ie.id] = ie.index;
                     }
                 }
                 break;

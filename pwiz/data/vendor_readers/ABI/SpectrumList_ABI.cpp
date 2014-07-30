@@ -75,7 +75,7 @@ PWIZ_API_DECL size_t SpectrumList_ABI::find(const string& id) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
 
-    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
         return size_;
     return scanItr->second;
@@ -318,6 +318,7 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
                " cycle=" << ie.cycle <<
                " experiment=" << ie.experiment->getExperimentNumber();
         ie.id = oss.str();
+        idToIndexMap_[ie.id] = ie.index;
     }
 
     size_ = index_.size();

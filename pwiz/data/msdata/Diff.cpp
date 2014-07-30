@@ -607,15 +607,31 @@ void diff(const SpectrumList& a,
 
     double maxPrecisionDiff = 0;
     for (unsigned int i=0; i<a.size(); i++)
-    { 
+    {
+        SpectrumPtr a_spectrum = a.spectrum(i, true);
+        SpectrumPtr b_spectrum = a.spectrum(i, true);
         SpectrumPtr temp_a_b(new Spectrum);        
         SpectrumPtr temp_b_a(new Spectrum);
-        diff(*a.spectrum(i, true), *b.spectrum(i, true), *temp_a_b, *temp_b_a, config);
+        diff(*a_spectrum, *b_spectrum, *temp_a_b, *temp_b_a, config);
 
-        if (!temp_a_b->empty() || !temp_b_a->empty())
+        // test find()
+        size_t a_find = config.ignoreIdentity ? 0 : a.find(a_spectrum->id);
+        size_t b_find = config.ignoreIdentity ? 0 : b.find(b_spectrum->id);
+
+        if (!temp_a_b->empty() || !temp_b_a->empty() || a_find != b_find)
         {
             a_b.spectra.push_back(temp_a_b);
             b_a.spectra.push_back(temp_b_a);
+
+            if (a_find != b_find)
+            {
+                temp_a_b->index = a_spectrum->index;
+                temp_a_b->id = a_spectrum->id;
+                temp_b_a->index = b_spectrum->index;
+                temp_b_a->id = b_spectrum->id;
+                temp_a_b->userParams.push_back(UserParam("find() result", lexical_cast<string>(a_find)));
+                temp_b_a->userParams.push_back(UserParam("find() result", lexical_cast<string>(b_find)));
+            }
 
             if (!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
             {
@@ -674,14 +690,31 @@ void diff(const ChromatogramList& a,
 
     double maxPrecisionDiff = 0;
     for (unsigned int i=0; i<a.size(); i++)
-    { 
+    {
+        ChromatogramPtr a_chromatogram = a.chromatogram(i, true);
+        ChromatogramPtr b_chromatogram = b.chromatogram(i, true);
         ChromatogramPtr temp_a_b(new Chromatogram);        
         ChromatogramPtr temp_b_a(new Chromatogram);        
-        diff(*a.chromatogram(i, true), *b.chromatogram(i, true), *temp_a_b, *temp_b_a, config);
-        if (!temp_a_b->empty() || !temp_b_a->empty())
+        diff(*a_chromatogram, *b_chromatogram, *temp_a_b, *temp_b_a, config);
+
+        // test find()
+        size_t a_find = config.ignoreIdentity ? 0 : a.find(a_chromatogram->id);
+        size_t b_find = config.ignoreIdentity ? 0 : b.find(b_chromatogram->id);
+
+        if (!temp_a_b->empty() || !temp_b_a->empty() || a_find != b_find)
         {
             a_b.chromatograms.push_back(temp_a_b);
             b_a.chromatograms.push_back(temp_b_a);
+
+            if (a_find != b_find)
+            {
+                temp_a_b->index = a_chromatogram->index;
+                temp_a_b->id = a_chromatogram->id;
+                temp_b_a->index = b_chromatogram->index;
+                temp_b_a->id = b_chromatogram->id;
+                temp_a_b->userParams.push_back(UserParam("find() result", lexical_cast<string>(a_find)));
+                temp_b_a->userParams.push_back(UserParam("find() result", lexical_cast<string>(b_find)));
+            }
 
             if (!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
             {
