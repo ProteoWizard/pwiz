@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peak = curveInfo.Peak;
             int peakId = peak.FilterIndex;
-            var color = GetPeakColor(peakId);
+            var color = ColorGenerator.GetColor(peak.ModifiedSequence);
             var curve = curveInfo.Curve = new LineItem(peakId + string.Empty, new PointPairList(), color, SymbolType.None);
             curve.Label.IsVisible = false;
             curve.Line.Color = Color.FromArgb(peakId == 0 ? 70 : lineTransparency, color);
@@ -501,7 +501,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     endIndex++;
                 }
 
-                yield return new ChromatogramLoadingStatus.TransitionData.Peak(peak.FilterIndex, false)
+                yield return new ChromatogramLoadingStatus.TransitionData.Peak(peak.ModifiedSequence, peak.FilterIndex, false)
                     {
                         Times = peak.Times.GetRange(startIndex, endIndex - startIndex),
                         Intensities = peak.Intensities.GetRange(startIndex, endIndex - startIndex),
@@ -614,49 +614,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return render;
-        }
-
-        // Generate a pleasant color for a peak by subdividing the hue circle.
-        private Color GetPeakColor(int peakId)
-        {
-            // BUG: This won't happen now (peakId will always be positive), but we need
-            // to fix color generation so that unknown/ peptides actually do get the unknown color.
-            if (peakId == -1)
-                return _unknownPeakColor;
-
-            double hue = (peakId*109)%360;
-
-            // Random saturation (but not too bland) and value (but not too dark).
-            double saturation = ((peakId*433)%50000)/100000.0 + 0.5;   // Range [0.5..1.0]
-            double value = ((peakId*809)%50000)/100000.0 + 0.5;        // Range [0.5..1.0]
-
-            return ColorFromHSV(hue, saturation, value);
-        }
-
-        // Return a color for the given hue, saturation, and value.
-        private static Color ColorFromHSV(double hue, double saturation, double value)
-        {
-            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
-            double f = hue / 60 - Math.Floor(hue / 60);
-
-            value = value * 255;
-            int v = Convert.ToInt32(value);
-            int p = Convert.ToInt32(value * (1 - saturation));
-            int q = Convert.ToInt32(value * (1 - f * saturation));
-            int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
-
-            if (hi == 0)
-                return Color.FromArgb(255, v, t, p);
-            else if (hi == 1)
-                return Color.FromArgb(255, q, v, p);
-            else if (hi == 2)
-                return Color.FromArgb(255, p, v, t);
-            else if (hi == 3)
-                return Color.FromArgb(255, p, q, v);
-            else if (hi == 4)
-                return Color.FromArgb(255, t, p, v);
-            else
-                return Color.FromArgb(255, v, p, q);
         }
 
         /// <summary>

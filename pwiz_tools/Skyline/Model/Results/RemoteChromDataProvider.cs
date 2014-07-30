@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, 
+            string modifiedSequence,
             out ChromExtra extra,
             out float[] times, 
             out int[] scanIds, 
@@ -104,6 +105,7 @@ namespace pwiz.Skyline.Model.Results
                     if (times.Length > 0)
                     {
                         LoadingStatus.Transitions.AddTransition(
+                                modifiedSequence,
                                 extra.StatusId,
                                 extra.StatusRank,
                                 times,

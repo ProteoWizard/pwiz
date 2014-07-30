@@ -52,11 +52,13 @@ namespace pwiz.Skyline.Model.Results
             get { return _cachedChromatogramDataProvider.ChromIds; }
         }
 
-        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities,
-            out float[] massErrors)
+        public override bool GetChromatogram(
+            int id, string modifiedSequence, 
+            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
-            return _cachedChromatogramDataProvider.GetChromatogram(id, out extra, out times, out scanIds,
-                out intensities, out massErrors);
+            return _cachedChromatogramDataProvider.GetChromatogram(
+                id, modifiedSequence, 
+                out extra, out times, out scanIds, out intensities, out massErrors);
         }
 
         public override double? MaxRetentionTime

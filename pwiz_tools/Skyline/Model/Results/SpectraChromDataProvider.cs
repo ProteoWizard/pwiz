@@ -509,7 +509,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override bool GetChromatogram(int id, out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
+        public override bool GetChromatogram(
+            int id, string modifiedSequence,
+            out ChromExtra extra, out float[] times, out int[] scanIds, out float[] intensities, out float[] massErrors)
         {
             var keyAndCollector = _chromatograms[id];
             keyAndCollector.Collector.ReleaseChromatogram(out times, out scanIds, out intensities, out massErrors);
@@ -673,7 +675,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Add data for chromatogram graph.
             if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
-                _allChromData.Add(spectrum.FilterIndex, ChromSource, (float)time, spectrum.Intensities);
+                _allChromData.Add(spectrum.ModifiedSequence, spectrum.FilterIndex, ChromSource, (float)time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.

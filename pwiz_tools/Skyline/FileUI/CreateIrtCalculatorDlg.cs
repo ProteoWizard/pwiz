@@ -37,17 +37,17 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class CreateIrtCalculatorDlg : FormEx
     {
-        private static readonly string[] COMMON_IRT_STANDARDS = { "ADVTPADFSEWSK", 
-                                                                  "DGLDAASYYAPVR", 
-                                                                  "GAGSSEPVTGLDAK", 
-                                                                  "GTFIIDPAAVIR",
-                                                                  "GTFIIDPGGVIR",
-                                                                  "LFLQFGAQGSPFLK", 
-                                                                  "LGGNEQVTR", 
-                                                                  "TPVISGGPYEYR",
-                                                                  "TPVITGAPYEYR",
-                                                                  "VEATFGVDESNAK",
-                                                                  "YILAGVENSK"};
+        private static readonly string[] COMMON_IRT_STANDARDS = { "ADVTPADFSEWSK",  // Not L10N
+                                                                  "DGLDAASYYAPVR",  // Not L10N
+                                                                  "GAGSSEPVTGLDAK", // Not L10N
+                                                                  "GTFIIDPAAVIR",   // Not L10N
+                                                                  "GTFIIDPGGVIR",   // Not L10N
+                                                                  "LFLQFGAQGSPFLK", // Not L10N
+                                                                  "LGGNEQVTR",      // Not L10N
+                                                                  "TPVISGGPYEYR",   // Not L10N
+                                                                  "TPVITGAPYEYR",   // Not L10N
+                                                                  "VEATFGVDESNAK",  // Not L10N
+                                                                  "YILAGVENSK"};    // Not L10N
 
         public List<SpectrumMzInfo> LibrarySpectra { get { return _librarySpectra; } } 
         public List<DbIrtPeptide> DbIrtPeptides { get { return _dbIrtPeptides; } } 

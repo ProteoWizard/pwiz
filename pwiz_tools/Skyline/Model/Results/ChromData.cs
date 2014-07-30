@@ -52,12 +52,14 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public bool Load(ChromDataProvider provider)
+        public bool Load(ChromDataProvider provider, string modifiedSequence)
         {
             ChromExtra extra;
             float[] times, intensities, massErrors;
             int[] scanIds;
-            bool result = provider.GetChromatogram(ProviderId, out extra, out times, out scanIds, out intensities, out massErrors);
+            bool result = provider.GetChromatogram(
+                ProviderId, modifiedSequence, 
+                out extra, out times, out scanIds, out intensities, out massErrors);
             Extra = extra;
             RawTimes = Times = times;
             RawIntensities = Intensities = intensities;

@@ -103,11 +103,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add transition points (partial data for multiple transitions) to AllChromatogramsGraph.
             /// </summary>
-            /// <param name="filterIndex"></param>
-            /// <param name="chromSource"></param>
-            /// <param name="time"></param>
-            /// <param name="intensities"></param>
-            public void Add(int filterIndex, ChromSource chromSource, float time, float[] intensities)
+            public void Add(string modifiedSequence, int filterIndex, ChromSource chromSource, float time, float[] intensities)
             {
                 if (!Progressive)
                     MaxRetentionTime = Math.Max(MaxRetentionTime, time);
@@ -169,7 +165,7 @@ namespace pwiz.Skyline.Model.Results
                 // Create a new time bin.
                 if (peak == null)
                 {
-                    _peaks[filterIndex][sourceIndex] = peak = new Peak(filterIndex, false);
+                    _peaks[filterIndex][sourceIndex] = peak = new Peak(modifiedSequence, filterIndex, false);
                     peak.PointCount = 1;
                 }
                 peak.Times.Add(timeBin);
@@ -179,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
-            public void AddTransition(int index, int rank, float[] times, float[] intensities)
+            public void AddTransition(string modifiedSequence, int index, int rank, float[] times, float[] intensities)
             {
                 if (rank == 0 || times.Length == 0)
                     return;
@@ -203,17 +199,17 @@ namespace pwiz.Skyline.Model.Results
                     while (endIndex < intensities.Length && intensities[endIndex] >= thresholdIntensity)
                         endIndex++;
 
-                    AddTransition(index, times, intensities, startIndex, endIndex);
+                    AddTransition(modifiedSequence, index, times, intensities, startIndex, endIndex);
 
                     startIndex = endIndex;
                 }
             }
 
-            private void AddTransition(int index, float[] times, float[] intensities, int startIndex, int endIndex)
+            private void AddTransition(string modifiedSequence, int index, float[] times, float[] intensities, int startIndex, int endIndex)
             {
                 MaxRetentionTime = Math.Max(MaxRetentionTime, times[times.Length - 1]);
 
-                var peak = new Peak(index, true);
+                var peak = new Peak(modifiedSequence, index, true);
                 float lastTimeBin = GetTimeBin(times[startIndex]);
                 double binIntensity = 0.0;
                 int binSampleCount = 0;
@@ -299,14 +295,16 @@ namespace pwiz.Skyline.Model.Results
 
             public class Peak
             {
-                public Peak(int filterIndex, bool mayOverlap)
+                public Peak(string modifiedSequence, int filterIndex, bool mayOverlap)
                 {
+                    ModifiedSequence = modifiedSequence;
                     FilterIndex = filterIndex;
                     Times = new List<float>();
                     Intensities = new List<float>();
                     MayOverlap = mayOverlap;
                 }
 
+                public readonly string ModifiedSequence;
                 public readonly int FilterIndex;
                 public List<float> Times;
                 public List<float> Intensities;

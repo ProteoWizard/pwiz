@@ -214,11 +214,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool Load(ChromDataProvider provider)
+        public bool Load(ChromDataProvider provider, string modifiedSequence)
         {
             foreach (var chromData in _listChromData.ToArray())
             {
-                if (!chromData.Load(provider))
+                if (!chromData.Load(provider, modifiedSequence))
                     _listChromData.Remove(chromData);
             }
             return _listChromData.Count > 0;

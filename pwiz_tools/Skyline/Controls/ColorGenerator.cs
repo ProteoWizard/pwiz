@@ -29,6 +29,7 @@ namespace pwiz.Skyline.Controls
     public static class ColorGenerator
     {
         private const int CollisionThreshold = 30;
+        private static readonly Color UNKNOWN_PEPTIDE_COLOR = Color.FromArgb(170, 170, 170);
 
         private static readonly Dictionary<string, Dictionary<string, int>> _colorDictionary =
             new Dictionary<string, Dictionary<string, int>>();
@@ -40,9 +41,11 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public static Color GetColor(string proteinName, string peptideName)
         {
+            if (peptideName == null)
+                return UNKNOWN_PEPTIDE_COLOR;
+
             // Names may be null, but we can't look up a null value in a dictionary.
             proteinName = proteinName ?? string.Empty;
-            peptideName = peptideName ?? string.Empty;
 
             // Get dictionary of peptide colors for this protein, or create it.
             Dictionary<string, int> colorsPerPeptide;
@@ -50,13 +53,10 @@ namespace pwiz.Skyline.Controls
                 colorsPerPeptide = _colorDictionary[proteinName] = new Dictionary<string, int>();
 
             // Get hashed color index for this peptide, or create it.
-            int hash;
-            if (!colorsPerPeptide.TryGetValue(peptideName, out hash))
+            int index;
+            if (!colorsPerPeptide.TryGetValue(peptideName, out index))
             {
-                // Get hash code for peptide name, then XOR the bytes to make a smaller hash,
-                // then modulo to our color array size.
-                hash = peptideName.GetHashCode();
-                hash = ((hash) ^ (hash >> 8) ^ (hash >> 16) ^ (hash >> 24))%_colors.Length;
+                index = GetColorIndex(peptideName);
 
                 // Check for collision with other peptides in this protein.  A collision happens
                 // when two colors are close enough that they would be hard to distinguish.
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls
                 {
                     for (int i = 0; i < _colors.Length; i++)
                     {
-                        var color = _colors[hash];
+                        var color = _colors[index];
                         bool collision = false;
                         foreach (var colorIndex in colorsPerPeptide.Values)
                         {
@@ -81,14 +81,28 @@ namespace pwiz.Skyline.Controls
                             break;
 
                         // Step to next index value and re-check for collisions.
-                        hash = (hash + 1)%_colors.Length;
+                        index = (index + 1)%_colors.Length;
                     }
                 }
 
-                colorsPerPeptide[peptideName] = hash;
+                colorsPerPeptide[peptideName] = index;
             }
 
-            return _colors[hash];
+            return _colors[index];
+        }
+
+        public static Color GetColor(string peptideName)
+        {
+            return peptideName == null ? UNKNOWN_PEPTIDE_COLOR : _colors[GetColorIndex(peptideName)];
+        }
+
+        private static int GetColorIndex(string peptideName)
+        {
+            // Get hash code for peptide name, then XOR the bytes to make a smaller hash,
+            // then modulo to our color array size.
+            int hash = peptideName.GetHashCode();
+            int index = ((hash) ^ (hash >> 8) ^ (hash >> 16) ^ (hash >> 24))%_colors.Length;
+            return index;
         }
 
         // These colors were generated using the SkylinePeptideColorGenerator utility.
