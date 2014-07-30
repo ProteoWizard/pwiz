@@ -609,14 +609,15 @@ void diff(const SpectrumList& a,
     for (unsigned int i=0; i<a.size(); i++)
     {
         SpectrumPtr a_spectrum = a.spectrum(i, true);
-        SpectrumPtr b_spectrum = a.spectrum(i, true);
+        SpectrumPtr b_spectrum = b.spectrum(i, true);
         SpectrumPtr temp_a_b(new Spectrum);        
         SpectrumPtr temp_b_a(new Spectrum);
         diff(*a_spectrum, *b_spectrum, *temp_a_b, *temp_b_a, config);
 
-        // test find()
-        size_t a_find = config.ignoreIdentity ? 0 : a.find(a_spectrum->id);
-        size_t b_find = config.ignoreIdentity ? 0 : b.find(b_spectrum->id);
+        // test find() if the ids are the same
+        bool sameId = a_spectrum->id == b_spectrum->id;
+        size_t a_find = config.ignoreIdentity || !sameId ? 0 : a.find(a_spectrum->id);
+        size_t b_find = config.ignoreIdentity || !sameId ? 0 : b.find(b_spectrum->id);
 
         if (!temp_a_b->empty() || !temp_b_a->empty() || a_find != b_find)
         {
@@ -697,9 +698,10 @@ void diff(const ChromatogramList& a,
         ChromatogramPtr temp_b_a(new Chromatogram);        
         diff(*a_chromatogram, *b_chromatogram, *temp_a_b, *temp_b_a, config);
 
-        // test find()
-        size_t a_find = config.ignoreIdentity ? 0 : a.find(a_chromatogram->id);
-        size_t b_find = config.ignoreIdentity ? 0 : b.find(b_chromatogram->id);
+        // test find() if the ids are the same
+        bool sameId = a_chromatogram->id == b_chromatogram->id;
+        size_t a_find = config.ignoreIdentity || !sameId ? 0 : a.find(a_chromatogram->id);
+        size_t b_find = config.ignoreIdentity || !sameId ? 0 : b.find(b_chromatogram->id);
 
         if (!temp_a_b->empty() || !temp_b_a->empty() || a_find != b_find)
         {
