@@ -55,7 +55,7 @@ lib NativeQonverter
  ;
  
 lib NativeParserEmbedderMergerFilter
- : ../Parser.cpp ../Embedder.cpp ../Merger.cpp ../Filter.cpp ../TotalCounts.cpp
+ : ../Parser.cpp ../Embedder.cpp ../Merger.cpp ../Filter.cpp ../TotalCounts.cpp ../CoreVersion.cpp
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <link>static
    <library>NativeQonverter

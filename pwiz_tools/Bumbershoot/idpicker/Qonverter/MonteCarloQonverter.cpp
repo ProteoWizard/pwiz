@@ -36,7 +36,8 @@ BEGIN_IDPICKER_NAMESPACE
 
 void MonteCarloQonverter::Qonvert(PSMList& psmRows,
                                   const Qonverter::Settings& settings,
-                                  const vector<double>& scoreWeights)
+                                  const vector<double>& scoreWeights,
+                                  WeightsByChargeAndBestSpecificity* monteCarloWeightsByChargeAndBestSpecificity)
 {
     vector< vector<double> > validScorePermutations;
 
@@ -112,10 +113,12 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
 
             int passedPSMs = 0;
             BOOST_FOREACH(const PeptideSpectrumMatch& psm, range)
-                if(psm.fdrScore <= settings.maxFDR)
+            {
+                if (psm.fdrScore <= settings.maxFDR)
                     ++passedPSMs;
                 else
                     break;
+            }
 
             // save the solution if this is best we have seen so far
             if(passingPSMs <= passedPSMs)
@@ -124,6 +127,10 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
                 bestSolution = &scorePermutation;
             }
         }
+
+        if (monteCarloWeightsByChargeAndBestSpecificity)
+            BOOST_FOREACH(const PeptideSpectrumMatch& psm, range)
+                (*monteCarloWeightsByChargeAndBestSpecificity)[psm.chargeState][psm.bestSpecificity] = *bestSolution;
 
         // early exit if the last solution was the best solution
         if (bestSolution == &validScorePermutations.back())

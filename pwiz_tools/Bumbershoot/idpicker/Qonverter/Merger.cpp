@@ -29,6 +29,8 @@
 #include "SchemaUpdater.hpp"
 #include "Merger.hpp"
 #include "Qonverter.hpp"
+#include "Embedder.hpp"
+#include "CoreVersion.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/assert.hpp"
 #include "boost/atomic.hpp"
@@ -322,7 +324,7 @@ class TemporaryFile
     public:
     TemporaryFile(const string& extension = ".tmp")
     {
-        filepath = bfs::unique_path("%%%%%%%%%%%%%%%%" + extension);
+        filepath = bfs::temp_directory_path() / bfs::unique_path("%%%%%%%%%%%%%%%%" + extension);
     }
 
     ~TemporaryFile()
@@ -524,6 +526,7 @@ struct Merger::Impl
         SchemaUpdater::update(tempMergeTargetFilepath, ilr);
 
         Qonverter::dropFilters(tempMergeTargetFilepath);
+        Embedder::dropGeneMetadata(tempMergeTargetFilepath);
 
         string sqliteSafeMergeTargetFilepath = bal::replace_all_copy(tempMergeTargetFilepath, "'", "''");
 
@@ -532,7 +535,8 @@ struct Merger::Impl
         db.executef("PRAGMA merged.journal_mode=OFF; PRAGMA merged.synchronous=OFF; PRAGMA merged.cache_size=%d", mergedCacheSize);
 
         db.execute("CREATE TABLE IF NOT EXISTS merged.MergedFiles (Filepath TEXT PRIMARY KEY)");
-        db.execute("UPDATE About SET SoftwareVersion = '" + string("3.0.0") + "', StartTime = datetime('now')");
+        db.execute("UPDATE About SET SoftwareVersion = '" + IDPicker::Version::str() + "', StartTime = datetime('now')");
+        db.execute("DELETE FROM FilterHistory");
 
         string sql = (getNewMaxIdsSql % "merged").str();
         sqlite3pp::query maxIdRowQuery(db, sql.c_str());

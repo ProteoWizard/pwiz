@@ -57,7 +57,7 @@ lib Qonverter
 
 lib Parser
     : # sources
-        Parser.cpp Embedder.cpp
+        Parser.cpp Embedder.cpp CoreVersion
     : # requirements
         <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
@@ -75,12 +75,12 @@ lib Parser
 
 lib Merger
     : # sources
-        Merger.cpp SchemaUpdater
+        Merger.cpp SchemaUpdater CoreVersion
     : # requirements
-        <library>Qonverter
+        <library>Parser
     : # default-build
     : # usage-requirements
-        <library>Qonverter
+        <library>Parser
     ;
 
 lib Filter

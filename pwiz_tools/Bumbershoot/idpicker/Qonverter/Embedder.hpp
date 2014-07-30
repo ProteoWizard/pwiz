@@ -127,6 +127,9 @@ bool hasGeneMetadata(sqlite3* idpDbConnection);
 /// embed gene metadata in the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
 void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
 
+/// remove gene metadata, if any is present, from the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
+void dropGeneMetadata(const string& idpDbFilepath);
+
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 void extract(const string& idpDbFilepath, const string& sourceName, const string& outputFilepath);
 

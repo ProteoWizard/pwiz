@@ -26,10 +26,14 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "Qonverter.hpp"
 #include "StaticWeightQonverter.hpp"
+#include "MonteCarloQonverter.hpp"
 #include "SVMQonverter.hpp"
+#include <boost/foreach_field.hpp>
+#include <boost/assign/list_of.hpp> // for 'list_of()'
 
 
 using namespace pwiz::util;
+using namespace boost::assign;
 using namespace IDPicker;
 
 
@@ -312,22 +316,15 @@ void testDiscriminate()
 }
 
 
-void testStaticWeightQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
-                               const Qonverter::Settings& settings,
-                               const vector<double>& scoreWeights)
+int testQonvertedPSMs(PSMList& psmRows, const TestPSM* testPSMs, size_t testPSMsSize)
 {
-    PSMList psmRows;
-    for (size_t i=0; i < testPSMsSize; ++i)
-        psmRows.push_back(testPSMs[i].psm());
-
-    StaticWeightQonverter::Qonvert(psmRows, settings, scoreWeights);
-
     sort(psmRows.begin(), psmRows.end(), PSMLessThan());
 
+    int testsFailed = 0;
     size_t i;
     try
     {
-        for (i=0; i < psmRows.size(); ++i)
+        for (i = 0; i < psmRows.size(); ++i)
         {
             unit_assert_operator_equal(testPSMs[i].newRank, psmRows[i].newRank);
             unit_assert_equal(testPSMs[i].totalScore, psmRows[i].totalScore, 1e-6);
@@ -337,8 +334,12 @@ void testStaticWeightQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
     }
     catch (exception& e)
     {
-        cout << "Testing PSM " << (i+1) << ": " << e.what() << endl;
-        for (size_t i=0; i < psmRows.size(); ++i)
+        ++testsFailed;
+        cout << "PSM test " << (i + 1) << " failed: " << e.what() << endl;
+    }
+
+    if (testsFailed > 0)
+        for (size_t i = 0; i < psmRows.size(); ++i)
         {
             cout << "  Actual: "
                  << psmRows[i].spectrum << " "
@@ -347,7 +348,7 @@ void testStaticWeightQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
                  << psmRows[i].totalScore << " "
                  << psmRows[i].qValue << " "
                  << psmRows[i].fdrScore << endl;
-            
+
             cout << "Expected: "
                  << testPSMs[i].spectrum << " "
                  << testPSMs[i].originalRank << " "
@@ -356,7 +357,24 @@ void testStaticWeightQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
                  << testPSMs[i].qValue << " "
                  << testPSMs[i].fdrScore << endl << endl;
         }
-    }
+
+    return testsFailed;
+}
+
+
+void testStaticWeightQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
+                               const Qonverter::Settings& settings,
+                               const vector<double>& scoreWeights,
+                               int lineNumber)
+{
+    PSMList psmRows;
+    for (size_t i=0; i < testPSMsSize; ++i)
+        psmRows.push_back(testPSMs[i].psm());
+
+    StaticWeightQonverter::Qonvert(psmRows, settings, scoreWeights);
+
+    int failedTests = testQonvertedPSMs(psmRows, testPSMs, testPSMsSize);
+    (failedTests > 0) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, lineNumber, "0", lexical_cast<string>(failedTests), "failedTests")) : 0;
 }
 
 
@@ -382,7 +400,7 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 1.0;
         scoreWeights[1] = 0.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
     }
 
     // test negative weights and a secondary score
@@ -401,7 +419,7 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 0.0;
         scoreWeights[1] = -1.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
     }
 
     // test combined weights
@@ -420,7 +438,7 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 1.0;
         scoreWeights[1] = -1.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
     }
 
     // test multiple ranks without reranking
@@ -445,7 +463,7 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 1.0;
         scoreWeights[1] = -1.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
     }
 
     // test multiple ranks with reranking
@@ -472,7 +490,7 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 1.0;
         scoreWeights[1] = -1.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
 
         settings.rerankMatches = false;
     }
@@ -512,7 +530,7 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 1.0;
         scoreWeights[1] = -1.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
     }
 
     // test charge and specificity partitioning
@@ -569,7 +587,313 @@ void testStaticWeightQonverter()
 
         scoreWeights[0] = 1.0;
         scoreWeights[1] = -1.0;
-        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights);
+        testStaticWeightQonverter(testPSMs, sizeof(testPSMs)/sizeof(TestPSM), settings, scoreWeights, __LINE__);
+    }
+
+}
+
+
+void testMonteCarloQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
+                             const Qonverter::Settings& settings,
+                             const vector<double>& scoreWeights,
+                             const MonteCarloQonverter::WeightsByChargeAndBestSpecificity& expectedScoreWeights,
+                             int lineNumber)
+{
+    PSMList psmRows;
+    for (size_t i = 0; i < testPSMsSize; ++i)
+        psmRows.push_back(testPSMs[i].psm());
+
+    MonteCarloQonverter::WeightsByChargeAndBestSpecificity actualWeights;
+    MonteCarloQonverter::Qonvert(psmRows, settings, scoreWeights, &actualWeights);
+
+    int failedTests = testQonvertedPSMs(psmRows, testPSMs, testPSMsSize);
+    (failedTests > 0) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, lineNumber, "0", lexical_cast<string>(failedTests), "failedTests")) : 0;
+
+    BOOST_FOREACH_FIELD((int chargeState)(const MonteCarloQonverter::WeightsByBestSpecificity& monteCarloWeightsByBestSpecificity), expectedScoreWeights)
+    BOOST_FOREACH_FIELD((int bestSpecificity)(const vector<double>& expectedMonteCarloWeights), monteCarloWeightsByBestSpecificity)
+    for (size_t i = 0; i < expectedMonteCarloWeights.size(); ++i)
+    {
+        unit_assert_operator_equal(expectedScoreWeights.size(), actualWeights.size());
+        unit_assert_operator_equal(monteCarloWeightsByBestSpecificity.size(), actualWeights[chargeState].size());
+        unit_assert_operator_equal(expectedMonteCarloWeights.size(), actualWeights[chargeState][bestSpecificity].size());
+        unit_assert_equal(expectedMonteCarloWeights[i], actualWeights[chargeState][bestSpecificity][i], 1e-5);
+    }
+}
+
+
+void testMonteCarloQonverter()
+{
+    Qonverter::Settings settings;
+    settings.minPartitionSize = 1;
+    vector<double> scoreWeights(2);
+    
+    // a simple example with just one score
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6",    1,   6,    0,     0},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5",    1,   5,    0,     0.2},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4",    1,   4,    0.4,   0.4},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3",    1,   3,    0.4,   0.488},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2",    1,   2,    0.4,   0.577},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1",    1,   1,    0.666, 0.666},
+        };
+
+        vector<double> scoreWeights(1, 1.0);
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][1] = vector<double>(1, 1.0);
+        expectedScoreWeights[1][2] = vector<double>(1, 1.0);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+    }
+
+    // test negative weights and a secondary score
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1.9", 1,  4.42, 0,     0},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 6",   1,  2.8,  0,     0.356},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4 3",   1,  2.6,  0.4,   0.4},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3 4",   1,  1.6,  0.4,   0.488},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2 -14", 1,  4.4,  0,     0.004},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1 6",   1,  -0.4, 0.666, 0.666},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = -1.0;
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][2] = list_of(0.8)(-0.2);
+        expectedScoreWeights[1][1] = list_of(0.8)(-0.2);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+    }
+
+    // test that 1,0 is considered
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 -10",  1,   6,    0,     0},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 -20",  1,   5,    0,     0.2},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4 -30",  1,   4,    0.4,   0.4},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3 -40",  1,   3,    0.4,   0.488},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2 -50",  1,   2,    0.4,   0.577},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1 -60",  1,   1,    0.666, 0.666},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = -1.0;
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][2] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][1] = list_of(1.0)(-0.0);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+    }
+
+    // test that 0,1 is considered
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "10 1",  1,   -1,   0,     0},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "20 2",  1,   -2,   0,     0.2},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "30 3",  1,   -3,   0.4,   0.4},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "40 4",  1,   -4,   0.4,   0.488},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "50 5",  1,   -5,   0.4,   0.577},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "60 6",  1,   -6,   0.666, 0.666},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = -1.0;
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][2] = list_of(0.0)(-1.0);
+        expectedScoreWeights[1][1] = list_of(0.0)(-1.0);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+    }
+
+    // test multiple ranks without reranking
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 90",  1,   6,    0,     0},
+            {0, 1, 2,  DecoyState::Target, 1, 2,  0, 0, "5 90",  2,   5,    2,     2},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 80",  1,   5,    0,     0.2},
+            {0, 2, 2,  DecoyState::Target, 1, 2,  0, 0, "4 80",  2,   4,    2,     2},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+            {0, 3, 2,  DecoyState::Target, 1, 1,  0, 0, "4 70",  2,   4,    2,     2},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3 60",  1,   3,    0.4,   0.488},
+            {0, 4, 2,  DecoyState::Target, 1, 2,  0, 0, "2 60",  2,   2,    2,     2},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2 50",  1,   2,    0.4,   0.577},
+            {0, 5, 2,  DecoyState::Target, 1, 2,  0, 0, "1 50",  2,   1,    2,     2},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1 40",  1,   1,    0.666, 0.666},
+            {0, 6, 2,  DecoyState::Decoy,  1, 1,  0, 0, "0 40",  2,   0,    2,     2},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = -1.0;
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][2] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][1] = list_of(1.0)(-0.0);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+    }
+
+    // test multiple ranks with reranking
+    /*{
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   5,    0,     0},
+            {0, 1, 2,  DecoyState::Target, 1, 2,  0, 0, "5 1",  2,   4,    2,     2},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 2",  1,   3,    0,     0.066},
+            {0, 2, 2,  DecoyState::Target, 1, 2,  0, 0, "4 1",  1,   3,    0,     0.066},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4 3",  2,   1,    2,     2},
+            {0, 3, 2,  DecoyState::Target, 1, 1,  0, 0, "4 2",  1,   2,    0,     0.1},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3 4",  2,   -1,   2,     2},
+            {0, 4, 2,  DecoyState::Target, 1, 2,  0, 0, "2 2",  1,   0,    0,     0.166},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2 5",  2,   -3,   2,     2},
+            {0, 5, 2,  DecoyState::Target, 1, 2,  0, 0, "1 3",  1,   -2,   0,     0.233},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1 6",  1,   -5,   0.333, 0.333},
+            {0, 6, 2,  DecoyState::Decoy,  1, 1,  0, 0, "0 6",  2,   -6,   2,     2},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = 0.0;
+
+        settings.rerankMatches = true;
+
+        expectedScoreWeights[1][2][0] = 1.0;
+        expectedScoreWeights[1][2][1] = 0.0;
+        expectedScoreWeights[1][1][0] = 1.0;
+        expectedScoreWeights[1][1][1] = 0.0;
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+
+        settings.rerankMatches = false;
+    }*/
+
+    // test charge state partitioning
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1.9", 1,  4.42, 0,     0},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 6",   1,  2.8,  0,     0.356},
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4 3",   1,  2.6,  0.4,   0.4},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3 4",   1,  1.6,  0.4,   0.488},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2 -14", 1,  4.4,  0,     0.004},
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1 6",   1,  -0.4, 0.666, 0.666},
+
+            {0, 7, 1,  DecoyState::Target, 2, 2,  0, 0, "6 1.9", 1,  4.42, 0,     0},
+            {0, 8, 1,  DecoyState::Target, 2, 2,  0, 0, "5 6",   1,  2.8,  0,     0.356},
+            {0, 9, 1,  DecoyState::Decoy,  2, 1,  0, 0, "4 3",   1,  2.6,  0.4,   0.4},
+            {0, 10, 1,  DecoyState::Target, 2, 2,  0, 0, "3 4",   1,  1.6,  0.4,   0.488},
+            {0, 11, 1,  DecoyState::Target, 2, 2,  0, 0, "2 -14", 1,  4.4,  0,     0.004},
+            {0, 12, 1,  DecoyState::Decoy,  2, 1,  0, 0, "1 6",   1,  -0.4, 0.666, 0.666},
+
+            {0, 13, 1,  DecoyState::Target, 3, 2,  0, 0, "6 90",   1,  6,    0,     0},
+            {0, 14, 1,  DecoyState::Target, 3, 2,  0, 0, "5 80",   1,  5,    0,     0.2},
+            {0, 15, 1,  DecoyState::Decoy,  3, 1,  0, 0, "4 70",   1,  4,    0.4,   0.4},
+            {0, 16, 1,  DecoyState::Target, 3, 2,  0, 0, "3 60",   1,  3,    0.4,   0.488},
+            {0, 17, 1,  DecoyState::Target, 3, 2,  0, 0, "2 50",   1,  2,    0.4,   0.577},
+            {0, 18, 1,  DecoyState::Decoy,  3, 1,  0, 0, "1 40",   1,  1,    0.666, 0.666},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = -1.0;
+
+        settings.chargeStateHandling = Qonverter::ChargeStateHandling::Partition;
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][2] = list_of(0.8)(-0.2);
+        expectedScoreWeights[1][1] = list_of(0.8)(-0.2);
+        expectedScoreWeights[2][2] = list_of(0.8)(-0.2);
+        expectedScoreWeights[2][1] = list_of(0.8)(-0.2);
+        expectedScoreWeights[3][2] = list_of(1.0)(-0.0);
+        expectedScoreWeights[3][1] = list_of(1.0)(-0.0);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
+    }
+
+    // test charge and specificity partitioning
+    {
+        const TestPSM testPSMs[] =
+        {
+         //       orig                                          new  |-----expected------|
+         // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
+            {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "6 90",  1,   6,    0,     0},
+            {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 90",  1,   6,    0,     0},
+            {0, 1, 1,  DecoyState::Target, 2, 1,  0, 0, "6 90",  1,   6,    0,     0},
+            {0, 1, 1,  DecoyState::Target, 2, 2,  0, 0, "6 90",  1,   6,    0,     0},
+            {0, 1, 1,  DecoyState::Target, 3, 1,  0, 0, "6 90",  1,   6,    0,     0},
+            {0, 1, 1,  DecoyState::Target, 3, 2,  0, 0, "6 90",  1,   6,    0,     0},
+
+            {0, 2, 1,  DecoyState::Target, 1, 1,  0, 0, "5 80",  1,   5,    0,     0.2},
+            {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 80",  1,   5,    0,     0.2},
+            {0, 2, 1,  DecoyState::Target, 2, 1,  0, 0, "5 80",  1,   5,    0,     0.2},
+            {0, 2, 1,  DecoyState::Target, 2, 2,  0, 0, "5 80",  1,   5,    0,     0.2},
+            {0, 2, 1,  DecoyState::Target, 3, 1,  0, 0, "5 80",  1,   5,    0,     0.2},
+            {0, 2, 1,  DecoyState::Target, 3, 2,  0, 0, "5 80",  1,   5,    0,     0.2},
+
+            {0, 3, 1,  DecoyState::Decoy,  1, 1,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+            {0, 3, 1,  DecoyState::Decoy,  1, 2,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+            {0, 3, 1,  DecoyState::Decoy,  2, 1,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+            {0, 3, 1,  DecoyState::Decoy,  2, 2,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+            {0, 3, 1,  DecoyState::Decoy,  3, 1,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+            {0, 3, 1,  DecoyState::Decoy,  3, 2,  0, 0, "4 70",  1,   4,    0.4,   0.4},
+
+            {0, 4, 1,  DecoyState::Target, 1, 1,  0, 0, "3 60",  1,   3,   0.4,   0.488},
+            {0, 4, 1,  DecoyState::Target, 1, 2,  0, 0, "3 60",  1,   3,   0.4,   0.488},
+            {0, 4, 1,  DecoyState::Target, 2, 1,  0, 0, "3 60",  1,   3,   0.4,   0.488},
+            {0, 4, 1,  DecoyState::Target, 2, 2,  0, 0, "3 60",  1,   3,   0.4,   0.488},
+            {0, 4, 1,  DecoyState::Target, 3, 1,  0, 0, "3 60",  1,   3,   0.4,   0.488},
+            {0, 4, 1,  DecoyState::Target, 3, 2,  0, 0, "3 60",  1,   3,   0.4,   0.488},
+
+            {0, 5, 1,  DecoyState::Target, 1, 1,  0, 0, "2 50",  1,   2,   0.4,   0.577},
+            {0, 5, 1,  DecoyState::Target, 1, 2,  0, 0, "2 50",  1,   2,   0.4,   0.577},
+            {0, 5, 1,  DecoyState::Target, 2, 1,  0, 0, "2 50",  1,   2,   0.4,   0.577},
+            {0, 5, 1,  DecoyState::Target, 2, 2,  0, 0, "2 50",  1,   2,   0.4,   0.577},
+            {0, 5, 1,  DecoyState::Target, 3, 1,  0, 0, "2 50",  1,   2,   0.4,   0.577},
+            {0, 5, 1,  DecoyState::Target, 3, 2,  0, 0, "2 50",  1,   2,   0.4,   0.577},
+
+            {0, 6, 1,  DecoyState::Decoy,  1, 1,  0, 0, "1 40",  1,   1,   0.666, 0.666},
+            {0, 6, 1,  DecoyState::Decoy,  1, 2,  0, 0, "1 40",  1,   1,   0.666, 0.666},
+            {0, 6, 1,  DecoyState::Decoy,  2, 1,  0, 0, "1 40",  1,   1,   0.666, 0.666},
+            {0, 6, 1,  DecoyState::Decoy,  2, 2,  0, 0, "1 40",  1,   1,   0.666, 0.666},
+            {0, 6, 1,  DecoyState::Decoy,  3, 1,  0, 0, "1 40",  1,   1,   0.666, 0.666},
+            {0, 6, 1,  DecoyState::Decoy,  3, 2,  0, 0, "1 40",  1,   1,   0.666, 0.666},
+        };
+
+        scoreWeights[0] = 1.0;
+        scoreWeights[1] = -1.0;
+
+        settings.chargeStateHandling = Qonverter::ChargeStateHandling::Partition;
+        settings.terminalSpecificityHandling = Qonverter::TerminalSpecificityHandling::Partition;
+
+        MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
+        expectedScoreWeights[1][2] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][1] = list_of(1.0)(-0.0);
+        expectedScoreWeights[2][2] = list_of(1.0)(-0.0);
+        expectedScoreWeights[2][1] = list_of(1.0)(-0.0);
+        expectedScoreWeights[3][2] = list_of(1.0)(-0.0);
+        expectedScoreWeights[3][1] = list_of(1.0)(-0.0);
+
+        testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }
 
 }
@@ -633,6 +957,7 @@ int main(int argc, char* argv[])
         testPartition();
         testDiscriminate();
         testStaticWeightQonverter();
+        testMonteCarloQonverter();
         //testSVMQonverter();
     }
     catch (exception& e)

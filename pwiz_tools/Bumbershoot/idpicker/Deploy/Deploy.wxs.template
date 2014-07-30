@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- $Id$ -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
    <Product Id="{ProductGuid}"
             Name="IDPicker {version} $(var.AddressModel)-bit"

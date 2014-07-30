@@ -35,6 +35,7 @@
 #include "Parser.hpp"
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
+#include "CoreVersion.hpp"
 #include "../freicore/AhoCorasickTrie.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/thread/thread.hpp"
@@ -402,7 +403,7 @@ struct ParserImpl
         // initialize the tables
         idpDb.execute("DROP TABLE IF EXISTS About;"
                       "CREATE TABLE About (Id INTEGER PRIMARY KEY, SoftwareName TEXT, SoftwareVersion TEXT, StartTime DATETIME, SchemaRevision INT);"
-                      "INSERT INTO About VALUES (1, 'IDPicker', '3.0', datetime('now'), " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + ");");
+                      "INSERT INTO About VALUES (1, 'IDPicker', '" + IDPicker::Version::str() + "', datetime('now'), " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + ");");
 
         idpDb.execute("CREATE TABLE IF NOT EXISTS SpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);"
                       "CREATE TABLE IF NOT EXISTS SpectrumSourceMetadata (Id INTEGER PRIMARY KEY, MsDataBytes BLOB);"
@@ -817,7 +818,7 @@ struct ParserImpl
         const Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
 
         Qonverter qonverter;
-        //qonverter.logQonversionDetails = true;
+        qonverter.logQonversionDetails = analysis.importSettings.logQonversionDetails;
         qonverter.settingsByAnalysis[0] = settings;
         qonverter.qonvert(idpDb.connected());
 

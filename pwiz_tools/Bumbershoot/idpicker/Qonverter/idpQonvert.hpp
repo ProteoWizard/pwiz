@@ -44,8 +44,8 @@
     RTCONFIG_VARIABLE( bool,     EmbedSpectrumScanTimes,     false  ) \
     RTCONFIG_VARIABLE( bool,     EmbedSpectrumSources,       false  ) \
     RTCONFIG_VARIABLE( bool,     EmbedGeneMetadata,          false  ) \
-    RTCONFIG_VARIABLE( double,   MaxFDR,                     0.05   ) \
-    RTCONFIG_VARIABLE( double,   MaxImportFDR,               0.25   ) \
+    RTCONFIG_VARIABLE( double,   MaxFDR,                     0.02   ) \
+    RTCONFIG_VARIABLE( double,   MaxImportFDR,               0.1    ) \
     RTCONFIG_VARIABLE( int,      MaxResultRank,              3      ) \
     RTCONFIG_VARIABLE( bool,     RerankMatches,              false  ) \
     RTCONFIG_VARIABLE( int,      MinPartitionSize,           10     ) \

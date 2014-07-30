@@ -81,6 +81,7 @@ struct Parser
             int maxResultRank; /// filter the database on PSM rank before writing to disk
             int minPeptideLength; /// ignore peptides shorter than this
             bool ignoreUnmappedPeptides;
+            bool logQonversionDetails;
         };
 
         mutable ImportSettings importSettings;

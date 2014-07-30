@@ -58,12 +58,15 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
 
     map<string, sqlite3_int64> sourceIdByName;
     map<string, set<sqlite3_int64> > sourcesByGroup;
-    set<sqlite3_int64> alreadyGroupedSources;
+    set<sqlite3_int64> ungroupedSources;
     vector<string> sourceGroups;
 
     sqlite3pp::query sourceIdByNameQuery(idpDb, "SELECT Id, Name FROM SpectrumSource");
     BOOST_FOREACH(sqlite3pp::query::rows queryRow, sourceIdByNameQuery)
+    {
         sourceIdByName[queryRow.get<string>(1)] = queryRow.get<sqlite3_int64>(0);
+        ungroupedSources.insert(queryRow.get<sqlite3_int64>(0));
+    }
 
     // open the assembly.txt file
     ifstream assembleTxtFile(assemblyFilepath.c_str());
@@ -103,6 +106,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
                         continue;
 
                     sourcesByGroup[group].insert(findItr->second);
+                    ungroupedSources.erase(findItr->second);
                 }
             }
             else
@@ -114,6 +118,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
                     continue;
 
                 sourcesByGroup[group].insert(findItr->second);
+                ungroupedSources.erase(findItr->second);
             }
         }
         catch (exception& e)
@@ -121,6 +126,10 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
             throw runtime_error("error reading line \"" + line + "\" from assembly text at \"" + assemblyFilepath + "\": " + e.what());
         }
     }
+
+    // assign ungrouped source to the root group
+    BOOST_FOREACH(sqlite3_int64 sourceId, ungroupedSources)
+        sourcesByGroup["/"].insert(sourceId);
 
     sqlite3pp::transaction transaction(idpDb);
 
@@ -311,7 +320,7 @@ int main(int argc, const char* argv[])
 
     string usage = "IDPAssemble is a command-line tool for merging and filtering idpDB files. You can also assign a source group hierarchy.\n"
                    "\n"
-                   "Usage: idpAssemble <idpDB filepath> [another idpDB filepath ...] [-MergeTargetFilepath <filepath to merge to>]\n"
+                   "Usage: idpAssemble <idpDB filepath> [another idpDB filepath ...] [-MergedOutputFilepath <filepath to merge to>]\n"
                    "                   [-MaxFDRScore <real>]\n"
                    "                   [-MinDistinctPeptides <integer>]\n"
                    "                   [-MinSpectra <integer>]\n"
@@ -319,6 +328,7 @@ int main(int argc, const char* argv[])
                    "                   [-MinSpectraPerDistinctMatch <integer>]\n"
                    "                   [-MinSpectraPerDistinctPeptide <integer>]\n"
                    "                   [-MaxProteinGroupsPerPeptide <integer>]\n"
+                   "                   [-FilterAtGeneLevel <boolean>]\n"
                    "                   [-MergedOutputFilepath <string>]\n"
                    "                   [-AssignSourceHierarchy <assemble.tsv>]\n"
                    "                   [-SummarizeSources <boolean>]\n"
@@ -327,7 +337,7 @@ int main(int argc, const char* argv[])
                    "\n"
                    "Example: idpAssemble fraction1.idpDB fraction2.idpDB fraction3.idpDB -MergeTargetFilepath mudpit.idpDB\n"
                    "\n"
-                   "The assemble.txt file is a tab-delimited file with two columns. The first column is the source group path,\n"
+                   "The assemble.tsv file is a tab-delimited file with two columns. The first column is the source group path,\n"
                    "the second column is a source group name to assign to that group.";
 
     string mergeTargetFilepath;
@@ -436,6 +446,8 @@ int main(int argc, const char* argv[])
             bpt::ptime start = bpt::microsec_clock::local_time();
             Merger merger;
             merger.merge(mergeTargetFilepath, mergeSourceFilepaths, maxThreads, &ilr);
+            //std::random_shuffle(mergeSourceFilepaths.begin(), mergeSourceFilepaths.end());
+            //merger.merge(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), mergeSourceFilepaths, 1, &ilr);
             cout << "\nMerging finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
         }
 
@@ -443,12 +455,14 @@ int main(int argc, const char* argv[])
         Filter filter;
         filter.config = filterConfig;
         filter.filter(mergeTargetFilepath, &ilr);
+        //filter.filter(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), &ilr);
         cout << "\nFiltering finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
 
         if (!assembleTextFilepath.empty())
             assignSourceGroupHierarchy(mergeTargetFilepath, assembleTextFilepath);
 
         summarizeAssembly(mergeTargetFilepath, summarizeSources);
+        //summarizeAssembly(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), summarizeSources);
 
         return 0;
     }

@@ -830,8 +830,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     }
     
     // drop filtered tables and update schema if necessary
-    Qonverter q;
-    q.dropFilters(idpDbFilepath);
+    Qonverter::dropFilters(idpDbFilepath);
 
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
@@ -876,6 +875,17 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     idpDb.execute("UPDATE Protein SET GeneId='Unmapped_'||Accession WHERE GeneId IS NULL");
     //idpDb.execute("UPDATE Protein SET GeneId='Unmapped' WHERE GeneId IS NULL");
     transaction.commit();
+}
+
+
+void dropGeneMetadata(const string& idpDbFilepath)
+{
+    // open the database
+    sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
+
+    // unset gene columns
+    idpDb.execute("UPDATE Protein SET GeneId=NULL, GeneGroup=NULL");
+    idpDb.execute("UPDATE ProteinMetadata SET TaxonomyId=NULL, GeneName=NULL, Chromosome=NULL, GeneFamily=NULL, GeneDescription=NULL");
 }
 
 

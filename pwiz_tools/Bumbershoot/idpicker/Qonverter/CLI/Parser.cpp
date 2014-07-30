@@ -78,6 +78,7 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             analysis->importSettings->maxQValue = 0.25;
             analysis->importSettings->maxResultRank = 2;
             analysis->importSettings->ignoreUnmappedPeptides = false;
+            analysis->importSettings->logQonversionDetails = false;
 
             args->DistinctAnalyses->Add(analysis);
         }
@@ -98,6 +99,7 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             nativeAnalysis.importSettings.maxQValue = analysis->importSettings->maxQValue;
             nativeAnalysis.importSettings.maxResultRank = analysis->importSettings->maxResultRank;
             nativeAnalysis.importSettings.ignoreUnmappedPeptides = analysis->importSettings->ignoreUnmappedPeptides;
+            nativeAnalysis.importSettings.logQonversionDetails = analysis->importSettings->logQonversionDetails;
 
             NativeQonverter::Settings& nativeQonverterSettings = nativeAnalysis.importSettings.qonverterSettings;
             Qonverter::Settings^ qonverterSettings = analysis->importSettings->qonverterSettings;

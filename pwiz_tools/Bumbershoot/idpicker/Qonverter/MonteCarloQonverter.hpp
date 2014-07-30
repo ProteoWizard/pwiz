@@ -34,9 +34,13 @@ BEGIN_IDPICKER_NAMESPACE
 
 struct MonteCarloQonverter
 {
+    typedef map<int, vector<double> > WeightsByBestSpecificity;
+    typedef map<int, WeightsByBestSpecificity> WeightsByChargeAndBestSpecificity;
+
     static void Qonvert(PSMList& psmRows,
                         const Qonverter::Settings& settings,
-                        const std::vector<double>& scoreWeights);
+                        const std::vector<double>& scoreWeights,
+                        WeightsByChargeAndBestSpecificity* monteCarloWeightsByChargeAndBestSpecificity = NULL);
 };
 
 

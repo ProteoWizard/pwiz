@@ -1863,6 +1863,14 @@ namespace IDPicker
             process.StartInfo.RedirectStandardOutput = process.StartInfo.RedirectStandardError = true;
             process.Start();
             process.EnableRaisingEvents = true;
+
+            //Wait for process main handle be acquired
+            while (process.MainWindowHandle == IntPtr.Zero)
+                Thread.Sleep(1);
+
+            WinAPI.SetWindowPos(process.MainWindowHandle, new IntPtr(0), this.Location.X + this.Width / 3, this.Location.Y + this.Height / 3, 0, 0,
+                                WinAPI.SetWindowPosFlags.IgnoreResize | WinAPI.SetWindowPosFlags.IgnoreZOrder | WinAPI.SetWindowPosFlags.ShowWindow);
+
             process.Exited += (x, y) =>
             {
                 if (process.ExitCode != 0)

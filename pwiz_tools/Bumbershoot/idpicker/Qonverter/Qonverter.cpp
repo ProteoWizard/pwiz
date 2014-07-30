@@ -166,7 +166,7 @@ void validateSettings(const Qonverter::Settings& settings)
     }
 }
 
-void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMList& psmRows)
+void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMList& psmRows, const MonteCarloQonverter::WeightsByChargeAndBestSpecificity& monteCarloWeightsByChargeAndBestSpecificity)
 {
 #ifdef QONVERTER_HAS_NATIVEID
 #define SPECTRUM_ID nativeID
@@ -178,18 +178,27 @@ void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMLis
 
     if (logQonversionDetails)
     {
+        map<int, map<int, string> > monteCarloWeightsStringByChargeAndBestSpecificity;
+
+        BOOST_FOREACH_FIELD((int chargeState)(const MonteCarloQonverter::WeightsByBestSpecificity& monteCarloWeightsByBestSpecificity), monteCarloWeightsByChargeAndBestSpecificity)
+        BOOST_FOREACH_FIELD((int bestSpecificity)(const vector<double>& monteCarloWeights), monteCarloWeightsByBestSpecificity)
+        BOOST_FOREACH(double weight, monteCarloWeights)
+            monteCarloWeightsStringByChargeAndBestSpecificity[chargeState][bestSpecificity] += lexical_cast<string>(weight) + " ";
+
         sqlite::transaction transaction(db);
         sqlite::command(db, "DROP TABLE IF EXISTS QonversionDetails").execute();
-        sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, "SPECTRUM_ID_STR", OriginalRank, NewRank, Charge, BestSpecificity, TotalScore, QValue, FDRScore, DecoyState)").execute();
-        sqlite::command insertQonversionDetails(db, "INSERT INTO QonversionDetails VALUES (?,?,?,?,?,?,?,?,?,?)");
+        sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, Source, "SPECTRUM_ID_STR", OriginalRank, NewRank, Charge, BestSpecificity, MonteCarloWeights, TotalScore, QValue, FDRScore, DecoyState)").execute();
+        sqlite::command insertQonversionDetails(db, "INSERT INTO QonversionDetails VALUES (?,(SELECT Source FROM Spectrum WHERE Id=?),?,?,?,?,?,?,?,?,?,?)");
         BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
         {
             insertQonversionDetails.binder() << row.id
+                                             << row.spectrum
                                              << row.SPECTRUM_ID
                                              << row.originalRank
                                              << row.newRank
                                              << row.chargeState
                                              << row.bestSpecificity
+                                             << monteCarloWeightsStringByChargeAndBestSpecificity[row.chargeState][row.bestSpecificity]
                                              << row.totalScore
                                              << row.qValue
                                              << row.fdrScore
@@ -456,6 +465,8 @@ void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* i
 
         ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "calculating Q values")
 
+        map<int, map<int, vector<double> > > monteCarloWeightsByChargeAndBestSpecificity;
+
         switch (qonverterSettings.qonverterMethod.index())
         {
             default:
@@ -463,7 +474,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* i
                 StaticWeightQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector);
                 break;
             case Qonverter::QonverterMethod::MonteCarlo:
-                MonteCarloQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector);
+                MonteCarloQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector, &monteCarloWeightsByChargeAndBestSpecificity);
                 break;
             case Qonverter::QonverterMethod::PartitionedSVM:
             case Qonverter::QonverterMethod::SingleSVM:
@@ -496,7 +507,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, pwiz::util::IterationListenerRegistry* i
         ITERATION_UPDATE(ilr, finishedAnalyses, analysisSourcePairs.size(), "updating Q values")
 
         // update the database with the new Q values
-        updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
+        updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows, monteCarloWeightsByChargeAndBestSpecificity);
 
         vector<string> scoreInfoTuples;
         BOOST_FOREACH_FIELD((const string& name)(const Qonverter::Settings::ScoreInfo& scoreInfo), qonverterSettings.scoreInfoByName)
@@ -909,6 +920,9 @@ void calculateWeightedTotalScore(const PSMIteratorRange& psmRows, const vector<d
     BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
     {
         psm.totalScore = 0;
+        if (psm.scores.size() != scoreWeights.size())
+            throw runtime_error("[calculateWeightedTotalScore()] PSM has " + lexical_cast<string>(psm.scores.size()) + " scores but there are " + lexical_cast<string>(scoreWeights.size()) + " score weights");
+
         for (i=0, end=psm.scores.size(); i < end; ++i)
             psm.totalScore += psm.scores[i] * scoreWeights[i];
     }
