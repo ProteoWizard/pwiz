@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -60,6 +61,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         protected override void DoTest()
         {
             string skyFile = TestFilesDir.GetTestPath("Erin 19pep test subset.sky");
+
+            // Fix up paths in local copy of skyfile to use the persistent files
+            string text = File.ReadAllText(skyFile);
+            text = text.Replace(@"M:\brendanx\data\IonMobility\Agilent\FromPNNL", TestFilesDir.PersistentFilesDir);
+            File.WriteAllText(skyFile, text);
+
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             const int chromIndex = 1;
