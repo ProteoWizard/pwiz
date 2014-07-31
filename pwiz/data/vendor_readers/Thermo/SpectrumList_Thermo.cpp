@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
+#include <boost/spirit/include/karma.hpp>
 
 
 using namespace pwiz::cv;
@@ -636,6 +637,9 @@ PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfMSOrder(MSOrder msOrder) cons
 
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 {
+    using namespace boost::spirit::karma;
+    map<std::string, size_t> idToIndexTempMap;
+
     spectraByScanType.resize(ScanType_Count, 0);
     spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
 
@@ -692,12 +696,11 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         ie.scan = scan;
                         ie.index = index_.size()-1;
 
-                        ostringstream oss;
-                        oss << "controllerType=" << ie.controllerType <<
-                               " controllerNumber=" << ie.controllerNumber <<
-                               " scan=" << ie.scan;
-                        ie.id = oss.str();
-                        idToIndexMap_[ie.id] = ie.index;
+                        std::back_insert_iterator<std::string> sink(ie.id);
+                        generate(sink,
+                                 "controllerType=" << int_ << " controllerNumber=" << int_ << " scan=" << int_,
+                                 (int) ie.controllerType, ie.controllerNumber, ie.scan);
+                        idToIndexTempMap[ie.id] = ie.index;
 
                         ie.scanType = scanType;
                         ie.msOrder = msOrder;
@@ -717,12 +720,11 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         ie.scan = scan;
                         ie.index = index_.size()-1;
 
-                        ostringstream oss;
-                        oss << "controllerType=" << ie.controllerType <<
-                               " controllerNumber=" << ie.controllerNumber <<
-                               " scan=" << ie.scan;
-                        ie.id = oss.str();
-                        idToIndexMap_[ie.id] = ie.index;
+                        std::back_insert_iterator<std::string> sink(ie.id);
+                        generate(sink,
+                                 "controllerType=" << int_ << " controllerNumber=" << int_ << " scan=" << int_,
+                                 (int) ie.controllerType, ie.controllerNumber, ie.scan);
+                        idToIndexTempMap[ie.id] = ie.index;
                     }
                 }
                 break;
@@ -732,6 +734,8 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         }
     }
 
+    idToIndexMap_.reserve(idToIndexTempMap.size());
+    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
     size_ = index_.size();
 }
 

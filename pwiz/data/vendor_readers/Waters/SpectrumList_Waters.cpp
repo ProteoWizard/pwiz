@@ -43,7 +43,6 @@ SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const 
     : msd_(msd), rawdata_(rawdata), config_(config)
 {
     createIndex();
-    size_ = index_.size();
 }
 
 
@@ -64,7 +63,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size
 
 PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 {
-    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
         return size_;
     return scanItr->second;
@@ -410,6 +409,8 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(doub
 
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
+    map<std::string, size_t> idToIndexTempMap;
+
     BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
     {
         int msLevel;
@@ -460,7 +461,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
                     generate(sink,
                                 "function=" << int_ << " process=" << int_ << " scan=" << int_,
                                 (ie.function+1), ie.process, ((numScansInBlock*ie.block)+ie.scan+1));
-                    idToIndexMap_[ie.id] = ie.index;
+                    idToIndexTempMap[ie.id] = ie.index;
                 }
             }
         }
@@ -481,10 +482,14 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
                 generate(sink,
                             "function=" << int_ << " process=" << int_ << " scan=" << int_,
                             (ie.function+1), ie.process, (ie.scan+1));
-                idToIndexMap_[ie.id] = ie.index;
+                idToIndexTempMap[ie.id] = ie.index;
             }
         }
     }
+
+    idToIndexMap_.reserve(idToIndexTempMap.size());
+    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
+    size_ = index_.size();
 }
 
 

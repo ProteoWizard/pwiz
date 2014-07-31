@@ -506,6 +506,7 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(dou
 PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 {
     using namespace boost::spirit::karma;
+    map<std::string, size_t> idToIndexTempMap;
 
 	bool hasIMS = rawfile_->hasIonMobilityData(); // enumerate all drift scans
 	if (hasIMS)
@@ -514,6 +515,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
         int driftBinsPerFrame = rawfile_->getIonMobilityFrame(0)->getDriftBinsPresent();
         size_t size = config_.combineIonMobilitySpectra ? frames : frames * driftBinsPerFrame;
 		index_.reserve(size);
+        scanTimeToFrameMap_.reserve(frames);
 
         for (int i = 0; i < frames; ++i)
 		{
@@ -530,7 +532,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink, "scanId=" << int_, ie.scanId);
-                idToIndexMap_[ie.id] = ie.index;
+                idToIndexTempMap[ie.id] = ie.index;
             }
             else
             {
@@ -550,7 +552,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                         std::back_insert_iterator<std::string> sink(ie.id);
                         generate(sink, "scanId=" << int_, ie.scanId);
-                        idToIndexMap_[ie.id] = ie.index;
+                        idToIndexTempMap[ie.id] = ie.index;
                     }
                 }
                 else
@@ -577,7 +579,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                         std::back_insert_iterator<std::string> sink(ie.id);
                         generate(sink, "scanId=" << int_, ie.scanId);
-                        idToIndexMap_[ie.id] = ie.index;
+                        idToIndexTempMap[ie.id] = ie.index;
 			        }
                 }
             }
@@ -615,11 +617,13 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink, "scanId=" << int_, ie.scanId);
-                idToIndexMap_[ie.id] = ie.index;
+                idToIndexTempMap[ie.id] = ie.index;
 			}
 		}
 	}
 
+    idToIndexMap_.reserve(idToIndexTempMap.size());
+    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
     size_ = index_.size();
 }
 

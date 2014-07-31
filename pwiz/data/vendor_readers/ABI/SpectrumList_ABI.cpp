@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
+#include <boost/spirit/include/karma.hpp>
 
 
 namespace pwiz {
@@ -239,43 +240,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
 PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 {
-    /*int periodCount = wifffile_->getPeriodCount(sample);
-    for (int ii=1; ii <= periodCount; ++ii)
-    {
-        //Console::WriteLine("Sample {0}, Period {1}", sample, ii);
-
-        int experimentCount = wifffile_->getExperimentCount(sample, ii);
-        for (int iii=1; iii <= experimentCount; ++iii)
-        {
-            ExperimentPtr msExperiment = wifffile_->getExperiment(sample, ii, iii);
-            if (msExperiment->getScanType() != MRM)
-            {
-                vector<double> times, intensities;
-                msExperiment->getTIC(times, intensities);
-
-                for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                {
-                    if (intensities[iiii] > 0)
-                    {
-                        index_.push_back(IndexEntry());
-                        IndexEntry& ie = index_.back();
-                        ie.sample = sample;
-                        ie.period = ii;
-                        ie.cycle = iiii+1;
-                        ie.experiment = msExperiment;
-                        ie.index = index_.size()-1;
-
-                        std::ostringstream oss;
-                        oss << "sample=" << ie.sample <<
-                               " period=" << ie.period <<
-                               " cycle=" << ie.cycle <<
-                               " experiment=" << ie.experiment->getExperimentNumber();
-                        ie.id = oss.str();
-                    }
-                }
-            }
-        }
-    }*/
+    using namespace boost::spirit::karma;
+    map<std::string, size_t> idToIndexTempMap;
 
     typedef multimap<double, pair<ExperimentPtr, int> > ExperimentAndCycleByTime;
     ExperimentAndCycleByTime experimentAndCycleByTime;
@@ -312,15 +278,16 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
         ie.experiment = itr.second.first;
         ie.index = index_.size()-1;
 
-        std::ostringstream oss;
-        oss << "sample=" << ie.sample <<
-               " period=" << ie.period <<
-               " cycle=" << ie.cycle <<
-               " experiment=" << ie.experiment->getExperimentNumber();
-        ie.id = oss.str();
-        idToIndexMap_[ie.id] = ie.index;
+
+        std::back_insert_iterator<std::string> sink(ie.id);
+        generate(sink,
+                 "sample=" << int_ << " period=" << int_ << " cycle=" << int_ << " experiment=" << int_,
+                 ie.sample, ie.period, ie.cycle, ie.experiment->getExperimentNumber());
+        idToIndexTempMap[ie.id] = ie.index;
     }
 
+    idToIndexMap_.reserve(idToIndexTempMap.size());
+    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
     size_ = index_.size();
 }
 
