@@ -44,6 +44,8 @@ namespace pwiz.MSGraph
             }
 
             CurveList.Clear();
+            XAxis.Scale.SetupScaleData(this,  XAxis);
+            YAxis.Scale.SetupScaleData(this,  YAxis);
             double cellWidth = Math.Abs(XAxis.Scale.ReverseTransform(MinDotRadius) - XAxis.Scale.ReverseTransform(0));
             double cellHeight = Math.Abs(YAxis.Scale.ReverseTransform(MinDotRadius) - YAxis.Scale.ReverseTransform(0));
             if (cellWidth <= 0 || double.IsNaN(cellWidth) || cellHeight <= 0 || double.IsNaN(cellHeight))
