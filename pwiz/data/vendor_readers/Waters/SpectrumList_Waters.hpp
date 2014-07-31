@@ -72,7 +72,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     };
 
     mutable vector<IndexEntry> index_;
-    mutable boost::container::flat_map<string, size_t> idToIndexMap_;
+    mutable map<string, size_t> idToIndexMap_;
     mutable boost::container::flat_map<double, vector<pair<int, int> > > scanTimeToFunctionAndBlockMap_;
 
     void initializeCoefficients() const;

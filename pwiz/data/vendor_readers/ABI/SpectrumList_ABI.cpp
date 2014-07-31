@@ -76,7 +76,7 @@ PWIZ_API_DECL size_t SpectrumList_ABI::find(const string& id) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
 
-    boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
         return size_;
     return scanItr->second;
@@ -241,7 +241,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 {
     using namespace boost::spirit::karma;
-    map<std::string, size_t> idToIndexTempMap;
 
     typedef multimap<double, pair<ExperimentPtr, int> > ExperimentAndCycleByTime;
     ExperimentAndCycleByTime experimentAndCycleByTime;
@@ -283,11 +282,9 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
         generate(sink,
                  "sample=" << int_ << " period=" << int_ << " cycle=" << int_ << " experiment=" << int_,
                  ie.sample, ie.period, ie.cycle, ie.experiment->getExperimentNumber());
-        idToIndexTempMap[ie.id] = ie.index;
+        idToIndexMap_[ie.id] = ie.index;
     }
 
-    idToIndexMap_.reserve(idToIndexTempMap.size());
-    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
     size_ = index_.size();
 }
 

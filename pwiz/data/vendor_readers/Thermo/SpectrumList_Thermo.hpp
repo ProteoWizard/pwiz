@@ -86,7 +86,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     };
 
     vector<IndexEntry> index_;
-    boost::container::flat_map<string, size_t> idToIndexMap_;
+    map<string, size_t> idToIndexMap_;
 
     void createIndex();
     size_t findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const;

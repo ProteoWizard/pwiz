@@ -77,7 +77,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     }
     catch (bad_lexical_cast&)
     {
-        boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+        map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
         if (scanItr == idToIndexMap_.end())
             return size_;
         return scanItr->second;
@@ -638,7 +638,6 @@ PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfMSOrder(MSOrder msOrder) cons
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 {
     using namespace boost::spirit::karma;
-    map<std::string, size_t> idToIndexTempMap;
 
     spectraByScanType.resize(ScanType_Count, 0);
     spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
@@ -700,7 +699,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         generate(sink,
                                  "controllerType=" << int_ << " controllerNumber=" << int_ << " scan=" << int_,
                                  (int) ie.controllerType, ie.controllerNumber, ie.scan);
-                        idToIndexTempMap[ie.id] = ie.index;
+                        idToIndexMap_[ie.id] = ie.index;
 
                         ie.scanType = scanType;
                         ie.msOrder = msOrder;
@@ -724,7 +723,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         generate(sink,
                                  "controllerType=" << int_ << " controllerNumber=" << int_ << " scan=" << int_,
                                  (int) ie.controllerType, ie.controllerNumber, ie.scan);
-                        idToIndexTempMap[ie.id] = ie.index;
+                        idToIndexMap_[ie.id] = ie.index;
                     }
                 }
                 break;
@@ -734,8 +733,6 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         }
     }
 
-    idToIndexMap_.reserve(idToIndexTempMap.size());
-    idToIndexMap_.insert(boost::container::ordered_unique_range, idToIndexTempMap.begin(), idToIndexTempMap.end());
     size_ = index_.size();
 }
 

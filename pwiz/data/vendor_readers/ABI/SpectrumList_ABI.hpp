@@ -78,7 +78,7 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     };
 
     mutable std::vector<IndexEntry> index_;
-    mutable boost::container::flat_map<std::string, size_t> idToIndexMap_;
+    mutable std::map<std::string, size_t> idToIndexMap_;
 
     // Cache last accessed spectrum for fast in order access
     mutable boost::mutex spectrum_mutex;

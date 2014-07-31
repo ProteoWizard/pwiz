@@ -86,7 +86,7 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     };
 
     mutable vector<IndexEntry> index_;
-    mutable boost::container::flat_map<string, size_t> idToIndexMap_;
+    mutable map<string, size_t> idToIndexMap_;
     mutable boost::container::flat_map<double, size_t> scanTimeToFrameMap_;
 
     void createIndex() const;
