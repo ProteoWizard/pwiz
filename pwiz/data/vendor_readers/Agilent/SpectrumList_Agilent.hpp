@@ -37,7 +37,6 @@
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz_aux/msrc/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include "pwiz/utility/misc/Once.hpp"
-#include <boost/thread.hpp>
 using namespace pwiz::vendor_api::Agilent;
 #endif // PWIZ_READER_AGILENT
 
@@ -71,7 +70,6 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase
     MassHunterDataPtr rawfile_;
     Reader::Config config_;
     mutable size_t size_;
-    mutable boost::mutex readMutex;
     mutable int lastFrameIndex_;
     mutable pwiz::vendor_api::Agilent::FramePtr lastFrame_;
     mutable int lastRowNumber_;

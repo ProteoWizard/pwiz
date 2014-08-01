@@ -31,7 +31,6 @@
 #ifdef PWIZ_READER_ABI
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
 #include "pwiz/utility/misc/Once.hpp"
-#include <boost/thread.hpp>
 using namespace pwiz::vendor_api::ABI;
 #endif // PWIZ_READER_ABI
 
@@ -64,7 +63,6 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     const Reader::Config config_;
     ExperimentsMap experimentsMap_;
     int sample;
-    mutable boost::mutex readMutex;
 
     mutable size_t size_;
 

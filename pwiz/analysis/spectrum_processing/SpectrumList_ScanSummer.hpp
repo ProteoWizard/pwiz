@@ -28,7 +28,6 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include <boost/thread.hpp>
 
 typedef struct {
     double mz;
@@ -69,7 +68,6 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
     double precursorTol_;
     double rTimeTol_;
 
-    mutable boost::mutex readMutex;
     mutable int ms2cnt;
     std::vector<msdata::SpectrumIdentity> spectrumIdentities; // local cache, with fixed up index fields
     std::vector<size_t> indexMap; // maps index -> original index

@@ -72,7 +72,6 @@ lib pwiz_data_msdata
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
-        SpectrumWorkerThreads.cpp
     : # requirements
         <library>pwiz_data_msdata_version
         <library>../common//pwiz_data_common

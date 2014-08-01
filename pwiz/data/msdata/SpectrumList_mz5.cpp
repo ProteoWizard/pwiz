@@ -26,7 +26,6 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "References.hpp"
 #include "SpectrumList_mz5.hpp"
-#include <boost/thread.hpp>
 
 namespace pwiz {
 namespace msdata {
@@ -117,7 +116,6 @@ private:
     mutable std::map<std::string, IndexList> spotMap_;
     size_t numberOfSpectra_;
     mutable bool initSpectra_;
-    mutable boost::mutex readMutex;
 
     void initSpectra() const;
 };
@@ -228,7 +226,6 @@ IndexList SpectrumList_mz5Impl::findSpotID(const std::string& spotID) const
 
 SpectrumPtr SpectrumList_mz5Impl::spectrum(size_t index, bool getBinaryData) const
 {
-    boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     initSpectra();
     if (index >= 0 && index < numberOfSpectra_)
     {

@@ -100,7 +100,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinar
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const
 {
-    boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
     if (index >= size_)
         throw runtime_error("[SpectrumList_ABI::spectrum()] Bad index: " + lexical_cast<string>(index));

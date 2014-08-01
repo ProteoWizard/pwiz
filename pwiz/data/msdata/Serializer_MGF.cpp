@@ -27,7 +27,6 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/spirit/include/karma.hpp>
-#include "SpectrumWorkerThreads.hpp"
 
 
 namespace pwiz {
@@ -72,11 +71,9 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
     os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
-    SpectrumWorkerThreads spectrumWorkers(msd.run.spectrumListPtr);
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
-        //SpectrumPtr s = sl.spectrum(i, true);
-        SpectrumPtr s = spectrumWorkers.processBatch(i);
+        SpectrumPtr s = sl.spectrum(i, true);
         Scan* scan = !s->scanList.empty() ? &s->scanList.scans[0] : 0;
 
         if (s->cvParam(MS_ms_level).valueAs<int>() > 1 &&

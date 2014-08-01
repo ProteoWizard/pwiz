@@ -28,7 +28,6 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "zlib.h"
-#include <boost/thread.hpp>
 
 
 namespace pwiz {
@@ -166,7 +165,6 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   
   SpectrumPtr spectrum(size_t index, bool getBinaryData) const
   {
-    boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     if (index > index_.size())
       throw runtime_error("[SpectrumList_MSn::spectrum] Index out of bounds");
     
@@ -201,7 +199,6 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   map<string, size_t> idToIndex_;
   int version_; // read from fileheader for bms1, cms1, bms2, and cms2 filetypes
   MSn_Type filetype_;
-  mutable boost::mutex readMutex;
 
   void parseSpectrumText(Spectrum& spectrum, bool getBinaryData) const
   {

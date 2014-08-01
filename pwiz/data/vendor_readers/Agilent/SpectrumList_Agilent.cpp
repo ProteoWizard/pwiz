@@ -113,7 +113,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
-    boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Agilent::createIndex, this));
     if (index >= size_)
         throw runtime_error(("[SpectrumList_Agilent::spectrum] Bad index: " 

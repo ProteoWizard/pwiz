@@ -28,7 +28,6 @@
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "SpectrumWorkerThreads.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -2235,7 +2234,6 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
                                         spectrumList.dataProcessingPtr()->id));
 
     writer.startElement("spectrumList", attributes);
-    SpectrumWorkerThreads spectrumWorkers(msd.run.spectrumListPtr);
 
     for (size_t i=0; i<spectrumList.size(); i++)
     {
@@ -2257,8 +2255,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
 
         // write the spectrum
 
-        //SpectrumPtr spectrum = spectrumList.spectrum(i, true);
-        SpectrumPtr spectrum = spectrumWorkers.processBatch(i);
+        SpectrumPtr spectrum = spectrumList.spectrum(i, true);
         BOOST_ASSERT(spectrum->binaryDataArrayPtrs.empty() ||
                      spectrum->defaultArrayLength == spectrum->getMZArray()->data.size());
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
