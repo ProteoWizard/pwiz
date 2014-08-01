@@ -26,6 +26,7 @@
 #include "SpectrumList_MGF.hpp"
 #include "References.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/thread.hpp>
 
 
 namespace pwiz {
@@ -89,6 +90,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 
     SpectrumPtr spectrum(size_t index, bool getBinaryData) const
     {
+        boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
         if (index > index_.size())
             throw runtime_error("[SpectrumList_MGF::spectrum] Index out of bounds");
 
@@ -118,6 +120,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
     vector<SpectrumIdentity> index_;
     map<string, size_t> idToIndex_;
     map<string, IndexList> titleIDToIndexList_;
+    mutable boost::mutex readMutex;
 
     void parseSpectrum(Spectrum& spectrum, bool getBinaryData) const
     {

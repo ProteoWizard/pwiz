@@ -27,6 +27,7 @@
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/thread.hpp>
 
 
 namespace pwiz {
@@ -61,6 +62,7 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     const MSData& msd_;
     vector<SpectrumIdentityFromMzXML> index_;
     map<string,size_t> idToIndex_;
+    mutable boost::recursive_mutex readMutex;
 
     mutable vector<int> scanMsLevelCache_;
 
@@ -586,6 +588,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
 
 SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, DetailLevel detailLevel, const SpectrumPtr *defaults, bool isRecursiveCall) const
 {
+    boost::lock_guard<boost::recursive_mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     if (index > index_.size())
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Index out of bounds.");
 

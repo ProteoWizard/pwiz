@@ -378,7 +378,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ScanSummer::spectrum(size_t index, bool g
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ScanSummer::spectrum(size_t index, DetailLevel detailLevel) const
 {
-
+    boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     size_t summedScanIndex = indexMap.at(index);
     SpectrumPtr summedSpectrum = inner_->spectrum(summedScanIndex, detailLevel);
     

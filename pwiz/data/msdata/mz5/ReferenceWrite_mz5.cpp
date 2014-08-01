@@ -26,6 +26,7 @@
 #include "Datastructures_mz5.hpp"
 #include "../../common/cv.hpp"
 #include <boost/lexical_cast.hpp>
+#include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -362,6 +363,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
         pwiz::msdata::SpectrumPtr sp;
         pwiz::msdata::BinaryDataArrayPtr bdap;
         std::vector<double> mz;
+        SpectrumWorkerThreads spectrumWorkers(sl);
         for (size_t i = 0; i < sl->size(); i++)
         {
             status = pwiz::util::IterationListener::Status_Ok;
@@ -372,7 +374,8 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
             if (status == pwiz::util::IterationListener::Status_Cancel)
                 break;
 
-            sp = sl->spectrum(i, true);
+            //sp = sl->spectrum(i, true);
+            sp = spectrumWorkers.processBatch(i);
             mz.clear();
             if (sp.get())
             {

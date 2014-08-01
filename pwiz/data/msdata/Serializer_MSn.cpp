@@ -30,6 +30,7 @@
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "zlib.h"
 #include <time.h>
+#include "SpectrumWorkerThreads.hpp"
 
 
 namespace pwiz {
@@ -437,9 +438,11 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
     // Go through the spectrum list and write each spectrum
     bool ms1File = MSn_Type_MS1 == _filetype || MSn_Type_BMS1 == _filetype || MSn_Type_CMS1 == _filetype;
     SpectrumList& sl = *msd.run.spectrumListPtr;
+    SpectrumWorkerThreads spectrumWorkers(msd.run.spectrumListPtr);
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
-        SpectrumPtr s = sl.spectrum(i, true);
+        //SpectrumPtr s = sl.spectrum(i, true);
+        SpectrumPtr s = spectrumWorkers.processBatch(i);
         int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
         if ((ms1File && msLevel == 1) ||
             (!ms1File && msLevel == 2 && !s->precursors.empty() && !s->precursors[0].selectedIons.empty()))
