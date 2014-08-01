@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
             _cachedChromatogramDataProvider = new CachedChromatogramDataProvider(cache, document,
                 chromFileInfo.FilePath, chromFileInfo, null, progressStatus, startPercent, endPercent, loader);
         }
+
         public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
         {
             get { return _cachedChromatogramDataProvider.ChromIds; }

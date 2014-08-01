@@ -488,6 +488,15 @@ namespace pwiz.Skyline.Model.Results
                 // it can be garbage collected after it has been written
                 listChromData[i] = null;
             }
+            // Write scan ids
+            var scanIdBytes = provider.ScanIdBytes;
+            if (scanIdBytes.Length > 0)
+            {
+                _currentFileInfo.LocationScanIds = _fsScans.Stream.Position;
+                _currentFileInfo.SizeScanIds = scanIdBytes.Length;
+                _fsScans.Stream.Write(scanIdBytes, 0, scanIdBytes.Length);
+            }
+
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
             PostChromDataSet(null, true);
@@ -1155,6 +1164,8 @@ namespace pwiz.Skyline.Model.Results
                                                                          _currentFileInfo.StartTime,
                                                                          LoadingStatus.Transitions.MaxRetentionTime,
                                                                          LoadingStatus.Transitions.MaxIntensity,
+                                                                         _currentFileInfo.SizeScanIds,
+                                                                         _currentFileInfo.LocationScanIds,
                                                                          _currentFileInfo.InstrumentInfoList));
                                 _currentFileIndex++;
 
@@ -1358,5 +1369,8 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
         }
+
+        public int SizeScanIds { get; set; }
+        public long LocationScanIds { get; set; }
     }
 }

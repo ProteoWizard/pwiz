@@ -44,8 +44,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>6484</ApplicationRevision>
-    <ApplicationVersion>2.5.1.6484</ApplicationVersion>
+    <ApplicationRevision>6530</ApplicationRevision>
+    <ApplicationVersion>2.5.1.6530</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -941,6 +941,7 @@
     <Compile Include="Model\Results\ChromDataSet.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
     <Compile Include="Model\Results\ChromInfoData.cs" />
+    <Compile Include="Model\Results\DataFileScanIds.cs" />
     <Compile Include="Model\Results\Demultiplexer.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\Exception.cs" />
@@ -1496,6 +1497,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.ja.resx">
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphChromatogram.zh-CHS.resx">
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
@@ -1534,6 +1536,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\PopupPickList.ja.resx">
       <DependentUpon>PopupPickList.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\PopupPickList.zh-CHS.resx">
       <DependentUpon>PopupPickList.cs</DependentUpon>
@@ -1607,6 +1610,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditNoteDlg.ja.resx">
       <DependentUpon>EditNoteDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditNoteDlg.zh-CHS.resx">
       <DependentUpon>EditNoteDlg.cs</DependentUpon>
@@ -2133,6 +2137,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.ja.resx">
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.zh-CHS.resx">
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>

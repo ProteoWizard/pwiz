@@ -440,6 +440,13 @@ namespace pwiz.SkylineTestFunctional
                 // Cache version 7 adds ion mobility information
                 cacheSize += sizeof(float) * 2 * dataTranCount;
             }
+            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_8)
+            {
+                // Cache version 9 adds scan id values for every file
+                cacheSize += (sizeof(int) + sizeof(long)) * fileCachedCount;
+                // And scan ids location to global header
+                cacheSize += sizeof(long);
+            }
             return cacheSize;
         }
 

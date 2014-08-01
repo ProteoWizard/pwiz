@@ -379,9 +379,6 @@ document to calculate the equation with linear regression</value>
   <data name="findPeptidesButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
-  <data name="findPeptidesButton.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
   <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
     <value>Find Unknown Peptides</value>
   </data>

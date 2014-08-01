@@ -67,9 +67,9 @@ namespace pwiz.Skyline.Model.Results
         /// Collects statistics on how much space savings minimizing will achieve, and (if outStream
         /// is not null) writes out the minimized cache file.
         /// </summary>
-        public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream, FileStream outStreamPeaks = null)
+        public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream, FileStream outStreamScans = null, FileStream outStreamPeaks = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, outStream, outStreamPeaks);
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, outStream, outStreamScans, outStreamPeaks);
             var statisticsCollector = new MinStatisticsCollector(this);
             bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
@@ -441,16 +441,18 @@ namespace pwiz.Skyline.Model.Results
             private readonly ChromatogramCache _originalCache;
             private readonly Stream _outputStream;
             private readonly FileStream _outputStreamPeaks;
+            private readonly FileStream _outputStreamScans;
             private int _peakCount;
             private readonly List<ChromGroupHeaderInfo5> _chromGroupHeaderInfos = new List<ChromGroupHeaderInfo5>();
             private readonly List<ChromTransition> _transitions = new List<ChromTransition>();
             private readonly List<Type> _scoreTypes;
             private readonly List<float> _scores = new List<float>();
 
-            public Writer(ChromatogramCache chromatogramCache, Stream outputStream, FileStream outputStreamPeaks)
+            public Writer(ChromatogramCache chromatogramCache, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks)
             {
                 _originalCache = chromatogramCache;
                 _outputStream = outputStream;
+                _outputStreamScans = outputStreamScans;
                 _outputStreamPeaks = outputStreamPeaks;
                 _scoreTypes = chromatogramCache.ScoreTypes.ToList();
             }
@@ -587,7 +589,10 @@ namespace pwiz.Skyline.Model.Results
 
             public void WriteEndOfFile()
             {
+                _originalCache.WriteScanIds(_outputStreamScans);
+
                 ChromatogramCache.WriteStructs(_outputStream,
+                                               _outputStreamScans,
                                                _outputStreamPeaks,
                                                _originalCache.CachedFiles,
                                                _chromGroupHeaderInfos,

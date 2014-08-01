@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,6 +33,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
+        public const int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
         public const int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
         public const int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support
         public const int FORMAT_VERSION_CACHE_6 = 6;
@@ -44,10 +44,11 @@ namespace pwiz.Skyline.Model.Results
 
         public const string EXT = ".skyd"; // Not L10N
         public const string PEAKS_EXT = ".peaks"; // Not L10N
+        public const string SCANS_EXT = ".scans"; // Not L10N
 
         public static int FORMAT_VERSION_CACHE
         {
-            get { return FORMAT_VERSION_CACHE_8; }
+            get { return FORMAT_VERSION_CACHE_9; }
         }
 
         /// <summary>
@@ -80,9 +81,10 @@ namespace pwiz.Skyline.Model.Results
             StringBuilder sbName = new StringBuilder(dataFilePath.GetFileNameWithoutExtension());
             // If the data file is not in the same directory as the document, add a checksum
             // of the data directory.
-            if (dataFilePath is MsDataFilePath)
+            var msDataFilePath = dataFilePath as MsDataFilePath;
+            if (msDataFilePath != null)
             {
-                string dirData = Path.GetDirectoryName(((MsDataFilePath) dataFilePath).FilePath);
+                string dirData = Path.GetDirectoryName(msDataFilePath.FilePath);
                 // Perhaps one of these hasn't a path at all - are both in the current working directory?
                 string fullDocDirPath = String.IsNullOrEmpty(dirDocument) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirDocument));
                 string fullFileDirPath = String.IsNullOrEmpty(dirData) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(Path.GetFullPath(dirData));
@@ -110,6 +112,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly Dictionary<Type, int> _scoreTypeIndices;
         private readonly float[] _scores;
         private readonly byte[] _seqBytes;
+        private readonly long _locationScanIds;
+        private readonly long _countBytesScanIds;
 
         public ChromatogramCache(string cachePath, RawData raw, IPooledStream readStream)
         {
@@ -124,6 +128,8 @@ namespace pwiz.Skyline.Model.Results
                 _scoreTypeIndices.Add(raw.ScoreTypes[i], i);
             _scores = raw.Scores;
             _seqBytes = raw.SeqBytes;
+            _locationScanIds = raw.LocationScanIds;
+            _countBytesScanIds = raw.CountBytesScanIds;
             ReadStream = readStream;
         }
 
@@ -201,6 +207,30 @@ namespace pwiz.Skyline.Model.Results
         private static bool IsCovered(MsDataFileUri path, IEnumerable<ChromatogramCache> caches)
         {
             return caches.Any(cache => cache.CachedFilePaths.Contains(path));
+        }
+
+        public DataFileScanIds LoadScanIds(int fileIndex)
+        {
+            return DataFileScanIds.FromBytes(LoadScanIdBytes(fileIndex));
+        }
+
+        public byte[] LoadScanIdBytes(int fileIndex)
+        {
+            var cachedFile = CachedFiles[fileIndex];
+            byte[] scanIdBytes = new byte[cachedFile.SizeScanIds];
+            if (scanIdBytes.Length > 0)
+            {
+                Stream stream = ReadStream.Stream;
+                lock (stream)
+                {
+                    stream.Seek(_locationScanIds + cachedFile.LocationScanIds, SeekOrigin.Begin);
+
+                    // Single read to get all the points
+                    if (stream.Read(scanIdBytes, 0, scanIdBytes.Length) < scanIdBytes.Length)
+                        throw new IOException(Resources.ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs);
+                }
+            }
+            return scanIdBytes;
         }
 
         public bool TryLoadChromatogramInfo(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
@@ -368,6 +398,10 @@ namespace pwiz.Skyline.Model.Results
         // ReSharper disable UnusedMember.Local
         private enum Header
         {
+            // Version 9 header addition
+            location_scan_ids_lo,
+            location_scan_ids_hi,
+
             // Version 5 header addition
             num_score_types,
             num_scores,
@@ -399,7 +433,8 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 var headerFirst = FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4
-                                     ? Header.num_score_types
+                                     ? FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8
+                                        ? Header.location_scan_ids_lo : Header.num_score_types
                                      : Header.format_version;
                 return (Header.count - headerFirst)*sizeof (int);
             }
@@ -420,12 +455,17 @@ namespace pwiz.Skyline.Model.Results
             // Version 6 file header addition
             max_retention_time,
             max_intensity,
+            // Version 9 file header addition
+            size_scan_ids,
+            location_scan_ids_lo,
+            location_scan_ids_hi,
 
             count,
             count2 = runstart_lo,
-			count3 = len_instrument_info,
+            count3 = len_instrument_info,
             count4 = flags,
-            count5 = max_retention_time
+            count5 = max_retention_time,
+            count6 = size_scan_ids
         }
         // ReSharper restore UnusedMember.Local
 
@@ -449,6 +489,8 @@ namespace pwiz.Skyline.Model.Results
             public Type[] ScoreTypes { get; set; }
             public float[] Scores { get; set; }
             public byte[] SeqBytes { get; set; }
+            public long LocationScanIds { get; set; }
+            public long CountBytesScanIds { get; set; }
 
             public void RecalcEntry(int entryIndex,
                 int offsetFiles,
@@ -581,6 +623,12 @@ namespace pwiz.Skyline.Model.Results
                 numSeqBytes = GetInt32(cacheHeader, (int)Header.num_seq_bytes);
                 locationSeqBytes = BitConverter.ToInt64(cacheHeader, ((int)Header.location_seq_bytes_lo) * 4);
             }
+            raw.LocationScanIds = locationPeaks;
+            if (formatVersion > FORMAT_VERSION_CACHE_8)
+            {
+                raw.LocationScanIds = BitConverter.ToInt64(cacheHeader, ((int)Header.location_scan_ids_lo) * 4);
+            }
+            raw.CountBytesScanIds = locationPeaks - raw.LocationScanIds;
 
             // Unexpected empty cache.  Return values that will force it to be completely rebuild.
             if (numFiles == 0)
@@ -618,6 +666,13 @@ namespace pwiz.Skyline.Model.Results
                     maxRT = GetFloat(fileHeader, (int)FileHeader.max_retention_time);
                     maxIntensity = GetFloat(fileHeader, (int)FileHeader.max_intensity);
                 }
+                int sizeScanIds = 0;
+                long locationScanIds = 0;
+                if (formatVersion > FORMAT_VERSION_CACHE_8)
+                {
+                    sizeScanIds = GetInt32(fileHeader, (int) FileHeader.size_scan_ids);
+                    locationScanIds = BitConverter.ToInt64(fileHeader, ((int) FileHeader.location_scan_ids_lo)*4);
+                }
                 string instrumentInfoStr = null;
                 if (formatVersion > FORMAT_VERSION_CACHE_3)
                 {
@@ -630,8 +685,15 @@ namespace pwiz.Skyline.Model.Results
                 DateTime modifiedTime = DateTime.FromBinary(modifiedBinary);
                 DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
-                raw.ChromCacheFiles[i] = new ChromCachedFile(filePath, fileFlags,
-                    modifiedTime, runstartTime, maxRT, maxIntensity, instrumentInfoList);
+                raw.ChromCacheFiles[i] = new ChromCachedFile(filePath,
+                                                             fileFlags,
+                                                             modifiedTime,
+                                                             runstartTime,
+                                                             maxRT,
+                                                             maxIntensity,
+                                                             sizeScanIds,
+                                                             locationScanIds,
+                                                             instrumentInfoList);
             }
 
             // Read list of chromatogram group headers
@@ -683,7 +745,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromPeak.SizeOf,
                 ChromPeak.DEFAULT_BLOCK_SIZE);
 
-            return locationPeaks;
+            return raw.LocationScanIds;  // Bytes of chromatogram data
         }
 
         private static int GetFileHeaderCount(int formatVersion)
@@ -698,6 +760,10 @@ namespace pwiz.Skyline.Model.Results
                     return (int) (FileHeader.count4)*4;
                 case FORMAT_VERSION_CACHE_5:
                     return (int) (FileHeader.count5)*4;
+                case FORMAT_VERSION_CACHE_6:
+                case FORMAT_VERSION_CACHE_7:
+                case FORMAT_VERSION_CACHE_8:
+                    return (int) (FileHeader.count6)*4;
                 default:
                     return (int) (FileHeader.count)*4;
             }
@@ -732,6 +798,7 @@ namespace pwiz.Skyline.Model.Results
         /// breaking encapsulation.
         /// </summary>
         public static void WriteStructs(Stream outStream,
+                                        Stream outStreamScans,
                                         Stream outStreamPeaks,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         List<ChromGroupHeaderInfo5> chromatogramEntries,
@@ -742,6 +809,7 @@ namespace pwiz.Skyline.Model.Results
                                         ChromatogramCache originalCache)
         {
             WriteStructs(outStream,
+                         outStreamScans,
                          outStreamPeaks,
                          chromCachedFiles,
                          chromatogramEntries,
@@ -753,6 +821,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void WriteStructs(Stream outStream,
+                                        Stream outStreamScans,
                                         Stream outStreamPeaks,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         List<ChromGroupHeaderInfo5> chromatogramEntries,
@@ -762,6 +831,14 @@ namespace pwiz.Skyline.Model.Results
                                         float[] scores,
                                         int peakCount)
         {
+            long locationScans = outStream.Position;
+            if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8)
+            {
+                // Write any scan ids
+                outStreamScans.Seek(0, SeekOrigin.Begin);
+                outStreamScans.CopyTo(outStream);
+            }
+
             // Write the picked peaks
             long locationPeaks = outStream.Position;
             outStreamPeaks.Seek(0, SeekOrigin.Begin);
@@ -903,12 +980,24 @@ namespace pwiz.Skyline.Model.Results
                     outStream.Write(BitConverter.GetBytes(cachedFile.MaxIntensity), 0, sizeof(float));
                 }
 
+                // Version 9 write scan id info
+                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8)
+                {
+                    outStream.Write(BitConverter.GetBytes(cachedFile.SizeScanIds), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(cachedFile.LocationScanIds), 0, sizeof(long));
+                }
+
                 // Write variable length buffers
                 outStream.Write(pathBuffer, 0, len);
                 outStream.Write(instrumentInfoBuffer, 0, instrumentInfoLen);
             }
 
             // Write the initial file header
+            if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_8)
+            {
+                // scan ids
+                outStream.Write(BitConverter.GetBytes(locationScans), 0, sizeof(long));
+            }
             if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
             {
                 // scores
@@ -1111,7 +1200,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeCachePath(cachePathOpt);
             }
 
-            Debug.Assert(cachedFilePaths.Count > 0);
+            Assume.IsTrue(cachedFilePaths.Count > 0);
 
             // Create a copy of the headers
             var listEntries = new List<ChromGroupHeaderInfo5>(_chromatogramEntries);
@@ -1133,6 +1222,7 @@ namespace pwiz.Skyline.Model.Results
             var scoreTypes = ScoreTypes.ToArray();
 
             using (FileSaver fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
+            using (FileSaver fsScans = new FileSaver(cachePathOpt + SCANS_EXT, true))
             using (FileSaver fs = new FileSaver(cachePathOpt))
             {
                 var inStream = ReadStream.Stream;
@@ -1207,17 +1297,22 @@ namespace pwiz.Skyline.Model.Results
 
                     if (keepFile)
                     {
-                        listKeepCachedFiles.Add(_cachedFiles[fileIndex]);
+                        if (_cachedFiles[fileIndex].SizeScanIds == 0)
+                            listKeepCachedFiles.Add(_cachedFiles[fileIndex]);
+                        else
+                        {
+                            // Write all scan ids for the last file to the scan ids output stream
+                            inStream.Seek(_locationScanIds + _cachedFiles[fileIndex].LocationScanIds, SeekOrigin.Begin);
+                            int lenReadIds = _cachedFiles[fileIndex].SizeScanIds;
+                            long locationScanIds = fsScans.Stream.Position;
+                            inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
+                            listKeepCachedFiles.Add(_cachedFiles[fileIndex].RelocateScanIds(locationScanIds));
+                        }
 
                         // Write all points for the last file to the output stream
                         inStream.Seek(firstEntry.LocationPoints, SeekOrigin.Begin);
                         long lenRead = lastEntry.LocationPoints + lastEntry.CompressedSize - firstEntry.LocationPoints;
-                        int len;
-                        while (lenRead > 0 && (len = inStream.Read(buffer, 0, (int)Math.Min(lenRead, buffer.Length))) != 0)
-                        {
-                            fs.Stream.Write(buffer, 0, len);
-                            lenRead -= len;
-                        }                        
+                        inStream.TransferBytes(fs.Stream, lenRead, buffer);
                     }
 
                     // Advance to next file
@@ -1225,7 +1320,11 @@ namespace pwiz.Skyline.Model.Results
                 }
                 while (i < listEntries.Count);
 
+                long locationAllScanIds = fs.Stream.Position;
+                long countBytesAllScanIds = fsScans.Stream.Position;
+
                 WriteStructs(fs.Stream,
+                    fsScans.Stream,
                     fsPeaks.Stream,
                     listKeepCachedFiles,
                     listKeepEntries,
@@ -1250,12 +1349,24 @@ namespace pwiz.Skyline.Model.Results
                         SeqBytes = listKeepSeqBytes.ToArray(),
                         ScoreTypes = scoreTypes,
                         Scores = listKeepScores.ToArray(),
+                        LocationScanIds = locationAllScanIds,
+                        CountBytesScanIds = countBytesAllScanIds,
                     };
                 return new ChromatogramCache(cachePathOpt,
                                              rawData,
                                              // Create a new read stream, for the newly created file
                                              streamManager.CreatePooledStream(cachePathOpt, false));
             }
+        }
+
+        public void WriteScanIds(FileStream outputStreamScans)
+        {
+            if (_countBytesScanIds == 0)
+                return;
+
+            var stream = ReadStream.Stream;
+            stream.Seek(_locationScanIds, SeekOrigin.Begin);
+            ReadStream.Stream.TransferBytes(outputStreamScans, _countBytesScanIds);
         }
 
         public void CommitCache(FileSaver fs)

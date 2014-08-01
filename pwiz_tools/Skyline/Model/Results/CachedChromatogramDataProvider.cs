@@ -19,12 +19,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     internal class CachedChromatogramDataProvider : ChromDataProvider
     {
         private ChromatogramCache _cache;
+        private int _fileIndex;
         private ChromKeyIndices[] _chromKeyIndices;
 
         private ChromKeyIndices _lastIndices;
@@ -47,6 +49,7 @@ namespace pwiz.Skyline.Model.Results
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
             _cache = cache;
+            _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
             _cache.GetStatusDimensions(dataFilePath, out _maxRetentionTime, out _maxIntensity);
             _singleMatchMz = singleMatchMz.HasValue
@@ -98,6 +101,11 @@ namespace pwiz.Skyline.Model.Results
                     intensities);
             }
             return true;
+        }
+
+        public override byte[] ScanIdBytes
+        {
+            get { return _cache.LoadScanIdBytes(_fileIndex); }
         }
 
         public override double? MaxRetentionTime { get { return _maxRetentionTime; } }

@@ -105,7 +105,15 @@ namespace pwiz.Skyline.Model.Results
                     int offsetScores = _listScores.Count;
                     long offsetPoints = _fs.Stream.Position;
 
-                    _listCachedFiles.AddRange(rawData.ChromCacheFiles);
+                    // Scan ids
+                    long offsetScanIds = _fsScans.Stream.Position;
+                    _listCachedFiles.AddRange(rawData.ChromCacheFiles.Select(f => f.RelocateScanIds(offsetScanIds)));
+                    if (rawData.CountBytesScanIds > 0)
+                    {
+                        _inStream.Seek(rawData.LocationScanIds, SeekOrigin.Begin);
+                        _inStream.TransferBytes(_fsScans.Stream, rawData.CountBytesScanIds);
+                    }
+
                     _peakCount += rawData.ChromatogramPeaks.Length;
                     rawData.ChromatogramPeaks.WriteArray(block => ChromPeak.WriteArray(_fsPeaks.FileStream.SafeFileHandle, block));
                     _listTransitions.AddRange(rawData.ChromTransitions);

@@ -312,8 +312,10 @@ namespace pwiz.Skyline.Controls.Graphs
             var chorusUrl = FilePath as ChorusUrl;
             if (null == chorusUrl)
             {
+                var measuredResults = DocumentUI.Settings.MeasuredResults;
                 scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
-                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray());
+                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
+                    () => measuredResults.LoadScanIds(FilePath));
             }
             else
             {

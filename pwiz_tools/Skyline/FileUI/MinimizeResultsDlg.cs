@@ -279,6 +279,7 @@ namespace pwiz.Skyline.FileUI
         {
             var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
             using (var skydSaver = new FileSaver(targetSkydFile))
+            using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
             {
                 skydSaver.Stream = File.OpenWrite(skydSaver.SafeName);
@@ -293,7 +294,7 @@ namespace pwiz.Skyline.FileUI
                                                         using (var backgroundWorker =
                                                             new BackgroundWorker(this, longWaitBroker))
                                                         {
-                                                            backgroundWorker.RunBackground(skydSaver.Stream, peaksSaver.FileStream);
+                                                            backgroundWorker.RunBackground(skydSaver.Stream, scansSaver.FileStream, peaksSaver.FileStream);
                                                         }
                                                     }
                                                     catch (ObjectDisposedException)
@@ -409,16 +410,16 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            public void RunBackground(Stream outputStream, FileStream outputStreamPeaks)
+            public void RunBackground(Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks)
             {
-                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream, outputStreamPeaks);
+                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream, outputStreamScans, outputStreamPeaks);
             }
 
             public void CollectStatistics()
             {
                 try
                 {
-                    RunBackground(null, null);
+                    RunBackground(null, null, null);
                 }
                 catch (ObjectDisposedException)
                 {

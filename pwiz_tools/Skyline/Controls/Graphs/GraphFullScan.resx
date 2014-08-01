@@ -183,9 +183,6 @@
   <data name="rightButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
-  <data name="rightButton.Text" xml:space="preserve">
-    <value>toolStripButton1</value>
-  </data>
   <data name="rightButton.ToolTipText" xml:space="preserve">
     <value>Next scan</value>
   </data>
@@ -194,9 +191,6 @@
   </data>
   <data name="leftButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
-  </data>
-  <data name="leftButton.Text" xml:space="preserve">
-    <value>toolStripButton2</value>
   </data>
   <data name="leftButton.ToolTipText" xml:space="preserve">
     <value>Previous scan</value>

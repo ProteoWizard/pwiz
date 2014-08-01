@@ -849,6 +849,24 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    public static class StreamEx
+    {
+        public static void TransferBytes(this Stream inStream, Stream outStream, long lenRead)
+        {
+            inStream.TransferBytes(outStream, lenRead, new byte[0x40000]); // 256K
+        }
+
+        public static void TransferBytes(this Stream inStream, Stream outStream, long lenRead, byte[] buffer)
+        {
+            int len;
+            while (lenRead > 0 && (len = inStream.Read(buffer, 0, (int)Math.Min(lenRead, buffer.Length))) != 0)
+            {
+                outStream.Write(buffer, 0, len);
+                lenRead -= len;
+            }
+        }    
+    }
+
     public sealed class FileSaver : IDisposable
     {
         public const string TEMP_PREFIX = "~SK"; // Not L10N

@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly List<float> _listScores = new List<float>();
         protected readonly FileSaver _fs;
+        protected readonly FileSaver _fsScans;
         protected readonly FileSaver _fsPeaks;
         protected readonly ILoadMonitor _loader;
         protected ProgressStatus _status;
@@ -46,6 +47,7 @@ namespace pwiz.Skyline.Model.Results
         {
             CachePath = cachePath;
             _fs = new FileSaver(CachePath);
+            _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
             _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
             _loader = loader;
             _status = status;
@@ -65,9 +67,14 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (x == null && !_status.IsFinal)
                     {
+                        long locationScanIds = 0, countBytesScanIds = 0;
                         if (_fs.Stream != null)
                         {
+                            locationScanIds = _fs.Stream.Position;
+                            countBytesScanIds = _fsScans.Stream.Position;
+
                             ChromatogramCache.WriteStructs(_fs.Stream,
+                                                           _fsScans.Stream,
                                                            _fsPeaks.Stream,
                                                            _listCachedFiles,
                                                            _listGroups,
@@ -98,6 +105,8 @@ namespace pwiz.Skyline.Model.Results
                                 ScoreTypes = _listScoreTypes.ToArray(),
                                 Scores = _listScores.ToArray(),
                                 SeqBytes = _listSeqBytes.ToArray(),
+                                LocationScanIds = locationScanIds,
+                                CountBytesScanIds = countBytesScanIds,
                             };
                         result = new ChromatogramCache(CachePath, rawData, readStream);
                         _loader.UpdateProgress(_status.Complete());
@@ -133,6 +142,7 @@ namespace pwiz.Skyline.Model.Results
             }
             _fs.Dispose();
             _fsPeaks.Dispose();
+            _fsScans.Dispose();
         }
     }
 }

@@ -561,6 +561,14 @@ namespace pwiz.ProteowizardWrapper
             return SpectrumCount;
         }
 
+        public int GetScanIndex(string id)
+        {
+            int index = SpectrumList.findAbbreviated(id);
+            if (0 > index || index >= SpectrumList.size())
+                return -1;
+            return index;
+        }
+
         public void GetSpectrum(int scanIndex, out double[] mzArray, out double[] intensityArray)
         {
             var spectrum = GetSpectrum(scanIndex);
@@ -594,21 +602,36 @@ namespace pwiz.ProteowizardWrapper
 
         private MsDataSpectrum GetSpectrum(Spectrum spectrum)
         {
-            if (spectrum != null && spectrum.binaryDataArrays.Count > 1)
+            if (spectrum == null)
+            {
+                return new MsDataSpectrum
+                {
+                    Centroided = true,
+                    Mzs = new double[0],
+                    Intensities = new double[0]
+                };
+            }
+            var msDataSpectrum = new MsDataSpectrum
+            {
+                Id = id.abbreviate(spectrum.id),
+                Level = GetMsLevel(spectrum) ?? 0,
+                Index = spectrum.index,
+                RetentionTime = GetStartTime(spectrum),
+                DriftTimeMsec = GetDriftTimeMsec(spectrum),
+                Precursors = GetPrecursors(spectrum),
+                Centroided = IsCentroided(spectrum),
+            };
+            if (spectrum.binaryDataArrays.Count <= 1)
+            {
+                msDataSpectrum.Mzs = new double[0];
+                msDataSpectrum.Intensities = new double[0];
+            }
+            else
             {
                 try
                 {
-                    var msDataSpectrum = new MsDataSpectrum
-                               {
-                                   Level = GetMsLevel(spectrum) ?? 0,
-                                   Index = spectrum.index,
-                                   RetentionTime = GetStartTime(spectrum),
-                                   DriftTimeMsec = GetDriftTimeMsec(spectrum),
-                                   Precursors = GetPrecursors(spectrum),
-                                   Centroided = IsCentroided(spectrum),
-                                   Mzs = ToArray(spectrum.getMZArray()),
-                                   Intensities = ToArray(spectrum.getIntensityArray())
-                               };
+                    msDataSpectrum.Mzs = ToArray(spectrum.getMZArray());
+                    msDataSpectrum.Intensities = ToArray(spectrum.getIntensityArray());
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
                             spectrum.scanList.scans[0].scanWindows.Count > 0)
@@ -622,26 +645,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                 }
             }
-
-            if (spectrum != null)
-                return new MsDataSpectrum
-                {
-                    Level = GetMsLevel(spectrum) ?? 0,
-                    Index = spectrum.index,
-                    RetentionTime = GetStartTime(spectrum),
-                    DriftTimeMsec = GetDriftTimeMsec(spectrum),
-                    Precursors = GetPrecursors(spectrum),
-                    Centroided = IsCentroided(spectrum),
-                    Mzs = new double[0],
-                    Intensities = new double[0]
-                };
-
-            return new MsDataSpectrum
-            {
-                Centroided = true,
-                Mzs = new double[0],
-                Intensities = new double[0]
-            };
+            return msDataSpectrum;
         }
 
         public MsDataSpectrum GetCentroidedSpectrum(int scanIndex)
@@ -1005,6 +1009,7 @@ namespace pwiz.ProteowizardWrapper
 
     public sealed class MsDataSpectrum
     {
+        public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }

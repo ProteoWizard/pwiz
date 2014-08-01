@@ -7880,4 +7880,10 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_" xml:space="preserve">
     <value>The precursor m/z {0} of the peptide {1} is outside the range covered by the DIA isolation scheme.</value>
   </data>
+    <data name="ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__" xml:space="preserve">
+    <value>The scan ID {0} was not found in the file {1}.</value>
+  </data>
+    <data name="ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs" xml:space="preserve">
+    <value>Failure trying to read scan IDs</value>
+  </data>
 </root>

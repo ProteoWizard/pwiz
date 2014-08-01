@@ -1288,14 +1288,29 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
                                float maxRT, float maxIntensity, IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
+            : this(filePath, flags, fileWriteTime, runStartTime, maxRT, maxIntensity, 0, 0, instrumentInfoList)
+        {
+        }
+
+        public ChromCachedFile(MsDataFileUri filePath,
+                               FlagValues flags,
+                               DateTime fileWriteTime,
+                               DateTime? runStartTime,
+                               float maxRT,
+                               float maxIntensity,
+                               int sizeScanIds,
+                               long locationScanIds,
+                               IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
             : this()
         {
             FilePath = filePath;
             Flags = flags;
-            MaxRetentionTime = maxRT;
-            MaxIntensity = maxIntensity;
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
+            MaxRetentionTime = maxRT;
+            MaxIntensity = maxIntensity;
+            SizeScanIds = sizeScanIds;
+            LocationScanIds = locationScanIds;
             InstrumentInfoList = instrumentInfoList;
         }
 
@@ -1305,6 +1320,8 @@ namespace pwiz.Skyline.Model.Results
         public DateTime? RunStartTime { get; private set; }
         public float MaxRetentionTime { get; private set; }
         public float MaxIntensity { get; private set; }
+        public int SizeScanIds { get; private set; }
+        public long LocationScanIds { get; private set; }
         public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; } 
 
         public bool IsCurrent
@@ -1315,6 +1332,12 @@ namespace pwiz.Skyline.Model.Results
         public bool? IsSingleMatchMz
         {
             get { return IsSingleMatchMzFlags(Flags); }
+        }
+
+        public ChromCachedFile RelocateScanIds(long locationScanIds)
+        {
+            return new ChromCachedFile(FilePath, Flags, FileWriteTime, RunStartTime, MaxRetentionTime, MaxIntensity,
+                SizeScanIds, locationScanIds, InstrumentInfoList);
         }
     }
 

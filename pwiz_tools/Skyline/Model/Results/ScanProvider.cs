@@ -54,14 +54,19 @@ namespace pwiz.Skyline.Model.Results
     public class ScanProvider : IScanProvider
     {
         private MsDataFileImpl _dataFile;
+        private DataFileScanIds _scanIds;
+        private Func<DataFileScanIds> _getScanIds;
 
-        public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source, float[] times, TransitionFullScanInfo[] transitions)
+        public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
+            float[] times, TransitionFullScanInfo[] transitions, Func<DataFileScanIds> getScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
             Source = source;
             Times = times;
             Transitions = transitions;
+
+            _getScanIds = getScanIds;
         }
 
         public bool Adopt(IScanProvider other)
@@ -72,6 +77,8 @@ namespace pwiz.Skyline.Model.Results
             if (scanProvider == null)
                 return false;
             _dataFile = scanProvider._dataFile;
+            _scanIds = scanProvider._scanIds;
+            _getScanIds = scanProvider._getScanIds;
             scanProvider._dataFile = null;
             return true;
         }
@@ -85,6 +92,18 @@ namespace pwiz.Skyline.Model.Results
         public MsDataSpectrum[] GetScans(int scanId)
         {
             var fullScans = new List<MsDataSpectrum>();
+            if (_getScanIds != null)
+            {
+                _scanIds = _getScanIds();
+                _getScanIds = null;
+            }
+            if (_scanIds != null)
+            {
+                var scanIdText = _scanIds.GetId(scanId);
+                scanId = GetDataFile().GetScanIndex(scanIdText);
+                if (scanId == -1)
+                    throw new IOException(string.Format(Resources.ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__, scanIdText, DataFilePath.GetFileName()));
+            }
             var currentScan = GetDataFile().GetSpectrum(scanId);
             fullScans.Add(currentScan);
             if (currentScan.DriftTimeMsec.HasValue)
