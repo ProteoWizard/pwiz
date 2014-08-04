@@ -85,6 +85,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
+            lblScanId.Visible = false;  // you might want to show the scan index for debugging
         }
 
         private void SetScans(MsDataSpectrum[] scans)

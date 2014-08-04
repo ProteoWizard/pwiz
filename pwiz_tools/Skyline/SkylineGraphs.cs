@@ -541,6 +541,10 @@ namespace pwiz.Skyline
                         return GetGraphChrom(name) ?? CreateGraphChrom(name);
                 }
             }
+            if (Equals(persistentString, typeof(GraphFullScan).ToString()))
+            {
+                return _graphFullScan ?? CreateGraphFullScan();
+            }
             return null;
         }
 
@@ -1089,13 +1093,6 @@ namespace pwiz.Skyline
 
         public void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
         {
-            if (scanProvider == null)
-            {
-                if (_graphFullScan != null)
-                    _graphFullScan.ShowSpectrum(null, 0, 0);
-                return;
-            }
-
             if (_graphFullScan != null)
             {
                 _graphFullScan.Activate();
@@ -1104,11 +1101,12 @@ namespace pwiz.Skyline
             else
             {
                 _graphFullScan = CreateGraphFullScan();
-                
+
                 // Choose a position to float the window
                 var rectFloat = GetFloatingRectangleForNewWindow();
                 _graphFullScan.Show(dockPanel, rectFloat);
             }
+
             _graphFullScan.ShowSpectrum(scanProvider, transitionIndex, scanIndex);
         }
 
@@ -1142,14 +1140,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void graphFullScan_SelectedScanChanged(object sender, SelectedScanEventArgs e)
-        {
-            SelectedScanFile = e.DataFile;
-            SelectedScanRetentionTime = e.RetentionTime;
-            SelectedScanTransition = e.TransitionId;
-            UpdateChromGraphs();
-        }
-
         private void graphFullScan_VisibleChanged(object sender, EventArgs e)
         {
             if (_graphFullScan != null)
@@ -1161,6 +1151,14 @@ namespace pwiz.Skyline
             // Update settings and menu check
             Settings.Default.ShowFullScan = false;
             _graphFullScan = null;
+        }
+
+        private void graphFullScan_SelectedScanChanged(object sender, SelectedScanEventArgs e)
+        {
+            SelectedScanFile = e.DataFile;
+            SelectedScanRetentionTime = e.RetentionTime;
+            SelectedScanTransition = e.TransitionId;
+            UpdateChromGraphs();
         }
 
         #endregion
