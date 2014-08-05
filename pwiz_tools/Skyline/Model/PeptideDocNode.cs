@@ -1404,6 +1404,7 @@ namespace pwiz.Skyline.Model
         private struct TransitionKey
         {
             private readonly IonType _ionType;
+            private readonly MeasuredIon _ion;
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
             private readonly int? _decoyMassShift;
@@ -1421,6 +1422,7 @@ namespace pwiz.Skyline.Model
             {
                 var transition = tranLossKey.Transition;
                 _ionType = transition.IonType;
+                _ion = transition.CustomIon;
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
                 _decoyMassShift = transition.DecoyMassShift;
@@ -1433,6 +1435,7 @@ namespace pwiz.Skyline.Model
             public TransitionKey(TransitionKey key, IsotopeLabelType labelType)
             {
                 _ionType = key._ionType;
+                _ion = key._ion;
                 _ionOrdinal = key._ionOrdinal;
                 _massIndex = key._massIndex;
                 _decoyMassShift = key._decoyMassShift;
@@ -1450,6 +1453,7 @@ namespace pwiz.Skyline.Model
             private bool Equals(TransitionKey other)
             {
                 return Equals(other._ionType, _ionType) &&
+                       Equals(_ion, other._ion) &&
                        other._ionOrdinal == _ionOrdinal &&
                        other._massIndex == _massIndex &&
                        Equals(other._decoyMassShift, _decoyMassShift) &&
@@ -1471,6 +1475,7 @@ namespace pwiz.Skyline.Model
                 unchecked
                 {
                     int result = _ionType.GetHashCode();
+                    result = (result*397) ^ (_ion == null ? 0 : _ion.GetHashCode());
                     result = (result*397) ^ _ionOrdinal;
                     result = (result*397) ^ _massIndex;
                     result = (result*397) ^ (_decoyMassShift.HasValue ? _decoyMassShift.Value : 0);
