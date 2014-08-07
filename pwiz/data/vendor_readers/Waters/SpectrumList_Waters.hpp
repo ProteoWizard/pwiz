@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
+#include <boost/thread.hpp>
 
 
 using boost::shared_ptr;
@@ -82,6 +83,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     mutable vector<float> imsMasses_;
     mutable vector<int> massIndices_;
     mutable vector<float> imsIntensities_;
+    mutable boost::mutex readMutex;
 
     void createIndex();
 #endif // PWIZ_READER_WATERS

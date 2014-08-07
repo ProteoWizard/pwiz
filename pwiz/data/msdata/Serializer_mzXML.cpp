@@ -32,6 +32,7 @@
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "SpectrumWorkerThreads.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -694,6 +695,7 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
     if (!sl.get()) return;
 
     CVID defaultNativeIdFormat = id::getDefaultNativeIDFormat(msd);
+    SpectrumWorkerThreads spectrumWorkers(*sl);
 
     for (size_t i=0; i<sl->size(); i++)
     {
@@ -708,7 +710,8 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
         if (status == IterationListener::Status_Cancel)
             break;
 
-        SpectrumPtr spectrum = sl->spectrum(i, true);
+        //SpectrumPtr spectrum = sl->spectrum(i, true);
+        SpectrumPtr spectrum = spectrumWorkers.processBatch(i);
 
         // Thermo spectra not from "controllerType=0 controllerNumber=1" are ignored
         if (defaultNativeIdFormat == MS_Thermo_nativeID_format &&

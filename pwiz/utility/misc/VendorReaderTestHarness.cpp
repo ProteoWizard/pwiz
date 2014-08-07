@@ -208,14 +208,17 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
         {
             *itr = MS_centroid_spectrum;
 
-            // take only the first 100 points (100k points in MGF is not fun)
-            vector<double>& mzArray = result->getMZArray()->data;
-            vector<double>& intensityArray = result->getIntensityArray()->data;
-            if (result->defaultArrayLength > 100)
+            if (result->getMZArray() && result->getIntensityArray())
             {
-                result->defaultArrayLength = 100;
-                mzArray.resize(100);
-                intensityArray.resize(100);
+                // take only the first 100 points (100k points in MGF is not fun)
+                vector<double>& mzArray = result->getMZArray()->data;
+                vector<double>& intensityArray = result->getIntensityArray()->data;
+                if (result->defaultArrayLength > 100)
+                {
+                    result->defaultArrayLength = 100;
+                    mzArray.resize(100);
+                    intensityArray.resize(100);
+                }
             }
         }
 

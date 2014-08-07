@@ -26,6 +26,8 @@
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
+#include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
 
 using namespace pwiz::data;
 using namespace pwiz::msdata;
@@ -39,8 +41,10 @@ several different ways, recording the time taken to iterate each way.
 */
 
 
-bpt::time_duration enumerateSpectra(const string& filename, bool getBinaryData)
+void enumerateSpectra(const string& filename, bool getBinaryData, const vector<string>& filters)
 {
+    bpt::ptime start = bpt::microsec_clock::local_time();
+
     FullReaderList readers; // for vendor Reader support
     MSDataFile msd(filename, &readers);
 
@@ -48,16 +52,29 @@ bpt::time_duration enumerateSpectra(const string& filename, bool getBinaryData)
         throw runtime_error("[msbenchmark] No spectra or chromatograms found.");
 
     if (!msd.run.spectrumListPtr.get())
-        return bpt::time_duration();
+        return;
+
+    pwiz::analysis::SpectrumListFactory::wrap(msd, filters);
 
     SpectrumList& sl = *msd.run.spectrumListPtr;
 
-    bpt::ptime start = bpt::microsec_clock::local_time();
+    bpt::ptime stop = bpt::microsec_clock::local_time();
+    cout << "Time to open file: " << bpt::to_simple_string(stop - start) << endl;
+
+    SpectrumWorkerThreads multithreadedSpectrumList(sl);
+
+    start = bpt::microsec_clock::local_time();
 
     size_t totalArrayLength = 0;
     for (size_t i=0, size=sl.size(); i != size; ++i)
     {
-        SpectrumPtr s = sl.spectrum(i, getBinaryData);
+        SpectrumPtr s = multithreadedSpectrumList.processBatch(i, getBinaryData);
+
+        if (i == 0)
+        {
+            stop = bpt::microsec_clock::local_time();
+            cout << "Time to get first spectrum: " << bpt::to_simple_string(stop - start) << endl;
+        }
 
         totalArrayLength += s->defaultArrayLength;
         if (i+1 == size || ((i+1) % 100) == 0)
@@ -65,19 +82,24 @@ bpt::time_duration enumerateSpectra(const string& filename, bool getBinaryData)
     }
     cout << endl;
 
-    bpt::ptime stop = bpt::microsec_clock::local_time();
-    return stop - start;
+    stop = bpt::microsec_clock::local_time();
+    cout << "Time to enumerate: " << bpt::to_simple_string(stop - start) << endl;
 }
 
 
-bpt::time_duration enumerateRAMPAdapterSpectra(const string& filename, bool getBinaryData)
+void enumerateRAMPAdapterSpectra(const string& filename, bool getBinaryData)
 {
+    bpt::ptime start = bpt::microsec_clock::local_time();
+
     RAMPAdapter ra(filename);
 
     if (ra.scanCount() == 0)
         throw runtime_error("[msbenchmark] No spectra found.");
 
-    bpt::ptime start = bpt::microsec_clock::local_time();
+    bpt::ptime stop = bpt::microsec_clock::local_time();
+    cout << "Time to open file: " << bpt::to_simple_string(stop - start) << endl;
+
+    start = bpt::microsec_clock::local_time();
 
     size_t totalArrayLength = 0;
     for (size_t i=0, size=ra.scanCount(); i != size; ++i)
@@ -94,18 +116,26 @@ bpt::time_duration enumerateRAMPAdapterSpectra(const string& filename, bool getB
         else
             totalArrayLength += scanHeader.peaksCount;
 
+        if (i == 0)
+        {
+            stop = bpt::microsec_clock::local_time();
+            cout << "Time to get first spectrum: " << bpt::to_simple_string(stop - start) << endl;
+        }
+
         if (i+1 == size || ((i+1) % 100) == 0)
             cout << "Enumerating spectra: " << (i+1) << '/' << size << " (" << totalArrayLength << " data points)\r" << flush;
     }
     cout << endl;
 
-    bpt::ptime stop = bpt::microsec_clock::local_time();
-    return stop - start;
+    stop = bpt::microsec_clock::local_time();
+    cout << "Time to enumerate: " << bpt::to_simple_string(stop - start) << endl;
 }
 
 
-bpt::time_duration enumerateRAMPSpectra(const string& filename, bool getBinaryData)
+void enumerateRAMPSpectra(const string& filename, bool getBinaryData)
 {
+    bpt::ptime start = bpt::microsec_clock::local_time();
+
     RAMPFILE* rf = rampOpenFile(filename.c_str());
     if (!rf->fileHandle)
         throw runtime_error("[msbenchmark] Error opening RAMPFILE.");
@@ -121,7 +151,10 @@ bpt::time_duration enumerateRAMPSpectra(const string& filename, bool getBinaryDa
     if (runHeader.scanCount == 0)
         throw runtime_error("[msbenchmark] No spectra found.");
 
-    bpt::ptime start = bpt::microsec_clock::local_time();
+    bpt::ptime stop = bpt::microsec_clock::local_time();
+    cout << "Time to open file: " << bpt::to_simple_string(stop - start) << endl;
+
+    start = bpt::microsec_clock::local_time();
 
     size_t totalArrayLength = 0;
     for (size_t i=0, size=runHeader.scanCount; i != size; ++i)
@@ -138,6 +171,12 @@ bpt::time_duration enumerateRAMPSpectra(const string& filename, bool getBinaryDa
         else
             totalArrayLength += scanHeader.peaksCount;
 
+        if (i == 0)
+        {
+            stop = bpt::microsec_clock::local_time();
+            cout << "Time to get first spectrum: " << bpt::to_simple_string(stop - start) << endl;
+        }
+
         if (i+1 == size || ((i+1) % 100) == 0)
             cout << "Enumerating spectra: " << (i+1) << '/' << size << " (" << totalArrayLength << " data points)\r" << flush;
     }
@@ -146,13 +185,15 @@ bpt::time_duration enumerateRAMPSpectra(const string& filename, bool getBinaryDa
     free(scanIndex);
     rampCloseFile(rf);
 
-    bpt::ptime stop = bpt::microsec_clock::local_time();
-    return stop - start;
+    stop = bpt::microsec_clock::local_time();
+    cout << "Time to enumerate: " << bpt::to_simple_string(stop - start) << endl;
 }
 
 
-bpt::time_duration enumerateChromatograms(const string& filename, bool getBinaryData)
+void enumerateChromatograms(const string& filename, bool getBinaryData)
 {
+    bpt::ptime start = bpt::microsec_clock::local_time();
+
     FullReaderList readers; // for vendor Reader support
     MSDataFile msd(filename, &readers);
 
@@ -160,16 +201,25 @@ bpt::time_duration enumerateChromatograms(const string& filename, bool getBinary
         throw runtime_error("[msbenchmark] No spectra or chromatograms found.");
 
     if (!msd.run.chromatogramListPtr.get())
-        return bpt::time_duration();
+        return;
 
     ChromatogramList& cl = *msd.run.chromatogramListPtr;
 
-    bpt::ptime start = bpt::microsec_clock::local_time();
+    bpt::ptime stop = bpt::microsec_clock::local_time();
+    cout << "Time to open file: " << bpt::to_simple_string(stop - start) << endl;
+
+    start = bpt::microsec_clock::local_time();
 
     size_t totalArrayLength = 0;
     for (size_t i=0, size=cl.size(); i != size; ++i)
     {
         ChromatogramPtr c = cl.chromatogram(i, getBinaryData);
+
+        if (i == 0)
+        {
+            stop = bpt::microsec_clock::local_time();
+            cout << "Time to get first chromatogram: " << bpt::to_simple_string(stop - start) << endl;
+        }
 
         totalArrayLength += c->defaultArrayLength;
         if (i+1 == size || ((i+1) % 100) == 0)
@@ -177,8 +227,8 @@ bpt::time_duration enumerateChromatograms(const string& filename, bool getBinary
     }
     cout << endl;
 
-    bpt::ptime stop = bpt::microsec_clock::local_time();
-    return stop - start;
+    stop = bpt::microsec_clock::local_time();
+    cout << "Time to enumerate: " << bpt::to_simple_string(stop - start) << endl;
 }
 
 
@@ -191,22 +241,22 @@ enum BenchmarkMode
 };
 
 
-void benchmark(const char* filename, BenchmarkMode benchmarkMode, bool getBinaryData)
+void benchmark(const char* filename, BenchmarkMode benchmarkMode, bool getBinaryData, const vector<string>& filters)
 {
     switch (benchmarkMode)
     {
         default:
         case BenchmarkMode_Spectra:
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateSpectra(filename, getBinaryData)) << endl;
+            enumerateSpectra(filename, getBinaryData, filters);
             break;
         case BenchmarkMode_Chromatograms:
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateChromatograms(filename, getBinaryData)) << endl;
+            enumerateChromatograms(filename, getBinaryData);
             break;
         case BenchmarkMode_RAMPAdapter:
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateRAMPAdapterSpectra(filename, getBinaryData)) << endl;
+            enumerateRAMPAdapterSpectra(filename, getBinaryData);
             break;
         case BenchmarkMode_RAMP:
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateRAMPSpectra(filename, getBinaryData)) << endl;
+            enumerateRAMPSpectra(filename, getBinaryData);
             break;
     }
 }
@@ -216,12 +266,16 @@ int main(int argc, char* argv[])
 {
     try
     {
-        if (argc != 4)
+        if (argc < 4 || argv[1] == string("--help"))
         {
-            cout << "Usage: msbenchmark <spectra|chromatograms|rampadapter|ramp> <binary|no-binary> <filename>\n"
+            cout << "Usage: msbenchmark <spectra|chromatograms|rampadapter|ramp> <binary|no-binary> <filename> [--filter <filter name> <options>] [another filter] \n"
                  << "Iterates over a file's spectra or chromatograms to test reader speed.\n\n"
                  << "http://proteowizard.sourceforge.net\n"
                  << "support@proteowizard.org\n";
+
+            if (argv[1] == string("--help"))
+                pwiz::analysis::SpectrumListFactory::usage();
+
             return 1;
         }
 
@@ -247,7 +301,18 @@ int main(int argc, char* argv[])
         else
             throw runtime_error("[msbenchmark] Second argument must be \"binary\" or \"no-binary\"");
 
-        benchmark(filename, benchmarkMode, getBinaryData);
+        vector<string> filters;
+        for (int i = 4; i < argc; i += 2)
+            if (argv[i] == string("--filter"))
+            {
+                if (i + 1 == argc)
+                    throw runtime_error("[msbenchmark] no options passed to --filter parameter");
+                filters.push_back(argv[i + 1]);
+            }
+            else
+                throw runtime_error("[msbenchmark] unknown option \"" + string(argv[i]) + "\"");
+
+        benchmark(filename, benchmarkMode, getBinaryData, filters);
 
         return 0;
     }

@@ -29,6 +29,7 @@
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
+#include <boost/thread.hpp>
 
 
 namespace pwiz {
@@ -63,6 +64,7 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     const MSData& msd_;
     int schemaVersion_;
     mutable bool indexed_;
+    mutable boost::mutex readMutex;
 
     Index_mzML_Ptr index_;
 };
@@ -119,6 +121,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(const SpectrumPtr &seed, bool getBin
 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const
 {
+    boost::lock_guard<boost::mutex> lock(readMutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     //boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     if (index >= index_->spectrumCount())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Index out of bounds.");
