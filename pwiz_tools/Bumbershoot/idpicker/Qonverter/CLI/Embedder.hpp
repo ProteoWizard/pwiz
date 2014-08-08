@@ -60,6 +60,22 @@ ref struct QuantitationConfiguration
     property pwiz::CLI::chemistry::MZTolerance^ ReporterIonMzTolerance;
 };
 
+ref struct XICConfiguration
+{
+    XICConfiguration();
+    XICConfiguration(String^ representitiveString);
+    virtual String^ ToString() override;
+
+    property bool useAvgMass;
+    property double maxQValue;
+    property int MonoisotopicAdjustmentMin;
+    property int MonoisotopicAdjustmentMax;
+    property int RetentionTimeLowerTolerance;
+    property int RetentionTimeUpperTolerance;
+    property pwiz::CLI::chemistry::MZTolerance^ ChromatogramMzLowerOffset;
+    property pwiz::CLI::chemistry::MZTolerance^ ChromatogramMzUpperOffset;
+};
+
 
 /// the default source extensions to search for, ordered by descending priority
 static property String^ DefaultSourceExtensionPriorityList { String^ get(); }
@@ -102,6 +118,16 @@ static void EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::IterationL
 
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 static void Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath);
+
+
+/// search for source files of the idpDB using the given search path, using the default source extensions,
+/// and embed XIC metrics in a new table called PeptideQuantitation within the idpDB
+static void EmbedMS1Metrics(String^ idpDbFilepath,
+                    String^ sourceSearchPath,
+                     String^ sourceExtensionPriorityList,
+                     IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
+                     IDictionary<int, XICConfiguration^>^ xicConfigurationBySource,
+                     pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 };
 

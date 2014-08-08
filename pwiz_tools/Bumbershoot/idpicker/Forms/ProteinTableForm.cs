@@ -490,6 +490,7 @@ namespace IDPicker.Forms
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
             else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
             else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("MS1")) valueColumn = "SUM(psm.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 
             var pivotHql = String.Format(pivotHqlFormat,
@@ -1720,7 +1721,9 @@ namespace IDPicker.Forms
                           new Pivot<PivotBy>() {Mode = PivotBy.iTRAQByGroup, Text = "iTRAQ by Group"},
                           new Pivot<PivotBy>() {Mode = PivotBy.iTRAQBySource, Text = "iTRAQ by Source"},
                           new Pivot<PivotBy>() {Mode = PivotBy.TMTByGroup, Text = "TMT by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.TMTBySource, Text = "TMT by Source"});
+                          new Pivot<PivotBy>() {Mode = PivotBy.TMTBySource, Text = "TMT by Source"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.MS1IntensityByGroup, Text = "MS1 Intensity by Group"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.MS1IntensityBySource, Text = "MS1 Intensity by Source"});
 
                 pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
                 return false;

@@ -53,10 +53,6 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.dataGridView = new System.Windows.Forms.DataGridView();
-            this.idColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.quantitationMethodColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.okButton = new System.Windows.Forms.Button();
             this.embedAllButton = new System.Windows.Forms.Button();
             this.deleteAllButton = new System.Windows.Forms.Button();
@@ -66,7 +62,16 @@ namespace IDPicker.Forms
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.extensionsTextBox = new System.Windows.Forms.TextBox();
-            this.scanTimeOnlyCheckBox = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.EmbedTypeBox = new System.Windows.Forms.ComboBox();
+            this.DefaultXICSettingsButton = new System.Windows.Forms.Button();
+            this.DefaultLabel = new System.Windows.Forms.Label();
+            this.DefaultQuantitationMethodBox = new System.Windows.Forms.ComboBox();
+            this.idColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.quantitationMethodColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.XICSettingsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -83,52 +88,15 @@ namespace IDPicker.Forms
             this.idColumn,
             this.sourceNameColumn,
             this.embeddedSourceColumn,
-            this.quantitationMethodColumn});
-            this.dataGridView.Location = new System.Drawing.Point(0, 0);
+            this.quantitationMethodColumn,
+            this.XICSettingsColumn});
+            this.dataGridView.Location = new System.Drawing.Point(0, 33);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.RowHeadersVisible = false;
-            this.dataGridView.Size = new System.Drawing.Size(784, 502);
+            this.dataGridView.Size = new System.Drawing.Size(784, 469);
             this.dataGridView.TabIndex = 1;
+            this.dataGridView.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellClick);
             this.dataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellValueChanged);
-            // 
-            // idColumn
-            // 
-            this.idColumn.HeaderText = "Id";
-            this.idColumn.Name = "idColumn";
-            this.idColumn.ReadOnly = true;
-            this.idColumn.Visible = false;
-            // 
-            // sourceNameColumn
-            // 
-            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.sourceNameColumn.HeaderText = "Source";
-            this.sourceNameColumn.Name = "sourceNameColumn";
-            this.sourceNameColumn.ReadOnly = true;
-            // 
-            // embeddedSourceColumn
-            // 
-            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.embeddedSourceColumn.HeaderText = "Embedded Status";
-            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
-            this.embeddedSourceColumn.ReadOnly = true;
-            this.embeddedSourceColumn.Width = 250;
-            // 
-            // quantitationMethodColumn
-            // 
-            this.quantitationMethodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.quantitationMethodColumn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.quantitationMethodColumn.HeaderText = "Quantitation Method";
-            this.quantitationMethodColumn.Items.AddRange(new object[] {
-            "None",
-            "Label free",
-            "iTRAQ 4-plex",
-            "iTRAQ 8-plex",
-            "TMT duplex",
-            "TMT 6-plex"});
-            this.quantitationMethodColumn.Name = "quantitationMethodColumn";
-            this.quantitationMethodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.quantitationMethodColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.quantitationMethodColumn.Width = 130;
             // 
             // okButton
             // 
@@ -214,16 +182,112 @@ namespace IDPicker.Forms
             this.extensionsTextBox.Size = new System.Drawing.Size(240, 20);
             this.extensionsTextBox.TabIndex = 8;
             // 
-            // scanTimeOnlyCheckBox
+            // label3
             // 
-            this.scanTimeOnlyCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.scanTimeOnlyCheckBox.AutoSize = true;
-            this.scanTimeOnlyCheckBox.Location = new System.Drawing.Point(392, 537);
-            this.scanTimeOnlyCheckBox.Name = "scanTimeOnlyCheckBox";
-            this.scanTimeOnlyCheckBox.Size = new System.Drawing.Size(142, 17);
-            this.scanTimeOnlyCheckBox.TabIndex = 9;
-            this.scanTimeOnlyCheckBox.Text = "Only Embed Scan Times";
-            this.scanTimeOnlyCheckBox.UseVisualStyleBackColor = true;
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 9);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(66, 13);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Embed type:";
+            // 
+            // EmbedTypeBox
+            // 
+            this.EmbedTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.EmbedTypeBox.FormattingEnabled = true;
+            this.EmbedTypeBox.Items.AddRange(new object[] {
+            "Spectra + scan times",
+            "Scan times only",
+            "MS1 intensities"});
+            this.EmbedTypeBox.Location = new System.Drawing.Point(84, 6);
+            this.EmbedTypeBox.Name = "EmbedTypeBox";
+            this.EmbedTypeBox.Size = new System.Drawing.Size(149, 21);
+            this.EmbedTypeBox.TabIndex = 11;
+            this.EmbedTypeBox.SelectedIndexChanged += new System.EventHandler(this.EmbedTypeBox_SelectedIndexChanged);
+            // 
+            // DefaultXICSettingsButton
+            // 
+            this.DefaultXICSettingsButton.Location = new System.Drawing.Point(667, 5);
+            this.DefaultXICSettingsButton.Name = "DefaultXICSettingsButton";
+            this.DefaultXICSettingsButton.Size = new System.Drawing.Size(75, 23);
+            this.DefaultXICSettingsButton.TabIndex = 12;
+            this.DefaultXICSettingsButton.Text = "Define";
+            this.DefaultXICSettingsButton.UseVisualStyleBackColor = true;
+            this.DefaultXICSettingsButton.Visible = false;
+            this.DefaultXICSettingsButton.Click += new System.EventHandler(this.DefaultXICSettingsButton_Click);
+            // 
+            // DefaultLabel
+            // 
+            this.DefaultLabel.AutoSize = true;
+            this.DefaultLabel.Location = new System.Drawing.Point(515, 9);
+            this.DefaultLabel.Name = "DefaultLabel";
+            this.DefaultLabel.Size = new System.Drawing.Size(140, 13);
+            this.DefaultLabel.TabIndex = 13;
+            this.DefaultLabel.Text = "Default quantitation method:";
+            // 
+            // DefaultQuantitationMethodBox
+            // 
+            this.DefaultQuantitationMethodBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DefaultQuantitationMethodBox.FormattingEnabled = true;
+            this.DefaultQuantitationMethodBox.Items.AddRange(new object[] {
+            "None",
+            "Label free",
+            "iTRAQ 4-plex",
+            "iTRAQ 8-plex",
+            "TMT duplex",
+            "TMT 6-plex"});
+            this.DefaultQuantitationMethodBox.Location = new System.Drawing.Point(661, 6);
+            this.DefaultQuantitationMethodBox.Name = "DefaultQuantitationMethodBox";
+            this.DefaultQuantitationMethodBox.Size = new System.Drawing.Size(111, 21);
+            this.DefaultQuantitationMethodBox.TabIndex = 14;
+            this.DefaultQuantitationMethodBox.SelectedIndexChanged += new System.EventHandler(this.DefaultQuantitationMethodBox_SelectedIndexChanged);
+            // 
+            // idColumn
+            // 
+            this.idColumn.HeaderText = "Id";
+            this.idColumn.Name = "idColumn";
+            this.idColumn.ReadOnly = true;
+            this.idColumn.Visible = false;
+            // 
+            // sourceNameColumn
+            // 
+            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.sourceNameColumn.HeaderText = "Source";
+            this.sourceNameColumn.Name = "sourceNameColumn";
+            this.sourceNameColumn.ReadOnly = true;
+            // 
+            // embeddedSourceColumn
+            // 
+            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.embeddedSourceColumn.HeaderText = "Embedded Status";
+            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
+            this.embeddedSourceColumn.ReadOnly = true;
+            this.embeddedSourceColumn.Width = 250;
+            // 
+            // quantitationMethodColumn
+            // 
+            this.quantitationMethodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.quantitationMethodColumn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.quantitationMethodColumn.HeaderText = "Quantitation Method";
+            this.quantitationMethodColumn.Items.AddRange(new object[] {
+            "None",
+            "Label free",
+            "iTRAQ 4-plex",
+            "iTRAQ 8-plex",
+            "TMT duplex",
+            "TMT 6-plex"});
+            this.quantitationMethodColumn.Name = "quantitationMethodColumn";
+            this.quantitationMethodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.quantitationMethodColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.quantitationMethodColumn.Width = 130;
+            // 
+            // XICSettingsColumn
+            // 
+            this.XICSettingsColumn.HeaderText = "MS1 Embed Settings";
+            this.XICSettingsColumn.Name = "XICSettingsColumn";
+            this.XICSettingsColumn.ReadOnly = true;
+            this.XICSettingsColumn.Visible = false;
+            this.XICSettingsColumn.Width = 200;
             // 
             // EmbedderForm
             // 
@@ -231,7 +295,10 @@ namespace IDPicker.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 562);
-            this.Controls.Add(this.scanTimeOnlyCheckBox);
+            this.Controls.Add(this.DefaultLabel);
+            this.Controls.Add(this.DefaultXICSettingsButton);
+            this.Controls.Add(this.EmbedTypeBox);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.extensionsTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -240,6 +307,7 @@ namespace IDPicker.Forms
             this.Controls.Add(this.embedAllButton);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.dataGridView);
+            this.Controls.Add(this.DefaultQuantitationMethodBox);
             this.Name = "EmbedderForm";
             this.Text = "Embed Subset Spectra";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
@@ -260,10 +328,15 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox extensionsTextBox;
-        private System.Windows.Forms.CheckBox scanTimeOnlyCheckBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox EmbedTypeBox;
+        private System.Windows.Forms.Button DefaultXICSettingsButton;
+        private System.Windows.Forms.Label DefaultLabel;
+        private System.Windows.Forms.ComboBox DefaultQuantitationMethodBox;
         private System.Windows.Forms.DataGridViewTextBoxColumn idColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn sourceNameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn embeddedSourceColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn quantitationMethodColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn XICSettingsColumn;
     }
 }

@@ -260,6 +260,11 @@ namespace IDPicker.DataModel
         public virtual string DistinctMatchKey { get; protected set; }
         public virtual long DistinctMatchId { get; protected set; }
 
+        public virtual double PeakIntensity { get; set; }
+        public virtual double PeakArea { get; set; }
+        public virtual double PeakSNR { get; set; }
+        public virtual double PeakTimeInSeconds { get; set; }
+
         /// <summary>
         /// Automatically choose monoisotopic or average mass error based on the following logic:
         /// if the absolute value of monoisotopic error is less than absolute value of average error

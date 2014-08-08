@@ -1,16 +1,16 @@
 //
 // $Id$
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 // The Original Code is the IDPicker project.
@@ -236,7 +236,7 @@ struct SpectrumList_Quantifier
             double tic = s->cvParam(MS_TIC).valueAs<double>();
             if (tic == 0.0)
                 tic = accumulate(intensities->data.begin(), intensities->data.end(), 0.0);
-        
+
             ++totalSpectraByMSLevel[msLevel];
             totalIonCurrentByMSLevel[msLevel] += tic;
 
@@ -400,7 +400,7 @@ struct SpectrumList_Quantifier
                 spectrumQuantitationRows[i].reporterIonIntensities[j] *= channelCorrectionFactors[j];
     }
 
-    const map<string, int>& rowIdByNativeID;    
+    const map<string, int>& rowIdByNativeID;
     const QuantitationMethod quantitationMethod;
     MZTolerance tolerance;
     vector<double> itraq4plexIons, itraq8plexIons;
@@ -468,7 +468,7 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
     private:
     sqlite::database& idpDb;
     int sourceId;
-    const map<string, int>& rowIdByNativeID;    
+    const map<string, int>& rowIdByNativeID;
     mutable sqlite::command updateScanTime;
     mutable boost::scoped_ptr<sqlite::command> updateUnfilteredScanTime;
     bool hasUnfilteredTables;
@@ -533,7 +533,7 @@ void embed(const string& idpDbFilepath,
             filteredIndexes.insert((int) index);
             rowIdByNativeID[sl.spectrumIdentity(index).id] = source.spectrumIds[j];
         }
-        
+
         sqlite::transaction transaction(idpDb);
 
         scoped_ptr<SpectrumList_Quantifier> slq;
@@ -592,7 +592,7 @@ void embed(const string& idpDbFilepath,
 
         try { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM UnfilteredSpectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
         catch (sqlite::database_error&) { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM Spectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
-        
+
         if (newQuantitationConfig.quantitationMethod == source.quantitationMethod)
         {
             transaction.commit();
@@ -702,7 +702,7 @@ void embedScanTime(const string& idpDbFilepath,
         scoped_ptr<SpectrumList_Quantifier> slq;
 
         QuantitationConfiguration newQuantitationConfig;
-        
+
         if (quantitationMethodBySource.count(source.id) > 0)
             newQuantitationConfig = quantitationMethodBySource.find(source.id)->second;
         else if (quantitationMethodBySource.count(0) > 0)
@@ -791,7 +791,7 @@ bool hasGeneMetadata(const string& idpDbFilepath)
 {
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
-    
+
     return hasGeneMetadata(idpDb.connected());
 }
 
@@ -828,7 +828,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
                                                                      boost::make_optional(!geneDescription.empty(), geneDescription));
         }
     }
-    
+
     // drop filtered tables and update schema if necessary
     Qonverter::dropFilters(idpDbFilepath);
 
@@ -877,6 +877,49 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     transaction.commit();
 }
 
+void EmbedMS1Metrics(const string& idpDbFilepath,
+           const string& sourceSearchPath,
+           const string& sourceExtensionPriorityList,
+           const map<int, QuantitationConfiguration>& quantitationMethodBySource,
+           const map<int, XIC::XICConfiguration>& xicConfigBySource,
+           pwiz::util::IterationListenerRegistry* ilr)
+{
+    sqlite::database idpDb;
+    // get a list of sources from the database
+    vector<SpectrumSource> sources;
+    try
+    {
+        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, quantitationMethodBySource, ilr);
+    }
+    catch (runtime_error& e)
+    {
+        throw runtime_error(string("[embed] ") + e.what());
+    }
+    //TODO: process all files
+//    idpDb.execute("DROP TABLE IF EXISTS XICMetrics; "
+//                  "CREATE TABLE IF NOT EXISTS XICMetrics (DistinctMatchId INT, Source INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC, PRIMARY KEY(DistinctMatchId, Source));");
+    idpDb.execute("DROP TABLE IF EXISTS XICMetrics;");
+    idpDb.execute("DROP TABLE IF EXISTS XICMetricsSettings;");
+    idpDb.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
+    idpDb.execute("CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
+    for(size_t i=0; i < sources.size(); ++i)
+    {
+        SpectrumSource& source = sources[i];
+        XIC::XICConfiguration config;
+
+        if (xicConfigBySource.count(source.id) > 0)
+            config = xicConfigBySource.find(source.id)->second;
+        else if (xicConfigBySource.count(0) > 0)
+            config = xicConfigBySource.find(0)->second; // applies to all sources
+
+        string configString = "[" + lexical_cast<string>(config.MonoisotopicAdjustmentMin) + "," + lexical_cast<string>(config.MonoisotopicAdjustmentMax) + "] ; " +
+        "[-" + lexical_cast<string>(config.RetentionTimeLowerTolerance) + "," + lexical_cast<string>(config.RetentionTimeUpperTolerance) + "] ; "+
+        "[-" + lexical_cast<string>(config.ChromatogramMzLowerOffset) + "," + lexical_cast<string>(config.ChromatogramMzUpperOffset) + "]";
+
+        int spectraAdded = XIC::EmbedMS1ForFile(idpDb, idpDbFilepath, source.filepath, lexical_cast<string>(source.id), config, ilr, i, sources.size());
+        idpDb.execute("INSERT INTO XICMetricsSettings VALUES (" + lexical_cast<string>(source.id) + "," + lexical_cast<string>(spectraAdded) + ",'" + configString+ "')");
+    }
+}
 
 void dropGeneMetadata(const string& idpDbFilepath)
 {

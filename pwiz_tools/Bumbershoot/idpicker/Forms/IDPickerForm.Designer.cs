@@ -86,6 +86,8 @@ namespace IDPicker
             this.glossaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataImportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.proteinViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.geneFeaturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.netGestaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -97,8 +99,6 @@ namespace IDPicker
             this.garbageCollectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reapplyFiltersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
-            this.geneFeaturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.netGestaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -179,7 +179,7 @@ namespace IDPicker
             this.newToolStripMenuItem,
             this.importToolStripMenuItem});
             this.importToToolStripMenuItem.Name = "importToToolStripMenuItem";
-            this.importToToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.importToToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.importToToolStripMenuItem.Text = "Import files";
             this.importToToolStripMenuItem.Click += new System.EventHandler(this.importToToolStripMenuItem_Click);
             // 
@@ -200,21 +200,21 @@ namespace IDPicker
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.openToolStripMenuItem.Text = "Open idpDB...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // newSessionToolStripMenuItem
             // 
             this.newSessionToolStripMenuItem.Name = "newSessionToolStripMenuItem";
-            this.newSessionToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.newSessionToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.newSessionToolStripMenuItem.Text = "New Session";
             this.newSessionToolStripMenuItem.Click += new System.EventHandler(this.newSessionToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(158, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(149, 6);
             // 
             // exportToolStripMenuItem
             // 
@@ -224,7 +224,7 @@ namespace IDPicker
             this.toQuasitelToolStripMenuItem,
             this.spectralLibraryToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
-            this.exportToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.exportToolStripMenuItem.Text = "Export";
             // 
             // exportAllViewsToolStripMenuItem
@@ -282,19 +282,19 @@ namespace IDPicker
             // embedSpectraToolStripMenuItem
             // 
             this.embedSpectraToolStripMenuItem.Name = "embedSpectraToolStripMenuItem";
-            this.embedSpectraToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.embedSpectraToolStripMenuItem.Text = "Embed spectra...";
+            this.embedSpectraToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.embedSpectraToolStripMenuItem.Text = "Embed...";
             this.embedSpectraToolStripMenuItem.Click += new System.EventHandler(this.embedSpectraToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(158, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -364,23 +364,37 @@ namespace IDPicker
             // glossaryToolStripMenuItem
             // 
             this.glossaryToolStripMenuItem.Name = "glossaryToolStripMenuItem";
-            this.glossaryToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.glossaryToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.glossaryToolStripMenuItem.Text = "Glossary";
             this.glossaryToolStripMenuItem.Click += new System.EventHandler(this.glossaryToolStripMenuItem_Click);
             // 
             // dataImportToolStripMenuItem
             // 
             this.dataImportToolStripMenuItem.Name = "dataImportToolStripMenuItem";
-            this.dataImportToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.dataImportToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.dataImportToolStripMenuItem.Text = "Data Import";
             this.dataImportToolStripMenuItem.Click += new System.EventHandler(this.dataImportToolStripMenuItem_Click);
             // 
             // proteinViewToolStripMenuItem
             // 
             this.proteinViewToolStripMenuItem.Name = "proteinViewToolStripMenuItem";
-            this.proteinViewToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.proteinViewToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.proteinViewToolStripMenuItem.Text = "Protein View";
             this.proteinViewToolStripMenuItem.Click += new System.EventHandler(this.proteinViewToolStripMenuItem_Click);
+            // 
+            // geneFeaturesToolStripMenuItem
+            // 
+            this.geneFeaturesToolStripMenuItem.Name = "geneFeaturesToolStripMenuItem";
+            this.geneFeaturesToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.geneFeaturesToolStripMenuItem.Text = "Gene Features";
+            this.geneFeaturesToolStripMenuItem.Click += new System.EventHandler(this.geneFeaturesToolStripMenuItem_Click);
+            // 
+            // netGestaltToolStripMenuItem
+            // 
+            this.netGestaltToolStripMenuItem.Name = "netGestaltToolStripMenuItem";
+            this.netGestaltToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.netGestaltToolStripMenuItem.Text = "NetGestalt";
+            this.netGestaltToolStripMenuItem.Click += new System.EventHandler(this.netGestaltToolStripMenuItem_Click);
             // 
             // commandLineHelpMenuItem
             // 
@@ -465,20 +479,6 @@ namespace IDPicker
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.Size = new System.Drawing.Size(584, 404);
             this.dockPanel.TabIndex = 0;
-            // 
-            // geneFeaturesToolStripMenuItem
-            // 
-            this.geneFeaturesToolStripMenuItem.Name = "geneFeaturesToolStripMenuItem";
-            this.geneFeaturesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.geneFeaturesToolStripMenuItem.Text = "Gene Features";
-            this.geneFeaturesToolStripMenuItem.Click += new System.EventHandler(this.geneFeaturesToolStripMenuItem_Click);
-            // 
-            // netGestaltToolStripMenuItem
-            // 
-            this.netGestaltToolStripMenuItem.Name = "netGestaltToolStripMenuItem";
-            this.netGestaltToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.netGestaltToolStripMenuItem.Text = "NetGestalt";
-            this.netGestaltToolStripMenuItem.Click += new System.EventHandler(this.netGestaltToolStripMenuItem_Click);
             // 
             // IDPickerForm
             // 

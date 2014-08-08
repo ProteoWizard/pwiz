@@ -244,6 +244,15 @@
             <property name="DistinctMatchKey"/>
             <property name="DistinctMatchId"/>
         </join>
+
+      <join optional="true" table="XICMetrics">
+        <key column="PsmId"/>
+        <property name="PeakIntensity"/>
+        <property name="PeakArea"/>
+        <property name="PeakSNR"/>
+        <property name="PeakTimeInSeconds"/>
+      </join>
+      
     </class>
 
     <class name="PeptideModification">

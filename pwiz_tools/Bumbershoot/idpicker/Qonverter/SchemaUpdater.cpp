@@ -37,7 +37,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 9;
+const int CURRENT_SCHEMA_REVISION = 10;
 
 namespace SchemaUpdater {
 
@@ -106,6 +106,25 @@ struct DistinctDoubleArraySum
     }
 };
 
+void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    ITERATION_UPDATE(ilr, 8, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    try
+    {
+        // add XICMetrics
+        db.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
+        db.execute("CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such") && !bal::contains(e.what(), "duplicate column")) // column or table
+            throw runtime_error(e.what());
+    }
+
+    //update_10_to_11(db, ilr);
+}
+
 
 void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -135,7 +154,7 @@ void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr)
             throw runtime_error(e.what());
     }
 
-    //update_9_to_10(db, ilr);
+    update_9_to_10(db, ilr);
 }
 
 void update_7_to_8(sqlite::database& db, IterationListenerRegistry* ilr)
@@ -521,6 +540,8 @@ bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
         update_7_to_8(db, ilr);
     else if (schemaRevision == 8)
         update_8_to_9(db, ilr);
+    else if (schemaRevision == 9)
+        update_9_to_10(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

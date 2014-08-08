@@ -330,6 +330,7 @@ namespace IDPicker.Forms
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
             else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
             else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("MS1")) valueColumn = "SUM(psm.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 
             var pivotHql = String.Format(pivotHqlFormat,
@@ -959,16 +960,18 @@ namespace IDPicker.Forms
                 return base.updatePivots(formProperty);
             else
             {
-                setPivots(new Pivot<PivotBy>() {Mode = PivotBy.SpectraByGroup, Text = "Spectra by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.SpectraBySource, Text = "Spectra by Source"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.MatchesByGroup, Text = "Matches by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.MatchesBySource, Text = "Matches by Source"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.PeptidesByGroup, Text = "Peptides by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.PeptidesBySource, Text = "Peptides by Source"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.iTRAQByGroup, Text = "iTRAQ by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.iTRAQBySource, Text = "iTRAQ by Source"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.TMTByGroup, Text = "TMT by Group"},
-                          new Pivot<PivotBy>() {Mode = PivotBy.TMTBySource, Text = "TMT by Source"});
+                    setPivots(new Pivot<PivotBy>() {Mode = PivotBy.SpectraByGroup, Text = "Spectra by Group"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.SpectraBySource, Text = "Spectra by Source"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.MatchesByGroup, Text = "Matches by Group"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.MatchesBySource, Text = "Matches by Source"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.PeptidesByGroup, Text = "Peptides by Group"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.PeptidesBySource, Text = "Peptides by Source"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.iTRAQByGroup, Text = "iTRAQ by Group"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.iTRAQBySource, Text = "iTRAQ by Source"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.TMTByGroup, Text = "TMT by Group"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.TMTBySource, Text = "TMT by Source"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.MS1IntensityByGroup, Text = "MS1 Intensity by Group"},
+                              new Pivot<PivotBy>() {Mode = PivotBy.MS1IntensityBySource, Text = "MS1 Intensity by Source"});
                 pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
                 return false;
             }

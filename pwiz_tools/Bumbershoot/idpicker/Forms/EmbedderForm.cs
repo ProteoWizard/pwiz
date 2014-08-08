@@ -31,6 +31,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using IDPicker;
 using Microsoft.WindowsAPICodePack.Taskbar;
 using NHibernate.Linq;
 using IDPicker.DataModel;
@@ -50,6 +51,8 @@ namespace IDPicker.Forms
             this.session = session.SessionFactory.OpenSession();
 
             InitializeComponent();
+
+            EmbedTypeBox.Text = "Spectra + scan times";
         }
 
         protected override void OnLoad (EventArgs e)
@@ -75,47 +78,73 @@ namespace IDPicker.Forms
             dataGridView.SuspendLayout();
             dataGridView.Rows.Clear();
 
-            var rows = session.CreateSQLQuery("SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod " +
-                                              "FROM SpectrumSource ss " +
-                                              "JOIN UnfilteredSpectrum s ON ss.Id=Source " +
-                                              "GROUP BY ss.Id")
+            var rows = session.CreateSQLQuery(
+                "SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod, " +
+                //"IFNULL((SELECT count() FROM XICMetrics x JOIN PeptideSpectrumMatch psm on x.PsmId=psm.Id JOIN Spectrum s on psm.Spectrum = s.Id where s.Source =ss.Id), 0) " +
+                "IFNULL((SELECT TotalSpectra FROM XICMetricsSettings WHERE SourceId=ss.Id), 0), IFNULL((SELECT Settings FROM XICMetricsSettings WHERE SourceId=ss.Id), '') " +
+                "FROM SpectrumSource ss " +
+                "JOIN UnfilteredSpectrum s ON ss.Id=Source " +
+                "GROUP BY ss.Id")
                               .List<object[]>()
-                              .Select(o => new { Id = Convert.ToInt32(o[0]),
-                                                 Name = (string) o[1],
-                                                 Spectra = Convert.ToInt32(o[2]),
-                                                 EmbeddedSize = Convert.ToInt32(o[3]),
-                                                 MaxScanTime = Convert.ToDouble(o[4]),
-                                                 QuantitationMethodIndex = Convert.ToInt32(o[5])
-                                               });
+                              .Select(o => new
+                                  {
+                                      Id = Convert.ToInt32(o[0]),
+                                      Name = (string) o[1],
+                                      Spectra = Convert.ToInt32(o[2]),
+                                      EmbeddedSize = Convert.ToInt32(o[3]),
+                                      MaxScanTime = Convert.ToDouble(o[4]),
+                                      QuantitationMethodIndex = Convert.ToInt32(o[5]),
+                                      XICTotal = Convert.ToInt32(o[6]),
+                                      XICSettings = (string) o[7]
+                                  });
 
             hasEmbeddedSources = hasNonEmbeddedSources = false;
 
             foreach (var row in rows)
             {
                 string status;
-                if (row.EmbeddedSize > 0)
+                if (EmbedTypeBox.SelectedIndex == 2)
                 {
-                    status = String.Format("{0} spectra embedded ({1} bytes)", row.Spectra, row.EmbeddedSize);
-                    hasEmbeddedSources = true;
-                }
-                else if (row.QuantitationMethodIndex != 0)
-                {
-                    status = String.Format("{0} spectra with quantitation", row.Spectra);
-                    hasEmbeddedSources = true;
-                    hasNonEmbeddedSources = true;
-                }
-                else if (row.MaxScanTime > 0)
-                {
-                    status = String.Format("{0} spectra with scan times", row.Spectra);
-                    hasNonEmbeddedSources = true;
+                    if (row.XICTotal > 0)
+                    {
+                        status = String.Format("{0} matches have MS1 spectra embedded", row.XICTotal);
+                        hasEmbeddedSources = true;
+                    }
+                    else
+                    {
+                        status = String.Format("MS1 spectra not embedded");
+                        hasNonEmbeddedSources = true;
+                    }
                 }
                 else
                 {
-                    status = "not embedded";
-                    hasNonEmbeddedSources = true;
+                    if (row.EmbeddedSize > 0)
+                    {
+                        status = String.Format("{0} spectra embedded ({1} bytes)", row.Spectra, row.EmbeddedSize);
+                        hasEmbeddedSources = true;
+                    }
+                    else if (row.QuantitationMethodIndex != 0)
+                    {
+                        status = String.Format("{0} spectra with quantitation", row.Spectra);
+                        hasEmbeddedSources = true;
+                        hasNonEmbeddedSources = true;
+                    }
+                    else if (row.MaxScanTime > 0)
+                    {
+                        status = String.Format("{0} spectra with scan times", row.Spectra);
+                        hasNonEmbeddedSources = true;
+                    }
+                    else
+                    {
+                        status = "not embedded";
+                        hasNonEmbeddedSources = true;
+                    }
                 }
+                
 
-                dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethodColumn.Items[row.QuantitationMethodIndex]);
+                dataGridView.Rows.Add(row.Id, row.Name, status,
+                                      quantitationMethodColumn.Items[row.QuantitationMethodIndex],
+                                      new Embedder.XICConfiguration(row.XICSettings));
             }
 
             dataGridView.ResumeLayout();
@@ -185,6 +214,7 @@ namespace IDPicker.Forms
             }
 
             var quantitationMethodBySource = new Dictionary<int, Embedder.QuantitationConfiguration>();
+            var xicConfigBySource = new Dictionary<int, Embedder.XICConfiguration>();
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
                 int id = (int) row.Cells[idColumn.Index].Value;
@@ -195,8 +225,11 @@ namespace IDPicker.Forms
                     QuantitationMethod = (QuantitationMethod)methodIndex,
                     ReporterIonMzTolerance = new MZTolerance(0.015, MZTolerance.Units.MZ)
                 };
+                xicConfigBySource[id] = row.Cells[XICSettingsColumn.Index].Value as Embedder.XICConfiguration ??
+                                        new Embedder.XICConfiguration();
             }
 
+            var embedType = EmbedTypeBox.SelectedIndex;
             new Thread(() =>
             {
                 try
@@ -205,7 +238,9 @@ namespace IDPicker.Forms
                     ilr.addListener(new EmbedderIterationListener(this), 1);
 
                     string idpDbFilepath = session.Connection.GetDataSource();
-                    if (scanTimeOnlyCheckBox.Checked)
+                    if (embedType == 2)
+                        Embedder.EmbedMS1Metrics(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, xicConfigBySource, ilr);
+                    else if (embedType == 1)
                         Embedder.EmbedScanTime(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
                     else
                         Embedder.Embed(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
@@ -229,8 +264,11 @@ namespace IDPicker.Forms
 
         private void deleteAllButton_Click (object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to delete\r\n" +
-                                "all embedded spectra and quantitation data?", "Confirm",
+            var ms1Mode = (EmbedTypeBox.SelectedIndex == 2);
+            var message = "Are you sure you want to delete\r\n" + (ms1Mode
+                                                                       ? "all MS1 data?"
+                                                                       : "all embedded spectra and quantitation data?");
+            if (MessageBox.Show(message, "Confirm",
                                 MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Exclamation,
                                 MessageBoxDefaultButton.Button2) == DialogResult.No)
@@ -249,7 +287,10 @@ namespace IDPicker.Forms
                 try
                 {
                     var tls = session.SessionFactory.OpenStatelessSession();
-                    tls.CreateSQLQuery(@"UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL;
+                    if (ms1Mode)
+                        tls.CreateSQLQuery(@"DELETE FROM XICMetrics;DELETE FROM XICMetricsSettings; VACUUM").ExecuteUpdate();
+                    else
+                        tls.CreateSQLQuery(@"UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL;
                                          UPDATE SpectrumSource SET QuantitationMethod = 0;
                                          DELETE FROM PeptideQuantitation;
                                          DELETE FROM DistinctMatchQuantitation;
@@ -281,6 +322,45 @@ namespace IDPicker.Forms
                 var selectedRows = dataGridView.SelectedCells.Cast<DataGridViewCell>().Select(o => o.OwningRow).ToList();
                 if (selectedRows.Count > 1)
                     selectedRows.ForEach(o => o.Cells[e.ColumnIndex].Value = dataGridView[e.ColumnIndex, e.RowIndex].Value);
+            }
+        }
+
+        private void EmbedTypeBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            quantitationMethodColumn.Visible = EmbedTypeBox.SelectedIndex != 2;
+            DefaultQuantitationMethodBox.Visible = EmbedTypeBox.SelectedIndex != 2;
+            XICSettingsColumn.Visible = EmbedTypeBox.SelectedIndex == 2;
+            DefaultXICSettingsButton.Visible = EmbedTypeBox.SelectedIndex == 2;
+            DefaultLabel.Text = EmbedTypeBox.SelectedIndex == 2
+                                    ? "Default MS1 Embed Settings:"
+                                    : "Default quantitation method:";
+            Refresh();
+        }
+
+        private void DefaultQuantitationMethodBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (DataGridViewRow row in dataGridView.Rows)
+                row.Cells[quantitationMethodColumn.Index].Value = DefaultQuantitationMethodBox.Text;
+        }
+
+        private void DefaultXICSettingsButton_Click(object sender, EventArgs e)
+        {
+            var xicForm = new XICForm(new Embedder.XICConfiguration());
+            if (xicForm.ShowDialog() == DialogResult.OK)
+                foreach (DataGridViewRow row in dataGridView.Rows)
+                    row.Cells[XICSettingsColumn.Index].Value = xicForm.GetConfig();
+        }
+
+        private void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == XICSettingsColumn.Index)
+            {
+                var oldSettings = dataGridView[e.ColumnIndex, e.RowIndex].Value as Embedder.XICConfiguration;
+                if (oldSettings == null)
+                    return;
+                var xicForm = new XICForm(oldSettings);
+                if (xicForm.ShowDialog() == DialogResult.OK)
+                    dataGridView[e.ColumnIndex, e.RowIndex].Value = xicForm.GetConfig();
             }
         }
     }

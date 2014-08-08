@@ -57,8 +57,9 @@ lib Qonverter
 
 lib Parser
     : # sources
-        Parser.cpp Embedder.cpp CoreVersion
+        Parser.cpp Embedder.cpp CoreVersion XIC.cpp
     : # requirements
+        <library>crawdad//crawdad
         <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
@@ -66,6 +67,7 @@ lib Parser
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
     : # default-build
     : # usage-requirements
+        <library>crawdad//crawdad
         <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome

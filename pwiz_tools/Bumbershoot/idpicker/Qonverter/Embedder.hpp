@@ -1,16 +1,16 @@
 //
 // $Id$
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 // The Original Code is the IDPicker project.
@@ -37,6 +37,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enum.hpp>
 #include "sqlite3pp.h"
+#include "XIC.hpp"
 
 
 #ifndef IDPICKER_NAMESPACE
@@ -51,6 +52,9 @@
 
 BEGIN_IDPICKER_NAMESPACE
 
+using namespace boost::icl;
+namespace accs = boost::accumulators;
+namespace bmi = boost::multi_index;
 
 BOOST_ENUM(QuantitationMethod,
     (None)
@@ -73,6 +77,7 @@ using std::vector;
 using std::map;
 using std::pair;
 using pwiz::chemistry::MZTolerance;
+namespace sqlite = sqlite3pp;
 
 
 struct QuantitationConfiguration
@@ -133,6 +138,13 @@ void dropGeneMetadata(const string& idpDbFilepath);
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 void extract(const string& idpDbFilepath, const string& sourceName, const string& outputFilepath);
 
+/// embed ms1 info from all sources
+void EmbedMS1Metrics(const string& idpDbFilepath,
+           const string& sourceSearchPath,
+           const string& sourceExtensionPriorityList,
+           const map<int, QuantitationConfiguration>& quantitationMethodBySource,
+           const map<int, XIC::XICConfiguration>& xicConfigBySource,
+           pwiz::util::IterationListenerRegistry* ilr);
 } // namespace Embedder
 END_IDPICKER_NAMESPACE
 
