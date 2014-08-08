@@ -46,7 +46,7 @@ using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;
-namespace sqlite = sqlite3pp;
+//namespace sqlite = sqlite3pp;
 
 
 BEGIN_IDPICKER_NAMESPACE
