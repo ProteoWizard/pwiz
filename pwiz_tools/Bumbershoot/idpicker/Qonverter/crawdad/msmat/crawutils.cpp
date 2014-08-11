@@ -40,7 +40,7 @@ extern "C" {
 
 #endif
 
-#ifndef __GNUC__
+
 double roundDouble(double n) {
   
   double tempval;
@@ -57,7 +57,6 @@ double roundDouble(double n) {
   return tempval;
 }
       
-#endif
 
 
 
@@ -278,8 +277,6 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
   void rankties( std::vector<float> & v ) {
     std::vector<int> tied_idxs(1);
     tied_idxs[0] = 0;
-    int start_idx = -1;
-    int stop_idx = -1;
     float last_seen = v[0];
     for ( int i = 1 ; i < (int)v.size() ; i++ ) {
       if ( v[i] != last_seen ) {
@@ -363,7 +360,6 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
 
     int i = 0;
     int tie_start = 0;
-    int last_rank = -1;
     float last_val = sorted_by_i[0].first - 1.0f;
     bool in_tie = false;
 
@@ -371,7 +367,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
       if ( i >= (int)sorted_by_i.size() ) {
 	break;
       }
-      if ( ( i != (sorted_by_i.size() ) ) && ( sorted_by_i[i].first == last_val) ) {
+      if ( ( i != ((int)sorted_by_i.size() ) ) && ( sorted_by_i[i].first == last_val) ) {
 	if ( ! in_tie ) {
 	  in_tie = true;
 	  tie_start = i;
@@ -961,7 +957,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     idx = 1;
     while (cumulative_area[idx] < half_total_auc)
       idx++;
-    if (cumulative_area.size() == idx)
+    if ((int)cumulative_area.size() == idx)
       idx--; // for safety's sake, in case we can't rely upon two floats truly equalling one another
     if (cumulative_area[idx] - half_total_auc < half_total_auc - cumulative_area[idx-1])
       return idx;
@@ -1007,11 +1003,11 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     idx = 1;
     while (cumulative_area[idx] < half_total_auc)
       idx++;
-    if (cumulative_area.size() == idx)
+    if ((int)cumulative_area.size() == idx)
       idx--; // for safety's sake, in case we can't rely upon two floats truly equalling one another
     if (cumulative_area[idx] - half_total_auc < half_total_auc - cumulative_area[idx-1])
       return idx;
-    return idx - 1;
+    return (idx - 1);
   }
 
 
@@ -1138,7 +1134,6 @@ return drand48();
     const char * prot_str = protein.c_str();
     int pep_added = 0;
     std::vector<char> pepbuf;
-    bool last_tryp = false;
 		  
     for ( int i = 0 ; i < (int)protein.length() - 1 ; i++ ) {
       char this_res = prot_str[i];
@@ -1231,7 +1226,6 @@ return drand48();
 std::vector< TwoGroupsType >
 permute_two_groups ( IdxGroupType g1, IdxGroupType g2 ) {
    int g1_len = g1.size();
-   int g2_len = g2.size();
   
    //vector for storing all selections of size(len(g1))
    std::vector< std::vector< int > > g1_permutes;   

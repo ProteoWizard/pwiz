@@ -25,7 +25,6 @@
 #include "Embedder.hpp"
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
-#include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
@@ -45,7 +44,7 @@ using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;
-//namespace sqlite = sqlite3pp;
+//namespace sqlite = sqlite;
 using namespace Embedder;
 using pwiz::chemistry::MZTolerance;
 
@@ -886,7 +885,8 @@ int writeChromatograms(const string& idpDBFilename,
 			if (window.PSMs.size() > 0)
 			{
 			    //insertPeptideIntensity.binder()<<psm.id<<window.distinctMatch<<window.source<<peak.intensity<<peakArea<<SNRatio<<peak.peakTime;
-			    insertPeptideIntensity.binder()<<window.PSMs[0].id<<window.distinctMatch<<peak.intensity<<peakArea<<SNRatio<<peak.peakTime;
+			    insertPeptideIntensity.binder() << lexical_cast<string>(window.PSMs[0].id) << lexical_cast<string>(window.distinctMatch) << lexical_cast<string>(peak.intensity)
+                                                << lexical_cast<string>(peakArea) << lexical_cast<string>(SNRatio) << lexical_cast<string>(peak.peakTime);
                 insertPeptideIntensity.execute();
                 insertPeptideIntensity.reset();
                 totalAdded++;
@@ -925,7 +925,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 		//ITERATION_UPDATE(ilr, currentFile, totalFiles, "Started processing file " + sourceFilename);
 
 		// Spectral counts
-		int MS1Count = 0, MS2Count = 0, MS3OrGreaterCount = 0;
+		int MS1Count = 0, MS2Count = 0;
 
 		MS1ScanMap ms1ScanMap;
 		MS2ScanMap ms2ScanMap;
@@ -946,7 +946,6 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             char const* nativeId;
             sqlite_int64 distinctMatchId;
 
-            size_t distinctModifiedPeptide = 0;
             int temp = 0;
             BOOST_FOREACH(sqlite::query::rows row, distinctModifiedPeptideByNativeIDQuery)
             {
@@ -1222,8 +1221,10 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 				// calculate TIC manually if necessary
 				MS2ScanInfo& scanInfo = const_cast<MS2ScanInfo&>(*ms2ScanMap.get<nativeID>().find(spectrum->id));
 				if (scanInfo.precursorIntensity == 0)
-					BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                {
+                    BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
 						scanInfo.precursorIntensity += p;
+                }
 			}
 		} // end of spectra loop
 

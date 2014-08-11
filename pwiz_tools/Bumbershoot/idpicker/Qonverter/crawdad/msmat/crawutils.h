@@ -117,10 +117,7 @@ typedef fpos_t f_off;
 
 
 
-
-#ifndef __GNUC__
 double roundDouble(double n);
-#endif
 
 
 ///Struct for comparing two floats using < operator

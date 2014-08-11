@@ -79,7 +79,6 @@ using namespace pwiz::SimpleCrawdad;
 using namespace boost::icl;
 namespace accs = boost::accumulators;
 namespace bmi = boost::multi_index;
-namespace sqlite = sqlite3pp;
 
 
 namespace XIC {
@@ -324,8 +323,6 @@ struct Interpolator
         {
             newX.push_back(newX.back() + minSampleSize);
             newY.push_back(0);
-            int left = i-1;
-            //spline_cubic_val2(_size, &x[0], newX.back(), &left, &y[0], _ypp.get(), &newY.back(), &ypval, &yppval);
             spline_pchip_val(_size, &x[0], &y[0], _ypp.get(), 1, &newX.back(), &newY.back());
         }
         swap(x, newX);
@@ -351,7 +348,7 @@ struct Interpolator
     int _size;
 };
 
-int EmbedMS1ForFile(sqlite::database& idpDb,
+int EmbedMS1ForFile(sqlite3pp::database& idpDb,
                      const string& idpDBFilePath,
                      const string& sourceFilePath,
                      const string& sourceId,
