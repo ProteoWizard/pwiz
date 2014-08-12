@@ -438,19 +438,6 @@ namespace pwiz.Skyline.Controls.Startup
                 (WindowState == FormWindowState.Maximized);
         }
 
-        // StartPage fade in effect
-        private void StartPage_Load(object sender, EventArgs e)
-        {
-            Opacity = 0;
-            actionBoxFadeInTimer.Enabled = true;
-            StartPage_Resize(sender, e);
-        }
-
-        private void startupTimer_Tick(object sender, EventArgs e)
-        {
-            Opacity += 0.1;
-        }
-
         // Updates settings on form close.
         private void StartPage_FormClosing(object sender, FormClosedEventArgs e)
         {

@@ -32,7 +32,6 @@ namespace pwiz.Skyline.Controls.Startup
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StartPage));
-            this.actionBoxFadeInTimer = new System.Windows.Forms.Timer(this.components);
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tabControlMain = new System.Windows.Forms.TabControl();
             this.wizardTabPage = new System.Windows.Forms.TabPage();
@@ -56,11 +55,6 @@ namespace pwiz.Skyline.Controls.Startup
             this.openFilePanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.openFileIcon)).BeginInit();
             this.SuspendLayout();
-            // 
-            // actionBoxFadeInTimer
-            // 
-            this.actionBoxFadeInTimer.Interval = 50;
-            this.actionBoxFadeInTimer.Tick += new System.EventHandler(this.startupTimer_Tick);
             // 
             // tabControlMain
             // 
@@ -183,7 +177,6 @@ namespace pwiz.Skyline.Controls.Startup
             this.Icon = global::pwiz.Skyline.Properties.Resources.Skyline;
             this.Name = "StartPage";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.StartPage_FormClosing);
-            this.Load += new System.EventHandler(this.StartPage_Load);
             this.Move += new System.EventHandler(this.StartPage_Move);
             this.Resize += new System.EventHandler(this.StartPage_Resize);
             this.tabControlMain.ResumeLayout(false);
@@ -212,7 +205,6 @@ namespace pwiz.Skyline.Controls.Startup
         private System.Windows.Forms.Panel openFilePanel;
         private System.Windows.Forms.Panel leftBottomPanel;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelWizard;
-        private System.Windows.Forms.Timer actionBoxFadeInTimer;
         private System.Windows.Forms.TabControl tabControlMain;
         private System.Windows.Forms.TabPage wizardTabPage;
         private System.Windows.Forms.TabPage tutorialsTabPage;
