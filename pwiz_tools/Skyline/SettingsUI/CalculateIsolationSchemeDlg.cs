@@ -219,7 +219,10 @@ namespace pwiz.Skyline.SettingsUI
                     EndMargin = generateEndMargin ? (double?)marginRight : null
                 };
                 if (overlap > 0)
-                    isolationWindows.Insert(i % 2 == 1 ? i / 2 : i, window);
+                {
+                    var index = Math.Max(Math.Min(i%2 == 1 ? i/2 : i, isolationWindows.Count), 0);
+                    isolationWindows.Insert(index, window);    
+                }
                 else
                     isolationWindows.Add(window);
             }
