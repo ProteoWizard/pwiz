@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.infoclinika</groupId>
+    <artifactId>chorus-integration</artifactId>
+    <version>1.0.0</version>
+
+    <repositories>
+        <repository>
+            <id>ebi-repo</id>
+            <name>The EBI Maven 2 repository</name>
+            <url>http://www.ebi.ac.uk/~maven/m2repo</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.ac.ebi.jmzml</groupId>
+            <artifactId>jmzml</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>15.0</version>
+        </dependency>
+
+    </dependencies>
+
+    
+</project>

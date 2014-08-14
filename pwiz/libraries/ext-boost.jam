@@ -1,0 +1,769 @@
+#
+# $Id$
+#
+
+#~ Copyright Redshift Software, Inc. 2006.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building Boost <http://www.boost.org/> externally.
+### Targets:
+###     /ext/boost//boost
+###     /ext/boost//thread
+###     /ext/boost//regex
+###     /ext/boost//interprocess
+###     /ext/boost//filesystem
+###     /ext/boost//iostreams
+###     /ext/boost//program_options
+###     /ext/boost//serialization
+
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import set ;
+import stage ;
+import common ;
+import path ;
+import type ;
+import targets ;
+import generators ;
+import "class" : new ;
+import os ;
+import tar ;
+import regex ;
+import errors ;
+
+extension.declare boost ;
+
+local boost_build_path = [ modules.peek : search-path ] ;
+boost_build_path = $(boost_build_path[1]) ;
+path-constant THIS_PATH : [ path.join $(boost_build_path) .. ] ;
+
+.boost-version = ;
+.boost-src-location = ;
+
+feature.feature boost-filesystem-version : default 2 3 : composite link-incompatible propagated ;
+feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
+feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
+feature.feature zlib-src-location : : free path ;
+
+feature.feature boost-interprocess : : free ;
+feature.feature boost-asio : : free ;
+
+rule boost-tag ( name : type ? : property-set )
+{
+    return [ common.format-name
+        boost_ <base> <toolset> <threading> <runtime> <version:boost-version>
+        : $(name) : $(type) : $(property-set) ] ;
+}
+
+
+# warning: _SECURE_SCL_THROWS is deprecated
+# checked iterators throw instead of crash  
+rule secure-scl-throws ( properties * )
+{
+    if <toolset>msvc in $(properties) &&
+       ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
+       ! ( <toolset-msvc:version>12.0 in $(properties) )
+    {
+        return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+               <define>_SECURE_SCL_THROWS=1 ;
+    }
+}
+
+rule filesystem-usage-requirements ( properties * )
+{
+    local location = $(.boost-src-location) ;
+    local version-tokens = [ regex.split $(.boost-version) \\. ] ;
+    local fs-version = [ feature.get-values boost-filesystem-version : $(properties) ] ;
+
+    # TODO: at some point v2 support will disappear
+    #if $(fs-version) = 2 && $(version-tokens[2]) > 49
+    #{
+    #    errors.user-error "Boost $(.boost-version) does not support filesystem version 2." ;
+    #}
+
+    if $(fs-version) = 3 && $(version-tokens[2]) < 44
+    {
+        errors.user-error "Boost $(.boost-version) does not support filesystem version 3." ;
+    }
+
+    local result ;
+    
+    if $(fs-version) = "default"
+    {
+        fs-version = 2 ;
+        if $(version-tokens[2]) > 45 { fs-version = 3 ; }
+    }
+    else
+    {
+        result += <define>BOOST_FILESYSTEM_VERSION=$(fs-version) ;
+    }
+
+    if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
+    {
+        result += <define>BOOST_WINDOWS_API ;
+    }
+
+    return $(result) ;
+}
+
+rule filesystem-requirements ( properties * )
+{
+    local location = $(.boost-src-location) ;
+    local version-tokens = [ regex.split $(.boost-version) \\. ] ;
+    local fs-version = [ feature.get-values boost-filesystem-version : $(properties) ] ;
+
+    local result = [ filesystem-usage-requirements $(properties) ] ;
+    
+    if $(fs-version) = "default"
+    {
+        fs-version = 2 ;
+        if $(version-tokens[2]) > 45 { fs-version = 3 ; }
+    }
+
+    local sources = [ path.glob $(location)/libs/filesystem/v$(fs-version)/src $(location)/libs/filesystem/src : *.cpp ] ;
+    result += <source>$(sources) ;
+
+    if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
+    {
+        result += <define>BOOST_WINDOWS_API ;
+    }
+
+    return $(result) ;
+}
+
+
+# TODO: parse version from version.hpp file
+rule init ( version : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        local version-tokens = [ regex.split $(version) \\. ] ;
+        local boost-basename = "boost_$(version-tokens:J=_)" ;
+
+        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            # extract boost tarball
+            tar.extract
+                  # tar filepath
+                    $(boost-basename).tar.bz2
+                : # include patterns
+                    $(boost-basename)/boost*.?pp
+                    $(boost-basename)/boost*.h
+                    $(boost-basename)/libs*.?pp
+                    $(boost-basename)/libs/*timeconv.inl
+                : # requirements
+                    <location>.
+                : # usage-requirements
+                : check-last-file-only   
+                ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            errors.user-error "Boost source tree not found at $(location)" ;
+        }
+
+        local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
+        zlib-src-location ?= $(location)/../zlib-1.2.3 ;
+        path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
+        using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+
+        .boost-src-location = $(location) ;
+        .boost-version = $(version) ;
+
+        local requirements =
+            [ extension.refine boost $(version) : <tag>@boost-tag $(options) ]
+            [ extension.static-with-fpic ]
+            $(options)
+            <toolset>msvc:<define>WIN32
+            <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+            <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+            <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
+            <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
+            <link>shared:<define>BOOST_ALL_DYN_LINK=1
+            <link>static:<define>BOOST_ALL_STATIC_LINK=1
+            <warnings>off
+            <conditional>@secure-scl-throws
+            ;
+
+        lib pthread : : <name>pthread <link>shared : 
+            : <toolset>gcc:<linkflags>-pthread # sometimes segfaults when not defined -- dk
+            ;
+
+        explicit pthread ;
+        local regex_pthread_requirement ;
+        if [ modules.peek : UNIX ]
+        {
+            regex_pthread_requirement = <toolset>gcc:<library>pthread/<link>shared ;
+        }
+
+        #requirements = [ extension.refine boost $(version) : <tag>@boost-tag ] ;
+        local common-requirements =
+            <include>$(location)
+            <define>BOOST_ALL_NO_LIB=1
+            ;
+        alias boost
+            :
+            :   $(common-requirements)
+                $(requirements)
+            :
+            :   $(common-requirements)
+            ;
+
+
+        lib filesystem
+            :
+            :   $(requirements)
+                <location-prefix>filesystem-$(version-tokens:J=_)
+                <use>boost
+                <threading>multi
+                <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
+                <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
+                <define>BOOST_FILESYSTEM_NO_LIB=1
+                <conditional>@filesystem-requirements
+                <library>system
+            :
+            :   <define>BOOST_FILESYSTEM_NO_LIB=1
+                <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
+                <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
+                <link>shared:<define>BOOST_ALL_DYN_LINK=1
+                <conditional>@filesystem-usage-requirements
+                <library>system
+            ;
+
+        lib program_options
+            :   [ path.glob $(location)/libs/program_options/src : *.cpp ]
+            :   $(requirements)
+                <location-prefix>program_options-$(version-tokens:J=_)
+                <use>boost
+                <threading>multi
+                <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK=1
+                <define>BOOST_PROGRAM_OPTIONS_NO_LIB=1
+            :
+            :   <define>BOOST_PROGRAM_OPTIONS_NO_LIB=1
+                <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK=1
+            ;
+            
+        lib shell32 : : <name>shell32 ; # for CommandLineToArgW
+        lib nowide
+            :   [ path.glob $(location)/../boost_aux/libs/nowide/src : *.cpp ]
+            :   $(requirements)
+                <location-prefix>nowide-$(version-tokens:J=_)
+                <use>boost
+                <threading>multi
+                <link>shared:<define>BOOST_NOWIDE_DYN_LINK=1
+                <define>BOOST_NOWIDE_NO_LIB=1
+                <toolset>msvc:<library>shell32
+            :
+            :   <define>BOOST_NOWIDE_NO_LIB=1
+                <link>shared:<define>BOOST_NOWIDE_DYN_LINK=1
+                <toolset>msvc:<library>shell32
+            ;
+
+        lib iostreams
+            :   [ path.glob $(location)/libs/iostreams/src : *.cpp : zlib.cpp gzip.cpp bzip2.cpp ]
+            :   $(requirements)
+                <location-prefix>iostreams-$(version-tokens:J=_)
+                <use>boost
+                <threading>multi
+                <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
+                <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/zlib.cpp
+                <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/gzip.cpp
+                <boost-iostreams-zlib>on:<library>/ext/zlib//z
+                #<toolset>msvc,<boost-iostreams-zlib>on:<link>static
+                <boost-iostreams-bzip2>on:<source>$(location)/libs/iostreams/src/bzip2.cpp
+                #<toolset>msvc,<boost-iostreams-bzip2>on:<link>static
+                <define>BOOST_IOSTREAMS_NO_LIB=1
+            :
+            :   <define>BOOST_IOSTREAMS_NO_LIB=1
+                <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
+                <boost-iostreams-zlib>on:<library>/ext/zlib//z
+            ;
+
+        local tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+        tmp += $(location)/libs/serialization/build ;
+        modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+
+        local serialization_sources =
+          basic_archive
+          basic_iarchive
+          basic_iserializer
+          basic_oarchive
+          basic_oserializer
+          basic_pointer_iserializer
+          basic_pointer_oserializer
+          basic_serializer_map
+          basic_text_iprimitive
+          basic_text_oprimitive
+          basic_xml_archive
+          binary_iarchive
+          binary_oarchive
+          extended_type_info
+          extended_type_info_typeid
+          extended_type_info_no_rtti
+          polymorphic_iarchive
+          polymorphic_oarchive
+          stl_port
+          text_iarchive
+          text_oarchive
+          void_cast
+          archive_exception
+          xml_grammar
+          xml_iarchive
+          xml_oarchive
+          xml_archive_exception
+          shared_ptr_helper
+        ;
+
+        local wserialization_sources = 
+          basic_text_wiprimitive
+          basic_text_woprimitive
+          text_wiarchive
+          text_woarchive
+          utf8_codecvt_facet
+          xml_wgrammar
+          xml_wiarchive
+          xml_woarchive
+          codecvt_null
+        ;
+
+        lib serialization
+            :   $(location)/libs/serialization/src/$(serialization_sources).cpp
+            :   $(requirements) <toolset>msvc:<cxxflags>/Gy
+                <location-prefix>serialization-$(version-tokens:J=_)
+                <use>boost
+                #<threading>multi
+                <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
+                <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
+            :
+            :   <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
+                <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
+            ;
+
+        lib wserialization
+            :   $(location)/libs/serialization/src/$(wserialization_sources).cpp serialization
+            :   $(requirements) <toolset>msvc:<cxxflags>/Gy 
+                <location-prefix>wserialization-$(version-tokens:J=_)
+                <use>boost
+                #<threading>multi
+                <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
+                <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
+            :
+            :   <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
+                <define>BOOST_SERIALIZATION_NO_LIB=1
+                <toolset>msvc-12.0:<cxxflags>/FIalgorithm
+            ;
+
+        local thread_sources ;
+        if [ modules.peek : NT ]
+        {
+          thread_sources =
+                win32/thread
+                win32/tss_dll
+                future
+              ;
+        } else
+        {
+          thread_sources =
+                pthread/thread
+                pthread/once
+                future
+              ;
+        }
+
+        local alternate_thread_sources ;
+        if [ modules.peek : NT ]
+        {
+            if $(version-tokens[2]) < 44
+            {
+                alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe-before_1_44.cpp ;
+            }
+            else
+            {
+                alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe.cpp ;
+            }
+        }
+        
+        lib thread
+            :   $(location)/libs/thread/src/$(thread_sources).cpp
+            :   $(requirements)
+                <location-prefix>thread-$(version-tokens:J=_)
+                <use>boost
+                <toolset>gcc:<cxxflags>-Wextra
+                <toolset>gcc:<cxxflags>-pedantic
+                <toolset>gcc:<cxxflags>-Wno-long-long
+                #<toolset>gcc:<cxxflags>-ansi
+                #<toolset>gcc:<cxxflags>-fpermissive
+                <toolset>gcc:<cxxflags>-Wno-variadic-macros
+                #<toolset>gcc:<cxxflags>-Wunused-local-typedefs
+                <toolset>gcc:<cxxflags>-Wunused-function
+        
+                <toolset>darwin:<cxxflags>-Wextra
+                <toolset>darwin:<cxxflags>-pedantic
+                #<toolset>darwin:<cxxflags>-ansi
+                <toolset>darwin:<cxxflags>-fpermissive
+                <toolset>darwin:<cxxflags>-Wno-long-long
+                <toolset>darwin:<cxxflags>-Wno-variadic-macros
+                #<toolset>darwin:<cxxflags>-Wunused-local-typedefs
+                <toolset>darwin:<cxxflags>-Wunused-function
+        
+                #<toolset>pathscale:<cxxflags>-Wextra
+                <toolset>pathscale:<cxxflags>-Wno-long-long
+                <toolset>pathscale:<cxxflags>-pedantic
+        
+                <toolset>clang:<cxxflags>-Wextra
+                <toolset>clang:<cxxflags>-pedantic
+                #<toolset>clang:<cxxflags>-ansi
+                #<toolset>clang:<cxxflags>-fpermissive
+                <toolset>clang:<cxxflags>-Wno-long-long
+                <toolset>clang:<cxxflags>-Wunused-function
+                <toolset>clang:<cxxflags>-Wno-variadic-macros
+        
+                <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
+                <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+                #<toolset>gcc:<cxxflags>-Wno-missing-field-initializers
+        
+                <toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
+                <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+        
+                #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
+                #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
+                #<toolset>clang-2.9:<cxxflags>-Wno-delete-non-virtual-dtor
+                #<toolset>clang-2.9:<cxxflags>-Wno-unused-function
+                <toolset>clang-3.0:<cxxflags>-Wno-delete-non-virtual-dtor
+                #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
+                #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
+                <link>shared:<define>BOOST_THREAD_DYN_LINK=1
+                <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+                <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+                <define>BOOST_THREAD_NO_LIB=1
+                <define>BOOST_THREAD_USES_CHRONO
+                $(alternate_thread_sources)
+                <link>static:<source>$(THIS_PATH)/tss_workaround.cpp
+                <library>date_time
+                <library>chrono
+            :
+            :   <threading>multi
+                <link>shared:<define>BOOST_THREAD_DYN_DLL=1
+                <link>static:<define>BOOST_THREAD_USE_LIB=1
+                <define>BOOST_THREAD_NO_LIB=1
+                <library>date_time
+                <library>chrono
+            ;
+
+        local date_time_sources =
+            greg_month
+            greg_weekday
+            date_generators
+          ;
+
+        lib date_time
+            :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
+            :   $(requirements)
+                <location-prefix>date_time-$(version-tokens:J=_)
+                <use>boost
+                <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+                <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
+                #<define>NO_BOOST_DATE_TIME_INLINE
+                <define>BOOST_DATE_TIME_NO_LIB=1
+            :
+            :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
+                #<define>NO_BOOST_DATE_TIME_INLINE
+                <define>BOOST_DATE_TIME_NO_LIB=1
+            ;
+
+        if $(version-tokens[2]) < 47
+        {
+            alias chrono ;
+        }
+        else
+        {
+            boost_chrono_sources = chrono thread_clock process_cpu_clocks ;
+    
+            lib chrono
+                :   $(location)/libs/chrono/src/$(boost_chrono_sources).cpp
+                :   $(requirements)
+                    <location-prefix>chrono-$(version-tokens:J=_)
+                    <use>boost
+                    <target-os>freebsd:<linkflags>"-lrt" 
+                    <target-os>linux:<linkflags>"-lrt" 
+                    <toolset>pgi:<linkflags>"-lrt" 
+                    #<threading>single:<define>BOOST_CHRONO_THREAD_DISABLED
+                    <library>system
+                    #<define>BOOST_ERROR_CODE_HEADER_ONLY
+                    #<define>BOOST_SYSTEM_INLINED
+                    #<define>BOOST_COMMON_TYPE_USES_STATIC_ASSERT
+                    #<define>BOOST_RATIO_USES_STATIC_ASSERT
+                    #<define>BOOST_CHRONO_USES_STATIC_ASSERT
+                    #<define>BOOST_COMMON_TYPE_USES_MPL_ASSERT
+                    #<define>BOOST_RATIO_USES_MPL_ASSERT
+                    #<define>BOOST_CHRONO_USES_MPL_ASSERT
+                    #<define>BOOST_COMMON_TYPE_USES_ARRAY_ASSERT
+                    #<define>BOOST_RATIO_USES_ARRAY_ASSERT
+                    #<define>BOOST_CHRONO_USES_ARRAY_ASSERT
+                    <toolset>sun:<define>__typeof__=__typeof__ 
+                    <define>BOOST_SYSTEM_NO_DEPRECATED
+                    #<toolset>gcc-3.4.4:<linkflags>--enable-auto-import
+                    #<toolset>gcc-4.3.4:<linkflags>--enable-auto-import
+                    #<toolset>gcc-mingw-4.4.0:<linkflags>--enable-auto-import
+                    #<toolset>gcc-mingw-4.5.0:<linkflags>--enable-auto-import
+                    <toolset>gcc:<cxxflags>-Wextra
+                    <toolset>gcc:<cxxflags>-pedantic
+                    <toolset>gcc:<cxxflags>-Wno-long-long
+                    <toolset>darwin:<cxxflags>-Wextra
+                    <toolset>darwin:<cxxflags>-pedantic
+                    <toolset>darwin:<cxxflags>-Wno-long-long
+                    #<toolset>pathscale:<cxxflags>-Wextra
+                    <toolset>pathscale:<cxxflags>-Wno-long-long
+                    <toolset>pathscale:<cxxflags>-pedantic
+                    <toolset>clang:<cxxflags>-Wextra
+                    <toolset>clang:<cxxflags>-pedantic
+                    <toolset>clang:<cxxflags>-Wno-long-long
+                    <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
+                    <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
+                    <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
+                    <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
+                    <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
+                    <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+                # Note: Some of the remarks from the Intel compiler are disabled
+                # remark #304: access control not specified ("public" by default)
+                # remark #383: value copied to temporary, reference to temporary used
+                # remark #1418: external function definition with no prior declaration
+                    <toolset>intel:<cxxflags>-wd304,383,1418
+                    <link>shared:<define>BOOST_ALL_DYN_LINK=1 # tell source we're building dll's
+                    <link>static:<define>BOOST_ALL_STATIC_LINK=1 # tell source we're building static lib's
+                :
+                :   <threading>single:<define>BOOST_CHRONO_THREAD_DISABLED
+                    <library>system
+                    #<define>BOOST_ERROR_CODE_HEADER_ONLY
+                    #<define>BOOST_SYSTEM_INLINED
+                    #<define>BOOST_COMMON_TYPE_USES_STATIC_ASSERT
+                    #<define>BOOST_RATIO_USES_STATIC_ASSERT
+                    #<define>BOOST_CHRONO_USES_STATIC_ASSERT
+                    #<define>BOOST_COMMON_TYPE_USES_MPL_ASSERT
+                    #<define>BOOST_RATIO_USES_MPL_ASSERT
+                    #<define>BOOST_CHRONO_USES_MPL_ASSERT
+                    #<define>BOOST_COMMON_TYPE_USES_ARRAY_ASSERT
+                    #<define>BOOST_RATIO_USES_ARRAY_ASSERT
+                    #<define>BOOST_CHRONO_USES_ARRAY_ASSERT
+                    #<toolset>vacpp:<define>BOOST_COMMON_TYPE_DONT_USE_TYPEOF
+                    <toolset>vacpp:<define>BOOST_TYPEOF_EMULATION
+                    <toolset>sun:<define>__typeof__=__typeof__ 
+    
+                    <define>BOOST_SYSTEM_NO_DEPRECATED
+                    <link>shared:<define>BOOST_CHRONO_DYN_LINK=1
+                    <link>static:<define>BOOST_CHRONO_STATIC_LINK=1
+                    <toolset>gcc-3.4.4:<linkflags>--enable-auto-import
+                    <toolset>gcc-4.3.4:<linkflags>--enable-auto-import
+                    <toolset>gcc-mingw-4.4.0:<linkflags>--enable-auto-import
+                    <toolset>gcc-mingw-4.5.0:<linkflags>--enable-auto-import
+                ;
+        }
+
+        lib regex
+            :   [ path.glob $(location)/libs/regex/src : *.cpp ]
+            :   $(requirements)
+                $(regex_pthread_requirement)
+                <location-prefix>regex-$(version-tokens:J=_)
+                <use>boost
+                <link>shared:<define>BOOST_REGEX_DYN_LINK=1
+                <define>BOOST_REGEX_NO_LIB=1
+                <toolset>msvc:<cxxflags>/wd4309
+                <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+            :
+            :   <define>BOOST_REGEX_NO_LIB=1
+                <link>shared:<define>BOOST_REGEX_DYN_LINK=1
+            ;
+
+        lib system
+            :   $(location)/libs/system/src/error_code.cpp
+            :   $(requirements)
+                <location-prefix>system-$(version-tokens:J=_)
+                <use>boost
+                <define>BOOST_SYSTEM_NO_LIB=1
+                <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
+                <link>static:<define>BOOST_SYSTEM_STATIC_LINK=1
+            :
+            :   <define>BOOST_SYSTEM_NO_LIB=1
+                <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
+                <link>static:<define>BOOST_SYSTEM_STATIC_LINK=1
+            ;
+
+        lib atomic
+            :   $(location)/libs/atomic/src/lockpool.cpp
+            :   $(requirements)
+                <location-prefix>atomic-$(version-tokens:J=_)
+                <use>boost
+            ;
+
+        local PRG_EXEC_MON_SOURCES =
+            execution_monitor
+            debug
+            cpp_main
+        ;
+
+        local TEST_EXEC_MON_SOURCES =
+            compiler_log_formatter
+            debug
+            execution_monitor
+            framework
+            plain_report_formatter
+            progress_monitor
+            results_collector
+            results_reporter
+            test_main
+            test_tools
+            unit_test_log
+            unit_test_main
+            unit_test_monitor
+            unit_test_parameters
+            unit_test_suite
+            xml_log_formatter
+            xml_report_formatter
+        ;
+
+        local UTF_SOURCES =
+            compiler_log_formatter
+            debug
+            exception_safety
+            execution_monitor
+            framework
+            interaction_based
+            logged_expectations
+            plain_report_formatter
+            progress_monitor
+            results_collector
+            results_reporter
+            test_tools
+            unit_test_log
+            unit_test_main
+            unit_test_monitor
+            unit_test_parameters
+            unit_test_suite
+            xml_log_formatter
+            xml_report_formatter
+        ;
+
+        lib prg_exec_monitor
+            : # sources
+                $(location)/libs/test/src/$(PRG_EXEC_MON_SOURCES).cpp
+            : # requirements
+                $(requirements)
+                <location-prefix>prg_exec_monitor-$(version-tokens:J=_)
+                <use>boost
+            ;
+
+        lib test_exec_monitor
+            : # sources
+                $(location)/libs/test/src/$(TEST_EXEC_MON_SOURCES).cpp
+            : # requirements
+                $(requirements)
+                <location-prefix>test_exec_monitor-$(version-tokens:J=_)
+                <use>boost
+                <link>static
+            ;
+
+        lib unit_test_framework
+            : # sources
+                $(location)/libs/test/src/$(UTF_SOURCES).cpp
+            : # requirements
+                $(requirements)
+                <location-prefix>unit_test_framework-$(version-tokens:J=_)
+                <use>boost
+            ;
+
+        if <boost-interprocess> in $(requirements:G)
+        {
+            local i = [ property.select <boost-interprocess> : $(requirements) ] ;
+            if ! ( $(i:G=) in enable disable )
+            {
+                local i-location = [ path.make $(i:G=) ] ;
+                local i-files = [ path.glob-tree $(i-location)/boost/interprocess : *.hpp ] ;
+                local custom-files ;
+                for local i-file in $(i-files)
+                {
+                    local custom-file = [ path.relative $(i-file) $(i-location) ] ;
+                    make $(custom-file) : $(i-file) : common.copy
+                        :   $(requirements)
+                            <location-prefix>interprocess-$(version-tokens:J=_)
+                        ;
+                    custom-files += $(custom-file) ;
+                }
+                alias interprocess
+                    :
+                    :   $(requirements)
+                        <use>boost
+                        <dependency>$(custom-files)
+                    :
+                    :   $(common-requirements)
+                        <dependency>$(custom-files)
+                        <implicit-dependency>$(custom-files)
+                    ;
+            }
+            else if $(i:G=) = enable
+            {
+                alias interprocess
+                    :
+                    :   $(requirements)
+                        <use>boost
+                    :
+                    :
+                    ;
+            }
+        }
+        
+        if <boost-asio> in $(requirements:G)
+        {
+            local i = [ property.select <boost-asio> : $(requirements) ] ;
+            if ! ( $(i:G=) in enable disable )
+            {
+                local i-location = [ path.make $(i:G=) ] ;
+                local i-files = [ path.glob-tree $(i-location)/boost/asio : *.hpp ] ;
+                local custom-files ;
+                for local i-file in $(i-files)
+                {
+                    local custom-file = [ path.relative $(i-file) $(i-location) ] ;
+                    make $(custom-file) : $(i-file) : common.copy
+                        :   $(requirements)
+                            <location-prefix>asio-$(version-tokens:J=_)
+                        ;
+                    custom-files += $(custom-file) ;
+                }
+                alias asio
+                    :
+                    :   $(requirements)
+                        <use>boost
+                        <dependency>$(custom-files)
+                    :
+                    :   $(common-requirements)
+                        <dependency>$(custom-files)
+                        <implicit-dependency>$(custom-files)
+                    ;
+            }
+            else if $(i:G=) = enable
+            {
+                alias asio
+                    :
+                    :   $(requirements)
+                        <use>boost
+                    :
+                    :
+                    ;
+            }
+        }
+    }
+}

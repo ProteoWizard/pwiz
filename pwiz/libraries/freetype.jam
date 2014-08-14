@@ -1,0 +1,101 @@
+#
+# $Id$
+#
+
+#~ Copyright Rene Rivera 2007.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+###
+
+import extension ;
+import tar ;
+
+extension.declare freetype ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Freetype source tree not found at $(location)" ;
+        }
+
+        version ?= default ;
+        local requirements =
+            [ extension.define freetype $(version) : $(location) : $(options) ]
+            <freetype-version>$(version)
+            <freetype-location>$(location)
+            <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+            <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+            [ extension.static-with-fpic ]
+            ;
+        local common-requirements =
+            <include>$(location)/include
+            ;
+
+        local rule src ( subdir names + )
+        {
+            return $(location)/src/$(subdir)/$(names:S=.c) ;
+        }
+
+        extension.text freetype $(version)
+            :   ftdefs.h
+            :   "#define FT_EXPORT(x) FT_DLLEXPORT extern x"
+            ;
+        common-requirements +=
+            <implicit-dependency>/ext/freetype//ftdefs.h
+            <dependency>/ext/freetype//ftdefs.h
+            <toolset>msvc:<cflags>-FIftdefs.h
+            <toolset>msvc,<link>static:<define>FT_DLLEXPORT=
+            ;
+
+        lib freetype
+            :   [ src autofit autofit ]
+                [ src base ftbase ]
+                [ src base
+                    ftsystem ftinit ftglyph ftmm ftbdf ftbbox ftdebug
+                    ftxf86 fttype1 ftpfr ftstroke ftwinfnt ftotval ftbitmap
+                    ftsynth ftgxval ftlcdfil ftgasp ftpatent ]
+                [ src bdf bdf ]
+                [ src cache ftcache ]
+                [ src cff cff ]
+                [ src cid type1cid ]
+                [ src gzip ftgzip ]
+                [ src lzw ftlzw ]
+                [ src pcf pcf ]
+                [ src pfr pfr ]
+                [ src psaux psaux ]
+                [ src pshinter pshinter ]
+                [ src psnames psnames ]
+                [ src raster raster ]
+                [ src sfnt sfnt ]
+                [ src smooth smooth ]
+                [ src truetype truetype ]
+                [ src type1 type1 ]
+                [ src type42 type42 ]
+                [ src winfonts winfnt ]
+            :   $(requirements) $(common-requirements)
+                <location-prefix>freetype
+                <define>FT2_BUILD_LIBRARY
+                <toolset>msvc,<link>shared:<define>FT_DLLEXPORT=__declspec(dllexport)
+
+                <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+                <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+                <warnings>off
+            :
+            :   $(common-requirements)
+                <define>FT_FREETYPE_H
+                <toolset>msvc,<link>shared:<define>FT_DLLEXPORT=__declspec(dllimport)
+            ;
+    }
+}

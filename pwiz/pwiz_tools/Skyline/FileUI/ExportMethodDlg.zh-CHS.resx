@@ -1,0 +1,995 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element msdata:IsDataSet="true" name="root">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
+              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
+              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="radioSingle.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  <data name="radioSingle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 69</value>
+  </data>
+  <data name="radioSingle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 17</value>
+  </data>
+  <data name="radioSingle.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="radioSingle.Text" xml:space="preserve">
+    <value>单一方法(&amp;S)</value>
+  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="radioSingle.ToolTip" xml:space="preserve">
+    <value>创建包含所有离子对的单一文件。如果该文件并非仅供参考，
+确保您的仪器能够处理全部的离子对。</value>
+  </data>
+  <data name=">>radioSingle.Name" xml:space="preserve">
+    <value>radioSingle</value>
+  </data>
+  <data name=">>radioSingle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>radioSingle.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>radioSingle.ZOrder" xml:space="preserve">
+    <value>22</value>
+  </data>
+  <data name="radioProtein.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioProtein.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 93</value>
+  </data>
+  <data name="radioProtein.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 17</value>
+  </data>
+  <data name="radioProtein.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="radioProtein.Text" xml:space="preserve">
+    <value>每个蛋白质一个方法(&amp;O)</value>
+  </data>
+  <data name="radioProtein.ToolTip" xml:space="preserve">
+    <value>蛋白质范围内的分割方法。如果该文件并非仅供参考，
+确保您的仪器能够处理每个文件中的离子对数量。</value>
+  </data>
+  <data name=">>radioProtein.Name" xml:space="preserve">
+    <value>radioProtein</value>
+  </data>
+  <data name=">>radioProtein.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>radioProtein.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>radioProtein.ZOrder" xml:space="preserve">
+    <value>21</value>
+  </data>
+  <data name="radioBuckets.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioBuckets.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 117</value>
+  </data>
+  <data name="radioBuckets.Size" type="System.Drawing.Size, System.Drawing">
+    <value>104, 17</value>
+  </data>
+  <data name="radioBuckets.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="radioBuckets.Text" xml:space="preserve">
+    <value>多个方法(&amp;M)</value>
+  </data>
+  <data name="radioBuckets.ToolTip" xml:space="preserve">
+    <value>根据允许的最多离子对数量，创建所需的任意数量的文件。</value>
+  </data>
+  <data name=">>radioBuckets.Name" xml:space="preserve">
+    <value>radioBuckets</value>
+  </data>
+  <data name=">>radioBuckets.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>radioBuckets.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>radioBuckets.ZOrder" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="textMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 174</value>
+  </data>
+  <data name="textMaxTransitions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 20</value>
+  </data>
+  <data name="textMaxTransitions.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="textMaxTransitions.ToolTip" xml:space="preserve">
+    <value>如果肽或蛋白质范围不允许有最大数量，
+则所创建的每个文件最多只能包含这些数量的离子对，但可能会更少一些。</value>
+  </data>
+  <data name=">>textMaxTransitions.Name" xml:space="preserve">
+    <value>textMaxTransitions</value>
+  </data>
+  <data name=">>textMaxTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textMaxTransitions.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textMaxTransitions.ZOrder" xml:space="preserve">
+    <value>19</value>
+  </data>
+  <data name="labelMaxTransitions.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 158</value>
+  </data>
+  <data name="labelMaxTransitions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 13</value>
+  </data>
+  <data name="labelMaxTransitions.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelMaxTransitions.Text" xml:space="preserve">
+    <value>每次样品允许的最多离子对数(&amp;X)：</value>
+  </data>
+  <data name=">>labelMaxTransitions.Name" xml:space="preserve">
+    <value>labelMaxTransitions</value>
+  </data>
+  <data name=">>labelMaxTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelMaxTransitions.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelMaxTransitions.ZOrder" xml:space="preserve">
+    <value>18</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>218, 41</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name=">>btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name=">>btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnCancel.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>218, 11</value>
+  </data>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name=">>btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
+  </data>
+  <data name=">>btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnOk.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 303</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>方法类型(&amp;T)：</value>
+  </data>
+  <data name=">>label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name=">>label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label2.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="comboTargetType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 319</value>
+  </data>
+  <data name="comboTargetType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 21</value>
+  </data>
+  <data name="comboTargetType.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name=">>comboTargetType.Name" xml:space="preserve">
+    <value>comboTargetType</value>
+  </data>
+  <data name=">>comboTargetType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboTargetType.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboTargetType.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="textRunLength.Location" type="System.Drawing.Point, System.Drawing">
+    <value>174, 322</value>
+  </data>
+  <data name="textRunLength.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textRunLength.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="textRunLength.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name=">>textRunLength.Name" xml:space="preserve">
+    <value>textRunLength</value>
+  </data>
+  <data name=">>textRunLength.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textRunLength.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textRunLength.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="textDwellTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>174, 319</value>
+  </data>
+  <data name="textDwellTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textDwellTime.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="textDwellTime.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name=">>textDwellTime.Name" xml:space="preserve">
+    <value>textDwellTime</value>
+  </data>
+  <data name=">>textDwellTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textDwellTime.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textDwellTime.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="labelDwellTime.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDwellTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>174, 303</value>
+  </data>
+  <data name="labelDwellTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 13</value>
+  </data>
+  <data name="labelDwellTime.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="labelDwellTime.Text" xml:space="preserve">
+    <value>驻留时间（毫秒）(&amp;D)：</value>
+  </data>
+  <data name="labelDwellTime.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name=">>labelDwellTime.Name" xml:space="preserve">
+    <value>labelDwellTime</value>
+  </data>
+  <data name=">>labelDwellTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelDwellTime.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelDwellTime.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="comboInstrument.Items" xml:space="preserve">
+    <value>ABI</value>
+  </data>
+  <data name="comboInstrument.Items1" xml:space="preserve">
+    <value>Agilent</value>
+  </data>
+  <data name="comboInstrument.Items2" xml:space="preserve">
+    <value>Thermo</value>
+  </data>
+  <data name="comboInstrument.Items3" xml:space="preserve">
+    <value>Waters</value>
+  </data>
+  <data name="comboInstrument.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 27</value>
+  </data>
+  <data name="comboInstrument.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboInstrument.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="comboInstrument.ToolTip" xml:space="preserve">
+    <value>执行这些设置的仪器类型</value>
+  </data>
+  <data name=">>comboInstrument.Name" xml:space="preserve">
+    <value>comboInstrument</value>
+  </data>
+  <data name=">>comboInstrument.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboInstrument.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboInstrument.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 11</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>82, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>仪器类型(&amp;I)：</value>
+  </data>
+  <data name=">>label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name=">>label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label4.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label4.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="labelTemplateFile.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 370</value>
+  </data>
+  <data name="labelTemplateFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="labelTemplateFile.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="labelTemplateFile.Text" xml:space="preserve">
+    <value>模板文件(&amp;E)：</value>
+  </data>
+  <data name=">>labelTemplateFile.Name" xml:space="preserve">
+    <value>labelTemplateFile</value>
+  </data>
+  <data name=">>labelTemplateFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelTemplateFile.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelTemplateFile.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="textTemplateFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 388</value>
+  </data>
+  <data name="textTemplateFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>196, 20</value>
+  </data>
+  <data name="textTemplateFile.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name=">>textTemplateFile.Name" xml:space="preserve">
+    <value>textTemplateFile</value>
+  </data>
+  <data name=">>textTemplateFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textTemplateFile.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>textTemplateFile.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="btnBrowseTemplate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowseTemplate.Location" type="System.Drawing.Point, System.Drawing">
+    <value>218, 387</value>
+  </data>
+  <data name="btnBrowseTemplate.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseTemplate.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="btnBrowseTemplate.Text" xml:space="preserve">
+    <value>浏览(&amp;B)……</value>
+  </data>
+  <data name=">>btnBrowseTemplate.Name" xml:space="preserve">
+    <value>btnBrowseTemplate</value>
+  </data>
+  <data name=">>btnBrowseTemplate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>btnBrowseTemplate.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>btnBrowseTemplate.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="cbIgnoreProteins.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbIgnoreProteins.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbIgnoreProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>179, 117</value>
+  </data>
+  <data name="cbIgnoreProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 17</value>
+  </data>
+  <data name="cbIgnoreProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbIgnoreProteins.Text" xml:space="preserve">
+    <value>忽视蛋白质(&amp;R)</value>
+  </data>
+  <data name="cbIgnoreProteins.ToolTip" xml:space="preserve">
+    <value>如果被选，肽将在文件中进行分配，不会考虑蛋白质范围。
+否则，如果蛋白质所包含的离子对数
+超过最大限制，那么相同蛋白质中的肽只会分离。</value>
+  </data>
+  <data name=">>cbIgnoreProteins.Name" xml:space="preserve">
+    <value>cbIgnoreProteins</value>
+  </data>
+  <data name=">>cbIgnoreProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbIgnoreProteins.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>cbIgnoreProteins.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="cbEnergyRamp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbEnergyRamp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 7</value>
+  </data>
+  <data name="cbEnergyRamp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 17</value>
+  </data>
+  <data name="cbEnergyRamp.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbEnergyRamp.Text" xml:space="preserve">
+    <value>添加能量梯度(&amp;A)</value>
+  </data>
+  <data name="cbEnergyRamp.ToolTip" xml:space="preserve">
+    <value>Thermo TSQ 软件的某些版本要求具有
+添加能量梯度栏</value>
+  </data>
+  <data name=">>cbEnergyRamp.Name" xml:space="preserve">
+    <value>cbEnergyRamp</value>
+  </data>
+  <data name=">>cbEnergyRamp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbEnergyRamp.Parent" xml:space="preserve">
+    <value>panelThermoColumns</value>
+  </data>
+  <data name=">>cbEnergyRamp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="cbTriggerRefColumns.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbTriggerRefColumns.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 30</value>
+  </data>
+  <data name="cbTriggerRefColumns.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 17</value>
+  </data>
+  <data name="cbTriggerRefColumns.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="cbTriggerRefColumns.Text" xml:space="preserve">
+    <value>添加触发器和参考(&amp;N)</value>
+  </data>
+  <data name="cbTriggerRefColumns.ToolTip" xml:space="preserve">
+    <value>Thermo TSQ 软件的某些版本要求具有
+添加触发器和参考栏</value>
+  </data>
+  <data name=">>cbTriggerRefColumns.Name" xml:space="preserve">
+    <value>cbTriggerRefColumns</value>
+  </data>
+  <data name=">>cbTriggerRefColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbTriggerRefColumns.Parent" xml:space="preserve">
+    <value>panelThermoColumns</value>
+  </data>
+  <data name=">>cbTriggerRefColumns.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbExportMultiQuant.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbExportMultiQuant.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 6</value>
+  </data>
+  <data name="cbExportMultiQuant.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 17</value>
+  </data>
+  <data name="cbExportMultiQuant.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbExportMultiQuant.Text" xml:space="preserve">
+    <value>创建 MultiQuant 方法(&amp;Q)</value>
+  </data>
+  <data name="cbExportMultiQuant.ToolTip" xml:space="preserve">
+    <value>将兼容 MultiQuant 的分析方法导出到相同的目录中，
+基名取为 Analyst 采集方法。</value>
+  </data>
+  <data name=">>cbExportMultiQuant.Name" xml:space="preserve">
+    <value>cbExportMultiQuant</value>
+  </data>
+  <data name=">>cbExportMultiQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>cbExportMultiQuant.Parent" xml:space="preserve">
+    <value>panelAbSciexTOF</value>
+  </data>
+  <data name=">>cbExportMultiQuant.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 250</value>
+  </data>
+  <data name="comboOptimizing.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboOptimizing.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name=">>comboOptimizing.Name" xml:space="preserve">
+    <value>comboOptimizing</value>
+  </data>
+  <data name=">>comboOptimizing.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>comboOptimizing.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>comboOptimizing.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 236</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>最优化(&amp;Z)：</value>
+  </data>
+  <data name=">>label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name=">>label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>label1.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelMethods.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMethods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 201</value>
+  </data>
+  <data name="labelMethods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 13</value>
+  </data>
+  <data name="labelMethods.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelMethods.Text" xml:space="preserve">
+    <value>方法：</value>
+  </data>
+  <data name=">>labelMethods.Name" xml:space="preserve">
+    <value>labelMethods</value>
+  </data>
+  <data name=">>labelMethods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelMethods.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelMethods.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelMethodNum.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMethodNum.Location" type="System.Drawing.Point, System.Drawing">
+    <value>70, 201</value>
+  </data>
+  <data name="labelMethodNum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 13</value>
+  </data>
+  <data name="labelMethodNum.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="labelMethodNum.Text" xml:space="preserve">
+    <value>##</value>
+  </data>
+  <data name=">>labelMethodNum.Name" xml:space="preserve">
+    <value>labelMethodNum</value>
+  </data>
+  <data name=">>labelMethodNum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>labelMethodNum.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>labelMethodNum.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelThermoColumns.Location" type="System.Drawing.Point, System.Drawing">
+    <value>148, 337</value>
+  </data>
+  <data name="panelThermoColumns.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 54</value>
+  </data>
+  <data name="panelThermoColumns.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="panelThermoColumns.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name=">>panelThermoColumns.Name" xml:space="preserve">
+    <value>panelThermoColumns</value>
+  </data>
+  <data name=">>panelThermoColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>panelThermoColumns.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>panelThermoColumns.ZOrder" xml:space="preserve">
+    <value>24</value>
+  </data>
+  <data name="panelAbSciexTOF.Location" type="System.Drawing.Point, System.Drawing">
+    <value>148, 272</value>
+  </data>
+  <data name="panelAbSciexTOF.Size" type="System.Drawing.Size, System.Drawing">
+    <value>155, 28</value>
+  </data>
+  <data name="panelAbSciexTOF.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="panelAbSciexTOF.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name=">>panelAbSciexTOF.Name" xml:space="preserve">
+    <value>panelAbSciexTOF</value>
+  </data>
+  <data name=">>panelAbSciexTOF.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>panelAbSciexTOF.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>panelAbSciexTOF.ZOrder" xml:space="preserve">
+    <value>23</value>
+  </data>
+  <data name="textPrimaryCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>34, 4</value>
+  </data>
+  <data name="textPrimaryCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 20</value>
+  </data>
+  <data name="textPrimaryCount.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name=">>textPrimaryCount.Name" xml:space="preserve">
+    <value>textPrimaryCount</value>
+  </data>
+  <data name=">>textPrimaryCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>textPrimaryCount.Parent" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name=">>textPrimaryCount.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>71, 7</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>54, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>最优先</value>
+  </data>
+  <data name=">>label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name=">>label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label5.Parent" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name=">>label5.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 7</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>顶部</value>
+  </data>
+  <data name=">>label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name=">>label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>label3.Parent" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name=">>label3.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
+    <value>148, 244</value>
+  </data>
+  <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 27</value>
+  </data>
+  <data name="panelTriggered.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="panelTriggered.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name=">>panelTriggered.Name" xml:space="preserve">
+    <value>panelTriggered</value>
+  </data>
+  <data name=">>panelTriggered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>panelTriggered.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name=">>panelTriggered.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>305, 422</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>导出方法</value>
+  </data>
+  <data name=">>helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
+  </data>
+  <data name=">>helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name=">>$this.Name" xml:space="preserve">
+    <value>ExportMethodDlg</value>
+  </data>
+  <data name=">>$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

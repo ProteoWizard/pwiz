@@ -1,0 +1,50 @@
+#
+# $Id$
+#
+
+#~ Copyright Redshift Software, Inc. 2006.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building PNG library <http://www.libpng.org/>.
+### Targets:
+###     /ext/png//png
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import common ;
+import set ;
+import tar ;
+import errors ;
+
+extension.declare png ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
+        zlib-src-location ?= $(location)/../zlib-1.2.3 ;
+        path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
+        using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h *.prebuilt : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "LibPNG source tree not found at $(location)" ;
+        }
+
+        using png : $(version) : <source>$(location) $(options) <build-name>png : [ extension.static-with-fpic ] <library>/zlib//zlib : is-default ;
+        alias png : /libpng//libpng ;
+    }
+}

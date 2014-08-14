@@ -1,0 +1,163 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2007 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+project
+    : requirements 
+        <include>ramp # look in local ramp directory for ramp.h
+        <toolset>gcc:<define>_LARGEFILE_SOURCE # ramp.h wants this
+        <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
+    ;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+
+lib pwiz_data_msdata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
+lib pwiz_data_msdata
+    : # sources
+        BinaryDataEncoder.cpp
+        ChromatogramList_mzML.cpp
+        [ mz5-build ChromatogramList_mz5.cpp ]
+        DefaultReaderList.cpp
+        Diff.cpp
+        IO.cpp
+        Index_mzML.cpp
+        LegacyAdapter.cpp
+        MSData.cpp
+        MSDataFile.cpp
+        MSDataMerger.cpp
+        MSNumpress.cpp
+        Serializer_mzML.cpp
+        Serializer_mzXML.cpp
+        Serializer_MGF.cpp
+        Serializer_MSn.cpp
+        [ mz5-build Serializer_mz5.cpp ]
+        SpectrumInfo.cpp
+        SpectrumIterator.cpp
+        SpectrumList_mzML.cpp
+        SpectrumList_mzXML.cpp
+        SpectrumList_MGF.cpp
+        SpectrumList_MSn.cpp
+        SpectrumList_BTDX.cpp
+        [ mz5-build SpectrumList_mz5.cpp ]
+        SpectrumListCache.cpp
+        RAMPAdapter.cpp
+        Reader.cpp
+        References.cpp
+        SpectrumWorkerThreads.cpp
+    : # requirements
+        <library>pwiz_data_msdata_version
+        <library>../common//pwiz_data_common
+        <library>../..//pwiz_version
+		<library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//thread
+        <library>/ext/boost//regex
+        <library>/ext/zlib//z
+        [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_data_msdata_version
+        <library>../common//pwiz_data_common
+        <library>../..//pwiz_version
+        <library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//filesystem
+        <library>/ext/boost//thread
+        <library>/ext/boost//regex
+        <library>/ext/zlib//z
+        [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
+    ;
+
+
+lib pwiz_data_msdata_examples
+    :   examples.cpp
+    :   <library>pwiz_data_msdata
+    :
+    :   <library>pwiz_data_msdata
+    ;
+
+
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+
+unit-test-if-exists MSDataTest : MSDataTest.cpp pwiz_data_msdata ; # MSData.cpp cv.cpp ;
+unit-test-if-exists LegacyAdapterTest : LegacyAdapterTest.cpp pwiz_data_msdata ; # LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ;
+unit-test-if-exists SpectrumIteratorTest : SpectrumIteratorTest.cpp pwiz_data_msdata ; # SpectrumIterator.cpp MSData.cpp cv.cpp ../util ;
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_msdata_examples ; # Diff.cpp MSData.cpp cv.cpp ;
+unit-test-if-exists MSDataMergerTest : MSDataMergerTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
+unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_msdata ; # References.cpp MSData.cpp cv.cpp ;
+unit-test-if-exists IOTest : IOTest.cpp pwiz_data_msdata ; # IO.cpp MSData.cpp Diff.cpp cv.cpp References.cpp BinaryDataEncoder.cpp ../minimxml ../util ;
+unit-test-if-exists SpectrumList_mzML_Test : SpectrumList_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzML.cpp examples.cpp Serializer_mzML.cpp  References.cpp IO.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../minimxml ../util ;
+unit-test-if-exists ChromatogramList_mzML_Test : ChromatogramList_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # ChromatogramList_mzML.cpp examples.cpp Serializer_mzML.cpp  References.cpp IO.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../minimxml ../util ;
+unit-test-if-exists Serializer_mzML_Test : Serializer_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzML.cpp examples.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../util ../minimxml ;
+unit-test-if-exists SpectrumList_mzXML_Test : SpectrumList_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzXML.cpp examples.cpp Serializer_mzXML.cpp References.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
+unit-test-if-exists Serializer_mzXML_Test : Serializer_mzXML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # Serializer_mzXML.cpp examples.cpp SpectrumList_mzXML.cpp Serializer_mzML.cpp SpectrumList_mzML.cpp IO.cpp References.cpp Diff.cpp BinaryDataEncoder.cpp LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ../util ../minimxml ;
+unit-test-if-exists SpectrumList_MGF_Test : SpectrumList_MGF_Test.cpp pwiz_data_msdata ;
+unit-test-if-exists Serializer_MGF_Test : Serializer_MGF_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_MSn_Test : SpectrumList_MSn_Test.cpp pwiz_data_msdata ;
+unit-test-if-exists Serializer_MSn_Test : Serializer_MSn_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
+if ! [ without-mz5 ] 
+{
+	unit-test-if-exists Serializer_mz5_Test : Serializer_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+	unit-test-if-exists SpectrumList_mz5_Test : SpectrumList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+	unit-test-if-exists ChromatogramList_mz5_Test : ChromatogramList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+}
+unit-test-if-exists MSnReaderTest : MSnReaderTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
+unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+unit-test-if-exists RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ../vendor_readers ;
+unit-test-if-exists SpectrumInfoTest : SpectrumInfoTest.cpp pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumListBaseTest : SpectrumListBaseTest.cpp pwiz_data_msdata ;
+unit-test-if-exists ChromatogramListBaseTest : ChromatogramListBaseTest.cpp pwiz_data_msdata ;
+unit-test-if-exists SpectrumListWrapperTest : SpectrumListWrapperTest.cpp pwiz_data_msdata ;
+unit-test-if-exists SpectrumListCacheTest : SpectrumListCacheTest.cpp pwiz_data_msdata ;
+
+
+# special run target for BinaryDataEncoderTest, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run-if-exists BinaryDataEncoderTest.cpp pwiz_data_msdata
+    : # args
+    : # input-files
+        BinaryDataEncoderTest.bad.bin
+    : # requirements
+    : # target name
+        BinaryDataEncoderTest
+    : # default-build
+    ;

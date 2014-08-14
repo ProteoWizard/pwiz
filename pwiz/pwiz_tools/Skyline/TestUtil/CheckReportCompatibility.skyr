@@ -1,0 +1,74 @@
+﻿<?xml version="1.0"?>
+<ReportSpecList>
+  <!-- this file contains reports that are used by CheckReportCompatibility -->
+  <revision index="1" />
+  <report name="PivotIsotopeLabel">
+    <table name="T1">DbPrecursor</table>
+    <select>
+      <column name="T1">Peptide.Sequence</column>
+      <column name="T1">Charge</column>
+    </select>
+    <group_by>
+      <column name="T1">Peptide</column>
+      <column name="T1">Charge</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name="T1">IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name="T1">Mz</column>
+    </cross_tab_values>
+  </report>
+  <report name="PivotIsotopeLabelWithResults">
+    <table name="T1">DbPrecursor</table>
+    <table name="T2">DbPrecursorResult</table>
+    <select>
+      <column name="T1">Peptide.Sequence</column>
+    </select>
+    <group_by>
+      <column name="T1">Peptide</column>
+      <column name="T1">Charge</column>
+      <column name="T2">ResultFile.Replicate.Replicate</column>
+      <column name="T2">OptStep</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name="T1">IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name="T1">Mz</column>
+      <column name="T2">TotalArea</column>
+    </cross_tab_values>
+  </report>
+  <report name="PivotIsotopeLabelAndReplicate">
+    <table name="T1">DbTransition</table>
+    <table name="T2">DbTransitionResult</table>
+    <select>
+      <column name="T1">Precursor.Peptide.Sequence</column>
+      <column name="T1">Precursor.Peptide.Protein.Name</column>
+      <column name="T1">Precursor.Charge</column>
+      <column name="T1">ProductCharge</column>
+      <column name="T1">FragmentIon</column>
+    </select>
+    <group_by>
+      <column name="T1">ProductCharge</column>
+      <column name="T1">FragmentIon</column>
+      <column name="T1">Losses</column>
+      <column name="T1">Precursor.Peptide</column>
+      <column name="T1">Precursor.Charge</column>
+      <column name="T2">PrecursorResult.OptStep</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name="T2">ResultFile.Replicate.Replicate</column>
+      <column name="T1">Precursor.IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.ReplicateName</column>
+      <column name="T1">Precursor.Mz</column>
+      <column name="T1">ProductMz</column>
+      <column name="T2">RetentionTime</column>
+      <column name="T2">Area</column>
+      <column name="T2">Background</column>
+      <column name="T2">PeakRank</column>
+    </cross_tab_values>
+  </report>
+</ReportSpecList>

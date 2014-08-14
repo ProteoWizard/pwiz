@@ -1,0 +1,46 @@
+
+5 Peptide, Description & Usage
+Composition
+The 5 peptide mixture is comprised of the following species...
+
+All reagents listed with Sigma catalog numbers
+
+Angiotensin II: A-9525
+Asp-Arg-Val-Tyr-Ile-His-Pro-Phe
+(C50 H71 N13 O12)
+H+ Adducts: 1046.5418, 523.7745, 349.5188, 262.3909
+
+Bombessin: B-4272
+pGlu-Gln-Arg-Leu-Gly-Asn-Gln-Trp-Ala-Val-Gly-His-Leu-Met-NH2
+(C71 H110 N24 O18 S1) ?(C71 H111 N23 O20 S1)
+H+ Adducts: 1619.8223, 810.4148, 540.6123, 405.7110
+
+Substance P: S-6883
+Arg-Pro-Lys-Pro-Gln-Gln-Phe-Phe-Gly-Leu-Met-NH2
+(C63 H98 N18 O13 S1) ? (C63 H97 N17 O14 S1)
+H+ Adducts: 1347.7354, 674.3713, 449.9167
+
+Neurotensin: N-6383
+pGlu-Leu-Tyr-Glu-Asn-Lys-Pro-Arg-Arg-Pro-Tyr-Ile-Leu
+(C78 H121 N21 O20)
+H+ Adducts: 1672.9170, 836.9621, 558.3105, 418.9847, 335.3892
+
+Alpha1-6: T-2903
+Trp-His-Trp-Leu-Gln-Leu
+(C45 H59 N11 O8)
+H+ Adducts: 882.4621, 441.7347, 294.8255
+
+
+Solution Formulation
+Please follow the instuctions in the peptide reconstitution page.
+
+Usage
+Microspray
+For 1uL injections, 1 uM of each peptide as a final concentration in
+water is a good stock solution. This is our standard for 5 peptide
+injections
+
+Nanospray
+For 1uL injections, 0.1 uM of each peptide as a final concentration in
+water is a good stock solution
+

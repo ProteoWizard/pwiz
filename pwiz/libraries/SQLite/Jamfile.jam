@@ -1,0 +1,52 @@
+#
+# $Id: Jamfile.jam 304 2011-10-28 16:03:46Z chambm $
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+#lib sqlite3 : : <toolset>msvc <link>shared <name>System.Data.SQLite <search>. : : <include>. ;
+
+path-constant THIS_PATH : . ;
+
+rule sqlite3-requirements ( properties * )
+{
+    local result = <include>$(THIS_PATH) ;
+    if <toolset>msvc in $(properties)
+    {
+        if <address-model>64 in $(properties) { result += <define>SQLITE_MAX_MMAP_SIZE=70368744177664 ; }
+    }
+    else
+    {
+        result += <define>SQLITE_MAX_MMAP_SIZE=70368744177664 ;
+    }
+    return $(result) ;
+}
+
+rule sqlite3-usage-requirements ( properties * )
+{
+    if ! <toolset>msvc in $(properties)
+    {
+        return <linkflags>-ldl ;
+    }
+}
+
+lib sqlite3 : sqlite3.c : <conditional>@sqlite3-requirements <link>static : : <conditional>@sqlite3-usage-requirements <include>$(THIS_PATH) ;
+lib sqlite3pp : sqlite3pp.cpp sqlite3 : <include>$(THIS_PATH) <link>static : : <conditional>@sqlite3-usage-requirements <include>$(THIS_PATH) ;
+
+#exe sqlite : shell.c : <library>sqlite3 <link>static ;

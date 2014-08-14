@@ -1,0 +1,206 @@
+<html>
+<!--
+FILE: BlibBuild
+AUTHOR: Barbara Frewen
+CREATE DATE: 7/19/05
+PROJECT: BiblioSpec
+REVISION: $Revision: 1.8 $
+-->
+<head>
+<title>BlibBuild</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibBuild</h1></center>
+
+<blockquote>
+
+<p>
+<b>Description:</b>&nbsp;&nbsp;Creates a library of spectra with
+known peptide identifications.  Typically, these
+identifications are done with a database search such as SEQUEST or
+Mascot, sometimes followed by an evaluation step such as percolator
+or Peptide Prophet.  BlibBuild accepts files from a variety of
+database search programs.  File formats are identified by file
+extension, which are given in the table below.  In many cases, the
+peptide identification (peptide sequence, charge state and optional
+score) are in a separate file from the spectrum information.  Unless
+noted, it is assumed that both files will be in the same
+directory.</p> 
+
+<table BORDER=1 CELLPADDING=3 CELLSPACING=1 RULES=ALL FRAME=BOX>
+<tr><th>Database search</th>
+    <th>Peptide ID file extension</th>
+    <th>Spectrum file extension</th>
+    <th>Notes</th>
+</tr>
+
+<tr><td>SEQUEST / Percolator</td><td>.perc.xml (.sqt)</td>
+    <td>.cms2, .ms2</td>
+    <td>Percolator v1.17 does not include sequence modification
+    information therefore the .sqt file from the SEQUEST search must
+    be present in the same directory.</td>
+</tr>
+<tr><td>Peptide Prophet</td><td>.pep.xml, .pep.XML, .pepXML</td>
+    <td>.mzXML</td>
+    <td>The names of the .mzXML files are given in the .pep.xml file
+    and may be in the parent or grandparent directory.</td>
+</tr>
+<tr><td>Spectrum Mill</td><td>.pep.xml, .pep.XML, .pepXML</td>
+    <td>.mzXML, .mzML</td>
+    <td>The names of the .mzXML files are given in the .pep.xml file
+    and may be in the parent or grandparent directory.</td>
+</tr>
+<tr><td>OMSSA</td><td>.pep.xml, .pep.XML, .pepXML</td><td>.mzXML, .mzML</td>
+    <td>The names of the .mzXML files are given in the .pep.xml file
+    and may be in the parent or grandparent directory.</td>
+</tr>
+<tr><td>X! Tandem</td><td>.xtan.xml</td><td>&nbsp;</td>
+    <td>No separate spectrum file.</td>
+</tr>
+<tr><td>Mascot</td><td>.dat</td><td>&nbsp;</td>
+    <td>No separate spectrum file.</td>
+</tr>
+<tr><td>Protein Pilot</td><td>.group.xml</td><td>&nbsp;</td>
+    <td>No separate spectrum file.</td>
+</tr>
+<tr><td>ID Picker (Myrimatch)</td><td>.idpXML</td>
+    <td>.mzXML, .mzML</td>
+    <td>The name(s) of the spectrum file(s) are given in the .idpXML
+    file</td> 
+</tr>
+<tr><td>Scaffold</td><td>.mzid</td><td>.MGF</td>
+    <td>&nbsp;</td>
+</tr>
+<tr><td>MS<sup>e</sup></td><td>final_fragment.csv</td><td>&nbsp;</td>
+    <td>There need not be a . before 'final_fragment'.</td>
+</tr>
+<tr><td>generic</td><td>.ssl</td><td>&nbsp;</td>
+    <td>This generic format is provided for peptide identifications
+    made by other means.  See the <a href="fileFormats.html#ssl">file
+    formats</a> page for a description.</td>
+</tr>
+</table>
+
+
+<p><b>Usage:</b><code>&nbsp;&nbsp;BlibBuild [options] 
+&nbsp;&lt;peptide id&nbsp;file&gt;[+]
+&nbsp;&lt;library&nbsp;name&gt;</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li>
+<code>&lt;peptide id file&gt;</code> &ndash;
+A file containing peptide spectrum matches to be included in the
+library.  The associated spectrum files should be in the same
+directory as the peptide id file but should not be given on the
+command line.  See the above table for recognized formats.  Multiple
+files may be listed together.
+
+<li>
+<code>&lt;library&nbsp;name&gt;</code> &ndash;
+The name of the library being created.  An existing library may be
+overwriten or added to.
+</ul>
+
+<p><b>Output:</b>&nbsp;&nbsp;A spectrum library in in sqlite3 
+<a href="fileformats.html#lib">format</a>.  
+
+<p><b>Options:</b>
+<ul>
+<li>
+<code>-o</code> &nbsp;
+Overwrite existing library. Default append.
+
+<li>
+<code>-s</code> &nbsp;
+Result file names from stdin. (e.g. ls *pep.xml | BlibBuild -s
+new.blib)
+
+<li>
+<code>-q</code> &nbsp; &lt;max score&gt;
+Maximum FDR for accepting results from Percolator (.sqt or .perc.xml)
+files. Default 0.01.
+
+<li>
+<code>-p</code> &nbsp; &lt;min score&gt;
+Minimum probability for accepting results from PeptideProphet
+(.pep.xml) files. Default 0.95. 
+
+<li>
+<code>-e</code> &nbsp; &lt;max score&gt;
+Maximum expectation value for accepting results from Mascot (.dat)
+files. Default 0.05 
+
+<li>
+<code>-t</code> &nbsp; &lt;max score&gt;
+Maximum expectation value for accepting results from X! Tandem
+(.xtan.xml) files. Default 0.1 
+
+<li>
+<code>-f</code> &nbsp; &lt;min score&gt;
+Minimum Scaffold Peptide Probability for accepting results from .mzid
+files. Default 0.95 
+
+<li>
+<code>-w</code> &nbsp; &lt;min score&gt;
+Minimum Waters MSe peptide score for accepting results from
+final_fragment.csv files. Default 6.
+
+<li>
+<code>-E</code> &nbsp; &lt;max score&gt;
+Maximum expectation value for accepting results from OMSAA .pep.xml
+files. Default 0.00001 
+
+<li>
+<code>-v</code> &nbsp; &lt;level&gt;
+Level of output to stderr (silent, error, status, warn). Default
+status.
+
+<li>
+<code>-L</code> &nbsp;
+Write status and warning messages to log file.
+
+<li>
+<code>-m</code> &nbsp; &lt;size&gt;
+SQLite memory cache size in Megs. Default 250M.
+
+<li>
+<code>-l</code> &nbsp; &lt;level&gt;
+ZLib compression level (0-?). Default 3.
+
+<li>
+<code>-i</code> &nbsp; &lt;library_id&gt;
+LSID library ID. Default uses file name.
+
+<li>
+<code>-a</code> &nbsp; &lt;authority&gt;
+LSID authority. Default proteome.gs.washington.edu.
+
+</ul>
+
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+
+<p><b>Bugs:</b>
+<ul>
+<li>
+</ul>
+-->
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

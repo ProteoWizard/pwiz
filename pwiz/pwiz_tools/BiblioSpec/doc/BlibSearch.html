@@ -1,0 +1,135 @@
+<html>
+<!--
+FILE: BlibSearch.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 5/9/11
+PROJECT: BiblioSpec
+-->
+<head>
+<title>BlibSearch</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibSearch</h1></center>
+
+<blockquote>
+
+<p>
+<b>Description:</b>&nbsp;&nbsp;Search a spectrum library for matches
+to query spectra. 
+
+<p><b>Usage:</b><code>  BlibSearch [options] 
+&nbsp;&lt;spectrum&nbsp;filename&gt;
+&nbsp;&lt;library&nbsp;filename&gt;[+]
+</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li> 
+<code>&lt;spectrum filename&gt;</code> &ndash;
+A file containing spectra to search.  File formats accepted are .ms2,
+.cms2, .mzXML, .mzML, .MGF, and .wiff (Windows only).
+
+<li> 
+<code>&lt;library name&gt;</code> &ndash
+The library to be searched for matches to the query.  Libraries may be
+filtered (the output of BlibFilter) or redundant (the output of
+BilbBuild).  More than one library can be listed on the command line. 
+
+</ul>
+
+<p>
+<b>Output:</b>&nbsp;&nbsp;Results are printed to a 
+<a href="fileFormats.html#report">report</a> file (tab-delimited
+text). The file may be named with the <code>--report-file</code> option
+or by default it is named after the spectrum file with the extension
+replaced with .report.  A seprate report file is written for any decoy
+spectra searched. An optional sqlite .psm file may also be produced.  </p>
+
+<p>
+<b>Options:</b>
+<ul>
+
+<li>
+<code>-c [ --clear-precursor ] &lt;&lt;true|false&gt;</code> &ndash;
+Remove the peaks in a X m/z window around the precursor from the query
+and library spectrum. 
+
+<li>
+<code>--topPeaksForSearch &lt;num&gt;</code> &ndash;
+Use this many of the highest intensity peaks. Default 100.
+
+<li>
+<code>-w [ --mz-window ] &lt;size&gt;</code> &ndash;
+Compare query to library spectra with precursor m/z +/- size. Default
+3.
+
+<li>
+<code>-L [ --low-charge &lt;charge&gt;</code> &ndash; ] 
+Search only spectra with charge no less than this. Default 1.
+
+<li>
+<code>-H [ --high-charge ] &lt;charge&gt;</code> &ndash; 
+Search only spectra with charge no higher than this. Default 5.
+
+<li>
+<code>-m [ --report-matches ] &lt;num&gt;</code> &ndash;   
+Return this number of the best matches for each query.  Use -1 to
+report all. Default 5.
+
+<li>
+<code>--psm-result-file &lt;name&gt;</code> &ndash;
+Return results in a .psm file of the given name.  Default no .psm file.
+
+<li>
+<code>-R [ --report-file ] &lt;name&gt;</code> &ndash;
+Return results in report file of the given nam.  Default
+is <spectrum file name>.report. 
+
+<li>
+<code>--preserve-order</code> &ndash;
+Search spectra in the order they appear in the file.  Default to
+search as sorted by precursor m/z.
+
+<li>
+<code>-p [ --parameter-file ] &lt;name&gt;</code> &ndash;
+File containing search parameters.  Command line values override file
+values.
+
+<li>
+<code>-v [ --verbosity ] &lt;level&gt;</code> &ndash;
+Control the level of output to stderr. (silent, error, status, warn,
+debug, detail, all)   Default status.  
+
+<li>
+<code>-h [ --help ]</code> &ndash;
+Print help message.
+
+
+</ul>
+
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+-->
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2008 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+lib pwiz_analysis_calibration
+    : # sources 
+        Calibrator.cpp
+        CalibratorTrial.cpp
+        ErrorEstimator.cpp
+        LeastSquaresCalibrator.cpp
+        MassDatabase.cpp
+        MassSpread.cpp
+        PeptideDatabase.cpp
+    : # usage  
+        <library>/ext/boost//iostreams
+        <library>/ext/boost//filesystem
+    : # default-build
+    : # usage-requirements 
+        <library>/ext/boost//iostreams
+        <library>/ext/boost//filesystem
+    ;
+
+
+lib pwiz_analysis_calibration_deprecated
+    : Path.cpp Random.cpp mt19937ar.cpp ;
+
+
+unit-test-if-exists CalibratorTrialTest : CalibratorTrialTest.cpp pwiz_analysis_calibration  ;
+unit-test-if-exists LeastSquaresCalibratorTest : LeastSquaresCalibratorTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists MassDatabaseTest : MassDatabaseTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists MassSpreadTest :   MassSpreadTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists PeptideDatabaseTest : PeptideDatabaseTest.cpp pwiz_analysis_calibration ;
+
+
+exe simerr : simerr.cpp pwiz_analysis_calibration pwiz_analysis_calibration_deprecated ;
+exe simcal : simcal.cpp pwiz_analysis_calibration pwiz_analysis_calibration_deprecated ;
+
+
+install bin : simerr simcal : <location>bin ;
+explicit bin ;
+

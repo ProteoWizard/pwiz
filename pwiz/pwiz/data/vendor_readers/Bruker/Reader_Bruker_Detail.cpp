@@ -1,0 +1,248 @@
+//
+// $Id$
+//
+//
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+//
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+
+#include "Reader_Bruker_Detail.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+#include "boost/filesystem/convenience.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
+
+using namespace pwiz::vendor_api::Bruker;
+
+namespace pwiz {
+namespace msdata {
+namespace detail {
+namespace Bruker {
+
+
+using namespace pwiz::util;
+
+Reader_Bruker_Format format(const string& path)
+{
+    bfs::path sourcePath(path);
+
+    // Make sure target "path" is actually a directory since
+    // all Bruker formats are directory-based
+    if (!bfs::is_directory(sourcePath))
+    {
+        // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf/.U2
+        // Note that direct paths to baf or u2 will fail to find a baf/u2 hybrid source
+        std::string leaf = BFS_STRING(sourcePath.leaf());
+        bal::to_lower(leaf);
+        if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
+            return Reader_Bruker_Format_FID;
+        else if(extension(sourcePath) == ".u2")
+            return Reader_Bruker_Format_U2;
+        else if(leaf == "analysis.yep")
+            return Reader_Bruker_Format_YEP;
+        else if(leaf == "analysis.baf")
+            return Reader_Bruker_Format_BAF;
+        else
+            return Reader_Bruker_Format_Unknown;
+    }
+
+    // TODO: 1SRef is not the only possible substring below, get more examples!
+
+    // Check for fid-based data;
+    // Every directory within the queried directory should have a "1/1SRef"
+    // subdirectory with a fid file in it, but we check only the first non-dotted
+    // directory for efficiency. This can fail, but those failures are acceptable.
+    // Alternatively, a directory closer to the fid file can be identified.
+    // Caveat: BAF files may be accompanied by a fid, skip these cases! (?)
+    const static bfs::directory_iterator endItr;
+    bfs::directory_iterator itr(sourcePath);
+    for (; itr != endItr; ++itr)
+        if (bfs::is_directory(itr->status()))
+        {
+            if (BFS_STRING(itr->path().leaf())[0] == '.') // HACK: skip ".svn"
+                continue;
+            else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
+                     bfs::exists(itr->path() / "1SRef/fid") ||
+                     bfs::exists(itr->path() / "1/1SLin/fid") ||
+                     bfs::exists(itr->path() / "1SLin/fid") ||
+                     (bfs::exists(itr->path() / "fid") && !bfs::exists(itr->path() / "Analysis.baf") && !bfs::exists(itr->path() / "analysis.baf")) ||
+                     (bfs::exists(sourcePath / "fid") && !bfs::exists(sourcePath / "Analysis.baf") && !bfs::exists(sourcePath / "analysis.baf")))
+                    return Reader_Bruker_Format_FID;
+            else
+                break;
+        }
+
+    // Check for yep-based data;
+    // The directory should have a file named "Analysis.yep"
+    if (bfs::exists(sourcePath / "Analysis.yep") || bfs::exists(sourcePath / "analysis.yep"))
+        return Reader_Bruker_Format_YEP;
+
+    bfs::path sourceDirectory = *(--sourcePath.end());
+
+    // Check for baf-based data;
+    // The directory should have a file named "Analysis.baf"
+    if (bfs::exists(sourcePath / "Analysis.baf") || bfs::exists(sourcePath / "analysis.baf"))
+    {
+        // Check for baf/u2 hybrid data
+        if (bfs::exists(sourcePath / sourceDirectory.replace_extension(".u2")))
+            return Reader_Bruker_Format_BAF_and_U2;
+        else
+            return Reader_Bruker_Format_BAF;
+    }
+
+    // Check for u2-based data;
+    // The directory should have a file named "<directory-name - ".d">.u2"
+    if (bfs::exists(sourcePath / sourceDirectory.replace_extension(".u2")))
+        return Reader_Bruker_Format_U2;
+
+    return Reader_Bruker_Format_Unknown;
+}
+
+
+#ifdef PWIZ_READER_BRUKER
+
+std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataPtr rawfile)
+{
+    vector<InstrumentConfiguration> configurations;
+    
+    MSSpectrumPtr firstSpectrum = rawfile->getMSSpectrum(1);
+    MSSpectrumParameterListPtr parametersPtr = firstSpectrum->parameters();
+    const MSSpectrumParameterList& parameters = *parametersPtr;
+
+    map<string, string> parameterMap;
+    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
+        parameterMap[p.name] = p.value;
+
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap:
+        case InstrumentFamily_OTOF:
+        case InstrumentFamily_OTOFQ:
+        case InstrumentFamily_maXis:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            break;
+
+        case InstrumentFamily_MaldiTOF:
+        case InstrumentFamily_BioTOF:
+        case InstrumentFamily_BioTOFQ:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(Component(MS_MALDI, 1));
+            break;
+
+        case InstrumentFamily_FTMS:
+            configurations.push_back(InstrumentConfiguration());
+            if (parameterMap["Mobile Hexapole Position"] == "MALDI") // HACK: I haven't seen enough data to know whether this is robust.
+                configurations.back().componentList.push_back(Component(MS_MALDI, 1));
+            else
+                configurations.back().componentList.push_back(Component(MS_ESI, 1));
+            break;
+
+        default:
+        case InstrumentFamily_Unknown:
+            break; // unknown configuration
+    }
+
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap:
+            configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 3));
+            break;
+
+        case InstrumentFamily_OTOF:
+        case InstrumentFamily_MaldiTOF:
+            configurations.back().componentList.push_back(Component(MS_time_of_flight, 2));
+            configurations.back().componentList.push_back(Component(MS_multichannel_plate, 3));
+            configurations.back().componentList.push_back(Component(MS_photomultiplier, 4));
+            break;
+
+        case InstrumentFamily_OTOFQ:
+        case InstrumentFamily_BioTOFQ:
+        case InstrumentFamily_maXis:
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 3));
+            configurations.back().componentList.push_back(Component(MS_time_of_flight, 4));
+            configurations.back().componentList.push_back(Component(MS_multichannel_plate, 5));
+            configurations.back().componentList.push_back(Component(MS_photomultiplier, 6));
+            break;
+
+        case InstrumentFamily_FTMS:
+            configurations.back().componentList.push_back(Component(MS_FT_ICR, 2));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
+            break;
+
+        default:
+        case InstrumentFamily_Unknown:
+            break; // unknown configuration
+    }
+
+    return configurations;
+}
+
+PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile)
+{
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap: return MS_Bruker_Daltonics_HCT_Series; // or amazon
+        case InstrumentFamily_OTOF: return MS_Bruker_Daltonics_micrOTOF_series;
+        case InstrumentFamily_OTOFQ: return MS_Bruker_Daltonics_micrOTOF_series; // or ultroTOF
+        case InstrumentFamily_BioTOF: return MS_Bruker_Daltonics_BioTOF_series;
+        case InstrumentFamily_BioTOFQ: return MS_Bruker_Daltonics_BioTOF_series;
+        case InstrumentFamily_MaldiTOF: return MS_Bruker_Daltonics_flex_series;
+        case InstrumentFamily_FTMS: return MS_Bruker_Daltonics_apex_series; // or solarix
+        case InstrumentFamily_maXis: return MS_Bruker_Daltonics_maXis_series;
+
+        default:
+        case InstrumentFamily_Unknown:
+            return MS_Bruker_Daltonics_instrument_model;
+    }
+}
+
+PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile)
+{
+    switch (rawfile->getInstrumentFamily())
+    {
+        case InstrumentFamily_Trap: return MS_HCTcontrol;
+        case InstrumentFamily_OTOF: return MS_micrOTOFcontrol;
+        case InstrumentFamily_OTOFQ: return MS_micrOTOFcontrol;
+        case InstrumentFamily_BioTOF: return MS_Compass;
+        case InstrumentFamily_BioTOFQ: return MS_Compass;
+        case InstrumentFamily_MaldiTOF: return MS_FlexControl;
+        case InstrumentFamily_FTMS: return MS_apexControl;
+        case InstrumentFamily_maXis: return MS_Compass;
+
+        default:
+        case InstrumentFamily_Unknown:
+            return MS_Compass;
+    }
+}
+
+#else
+
+PWIZ_API_DECL std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataPtr rawfile) { throw runtime_error("Reader_Bruker not implemented"); }
+PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile) { throw runtime_error("Reader_Bruker not implemented"); }
+PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile) { throw runtime_error("Reader_Bruker not implemented"); }
+
+#endif
+
+
+} // namespace Bruker
+} // namespace detail
+} // namespace msdata
+} // namespace pwiz

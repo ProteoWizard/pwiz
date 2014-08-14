@@ -1,0 +1,315 @@
+#
+# $Id$
+#
+#
+# Original author: Barbara Frewen <frewen .@. u.washington.edu>
+#
+# Copyright 2012 University of Washington - Seattle, WA 98195
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+import common ;
+import notfile ;
+import path ;
+import sequence ;
+
+# some properties for all
+project 
+  : requirements
+      <link>static
+;
+
+# extract the input files for the tests
+path-constant TEST_DATA_PATH : ./inputs ;
+
+# get copy command and separator
+# TODO remove this
+constant COPY_COMMAND : [ common.copy-command ] ;
+os_separator = / ;
+if [ modules.peek : NT ]
+{
+    os_separator = \\ ;
+}
+
+rule test-data
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
+        {
+            echo "[pwiz_tools/BiblioSpec] Missing test data." ;
+            result = <build>no ;
+        }
+    }
+    return $(result) ;
+}
+
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+
+rule mascot-installed ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+#    if ! $(msparser_path)
+#   Allow TeamCity to pass
+    if ! $(msparser_path) || <toolset>msvc in $(properties)
+    {
+        result = <build>no ;
+    }
+
+    return $(result) ;
+}
+
+# execute and compare tools converted to exe; new run targets run those tools with the given arguments
+path-constant THIS_PATH : . ;
+path-constant TEST_BUILD_PATH : $(PWIZ_BUILD_PATH)/BiblioSpec ;
+
+alias BlibBuild : ../src//BlibBuild ;
+alias BlibFilter : ../src//BlibFilter ;
+alias BlibToMs2 : ../src//BlibToMs2 ;
+alias BlibSearch : ../src//BlibSearch ;
+
+rule blib-test-build ( name : args * : output-name : reference-names + : inputs * : requirements * )
+{
+    local this_path = [ path.make $(THIS_PATH) ] ;
+
+    run-if-exists ExecuteBlib.cpp
+      : $(args) [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/$(inputs) ]
+      : BlibBuild
+      : $(requirements) <conditional>@test-data
+      : build-$(name) ;
+    run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
+      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
+      :
+      : <include>../src
+        <dependency>build-$(name)
+        $(requirements)
+      : $(name) ;
+}
+
+rule blib-test-filter ( name : args * : output-name : reference-names + : inputs * : requirements * )
+{
+    local this_path = [ path.make $(THIS_PATH) ] ;
+
+    run-if-exists ExecuteBlib.cpp
+      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
+      : BlibFilter
+      : $(requirements) <conditional>@test-data
+      : build-$(name) ;
+    run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
+      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
+      :
+      : <include>../src
+        <dependency>build-$(name)
+        $(requirements)
+      : $(name) ;
+}
+
+rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs * : requirements * )
+{
+    local this_path = [ path.make $(THIS_PATH) ] ;
+
+    run-if-exists ExecuteBlib.cpp
+      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
+      : BlibToMs2
+      : $(requirements) <conditional>@test-data
+      : build-$(name) ;
+    run-if-exists CompareTextFiles.cpp
+      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
+      :
+      : <include>../src
+        <dependency>build-$(name)
+        $(requirements)
+      : $(name) ;
+}
+
+rule blib-test-search ( name : args * : output-name : reference-names + : inputs * : requirements * )
+{
+    local this_path = [ path.make $(THIS_PATH) ] ;
+
+    run-if-exists ExecuteBlib.cpp
+      : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) ]
+      : BlibSearch
+      : $(requirements) <conditional>@test-data
+      : build-$(name) ;
+    run-if-exists CompareTextFiles.cpp
+      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
+      :
+      : <include>../src
+        <dependency>build-$(name)
+        $(requirements)
+      : $(name) ;
+}
+
+
+# Test building with sqt files
+
+blib-test-build sqt-ms2 : -o : output/demo.blib : sqt-ms2.check : inputs/demo.sqt ;
+blib-test-build sqt-cms2 : -o : output/demo-copy.blib : sqt-cms2.check : inputs/demo-copy.sqt ;
+blib-test-build sqt-ez : -o : output/sqt-ez.blib : sqt-ez.check : inputs/wormy4raw-1.select.sqt ;
+
+# Test with the tab-delimited input format
+
+blib-test-build ssl : -o : output/ssl.blib : ssl.check : inputs/demo.ssl ;
+blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : inputs/extra-cols.ssl ;
+blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : inputs/three-duplicates.ssl ;
+
+# Test building with percolator XML files
+
+blib-test-build perc-xml : -o : output/perc.blib : perc-xml.check : inputs/smaller.perc.xml ;
+
+# Test building with percolator XML files (bracketed modifications)
+
+blib-test-build perc-bracket-xml : -o : output/perc-bracket.blib : perc-bracket-xml.check : inputs/bracket.perc.xml ;
+
+# Test building with .pep.xml from various pipelines
+
+blib-test-build omssa : -o : output/omssa.blib : omssa.check : inputs/OMSSA.pep.xml ;
+blib-test-build pep-proph : -o : output/pep-proph.blib : pep-proph.check : inputs/CAexample.pep.xml ;
+blib-test-build morpheus : -o : output/morpheus.blib : morpheus.check : inputs/test-morpheus.pep.xml ;
+blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb.pepXML ;
+blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : inputs/peaksdb.pep.xml ;
+blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : inputs/V20120113-01_ITMSms2cid.pep.xml ;
+blib-test-build smill : -o : output/smill.blib : smill.check : inputs/CPTAC_Set4_725_091509.pep.XML ;
+blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : inputs/interact-prob-three-spec.pep.xml ;
+
+# Test other xml formats (idpicker, xtandem)
+
+blib-test-build idpicker : -o : output/idpicker.blib : idpicker.check : inputs/orbi-small-eg.idpXML ;
+blib-test-build tandem : -o : output/tandem.blib : tandem.check zbuild.skip-lines : inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml ;
+blib-test-build pride-mascot : -o : output/pride.mascot.blib : pride.mascot.check zbuild.skip-lines : inputs/test.mascot.pride.xml ;
+blib-test-build pride-xcorr : -o : output/pride.xcorr.blib : pride.xcorr.check zbuild.skip-lines : inputs/test.xcorr.pride.xml ;
+blib-test-build pride-bytes : -o : output/pride.xcorr.bytes.blib : pride.xcorr.bytes.check zbuild.skip-lines : inputs/test.bytes.pride.xml ;
+blib-test-build pride-xcorr-no-charges : -o : output/pride.xcorr.nocharges.blib : pride.xcorr.nocharges.check zbuild.skip-lines : inputs/test.xcorr.nocharges.pride.xml ;
+blib-test-build pride-mill : -o : output/pride.mill.blib : pride.mill.check zbuild.skip-lines : inputs/test.mill.pride.xml ;
+blib-test-build tiny-msf : -o : output/tiny.msf.blib : tiny.msf.check zbuild.skip-lines : inputs/tiny.msf ;
+blib-test-build tiny-v2-msf : -o : output/tiny-v2.msf.blib : tiny-v2.msf.check zbuild.skip-lines : inputs/tiny-v2.msf ;
+blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered.blib : tiny-v2-filtered.pdResult.check zbuild.skip-lines : inputs/tiny-v2-filtered.pdResult ;
+blib-test-build pilot : -o : output/pilot.blib : pilot.check : inputs/MB1_98_03.group.xml ;
+
+# mqpar file handling
+make output/mqpar1.using : : @use-mqpar1 : $(test_output_req) ;
+make output/mqpar2.using : maxquant-targeted : @use-mqpar2 : $(test_output_req) ;
+actions use-mqpar1
+{
+    $(COPY_COMMAND) $(TEST_DATA_PATH)$(os_separator)mqpar.xml.copy $(TEST_DATA_PATH)$(os_separator)mqpar.xml
+}
+actions use-mqpar2
+{
+    $(COPY_COMMAND) $(TEST_DATA_PATH)$(os_separator)mqpar2.xml.copy $(TEST_DATA_PATH)$(os_separator)mqpar.xml
+}
+
+# Test maxquant text file
+
+blib-test-build maxquant : -o : output/maxquant.blib : maxquant.check zbuild.skip-lines : inputs/test.msms.txt : <dependency>output/mqpar1.using ;
+
+# Test reading from stdin (filenames and target sequences)
+
+blib-test-build maxquant-targeted : -o -s -u -U -S : output/maxquant.targeted.blib : maxquant.targeted.check zbuild.skip-lines : inputs/maxquant-targeted-stdin.txt : <dependency>maxquant ;
+
+# Test maxquant text file (new format)
+
+blib-test-build maxquant2 : -o : output/maxquant2.blib : maxquant2.check zbuild.skip-lines : inputs/test2.msms.txt : <dependency>output/mqpar2.using ;
+
+# Test mzid format from scaffold
+
+blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/scaffold.mzid ;
+
+# Test mzid format from ByOnic
+
+blib-test-build byonic : -o : output/byonic.blib : byonic.check : inputs/byonic-test.mzid ;
+
+# Test mzid format from MSGF+
+
+blib-test-build msgf-mzid : -o : output/msgf-mzid.blib : msgf-mzid.check : inputs/msgf-test.mzid ;
+
+# Test waters csv format
+
+blib-test-build mse : -o : output/mse.blib : mse.check : inputs/tiny_final_fragment.csv ;
+
+# Test waters csv format with precursor mobility
+
+blib-test-build mse-mobility : -o -P 0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
+
+# Test building with Mascot .dat files, contingent on Mascot support
+
+blib-test-build mascot : -o : output/mascot.blib : mascot.check : inputs/F027319.dat : <conditional>@mascot-installed ;
+blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : inputs/F027752.dat : <conditional>@mascot-installed ;
+blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : inputs/F007401.dat : <conditional>@mascot-installed ;
+blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : inputs/F007401b.dat : <conditional>@mascot-installed ;
+
+# Test merging existing libraries
+
+blib-test-build merge : -o : output/xmerged.redundant.blib : xmerged.redundant.check : output/demo-copy.blib output/demo.blib output/pep-proph.blib : <dependency>sqt-ms2 <dependency>sqt-cms2 <dependency>pep-proph ;
+
+# Test BlibFilter
+
+blib-test-filter filter : : output/zmerged.filtered.blib : zmerged.filtered.check : output/xmerged.redundant.blib : <dependency>merge ;
+
+# Test BlibFilter on a library with precursor mobility values
+
+blib-test-filter filter-mobility : : output/mse-mobility.filtered.blib : mse-mobility.filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
+
+
+#make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp : : BlibFilter inputs/existing.blib output/filtered.existing.blib : 
+#  : build-filter-old ;
+#run-if-exists CompareLibraryContents.cpp compare-src : 
+#  : output/filtered.existing.blib reference/filtered.existing.check : $(compare-reqs)
+#  : check-filter-old ;
+
+# Test adding spectra to existing libraries, new and old formats
+
+# TODO: these tests are broken
+# requires a clean copy of inputs/existing.blib to output/z.old.blib before running
+#make output/z.old.blib : inputs/existing.blib : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp :  
+#  : BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.old.blib : 
+#  : build-into-old ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.old.blib reference/old.check : $(compare-reqs)
+#  : check-old ;
+
+#make output/z.new.blib : output/scaffold.blib : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp : 
+#  : BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.new.blib : 
+#  : build-into-new ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.new.blib reference/new.check : $(compare-reqs)
+#  : check-new ;
+
+#make output/z.mixed.blib : inputs/empty : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp : -o : BlibBuild inputs/existing.blib output/scaffold.blib output/z.mixed.blib : 
+#  : build-mixed ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.mixed.blib reference/mixed.check : $(compare-reqs)
+#  : check-mixed ;
+
+# Test conversion to text
+
+blib-test-to-ms2 lms2 : -f : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/demo.blib : <dependency>sqt-ms2 ;
+
+# Test BlibSearch
+
+blib-test-search search-demo : --preserve-order : inputs/demo.report : demo.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-decoy : --preserve-order --decoys-per-target_1 : inputs/demo.decoy.report : demo.decoy.report demo.skip-lines : inputs/demo.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-mzsorted : : inputs/mzsorted.report : mzsorted.report mzsorted.skip-lines : inputs/mzsorted.ms2 output/demo.blib : <dependency>sqt-ms2 ;
+blib-test-search search-binning : --bin-size_1.1 --bin-offset_0.2 : inputs/binning.report : binning.report demo.skip-lines : inputs/binning.ms2 output/demo.blib : <dependency>sqt-ms2 ;

@@ -1,0 +1,130 @@
+#
+# $Id$
+#
+
+#~ Copyright Vanderbilt University 2011.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building GD library with only PNG and BMP support. <http://www.libgd.org/>.
+### Targets:
+###     /ext/gd//gd
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import common ;
+import set ;
+import tar ;
+import errors ;
+
+extension.declare gd ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        version ?= default ;
+        local requirements = [ extension.define gd $(version) : $(location) : $(options) ] [ extension.static-with-fpic ] ;
+
+        local sources =
+            gd.c
+            gdfx.c
+            gd_color.c
+            gd_color_map.c
+            gd_crop.c
+            gd_transform.c
+            gd_security.c
+            #gdpp.cxx
+            gd_bmp.c
+            gd_filter.c
+            gd_gd.c
+            gd_gd2.c
+            gd_io.c
+            #gd_io_stream.cxx
+            gd_io_dp.c
+            gd_gif_in.c
+            gd_gif_out.c
+            gd_io_file.c
+            gd_io_ss.c
+            #gd_jpeg.c
+            gd_nnquant.c
+            gd_pixelate.c
+            gd_png.c
+            #gd_tiff.c
+            #gd_tga.c
+            gd_ss.c
+            gd_topal.c
+            gd_wbmp.c
+            gdcache.c
+            gdfontg.c
+            gdfontl.c
+            gdfontmb.c
+            gdfonts.c
+            gdfontt.c
+            gdft.c
+            gdhelpers.c
+            gdkanji.c
+            gdtables.c
+            #gdxpm.c
+            wbmp.c ;
+
+        local png-src-location = [ feature.get-values <png-src-location> : $(options) ] ;
+        png-src-location ?= $(location)/../libpng-1.5.6 ;
+        path-constant PNG_SOURCE : $(png-src-location[1]) ;
+        using ext-png : 1.5.6 : $(PNG_SOURCE) ;
+
+        local freetype-src-location = [ feature.get-values <freetype-src-location> : $(options) ] ;
+        freetype-src-location ?= $(location)/../freetype-2.4.7 ;
+        path-constant FREETYPE_SOURCE : $(freetype-src-location[1]) ;
+        using freetype : 2.4.7 : $(FREETYPE_SOURCE) : $(options) ;
+
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.cxx *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Freetype source tree not found at $(location)" ;
+        }
+
+        local sources = $(location)/src/$(sources) ;
+        if ! $(sources) { errors.error "No sources found for LibGD at \"$(location)\". Check that you're passing a valid location." ; }
+
+        lib gd
+            :   $(sources)
+            :   $(requirements)
+                <gd-version>$(version)
+                <gd-location>$(location)
+                <include>$(location)/src
+                <location-prefix>gd
+                <library>/ext/png//png
+                <library>/ext/freetype//freetype
+                <define>HAVE_LIBPNG
+                <define>HAVE_LIBFREETYPE
+                <define>HAVE_LIBZ
+
+                <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+                <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+                <toolset>msvc,<link>shared:<define>BGDWIN32
+                <link>static:<define>NONDLL
+                <warnings>off
+            :
+            :   <include>$(location)/src
+                <library>/ext/png//png
+                <library>/ext/freetype//freetype
+                <define>HAVE_LIBPNG
+                <define>HAVE_LIBFREETYPE
+                <define>HAVE_LIBZ
+
+                <toolset>msvc,<link>shared:<define>BGDWIN32
+                <link>static:<define>NONDLL
+            ;
+    }
+}

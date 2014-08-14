@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>DefiningTracers</title>
+
+  
+</head><body>
+<h2>Defining tracers in Topograph</h2>
+
+Topograph allows a scientist to be very specific in describing the mass
+characteristics of the tracers that they are using.&nbsp; Most
+experiments will use only one tracer, but Topograph has the flexibility
+to specify more than one tracer.<br>
+
+A tracer is either a modified form of an amino acid, or a different
+isotope of an element.<br>
+
+When defining the tracer, the scientist specifies the mass difference
+from the tracer from the natural form of the amino acid, or the mass
+difference from the most abundant isotope of the element.<br>
+
+If the tracer is an amino acid, Topograph can take into account that
+the heavy isotopes in the tracer may not be 100% pure.&nbsp; Topograph
+allows the scientist to specify the number of heavy atoms in the amino
+acid, and the percentage of those atoms that are expected to be the
+isotope that they are supposed to be.<br>
+
+<br>
+
+Topograph also asks whether the tracer elutes earlier or later than the
+tracee.&nbsp; In the future it will make use of this information when
+looking for the chromatogram peak.<br>
+
+<br>
+
+<h2>Adding peptide search results to Topograph</h2>
+
+After creating a workspace peptide search results can be added to the
+workspace.&nbsp; Topograph understands two formats of search results:<br>
+
+DTASelect-filter.txt: Topograph adds each of the peptides identified in
+the file into the workspace.<br>
+
+Sequest: Topograph allows you to specify the minimum XCorr value for
+peptide id's to be added to the workspace.&nbsp; <br>
+
+It also allows you to specify that only search results for peptides
+which are already in the workspace should be added.&nbsp; Use this if a
+DTASelect-filter.txt file was already added to the workspace, but the
+DTASelect-filter.txt file did not include all of the peptide IDs for
+all of the samples.<br>
+
+Topograph looks for the .RAW file by walking up the tree from where the
+search results were found.&nbsp; If the .RAW file cannot be found at
+the time that the search results are being added, the user will be
+prompted to browse for the file when creating analyses.<br>
+
+When adding search results to the workspace, Topograph remembers, for
+each peptide in each file, the range of charges that the peptide was
+found with, and the earliest and latest scan number.<br>
+
+<br>
+
+<h2>Creating peptide analyses</h2>
+
+To tell Topograph which peptides to analyze, click the "Analyze
+Peptides" button from either the Peptides view or the PeptideAnalyses
+view.&nbsp; The dialog comes up asking how to filter the set of
+peptides that are to be analyzed.<br>
+
+There are two questions that are asked:<br>
+
+Minimum tracer count<br>
+
+Typically, one only wants to analyze peptides which can contain at
+least one tracer.<br>
+
+Exclude amino acids<br>
+
+Topograph has a difficult time analyzing peptides which contain Q or N,
+since these amino acids are often deamidated, resulting in a one dalton
+increase in the peptide mass.<br>
+
+When creating peptide analyses, Topograph finds the .RAW files, and
+reads from the .RAW file the times of all of the scans.&nbsp; If
+Topograph cannot find the .RAW file, the user is prompted to browse for
+the .RAW file.&nbsp; If the user chooses not to browse for the .RAW
+file, Topograph marks the file with the validation status
+"reject".&nbsp; The file will be ignored from future operations.<br>
+
+To change the validation status of a file, do so in the "Data Files"
+view.<br>
+
+<h2>Running jobs</h2>
+
+After peptide analyses have been created, Topograph begins generating
+chromatograms for the peptide analyses.&nbsp; To view the status of
+jobs that are running in the background use the "View|Running Jobs"
+menu item.&nbsp; This shows the status of chromatogram generation, and
+result calculation.<br>
+
+Changing some settings in the workspace will invalidate the
+chromatograms that have been generated.&nbsp; Changing the mass of the
+tracers that have been defined, or the static modifications do
+so.&nbsp; If such settings have been changed, the chromatogram
+generating thread will stop doing work until the workspace has been
+saved.<br>
+
+The result calculator thread is responsible for calculating the amount
+of tracers that are present in the peptides, and for calculating the
+half life of the tracers.&nbsp; Changing the initial or final
+enrichment of a tracer definition or changing the time point or cohort
+of a MsDataFile will invalidate results that have already been
+calculated.<br>
+
+<br>
+
+<h2>How Topograph Generates Chromatograms</h2>
+
+Topograph generates chromatograms by looking at individual spectra in
+the .RAW file.&nbsp; Topograph begins the chromatogram 1800 scans
+before where the peptide was first identified, and continues it until
+1800 scans after the last id.&nbsp; Topograph only looks at MS1
+scan.&nbsp; Because most .RAW files have 5 MS2 scans for every MS1
+scan, this results in a chromatogram that has 300 points before the
+first ID for that peptide, and 300 points after the last ID.<br>
+
+If the spectrum was not saved as centroided data, Topograph centroids
+the data itself.&nbsp; The centroiding algorithm is to divide the
+spectrum by valleys (points where the first derivative goes from
+negative to positive).&nbsp; The intensities for each of these peaks is
+the sum of the intensities between the valleys, and the location of the
+peak is the average of these point, weighted by their intensity.<br>
+
+For each M/Z that Topograph is generating a chromatogram for, Topograph
+remembers the intensity and M/Z of the nearest peak.<br>
+
+There is a workspace setting which controls the mass accuracy.&nbsp; If
+a chromatogram point's peak M/Z differs from the M/Z of interest by
+more than the mass accuracy, Topograph treats that chromatogram point
+as 0.<br>
+
+The mass accuracy of the workspace can be changed without having to
+regenerate the chromatograms.<br>
+
+<h2>How
+Topograph decides which chromatograms to generate</h2>
+
+In order to determine which chromatograms to generate for a particular
+peptide, Topograph determines what combinations of tracers could be
+present in the peptide.&nbsp; In a typical experiment with only one
+type of tracer amino acid, if the peptide sequence contains 3 of these
+amino acids, Topograph will consider the expected mass distribution of
+the peptide if 0, 1, 2, or 3 of those amino acids were the tracer.<br>
+
+After determining this list of mass distributions, Topograph considers
+only those masses which are over 1% abundant for some combination of
+tracers.<br>
+
+There will be masses that are very close to each other, for instance
+the form of the peptide with one D3 Leucine tracer, and the natural
+form of the peptide that has three 13C atoms in it.&nbsp; For masses
+that are less than 0.1 daltons apart, Topograph will only generate one
+chromatogram.&nbsp; For each point in the chromatogram, Topograph will
+remember the peak which is closest to the bottom of that mass range,
+and the top of that mass range.&nbsp; Often, these will be the same
+peak.<br>
+
+<br>
+
+<h2>How Topograph determines chromatographic peak extent<br>
+</h2>
+
+Topograph currently determines the extent of a chromatographic peak by
+starting at the scan where the peptide was identified, and proceeding
+in each direction until every chromatogram has had at least one point
+where the intensity was 0.<br>
+If the peptide was identified in more than one scan, then Topograph
+ensures that the peak contains all of the scans where the peptide was
+identified.&nbsp; However, if there are more than 100 MS1 scans between
+where the peptide was first identified and was last identified, then
+Topograph only includes the first scan.<br>
+<br>
+
+<br>
+
+</body></html>

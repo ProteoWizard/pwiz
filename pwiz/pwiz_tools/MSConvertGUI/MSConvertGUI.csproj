@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{AF8F8305-6C76-4C94-879F-7746B6176203}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MSConvertGUI</RootNamespace>
+    <AssemblyName>MSConvertGUI</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\build-nt-x86\msvc-debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>..\..\build-nt-x86\msvc-release\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <Optimize>true</Optimize>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\build-nt-x86\msvc-debug-x86_64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>..\..\build-nt-x86\msvc-release-x86_64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <Optimize>true</Optimize>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
+    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\SeeMS\STL_Containers.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataGridViewProgressBar.cs" />
+    <Compile Include="FileSizeFormatProvider.cs" />
+    <Compile Include="ListViewColumnSorter.cs" />
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainLogic.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="ProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProgressForm.Designer.cs">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SingleInstanceHandler.cs" />
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgressForm.resx">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DataProcessing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\file.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=AnyCPU">
+      <Name>Interop.EDAL.SxS.manifest</Name>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\$(Platform)\Interop.EDAL.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=AnyCPU">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="CustomDataSourceDialog\CustomDataSourceDialog.csproj">
+      <Project>{6B7B0771-4D09-469F-AEFA-00E4FA06D017}</Project>
+      <Name>CustomDataSourceDialog</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Arrow Active.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Arrow Faded.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Arrow Lit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Back Active.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Back Faded.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Back Lit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Forward Active.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Forward Faded.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Forward Lit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Right Arrow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Right Arrow.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Left Arrow.gif" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

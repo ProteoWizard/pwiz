@@ -1,0 +1,826 @@
+//
+// $Id$
+//
+//
+// Original author: Kaipo Tamura <kaipot@uw.edu>
+//
+// Copyright 2012 University of Washington - Seattle, WA 98195
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+/**
+ * The MaxQuantReader parses the PSMs from the msms.txt tab delimited file
+ * and stores each record. Records are grouped by file. Spectra are then
+ * retrieved from the spectrum files. 
+ */
+
+#include "MaxQuantReader.h"
+
+namespace BiblioSpec {
+
+MaxQuantReader::MaxQuantReader(BlibBuilder& maker,
+                               const char* tsvName,
+                               const ProgressIndicator* parentProgress)
+  : BuildParser(maker, tsvName, parentProgress), 
+    tsvName_(tsvName), scoreThreshold_(getScoreThreshold(MAXQUANT)), lineNum_(1), 
+    curMaxQuantPSM_(NULL), separator_('\\', '\t', '\"')
+{
+    Verbosity::debug("Creating MaxQuantReader.");
+    
+    setSpecFileName(tsvName, // this is for BuildParser
+                    false);  // don't look for the file
+    
+    // point to self as spec reader
+    delete specReader_;
+    specReader_ = this;
+
+    // get mods path (will be empty string if not set)
+    modsPath_ = maker.getMaxQuantModsPath();
+
+    // define which columns are pulled from the file
+    initTargetColumns();
+
+    // Initialize mods
+    initModifications();
+}
+    
+MaxQuantReader::~MaxQuantReader()
+{
+    specReader_ = NULL; // so parent class doesn't try to delete itself
+    if (tsvFile_.is_open())
+    {
+        tsvFile_.close();
+    }
+}
+
+/**
+ * Define the columns we are looking for in the file.
+ */
+void MaxQuantReader::initTargetColumns()
+{
+    targetColumns_.push_back(MaxQuantColumnTranslator("Raw File", -1, 
+                                                      MaxQuantLine::insertRawFile));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Scan Number", -1, 
+                                                      MaxQuantLine::insertScanNumber));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Sequence", -1,
+                                                      MaxQuantLine::insertSequence));
+    targetColumns_.push_back(MaxQuantColumnTranslator("m/z", -1,
+                                                      MaxQuantLine::insertMz));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Charge", -1,
+                                                      MaxQuantLine::insertCharge));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Modifications", -1,
+                                                      MaxQuantLine::insertModifications));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Modified Sequence", -1,
+                                                      MaxQuantLine::insertModifiedSequence));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Retention Time", -1,
+                                                      MaxQuantLine::insertRetentionTime));
+    targetColumns_.push_back(MaxQuantColumnTranslator("PEP", -1,
+                                                      MaxQuantLine::insertPep));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Score", -1,
+                                                      MaxQuantLine::insertScore));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Masses", -1,
+                                                      MaxQuantLine::insertMasses));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Intensities", -1,
+                                                      MaxQuantLine::insertIntensities));
+    targetColumns_.push_back(MaxQuantColumnTranslator("Labeling State", -1,
+                                                      MaxQuantLine::insertLabelingState));
+
+    // columns that can are useful but not required
+    optionalColumns_.push_back("Labeling State");
+}
+
+/**
+ * Read in the modifications file.
+ */
+void MaxQuantReader::initModifications()
+{
+    // use specified path if it has been set
+    string modFile = modsPath_;
+    if (modFile.empty() ||
+        !filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+    {
+        // Check for modifications.xml in same folder as tsv file
+        modFile = (filesystem::path(tsvName_).parent_path() / "modifications.xml").string();
+
+        Verbosity::comment(V_DETAIL, "Checking for modification file %s",
+                           modFile.c_str());
+        if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+        {
+            // Check for modification.xml in the same folder as tsv file
+            modFile = (filesystem::path(tsvName_).parent_path() / "modification.xml").string();
+            Verbosity::comment(V_DETAIL, "Checking for modification file %s",
+                               modFile.c_str());
+            if (!filesystem::exists(modFile) || !filesystem::is_regular_file(modFile))
+            {
+                // Not there, use default
+                Verbosity::comment(V_DETAIL, "Loading default modifications");
+                modFile = getExeDirectory() + "modifications.xml";
+            }
+        }
+    }
+
+    Verbosity::comment(V_DETAIL, "Parsing modification file %s",
+                       modFile.c_str());
+    MaxQuantModReader modReader(modFile.c_str(), &modBank_);
+    try
+    {
+        modReader.parse();
+        Verbosity::comment(V_DETAIL, "Done parsing %s, %d modifications found",
+                           modFile.c_str(), modBank_.size());
+    }
+    catch (BlibException& e)
+    {
+        Verbosity::error("Error parsing modifications file: %s", e.what());
+        modBank_.clear();
+        return;
+    }
+    catch (...)
+    {
+        Verbosity::error("Unknown error while parsing modifications file");
+        modBank_.clear();
+        return;
+    }
+    
+    initFixedModifications();
+}
+
+/**
+ * Read in the mqpar file.
+ */
+void MaxQuantReader::initFixedModifications()
+{
+    filesystem::path tsvDir = filesystem::path(tsvName_).parent_path();
+    
+    // Check for mqpar.xml two folders up from tsv file
+    filesystem::path tryPath = tsvDir / ".." / ".." / "mqpar.xml";
+    Verbosity::comment(V_DETAIL, "Checking for mqpar file two folders up from msms.txt file.");
+    if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+    {
+        // Not there, check same folder
+        tryPath = tsvDir / "mqpar.xml";
+        Verbosity::comment(V_DETAIL, "Checking for mqpar file in same folder as msms.txt file.");
+        if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+        {
+            // Not there, check parent folder folder
+            tryPath = tsvDir / ".." / "mqpar.xml";
+            Verbosity::comment(V_DETAIL, "Checking for mqpar file in parent folder of msms.txt file.");
+            if (!filesystem::exists(tryPath) || !filesystem::is_regular_file(tryPath))
+            {
+                // Not there, throw exception
+                throw BlibException(false, "mqpar.xml file not found.");
+            }
+        }
+    }
+    string mqparFile = tryPath.string();
+
+    Verbosity::comment(V_DETAIL, "Parsing mqpar file %s",
+                       mqparFile.c_str());
+    set<string> fixedMods;
+    MaxQuantModReader modReader(mqparFile.c_str(), &fixedMods, &labelBank_);
+    try
+    {
+        modReader.parse();
+        Verbosity::comment(V_DETAIL, "Done parsing %s, %d fixed modifications found",
+                           mqparFile.c_str(), fixedMods.size());
+    }
+    catch (BlibException& e)
+    {
+        Verbosity::error("Error parsing mqpar file: %s", e.what());
+        return;
+    }
+    catch (...)
+    {
+        Verbosity::error("Unknown error while parsing mqpar file");
+        return;
+    }
+
+    // add all fixed mods to fixedModBank_
+    for (set<string>::iterator iter = fixedMods.begin();
+         iter != fixedMods.end();
+         ++iter)
+    {
+        // lookup in modbank
+        const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
+        if (lookup == NULL)
+        {
+            throw BlibException(false, "Unknown modification %s in mqpar file. Add a modifications.xml "
+                                       "file to the same directory as msms.txt which contains this "
+                                       "modification.",
+                                iter->c_str());
+        }
+
+        if (lookup->position != MaxQuantModification::ANYWHERE)
+        {
+            Verbosity::warn("Fixed mod '%s' will not be used (position is not 'anywhere').",
+                            iter->c_str());
+        }
+
+        map< MaxQuantModification::MAXQUANT_MOD_POSITION,
+            vector<const MaxQuantModification*> >::iterator vectorSearch =
+            fixedModBank_.find(lookup->position);
+        if (vectorSearch == fixedModBank_.end())
+        {
+            vector<const MaxQuantModification*> tmpMods;
+            tmpMods.push_back(lookup);
+            fixedModBank_[lookup->position] = tmpMods;
+        }
+        else
+        {
+            vectorSearch->second.push_back(lookup);
+        }
+    }
+
+    // add all labels to labelBank_
+    // iterate over raw files
+    for (vector<MaxQuantLabels>::iterator iter = labelBank_.begin();
+         iter != labelBank_.end();
+         ++iter)
+    {
+        // iterate over labeling states
+        for (vector<MaxQuantLabelingState>::iterator stateIter = iter->labelingStates.begin();
+             stateIter != iter->labelingStates.end();
+             ++stateIter)
+        {
+            vector<const MaxQuantModification*> mods;
+            // iterate over individual mods
+            for (vector<string>::const_iterator labelIter = stateIter->modsStrings.begin();
+                 labelIter != stateIter->modsStrings.end();
+                 ++labelIter)
+            {
+                if (!labelIter->empty())
+                {
+                    const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *labelIter);
+                    if (lookup == NULL)
+                    {
+                        throw BlibException(false, "Unknown label %s in mqpar file. Add a modifications.xml "
+                                                   "file to the same directory as msms.txt which contains this "
+                                                   "modification.",
+                                            labelIter->c_str());
+                    }
+                    mods.push_back(lookup);
+                }
+            }
+            iter->addMods(stateIter, mods);
+        }
+    }
+}
+
+/**
+ * Open the file, read header, read remaining file, build tables.
+ */
+bool MaxQuantReader::parseFile()
+{
+    Verbosity::debug("Parsing file.");
+    if (!openFile())
+    {
+        return false;
+    }
+
+    // read header in first line
+    string line;
+    getline(tsvFile_, line);
+    parseHeader(line);
+    
+    Verbosity::debug("Collecting PSMs.");
+    collectPsms();
+
+    Verbosity::debug("Building tables.");
+    // add psms by filename
+    initSpecFileProgress(fileMap_.size());
+    for (map< string, vector<MaxQuantPSM*> >::iterator iter = fileMap_.begin();
+         iter != fileMap_.end();
+         ++iter)
+    {
+        psms_.assign(iter->second.begin(), iter->second.end());
+        setSpecFileName(iter->first.c_str(), false);
+        buildTables(MAXQUANT_SCORE, iter->first, false);
+    }
+    
+    return true;
+}
+
+bool MaxQuantReader::openFile()
+{
+    Verbosity::debug("Opening TSV file.");
+    tsvFile_.open(tsvName_.c_str());
+    if(!tsvFile_.is_open())
+    {
+        throw BlibException(true, "Could not open tsv file '%s'.", 
+                            tsvName_.c_str());
+    }
+    
+    return true;
+}
+
+/**
+ * Read the given line (the first in the tsv file) and locate the
+ * position of each of the targeted columns.  Sort the target columns
+ * by position.
+ */
+void MaxQuantReader::parseHeader(string& line)
+{
+    LineParser lineParser(line, separator_);
+    int colNumber = 0;
+    size_t numColumns = targetColumns_.size();
+    
+    // for each token in the line
+    for (LineParser::iterator token = lineParser.begin();
+         token != lineParser.end();
+         ++token)
+    {
+        // check each column for a match
+        for (size_t i = 0; i < numColumns; i++)
+        {
+            if (iequals(*token, targetColumns_[i].name_))
+            {
+                targetColumns_[i].position_ = colNumber;
+                break;
+            }
+        }
+        colNumber++;
+    }
+    
+    // check that all required columns were in the file
+    for (size_t i = 0; i < targetColumns_.size(); i++)
+    {
+        if (targetColumns_[i].position_ < 0)
+        {
+            // check if it was optional
+            bool wasOptional = false;
+            for (vector<string>::iterator iter = optionalColumns_.begin();
+                 iter != optionalColumns_.end();
+                 ++iter)
+            {
+                if (targetColumns_[i].name_ == *iter)
+                {
+                    optionalColumns_.erase(iter);
+                    targetColumns_.erase(targetColumns_.begin() + i);
+                    wasOptional = true;
+                    break;
+                }
+            }
+            if (!wasOptional)
+            {
+                throw BlibException(false, "Did not find required column '%s'.",
+                                    targetColumns_[i].name_.c_str());
+            }
+        }
+    }
+    
+    // sort by column number so they can be fetched in order
+    sort(targetColumns_.begin(), targetColumns_.end());
+}
+
+/**
+ * Read the tsv file and parse all psms.
+ */
+void MaxQuantReader::collectPsms()
+{
+    string line;
+    bool parseSuccess = true;
+    string errorMsg;
+
+    // get file size and set progress
+    streampos originalPos = tsvFile_.tellg();
+    int lineCount = count(istreambuf_iterator<char>(tsvFile_),
+                          istreambuf_iterator<char>(), '\n') + 1;
+    tsvFile_.seekg(originalPos);
+    ProgressIndicator progress(lineCount);
+
+    // read file
+    while (!tsvFile_.eof())
+    {
+        getline(tsvFile_, line);
+        lineNum_++;
+
+        size_t colListIdx = 0;  // go through all target columns
+        int lineColNumber = 0;  // compare to all file columns
+        
+        MaxQuantLine entry; // store each line
+        try
+        {
+            LineParser lineParser(line, separator_); // create object for parsing line
+            for (LineParser::iterator token = lineParser.begin();
+                 token != lineParser.end();
+                 ++token)
+            {
+                if (lineColNumber++ == targetColumns_[colListIdx].position_)
+                {
+                    // insert the value in the proper field
+                    targetColumns_[colListIdx++].inserter(entry, *token);
+                    if (colListIdx == targetColumns_.size())
+                    {
+                        break;
+                    }
+                }
+            }
+            if (colListIdx != targetColumns_.size())
+            {
+                Verbosity::warn("Skipping invalid line %d", lineNum_);
+                continue;
+            }
+        }
+        catch (BlibException& e)
+        {
+            parseSuccess = false;
+            errorMsg = e.what();
+        }
+        catch (std::exception& e)
+        {
+            parseSuccess = false;
+            errorMsg = e.what();
+        }
+        catch (string& s)
+        {
+            parseSuccess = false;
+            errorMsg = s;
+        }
+        catch (...)
+        {
+            parseSuccess = false;
+            errorMsg = "Unknown exception";
+        }
+        
+        if (!parseSuccess)
+        {
+            throw BlibException(false, "%s caught at line %d, column %d", 
+                                errorMsg.c_str(), lineNum_, lineColNumber + 1);
+        }
+        // store this line's information in the curPSM
+        storeLine(entry);
+        
+        progress.increment();
+    }
+}
+ 
+/**
+ * Evaluate each line and add it to the map of files/PSMs.
+ */
+void MaxQuantReader::storeLine(MaxQuantLine& entry)
+{
+    if (entry.pep > scoreThreshold_)
+    {
+        Verbosity::comment(V_DETAIL, "Not saving PSM %d with PEP %f (line %d)",
+                           entry.scanNumber, entry.pep, lineNum_);
+        return;
+    }
+    else if (entry.masses.empty() || entry.intensities.empty())
+    {
+        Verbosity::warn("Not saving PSM %d with no spectrum (line %d)",
+                        entry.scanNumber, lineNum_);
+        return;
+    }
+
+    // Set up new PSM
+    curMaxQuantPSM_ = new MaxQuantPSM();
+
+    curMaxQuantPSM_->specKey = entry.scanNumber;
+    curMaxQuantPSM_->unmodSeq = entry.sequence;
+    curMaxQuantPSM_->mz = entry.mz;
+    curMaxQuantPSM_->charge = entry.charge;
+    try
+    {
+        addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
+    }
+    catch (const MaxQuantWrongSequenceException& e)
+    {
+        Verbosity::warn(e.what());
+        delete curMaxQuantPSM_;
+        return;
+    }
+    addLabelModsToVector(curMaxQuantPSM_->mods, entry.rawFile, entry.sequence, entry.labelingState);
+    curMaxQuantPSM_->retentionTime = entry.retentionTime;
+    curMaxQuantPSM_->score = entry.score;
+    addDoublesToVector(curMaxQuantPSM_->mzs, entry.masses);
+    addDoublesToVector(curMaxQuantPSM_->intensities, entry.intensities);
+
+    // Save PSM
+    map< string, vector<MaxQuantPSM*> >::iterator mapAccess
+        = fileMap_.find(entry.rawFile);
+    // file not in map yet, add it
+    if (mapAccess == fileMap_.end())
+    {
+        vector<MaxQuantPSM*> tmpPsms;
+        tmpPsms.push_back(curMaxQuantPSM_);
+        fileMap_[entry.rawFile] = tmpPsms;
+    }
+    else
+    {
+        fileMap_[entry.rawFile].push_back(curMaxQuantPSM_);
+    }
+}
+
+/**
+ * Take a string of semicolon separated doubles and add them to the vector.
+ */
+void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueList)
+{
+    vector<string> doubles;
+    split(doubles, valueList, is_any_of(";"));
+
+    try
+    {
+        transform(doubles.begin(), doubles.end(),
+                  back_inserter(v), lexical_cast<double, string>);
+    }
+    catch (bad_lexical_cast e)
+    {
+        Verbosity::error("Could not cast \"%s\" to doubles", valueList.c_str());
+    }
+}
+
+/**
+ * Adds a SeqMod for each modification in the given modified sequence string of the form
+ * "_I(ab)AMASEQ_". The modifications string contains the (comma separated) full names of
+ * the modifications; the string "Unmodified" can mean no variable modifications are present.
+ */
+void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence)
+{
+    // split modifications whole names
+    vector<string> modNames;
+    if (!iequals(modifications, "Unmodified"))
+    {
+        split(modNames, modifications, is_any_of(","));
+    }
+
+    // remove underscore from beginning and end if they exist
+    if (modSequence[0] == '_')
+    {
+        modSequence = modSequence.substr(1);
+    }
+    int sequenceLength = modSequence.length();
+    if (modSequence[sequenceLength - 1] == '_')
+    {
+        modSequence = modSequence.substr(0, sequenceLength - 1);
+        --sequenceLength;
+    }
+
+    // get fixed modifications by position
+    vector<const MaxQuantModification*> modsAnywhere;
+    /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
+    vector<const MaxQuantModification*> modsProteinNTerm;
+    vector<const MaxQuantModification*> modsProteinCTerm;
+    vector<const MaxQuantModification*> modsAnyNTerm;
+    vector<const MaxQuantModification*> modsAnyCTerm;
+    vector<const MaxQuantModification*> modsNotNTerm;
+    vector<const MaxQuantModification*> modsNotCTerm;
+    */
+
+    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> >::iterator search;
+    search = fixedModBank_.find(MaxQuantModification::ANYWHERE);
+    if (search != fixedModBank_.end())
+    {
+        modsAnywhere = search->second;
+    }
+
+    // iterate over sequence
+    int modsFound = 0;
+    for (int i = 0; i < sequenceLength; i++)
+    {
+        switch (modSequence[i])
+        {
+        case '(':
+            ++modsFound;
+            // which mod is it?
+            v.push_back(searchForMod(modNames, modSequence, i));
+            // advance iterator past modification
+            i += 3;
+            break;
+        case ')':
+            throw BlibException(false, "Unexpected closing parentheses found in sequence %s (line %d)",
+                                modSequence.c_str(), lineNum_);
+            break;
+        default:
+            if (modSequence[i] < 'A' || modSequence[i] > 'Z')
+            {
+                throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
+                                    modSequence[i], modSequence.c_str(), lineNum_);
+            }
+            // check for fixed mods
+            vector<SeqMod> fixedMods =
+                getFixedMods(modSequence[i], (i+1) - 4*modsFound, modsAnywhere);
+            v.insert(v.end(), fixedMods.begin(), fixedMods.end());
+            break;
+        }
+    }
+
+    if (modsFound < (int)modNames.size())
+    {
+        Verbosity::warn("Found %d modifications but expected at least %d in sequence %s (%d)",
+                        modsFound, modNames.size(), modSequence.c_str(), lineNum_);
+    }
+}
+
+/**
+ * Adds a SeqMod for each labeled AA in the given unmodified sequence string.
+ */
+void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFile,
+                                          const string& sequence, int labelingState)
+{
+    if (labelingState < 0)
+    {
+        return;
+    }
+
+    // get fixed modifications by position
+    const MaxQuantLabels* labels = MaxQuantLabels::findLabels(labelBank_, rawFile);
+    if (labels == NULL)
+    {
+        throw BlibException(false, "Required raw file '%s' was not found in mqpar file.", rawFile.c_str());
+    }
+    else if ((int)labels->labelingStates.size() <= labelingState)
+    {
+        throw BlibException(false, "Labeling state was %d but mqpar file only had %d labeling states for "
+                                   "raw file '%s'.",
+                                   labelingState, labels->labelingStates.size(), rawFile.c_str());
+    }
+    const vector<const MaxQuantModification*>& labelMods = labels->labelingStates[labelingState].mods;
+
+    // iterate over sequence
+    for (int i = 0; i < (int)sequence.length(); i++)
+    {
+        // check for label mods
+        vector<SeqMod> sequenceLabelMods = getFixedMods(sequence[i], i + 1, labelMods);
+        v.insert(v.end(), sequenceLabelMods.begin(), sequenceLabelMods.end());
+    }
+}
+
+/**
+ * Given a vector of modification names, a modified sequence, and the position of
+ * the opening parentheses for the modification in the sequence, attempt to
+ * look up which modification it is and return a SeqMod.
+ */
+SeqMod MaxQuantReader::searchForMod(vector<string>& modNames, string modSequence, int posOpenParen)
+{
+    // check that there are at least 3 more characters (2 + closing paren)
+    if (posOpenParen >= (int)modSequence.length() - 3)
+    {
+        throw BlibException(false, "Opening parentheses found in sequence %s but not enough "
+                            "characters following (line %d)", modSequence.c_str(), lineNum_);
+    }
+
+    // get mod abbreviation
+    string modAbbreviation = "";
+    for (int i = posOpenParen + 1; i < posOpenParen + 3; i++)
+    {
+        if (modSequence[i] < 'a' || modSequence[i] > 'z')
+        {
+            throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
+                                modSequence[i], modSequence.c_str(), lineNum_);
+        }
+        modAbbreviation += modSequence[i];
+    }
+    
+    // check for closing parentheses
+    if (modSequence[posOpenParen + 3] != ')')
+    {
+        throw BlibException(false, "Closing parentheses expected but %c found in sequence %s (line %d)",
+                                   modSequence[posOpenParen + 3], modSequence.c_str(), lineNum_);
+    }
+
+    // search list of mod names using abbreviation
+    for (vector<string>::iterator iter = modNames.begin(); iter != modNames.end(); ++iter)
+    {
+        if (iequals(modAbbreviation, iter->substr(0, 2)))
+        {
+            const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, *iter);
+            if (lookup == NULL)
+            {
+                throw BlibException(false, "Unknown modification %s in sequence %s (line %d). Add a "
+                                           "modifications.xml file to the same directory as msms.txt which "
+                                           "contains this modification.",
+                                    modAbbreviation.c_str(), modSequence.c_str(), lineNum_);
+            }
+            // count how many mods were before this one
+            int prevMods = 0;
+            for (int i = 0; i < posOpenParen; i++)
+            {
+                if (modSequence[i] == '(')
+                {
+                    ++prevMods;
+                }
+            }
+
+            // subtract 4 from position for each previous mod found (two parentheses and abbreviation)
+            SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->massDelta);
+            return curMod;
+        }
+    }
+        
+    /* Retry loop but try stripping numbers off the beginning of modification names -
+     * Modification string might be "2 Oxidation (M) to indicate
+     * that there are 2 "Oxidation (M)", not that the name of the
+     * mod is "2 Oxidation (M)" */
+    for (vector<string>::iterator iter = modNames.begin();
+         iter != modNames.end();
+         ++iter)
+    {
+        // loop until we find a non numeric character or the end of the string
+        unsigned int newStart = 0;
+        while (newStart < iter->length() && isdigit((*iter)[newStart]))
+        {
+            ++newStart;
+        }
+        // Make sure we found a space and that there are at least 2 chars after it
+        if ((*iter)[newStart] == ' ' && newStart + 2 < iter->length() &&
+            iequals(modAbbreviation, iter->substr(++newStart, 2)))
+        {
+            string modToCheck(iter->substr(newStart));
+            const MaxQuantModification* lookup = MaxQuantModification::find(modBank_, modToCheck);
+            if (lookup != NULL)
+            {
+                // count how many mods were before this one
+                int prevMods = 0;
+                for (int i = 0; i < posOpenParen; i++)
+                {
+                    if (modSequence[i] == '(')
+                    {
+                        ++prevMods;
+                    }
+                }
+
+                // subtract 4 from position for each previous mod found (two parentheses and abbreviation)
+                SeqMod curMod(max(1, posOpenParen - 4*prevMods), lookup->massDelta);
+                return curMod;
+            }
+        }
+    }
+
+    // This may occur due to a bug in MaxQuant where the wrong sequence
+    // (2nd best) is reported instead of the best one
+    throw MaxQuantWrongSequenceException(modAbbreviation, modSequence, lineNum_);
+}
+
+/**
+ * Given an amino acid, return a vector of all SeqMods that should apply to it.
+ */
+vector<SeqMod> MaxQuantReader::getFixedMods(char aa, int aaPosition,
+                                            const vector<const MaxQuantModification*>& mods)
+{
+    vector<SeqMod> modsApplied;
+
+    for (vector<const MaxQuantModification*>::const_iterator iter = mods.begin();
+         iter != mods.end();
+         ++iter)
+    {
+        if ((*iter)->sites.find(aa) != (*iter)->sites.end())
+        {
+            SeqMod newMod(aaPosition, (*iter)->massDelta);
+            modsApplied.push_back(newMod);
+        }
+    }
+
+    return modsApplied;
+}
+
+void MaxQuantReader::openFile(const char*, bool) {}
+void MaxQuantReader::setIdType(SPEC_ID_TYPE) {}
+
+/**
+ * Overrides the SpecFileReader implementation.  Assumes the PSM is a
+ * MaxQuantPSM and copies the additional data from it to the SpecData.
+ */
+bool MaxQuantReader::getSpectrum(PSM* psm,
+                                 SPEC_ID_TYPE findBy,
+                                 SpecData& returnData,
+                                 bool getPeaks)
+{
+    returnData.id = ((MaxQuantPSM*)psm)->specKey;
+    returnData.retentionTime = ((MaxQuantPSM*)psm)->retentionTime;
+    returnData.mz = ((MaxQuantPSM*)psm)->mz;
+    returnData.numPeaks = ((MaxQuantPSM*)psm)->mzs.size();
+
+    if (getPeaks)
+    {
+        returnData.mzs = new double[returnData.numPeaks];
+        returnData.intensities = new float[returnData.numPeaks];
+        for (int i = 0; i < returnData.numPeaks; i++)
+        {
+            returnData.mzs[i] = ((MaxQuantPSM*)psm)->mzs[i];
+            returnData.intensities[i] = (float)((MaxQuantPSM*)psm)->intensities[i];  
+        }
+    }
+    else
+    {
+        returnData.mzs = NULL;
+        returnData.intensities = NULL;
+    }
+    return true;
+}
+
+bool MaxQuantReader::getSpectrum(int, SpecData&, SPEC_ID_TYPE, bool) { return false; }
+bool MaxQuantReader::getSpectrum(string, SpecData&, bool) { return false; }
+bool MaxQuantReader::getNextSpectrum(SpecData&, bool) { return false; }
+
+} // namespace

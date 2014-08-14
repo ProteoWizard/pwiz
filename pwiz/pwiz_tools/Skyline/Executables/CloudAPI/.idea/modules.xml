@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ChromatogramGenerator/ChromatogramGenerator.iml" filepath="$PROJECT_DIR$/ChromatogramGenerator/ChromatogramGenerator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MzmlHarness/MzmlHarness.iml" filepath="$PROJECT_DIR$/MzmlHarness/MzmlHarness.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MzmlHarness/jmzml/jmzml.iml" filepath="$PROJECT_DIR$/MzmlHarness/jmzml/jmzml.iml" />
+    </modules>
+  </component>
+</project>
+

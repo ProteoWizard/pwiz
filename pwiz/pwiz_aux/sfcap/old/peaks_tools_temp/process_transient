@@ -1,0 +1,97 @@
+#!/bin/bash
+
+defaultNoiseFactor=5
+defaultWindowRadius=10
+defaultDetectionRadius=2
+defaultIterationCount=20
+
+if [ $# -ne 2 ] 
+then
+	echo "Usage: process_transient midas_file.dat outputDirectory"
+    echo "Variables (=default):"
+    echo "  noiseFactor (=$defaultNoiseFactor)"
+    echo "  windowRadius (=$defaultWindowRadius)"
+    echo "  detectionRadius (=$defaultDetectionRadius)"
+    echo "  iterationCount (=$defaultIterationCount)"
+    echo "Example:"
+    echo "  noiseFactor=3 detectionRadius=1 process_transient data.dat output"
+	exit 0
+fi
+
+if [ "$noiseFactor" = "" ]; then noiseFactor=$defaultNoiseFactor; fi
+if [ "$windowRadius" = "" ]; then windowRadius=$defaultWindowRadius; fi
+if [ "$detectionRadius" = "" ]; then detectionRadius=$defaultDetectionRadius; fi
+if [ "$iterationCount" = "" ]; then iterationCount=$defaultIterationCount; fi
+
+echo "noiseFactor: $noiseFactor"
+echo "windowRadius: $windowRadius"
+echo "detectionRadius: $detectionRadius"
+echo "iterationCount: $iterationCount"
+
+filename=$1
+outputDirectory=$2
+echo Processing $filename
+
+# remove .dat extension from filename
+filenameBase=${filename/%.dat}
+
+# create the output directory
+mkdir $outputDirectory 2> /dev/null
+if [ $? -ne 0 ]
+then
+    echo [process_transient] Could not create directory $outputDirectory
+    exit 1
+else
+    echo Created directory $outputDirectory
+fi
+
+# convert from midas to frequency data
+cfdfile=$outputDirectory/$filenameBase.cfd
+midas2cfd $filename $cfdfile
+
+# extract the peaks
+peakext $cfdfile $outputDirectory $noiseFactor $windowRadius $detectionRadius \
+    > $outputDirectory/peakext.log
+cat $outputDirectory/peakext.log
+
+# process the peaks
+for a in $outputDirectory/peak.*.cfd
+do
+    peak_base=${a/%.cfd}
+    peak_base_basename=${peak_base/#$outputDirectory\/} 
+    echo Processing $peak_base_basename
+    tlpfile_init=$peak_base.init.tlp
+    tlpfile_final=$peak_base.final.tlp
+    logfile=$peak_base.log
+
+    # initial estimate
+    echo "<tlpinit>" > $logfile
+    tlpinit $a $tlpfile_init >> $logfile
+
+    # iteration
+    echo >> $logfile
+    echo "<tlpiter>" >> $logfile 
+    tlpiter $a $tlpfile_init $tlpfile_final $iterationCount >> $logfile
+
+    # generate sample file from data
+    cfd cat $a > $a.sample
+
+    # generate sample file from final parameters
+    tlp sample $tlpfile_final > $tlpfile_final.sample
+
+    # generate gnuplot file
+    echo plot \'$peak_base_basename.cfd.sample\' using 1:3, \\ > $peak_base.plot
+    echo "'' using 1:4, '' using 1:5, \\" >> $peak_base.plot
+    echo \'$peak_base_basename.final.tlp.sample\' using 1:3 with lines, \\ >> $peak_base.plot
+    echo "'' using 1:4 with lines, '' using 1:5 with lines" >> $peak_base.plot
+
+done
+    
+# find frequency matches to 5 peptide mix
+tlplist=$outputDirectory/tlplist
+tlpmatches=$outputDirectory/tlpmatches
+tlpmatches_error=$outputDirectory/tlpmatches.error
+echo Matching peaks:  $tlpmatches 
+ls $outputDirectory/*.final.tlp > $tlplist
+tlpmatch $tlplist $cfdfile > $tlpmatches 2> $tlpmatches_error 
+

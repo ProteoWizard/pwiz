@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element msdata:IsDataSet="true" name="root">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" name="value" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+                <xsd:element minOccurs="0" msdata:Ordinal="2" name="comment" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute msdata:Ordinal="1" name="name" type="xsd:string" use="required"/>
+              <xsd:attribute msdata:Ordinal="3" name="type" type="xsd:string"/>
+              <xsd:attribute msdata:Ordinal="4" name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element minOccurs="0" msdata:Ordinal="1" name="value" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="$this.Text" xml:space="preserve">
+    <value>导入结果</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="cbShowAllChromatograms.Text" xml:space="preserve">
+    <value>导入时显示色谱图(&amp;C)</value>
+  </data>
+  <data name="labelNameAdd.Text" xml:space="preserve">
+    <value>名称(&amp;N)：</value>
+  </data>
+  <data name="labelNameNew.Text" xml:space="preserve">
+    <value>名称(&amp;N)：</value>
+  </data>
+  <data name="labelOptimizing.Text" xml:space="preserve">
+    <value>最优化(&amp;Z)：</value>
+  </data>
+  <data name="radioAddExisting.Text" xml:space="preserve">
+    <value>将文件添加至当前重复测定(&amp;E)</value>
+  </data>
+  <data name="radioAddExisting.ToolTip" xml:space="preserve">
+    <value>从文件中将注射添加到当前重复测定，
+并作为多次注射收集，但当注射结果可用时，
+不导入多个操作中。</value>
+  </data>
+  <data name="radioCreateMultiple.Text" xml:space="preserve">
+    <value>在文件中添加单次注射重复测定(&amp;S)</value>
+  </data>
+  <data name="radioCreateMultiple.ToolTip" xml:space="preserve">
+    <value>从文件中添加任意数量的单次注射重复测定。
+在这些文件中，有的文件可能包含一个注射，
+有的文件 (.wiff) 可能包含多个注射。每次注射都将
+作为单独的重复测定被添加。
+</value>
+  </data>
+  <data name="radioCreateMultipleMulti.Text" xml:space="preserve">
+    <value>在目录中添加多次注射重复测定(&amp;M)</value>
+  </data>
+  <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
+    <value>添加任意数量的多次注射重复测定
+并在目录中编组为：
+   &lt;root&gt;\
+       replicate1\
+           *.RAW
+       replicate2\
+           *.wiff
+       replicate3\
+           *.mzML
+选择根目录，且系统会为其每个子目录
+创建新的重复测定，</value>
+  </data>
+  <data name="radioCreateNew.Text" xml:space="preserve">
+    <value>添加一个新的重复测定(&amp;A)</value>
+  </data>
+  <data name="radioCreateNew.ToolTip" xml:space="preserve">
+    <value>添加一个带有任意注射数量和特定名称的
+新重复测定。</value>
+  </data>
+</root>

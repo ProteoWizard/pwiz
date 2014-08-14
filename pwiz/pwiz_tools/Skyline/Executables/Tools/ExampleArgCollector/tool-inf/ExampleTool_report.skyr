@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <revision index="1" />
+  <report name="Test Input">
+    <table name="T1">DbTransition</table>
+    <table name="T2">DbTransitionResult</table>
+    <select>
+      <column name="T1">Precursor.Peptide.Protein.Name</column>
+      <column name="T1">Precursor.Peptide.Sequence</column>
+      <column name="T1">Precursor.Charge</column>
+      <column name="T1">FragmentIon</column>
+      <column name="T1">ProductCharge</column>
+      <column name="T1">Precursor.IsotopeLabelType</column>
+      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_Condition</column>
+      <column name="T2">PrecursorResult.PeptideResult.ProteinResult.annotation_Run</column>
+      <column name="T2">Area</column>
+      <column name="T1">Precursor.Peptide.StandardType</column>
+    </select>
+  </report>
+</ReportSpecList>

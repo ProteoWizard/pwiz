@@ -1,0 +1,247 @@
+//
+// $Id$
+//
+//
+// Original author: William French <william.r.french .@. vanderbilt.edu>
+//
+// Copyright 2014 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+#define PWIZ_SOURCE
+
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
+#include "pwiz/utility/misc/mru_list.hpp"
+#include <boost/thread.hpp>
+#include <deque>
+
+
+using std::deque;
+using namespace pwiz::util;
+
+
+namespace pwiz {
+namespace msdata {
+
+class SpectrumWorkerThreads::Impl
+{
+    public:
+
+    Impl(const SpectrumList& sl)
+        : sl_(sl)
+        , numThreads_(boost::thread::hardware_concurrency())
+        , maxProcessedTaskCount_(numThreads_ * 4)
+        , taskMRU_(maxProcessedTaskCount_)
+    {
+        InstrumentConfigurationPtr icPtr;
+        if (sl.size() > 0)
+        {
+            SpectrumPtr s0 = sl.spectrum(0, false);
+            if (s0->scanList.scans.size() > 0)
+                icPtr = s0->scanList.scans[0].instrumentConfigurationPtr;
+        }
+
+        bool isBruker = icPtr.get() && icPtr->hasCVParamChild(MS_Bruker_Daltonics_instrument_model);
+        useThreads_ = !isBruker; // Bruker library is not thread-friendly
+
+        if (sl.size() > 0 && useThreads_)
+        {
+            // create one task per spectrum
+            tasks_.resize(sl.size(), Task());
+
+            // create and start worker threads
+            for (size_t i = 0; i < numThreads_; ++i)
+            {
+                workers_.push_back(TaskWorker());
+                workers_.back().start(this);
+            }
+        }
+    }
+
+    ~Impl()
+    {
+        BOOST_FOREACH(TaskWorker& worker, workers_)
+            if (worker.thread)
+            {
+                worker.thread->interrupt();
+                worker.thread->join();
+            }
+    }
+
+    SpectrumPtr spectrum(size_t index, bool getBinaryData)
+    {
+        if (!useThreads_)
+            return sl_.spectrum(index, getBinaryData);
+
+        boost::unique_lock<boost::mutex> taskLock(taskMutex_);
+
+        // if the task is already finished and has binary data if getBinaryData is true, return it as-is
+        Task& task = tasks_[index];
+        if (task.result && (!getBinaryData || task.hasBinaryData))
+            return task.result;
+
+        // otherwise, add this task and the numThreads following tasks to the queue (skipping the tasks that are already processed or being worked on)
+        for (size_t i = index; taskQueue_.size() < numThreads_ && i < tasks_.size(); ++i)
+        {
+            if (tasks_[i].processed())
+                continue;
+
+            taskQueue_.push_back(make_pair(i, getBinaryData));
+        }
+
+        // wait for the result to be set
+        while (!task.result)
+        {
+            // notify workers that tasks are available
+            taskQueuedCondition_.notify_all();
+            taskFinishedCondition_.wait_for(taskLock, boost::chrono::milliseconds(100));
+        }
+
+        return task.result;
+    }
+
+    private:
+
+    struct TaskWorker
+    {
+        void start(Impl* instance)
+        {
+            if (!thread)
+                thread.reset(new boost::thread(boost::bind(&SpectrumWorkerThreads::Impl::work, instance, this)));
+        }
+
+        shared_ptr<boost::thread> thread;
+    };
+
+    // each spectrum in the list is a task
+    struct Task
+    {
+        Task() : worker(NULL), hasBinaryData(false) {}
+
+        /// returns true iff the task is already done or a worker already owns it
+        bool processed() const { return worker != NULL || result; }
+
+        TaskWorker* worker; // the thread currently working on this task
+        SpectrumPtr result; // the spectrum produced by this task
+        bool hasBinaryData;
+    };
+
+    friend struct TaskWorker;
+
+    // function executed by worker threads
+    static void work(Impl* instance, TaskWorker* worker)
+    {
+        vector<Task>& tasks = instance->tasks_;
+        TaskQueue& taskQueue = instance->taskQueue_;
+        mru_list<size_t>& taskMRU = instance->taskMRU_;
+
+        // loop until the main thread kills the worker threads; the condition_variable::wait() call is an interruption point
+        try
+        {
+            while (true)
+            {
+                boost::unique_lock<boost::mutex> taskLock(instance->taskMutex_);
+
+                // wait for a new spectrum to be queued (while the task queue is either empty or the task at the end of the queue already has a worker assigned)
+                while (instance->taskQueue_.empty())
+                    instance->taskQueuedCondition_.wait(taskLock);
+
+                // get the next queued Task
+                TaskQueue::value_type queuedTask = taskQueue.front();
+                taskQueue.pop_front();
+
+                // set worker pointer on the Task
+                size_t task = queuedTask.first;
+                bool getBinaryData = queuedTask.second;
+                tasks[task].worker = worker;
+
+                // unlock taskLock
+                taskLock.unlock();
+
+                // get the spectrum
+                SpectrumPtr result = instance->sl_.spectrum(task, getBinaryData);
+
+                // lock the taskLock
+                taskLock.lock();
+
+                // set the result on the Task, and set its worker to empty
+                tasks[task].result = result;
+                tasks[task].hasBinaryData = getBinaryData;
+                tasks[task].worker = NULL;
+
+                // notify the main thread that a task has finished
+                instance->taskFinishedCondition_.notify_one();
+
+                // add the task to the MRU; if doing so will push an old task off the MRU, then reset the oldest (LRU) task;
+                // to know whether an old task was pushed off, keep a copy of the LRU item before adding the task
+                boost::optional<size_t> lruToReset;
+                if (taskMRU.size() + 1 == taskMRU.max_size())
+                {
+                    if (taskMRU.lru() == task)
+                        throw runtime_error("a task on the MRU list is being repeated; its result should have been available and the task should not have been queued");
+                    lruToReset = taskMRU.lru();
+                }
+
+                taskMRU.insert(task);
+
+                // if the MRU list's LRU is different now, it means the LRU was popped and needs to be reset
+                if (lruToReset.is_initialized() && lruToReset.get() != taskMRU.lru())
+                    tasks[lruToReset.get()].result.reset();
+            }
+        }
+        catch (boost::thread_interrupted&)
+        {
+            // return
+        }
+        catch (exception& e)
+        {
+            // TODO: log this
+            cerr << "[SpectrumWorkerThreads::work] error in thread: " << e.what() << endl;
+        }
+        catch (...)
+        {
+            cerr << "[SpectrumWorkerThreads::work] unknown exception in worker thread" << endl;
+        }
+    }
+
+    const SpectrumList& sl_;
+    bool useThreads_;
+    size_t numThreads_;
+
+    const size_t maxProcessedTaskCount_;
+    vector<Task> tasks_;
+    typedef deque<pair<size_t, bool> > TaskQueue;
+    TaskQueue taskQueue_;
+    mru_list<size_t> taskMRU_; // responsible for resetting old tasks; shared_ptr is used to avoid calling the dtor on insertion
+    boost::mutex taskMutex_;
+    boost::condition_variable taskQueuedCondition_, taskFinishedCondition_;
+
+    vector<TaskWorker> workers_;
+};
+
+
+SpectrumWorkerThreads::SpectrumWorkerThreads(const SpectrumList& sl) : impl_(new Impl(sl)) {}
+
+SpectrumWorkerThreads::~SpectrumWorkerThreads() {}
+
+SpectrumPtr SpectrumWorkerThreads::processBatch(size_t index, bool getBinaryData)
+{
+    return impl_->spectrum(index, getBinaryData);
+}
+
+
+} // namespace msdata
+} // namespace pwiz

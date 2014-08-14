@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <revision index="1" />
+  <report name="AllLabels">
+    <table name="T1">DbTransition</table>
+    <table name="T2">DbTransitionResult</table>
+    <select>
+      <column name="T1">Precursor.Peptide.Sequence</column>
+      <column name="T1">Precursor.Peptide.StandardType</column>
+      <column name="T2">PrecursorResult.PeptideResult.RatioToStandard</column>
+      <column name="T2">PrecursorResult.PeptideResult.ratio_RatioLightToHeavy</column>
+      <column name="T2">PrecursorResult.PeptideResult.rdotp_DotProductLightToHeavy</column>
+      <column name="T2">PrecursorResult.PeptideResult.ratio_RatioHeavy_15NToHeavy</column>
+      <column name="T2">PrecursorResult.PeptideResult.rdotp_DotProductHeavy_15NToHeavy</column>
+      <column name="T2">PrecursorResult.PeptideResult.ratio_RatioLightToHeavy_15N</column>
+      <column name="T2">PrecursorResult.PeptideResult.rdotp_DotProductLightToHeavy_15N</column>
+      <column name="T2">PrecursorResult.PeptideResult.ratio_RatioHeavyToHeavy_15N</column>
+      <column name="T2">PrecursorResult.PeptideResult.rdotp_DotProductHeavyToHeavy_15N</column>
+      <column name="T1">Precursor.Mz</column>
+      <column name="T2">PrecursorResult.TotalAreaRatio</column>
+      <column name="T2">PrecursorResult.RatioDotProduct</column>
+      <column name="T2">PrecursorResult.ratio_TotalAreaRatioToHeavy</column>
+      <column name="T2">PrecursorResult.rdotp_DotProductToHeavy</column>
+      <column name="T2">PrecursorResult.ratio_TotalAreaRatioToHeavy_15N</column>
+      <column name="T2">PrecursorResult.rdotp_DotProductToHeavy_15N</column>
+      <column name="T1">ProductMz</column>
+      <column name="T2">AreaRatio</column>
+      <column name="T2">ratio_AreaRatioToHeavy</column>
+      <column name="T2">ratio_AreaRatioToHeavy_15N</column>
+    </select>
+  </report>
+</ReportSpecList>

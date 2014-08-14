@@ -1,0 +1,46 @@
+
+Frequent Asked Questions about Building the ProteoWizard Library
+
+Q: How do I build the ProteoWizard library for use with my own programs?
+A: Ideally you will use the bjam-based build system that the ProteoWizard developers use.  If for some reason you don't want to use bjam you can use the provided build tools for GNU/GCC and MSVC to build just the core ProteoWizard libraries (see below for more on the idea of "core").  Either way, start by downloading the latest from http://proteowizard.sourceforge.net/downloads.shtml.  
+GNU/GCC: From the ProteoWizard/pwiz directory, create libpwiz.so by typing: 
+"./autotools/configure ; make ; make install"  
+MSVC: we provide project files for MSVC8, MSVC9 and MSVC10 (mingw users should follow the GCC procedure).  Use the libpwiz.sln in the msvc8, msvc9, or msvc10 directories to build libpwiz plus examples and tests, or you can just include the libpwiz.vcproj file in your own projects.  (Note: the pwiz.sln file in the ProteoWizard/pwiz directory is just a wrapper for the regular bjam build, it's not the one you're looking for.)
+
+Q: Why have different build systems?
+A: Some developers who are unfamiliar with bjam would rather just use the GNU/Autotools and MSVC build systems.  We actually generate the GNU and MSVC build tools from the bjam build logs so it's no bother maintaining all three. 
+
+Q: Why don't the MSVC and GNU/Autotools builds create all the same binaries as the official bjam build?
+A: The purpose of the MSVC and GNU/Autotools builds is to provide a familiar way to quickly build the core ProteoWizard libraries that read and write open formats like mzML, mzXML etc.  The official bjam-based build also allows for reading vendor formats (under Windows, via DLLs), and it builds tools like mspicture that pull in graphics libraries and so forth.  Another difference is that the bjam version builds its own 3rd party libraries (boost, zlib, libgd etc) from source, where the MSVC and Autotools builds use the shared libraries presumed to be already on your system.  Ideally everyone would use the bjam build, but some developers find they just don't want to deal with a new build system in order to get the core ProteoWizard functions.
+
+Q: What's this Boost stuff?
+A: ProteoWizard makes extensive use of the Boost library (www.boost.org).  The non-bjam builds assume that you have it installed on your system already.  If you don't already have it installed, there are prebuilt packages for most linux distros, and www.boostpro.com has Windows installers.  Set the BOOST_ROOT environment variable to tell ProteoWizard where to look for Boost. On linux, it's often easiest just to build Boost from source if it isn't already installed (read on for info on that). 
+
+Q: OK, I have Boost installed but the build is complaining that the version number isn't high enough.
+A: ProteoWizard needs Boost version 1.43.0 or greater (as of this writing - that will certainly increase eventually).  
+Windows: Visit boostpro.com for newer prebuilt Boost libraries.  Try version 1.46 or later.
+Linux: If the standard boost package is out of date, then rather than messing around with nonstandard packages you will probably find it easiest to build Boost from source - it goes something like this (running as root):
+cd /usr/local/src/
+wget http://sourceforge.net/projects/boost/files/boost/1.49.0/boost_1_49_0.tar.gz/download
+tar xvzf boost_1_49_0.tar.gz
+cd boost_1_49_0
+./bootstrap.sh
+./bjam --with-regex --with-filesystem --with-iostreams --with-thread --with-program_options --with-serialization --with-system --with-date_time install
+export BOOST_ROOT=/usr/local/src/boost_1_49_0
+
+Q: OK, I have Boost installed but MSVC8 is crashing in some of the template expansions.
+A: You're probably using a newer version of Boost, VC8 gets confused by some of the hairier uses of C++ templates in Boost 1.47.  Try installing Boost 1.46 if you're using MSVC8.
+
+Q: Now it's asking for zlib.
+A: Linux: It would be most surprising to find this not already installed, but if not there are packages available - consult the docs for your particular linux distro.  
+Windows: you can get prebuilt binaries at http://www.winimage.com/zLibDll/index.html, and the example build system also contains a vcproj file for building your own zlib.  If you already have a windows installation of zlib, set an environment variable ZLIB_SOURCE to tell the pwiz project where to find zlib.h (if you don't specify ZLIB_SOURCE, the build will default to using the zlib version that ships with ProteoWizard).
+
+Q: Now it's giving me "cannot open file 'libboost_zlib-vc80-mt-gd-1_43.lib'". 
+A: For some reason most Boost prebuilt binaries before version 1.46 (on boostpro and SourceForge) don't include support for handling compressed iostreams.  Your choices here are to move to a newer Boost prebuilt binary that does include zlib support, like boostpro's 1.46 (but see the note about 1.47 with MSVC8 above), or build your own 1.43 binaries (not actually all that hard to do, see www.boost.org "Getting Started", using the "with-zlib" stuff). 
+
+Q: The MSVC build can't find windows.h.
+A: You're probably using an Express Version, in which case you need to install the Platform SDK (download from the Microsoft website).
+
+Q: Why can't I read Thermo(/Agilent/Bruker/etc) files with non-bjam builds, or on linux with any build at all?
+A: Those formats require Windows DLLs from the various manufacturers.  This means of course that it doesn't work on Linux at all.  For Windows you'll need to go ahead and figure out the bjam-based build system that the ProteoWizard developers use - integrating these DLLs into a build is a moving target and fairly tricky to implement, so we leave that to the official bjam-based build system.  The MSVC build files provided here just allow for reading the open formats (mzML, mzXML, etc), which is all many projects require.
+

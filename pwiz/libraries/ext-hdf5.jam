@@ -1,0 +1,212 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2011 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import common ;
+import tar ;
+import path ;
+
+extension.declare hdf5 ;
+
+.posix_usage_defines = _LARGEFILE_SOURCE _LARGEFILE64_SOURCE _BSD_SOURCE ;
+.posix_build_defines = $(.posix_usage_defines) NDEBUG ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        .usage-requirements = <include>$(location)/src <use>H5pubconf.h/<extension>hdf5 ;
+        .requirements = $(.usage-requirements) <warnings>off [ extension.static-with-fpic ] ;
+
+        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Freetype source tree not found at $(location)" ;
+        }
+
+        local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
+        zlib-src-location ?= $(location)/../zlib-1.2.3 ;
+        path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
+        using ext-zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+
+        local boost-src-location = [ feature.get-values <boost-src-location> : $(options) ] ;
+        boost-src-location ?= $(location)/../boost_1_54_0 ;
+        path-constant BOOST_SOURCE : $(boost-src-location[1]) ;
+        using ext-boost : 1.54.0 : $(BOOST_SOURCE) ;
+
+        alias H5pubconf.h : $(location)/src/posix/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements : : <conditional>@H5pubconf-requirements ;
+        alias H5pubconf.h : $(location)/src/windows/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements <toolset>msvc : : <conditional>@H5pubconf-requirements ;
+        alias H5pubconf.h : $(location)/src/darwin/H5pubconf.h : <location>$(location) <conditional>@H5pubconf-requirements <toolset>darwin : : <conditional>@H5pubconf-requirements ;
+
+        exe H5detect : $(location)/src/H5detect.c : $(.requirements) ;
+        actions make_init { "$(>[1]:P)/H5detect" > "$(<)" }
+        make H5Tinit.c : H5detect : @make_init ;
+        actions copy_libsettings { cp -f "$(>)" "$(<)" }
+        make libhdf5.settings : $(location)/src/posix/libhdf5.settings : @copy_libsettings ;
+        make libhdf5.settings : $(location)/src/darwin/libhdf5.settings : @copy_libsettings : <toolset>darwin ;
+
+        exe H5make_libsettings : $(location)/src/H5make_libsettings.c : $(.requirements) ;
+        actions make_libsettings
+        {
+            cd $(>[1]:P)
+            "$(>[1]:P)/H5make_libsettings" > "$(<)"
+        }
+        make H5lib_settings.c : H5make_libsettings : @make_libsettings ;
+
+        make init_once_workaround.cpp : : @init_once_workaround_cpp ;
+
+        local .excluded-src = *szip.c *mpi*.c H5make_libsettings.c H5detect.c H5FDdirect.c H5FDWindows.c ;
+
+        lib hdf5
+            : # sources
+                [ path.glob $(location)/src : *.c : $(.excluded-src) ]
+                init_once_workaround.cpp
+                H5Tinit.c
+                H5lib_settings.c
+            : # requirements
+                $(.requirements)
+                <conditional>@hdf5-requirements
+            : # default-build
+            : # usage-requirements
+                $(.usage-requirements)
+                <conditional>@hdf5-usage-requirements
+            ;
+
+        lib hdf5pp
+            : # sources
+                [ path.glob $(location)/c++/src : *.cpp ]
+            : # requirements
+                $(.requirements)
+                <include>$(location)/c++/src
+                <library>hdf5
+            : # default-build
+            : # usage-requirements
+                $(.usage-requirements)
+                <include>$(location)/c++/src
+                <library>hdf5
+            ;
+    }
+}
+
+rule H5pubconf-requirements ( properties * )
+{
+    local location = [ feature.get-values <location> : $(properties) ] ;
+
+    if <toolset>msvc in $(properties)
+    {
+        return <include>$(location)/src/windows ;
+    }
+    else if <toolset>darwin in $(properties)
+    {
+        return <include>$(location)/src/darwin ;
+    }
+    else
+    {
+        return <include>$(location)/src/posix ;
+    }
+}
+
+rule link-requirements ( properties * )
+{
+    # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+    if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+    {
+        return <library>/ext/boost//thread/<link>shared
+               <library>/ext/zlib//z/<link>shared ;
+    }
+    else
+    {
+        return <library>/ext/boost//thread
+               <library>/ext/zlib//z ;
+    }
+}
+
+rule hdf5-requirements ( properties * )
+{
+    local location = [ feature.get-values <location> : $(properties) ] ;
+
+    if <toolset>msvc in $(properties)
+    {
+        return <source>$(location)/src/H5FDwindows.c
+               <conditional>@link-requirements ;
+    }
+    else if <toolset>darwin in $(properties)
+    {
+        return <source>$(location)/src/H5FDdirect.c
+               <define>$(.posix_build_defines)
+               <cflags>-std=c99 ;
+    }
+    else
+    {
+        return <source>$(location)/src/H5FDdirect.c
+               <define>$(.posix_build_defines)
+               <define>_POSIX_SOURCE
+               <cflags>-std=c99 ;
+    }
+}
+
+rule hdf5-usage-requirements ( properties * )
+{
+    if <toolset>msvc in $(properties)
+    {
+        return <conditional>@link-requirements ;
+    }
+    else
+    {
+        return <define>$(.posix_usage_defines)
+               <dependency>libhdf5.settings/<extension>hdf5 ;
+    }
+}
+
+actions init_once_workaround_cpp
+{
+    @($(STDOUT):E=
+#ifdef _MSC_VER
+
+#include <boost/thread.hpp>
+
+extern "C"
+{
+
+#include "H5pubconf.h"
+#include "H5private.h"
+#include "H5TSprivate.h"
+#include <stdio.h>
+
+void boost_first_thread_init_really() { H5TS_win32_first_thread_init(NULL, NULL, NULL); }
+int boost_first_thread_init() { static struct {boost::once_flag flag;} flag = {BOOST_ONCE_INIT}; boost::call_once(flag.flag, boost_first_thread_init_really); return 1; }
+
+}
+
+#endif // _MSC_VER
+) > "$(<)"
+}

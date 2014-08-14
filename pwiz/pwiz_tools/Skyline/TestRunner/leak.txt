@@ -1,0 +1,31 @@
+# Top leaks (in MB per execution):
+  TestReportSummary                        #  min=0.00  max=3.20  mean=1.91
+  TestManageResults                        #  min=0.00  max=1.20  mean=0.65
+  IrtFunctionalTest                        #  min=0.00  max=2.30  mean=0.38
+  TestPrecursorIon                         #  min=0.00  max=1.40  mean=0.35
+  TestSynchSiblings                        #  min=0.00  max=1.30  mean=0.35
+  TestIsotopeLabelPivot                    #  min=0.00  max=1.30  mean=0.32
+  TestNeutralLossLibrary                   #  min=0.00  max=1.10  mean=0.30
+  TestExplicitMultiType                    #  min=0.00  max=2.00  mean=0.29
+  TestBackgroundProteome                   #  min=0.00  max=1.10  mean=0.25
+  TestReportSpecList                       #  min=0.00  max=1.40  mean=0.21
+  TestExistingExperimentsTutorial          #  min=0.00  max=3.40  mean=0.21
+  TestNeutralLoss                          #  min=0.00  max=1.30  mean=0.21
+  TestUniMod                               #  min=0.00  max=0.50  mean=0.18
+  TestLibraryBuild                         #  min=0.00  max=1.30  mean=0.17
+  AddRemoveExplicitModTest                 #  min=0.00  max=0.50  mean=0.16
+  TestImportDoc                            #  min=0.00  max=1.10  mean=0.16
+  TestOptimization                         #  min=0.00  max=1.50  mean=0.16
+  TestMultiSelect                          #  min=0.00  max=0.90  mean=0.15
+  EquivalentTest                           #  min=0.00  max=0.50  mean=0.14
+  DocumentSerializeStubTest                #  min=0.00  max=0.50  mean=0.14
+  TestInsertMod                            #  min=0.00  max=1.00  mean=0.13
+  TestCollectStatistics                    #  min=0.00  max=0.50  mean=0.13
+  ConsolePathCoverage                      #  min=0.00  max=0.50  mean=0.12
+  LibraryTransitionTest                    #  min=0.00  max=0.50  mean=0.11
+  TestExplicitVariable                     #  min=0.00  max=0.90  mean=0.11
+  TestEditStaticMod                        #  min=0.00  max=1.10  mean=0.11
+  FullScanFilterTest                       #  min=0.00  max=0.50  mean=0.11
+  RefineResultsTest                        #  min=0.00  max=0.50  mean=0.10
+  Study7RoundtripTest                      #  min=0.00  max=0.50  mean=0.10
+
