@@ -10,6 +10,7 @@ pushd %PWIZ_ROOT%
 echo   Cleaning .NET applications...
 for /d /r Shared\BiblioSpec %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\Common %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
+for /d /r Shared\CommonTest %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\Crawdad %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\MSGraph %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\ProteomeDb %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
