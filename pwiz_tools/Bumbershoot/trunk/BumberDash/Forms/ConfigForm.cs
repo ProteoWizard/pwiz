@@ -341,7 +341,6 @@ namespace BumberDash.Forms
             PepModTypeList.Text = "Static";
             PepOutputFormatBox.Text = "pepXML";
             CometInstrumentBox.Text = "High Resolution";
-            CometActivationBox.Text = "CID";
             MSGFInstrumentBox.Text = "High Resolution LTQ";
             MSGFFragmentMethodBox.Text = "CID";
 
@@ -426,7 +425,7 @@ namespace BumberDash.Forms
                     }
 
                     _itemList[program].Add(item);
-                    _defaults.Add(item, GetControlValue(item).Trim('"'));
+                    _defaults.Add(item, GetControlValueString(item).Trim('"'));
                 }
                 else if (item.Name.EndsWith("Label"))
                 {
@@ -483,7 +482,7 @@ namespace BumberDash.Forms
         void CheckForChange(object sender, EventArgs e)
         {
             var item = (Control)sender;
-            var value = GetControlValue(item).Trim('"');
+            var value = GetControlValueString(item).Trim('"');
             var isModBox = false;
 
             if (RootName(item.Name) == "AppliedMod" && value.Length > 0)
@@ -593,23 +592,116 @@ namespace BumberDash.Forms
             }
         }
 
+        private List<ConfigProperty> GetProperties(List<Control> items, ConfigFile newConfig)
+        {
+            var propertyList = new List<ConfigProperty>();
+            foreach (var item in items)
+            {
+                var root = RootName(item.Name);
+                var isDual = GetDualDependenceValue(item);
+                if (isDual != null)
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = isDual
+                        });
+                else if (root == "AppliedMod")
+                {
+                    var modProperties = GetModProperties((DataGridView)item);
+                    foreach (var property in modProperties)
+                        property.ConfigAssociation = newConfig;
+                    propertyList.AddRange(modProperties);
+                }
+                else if (root == "UseAvgMassOfSequences")
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = (((ComboBox)item).SelectedIndex == 1).ToString().ToLower()
+                        });
+                else if (root == "MinTerminiCleavages" || root == "DeisotopingMode")
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = ((ComboBox)item).SelectedIndex.ToString()
+                        });
+                else if (root == "UnimodXML" && TRUnimodXMLBox.Text == "Default")
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = Path.Combine(Application.StartupPath, @"lib\Bumbershoot\TagRecon\unimod.xml")
+                        });
+                else if (root == "Blosum" && TRBlosumBox.Text == "Default")
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = Path.Combine(Application.StartupPath, @"lib\Bumbershoot\TagRecon\blosum62.fas")
+                        });
+                else if (root == "DeisotopingMode")
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = ((ComboBox)item).SelectedIndex.ToString()
+                        });
+                else if (item is ComboBox || item is TextBox)
+                {
+                    double x;
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = double.TryParse(item.Text, out x)
+                                        ? item.Text
+                                        : string.Format("\"{0}\"", item.Text)
+                        });
+                }
+                if (item is NumericUpDown)
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = ((NumericUpDown) item).Value.ToString()
+                        });
+                if (item is CheckBox)
+                    propertyList.Add(new ConfigProperty
+                        {
+                            Name = root,
+                            Type = "string",
+                            ConfigAssociation = newConfig,
+                            Value = ((CheckBox) item).Checked.ToString().ToLower()
+                        });
+            }
+            return propertyList;
+        }
+
         /// <summary>
         /// Returns value of "Box" suffix control, taking into account special cases
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        private string GetControlValue(Control item)
+        private string GetControlValueString(Control item)
         {
             var isDual = GetDualDependenceValue(item);
-            if (isDual != string.Empty)
+            if (isDual != null)
                 return isDual;
 
             var root = RootName(item.Name);
 
             if (root == "AppliedMod")
                 return GetModString((DataGridView)item);
-            if (root == "MonoisotopeAdjustmentSet")
-                return GetDualDependenceValue(item);
             if (root == "UseAvgMassOfSequences")
                 return (((ComboBox)item).SelectedIndex == 1).ToString().ToLower();
             if (root ==  "MinTerminiCleavages")
@@ -653,12 +745,6 @@ namespace BumberDash.Forms
             if (item == MyriFragmentMzToleranceBox)
                 return "\"" + item.Text + MyriFragmentMzToleranceUnitsList.Text + "\"";
 
-            //TagRecon
-            //if (item == TRPrecursorMzToleranceBox)
-            //    return "\"" + item.Text + TRMonoPrecursorMzToleranceUnitsList.Text + "\"";
-            //if (item == TRFragmentMzToleranceBox)
-            //    return "\"" + item.Text + TRFragmentMzToleranceUnitsList.Text + "\"";
-
             //Pepitome
             if (item == PepMonoisotopeAdjustmentSetBox)
             {
@@ -673,7 +759,7 @@ namespace BumberDash.Forms
                 return "\"" + item.Text + PepMonoPrecursorMzToleranceUnitsList.Text + "\"";
             if (item == PepFragmentMzToleranceBox)
                 return "\"" + item.Text + PepFragmentMzToleranceUnitsList.Text + "\"";
-            return string.Empty;
+            return null;
         }
 
         private void SetDualDependenceValue(Control item, string value)
@@ -849,7 +935,7 @@ namespace BumberDash.Forms
                                 : _defaults[control];
 
                 var isDual = GetDualDependenceValue(control);
-                if (isDual != string.Empty)
+                if (isDual != null)
                     SetDualDependenceValue(control, value);
                 else if (root == "AppliedMod")
                     SetModString(value);
@@ -892,7 +978,7 @@ namespace BumberDash.Forms
                     value = Math.Round(decimal.Parse(value), 6).ToString();
 
                 var isDual = GetDualDependenceValue(kvp.Key);
-                if (isDual != string.Empty)
+                if (isDual != null)
                     SetDualDependenceValue(kvp.Key, value);
                 else if (root == "AppliedMod")
                 {
@@ -963,6 +1049,45 @@ namespace BumberDash.Forms
                 fullWord = fullWord.Remove(fullWord.Length - 3, 3);
 
             return fullWord;
+        }
+        private List<ConfigProperty> GetModProperties(DataGridView dgv)
+        {
+            var staticList = new List<string>();
+            var dynamicList = new List<string>();
+            var ptmList = new List<string>();
+
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                if ((string)row.Cells[2].Value == "Static")
+                    staticList.Add(string.Format("{0} {1}", row.Cells[0].Value, row.Cells[1].Value));
+                else if ((string)row.Cells[2].Value == "Dynamic")
+                    dynamicList.Add(string.Format("{0} * {1}", row.Cells[0].Value, row.Cells[1].Value));
+                else
+                    ptmList.Add(string.Format("{0} {1}", row.Cells[0].Value, row.Cells[1].Value));
+            }
+            var configList = new List<ConfigProperty>();
+            if (staticList.Any())
+                configList.Add(new ConfigProperty
+                    {
+                        Name = "StaticMods",
+                        Type = "string",
+                        Value = "\"" + string.Join(" ", staticList.ToArray()) + "\""
+                    });
+            if (dynamicList.Any())
+                configList.Add(new ConfigProperty
+                    {
+                        Name = "DynamicMods",
+                        Type = "string",
+                        Value = "\"" + string.Join(" ", dynamicList.ToArray()) + "\""
+                    });
+            if (ptmList.Any())
+                configList.Add(new ConfigProperty
+                    {
+                        Name = "PreferredDeltaMasses",
+                        Type = "string",
+                        Value = "\"" + string.Join(" ", ptmList.ToArray()) + "\""
+                    });
+            return configList;
         }
 
         private string GetModString(DataGridView dgv)
@@ -1065,7 +1190,35 @@ namespace BumberDash.Forms
             return _filePath;
         }
 
-        internal string GetConfigString(bool redundant)
+        internal ConfigFile GetMainConfigFile()
+        {
+            if (ProgramModeBox.Text == "MyriMatch" && !ProgramSelectMyri.Checked)
+                return null;
+            var changed = new List<Control>();
+            if (_isCustom)
+                foreach (var item in _itemList[ProgramModeBox.Text])
+                {
+                    var value = GetControlValueString(item);
+                    var compareValue = value.Trim('"');
+                    var root = RootName(item.Name);
+                    var isModBox = root == "AppliedMod";
+
+                    if (isModBox && compareValue.Length > 0)
+                        compareValue += "\"";
+
+                    if (compareValue != _defaults[item] || (isModBox && !ModStringsEqual(compareValue, _defaults[item])))
+                        changed.Add(item);
+                }
+
+            var newConfig = new ConfigFile();
+            newConfig.DestinationProgram = ProgramModeBox.Text;
+            newConfig.Name = "--Custom--";
+            newConfig.PropertyList = _isCustom ? GetProperties(changed, newConfig) : null;
+            newConfig.FilePath = _isCustom ? "--Custom--" : _filePath;
+            return newConfig;
+        }
+
+        private string GetConfigString(bool redundant)
         {
 
             #region Group and order list
@@ -1174,12 +1327,12 @@ namespace BumberDash.Forms
             var changed = new Dictionary<string, string>();
             foreach (var item in _itemList[ProgramModeBox.Text])
             {
-                var value = GetControlValue(item);
+                var value = GetControlValueString(item);
                 var compareValue = value.Trim('"');
                 var root = RootName(item.Name);
                 var isModBox = root == "AppliedMod";
 
-                if (isModBox && compareValue.Length >0)
+                if (isModBox && compareValue.Length > 0)
                     compareValue += "\"";
 
                 if ((compareValue != _defaults[item] || (isModBox && !ModStringsEqual(compareValue, _defaults[item])))
@@ -1569,16 +1722,7 @@ namespace BumberDash.Forms
         private void SaveAsTemporaryButton_Click(object sender, EventArgs e)
         {
             var text = new TextPromptBox("Custom Configuration", _defaultName);
-            if (text.ShowDialog() == DialogResult.OK)
-            {
-                _isCustom = true;
-                _filePath = text.GetText();
-            }
-            else
-            {
-                _filePath = string.Empty;
-                DialogResult = DialogResult.None;
-            }
+            _isCustom = true;
         }
 
         internal bool IsTemporaryConfiguration()
@@ -1715,22 +1859,6 @@ namespace BumberDash.Forms
 
                 if (result != DialogResult.Cancel)
                 {
-                    if (MyriInstrumentList.Text.Contains("Ion"))
-                    {
-                        CometInstrumentBox.Text = "Ion Trap";
-                        MSGFInstrumentBox.Text = "Low Resolution LTQ";
-                    }
-                    else if (MyriInstrumentList.Text.Contains("TOF"))
-                    {
-                        CometInstrumentBox.Text = "High Resolution";
-                        MSGFInstrumentBox.Text = "TOF";
-                    }
-                    else
-                    {
-                        CometInstrumentBox.Text = "High Resolution";
-                        MSGFInstrumentBox.Text = "High Resolution LTQ";
-                    }
-
                     IList<ConfigFile> currentlist;
                     if (ProgramModeBox.Text == "MyriMatch")
                         currentlist = _myriTemplateList;
@@ -1746,7 +1874,31 @@ namespace BumberDash.Forms
                                             ? currentlist[_currentInstrument]
                                             : new ConfigFile {PropertyList = new List<ConfigProperty>()});
                     if (result == DialogResult.Yes)
+                    {
                         LoadTemplate();
+                        if ((sender) == MyriInstrumentList)
+                        {
+                            if (MyriInstrumentList.Text.Contains("Ion"))
+                            {
+                                CometInstrumentBox.Text = "Ion Trap";
+                                MSGFInstrumentBox.Text = "Low Resolution LTQ";
+                            }
+                            else if (MyriInstrumentList.Text.Contains("TOF"))
+                            {
+                                CometInstrumentBox.Text = "TOF";
+                                MSGFInstrumentBox.Text = "TOF";
+                            }
+                            else
+                            {
+                                CometInstrumentBox.Text = "High Resolution";
+                                MSGFInstrumentBox.Text = "High Resolution LTQ";
+                            }
+                            var multiSelect = ((ProgramSelectMyri.Checked ? 1 : 0) + (ProgramSelectComet.Checked ? 1 : 0) +
+                                   (ProgramSelectMSGF.Checked ? 1 : 0)) > 1;
+                            if (ProgramSelectMyri.Checked && multiSelect && string.IsNullOrEmpty(MyriOutputSuffixBox.Text))
+                                MyriOutputSuffixBox.Text = "_MM";
+                        }
+                    }
                 }
                 else
                 {
@@ -1847,7 +1999,7 @@ namespace BumberDash.Forms
                     currentConfig.PropertyList.Add(new ConfigProperty
                                                        {
                                                            Name = RootName(kvp.Key.Name),
-                                                           Value = GetControlValue(kvp.Key),
+                                                           Value = GetControlValueString(kvp.Key),
                                                            Type = parameterType.ContainsKey(RootName(kvp.Key.Name))
                                                                       ? parameterType[RootName(kvp.Key.Name)]
                                                                       : "unknown",
@@ -2257,5 +2409,117 @@ namespace BumberDash.Forms
         }
 
 
+        public ConfigFile GetCometConfig()
+        {
+            if (!ProgramSelectComet.Checked)
+                return null;
+            var newConfig = new ConfigFile
+                {
+                    DestinationProgram = "Comet",
+                    Name = "--Custom--",
+                    FilePath = "--Custom--",
+                    PropertyList = new List<ConfigProperty>()
+                };
+            var cometConfig = CometInstrumentBox.SelectedIndex == 0
+                                  ? CometParams.GetIonTrapParams()
+                                  : CometInstrumentBox.SelectedIndex == 0
+                                        ? CometParams.GetTofParams()
+                                        : CometParams.GetHighResParams();
+            if (CometParams.CleavageAgentOptions.ContainsKey(MyriCleavageRulesBox.Text))
+                cometConfig.CleavageAgent = CometParams.CleavageAgentOptions[MyriCleavageRulesBox.Text];
+            foreach (DataGridViewRow row in MyriAppliedModBox.Rows)
+            {
+                if (row.Cells[MyriTypeColumn.Index].Value.ToString() == "Dynamic")
+                    cometConfig.DynamicModifications.Add(
+                        new CometParams.Modification(row.Cells[MyriMotifColumn.Index].Value.ToString(),
+                                                     double.Parse(row.Cells[MyriMassColumn.Index].Value.ToString())));
+                else if (row.Cells[MyriMotifColumn.Index].Value.ToString() == "C")
+                    cometConfig.StaticCysteineMod = double.Parse(row.Cells[MyriMassColumn.Index].Value.ToString());
+            }
+            cometConfig.MaxMissedCleavages = (int)MyriMaxMissedCleavagesBox.Value;
+            cometConfig.MaxMods = (int)MyriMaxDynamicModsBox.Value;
+            cometConfig.OutputSuffix = CometOutputSuffixBox.Text;
+            cometConfig.PrecursorTolerance = Double.Parse(MyriMonoPrecursorMzToleranceBox.Text);
+            cometConfig.PrecursorUnit = MyriMonoPrecursorMzToleranceUnitsList.SelectedIndex == 0
+                                            ? CometParams.PrecursorUnitOptions.Daltons
+                                            : CometParams.PrecursorUnitOptions.PPM;
+            cometConfig.Specificity = MyriMinTerminiCleavagesBox.SelectedIndex;
+            newConfig.PropertyList.Add(new ConfigProperty
+                {
+                    Name = "config",
+                    Type = "string",
+                    ConfigAssociation = newConfig,
+                    Value = CometHandler.CometParamsToFileContents(cometConfig)
+                });
+            return newConfig;
+        }
+
+        private void ProgramSelect_CheckedChanged(object sender, EventArgs e)
+        {
+            var multiSelect = ((ProgramSelectMyri.Checked ? 1 : 0) + (ProgramSelectComet.Checked ? 1 : 0) +
+                               (ProgramSelectMSGF.Checked ? 1 : 0)) > 1;
+            CometGB.Visible = ProgramSelectComet.Checked;
+            MSGFGB.Visible = ProgramSelectMSGF.Checked;
+            if (ProgramSelectMyri.Checked && multiSelect && string.IsNullOrEmpty(MyriOutputSuffixBox.Text))
+                MyriOutputSuffixBox.Text = "_MM";
+        }
+
+        public ConfigFile GetMSGFConfig()
+        {
+            if (!ProgramSelectMSGF.Checked)
+                return null;
+            var newConfig = new ConfigFile
+            {
+                DestinationProgram = "MSGF",
+                Name = "--Custom--",
+                FilePath = "--Custom--",
+                PropertyList = new List<ConfigProperty>()
+            };
+            var msgfConfig = new MSGFParams();
+            if (MSGFParams.CleavageAgentOptions.ContainsKey(MyriCleavageRulesBox.Text))
+                msgfConfig.CleavageAgent = MSGFParams.CleavageAgentOptions[MyriCleavageRulesBox.Text];
+            //msgfConfig.FragmentationMethod = MSGFFragmentMethodBox.SelectedIndex;
+            msgfConfig.Instrument = MSGFInstrumentBox.SelectedIndex;
+            msgfConfig.OutputSuffix = MSGFOutputSuffixBox.Text;
+            msgfConfig.PrecursorTolerance = Double.Parse(MyriMonoPrecursorMzToleranceBox.Text);
+            msgfConfig.PrecursorToleranceUnits = MyriMonoPrecursorMzToleranceUnitsList.SelectedIndex == 0
+                                            ? MSGFParams.PrecursorToleranceUnitOptions.Daltons
+                                            : MSGFParams.PrecursorToleranceUnitOptions.PPM;
+            msgfConfig.Protocol = MSGFPhosphoBox.Checked
+                                      ? MSGFiTRAQBox.Checked
+                                            ? MSGFParams.ProtocolOptions.iTRAQPhospho
+                                            : MSGFParams.ProtocolOptions.Phosphorylation
+                                      : MSGFiTRAQBox.Checked
+                                            ? MSGFParams.ProtocolOptions.iTRAQ
+                                            : MSGFParams.ProtocolOptions.NoProtocol;
+            msgfConfig.Specificity = MyriMinTerminiCleavagesBox.SelectedIndex;
+
+            var modList = new List<Util.Modification>();
+            foreach (DataGridViewRow row in MyriAppliedModBox.Rows)
+            {
+                modList.Add(new Util.Modification
+                    {
+                        Mass = double.Parse(row.Cells[MyriMassColumn.Index].Value.ToString()),
+                        Residue = row.Cells[MyriMotifColumn.Index].Value.ToString(),
+                        Type = row.Cells[MyriTypeColumn.Index].Value.ToString()
+                    });
+            }
+
+            newConfig.PropertyList.Add(new ConfigProperty
+                {
+                    Name = "config",
+                    Type = "string",
+                    ConfigAssociation = newConfig,
+                    Value = MSGFHandler.MSGFParamsToOverload(msgfConfig)
+                });
+            newConfig.PropertyList.Add(new ConfigProperty
+                {
+                    Name = "mods",
+                    Type = "string",
+                    ConfigAssociation = newConfig,
+                    Value = MSGFHandler.ModListToModString(modList, (int) MyriMaxDynamicModsBox.Value)
+                });
+            return newConfig;
+        }
     }
 }

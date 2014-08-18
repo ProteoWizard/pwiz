@@ -33,26 +33,21 @@ namespace BumberDash.Forms
 {
     public sealed partial class AddJobForm : Form
     {
-        #region Globals
-        internal Dictionary<int, ConfigFile> MyriDropDownItems = new Dictionary<int, ConfigFile>();
-        internal Dictionary<int, ConfigFile> DTDropDownItems = new Dictionary<int, ConfigFile>();
-        internal Dictionary<int, ConfigFile> TRDropDownItems = new Dictionary<int, ConfigFile>();
-        internal Dictionary<int, ConfigFile> PepDropDownItems = new Dictionary<int, ConfigFile>();
+        internal Form _parentForm;
         private IList<ConfigFile> _templateList;
-        #endregion
 
         /// <summary>
         ///  Dialogue used to create new job. All fields empty
         ///  </summary>
         /// <param name="oldFiles">List of used History Items</param>
         /// <param name="templates"> List of available templates</param>
-        public AddJobForm(IEnumerable<HistoryItem> oldFiles, IList<ConfigFile> templates)
+        public AddJobForm(IList<ConfigFile> templates, Form parentForm)
         {
             InitializeComponent();
             SearchTypeBox.Text = JobType.Myrimatch;
             InputMethodBox.Text = "File List";
-            SetDropDownItems(oldFiles);
             _templateList = templates;
+            _parentForm = parentForm;
         }
 
         /// <summary>
@@ -62,11 +57,10 @@ namespace BumberDash.Forms
         /// <param name="hi">History Item to clone from</param>
         /// <param name="editMode">True if form should visually appear to be an edit box</param>
         /// <param name="templates">List of available templates</param>
-        public AddJobForm(IEnumerable<HistoryItem> oldFiles, HistoryItem hi, bool editMode, IList<ConfigFile> templates)
+        public AddJobForm(HistoryItem hi, IList<ConfigFile> templates, bool editMode, Form parentForm)
         {
             InitializeComponent();
             SearchTypeBox.Text = JobType.Myrimatch;
-            SetDropDownItems(oldFiles);
             SetHistoryItem(hi);
             if (editMode)
             {
@@ -74,6 +68,7 @@ namespace BumberDash.Forms
                 AddJobRunButton.Text = "Save";
             }
             _templateList = templates;
+            _parentForm = parentForm;
         }
 
         #region Events
@@ -230,11 +225,16 @@ namespace BumberDash.Forms
             if (fileLoc.ShowDialog() == DialogResult.OK)
             {
                 if (Path.GetExtension(fileLoc.FileName) == ".cfg")
-                    MyriConfigBox.Tag = null;
+                    MyriConfigBox.Tag = new ConfigFile
+                        {
+                            Name = Path.GetFileName(fileLoc.FileName),
+                            FilePath = fileLoc.FileName,
+                            DestinationProgram = "MyriMatch",
+                        };
                 else
                 {
-                    MyriConfigBox.Tag = "--Custom--";
-                    MyriMatchInfoBox.Text = PepXMLtoEntireFileString(fileLoc.FileName);
+                    MyriConfigBox.Tag = PepXMLToCustomConfig(fileLoc.FileName, "MyriMatch");
+                    MyriConfigBox.Text = Path.GetFileName(fileLoc.FileName);
                 }
 
                 MyriConfigBox.Text = fileLoc.FileName;
@@ -264,8 +264,8 @@ namespace BumberDash.Forms
                     DTConfigBox.Tag = null;
                 else
                 {
-                    DTConfigBox.Tag = "--Custom--";
-                    DirecTagInfoBox.Text = TagsFileToEntireFileString(fileLoc.FileName);
+                    DTConfigBox.Tag = TagsFileToEntireFileString(fileLoc.FileName);
+                    DirecTagInfoBox.Text = Path.GetFileName(fileLoc.FileName);
                 }
 
                 DTConfigBox.Text = fileLoc.FileName;
@@ -295,8 +295,8 @@ namespace BumberDash.Forms
                     TRConfigBox.Tag = null;
                 else
                 {
-                    TRConfigBox.Tag = "--Custom--";
-                    TagReconInfoBox.Text = PepXMLtoEntireFileString(fileLoc.FileName);
+                    TRConfigBox.Tag =  PepXMLToCustomConfig(fileLoc.FileName,"TagRecon");
+                    TagReconInfoBox.Text = Path.GetFileName(fileLoc.FileName);
                 }
 
                 TRConfigBox.Text = fileLoc.FileName;
@@ -321,8 +321,8 @@ namespace BumberDash.Forms
                     PepConfigBox.Tag = null;
                 else
                 {
-                    PepConfigBox.Tag = "--Custom--";
-                    PepitomeInfoBox.Text = PepXMLtoEntireFileString(fileLoc.FileName);
+                    PepConfigBox.Tag = PepXMLToCustomConfig(fileLoc.FileName,"Pepitome");
+                    PepitomeInfoBox.Text = Path.GetFileName(fileLoc.FileName);
                 }
 
                 PepConfigBox.Text = fileLoc.FileName;
@@ -388,17 +388,56 @@ namespace BumberDash.Forms
             var testConfigForm = (editButton.Text == "Edit" || editButton.Text == "Convert")
                                      ? new ConfigForm(GetConfigFile(destinationProgram), OutputDirectoryBox.Text ?? string.Empty, defaultName, _templateList)
                                      : new ConfigForm(destinationProgram, OutputDirectoryBox.Text ?? string.Empty, NameBox.Text ?? string.Empty, _templateList);
-
+            if (CometConfigBox.Tag != null)
+                testConfigForm.ProgramSelectComet.Checked = true;
+            if (MSGFConfigBox.Tag != null)
+                testConfigForm.ProgramSelectMSGF.Checked = true;
 
             if (testConfigForm.ShowDialog(this) == DialogResult.OK)
             {
-                var filepath = testConfigForm.GetFilePath();
-                configBox.Tag = testConfigForm.IsTemporaryConfiguration()
-                                      ? "--Custom--"
-                                      : null;
-
-                configBox.Text = filepath;
-                infoBox.Text = testConfigForm.GetConfigString(!testConfigForm.IsTemporaryConfiguration());
+                ConfigFile mainConfig = testConfigForm.GetMainConfigFile();
+                if (destinationProgram == "MyriMatch")
+                {
+                    MyriActiveBox.Checked = mainConfig != null;
+                    ConfigFile secondaryConfig = testConfigForm.GetCometConfig();
+                    CometActiveBox.Checked = secondaryConfig != null;
+                    if (secondaryConfig == null)
+                    {
+                        CometConfigBox.Tag = null;
+                        CometConfigBox.Text = string.Empty;
+                    }
+                    else
+                    {
+                        CometConfigBox.Tag = secondaryConfig;
+                        CometConfigBox.Text = "--Custom--";
+                    }
+                    secondaryConfig = testConfigForm.GetMSGFConfig();
+                    MSGFActiveBox.Checked = secondaryConfig != null;
+                    if (secondaryConfig == null)
+                    {
+                        MSGFConfigBox.Tag = null;
+                        MSGFConfigBox.Text = string.Empty;
+                    }
+                    else
+                    {
+                        MSGFConfigBox.Tag = secondaryConfig;
+                        MSGFConfigBox.Text = "--Custom--";
+                    }
+                }
+                if (mainConfig == null)
+                {
+                    configBox.Tag = null;
+                    configBox.Text = string.Empty;
+                    infoBox.Text = string.Empty;
+                    editButton.Text = "New";
+                }
+                else
+                {
+                    configBox.Tag = mainConfig;
+                    configBox.Text = mainConfig.Name;
+                    infoBox.Text = mainConfig.GetDescription();
+                    editButton.Text = "Edit";
+                }
             }
         }
 
@@ -481,107 +520,6 @@ namespace BumberDash.Forms
         }
 
         /// <summary>
-        /// Load info box with selected config item's properties
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MyriConfigBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            MyriConfigBox.Tag = null;
-            if (MyriConfigBox.SelectedIndex == 0)
-            {
-                ConfigBox_TextChanged(MyriConfigBox, null);
-                return;
-            }
-            if (!File.Exists(MyriConfigBox.Text) ||
-                Path.GetExtension(MyriConfigBox.Text) != ".cfg")
-            {
-                MyriMatchInfoBox.Text = string.Empty;
-                foreach (var item in MyriDropDownItems[MyriConfigBox.SelectedIndex].PropertyList)
-                    MyriMatchInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, Environment.NewLine);
-                MyriConfigBox.Tag = "--Custom--";
-            }
-            else if (File.Exists(MyriConfigBox.Text) && Path.GetExtension(MyriConfigBox.Text) == ".pepXML")
-                MyriConfigBox.Tag = "--Custom--";
-            ConfigBox_TextChanged(MyriConfigBox, null);
-        }
-
-        /// <summary>
-        /// Load info box with selected config item's properties
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DTConfigBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            DTConfigBox.Tag = null;
-            if (DTConfigBox.SelectedIndex == 0)
-            {
-                ConfigBox_TextChanged(DTConfigBox, null);
-                return;
-            }
-            if (!File.Exists(DTConfigBox.Text) 
-                || Path.GetExtension(DTConfigBox.Text) != ".cfg")
-            {
-                DirecTagInfoBox.Text = string.Empty;
-                foreach (var item in DTDropDownItems[DTConfigBox.SelectedIndex].PropertyList)
-                    DirecTagInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, Environment.NewLine);
-                DTConfigBox.Tag = "--Custom--";
-            }
-            else if (File.Exists(DTConfigBox.Text) && Path.GetExtension(DTConfigBox.Text) == ".tags")
-                DTConfigBox.Tag = "--Custom--";
-            ConfigBox_TextChanged(DTConfigBox, null);
-        }
-
-        /// <summary>
-        /// Load info box with selected config item's properties
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TRConfigBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            TRConfigBox.Tag = null;
-            if (TRConfigBox.SelectedIndex == 0)
-            {
-                ConfigBox_TextChanged(TRConfigBox, null);
-                return;
-            }
-
-            if (!File.Exists(TRConfigBox.Text) 
-                || Path.GetExtension(TRConfigBox.Text) != ".cfg")
-            {
-                TagReconInfoBox.Text = string.Empty;
-                foreach (var item in TRDropDownItems[TRConfigBox.SelectedIndex].PropertyList)
-                    TagReconInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, Environment.NewLine);
-                TRConfigBox.Tag = "--Custom--";
-            }
-            else if (File.Exists(TRConfigBox.Text) && Path.GetExtension(TRConfigBox.Text) == ".pepXML")
-                TRConfigBox.Tag = "--Custom--";
-            ConfigBox_TextChanged(TRConfigBox, null);
-        }
-
-        private void PepConfigBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            PepConfigBox.Tag = null;
-            if (PepConfigBox.SelectedIndex == 0)
-            {
-                ConfigBox_TextChanged(PepConfigBox, null);
-                return;
-            }
-
-            if (!File.Exists(PepConfigBox.Text)
-                || Path.GetExtension(PepConfigBox.Text) != ".cfg")
-            {
-                PepitomeInfoBox.Text = string.Empty;
-                foreach (var item in PepDropDownItems[PepConfigBox.SelectedIndex].PropertyList)
-                    PepitomeInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, Environment.NewLine);
-                PepConfigBox.Tag = "--Custom--";
-            }
-            else if (File.Exists(PepConfigBox.Text) && Path.GetExtension(PepConfigBox.Text) == ".pepXML")
-                PepConfigBox.Tag = "--Custom--";
-            ConfigBox_TextChanged(PepConfigBox, null);
-        }
-
-        /// <summary>
         /// Do not allow any manual editing to the config box
         /// </summary>
         /// <param name="sender"></param>
@@ -649,18 +587,32 @@ namespace BumberDash.Forms
             //If Myrimatch Search
             if (SearchTypeBox.Text == JobType.Myrimatch)
             {
-                if (MyriConfigBox.Text.Length > 0 && !MyriConfigBox.Text.Contains(" / "))
+                if (!MyriActiveBox.Checked || GetConfigFile("MyriMatch") != null)
                     MyriConfigBox.BackColor = Color.White;
                 else
                 {
                     allValid = false;
                     MyriConfigBox.BackColor = Color.LightPink;
                 }
+                if (!CometActiveBox.Checked || GetConfigFile("Comet") != null)
+                    CometConfigBox.BackColor = Color.White;
+                else
+                {
+                    allValid = false;
+                    CometConfigBox.BackColor = Color.LightPink;
+                }
+                if (!MSGFActiveBox.Checked || GetConfigFile("MSGF") != null)
+                    MSGFConfigBox.BackColor = Color.White;
+                else
+                {
+                    allValid = false;
+                    MSGFConfigBox.BackColor = Color.LightPink;
+                }
             }
             //If Tag Sequencing
             else if (SearchTypeBox.Text == JobType.Tag)
             {
-                if (DTConfigBox.Text.Length > 0 && !DTConfigBox.Text.Contains(" / "))
+                if (GetConfigFile("DirecTag") != null)
                     DTConfigBox.BackColor = Color.White;
                 else
                 {
@@ -668,7 +620,7 @@ namespace BumberDash.Forms
                     DTConfigBox.BackColor = Color.LightPink;
                 }
 
-                if (TRConfigBox.Text.Length > 0 && !TRConfigBox.Text.Contains(" / "))
+                if (GetConfigFile("TagRecon") != null)
                     TRConfigBox.BackColor = Color.White;
                 else
                 {
@@ -688,7 +640,7 @@ namespace BumberDash.Forms
                     DatabaseLocBox.BackColor = Color.LightPink;
                 }
 
-                if (PepConfigBox.Text.Length > 0 && !PepConfigBox.Text.Contains(" / "))
+                if (GetConfigFile("Pepitome") != null)
                     PepConfigBox.BackColor = Color.White;
                 else
                 {
@@ -699,84 +651,6 @@ namespace BumberDash.Forms
             }
 
             return allValid;
-        }
-
-        /// <summary>
-        /// Populates drop down boxeas with related items from old HistoryItems
-        /// </summary>
-        /// <param name="oldFiles"></param>
-        private void SetDropDownItems(IEnumerable<HistoryItem> oldFiles)
-        {
-            var usedInputList = new List<string>();
-            var usedOutputList = new List<string>();
-            var usedDatabaseList = new List<string>();
-            var usedLibList = new List<string>();
-            var usedMyriList = new List<string>();
-            var usedDTList = new List<string>();
-            var usedTRList = new List<string>();
-            var usedPepList = new List<string>();
-
-            foreach (var hi in oldFiles)
-            {
-                if (!usedOutputList.Contains(hi.OutputDirectory))
-                {
-                    usedOutputList.Add(hi.OutputDirectory);
-                    OutputDirectoryBox.Items.Add(hi.OutputDirectory);
-                }
-
-                if (!usedDatabaseList.Contains(hi.ProteinDatabase))
-                {
-                    usedDatabaseList.Add(hi.ProteinDatabase);
-                    DatabaseLocBox.Items.Add(hi.ProteinDatabase);
-                }
-
-                if (hi.JobType == JobType.Tag || (hi.JobType == null && hi.TagConfigFile != null))
-                {
-                    if (!usedDTList.Contains(hi.InitialConfigFile.FilePath))
-                    {
-                        usedDTList.Add(hi.InitialConfigFile.FilePath);
-                        DTDropDownItems.Add(DTConfigBox.Items.Count, hi.InitialConfigFile);
-                        DTConfigBox.Items.Add(hi.InitialConfigFile.FilePath == "--Custom--"
-                                                  ? hi.InitialConfigFile.Name ?? "--Custom--"
-                                                  : hi.InitialConfigFile.FilePath);
-                    }
-
-                    if (!usedTRList.Contains(hi.TagConfigFile.FilePath))
-                    {
-                        usedTRList.Add(hi.TagConfigFile.FilePath);
-                        TRDropDownItems.Add(TRConfigBox.Items.Count, hi.TagConfigFile);
-                        TRConfigBox.Items.Add(hi.TagConfigFile.FilePath == "--Custom--"
-                                                  ? hi.TagConfigFile.Name ?? "--Custom--"
-                                                  : hi.TagConfigFile.FilePath);
-                    }
-                }
-                else if (hi.SpectralLibrary != null)
-                {
-                    if (!usedLibList.Contains(hi.SpectralLibrary))
-                    {
-                        usedLibList.Add(hi.SpectralLibrary);
-                        SpecLibBox.Items.Add(hi.SpectralLibrary);
-                    }
-                    if (!usedPepList.Contains(hi.InitialConfigFile.FilePath))
-                    {
-                        PepDropDownItems.Add(PepConfigBox.Items.Count, hi.InitialConfigFile);
-                        PepConfigBox.Items.Add(hi.InitialConfigFile.FilePath == "--Custom--"
-                                                  ? hi.InitialConfigFile.Name ?? "--Custom--"
-                                                  : hi.InitialConfigFile.FilePath);
-                    }
-                }
-                else
-                {
-                    if (!usedMyriList.Contains(hi.InitialConfigFile.FilePath))
-                    {
-                        usedMyriList.Add(hi.InitialConfigFile.FilePath);
-                        MyriDropDownItems.Add(MyriConfigBox.Items.Count, hi.InitialConfigFile);
-                        MyriConfigBox.Items.Add(hi.InitialConfigFile.FilePath == "--Custom--"
-                                                  ? hi.InitialConfigFile.Name ?? "--Custom--"
-                                                  : hi.InitialConfigFile.FilePath);
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -942,67 +816,124 @@ namespace BumberDash.Forms
             return hi;
         }
 
-        private ConfigFile GetConfigFile(string destinationProgram)
+        public List<HistoryItem> GetHistoryItems()
         {
-            var parameterType = Util.parameterTypes;
+            var hiList = new List<HistoryItem>();
+            var files = GetInputFileNames();
+            var outputDir = OutputDirectoryBox.Text;
 
-            var configBox = destinationProgram == "MyriMatch"
-                                ? MyriConfigBox
-                                : (destinationProgram == "DirecTag"
-                                       ? DTConfigBox
-                                       : (destinationProgram == "Pepitome"
-                                              ? PepConfigBox
-                                              : TRConfigBox));
-
-            var config = new ConfigFile
+            //generic hi setup
+            var initialHi = new HistoryItem
             {
-                DestinationProgram = destinationProgram,
-                PropertyList = new List<ConfigProperty>()                
+                JobName = NameBox.Text,
+                OutputDirectory = newFolderBox.Checked ? outputDir + "+" : outputDir,
+                ProteinDatabase = DatabaseLocBox.Text,
+                Cpus = 0,
+                CurrentStatus = string.Empty,
+                StartTime = null,
+                EndTime = null,
+                RowNumber = 0,
+                TagConfigFile = null,
+                FileList = new List<InputFile>()
             };
+            foreach (var item in files)
+                initialHi.FileList.Add(new InputFile { FilePath = item, HistoryItem = initialHi });
 
-            if (configBox.Tag == null)
-                config.FilePath = configBox.Text;
+            if (SearchTypeBox.Text == JobType.Library)
+            {
+                initialHi.JobType = JobType.Library;
+                initialHi.SpectralLibrary = SpecLibBox.Text;
+                initialHi.InitialConfigFile = GetConfigFile("Pepitome");
+
+                //HACK: Until fix gets pushed out Pepitome should only run with 1 cpu core
+                initialHi.Cpus = 1;
+            }
+            else if (SearchTypeBox.Text == JobType.Tag)
+            {
+                initialHi.JobType = JobType.Tag;
+                initialHi.InitialConfigFile = GetConfigFile("DirecTag");
+                initialHi.TagConfigFile = GetConfigFile("TagRecon");
+            }
+            else if (SearchTypeBox.Text == JobType.Myrimatch)
+            {
+                var newOutput = initialHi.OutputDirectory;
+                initialHi.JobType = JobType.Myrimatch;
+                initialHi.InitialConfigFile = GetConfigFile("MyriMatch");
+                if (MyriActiveBox.Checked && newFolderBox.Checked)
+                    newOutput = Path.Combine(outputDir ?? string.Empty, NameBox.Text);
+
+                var cometHi = new HistoryItem
+                {
+                    JobType = JobType.Comet,
+                    OutputDirectory = newOutput,
+                    JobName = initialHi.JobName,
+                    ProteinDatabase = initialHi.ProteinDatabase,
+                    Cpus = 0,
+                    CurrentStatus = string.Empty,
+                    StartTime = null,
+                    EndTime = null,
+                    RowNumber = 0,
+                    InitialConfigFile = GetConfigFile("Comet"),
+                    FileList = new List<InputFile>()
+                };
+                var msgfHi = new HistoryItem
+                {
+                    JobType = JobType.MSGF,
+                    OutputDirectory = newOutput,
+                    JobName = initialHi.JobName,
+                    ProteinDatabase = initialHi.ProteinDatabase,
+                    Cpus = 0,
+                    CurrentStatus = string.Empty,
+                    StartTime = null,
+                    EndTime = null,
+                    RowNumber = 0,
+                    InitialConfigFile = GetConfigFile("MSGF"),
+                    FileList = new List<InputFile>()
+                };
+
+                foreach (var item in files)
+                {
+                    cometHi.FileList.Add(new InputFile { FilePath = item, HistoryItem = cometHi });
+                    msgfHi.FileList.Add(new InputFile { FilePath = item, HistoryItem = msgfHi });
+                }
+                if (CometActiveBox.Checked)
+                    hiList.Add(cometHi);
+                if (MSGFActiveBox.Checked)
+                    hiList.Add(msgfHi);
+            }
             else
-            {
-                config.FilePath = "--Custom--";
-                if ((string.IsNullOrEmpty(configBox.Text)
-                || configBox.Text == "(Default)")
-                && !string.IsNullOrEmpty(NameBox.Text))
-                    config.Name = NameBox.Text;
-                else
-                    config.Name = configBox.Text;
-            }
-
-            var properties = destinationProgram == "MyriMatch"
-                                 ? MyriMatchInfoBox.Text.Split(Environment.NewLine.ToCharArray(),
-                                                               StringSplitOptions.RemoveEmptyEntries)
-                                 : (destinationProgram == "DirecTag"
-                                        ? DirecTagInfoBox.Text.Split(Environment.NewLine.ToCharArray(),
-                                                                     StringSplitOptions.RemoveEmptyEntries)
-                                        : (destinationProgram == "Pepitome"
-                                               ? PepitomeInfoBox.Text.Split(Environment.NewLine.ToCharArray(),
-                                                                            StringSplitOptions.RemoveEmptyEntries)
-                                               : TagReconInfoBox.Text.Split(Environment.NewLine.ToCharArray(),
-                                                                            StringSplitOptions.RemoveEmptyEntries)));
-            foreach (var item in properties)
-            {
-                var splitProperty = item.Split("=".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                if (splitProperty.Length == 2)
-                    config.PropertyList.Add(new ConfigProperty
-                                                {
-                                                    Name = splitProperty[0].Trim(),
-                                                    Value = splitProperty[1].Trim(),
-                                                    Type = parameterType.ContainsKey(splitProperty[0].Trim())
-                                                               ? parameterType[splitProperty[0].Trim()]
-                                                               : "unknown",
-                                                    ConfigAssociation = config
-                                                });
-            }
-            return config;
+                throw new Exception("None of the known search types were checked." +
+                                    " Was there a new one added that hasn't been accounted for?");
+            if (SearchTypeBox.Text != JobType.Myrimatch || MyriActiveBox.Checked)
+                hiList.Insert(0, initialHi);
+            return hiList;
         }
 
-        public static string PepXMLtoEntireFileString(string file)
+        private ConfigFile GetConfigFile(string destinationProgram)
         {
+            var configBox = destinationProgram == "MyriMatch"
+                                ? MyriConfigBox
+                                : destinationProgram == "Comet"
+                                      ? CometConfigBox
+                                      : destinationProgram == "MSGF"
+                                            ? MSGFConfigBox
+                                            : (destinationProgram == "DirecTag"
+                                                   ? DTConfigBox
+                                                   : (destinationProgram == "Pepitome"
+                                                          ? PepConfigBox
+                                                          : TRConfigBox));
+            return (configBox.Tag as ConfigFile);
+
+        }
+
+        public static ConfigFile PepXMLToCustomConfig(string file, string destinationProgram)
+        {
+            var newConfig = new ConfigFile
+                {
+                    DestinationProgram = destinationProgram,
+                    Name = Path.GetFileName(file),
+                    PropertyList = new List<ConfigProperty>()
+                };
             var parameterTypes = Util.parameterTypes;
             var cutFile = string.Empty;
             var fileStream = new StreamReader(file);
@@ -1017,7 +948,6 @@ namespace BumberDash.Forms
             }
             fileStream.Close();
 
-            var formattedFile = string.Empty;
             var entireLine = cutFile.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             string[] propertySplit;
 
@@ -1039,13 +969,23 @@ namespace BumberDash.Forms
                     {
                         propertySplit[1] = propertySplit[1].Trim('\"');
                         propertySplit[1] = Convert.ToBoolean(int.Parse(propertySplit[1])).ToString().ToLower();
-                        formattedFile += propertySplit[0] + " = " + propertySplit[1] + Environment.NewLine;
+                        newConfig.PropertyList.Add(new ConfigProperty
+                            {
+                                Name = propertySplit[0],
+                                Value = propertySplit[1],
+                                Type = parameterTypes[propertySplit[0]]
+                            });
                     }
                     else if (parameterTypes[propertySplit[0]] == "int"
                              || parameterTypes[propertySplit[0]] == "double")
                     {
                         propertySplit[1] = propertySplit[1].Trim('\"');
-                        formattedFile += propertySplit[0] + " = " + propertySplit[1] + Environment.NewLine;
+                        newConfig.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = propertySplit[0],
+                            Value = propertySplit[1],
+                            Type = parameterTypes[propertySplit[0]]
+                        });
                     }
                     else if (parameterTypes[propertySplit[0]] == "string")
                     {
@@ -1054,19 +994,29 @@ namespace BumberDash.Forms
                             for (int i = 2; i < propertySplit.Length; i++)
                                 propertySplit[1] += " " + propertySplit[i];
                         }
-                        formattedFile += propertySplit[0] + " = " + propertySplit[1] + Environment.NewLine;
+                        newConfig.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = propertySplit[0],
+                            Value = propertySplit[1],
+                            Type = parameterTypes[propertySplit[0]]
+                        });
                     }
                 }
             }
 
 
-            return formattedFile;
+            return newConfig;
         }
 
-        public static string TagsFileToEntireFileString(string file)
+        public static ConfigFile TagsFileToEntireFileString(string file)
         {
+            var newConfig = new ConfigFile
+                {
+                    DestinationProgram = "DirecTag",
+                    Name = Path.GetFileName(file),
+                    PropertyList = new List<ConfigProperty>()
+                };
             var parameterTypes = Util.parameterTypes;
-
             var cutFile = string.Empty;
             var fileStream = new StreamReader(file);
             while (!fileStream.EndOfStream)
@@ -1087,7 +1037,6 @@ namespace BumberDash.Forms
             }
             fileStream.Close();
 
-            var formattedFile = string.Empty;
             var entireLine = cutFile.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             string[] propertySplit;
 
@@ -1106,13 +1055,23 @@ namespace BumberDash.Forms
                     {
                         propertySplit[1] = propertySplit[1].Trim('\"');
                         propertySplit[1] = Convert.ToBoolean(int.Parse(propertySplit[1])).ToString().ToLower();
-                        formattedFile += propertySplit[0] + " = " + bool.Parse(propertySplit[1]).ToString().ToLower() + Environment.NewLine;
+                        newConfig.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = propertySplit[0],
+                            Value = propertySplit[1],
+                            Type = parameterTypes[propertySplit[0]]
+                        });
                     }
                     else if (parameterTypes[propertySplit[0]] == "int"
                              || parameterTypes[propertySplit[0]] == "double")
                     {
                         propertySplit[1] = propertySplit[1].Trim('\"');
-                        formattedFile += propertySplit[0] + " = " + propertySplit[1] + Environment.NewLine;
+                        newConfig.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = propertySplit[0],
+                            Value = propertySplit[1],
+                            Type = parameterTypes[propertySplit[0]]
+                        });
                     }
                     else if (parameterTypes[propertySplit[0]] == "string")
                     {
@@ -1121,14 +1080,17 @@ namespace BumberDash.Forms
                             for (int foo = 2; foo < propertySplit.Length; foo++)
                                 propertySplit[1] += " " + propertySplit[foo];
                         }
-                        formattedFile += propertySplit[0] + " = " + propertySplit[1] + Environment.NewLine;
+                        newConfig.PropertyList.Add(new ConfigProperty
+                        {
+                            Name = propertySplit[0],
+                            Value = propertySplit[1],
+                            Type = parameterTypes[propertySplit[0]]
+                        });
                     }
                 }
             }
 
-            formattedFile = formattedFile.Trim();
-
-            return formattedFile;
+            return newConfig;
         }
 
         private void SearchTypeBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -1138,7 +1100,7 @@ namespace BumberDash.Forms
                 case JobType.Myrimatch:
                     ConfigGB.Visible = true;
                     PepPanel.Visible = false;
-                    ConfigDatabasePanel.Visible = true;
+                    DatabaseConfigPanel.Visible = true;
                     DatabaseConfigInfoPanel.Visible = true;
                     ConfigTagPanel.Visible = false;
                     PepConfigInfoPanel.Visible = false;
@@ -1147,7 +1109,7 @@ namespace BumberDash.Forms
                 case JobType.Tag:
                     ConfigGB.Visible = true;
                     PepPanel.Visible = false;
-                    ConfigDatabasePanel.Visible = false;
+                    DatabaseConfigPanel.Visible = false;
                     DatabaseConfigInfoPanel.Visible = false;
                     ConfigTagPanel.Visible = true;
                     PepConfigInfoPanel.Visible = false;
@@ -1187,8 +1149,8 @@ namespace BumberDash.Forms
 
         private void InputMethodBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            FileListPanel.Visible = InputMethodBox.SelectedItem == "File List";
-            FileMaskPanel.Visible = InputMethodBox.SelectedItem == "File Mask";
+            FileListPanel.Visible = (string)InputMethodBox.SelectedItem == "File List";
+            FileMaskPanel.Visible = (string)InputMethodBox.SelectedItem == "File Mask";
         }
 
         private void InputDirectoryButton_Click(object sender, EventArgs e)
@@ -1258,23 +1220,44 @@ namespace BumberDash.Forms
                 Title = "Comet config file location"
             };
             if (fileLoc.ShowDialog() == DialogResult.OK)
-                CometConfigBox.Text = fileLoc.FileName;
+            {
+                var newConfig = new ConfigFile
+                    {
+                        Name = Path.GetFileName(fileLoc.FileName),
+                        FilePath = fileLoc.FileName,
+                        DestinationProgram = "Comet"
+                    };
+                CometConfigBox.Tag = newConfig;
+                CometConfigBox.Text = newConfig.Name;
+            }
         }
 
-        private void MSGFConfigBrowse_Click(object sender, EventArgs e)
+        private void AdvancedModeBox_CheckedChanged(object sender, EventArgs e)
         {
-            var fileLoc = new OpenFileDialog
+            if (AdvancedModeBox.Checked)
+                return;
+            AdvancedModeBox.Checked = true;
+            _parentForm.Visible = true;
+            DialogResult = DialogResult.Cancel;
+        }
+
+        private void DBTabBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (DBTabBox.SelectedIndex == MyriTab.TabIndex)
             {
-                InitialDirectory = OutputDirectoryBox.Text,
-                RestoreDirectory = true,
-                Filter = "Text Files|*.txt|All files|*.*",
-                CheckFileExists = true,
-                CheckPathExists = true,
-                Multiselect = false,
-                Title = "Comet config file location"
-            };
-            if (fileLoc.ShowDialog() == DialogResult.OK)
-                MSGFConfigBox.Text = fileLoc.FileName;
+                MyriMatchInfoLabel.Text = "MyriMatch Configuration";
+                MyriMatchInfoBox.Text = (MyriConfigBox.Tag as ConfigFile ?? new ConfigFile()).GetDescription();
+            }
+            else if (DBTabBox.SelectedIndex == CometTab.TabIndex)
+            {
+                MyriMatchInfoLabel.Text = "Comet Configuration";
+                MyriMatchInfoBox.Text = (CometConfigBox.Tag as ConfigFile ?? new ConfigFile()).GetDescription();
+            }
+            else if (DBTabBox.SelectedIndex == MSGFTab.TabIndex)
+            {
+                MyriMatchInfoLabel.Text = "MS-GF+ Configuration";
+                MyriMatchInfoBox.Text = (MSGFConfigBox.Tag as ConfigFile ?? new ConfigFile()).GetDescription();
+            }
         }
     }
 }

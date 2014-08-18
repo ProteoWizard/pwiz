@@ -181,9 +181,9 @@ namespace BumberDash
                     {
                         foreach (var file in hi.FileList)
                         {
-                            var initialDir = Path.GetDirectoryName(hi.FileList[0].FilePath.Trim('!'));
+                            var initialDir = Path.GetDirectoryName(hi.FileList[0].FilePath.Trim('"').Trim('!'));
                             var noExtension = Path.Combine(initialDir ?? string.Empty,
-                                                           Path.GetFileNameWithoutExtension(file.FilePath) ?? string.Empty);
+                                                           Path.GetFileNameWithoutExtension(file.FilePath.Trim('"')) ?? string.Empty);
                             var cometParams = CometHandler.FileContentsToCometParams(cometConfig.Value);
                             _moveFileList.Add(noExtension + cometParams.OutputSuffix + ".pep.xml");
                             argumentString.Append(String.Format(" {0}", file.FilePath));
@@ -252,7 +252,7 @@ namespace BumberDash
                             var initialDir = Path.GetDirectoryName(fullMask);
                             var mask = Path.GetFileName(fullMask);
                             var maskedFiles = Directory.GetFiles(initialDir, mask);
-                            fileList.AddRange(maskedFiles);
+                            fileList.AddRange(maskedFiles.Select(file => "\"" + file + "\""));
                             foreach (var file in maskedFiles)
                             {
                                 var noExtension = Path.Combine(initialDir,
@@ -266,9 +266,9 @@ namespace BumberDash
                             fileList.AddRange(hi.FileList.Select(file => file.FilePath));
                             foreach (var file in hi.FileList)
                             {
-                                var initialDir = Path.GetDirectoryName(hi.FileList[0].FilePath.Trim('!'));
+                                var initialDir = Path.GetDirectoryName(hi.FileList[0].FilePath.Trim('"').Trim('!'));
                                 var noExtension = Path.Combine(initialDir,
-                                                               Path.GetFileNameWithoutExtension(file.FilePath) ?? string.Empty);
+                                                               Path.GetFileNameWithoutExtension(file.FilePath.Trim('"')) ?? string.Empty);
                                 var msgfParams = MSGFHandler.OverloadToMSGFParams(msgfOverload.Value);
                                 _moveFileList.Add(noExtension + msgfParams.OutputSuffix + ".mzid");
                             }
@@ -283,11 +283,11 @@ namespace BumberDash
                             arg.AppendFormat(@"-d64 -Xmx4000M -jar ""{0}\lib\MSGFPlus.jar""", AppDomain.CurrentDomain.BaseDirectory);
                             arg.Append(" -d \"" + hi.ProteinDatabase + "\"");
                             arg.Append(" -mod \"" + tempMSGFPath + "\"");
-                            var noExtension = Path.Combine(Path.GetDirectoryName(file) ?? string.Empty,
-                                                           Path.GetFileNameWithoutExtension(file) ?? string.Empty);
+                            var noExtension = Path.Combine(Path.GetDirectoryName(file.Trim('"')) ?? string.Empty,
+                                                           Path.GetFileNameWithoutExtension(file.Trim('"')) ?? string.Empty);
                             arg.Append(" " + msgfOverload.Value.Trim()
                                                          .Replace("[FileNameOnly]", noExtension)
-                                                         .Replace("[FullFileName]", file));
+                                                         .Replace("[FullFileName]", file.Trim('"')));
                             _msgfList.Add(arg.ToString());
                         }
                     }

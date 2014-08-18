@@ -10,7 +10,7 @@ namespace BumberDash
     class MSGFParams
     {
         public int Instrument { get; set; }
-        public int FragmentationMethod { get; set; }
+        //public int FragmentationMethod { get; set; }
         public int Protocol { get; set; }
         public double PrecursorTolerance { get; set; }
         public string PrecursorToleranceUnits { get; set; }
@@ -23,7 +23,7 @@ namespace BumberDash
         public MSGFParams()
         {
             Instrument = InstrumentOptions.LowResLTQ;
-            FragmentationMethod = FragmentationMethodOptions.Auto;
+            //FragmentationMethod = FragmentationMethodOptions.Auto;
             Protocol = ProtocolOptions.NoProtocol;
             PrecursorTolerance = 20.0;
             PrecursorToleranceUnits = PrecursorToleranceUnitOptions.PPM;
@@ -110,7 +110,7 @@ namespace BumberDash
             return "-inst " + config.Instrument
                    + " -o \"[FileNameOnly]" + config.OutputSuffix + ".mzid\""
                    + " -tda 1"
-                   + " -m " + config.FragmentationMethod
+                   + " -m 0"// + config.FragmentationMethod
                    + " -protocol " + config.Protocol
                    + " -e " + config.CleavageAgent
                    + " -t " + config.PrecursorTolerance.ToString(CultureInfo.InvariantCulture) + config.PrecursorToleranceUnits
@@ -140,9 +140,9 @@ namespace BumberDash
                                                                 .Replace(".mzid\"", string.Empty);
                         config.OutputSuffix = trimmedString;
                         break;
-                    case "-m":
-                        if (validNumberNext)
-                            config.FragmentationMethod = nextNumber;
+                    //case "-m":
+                    //    if (validNumberNext)
+                    //        config.FragmentationMethod = nextNumber;
                         break;
                     case "-e":
                         if (validNumberNext)

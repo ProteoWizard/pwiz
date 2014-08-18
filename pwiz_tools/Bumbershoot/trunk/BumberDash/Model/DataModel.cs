@@ -21,6 +21,8 @@
 //
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace BumberDash.Model
 {
@@ -45,6 +47,31 @@ namespace BumberDash.Model
         public virtual IList<HistoryItem> UsedByList { get; set; } //List of HistoryItems in which ConfigFile is main config
         public virtual IList<HistoryItem> UsedByList2 { get; set; } //List of HistoryItems in which ConfigFile is second (TagRecon) config
         public virtual IList<ConfigProperty> PropertyList { get; set; }
+
+        public override string ToString()
+        {
+            return DestinationProgram + " - " + Name;
+        }
+
+        public virtual string GetDescription()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(FilePath) && File.Exists(FilePath))
+                {
+                    var fileIn = new StreamReader(FilePath);
+                    return fileIn.ReadToEnd();
+                }
+                var sb = new StringBuilder();
+                foreach (var property in PropertyList)
+                    sb.AppendLine(property.Name + " = " + property.Value);
+                return sb.ToString();
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
     }
 
     public class ConfigProperty

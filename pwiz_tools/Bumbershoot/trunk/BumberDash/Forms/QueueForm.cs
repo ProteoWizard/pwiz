@@ -735,9 +735,8 @@ namespace BumberDash.Forms
         /// </summary>
         private void ShowAddBox()
         {
-            var oldconfigs = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Desc.List();
             var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
-            var addJob = new ConfigWizard(); //new AddJobForm(oldconfigs, templateList);
+            var addJob = new ConfigWizard(templateList); //new AddJobForm(oldconfigs, templateList);
             if (addJob.ShowDialog() == DialogResult.OK)
             {
                 _programmaticallyPaused = true;
@@ -756,14 +755,13 @@ namespace BumberDash.Forms
         /// <param name="oldHi"></param>
         private void ShowCloneBox(HistoryItem oldHi)
         {
-            var addJob = new ConfigWizard(oldHi, false);
+            var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
+            var addJob = new ConfigWizard(oldHi, templateList, false);
             if (addJob.ShowDialog() == DialogResult.OK)
             {
-                var newHi = addJob.GetHistoryItems().FirstOrDefault();
-                if (newHi == null)
-                    return;
-                _programmaticallyPaused = true;
-                InsertRowFromHistoryItem(newHi, JobQueueDGV.Rows.Count - 1);
+                var items = addJob.GetHistoryItems();
+                foreach (var hi in items)
+                    InsertRowFromHistoryItem(hi, JobQueueDGV.Rows.Count - 1);
                 _programmaticallyPaused = false;
             }
 
@@ -776,10 +774,11 @@ namespace BumberDash.Forms
         /// <param name="row"></param>
         private void ShowEditBox(int row)
         {
+            var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
             var locked = (string)JobQueueDGV.Rows[row].Tag == "Locked";
             JobQueueDGV.Rows[row].Tag = "Editing";
             var oldHi = (HistoryItem) JobQueueDGV[0, row].Tag;
-            var addJob = new ConfigWizard(oldHi, true);
+            var addJob = new ConfigWizard(oldHi, templateList, true);
             if (addJob.ShowDialog() == DialogResult.OK)
             {
                 var newHi = addJob.GetHistoryItems().FirstOrDefault();

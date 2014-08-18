@@ -20,18 +20,21 @@ namespace BumberDash.Forms
         private int _currentPanel = 1;
         private int _finalPanel = 0;
         private HistoryItem _currentJob;
+        private IList<ConfigFile> _templateList;
 
-        public ConfigWizard()
+        public ConfigWizard(IList<ConfigFile> templateList)
         {
             InitializeComponent();
             _currentJob = null;
+            _templateList = templateList;
         }
 
         private bool _editMode = false;
-        public ConfigWizard(HistoryItem hi, bool editMode)
+        public ConfigWizard(HistoryItem hi, IList<ConfigFile> templateList, bool editMode)
         {
             InitializeComponent();
             _currentJob = hi;
+            _templateList = templateList;
             _editMode = editMode;
             if (editMode)
                 Text = "Edit Job";
@@ -819,11 +822,11 @@ namespace BumberDash.Forms
                 CleavageAgentBox.Text = MSGFParams.CleavageAgentOptions.First(x => x.Value == msgfConfig.CleavageAgent).Key;
                 SpecificityBox.SelectedIndex = msgfConfig.Specificity;
 
-                //tolerance
-                if (msgfConfig.FragmentationMethod == MSGFParams.FragmentationMethodOptions.CID)
-                    FragmentLowRadio.Checked = true;
-                else
-                    FragmentHighRadio.Checked = true;
+                ////tolerance
+                //if (msgfConfig.FragmentationMethod == MSGFParams.FragmentationMethodOptions.CID)
+                //    FragmentLowRadio.Checked = true;
+                //else
+                //    FragmentHighRadio.Checked = true;
                 if (msgfConfig.PrecursorToleranceUnits == MSGFParams.PrecursorToleranceUnitOptions.Daltons)
                 {
                     PrecursorLowRadio.Checked = true;
@@ -843,8 +846,11 @@ namespace BumberDash.Forms
 
         }
 
+        private List<HistoryItem> _externalHiList;
         public List<HistoryItem> GetHistoryItems()
         {
+            if (AdvancedModeBox.Checked && _externalHiList != null)
+                return _externalHiList;
             var hiList = new List<HistoryItem>();
             var files = GetInputFileNames();
             var outputDir = OutputFolderBox.Text;
@@ -1173,9 +1179,9 @@ namespace BumberDash.Forms
                 msgfParams.PrecursorToleranceUnits = PrecursorToleranceUnitsBox.Text == "mz"
                                                          ? MSGFParams.PrecursorToleranceUnitOptions.Daltons
                                                          : MSGFParams.PrecursorToleranceUnitOptions.PPM;
-                msgfParams.FragmentationMethod = FragmentLowRadio.Checked
-                                                     ? MSGFParams.FragmentationMethodOptions.CID
-                                                     : MSGFParams.FragmentationMethodOptions.HCD;
+                //msgfParams.FragmentationMethod = FragmentLowRadio.Checked
+                //                                     ? MSGFParams.FragmentationMethodOptions.CID
+                //                                     : MSGFParams.FragmentationMethodOptions.HCD;
                 if (PrecursorLowRadio.Checked || FragmentLowRadio.Checked)
                     msgfParams.Instrument = MSGFParams.InstrumentOptions.LowResLTQ;
                 else if (PrecursorMidRadio.Checked || FragmentMidRadio.Checked)
@@ -1238,6 +1244,25 @@ namespace BumberDash.Forms
             var box = sender as TextBox ?? new TextBox();
             if (!double.TryParse(box.Text, out output))
                 box.Text = string.Empty;
+        }
+
+        private void AdvancedModeBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!AdvancedModeBox.Checked)
+                return;
+            AddJobForm advancedForm;
+            if (_currentJob.FileList == null)
+                advancedForm = new AddJobForm(_templateList, this);
+            else
+                advancedForm = new AddJobForm(_currentJob, _templateList, _editMode, this);
+            this.Visible = false;
+            if (advancedForm.ShowDialog() == DialogResult.OK)
+            {
+                _externalHiList = advancedForm.GetHistoryItems();
+                DialogResult = DialogResult.OK;
+            }
+            else
+                AdvancedModeBox.Checked = false;
         }
     }
 }

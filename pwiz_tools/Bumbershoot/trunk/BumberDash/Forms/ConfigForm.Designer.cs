@@ -175,9 +175,9 @@ namespace BumberDash.Forms
             this.MyriMinTerminiCleavagesLabel = new System.Windows.Forms.Label();
             this.MyriModGB = new System.Windows.Forms.GroupBox();
             this.MyriAppliedModBox = new System.Windows.Forms.DataGridView();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column3 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.MyriMotifColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MyriMassColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MyriTypeColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.MyriAppliedModLabel = new System.Windows.Forms.Label();
             this.MyriAppliedModRemove = new System.Windows.Forms.Button();
             this.MyriAppliedModAdd = new System.Windows.Forms.Button();
@@ -331,12 +331,23 @@ namespace BumberDash.Forms
             this.PepPrecursorMzToleranceRuleLabel = new System.Windows.Forms.Label();
             this.AdvTab = new System.Windows.Forms.TabPage();
             this.MyriAdvPanel = new System.Windows.Forms.Panel();
+            this.MSGFGB = new System.Windows.Forms.GroupBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.MSGFOutputSuffixBox = new System.Windows.Forms.TextBox();
+            this.MSGFiTRAQBox = new System.Windows.Forms.CheckBox();
+            this.MSGFPhosphoBox = new System.Windows.Forms.CheckBox();
+            this.MSGFFragmentMethodBox = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.MSGFInstrumentBox = new System.Windows.Forms.ComboBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.CometGB = new System.Windows.Forms.GroupBox();
-            this.CometActivationBox = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.CometOutputSuffixBox = new System.Windows.Forms.TextBox();
             this.CometInstrumentBox = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.MyriMiscGB = new System.Windows.Forms.GroupBox();
+            this.MyriOutputSuffixLabel = new System.Windows.Forms.Label();
+            this.MyriOutputSuffixBox = new System.Windows.Forms.TextBox();
             this.MyriOutputFormatBox = new System.Windows.Forms.ComboBox();
             this.MyriOutputFormatLabel = new System.Windows.Forms.Label();
             this.MyriNumChargeStatesBox = new System.Windows.Forms.NumericUpDown();
@@ -446,6 +457,8 @@ namespace BumberDash.Forms
             this.DTIsotopeMzToleranceLabel = new System.Windows.Forms.Label();
             this.TRAdvPanel = new System.Windows.Forms.Panel();
             this.TRMiscGB = new System.Windows.Forms.GroupBox();
+            this.TROutputSuffixLabel = new System.Windows.Forms.Label();
+            this.TROutputSuffixBox = new System.Windows.Forms.TextBox();
             this.TRFragmentationRuleBox = new System.Windows.Forms.ComboBox();
             this.TRFragmentationRuleLabel = new System.Windows.Forms.Label();
             this.TROutputFormatBox = new System.Windows.Forms.ComboBox();
@@ -527,6 +540,8 @@ namespace BumberDash.Forms
             this.PepCleanLibSpectraBox = new System.Windows.Forms.CheckBox();
             this.PepCleanLibSpectraLabel = new System.Windows.Forms.Label();
             this.PepMiscBox = new System.Windows.Forms.GroupBox();
+            this.PepOutputSuffixLabel = new System.Windows.Forms.Label();
+            this.PepOutputSuffixBox = new System.Windows.Forms.TextBox();
             this.PepFragmentationRuleBox = new System.Windows.Forms.ComboBox();
             this.PepFragmentationRuleLabel = new System.Windows.Forms.Label();
             this.PepOutputFormatBox = new System.Windows.Forms.ComboBox();
@@ -579,13 +594,6 @@ namespace BumberDash.Forms
             this.exportInstrumentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameInstrumentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteInstrumentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.MSGFGB = new System.Windows.Forms.GroupBox();
-            this.MSGFFragmentMethodBox = new System.Windows.Forms.ComboBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.MSGFInstrumentBox = new System.Windows.Forms.ComboBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.MSGFPhosphoBox = new System.Windows.Forms.CheckBox();
-            this.MSGFiTRAQBox = new System.Windows.Forms.CheckBox();
             this.mainTabControl.SuspendLayout();
             this.Gentab.SuspendLayout();
             this.SlowFadePanel.SuspendLayout();
@@ -622,6 +630,7 @@ namespace BumberDash.Forms
             this.PepInstrumentGB.SuspendLayout();
             this.AdvTab.SuspendLayout();
             this.MyriAdvPanel.SuspendLayout();
+            this.MSGFGB.SuspendLayout();
             this.CometGB.SuspendLayout();
             this.MyriMiscGB.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MyriNumChargeStatesBox)).BeginInit();
@@ -704,7 +713,6 @@ namespace BumberDash.Forms
             this.ConfigModePanel.SuspendLayout();
             this.TemplateModePanel.SuspendLayout();
             this.MoreContextMenu.SuspendLayout();
-            this.MSGFGB.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainTabControl
@@ -806,6 +814,7 @@ namespace BumberDash.Forms
             this.ProgramSelectMSGF.TabIndex = 7;
             this.ProgramSelectMSGF.Text = "MS-GF+";
             this.ProgramSelectMSGF.UseVisualStyleBackColor = true;
+            this.ProgramSelectMSGF.CheckedChanged += new System.EventHandler(this.ProgramSelect_CheckedChanged);
             // 
             // ProgramSelectComet
             // 
@@ -816,6 +825,7 @@ namespace BumberDash.Forms
             this.ProgramSelectComet.TabIndex = 6;
             this.ProgramSelectComet.Text = "Comet";
             this.ProgramSelectComet.UseVisualStyleBackColor = true;
+            this.ProgramSelectComet.CheckedChanged += new System.EventHandler(this.ProgramSelect_CheckedChanged);
             // 
             // ProgramSelectMyri
             // 
@@ -828,6 +838,7 @@ namespace BumberDash.Forms
             this.ProgramSelectMyri.TabIndex = 5;
             this.ProgramSelectMyri.Text = "MyriMatch";
             this.ProgramSelectMyri.UseVisualStyleBackColor = true;
+            this.ProgramSelectMyri.CheckedChanged += new System.EventHandler(this.ProgramSelect_CheckedChanged);
             // 
             // MyriToleranceGB
             // 
@@ -1198,9 +1209,9 @@ namespace BumberDash.Forms
             this.MyriAppliedModBox.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.MyriAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.MyriAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Column1,
-            this.Column2,
-            this.Column3});
+            this.MyriMotifColumn,
+            this.MyriMassColumn,
+            this.MyriTypeColumn});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -1223,31 +1234,31 @@ namespace BumberDash.Forms
             this.MyriAppliedModBox.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.AppliedModBox_RowsRemoved);
             this.MyriAppliedModBox.Validated += new System.EventHandler(this.CheckForChange);
             // 
-            // Column1
+            // MyriMotifColumn
             // 
-            this.Column1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column1.HeaderText = "Motif";
-            this.Column1.Name = "Column1";
-            this.Column1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.MyriMotifColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.MyriMotifColumn.HeaderText = "Motif";
+            this.MyriMotifColumn.Name = "MyriMotifColumn";
+            this.MyriMotifColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
-            // Column2
+            // MyriMassColumn
             // 
-            this.Column2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column2.HeaderText = "Mass";
-            this.Column2.Name = "Column2";
-            this.Column2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.MyriMassColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.MyriMassColumn.HeaderText = "Mass";
+            this.MyriMassColumn.Name = "MyriMassColumn";
+            this.MyriMassColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
-            // Column3
+            // MyriTypeColumn
             // 
-            this.Column3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Column3.FillWeight = 150F;
-            this.Column3.HeaderText = "Type";
-            this.Column3.Items.AddRange(new object[] {
+            this.MyriTypeColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.MyriTypeColumn.FillWeight = 150F;
+            this.MyriTypeColumn.HeaderText = "Type";
+            this.MyriTypeColumn.Items.AddRange(new object[] {
             "Static",
             "Dynamic"});
-            this.Column3.Name = "Column3";
-            this.Column3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.Column3.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.MyriTypeColumn.Name = "MyriTypeColumn";
+            this.MyriTypeColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.MyriTypeColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // MyriAppliedModLabel
             // 
@@ -3156,45 +3167,138 @@ namespace BumberDash.Forms
             this.MyriAdvPanel.Size = new System.Drawing.Size(538, 594);
             this.MyriAdvPanel.TabIndex = 6;
             // 
+            // MSGFGB
+            // 
+            this.MSGFGB.Controls.Add(this.label8);
+            this.MSGFGB.Controls.Add(this.MSGFOutputSuffixBox);
+            this.MSGFGB.Controls.Add(this.MSGFiTRAQBox);
+            this.MSGFGB.Controls.Add(this.MSGFPhosphoBox);
+            this.MSGFGB.Controls.Add(this.MSGFFragmentMethodBox);
+            this.MSGFGB.Controls.Add(this.label6);
+            this.MSGFGB.Controls.Add(this.MSGFInstrumentBox);
+            this.MSGFGB.Controls.Add(this.label7);
+            this.MSGFGB.Location = new System.Drawing.Point(8, 292);
+            this.MSGFGB.Name = "MSGFGB";
+            this.MSGFGB.Size = new System.Drawing.Size(246, 142);
+            this.MSGFGB.TabIndex = 113;
+            this.MSGFGB.TabStop = false;
+            this.MSGFGB.Text = "MS-GF+ Options";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(19, 87);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(68, 13);
+            this.label8.TabIndex = 116;
+            this.label8.Text = "OutputSuffix:";
+            // 
+            // MSGFOutputSuffixBox
+            // 
+            this.MSGFOutputSuffixBox.Location = new System.Drawing.Point(93, 81);
+            this.MSGFOutputSuffixBox.Name = "MSGFOutputSuffixBox";
+            this.MSGFOutputSuffixBox.Size = new System.Drawing.Size(125, 20);
+            this.MSGFOutputSuffixBox.TabIndex = 115;
+            this.MSGFOutputSuffixBox.Text = "_MSGF";
+            // 
+            // MSGFiTRAQBox
+            // 
+            this.MSGFiTRAQBox.AutoSize = true;
+            this.MSGFiTRAQBox.Location = new System.Drawing.Point(148, 109);
+            this.MSGFiTRAQBox.Name = "MSGFiTRAQBox";
+            this.MSGFiTRAQBox.Size = new System.Drawing.Size(58, 17);
+            this.MSGFiTRAQBox.TabIndex = 114;
+            this.MSGFiTRAQBox.Text = "iTRAQ";
+            this.MSGFiTRAQBox.UseVisualStyleBackColor = true;
+            // 
+            // MSGFPhosphoBox
+            // 
+            this.MSGFPhosphoBox.AutoSize = true;
+            this.MSGFPhosphoBox.Location = new System.Drawing.Point(40, 109);
+            this.MSGFPhosphoBox.Name = "MSGFPhosphoBox";
+            this.MSGFPhosphoBox.Size = new System.Drawing.Size(101, 17);
+            this.MSGFPhosphoBox.TabIndex = 113;
+            this.MSGFPhosphoBox.Text = "Phosphorylation";
+            this.MSGFPhosphoBox.UseVisualStyleBackColor = true;
+            // 
+            // MSGFFragmentMethodBox
+            // 
+            this.MSGFFragmentMethodBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.MSGFFragmentMethodBox.FormattingEnabled = true;
+            this.MSGFFragmentMethodBox.Items.AddRange(new object[] {
+            "Auto",
+            "CID",
+            "ETD",
+            "HCD",
+            "Merge within precursor"});
+            this.MSGFFragmentMethodBox.Location = new System.Drawing.Point(93, 53);
+            this.MSGFFragmentMethodBox.Name = "MSGFFragmentMethodBox";
+            this.MSGFFragmentMethodBox.Size = new System.Drawing.Size(125, 21);
+            this.MSGFFragmentMethodBox.TabIndex = 112;
+            this.MSGFFragmentMethodBox.Tag = "";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(28, 57);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(57, 13);
+            this.label6.TabIndex = 111;
+            this.label6.Text = "Activation:";
+            // 
+            // MSGFInstrumentBox
+            // 
+            this.MSGFInstrumentBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.MSGFInstrumentBox.FormattingEnabled = true;
+            this.MSGFInstrumentBox.Items.AddRange(new object[] {
+            "Low Resolution LTQ",
+            "High Resolution LTQ",
+            "TOF",
+            "Q Exactive"});
+            this.MSGFInstrumentBox.Location = new System.Drawing.Point(93, 25);
+            this.MSGFInstrumentBox.Name = "MSGFInstrumentBox";
+            this.MSGFInstrumentBox.Size = new System.Drawing.Size(125, 21);
+            this.MSGFInstrumentBox.TabIndex = 110;
+            this.MSGFInstrumentBox.Tag = "";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(28, 29);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(59, 13);
+            this.label7.TabIndex = 109;
+            this.label7.Text = "Instrument:";
+            // 
             // CometGB
             // 
-            this.CometGB.Controls.Add(this.CometActivationBox);
             this.CometGB.Controls.Add(this.label5);
+            this.CometGB.Controls.Add(this.CometOutputSuffixBox);
             this.CometGB.Controls.Add(this.CometInstrumentBox);
             this.CometGB.Controls.Add(this.label4);
-            this.CometGB.Location = new System.Drawing.Point(276, 290);
+            this.CometGB.Location = new System.Drawing.Point(275, 322);
             this.CometGB.Name = "CometGB";
-            this.CometGB.Size = new System.Drawing.Size(246, 104);
+            this.CometGB.Size = new System.Drawing.Size(246, 106);
             this.CometGB.TabIndex = 7;
             this.CometGB.TabStop = false;
             this.CometGB.Text = "Comet Options";
             // 
-            // CometActivationBox
-            // 
-            this.CometActivationBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.CometActivationBox.FormattingEnabled = true;
-            this.CometActivationBox.Items.AddRange(new object[] {
-            "All",
-            "CID",
-            "ECD",
-            "ETD",
-            "PQD",
-            "HCD",
-            "IRMPD"});
-            this.CometActivationBox.Location = new System.Drawing.Point(93, 56);
-            this.CometActivationBox.Name = "CometActivationBox";
-            this.CometActivationBox.Size = new System.Drawing.Size(125, 21);
-            this.CometActivationBox.TabIndex = 112;
-            this.CometActivationBox.Tag = "";
-            // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(28, 60);
+            this.label5.Location = new System.Drawing.Point(19, 63);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(57, 13);
-            this.label5.TabIndex = 111;
-            this.label5.Text = "Activation:";
+            this.label5.Size = new System.Drawing.Size(68, 13);
+            this.label5.TabIndex = 114;
+            this.label5.Text = "OutputSuffix:";
+            // 
+            // CometOutputSuffixBox
+            // 
+            this.CometOutputSuffixBox.Location = new System.Drawing.Point(93, 60);
+            this.CometOutputSuffixBox.Name = "CometOutputSuffixBox";
+            this.CometOutputSuffixBox.Size = new System.Drawing.Size(93, 20);
+            this.CometOutputSuffixBox.TabIndex = 113;
+            this.CometOutputSuffixBox.Text = "_CM";
             // 
             // CometInstrumentBox
             // 
@@ -3202,6 +3306,7 @@ namespace BumberDash.Forms
             this.CometInstrumentBox.FormattingEnabled = true;
             this.CometInstrumentBox.Items.AddRange(new object[] {
             "Ion Trap",
+            "TOF",
             "High Resolution"});
             this.CometInstrumentBox.Location = new System.Drawing.Point(93, 28);
             this.CometInstrumentBox.Name = "CometInstrumentBox";
@@ -3220,6 +3325,8 @@ namespace BumberDash.Forms
             // 
             // MyriMiscGB
             // 
+            this.MyriMiscGB.Controls.Add(this.MyriOutputSuffixLabel);
+            this.MyriMiscGB.Controls.Add(this.MyriOutputSuffixBox);
             this.MyriMiscGB.Controls.Add(this.MyriOutputFormatBox);
             this.MyriMiscGB.Controls.Add(this.MyriOutputFormatLabel);
             this.MyriMiscGB.Controls.Add(this.MyriNumChargeStatesBox);
@@ -3245,10 +3352,26 @@ namespace BumberDash.Forms
             this.MyriMiscGB.Controls.Add(this.MyriMaxResultRankLabel);
             this.MyriMiscGB.Location = new System.Drawing.Point(276, 6);
             this.MyriMiscGB.Name = "MyriMiscGB";
-            this.MyriMiscGB.Size = new System.Drawing.Size(247, 278);
+            this.MyriMiscGB.Size = new System.Drawing.Size(247, 310);
             this.MyriMiscGB.TabIndex = 6;
             this.MyriMiscGB.TabStop = false;
             this.MyriMiscGB.Text = "Misc";
+            // 
+            // MyriOutputSuffixLabel
+            // 
+            this.MyriOutputSuffixLabel.AutoSize = true;
+            this.MyriOutputSuffixLabel.Location = new System.Drawing.Point(67, 227);
+            this.MyriOutputSuffixLabel.Name = "MyriOutputSuffixLabel";
+            this.MyriOutputSuffixLabel.Size = new System.Drawing.Size(68, 13);
+            this.MyriOutputSuffixLabel.TabIndex = 112;
+            this.MyriOutputSuffixLabel.Text = "OutputSuffix:";
+            // 
+            // MyriOutputSuffixBox
+            // 
+            this.MyriOutputSuffixBox.Location = new System.Drawing.Point(141, 224);
+            this.MyriOutputSuffixBox.Name = "MyriOutputSuffixBox";
+            this.MyriOutputSuffixBox.Size = new System.Drawing.Size(93, 20);
+            this.MyriOutputSuffixBox.TabIndex = 111;
             // 
             // MyriOutputFormatBox
             // 
@@ -3257,7 +3380,7 @@ namespace BumberDash.Forms
             this.MyriOutputFormatBox.Items.AddRange(new object[] {
             "pepXML",
             "mzIdentML"});
-            this.MyriOutputFormatBox.Location = new System.Drawing.Point(143, 251);
+            this.MyriOutputFormatBox.Location = new System.Drawing.Point(142, 277);
             this.MyriOutputFormatBox.Name = "MyriOutputFormatBox";
             this.MyriOutputFormatBox.Size = new System.Drawing.Size(92, 21);
             this.MyriOutputFormatBox.TabIndex = 108;
@@ -3266,7 +3389,7 @@ namespace BumberDash.Forms
             // MyriOutputFormatLabel
             // 
             this.MyriOutputFormatLabel.AutoSize = true;
-            this.MyriOutputFormatLabel.Location = new System.Drawing.Point(60, 255);
+            this.MyriOutputFormatLabel.Location = new System.Drawing.Point(59, 281);
             this.MyriOutputFormatLabel.Name = "MyriOutputFormatLabel";
             this.MyriOutputFormatLabel.Size = new System.Drawing.Size(77, 13);
             this.MyriOutputFormatLabel.TabIndex = 107;
@@ -3314,7 +3437,7 @@ namespace BumberDash.Forms
             this.MyriFragmentationRuleBox.Items.AddRange(new object[] {
             "cid",
             "etd"});
-            this.MyriFragmentationRuleBox.Location = new System.Drawing.Point(143, 224);
+            this.MyriFragmentationRuleBox.Location = new System.Drawing.Point(142, 250);
             this.MyriFragmentationRuleBox.Name = "MyriFragmentationRuleBox";
             this.MyriFragmentationRuleBox.Size = new System.Drawing.Size(92, 21);
             this.MyriFragmentationRuleBox.TabIndex = 110;
@@ -3324,7 +3447,7 @@ namespace BumberDash.Forms
             // MyriFragmentationRuleLabel
             // 
             this.MyriFragmentationRuleLabel.AutoSize = true;
-            this.MyriFragmentationRuleLabel.Location = new System.Drawing.Point(35, 228);
+            this.MyriFragmentationRuleLabel.Location = new System.Drawing.Point(34, 254);
             this.MyriFragmentationRuleLabel.Name = "MyriFragmentationRuleLabel";
             this.MyriFragmentationRuleLabel.Size = new System.Drawing.Size(102, 13);
             this.MyriFragmentationRuleLabel.TabIndex = 109;
@@ -4735,6 +4858,8 @@ namespace BumberDash.Forms
             // 
             // TRMiscGB
             // 
+            this.TRMiscGB.Controls.Add(this.TROutputSuffixLabel);
+            this.TRMiscGB.Controls.Add(this.TROutputSuffixBox);
             this.TRMiscGB.Controls.Add(this.TRFragmentationRuleBox);
             this.TRMiscGB.Controls.Add(this.TRFragmentationRuleLabel);
             this.TRMiscGB.Controls.Add(this.TROutputFormatBox);
@@ -4753,10 +4878,26 @@ namespace BumberDash.Forms
             this.TRMiscGB.Controls.Add(this.TRMaxResultRankLabel);
             this.TRMiscGB.Location = new System.Drawing.Point(275, 190);
             this.TRMiscGB.Name = "TRMiscGB";
-            this.TRMiscGB.Size = new System.Drawing.Size(247, 197);
+            this.TRMiscGB.Size = new System.Drawing.Size(247, 238);
             this.TRMiscGB.TabIndex = 8;
             this.TRMiscGB.TabStop = false;
             this.TRMiscGB.Text = "Misc";
+            // 
+            // TROutputSuffixLabel
+            // 
+            this.TROutputSuffixLabel.AutoSize = true;
+            this.TROutputSuffixLabel.Location = new System.Drawing.Point(68, 148);
+            this.TROutputSuffixLabel.Name = "TROutputSuffixLabel";
+            this.TROutputSuffixLabel.Size = new System.Drawing.Size(68, 13);
+            this.TROutputSuffixLabel.TabIndex = 114;
+            this.TROutputSuffixLabel.Text = "OutputSuffix:";
+            // 
+            // TROutputSuffixBox
+            // 
+            this.TROutputSuffixBox.Location = new System.Drawing.Point(142, 145);
+            this.TROutputSuffixBox.Name = "TROutputSuffixBox";
+            this.TROutputSuffixBox.Size = new System.Drawing.Size(93, 20);
+            this.TROutputSuffixBox.TabIndex = 113;
             // 
             // TRFragmentationRuleBox
             // 
@@ -4764,7 +4905,7 @@ namespace BumberDash.Forms
             this.TRFragmentationRuleBox.Items.AddRange(new object[] {
             "cid",
             "etd"});
-            this.TRFragmentationRuleBox.Location = new System.Drawing.Point(143, 143);
+            this.TRFragmentationRuleBox.Location = new System.Drawing.Point(144, 171);
             this.TRFragmentationRuleBox.Name = "TRFragmentationRuleBox";
             this.TRFragmentationRuleBox.Size = new System.Drawing.Size(92, 21);
             this.TRFragmentationRuleBox.TabIndex = 112;
@@ -4774,7 +4915,7 @@ namespace BumberDash.Forms
             // TRFragmentationRuleLabel
             // 
             this.TRFragmentationRuleLabel.AutoSize = true;
-            this.TRFragmentationRuleLabel.Location = new System.Drawing.Point(35, 147);
+            this.TRFragmentationRuleLabel.Location = new System.Drawing.Point(36, 175);
             this.TRFragmentationRuleLabel.Name = "TRFragmentationRuleLabel";
             this.TRFragmentationRuleLabel.Size = new System.Drawing.Size(102, 13);
             this.TRFragmentationRuleLabel.TabIndex = 111;
@@ -4787,7 +4928,7 @@ namespace BumberDash.Forms
             this.TROutputFormatBox.Items.AddRange(new object[] {
             "pepXML",
             "mzIdentML"});
-            this.TROutputFormatBox.Location = new System.Drawing.Point(143, 170);
+            this.TROutputFormatBox.Location = new System.Drawing.Point(144, 198);
             this.TROutputFormatBox.Name = "TROutputFormatBox";
             this.TROutputFormatBox.Size = new System.Drawing.Size(92, 21);
             this.TROutputFormatBox.TabIndex = 110;
@@ -4796,7 +4937,7 @@ namespace BumberDash.Forms
             // TROutputFormatLabel
             // 
             this.TROutputFormatLabel.AutoSize = true;
-            this.TROutputFormatLabel.Location = new System.Drawing.Point(60, 174);
+            this.TROutputFormatLabel.Location = new System.Drawing.Point(61, 202);
             this.TROutputFormatLabel.Name = "TROutputFormatLabel";
             this.TROutputFormatLabel.Size = new System.Drawing.Size(77, 13);
             this.TROutputFormatLabel.TabIndex = 109;
@@ -5757,6 +5898,8 @@ namespace BumberDash.Forms
             // 
             // PepMiscBox
             // 
+            this.PepMiscBox.Controls.Add(this.PepOutputSuffixLabel);
+            this.PepMiscBox.Controls.Add(this.PepOutputSuffixBox);
             this.PepMiscBox.Controls.Add(this.PepFragmentationRuleBox);
             this.PepMiscBox.Controls.Add(this.PepFragmentationRuleLabel);
             this.PepMiscBox.Controls.Add(this.PepOutputFormatBox);
@@ -5775,10 +5918,26 @@ namespace BumberDash.Forms
             this.PepMiscBox.Controls.Add(this.PepMaxResultRankLabel);
             this.PepMiscBox.Location = new System.Drawing.Point(276, 175);
             this.PepMiscBox.Name = "PepMiscBox";
-            this.PepMiscBox.Size = new System.Drawing.Size(247, 227);
+            this.PepMiscBox.Size = new System.Drawing.Size(247, 259);
             this.PepMiscBox.TabIndex = 7;
             this.PepMiscBox.TabStop = false;
             this.PepMiscBox.Text = "Misc";
+            // 
+            // PepOutputSuffixLabel
+            // 
+            this.PepOutputSuffixLabel.AutoSize = true;
+            this.PepOutputSuffixLabel.Location = new System.Drawing.Point(68, 178);
+            this.PepOutputSuffixLabel.Name = "PepOutputSuffixLabel";
+            this.PepOutputSuffixLabel.Size = new System.Drawing.Size(68, 13);
+            this.PepOutputSuffixLabel.TabIndex = 116;
+            this.PepOutputSuffixLabel.Text = "OutputSuffix:";
+            // 
+            // PepOutputSuffixBox
+            // 
+            this.PepOutputSuffixBox.Location = new System.Drawing.Point(142, 173);
+            this.PepOutputSuffixBox.Name = "PepOutputSuffixBox";
+            this.PepOutputSuffixBox.Size = new System.Drawing.Size(93, 20);
+            this.PepOutputSuffixBox.TabIndex = 115;
             // 
             // PepFragmentationRuleBox
             // 
@@ -5786,7 +5945,7 @@ namespace BumberDash.Forms
             this.PepFragmentationRuleBox.Items.AddRange(new object[] {
             "cid",
             "etd"});
-            this.PepFragmentationRuleBox.Location = new System.Drawing.Point(143, 173);
+            this.PepFragmentationRuleBox.Location = new System.Drawing.Point(143, 199);
             this.PepFragmentationRuleBox.Name = "PepFragmentationRuleBox";
             this.PepFragmentationRuleBox.Size = new System.Drawing.Size(92, 21);
             this.PepFragmentationRuleBox.TabIndex = 114;
@@ -5796,7 +5955,7 @@ namespace BumberDash.Forms
             // PepFragmentationRuleLabel
             // 
             this.PepFragmentationRuleLabel.AutoSize = true;
-            this.PepFragmentationRuleLabel.Location = new System.Drawing.Point(35, 177);
+            this.PepFragmentationRuleLabel.Location = new System.Drawing.Point(35, 203);
             this.PepFragmentationRuleLabel.Name = "PepFragmentationRuleLabel";
             this.PepFragmentationRuleLabel.Size = new System.Drawing.Size(102, 13);
             this.PepFragmentationRuleLabel.TabIndex = 113;
@@ -5809,7 +5968,7 @@ namespace BumberDash.Forms
             this.PepOutputFormatBox.Items.AddRange(new object[] {
             "pepXML",
             "mzIdentML"});
-            this.PepOutputFormatBox.Location = new System.Drawing.Point(143, 200);
+            this.PepOutputFormatBox.Location = new System.Drawing.Point(143, 226);
             this.PepOutputFormatBox.Name = "PepOutputFormatBox";
             this.PepOutputFormatBox.Size = new System.Drawing.Size(92, 21);
             this.PepOutputFormatBox.TabIndex = 108;
@@ -5818,7 +5977,7 @@ namespace BumberDash.Forms
             // PepOutputFormatLabel
             // 
             this.PepOutputFormatLabel.AutoSize = true;
-            this.PepOutputFormatLabel.Location = new System.Drawing.Point(60, 204);
+            this.PepOutputFormatLabel.Location = new System.Drawing.Point(60, 230);
             this.PepOutputFormatLabel.Name = "PepOutputFormatLabel";
             this.PepOutputFormatLabel.Size = new System.Drawing.Size(77, 13);
             this.PepOutputFormatLabel.TabIndex = 107;
@@ -6427,90 +6586,6 @@ namespace BumberDash.Forms
             this.deleteInstrumentToolStripMenuItem.Text = "Delete Template";
             this.deleteInstrumentToolStripMenuItem.Click += new System.EventHandler(this.deleteInstrumentToolStripMenuItem_Click);
             // 
-            // MSGFGB
-            // 
-            this.MSGFGB.Controls.Add(this.MSGFiTRAQBox);
-            this.MSGFGB.Controls.Add(this.MSGFPhosphoBox);
-            this.MSGFGB.Controls.Add(this.MSGFFragmentMethodBox);
-            this.MSGFGB.Controls.Add(this.label6);
-            this.MSGFGB.Controls.Add(this.MSGFInstrumentBox);
-            this.MSGFGB.Controls.Add(this.label7);
-            this.MSGFGB.Location = new System.Drawing.Point(8, 292);
-            this.MSGFGB.Name = "MSGFGB";
-            this.MSGFGB.Size = new System.Drawing.Size(246, 123);
-            this.MSGFGB.TabIndex = 113;
-            this.MSGFGB.TabStop = false;
-            this.MSGFGB.Text = "MS-GF+ Options";
-            // 
-            // MSGFFragmentMethodBox
-            // 
-            this.MSGFFragmentMethodBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.MSGFFragmentMethodBox.FormattingEnabled = true;
-            this.MSGFFragmentMethodBox.Items.AddRange(new object[] {
-            "Auto",
-            "CID",
-            "ETD",
-            "HCD",
-            "Merge within precursor"});
-            this.MSGFFragmentMethodBox.Location = new System.Drawing.Point(93, 53);
-            this.MSGFFragmentMethodBox.Name = "MSGFFragmentMethodBox";
-            this.MSGFFragmentMethodBox.Size = new System.Drawing.Size(125, 21);
-            this.MSGFFragmentMethodBox.TabIndex = 112;
-            this.MSGFFragmentMethodBox.Tag = "";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(28, 57);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(57, 13);
-            this.label6.TabIndex = 111;
-            this.label6.Text = "Activation:";
-            // 
-            // MSGFInstrumentBox
-            // 
-            this.MSGFInstrumentBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.MSGFInstrumentBox.FormattingEnabled = true;
-            this.MSGFInstrumentBox.Items.AddRange(new object[] {
-            "Low Resolution LTQ",
-            "High Resolution LTQ",
-            "TOF",
-            "Q Exactive"});
-            this.MSGFInstrumentBox.Location = new System.Drawing.Point(93, 25);
-            this.MSGFInstrumentBox.Name = "MSGFInstrumentBox";
-            this.MSGFInstrumentBox.Size = new System.Drawing.Size(125, 21);
-            this.MSGFInstrumentBox.TabIndex = 110;
-            this.MSGFInstrumentBox.Tag = "";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(28, 29);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(59, 13);
-            this.label7.TabIndex = 109;
-            this.label7.Text = "Instrument:";
-            // 
-            // MSGFPhosphoBox
-            // 
-            this.MSGFPhosphoBox.AutoSize = true;
-            this.MSGFPhosphoBox.Location = new System.Drawing.Point(40, 83);
-            this.MSGFPhosphoBox.Name = "MSGFPhosphoBox";
-            this.MSGFPhosphoBox.Size = new System.Drawing.Size(101, 17);
-            this.MSGFPhosphoBox.TabIndex = 113;
-            this.MSGFPhosphoBox.Text = "Phosphorylation";
-            this.MSGFPhosphoBox.UseVisualStyleBackColor = true;
-            // 
-            // MSGFiTRAQBox
-            // 
-            this.MSGFiTRAQBox.AutoSize = true;
-            this.MSGFiTRAQBox.Location = new System.Drawing.Point(148, 83);
-            this.MSGFiTRAQBox.Name = "MSGFiTRAQBox";
-            this.MSGFiTRAQBox.Size = new System.Drawing.Size(58, 17);
-            this.MSGFiTRAQBox.TabIndex = 114;
-            this.MSGFiTRAQBox.Text = "iTRAQ";
-            this.MSGFiTRAQBox.UseVisualStyleBackColor = true;
-            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -6576,6 +6651,8 @@ namespace BumberDash.Forms
             this.PepInstrumentGB.PerformLayout();
             this.AdvTab.ResumeLayout(false);
             this.MyriAdvPanel.ResumeLayout(false);
+            this.MSGFGB.ResumeLayout(false);
+            this.MSGFGB.PerformLayout();
             this.CometGB.ResumeLayout(false);
             this.CometGB.PerformLayout();
             this.MyriMiscGB.ResumeLayout(false);
@@ -6682,8 +6759,6 @@ namespace BumberDash.Forms
             this.TemplateModePanel.ResumeLayout(false);
             this.TemplateModePanel.PerformLayout();
             this.MoreContextMenu.ResumeLayout(false);
-            this.MSGFGB.ResumeLayout(false);
-            this.MSGFGB.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -6712,9 +6787,6 @@ namespace BumberDash.Forms
         private System.Windows.Forms.Panel MyriAdvPanel;
         private System.Windows.Forms.GroupBox MyriModGB;
         private System.Windows.Forms.DataGridView MyriAppliedModBox;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
-        private System.Windows.Forms.DataGridViewComboBoxColumn Column3;
         private System.Windows.Forms.Label MyriAppliedModLabel;
         private System.Windows.Forms.Button MyriAppliedModRemove;
         private System.Windows.Forms.Button MyriAppliedModAdd;
@@ -7123,12 +7195,7 @@ namespace BumberDash.Forms
         private System.Windows.Forms.Panel MyriAdjustMassPanel;
         private System.Windows.Forms.Panel PepAdjustMassPanel;
         private System.Windows.Forms.CheckBox PepAdjustMassOption;
-        private System.Windows.Forms.CheckBox ProgramSelectMSGF;
-        private System.Windows.Forms.CheckBox ProgramSelectComet;
-        private System.Windows.Forms.CheckBox ProgramSelectMyri;
         private System.Windows.Forms.GroupBox CometGB;
-        private System.Windows.Forms.ComboBox CometActivationBox;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox CometInstrumentBox;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.GroupBox MSGFGB;
@@ -7138,5 +7205,21 @@ namespace BumberDash.Forms
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox MSGFInstrumentBox;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MyriMotifColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MyriMassColumn;
+        private System.Windows.Forms.DataGridViewComboBoxColumn MyriTypeColumn;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox MSGFOutputSuffixBox;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox CometOutputSuffixBox;
+        private System.Windows.Forms.Label MyriOutputSuffixLabel;
+        private System.Windows.Forms.TextBox MyriOutputSuffixBox;
+        private System.Windows.Forms.Label TROutputSuffixLabel;
+        private System.Windows.Forms.TextBox TROutputSuffixBox;
+        private System.Windows.Forms.Label PepOutputSuffixLabel;
+        private System.Windows.Forms.TextBox PepOutputSuffixBox;
+        internal System.Windows.Forms.CheckBox ProgramSelectMSGF;
+        internal System.Windows.Forms.CheckBox ProgramSelectComet;
+        internal System.Windows.Forms.CheckBox ProgramSelectMyri;
     }
 }
