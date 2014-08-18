@@ -992,7 +992,16 @@ void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>&
             throw runtime_error("[Merger::merge] there is more than one file left in the queue: something went wrong with the multi-threaded merge");
 
         sourceQueue.front()->isTemporary = false;
-        bfs::rename(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
+        try
+        {
+            // rename won't work across devices, but try it first
+            bfs::rename(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
+        }
+        catch (bfs::filesystem_error& e)
+        {
+            bfs::copy_file(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
+            bfs::remove(sourceQueue.front()->mergeSourceFilepath);
+        }
     }
     catch (cancellation_exception&)
     {
