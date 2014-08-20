@@ -264,7 +264,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate window width.
             double windowWidth;
-            if (!helper.ValidateDecimalTextBox(e, textWidth, 1, TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out windowWidth))
+            if (!helper.ValidateDecimalTextBox(e, textWidth, 0.1, TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out windowWidth))
             {
                 return;
             }
