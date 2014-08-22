@@ -349,7 +349,7 @@ namespace pwiz.Skyline.Controls
                     else
                     {
                         // Display the refined results: we'll still fire off another query to see if we get better results.
-                        DisplayResultsNow(newResults);
+                        DisplayResultsNow(newResults, _proteinMatcherLast.MaxResults);
                     }
                 }
             }
@@ -362,7 +362,7 @@ namespace pwiz.Skyline.Controls
             var settings = CreateProteinMatchSettings(_documentUiContainer.DocumentUI, MatchTypes, searchText);
             if (settings != null)
             {
-                _proteinMatcher = new ProteinMatchQuery(settings, 100);
+                _proteinMatcher = new ProteinMatchQuery(settings);
                 _proteinMatcher.BeginExecute(DisplayResults);
             }
         }
@@ -388,17 +388,17 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
-            DisplayResultsNow(proteinMatchQuery.GetMatches());
+            DisplayResultsNow(proteinMatchQuery.GetMatches(), proteinMatchQuery.MaxResults);
             _proteinMatcherLast = proteinMatchQuery;
         }
 
-        private void DisplayResultsNow(IList<ProteinMatch> matches)
+        private void DisplayResultsNow(IList<ProteinMatch> matches, int maxResults)
         {
             if (TextBox == null || TextBox.Parent == null)
             {
                 return;
             }
-            var listItems = CreateListViewItems(matches, TextBox.Text, MatchTypes, _proteinMatcher.MaxResults);
+            var listItems = CreateListViewItems(matches, TextBox.Text, MatchTypes, maxResults);
             ShowStatementCompletionForm(listItems);
         }
 
