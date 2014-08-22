@@ -378,7 +378,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             !scanInfo->hasMultiplePrecursors() &&
             precursorCount != msLevel-1)
         {
-            throw runtime_error("[SpectrumList_Thermo::spectrum()] Precursor count does not match ms level.");
+            throw runtime_error("precursor count does not match ms level");
         }
 
         if (scanInfo->hasMultiplePrecursors())
@@ -386,7 +386,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             vector<double> isolationWidths = rawfile_->getIsolationWidths(ie.scan);
             if (precursorCount != (long) isolationWidths.size())
             {
-                throw runtime_error("[SpectrumList_Thermo::spectrum()] Precursor count does not match isolation width count.");
+                throw runtime_error("precursor count does not match isolation width count");
             }
 
             Precursor precursor;
@@ -549,7 +549,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                                                                               precursorScanTime, precursorScanTime,
                                                                               Smoothing_None, 0);
                         if (c->size() == 0)
-                            throw runtime_error("[SpectrumList_Thermo::spectrum()] No chromatogram time points for the scan time.");
+                            throw runtime_error("no chromatogram time points for the scan time");
 
                         if (c->data()[0].intensity > 0)
                             selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_detector_counts);
@@ -616,6 +616,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         return result;
     }
     catch (RawEgg& e)
+    {
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving spectrum \"" + result->id + "\": " + e.what());
+    }
+    catch (exception& e)
     {
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving spectrum \"" + result->id + "\": " + e.what());
     }
