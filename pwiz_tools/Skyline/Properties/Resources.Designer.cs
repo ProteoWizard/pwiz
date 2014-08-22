@@ -20599,6 +20599,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred creating options..
+        /// </summary>
+        public static string SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_ {
+            get {
+                return ResourceManager.GetString("SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string StartPage_getBoxPanels_ {

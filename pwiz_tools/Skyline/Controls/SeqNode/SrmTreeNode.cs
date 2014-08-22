@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -430,9 +432,28 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public void ShowPickList(Point location, bool okOnDeactivate)
         {
-            PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };
-            popup.Show();
-            popup.Focus();
+            Exception exception = null;
+
+            try
+            {
+                PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };
+                popup.Show();
+                popup.Focus();
+            }
+            // Catch exceptions that may be caused trying to read results information from SKYD file
+            catch (IOException x)
+            {
+                exception = x;
+            }
+            catch (UnauthorizedAccessException x)
+            {
+                exception = x;
+            }
+
+            if (exception != null)
+            {
+                MessageDlg.Show(Program.MainWindow, TextUtil.LineSeparate(Resources.SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_, exception.Message));                
+            }
         }
 
         public abstract bool Filtered { get; set; }

@@ -299,14 +299,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
             var nodeGroup = (TransitionGroupDocNode)DocNode.ChangeChildrenChecked(listChildrenNew);
             var diff = new SrmSettingsDiff(DocSettings, true);
-            try
-            {
-                // Update results on the group to correctly handle user set peak boundaries
-                nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, nodePep, DocNode);
-            }
-            // Ignore I/O exceptions attempting to update results
-            catch (UnauthorizedAccessException) {}
-            catch (IOException) {}
+            // Update results on the group to correctly handle user set peak boundaries
+            nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, nodePep, DocNode);
 
             // Make sure any properties that depend on peptide relationships,
             // like ratios get updated.
