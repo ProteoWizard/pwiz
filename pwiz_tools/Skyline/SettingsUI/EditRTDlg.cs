@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -110,18 +109,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
                 helper.ShowTextBoxError(textName, Resources.EditRTDlg_OkDialog_The_retention_time_regression__0__already_exists, name);
-                e.Cancel = true;
                 return;
             }
 
@@ -131,18 +127,18 @@ namespace pwiz.Skyline.SettingsUI
             if (!cbAutoCalc.Checked)
             {
                 double slopeTmp;
-                if (!helper.ValidateDecimalTextBox(e, textSlope, out slopeTmp))
+                if (!helper.ValidateDecimalTextBox(textSlope, out slopeTmp))
                     return;
                 slope = slopeTmp;
 
                 double interceptTmp;
-                if (!helper.ValidateDecimalTextBox(e, textIntercept, out interceptTmp))
+                if (!helper.ValidateDecimalTextBox(textIntercept, out interceptTmp))
                     return;
                 intercept = interceptTmp;
             }
 
             double window;
-            if (!helper.ValidateDecimalTextBox(e, textTimeWindow, out window))
+            if (!helper.ValidateDecimalTextBox(textTimeWindow, out window))
                 return;
 
             if (window <= 0)
@@ -368,15 +364,14 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             double slope;
-            if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
+            if (!helper.ValidateDecimalTextBox(textSlope, out slope))
                 return;
 
             double intercept;
-            if (!helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
+            if (!helper.ValidateDecimalTextBox(textIntercept, out intercept))
                 return;
 
             var scores = new List<double>();

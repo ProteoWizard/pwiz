@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -41,14 +40,12 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             double maxArea = 0;
             if (!string.IsNullOrEmpty(textMaxArea.Text))
             {
-                if (!helper.ValidateDecimalTextBox(e, textMaxArea, 5, double.MaxValue, out maxArea))
+                if (!helper.ValidateDecimalTextBox(textMaxArea, 5, double.MaxValue, out maxArea))
                     return;
             }
 
@@ -60,7 +57,7 @@ namespace pwiz.Skyline.EditUI
                 double maxAllowed = 500;
                 if (decimalCv)
                     maxAllowed /= 100;
-                if (!helper.ValidateDecimalTextBox(e, textMaxCv, 0, maxAllowed, out maxCv))
+                if (!helper.ValidateDecimalTextBox(textMaxCv, 0, maxAllowed, out maxCv))
                     return;
             }
 

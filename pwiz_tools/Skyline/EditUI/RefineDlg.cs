@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -123,15 +122,13 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             int? minPeptidesPerProtein = null;
             if (!string.IsNullOrEmpty(textMinPeptides.Text))
             {
                 int minVal;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, 0, textMinPeptides, 0, 10, out minVal))
+                if (!helper.ValidateNumberTextBox(tabControl1, 0, textMinPeptides, 0, 10, out minVal))
                     return;
                 minPeptidesPerProtein = minVal;
             }
@@ -139,7 +136,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinTransitions.Text))
             {
                 int minVal;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, 0, textMinTransitions, 0, 100, out minVal))
+                if (!helper.ValidateNumberTextBox(tabControl1, 0, textMinTransitions, 0, 100, out minVal))
                     return;
                 minTransitionsPerPrecursor = minVal;
             }
@@ -163,14 +160,14 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinPeakFoundRatio.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, 1, textMinPeakFoundRatio, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMinPeakFoundRatio, 0, 1, out minVal))
                     return;
                 minPeakFoundRatio = minVal;
             }
             if (!string.IsNullOrEmpty(textMaxPeakFoundRatio.Text))
             {
                 double maxVal;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, 1, textMaxPeakFoundRatio, 0, 1, out maxVal))
+                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMaxPeakFoundRatio, 0, 1, out maxVal))
                     return;
                 maxPeakFoundRatio = maxVal;
             }
@@ -186,7 +183,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMaxPepPeakRank.Text))
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, 1, textMaxPepPeakRank, 1, 10, out maxVal))
+                if (!helper.ValidateNumberTextBox(tabControl1, 1, textMaxPepPeakRank, 1, 10, out maxVal))
                     return;
                 maxPepPeakRank = maxVal;
             }
@@ -194,7 +191,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMaxPeakRank.Text))
             {
                 int maxVal;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, 1, textMaxPeakRank, 1, 10, out maxVal))
+                if (!helper.ValidateNumberTextBox(tabControl1, 1, textMaxPeakRank, 1, 10, out maxVal))
                     return;
                 maxPeakRank = maxVal;
             }
@@ -205,7 +202,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textRTRegressionThreshold.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, 1, textRTRegressionThreshold, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textRTRegressionThreshold, 0, 1, out minVal))
                     return;
                 rtRegressionThreshold = minVal;
             }
@@ -214,7 +211,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinDotProduct.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, 1, textMinDotProduct, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMinDotProduct, 0, 1, out minVal))
                     return;
                 dotProductThreshold = minVal;
             }
@@ -223,7 +220,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(textMinIdotProduct.Text))
             {
                 double minVal;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, 1, textMinIdotProduct, 0, 1, out minVal))
+                if (!helper.ValidateDecimalTextBox(tabControl1, 1, textMinIdotProduct, 0, 1, out minVal))
                     return;
                 idotProductThreshold = minVal;
             }

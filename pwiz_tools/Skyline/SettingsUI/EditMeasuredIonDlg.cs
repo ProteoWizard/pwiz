@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -111,12 +110,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(m => !ReferenceEquals(_measuredIon, m) && Equals(name, m.Name)))
@@ -138,7 +135,7 @@ namespace pwiz.Skyline.SettingsUI
                     SequenceTerminus.C : SequenceTerminus.N);
 
                 int minAas;
-                if (!helper.ValidateNumberTextBox(e, textMinAas, MeasuredIon.MIN_MIN_FRAGMENT_LENGTH,
+                if (!helper.ValidateNumberTextBox(textMinAas, MeasuredIon.MIN_MIN_FRAGMENT_LENGTH,
                         MeasuredIon.MAX_MIN_FRAGMENT_LENGTH, out minAas))
                     return;
 
@@ -157,8 +154,6 @@ namespace pwiz.Skyline.SettingsUI
 
         private MeasuredIon ValidateCustomIon(string name)
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
             string formula = textFormula.Text;
             double? monoMass = null;
@@ -166,7 +161,7 @@ namespace pwiz.Skyline.SettingsUI
             int[] charges;
             const int min = Transition.MIN_PRODUCT_CHARGE;
             const int max = Transition.MAX_PRODUCT_CHARGE;
-            if (!helper.ValidateNumberListTextBox(e, textCharges, min, max, out charges))
+            if (!helper.ValidateNumberListTextBox(textCharges, min, max, out charges))
             {
                 return null;
             }
@@ -200,11 +195,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 formula = null;
                 double mass;
-                if (!helper.ValidateDecimalTextBox(e, textMonoMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS,
+                if (!helper.ValidateDecimalTextBox(textMonoMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS,
                                                    out mass))
                     return null;
                 monoMass = mass;
-                if (!helper.ValidateDecimalTextBox(e, textAverageMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS,
+                if (!helper.ValidateDecimalTextBox(textAverageMass, MeasuredIon.MIN_REPORTER_MASS, MeasuredIon.MAX_REPORTER_MASS,
                                                    out mass))
                     return null;
                 avgMass = mass;

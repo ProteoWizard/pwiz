@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -128,10 +127,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private bool ValidateBuilder(CancelEventArgs e, bool validateInputFiles)
+        private bool ValidateBuilder(bool validateInputFiles)
         {
             string name;
-            if (!_helper.ValidateNameTextBox(e, textName, out name))
+            if (!_helper.ValidateNameTextBox(textName, out name))
                 return false;
 
             string outputPath = textPath.Text;
@@ -179,7 +178,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             double cutOffScore;
-            if (!_helper.ValidateDecimalTextBox(e, textCutoff, 0, 1.0, out cutOffScore))
+            if (!_helper.ValidateDecimalTextBox(textCutoff, 0, 1.0, out cutOffScore))
                 return false;
             Settings.Default.LibraryResultCutOff = cutOffScore;
 
@@ -191,7 +190,7 @@ namespace pwiz.Skyline.SettingsUI
                 authority = LibraryAuthority;
                 if (Uri.CheckHostName(authority) != UriHostNameType.Dns)
                 {
-                    _helper.ShowTextBoxError(e, textAuthority, Resources.BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server,
+                    _helper.ShowTextBoxError(textAuthority, Resources.BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server,
                                              authority);
                     return false;
                 }
@@ -200,7 +199,7 @@ namespace pwiz.Skyline.SettingsUI
                 id = textID.Text;
                 if (!Regex.IsMatch(id, @"\w[0-9A-Za-z_\-]*")) // Not L10N: Easier to keep IDs restricted to these values.
                 {
-                    _helper.ShowTextBoxError(e, textID, Resources.BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes, id);
+                    _helper.ShowTextBoxError(textID, Resources.BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes, id);
                     return false;
                 }
             }
@@ -307,16 +306,14 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!panelProperties.Visible)
             {
-                var e = new CancelEventArgs();
-                ValidateBuilder(e, true);
-                if (!e.Cancel)
+                if (ValidateBuilder(true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if (ValidateBuilder(new CancelEventArgs(), false))
+            else if (ValidateBuilder(false))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 

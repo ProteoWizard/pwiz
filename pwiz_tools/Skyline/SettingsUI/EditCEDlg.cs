@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -89,12 +88,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
@@ -112,15 +109,15 @@ namespace pwiz.Skyline.SettingsUI
                     continue;
 
                 int charge;
-                if (!ValidateCharge(e, row.Cells[0], out charge))
+                if (!ValidateCharge(row.Cells[0], out charge))
                     return;
 
                 double slope;
-                if (!ValidateSlope(e, row.Cells[1], out slope))
+                if (!ValidateSlope(row.Cells[1], out slope))
                     return;
 
                 double intercept;
-                if (!ValidateIntercept(e, row.Cells[2], out intercept))
+                if (!ValidateIntercept(row.Cells[2], out intercept))
                     return;
 
                 conversions.Add(new ChargeRegressionLine(charge, slope, intercept));
@@ -133,14 +130,14 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             double stepSize;
-            if (!helper.ValidateDecimalTextBox(e, textStepSize,
+            if (!helper.ValidateDecimalTextBox(textStepSize,
                     CollisionEnergyRegression.MIN_STEP_SIZE,
                     CollisionEnergyRegression.MAX_STEP_SIZE,
                     out stepSize))
                 return;
 
             int stepCount;
-            if (!helper.ValidateNumberTextBox(e, textStepCount,
+            if (!helper.ValidateNumberTextBox(textStepCount,
                     OptimizableRegression.MIN_OPT_STEP_COUNT,
                     OptimizableRegression.MAX_OPT_STEP_COUNT,
                     out stepCount))
@@ -152,23 +149,23 @@ namespace pwiz.Skyline.SettingsUI
             Close();
         }
 
-        private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out int charge)
+        private bool ValidateCharge(DataGridViewCell cell, out int charge)
         {
-            if (!ValidateCell(e, cell, Convert.ToInt32, out charge))
+            if (!ValidateCell(cell, Convert.ToInt32, out charge))
                 return false;
 
             if (0 >= charge || charge > 5)
             {
-                InvalidCell(e, cell, Resources.EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5, charge);
+                InvalidCell(cell, Resources.EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5, charge);
                 return false;
             }
 
             return true;
         }
 
-        private bool ValidateSlope(CancelEventArgs e, DataGridViewCell cell, out double slope)
+        private bool ValidateSlope(DataGridViewCell cell, out double slope)
         {
-            if (!ValidateCell(e, cell, Convert.ToDouble, out slope))
+            if (!ValidateCell(cell, Convert.ToDouble, out slope))
                 return false;
 
             // TODO: Range check.
@@ -176,9 +173,9 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool ValidateIntercept(CancelEventArgs e, DataGridViewCell cell, out double intercept)
+        private bool ValidateIntercept(DataGridViewCell cell, out double intercept)
         {
-            if (!ValidateCell(e, cell, Convert.ToDouble, out intercept))
+            if (!ValidateCell(cell, Convert.ToDouble, out intercept))
                 return false;
 
             // TODO: Range check.
@@ -186,13 +183,13 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool ValidateCell<TVal>(CancelEventArgs e, DataGridViewCell cell,
+        private bool ValidateCell<TVal>(DataGridViewCell cell,
             Converter<string, TVal> conv, out TVal valueT)
         {
             valueT = default(TVal);
             if (cell.Value == null)
             {
-                InvalidCell(e, cell, Resources.EditCEDlg_ValidateCell_A_value_is_required);
+                InvalidCell(cell, Resources.EditCEDlg_ValidateCell_A_value_is_required);
                 return false;
             }
             string value = cell.Value.ToString();
@@ -202,14 +199,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                InvalidCell(e, cell, Resources.EditCEDlg_ValidateCell_The_entry__0__is_not_valid, value);
+                InvalidCell(cell, Resources.EditCEDlg_ValidateCell_The_entry__0__is_not_valid, value);
                 return false;
             }
 
             return true;            
         }
 
-        private void InvalidCell(CancelEventArgs e, DataGridViewCell cell,
+        private void InvalidCell(DataGridViewCell cell,
             string message, params object[] args)
         {            
             MessageBox.Show(string.Format(message, args));
@@ -218,7 +215,6 @@ namespace pwiz.Skyline.SettingsUI
             cell.Selected = true;
             gridRegression.CurrentCell = cell;
             gridRegression.BeginEdit(true);
-            e.Cancel = true;
         }
 
         private void btnOk_Click(object sender, EventArgs e)

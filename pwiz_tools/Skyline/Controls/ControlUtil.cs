@@ -18,7 +18,6 @@
  */
 using System;
 using System.Windows.Forms;
-using System.ComponentModel;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
@@ -45,7 +44,7 @@ namespace pwiz.Skyline.Controls
 
         public bool ShowMessages { get { return _showMessages; } }
 
-        public bool ValidateNameTextBox(CancelEventArgs e, Control control, out string val)
+        public bool ValidateNameTextBox(Control control, out string val)
         {
             bool valid = false;
             val = control.Text.Trim();
@@ -57,11 +56,10 @@ namespace pwiz.Skyline.Controls
             {
                 valid = true;
             }
-            e.Cancel = !valid;
             return valid;
         }
 
-        public bool ValidateDecimalTextBox(CancelEventArgs e, TextBox control, out double val)
+        public bool ValidateDecimalTextBox(TextBox control, out double val)
         {
             bool valid = false;
             val = default(double);
@@ -74,14 +72,13 @@ namespace pwiz.Skyline.Controls
             {
                 ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value);
             }
-            e.Cancel = !valid;
             return valid;
         }
 
-        public bool ValidateDecimalTextBox(CancelEventArgs e, TextBox control,
+        public bool ValidateDecimalTextBox(TextBox control,
                                            double? min, double? max, out double val)
         {
-            if (!ValidateDecimalTextBox(e, control, out val))
+            if (!ValidateDecimalTextBox(control, out val))
                 return false;
 
             bool valid = false;
@@ -91,14 +88,13 @@ namespace pwiz.Skyline.Controls
                 ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, null, max);
             else
                 valid = true;
-            e.Cancel = !valid;
             return valid;
         }
 
-        public bool ValidateDecimalTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+        public bool ValidateDecimalTextBox(TabControl tabControl, int tabIndex,
             TextBox control, double? min, double? max, out double val)
         {
-            bool valid = ValidateDecimalTextBox(e, control, min, max, out val);
+            bool valid = ValidateDecimalTextBox(control, min, max, out val);
             if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
             {
                 tabControl.SelectedIndex = tabIndex;
@@ -107,10 +103,10 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
-        public bool ValidateDecimalListTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+        public bool ValidateDecimalListTextBox(TabControl tabControl, int tabIndex,
                                               TextBox control, double? min, double? max, out double[] val)
         {
-            bool valid = ValidateDecimalListTextBox(e, control, min, max, out val);
+            bool valid = ValidateDecimalListTextBox(control, min, max, out val);
             if (!valid && tabControl.SelectedIndex != tabIndex)
             {
                 tabControl.SelectedIndex = tabIndex;
@@ -119,7 +115,7 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
-        public bool ValidateDecimalListTextBox(CancelEventArgs e, TextBox control,
+        public bool ValidateDecimalListTextBox(TextBox control,
                                               double? min, double? max, out double[] val)
         {
             val = ArrayUtil.Parse(control.Text, Convert.ToDouble, ',', new double[0]);
@@ -128,7 +124,6 @@ namespace pwiz.Skyline.Controls
 
             ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__,
                              null, min, max);
-            e.Cancel = true;
             return false;
         }
 
@@ -140,13 +135,12 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Validates a TextBox that should containe an integer value.
         /// </summary>
-        /// <param name="e">CancelEventArgs to cancel validation, if the integer is invalid</param>
         /// <param name="control">The TextBox control to validate</param>
         /// <param name="min">Minimum allowed value</param>
         /// <param name="max">Maximum allowed value</param>
         /// <param name="val">The integer value in the TextBox, if the function returns true</param>
         /// <returns>True if a valid integer was found</returns>
-        public bool ValidateNumberTextBox(CancelEventArgs e, TextBox control,
+        public bool ValidateNumberTextBox(TextBox control,
                                           int? min, int? max, out int val)
         {
             bool valid = false;
@@ -168,14 +162,13 @@ namespace pwiz.Skyline.Controls
             {
                 ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer);
             }
-            e.Cancel = !valid;
             return valid;
         }
 
-        public bool ValidateNumberTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+        public bool ValidateNumberTextBox(TabControl tabControl, int tabIndex,
             TextBox control, int? min, int? max, out int val)
         {
-            bool valid = ValidateNumberTextBox(e, control, min, max, out val);
+            bool valid = ValidateNumberTextBox(control, min, max, out val);
             if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
             {
                 tabControl.SelectedIndex = tabIndex;
@@ -184,10 +177,10 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
-        public bool ValidateNumberListTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+        public bool ValidateNumberListTextBox(TabControl tabControl, int tabIndex,
                                               TextBox control, int min, int max, out int[] val)
         {
-            bool valid = ValidateNumberListTextBox(e, control, min, max, out val);
+            bool valid = ValidateNumberListTextBox(control, min, max, out val);
             if (!valid && tabControl.SelectedIndex != tabIndex)
             {
                 tabControl.SelectedIndex = tabIndex;
@@ -196,7 +189,7 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
-        public bool ValidateNumberListTextBox(CancelEventArgs e, TextBox control,
+        public bool ValidateNumberListTextBox(TextBox control,
                                               int min, int max, out int[] val)
         {
             val = ArrayUtil.Parse(control.Text, Convert.ToInt32, TextUtil.SEPARATOR_CSV, new int[0]);
@@ -206,20 +199,7 @@ namespace pwiz.Skyline.Controls
             ShowTextBoxError(control, Resources. MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__,
                              null, min, max);
 
-            e.Cancel = true;
             return false;
-        }
-
-        public void ShowTextBoxError(CancelEventArgs e, TextBox control, string message)
-        {
-            ShowTextBoxError(control, message);
-            e.Cancel = true;
-        }
-
-        public void ShowTextBoxError(CancelEventArgs e, Control control, string message, params object[] vals)
-        {
-            ShowTextBoxError(control, message, vals);
-            e.Cancel = true;
         }
 
         public void ShowTextBoxError(TabControl tabControl, int tabIndex, TextBox control, string message)
@@ -287,6 +267,5 @@ namespace pwiz.Skyline.Controls
             string messageException = XmlUtil.GetInvalidDataMessage(path, x);
             MessageDlg.Show(_parent, TextUtil.LineSeparate(firstLine, messageException));
         }
-
     }
 }

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -295,28 +294,28 @@ namespace pwiz.Skyline.SettingsUI
             _driverEnrichments.SelectedIndexChangedEvent(sender, e);
         }
 
-        public bool ValidateFullScanSettings(CancelEventArgs e, MessageBoxHelper helper, out TransitionFullScan fullScanSettings, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidateFullScanSettings(MessageBoxHelper helper, out TransitionFullScan fullScanSettings, TabControl tabControl = null, int tabIndex = -1)
         {
             fullScanSettings = null;
 
             double? precursorIsotopeFilter;
-            if (!ValidatePrecursorIsotopeFilter(e, helper, out precursorIsotopeFilter, tabControl, tabIndex))
+            if (!ValidatePrecursorIsotopeFilter(helper, out precursorIsotopeFilter, tabControl, tabIndex))
                 return false;
 
             double? precursorRes;
-            if (!ValidatePrecursorRes(e, helper, precursorIsotopeFilter, out precursorRes, tabControl, tabIndex))
+            if (!ValidatePrecursorRes(helper, precursorIsotopeFilter, out precursorRes, tabControl, tabIndex))
                 return false;
 
             double? precursorResMz;
-            if (!ValidatePrecursorResMz(e, helper, out precursorResMz, tabControl, tabIndex))
+            if (!ValidatePrecursorResMz(helper, out precursorResMz, tabControl, tabIndex))
                 return false;
 
             double? productRes;
-            if (!ValidateProductRes(e, helper, out productRes, tabControl, tabIndex))
+            if (!ValidateProductRes(helper, out productRes, tabControl, tabIndex))
                 return false;
 
             double? productResMz;
-            if (!ValidateProductResMz(e, helper, out productResMz, tabControl, tabIndex))
+            if (!ValidateProductResMz(helper, out productResMz, tabControl, tabIndex))
                 return false;
 
             RetentionTimeFilterType retentionTimeFilterType = RetentionTimeFilterType;
@@ -340,7 +339,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidatePrecursorIsotopeFilter(CancelEventArgs e, MessageBoxHelper helper, out double? precursorIsotopeFilter, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidatePrecursorIsotopeFilter(MessageBoxHelper helper, out double? precursorIsotopeFilter, TabControl tabControl = null, int tabIndex = -1)
         {
             precursorIsotopeFilter = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
@@ -361,12 +360,12 @@ namespace pwiz.Skyline.SettingsUI
                 bool valid;
                 if (null != tabControl)
                 {
-                    valid = helper.ValidateDecimalTextBox(e, tabControl, tabIndex, textPrecursorIsotopeFilter,
+                    valid = helper.ValidateDecimalTextBox(tabControl, tabIndex, textPrecursorIsotopeFilter,
                                                           minFilt, maxFilt, out precIsotopeFilt);
                 }
                 else
                 {
-                    valid = helper.ValidateDecimalTextBox(e, textPrecursorIsotopeFilter,
+                    valid = helper.ValidateDecimalTextBox(textPrecursorIsotopeFilter,
                                                           minFilt, maxFilt, out precIsotopeFilt);
                 }
 
@@ -379,7 +378,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidatePrecursorRes(CancelEventArgs e, MessageBoxHelper helper, double? precursorIsotopeFilter, out double? precursorRes, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidatePrecursorRes(MessageBoxHelper helper, double? precursorIsotopeFilter, out double? precursorRes, TabControl tabControl = null, int tabIndex = -1)
         {
             precursorRes = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
@@ -419,12 +418,12 @@ namespace pwiz.Skyline.SettingsUI
                 bool valid;
                 if (null != tabControl)
                 {
-                    valid = helper.ValidateDecimalTextBox(e, tabControl, tabIndex, textPrecursorRes,
+                    valid = helper.ValidateDecimalTextBox(tabControl, tabIndex, textPrecursorRes,
                                                           minFilt, maxFilt, out precRes);
                 }
                 else
                 {
-                    valid = helper.ValidateDecimalTextBox(e, textPrecursorRes,
+                    valid = helper.ValidateDecimalTextBox(textPrecursorRes,
                                                           minFilt, maxFilt, out precRes);
                 }
                 if (!valid)
@@ -436,7 +435,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidatePrecursorResMz(CancelEventArgs e, MessageBoxHelper helper, out double? precursorResMz, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidatePrecursorResMz(MessageBoxHelper helper, out double? precursorResMz, TabControl tabControl = null, int tabIndex = -1)
         {
             precursorResMz = null;
             FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
@@ -450,13 +449,13 @@ namespace pwiz.Skyline.SettingsUI
                     bool valid;
                     if (null != tabControl)
                     {
-                        valid = helper.ValidateDecimalTextBox(e, tabControl, tabIndex, textPrecursorAt,
+                        valid = helper.ValidateDecimalTextBox(tabControl, tabIndex, textPrecursorAt,
                                                               TransitionFullScan.MIN_RES_MZ,
                                                               TransitionFullScan.MAX_RES_MZ, out precResMz);
                     }
                     else
                     {
-                        valid = helper.ValidateDecimalTextBox(e, textPrecursorAt,
+                        valid = helper.ValidateDecimalTextBox(textPrecursorAt,
                                                               TransitionFullScan.MIN_RES_MZ,
                                                               TransitionFullScan.MAX_RES_MZ, out precResMz);
                     }
@@ -607,7 +606,7 @@ namespace pwiz.Skyline.SettingsUI
             comboIsolationScheme.Focus();
         }
 
-        public bool ValidateProductRes(CancelEventArgs e, MessageBoxHelper helper, out double? productRes, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidateProductRes(MessageBoxHelper helper, out double? productRes, TabControl tabControl = null, int tabIndex = -1)
         {
             FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
             productRes = null;
@@ -632,12 +631,12 @@ namespace pwiz.Skyline.SettingsUI
                 bool valid;
                 if (null != tabControl)
                 {
-                    valid = helper.ValidateDecimalTextBox(e, tabControl, (int) TransitionSettingsUI.TABS.FullScan,
+                    valid = helper.ValidateDecimalTextBox(tabControl, (int) TransitionSettingsUI.TABS.FullScan,
                                                           textProductRes, minFilt, maxFilt, out prodRes);
                 }
                 else
                 {
-                    valid = helper.ValidateDecimalTextBox(e, textProductRes, minFilt, maxFilt, out prodRes);
+                    valid = helper.ValidateDecimalTextBox(textProductRes, minFilt, maxFilt, out prodRes);
                 }
 
                 if (!valid)
@@ -649,7 +648,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public bool ValidateProductResMz(CancelEventArgs e, MessageBoxHelper helper, out double? productResMz, TabControl tabControl = null, int tabIndex = -1)
+        public bool ValidateProductResMz(MessageBoxHelper helper, out double? productResMz, TabControl tabControl = null, int tabIndex = -1)
         {
             FullScanAcquisitionMethod acquisitionMethod = AcquisitionMethod;
             productResMz = null;
@@ -665,7 +664,7 @@ namespace pwiz.Skyline.SettingsUI
                     bool valid;
                     if (null != tabControl)
                     {
-                        valid = helper.ValidateDecimalTextBox(e, tabControl, (int) TransitionSettingsUI.TABS.FullScan,
+                        valid = helper.ValidateDecimalTextBox(tabControl, (int) TransitionSettingsUI.TABS.FullScan,
                                                               textProductAt,
                                                               TransitionFullScan.MIN_RES_MZ,
                                                               TransitionFullScan.MAX_RES_MZ, out prodResMz);
@@ -673,7 +672,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                        valid = helper.ValidateDecimalTextBox(e, textProductAt,
+                        valid = helper.ValidateDecimalTextBox(textProductAt,
                                                               TransitionFullScan.MIN_RES_MZ,
                                                               TransitionFullScan.MAX_RES_MZ, out prodResMz);
 

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
@@ -48,11 +47,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             foreach (SrmSettings settings in Settings.Default.SrmSettingsList)

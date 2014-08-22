@@ -169,8 +169,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             double cutOffScore;
             MessageBoxHelper helper = new MessageBoxHelper(WizardForm);
-            if (!helper.ValidateDecimalTextBox(e, textCutoff, 0, 1.0, out cutOffScore))
+            if (!helper.ValidateDecimalTextBox(textCutoff, 0, 1.0, out cutOffScore))
+            {
+                e.Cancel = true;
                 return false;
+            }
 
             string outputPath = BiblioSpecLiteSpec.GetLibraryFileName(SkylineWindow.DocumentFilePath);
 

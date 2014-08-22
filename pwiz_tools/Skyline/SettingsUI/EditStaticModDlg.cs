@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -255,12 +254,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, _editing ? (Control) textName : comboMod, out name))
+            if (!helper.ValidateNameTextBox(_editing ? (Control) textName : comboMod, out name))
                 return;
 
             // Allow updating the original modification
@@ -268,7 +265,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if(!ModNameAvailable(name))
                 {
-                    helper.ShowTextBoxError(e, _editing ? (Control)textName : comboMod, 
+                    helper.ShowTextBoxError(_editing ? (Control)textName : comboMod, 
                         Resources.EditStaticModDlg_OkDialog_The_modification__0__already_exists, name);
                     return;
                 }
@@ -329,7 +326,6 @@ namespace pwiz.Skyline.SettingsUI
                 catch (ArgumentException x)
                 {
                     helper.ShowTextBoxError(textFormula, x.Message);
-                    e.Cancel = true;
                     return;
                 }
             }
@@ -341,10 +337,10 @@ namespace pwiz.Skyline.SettingsUI
                 if (!string.IsNullOrEmpty(textMonoMass.Text) || !string.IsNullOrEmpty(textAverageMass.Text) || losses == null)
                 {
                     double mass;
-                    if (!helper.ValidateDecimalTextBox(e, textMonoMass, -1500, 1500, out mass))
+                    if (!helper.ValidateDecimalTextBox(textMonoMass, -1500, 1500, out mass))
                         return;
                     monoMass = mass;
-                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 1500, out mass))
+                    if (!helper.ValidateDecimalTextBox(textAverageMass, -1500, 1500, out mass))
                         return;
                     avgMass = mass;
                 }
@@ -359,7 +355,6 @@ namespace pwiz.Skyline.SettingsUI
             else if (aas == null && term.HasValue)
             {
                 MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid);
-                e.Cancel = true;
                 return;
             }
 

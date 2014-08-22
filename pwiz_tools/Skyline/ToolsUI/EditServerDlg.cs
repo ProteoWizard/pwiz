@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -88,7 +87,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             MessageBoxHelper helper = new MessageBoxHelper(this);
             string serverName;
-            if (!helper.ValidateNameTextBox(new CancelEventArgs(), textServerURL, out serverName))
+            if (!helper.ValidateNameTextBox(textServerURL, out serverName))
                 return;
 
             Uri uriServer = ServerNameToUri(serverName);

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -160,9 +159,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog() {
             var messageBoxHelper = new MessageBoxHelper(this);
-            var cancelEventArgs = new CancelEventArgs();
             string name;
-            if (!messageBoxHelper.ValidateNameTextBox(cancelEventArgs, tbxName, out name))
+            if (!messageBoxHelper.ValidateNameTextBox(tbxName, out name))
             {
                 return;
             }

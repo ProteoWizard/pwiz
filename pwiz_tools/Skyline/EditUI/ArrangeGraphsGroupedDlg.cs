@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -93,7 +92,7 @@ namespace pwiz.Skyline.EditUI
         {
             var helper = new MessageBoxHelper(this);
             int countGroups;
-            if (!helper.ValidateNumberTextBox(new CancelEventArgs(), textGroups, 1, _countGraphs, out countGroups))
+            if (!helper.ValidateNumberTextBox(textGroups, 1, _countGraphs, out countGroups))
                 return;
             Groups = countGroups;
 

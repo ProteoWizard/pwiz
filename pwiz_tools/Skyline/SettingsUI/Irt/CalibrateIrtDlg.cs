@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -70,11 +69,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
             double minIrt;
             double maxIrt;
 
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
-            if (!helper.ValidateDecimalTextBox(e, textMinIrt, null, null, out minIrt))
+            if (!helper.ValidateDecimalTextBox(textMinIrt, null, null, out minIrt))
                 return;
-            if (!helper.ValidateDecimalTextBox(e, textMaxIrt, minIrt, null, out maxIrt))
+            if (!helper.ValidateDecimalTextBox(textMaxIrt, minIrt, null, out maxIrt))
                 return;
 
             int iFixed1 = -1, iFixed2 = -1;

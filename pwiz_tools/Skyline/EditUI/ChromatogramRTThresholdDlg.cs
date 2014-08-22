@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -46,9 +45,8 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
-            if (!helper.ValidateDecimalTextBox(e, textThreshold, 0, double.MaxValue, out _threshold))
+            if (!helper.ValidateDecimalTextBox(textThreshold, 0, double.MaxValue, out _threshold))
                 return;
 
             DialogResult = DialogResult.OK;

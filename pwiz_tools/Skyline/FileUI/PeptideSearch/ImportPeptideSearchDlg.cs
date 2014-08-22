@@ -320,7 +320,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool UpdateFullScanSettings()
         {
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             // Validate and store MS1 full-scan settings
@@ -350,7 +349,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
 
             int[] precursorCharges;
-            if (!helper.ValidateNumberListTextBox(e, FullScanSettingsControl.PrecursorChargesTextBox, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
+            if (!helper.ValidateNumberListTextBox(FullScanSettingsControl.PrecursorChargesTextBox, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
                 return false;
             precursorCharges = precursorCharges.Distinct().ToArray();
             var filter = TransitionSettings.Filter.ChangePrecursorCharges(precursorCharges);
@@ -361,7 +360,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
 
             TransitionFullScan fullScan;
-            if (!FullScanSettingsControl.ValidateFullScanSettings(e, helper, out fullScan))
+            if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return false;
 
             Helpers.AssignIfEquals(ref fullScan, TransitionSettings.FullScan);
@@ -378,7 +377,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SrmSettings newSettings = SkylineWindow.DocumentUI.Settings.ChangeTransitionSettings(settings);
                 if (!SkylineWindow.ChangeSettings(newSettings, true))
                 {
-                    e.Cancel = true;
                     return false;
                 }
             }

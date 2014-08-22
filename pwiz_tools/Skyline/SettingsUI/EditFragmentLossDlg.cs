@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -77,8 +76,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string formulaLoss = textLossFormula.Text;
@@ -116,10 +113,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 formulaLoss = null;
                 double mass;
-                if (!helper.ValidateDecimalTextBox(e, textLossMonoMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
+                if (!helper.ValidateDecimalTextBox(textLossMonoMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 monoLoss = mass;
-                if (!helper.ValidateDecimalTextBox(e, textLossAverageMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
+                if (!helper.ValidateDecimalTextBox(textLossAverageMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 avgLoss = mass;
             }

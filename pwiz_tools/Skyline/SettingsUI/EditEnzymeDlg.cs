@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -98,26 +97,25 @@ namespace pwiz.Skyline.SettingsUI
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-            var e = new CancelEventArgs();
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             string cleavageC;
-            if (!helper.ValidateAATextBox(e, textCleavage, false, out cleavageC))
+            if (!helper.ValidateAATextBox(textCleavage, false, out cleavageC))
                 return;
             string restrictC;
-            if (!helper.ValidateAATextBox(e, textRestrict, true, out restrictC))
+            if (!helper.ValidateAATextBox(textRestrict, true, out restrictC))
                 return;
 
             string cleavageN;
             string restrictN;
             if (comboDirection.SelectedIndex == 2)
             {
-                if (!helper.ValidateAATextBox(e, textCleavageN, false, out cleavageN))
+                if (!helper.ValidateAATextBox(textCleavageN, false, out cleavageN))
                     return;
-                if (!helper.ValidateAATextBox(e, textRestrictN, true, out restrictN))
+                if (!helper.ValidateAATextBox(textRestrictN, true, out restrictN))
                     return;
             }
             else if (comboDirection.SelectedIndex == 1)
@@ -137,7 +135,6 @@ namespace pwiz.Skyline.SettingsUI
             if (_enzyme == null && _existing.Contains(enzyme))
             {
                 helper.ShowTextBoxError(textName, Resources.EditEnzymeDlg_OnClosing_The_enzyme__0__already_exists, name);
-                e.Cancel = true;
                 return;
             }
 
@@ -249,7 +246,7 @@ namespace pwiz.Skyline.SettingsUI
 
     internal static class EnzymeMessageBoxHelper
     {
-        public static bool ValidateAATextBox(this MessageBoxHelper helper, CancelEventArgs e, TextBox control, bool allowEmpty, out string aaText)
+        public static bool ValidateAATextBox(this MessageBoxHelper helper, TextBox control, bool allowEmpty, out string aaText)
         {
             aaText = control.Text.Trim().ToUpperInvariant();
             if (aaText.Length == 0)
@@ -257,7 +254,6 @@ namespace pwiz.Skyline.SettingsUI
                 if (!allowEmpty)
                 {
                     helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid);
-                    e.Cancel = true;
                     return false;
                 }
             }
@@ -270,7 +266,6 @@ namespace pwiz.Skyline.SettingsUI
                     if (!AminoAcid.IsAA(c))
                     {
                         helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid, c);
-                        e.Cancel = true;
                         return false;
                     }
                     // Silently strip duplicates.

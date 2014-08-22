@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -243,15 +242,13 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             // Validate start and end.
             double start;
             double end;
-            if (!helper.ValidateDecimalTextBox(e, textStart, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out start) ||
-                !helper.ValidateDecimalTextBox(e, textEnd, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out end))
+            if (!helper.ValidateDecimalTextBox(textStart, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out start) ||
+                !helper.ValidateDecimalTextBox(textEnd, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out end))
             {
                 return;
             }
@@ -264,7 +261,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate window width.
             double windowWidth;
-            if (!helper.ValidateDecimalTextBox(e, textWidth, 1, TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out windowWidth))
+            if (!helper.ValidateDecimalTextBox(textWidth, 1, TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out windowWidth))
             {
                 return;
             }
@@ -280,10 +277,10 @@ namespace pwiz.Skyline.SettingsUI
             double marginLeft = 0.0;
             double marginRight = 0.0;
             if (!Equals(comboMargins.SelectedItem.ToString(), WindowMargin.NONE) &&
-                    !helper.ValidateDecimalTextBox(e, textMarginLeft, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
+                    !helper.ValidateDecimalTextBox(textMarginLeft, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
                         TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginLeft) ||
                 (Equals(comboMargins.SelectedItem.ToString(), WindowMargin.ASYMMETRIC) &&
-                    !helper.ValidateDecimalTextBox(e, textMarginRight, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
+                    !helper.ValidateDecimalTextBox(textMarginRight, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
                         TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginRight)))
             {
                 return;
@@ -293,7 +290,7 @@ namespace pwiz.Skyline.SettingsUI
             if (Multiplexed)
             {
                 int windowsPerScan;
-                if (!helper.ValidateNumberTextBox(e, textWindowsPerScan, 2, 20, out windowsPerScan))
+                if (!helper.ValidateNumberTextBox(textWindowsPerScan, 2, 20, out windowsPerScan))
                 {
                     return;
                 }

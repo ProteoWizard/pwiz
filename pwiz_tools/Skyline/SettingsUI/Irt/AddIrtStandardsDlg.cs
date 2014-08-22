@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -53,12 +52,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             int standardCount;
-            if (!helper.ValidateNumberTextBox(e, textPeptideCount, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES, _peptideCount, out standardCount))
+            if (!helper.ValidateNumberTextBox(textPeptideCount, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES, _peptideCount, out standardCount))
                 return;
 
             DialogResult = DialogResult.OK;

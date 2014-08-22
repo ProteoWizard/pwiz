@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -126,8 +125,6 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             if (NamedPathSets == null)
@@ -159,16 +156,16 @@ namespace pwiz.Skyline.FileUI
                 else
                 {
                     string name;
-                    if (!helper.ValidateNameTextBox(e, textName, out name))
+                    if (!helper.ValidateNameTextBox(textName, out name))
                         return;
                     if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
                     {
-                        helper.ShowTextBoxError(e, textName, Resources.ImportResultsDlg_OkDialog_A_result_name_may_not_contain_any_of_the_characters___0___, Path.GetInvalidFileNameChars());
+                        helper.ShowTextBoxError(textName, Resources.ImportResultsDlg_OkDialog_A_result_name_may_not_contain_any_of_the_characters___0___, Path.GetInvalidFileNameChars());
                         return;
                     }
                     if (ResultsExist(name))
                     {
-                        helper.ShowTextBoxError(e, textName, Resources.ImportResultsDlg_OkDialog_The_specified_name_already_exists_for_this_document);
+                        helper.ShowTextBoxError(textName, Resources.ImportResultsDlg_OkDialog_The_specified_name_already_exists_for_this_document);
                         return;
                     }
 

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -70,11 +69,10 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             int numDecoys;
-            if (!helper.ValidateNumberTextBox(e, textNumberOfDecoys, 0, null, out numDecoys))
+            if (!helper.ValidateNumberTextBox(textNumberOfDecoys, 0, null, out numDecoys))
                 return;
 
             int numComparableGroups = _document.Peptides.SelectMany(PeakFeatureEnumerator.ComparableGroups).Count();

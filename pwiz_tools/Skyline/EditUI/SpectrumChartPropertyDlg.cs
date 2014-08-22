@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using pwiz.Common.SystemUtil;
 using System.Windows.Forms;
@@ -39,16 +38,14 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             int lineWidth;
-            if (!helper.ValidateNumberTextBox(e, textLineWidth, 1, 5, out lineWidth))
+            if (!helper.ValidateNumberTextBox(textLineWidth, 1, 5, out lineWidth))
                 return;
 
             int fontSize;
-            if (!helper.ValidateNumberTextBox(e, textFontSize, 6, 128, out fontSize))
+            if (!helper.ValidateNumberTextBox(textFontSize, 6, 128, out fontSize))
                 return;
 
             Settings.Default.SpectrumLineWidth = lineWidth;

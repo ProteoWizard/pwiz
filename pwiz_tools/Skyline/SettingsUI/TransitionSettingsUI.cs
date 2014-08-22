@@ -298,7 +298,7 @@ namespace pwiz.Skyline.SettingsUI
             int[] precursorCharges;
             int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
             int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
-            if (!helper.ValidateNumberListTextBox(e, tabControl1, (int) TABS.Filter, textPrecursorCharges,
+            if (!helper.ValidateNumberListTextBox(tabControl1, (int) TABS.Filter, textPrecursorCharges,
                     min, max, out precursorCharges))
                 return;
             precursorCharges = precursorCharges.Distinct().ToArray();
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.SettingsUI
             int[] productCharges;
             min = Transition.MIN_PRODUCT_CHARGE;
             max = Transition.MAX_PRODUCT_CHARGE;
-            if (!helper.ValidateNumberListTextBox(e, tabControl1, (int) TABS.Filter, textIonCharges,
+            if (!helper.ValidateNumberListTextBox(tabControl1, (int) TABS.Filter, textIonCharges,
                     min, max, out productCharges))
                 return;
             productCharges = productCharges.Distinct().ToArray();
@@ -324,7 +324,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
                 !Equals(textExclusionWindow.Text, exclusionWindow.ToString(LocalizationHelper.CurrentCulture)))
             {
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Filter, textExclusionWindow,
+                if (!helper.ValidateDecimalTextBox(tabControl1, (int)TABS.Filter, textExclusionWindow,
                         TransitionFilter.MIN_EXCLUSION_WINDOW, TransitionFilter.MAX_EXCLUSION_WINDOW, out exclusionWindow))
                 {
                     return;
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.SettingsUI
 
             double minTol = TransitionLibraries.MIN_MATCH_TOLERANCE;
             double maxTol = TransitionLibraries.MAX_MATCH_TOLERANCE;
-            if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Library, textTolerance,
+            if (!helper.ValidateDecimalTextBox(tabControl1, (int) TABS.Library, textTolerance,
                     minTol, maxTol, out ionMatchTolerance))
                 return;
 
@@ -368,7 +368,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 min = TransitionLibraries.MIN_ION_COUNT;
                 max = TransitionLibraries.MAX_ION_COUNT;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Library, textIonCount,
+                if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Library, textIonCount,
                         min, max, out ionCount))
                     return;
             }
@@ -383,18 +383,18 @@ namespace pwiz.Skyline.SettingsUI
             int minMz;
             min = TransitionInstrument.MIN_MEASUREABLE_MZ;
             max = TransitionInstrument.MAX_MEASURABLE_MZ - TransitionInstrument.MIN_MZ_RANGE;
-            if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMinMz, min, max, out minMz))
+            if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMinMz, min, max, out minMz))
                 return;
             int maxMz;
             min = minMz + TransitionInstrument.MIN_MZ_RANGE;
             max = TransitionInstrument.MAX_MEASURABLE_MZ;
-            if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMaxMz, min, max, out maxMz))
+            if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMaxMz, min, max, out maxMz))
                 return;
             bool isDynamicMin = cbDynamicMinimum.Checked;
             double mzMatchTolerance;
             minTol = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE;
             maxTol = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Instrument, textMzMatchTolerance,
+            if (!helper.ValidateDecimalTextBox(tabControl1, (int) TABS.Instrument, textMzMatchTolerance,
                     minTol, maxTol, out mzMatchTolerance))
                 return;
             int? maxTrans = null;
@@ -403,7 +403,7 @@ namespace pwiz.Skyline.SettingsUI
                 int maxTransTemp;
                 min = TransitionInstrument.MIN_TRANSITION_MAX;
                 max = TransitionInstrument.MAX_TRANSITION_MAX;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMaxTrans,
+                if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMaxTrans,
                         min, max, out maxTransTemp))
                     return;
                 maxTrans = maxTransTemp;
@@ -414,7 +414,7 @@ namespace pwiz.Skyline.SettingsUI
                 int maxInclusionsTemp;
                 min = TransitionInstrument.MIN_INCLUSION_MAX;
                 max = TransitionInstrument.MAX_INCLUSION_MAX;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMaxInclusions,
+                if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Instrument, textMaxInclusions,
                         min, max, out maxInclusionsTemp))
                     return;
                 maxInclusions = maxInclusionsTemp;
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.IsNullOrEmpty(textMinTime.Text))
             {
                 int minTimeTemp;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Instrument, textMinTime,
+                if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Instrument, textMinTime,
                         min, max, out minTimeTemp))
                     return;
                 minTime = minTimeTemp;
@@ -433,7 +433,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.IsNullOrEmpty(textMaxTime.Text))
             {
                 int maxTimeTemp;
-                if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Instrument, textMaxTime,
+                if (!helper.ValidateNumberTextBox(tabControl1, (int)TABS.Instrument, textMaxTime,
                         min, max, out maxTimeTemp))
                     return;
                 maxTime = maxTimeTemp;
@@ -513,7 +513,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionFullScan fullScan;
-            if (!FullScanSettingsControl.ValidateFullScanSettings(e, helper, out fullScan, tabControl1, (int)TABS.FullScan))
+            if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan, tabControl1, (int)TABS.FullScan))
                 return;
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);

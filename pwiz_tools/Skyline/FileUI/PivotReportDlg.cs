@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -195,10 +194,9 @@ namespace pwiz.Skyline.FileUI
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-            var e = new CancelEventArgs();
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_columns.Count == 0)

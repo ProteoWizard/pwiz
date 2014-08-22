@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -472,8 +471,6 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog(string outputPath)
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this, true);
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
@@ -575,7 +572,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             //This will populate _exportProperties
-            if (!ValidateSettings(e, helper))
+            if (!ValidateSettings(helper))
             {
                 return;
             }
@@ -626,7 +623,6 @@ namespace pwiz.Skyline.FileUI
                     else if (result == DialogResult.Cancel)
                     {
                         comboInstrument.Focus();
-                        e.Cancel = true;
                         return;
                     }
                 }
@@ -738,7 +734,7 @@ namespace pwiz.Skyline.FileUI
         /// boolean whether or not it succeeded. It can show MessageBoxes or not based
         /// on a parameter.
         /// </summary>
-        public bool ValidateSettings(CancelEventArgs e, MessageBoxHelper helper)
+        public bool ValidateSettings(MessageBoxHelper helper)
         {
             // ReSharper disable ConvertIfStatementToConditionalTernaryExpression
             if (radioSingle.Checked)
@@ -809,7 +805,7 @@ namespace pwiz.Skyline.FileUI
 
             if (_exportProperties.ExportStrategy != ExportStrategy.Buckets)
                 maxVal = maxInstrumentTrans;
-            else if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
+            else if (!helper.ValidateNumberTextBox(textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
                 return false;
 
             // Make sure all the transitions of all precursors can fit into a single document,
@@ -824,7 +820,7 @@ namespace pwiz.Skyline.FileUI
             if (textPrimaryCount.Visible)
             {
                 int primaryCount;
-                if (!helper.ValidateNumberTextBox(e, textPrimaryCount, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX, out primaryCount))
+                if (!helper.ValidateNumberTextBox(textPrimaryCount, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX, out primaryCount))
                     return false;
 
                 _exportProperties.PrimaryTransitionCount = primaryCount;
@@ -832,7 +828,7 @@ namespace pwiz.Skyline.FileUI
             if (textDwellTime.Visible)
             {
                 int dwellTime;
-                if (!helper.ValidateNumberTextBox(e, textDwellTime, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX, out dwellTime))
+                if (!helper.ValidateNumberTextBox(textDwellTime, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX, out dwellTime))
                     return false;
 
                 _exportProperties.DwellTime = dwellTime;
@@ -840,7 +836,7 @@ namespace pwiz.Skyline.FileUI
             if (textRunLength.Visible)
             {
                 double runLength;
-                if (!helper.ValidateDecimalTextBox(e, textRunLength, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX, out runLength))
+                if (!helper.ValidateDecimalTextBox(textRunLength, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX, out runLength))
                     return false;
 
                 _exportProperties.RunLength = runLength;
@@ -1222,10 +1218,9 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this, false);
 
-            if (!ValidateSettings(e, helper) || comboInstrument.SelectedItem == null)
+            if (!ValidateSettings(helper) || comboInstrument.SelectedItem == null)
             {
                 labelMethodNum.Text = string.Empty;
                 return;

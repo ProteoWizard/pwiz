@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -76,10 +75,9 @@ namespace pwiz.Skyline.SettingsUI
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-            var e = new CancelEventArgs();
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(exc => !ReferenceEquals(_exclusion, exc) && Equals(name, exc.Name)))

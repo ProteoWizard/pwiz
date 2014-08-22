@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -356,12 +355,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(en => !ReferenceEquals(_isolationScheme, en) && Equals(name, en.Name)))
@@ -377,14 +374,14 @@ namespace pwiz.Skyline.SettingsUI
                 double minFilt = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER*filterFactor;
                 double maxFilt = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER*filterFactor;
                 double precFilt;
-                if (!helper.ValidateDecimalTextBox(e, textPrecursorFilterMz,
+                if (!helper.ValidateDecimalTextBox(textPrecursorFilterMz,
                     minFilt, maxFilt, out precFilt))
                     return;
                 double? precursorFilter = precFilt;
                 double? precursorRightFilter = null;
                 if (cbAsymIsolation.Checked)
                 {
-                    if (!helper.ValidateDecimalTextBox(e, textRightPrecursorFilterMz,
+                    if (!helper.ValidateDecimalTextBox(textRightPrecursorFilterMz,
                         minFilt, maxFilt, out precFilt))
                         return;
                     precursorRightFilter = precFilt;
@@ -445,7 +442,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (Equals(SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED))
                 {
                     int x;
-                    if (!helper.ValidateNumberTextBox(e, textWindowsPerScan,
+                    if (!helper.ValidateNumberTextBox(textWindowsPerScan,
                         IsolationScheme.MIN_MULTIPLEXED_ISOLATION_WINDOWS,
                         IsolationScheme.MAX_MULTIPLEXED_ISOLATION_WINDOWS,
                         out x))

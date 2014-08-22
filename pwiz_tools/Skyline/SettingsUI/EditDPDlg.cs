@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -83,12 +82,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
@@ -98,22 +95,22 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             double slope;
-            if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
+            if (!helper.ValidateDecimalTextBox(textSlope, out slope))
                 return;
 
             double intercept;
-            if (!helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
+            if (!helper.ValidateDecimalTextBox(textIntercept, out intercept))
                 return;
 
             double stepSize;
-            if (!helper.ValidateDecimalTextBox(e, textStepSize,
+            if (!helper.ValidateDecimalTextBox(textStepSize,
                     DeclusteringPotentialRegression.MIN_STEP_SIZE,
                     DeclusteringPotentialRegression.MAX_STEP_SIZE,
                     out stepSize))
                 return;
 
             int stepCount;
-            if (!helper.ValidateNumberTextBox(e, textStepCount,
+            if (!helper.ValidateNumberTextBox(textStepCount,
                     OptimizableRegression.MIN_OPT_STEP_COUNT,
                     OptimizableRegression.MAX_OPT_STEP_COUNT,
                     out stepCount))

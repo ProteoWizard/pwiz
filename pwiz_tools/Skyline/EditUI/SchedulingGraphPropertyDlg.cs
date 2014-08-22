@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -76,11 +75,8 @@ namespace pwiz.Skyline.EditUI
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-            var e = new CancelEventArgs();
-
             double[] timeWindows;
-            if (!helper.ValidateDecimalListTextBox(e,
-                                                   textTimeWindows,
+            if (!helper.ValidateDecimalListTextBox(textTimeWindows,
                                                    PeptidePrediction.MIN_MEASURED_RT_WINDOW,
                                                    PeptidePrediction.MAX_MEASURED_RT_WINDOW,
                                                    out timeWindows)) 
@@ -89,8 +85,7 @@ namespace pwiz.Skyline.EditUI
             int primaryTransitionCount = 0;
             if (!string.IsNullOrEmpty(textPrimaryTransitionCount.Text))
             {
-                if (!helper.ValidateNumberTextBox(e,
-                                                  textPrimaryTransitionCount,
+                if (!helper.ValidateNumberTextBox(textPrimaryTransitionCount,
                                                   AbstractMassListExporter.PRIMARY_COUNT_MIN,
                                                   AbstractMassListExporter.PRIMARY_COUNT_MAX,
                                                   out primaryTransitionCount))

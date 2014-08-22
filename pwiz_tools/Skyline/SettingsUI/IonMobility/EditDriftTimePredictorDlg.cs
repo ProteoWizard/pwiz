@@ -131,7 +131,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public void OkDialog()
         {
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
@@ -139,7 +138,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var table = new ChargeRegressionTable(gridRegression);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(r => !ReferenceEquals(_predictor, r) && Equals(name, r.Name)))
@@ -149,22 +148,19 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         Resources.EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_),
                     Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                 {
-                    e.Cancel = true;
                     return;
                 }
             }
             if (driftTable.GetTableMeasuredDriftTimes() == null) // Some error detected in the measured drift times table
             {
-                e.Cancel = true;
                 return;
             }
             if (table.GetTableChargeRegressionLines() == null) // Some error detected in the charged regression lines table
             {
-                e.Cancel = true;
                 return;
             }
             double resolvingPower;
-            if (!helper.ValidateDecimalTextBox(e, textResolvingPower, out resolvingPower))
+            if (!helper.ValidateDecimalTextBox(textResolvingPower, out resolvingPower))
                 return;
 
             var errmsg = ValidateResolvingPower(resolvingPower);

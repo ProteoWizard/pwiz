@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -277,12 +276,10 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (!Equals(name, _originalName) &&
@@ -290,7 +287,6 @@ namespace pwiz.Skyline.SettingsUI
                 _existing.Contains(r => Equals(name, r.Name)))
             {
                 helper.ShowTextBoxError(textName, Resources.EditPeakScoringModelDlg_OkDialog_The_peak_scoring_model__0__already_exists, name);
-                e.Cancel = true;
                 return;
             }
 

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -93,12 +92,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
             if (_existing.Contains(en => !ReferenceEquals(_enrichments, en) && Equals(name, en.Name)))
@@ -111,7 +108,7 @@ namespace pwiz.Skyline.SettingsUI
             foreach (DataGridViewRow row in gridEnrichments.Rows.Cast<DataGridViewRow>().Where(row => !row.IsNewRow))
             {
                 double enrichment;
-                if (!ValidateEnrichment(e, row.Cells[COL_ENRICHMENT], out enrichment))
+                if (!ValidateEnrichment(row.Cells[COL_ENRICHMENT], out enrichment))
                     return;
 
                 listEnrichments.Add(new IsotopeEnrichmentItem(row.Cells[COL_SYMBOL].Value.ToString(), enrichment/100));
@@ -122,23 +119,23 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        private bool ValidateEnrichment(CancelEventArgs e, DataGridViewCell cell, out double enrichment)
+        private bool ValidateEnrichment(DataGridViewCell cell, out double enrichment)
         {
-            if (!ValidateCell(e, cell, Convert.ToDouble, out enrichment))
+            if (!ValidateCell(cell, Convert.ToDouble, out enrichment))
                 return false;
 
             const double min = IsotopeEnrichmentItem.MIN_ATOM_PERCENT_ENRICHMENT*100;
             const double max = IsotopeEnrichmentItem.MAX_ATOM_PERCENT_ENRICHMENT*100;
             if (min > enrichment || enrichment > max)
             {
-                InvalidCell(e, cell, Resources.EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__, min, max);
+                InvalidCell(cell, Resources.EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__, min, max);
                 return false;
             }
 
             return true;
         }
 
-        private bool ValidateCell<TVal>(CancelEventArgs e, DataGridViewCell cell,
+        private bool ValidateCell<TVal>(DataGridViewCell cell,
             Converter<string, TVal> conv, out TVal valueT)
         {
             valueT = default(TVal);
@@ -149,14 +146,14 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                InvalidCell(e, cell, Resources.EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid, value);
+                InvalidCell(cell, Resources.EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid, value);
                 return false;
             }
 
             return true;            
         }
 
-        private void InvalidCell(CancelEventArgs e, DataGridViewCell cell,
+        private void InvalidCell(DataGridViewCell cell,
             string message, params object[] args)
         {            
             MessageBox.Show(string.Format(message, args));
@@ -165,7 +162,6 @@ namespace pwiz.Skyline.SettingsUI
             cell.Selected = true;
             gridEnrichments.CurrentCell = cell;
             gridEnrichments.BeginEdit(true);
-            e.Cancel = true;
         }
 
         private void btnOk_Click(object sender, EventArgs e)

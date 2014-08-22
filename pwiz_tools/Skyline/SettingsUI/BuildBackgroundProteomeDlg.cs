@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
@@ -174,7 +173,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            if (!_messageBoxHelper.ValidateNameTextBox(new CancelEventArgs(), textName, out _name))
+            if (!_messageBoxHelper.ValidateNameTextBox(textName, out _name))
             {
                 return;
             }

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -54,22 +53,20 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             int lineWidth;
-            if (!helper.ValidateNumberTextBox(e, textLineWidth, 1, 5, out lineWidth))
+            if (!helper.ValidateNumberTextBox(textLineWidth, 1, 5, out lineWidth))
                 return;
 
             int fontSize;
-            if (!helper.ValidateNumberTextBox(e, textFontSize, 6, 128, out fontSize))
+            if (!helper.ValidateNumberTextBox(textFontSize, 6, 128, out fontSize))
                 return;
 
             double timeRange = 0;
             if (!string.IsNullOrEmpty(textTimeRange.Text))
             {
-                if (!helper.ValidateDecimalTextBox(e, textTimeRange, 0.05, 15.0, out timeRange))
+                if (!helper.ValidateDecimalTextBox(textTimeRange, 0.05, 15.0, out timeRange))
                     return;
             }
             bool relative = cbRelative.Checked;
@@ -77,7 +74,7 @@ namespace pwiz.Skyline.EditUI
             double maxIntensity = 0;
             if (!string.IsNullOrEmpty(textMaxIntensity.Text))
             {
-                if (!helper.ValidateDecimalTextBox(e, textMaxIntensity, 5, double.MaxValue, out maxIntensity))
+                if (!helper.ValidateDecimalTextBox(textMaxIntensity, 5, double.MaxValue, out maxIntensity))
                     return;
             }
 

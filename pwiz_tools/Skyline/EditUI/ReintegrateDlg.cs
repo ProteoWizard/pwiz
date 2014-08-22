@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
@@ -63,14 +62,12 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            // TODO: Remove this
-            var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
             double qCutoff = double.MaxValue;
             if (reintegrateQCutoff.Checked)
             {
-                if (!helper.ValidateDecimalTextBox(e, textBoxCutoff, 0.0, 1.0, out qCutoff))
+                if (!helper.ValidateDecimalTextBox(textBoxCutoff, 0.0, 1.0, out qCutoff))
                     return;
             }
 
