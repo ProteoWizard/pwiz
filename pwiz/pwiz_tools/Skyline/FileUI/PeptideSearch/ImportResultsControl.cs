@@ -380,7 +380,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resultsFilesList.Items.Clear();
             foreach (var fileName in resultsFiles)
             {
-                resultsFilesList.Items.Add(fileName.Substring(dirInputRoot.Length));
+                string fileSuffix = fileName;
+                if (dirInputRoot.Length > 0)
+                    fileSuffix = fileName.Substring(dirInputRoot.Length);
+                resultsFilesList.Items.Add(fileSuffix);
             }
         }
 
