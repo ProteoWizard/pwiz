@@ -33,11 +33,10 @@ using pwiz.CLI.util;
 
 namespace IDPicker
 {
-    public class ProgressUpdateEventArgs : CancelEventArgs
+    public class ProgressUpdateEventArgs : UpdateMessageProxy
     {
-        public string Message {get;set;}
-        public int Current {get;set;}
-        public int Total {get;set;}
+        public int Current { get { return IterationIndex; } set { IterationIndex = value; } }
+        public int Total { get { return IterationCount; } set { IterationCount = value; } }
     }
 
     public class ProgressMonitor
@@ -145,8 +144,8 @@ namespace IDPicker
             progressUpdate.Total = e.TotalFilters;
             progressUpdate.Current = e.CompletedFilters;
 
-            progressUpdate.Message = String.Format("{0}{1} ({2}/{3})",
-                                                   e.FilteringStage[0].ToString().ToUpper(), e.FilteringStage.Substring(1),
+            progressUpdate.Message = String.Format("{0} ({1}/{2})",
+                                                   e.FilteringStage,
                                                    e.CompletedFilters,
                                                    e.TotalFilters);
 
@@ -175,6 +174,11 @@ namespace IDPicker
 
             ProgressUpdate(this, progressUpdate);
             e.Cancel = progressUpdate.Cancel;
+        }
+
+        public IterationListenerProxy<ProgressUpdateEventArgs> GetIterationListenerProxy()
+        {
+            return new IterationListenerProxy<ProgressUpdateEventArgs>(ProgressUpdate);
         }
     }
 }

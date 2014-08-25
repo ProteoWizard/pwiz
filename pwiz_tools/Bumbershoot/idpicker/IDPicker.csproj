@@ -243,6 +243,12 @@
     <Compile Include="Forms\NewVersionForm.Designer.cs">
       <DependentUpon>NewVersionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\EmbedGeneMetadataWarningForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EmbedGeneMetadataWarningForm.Designer.cs">
+      <DependentUpon>EmbedGeneMetadataWarningForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\NonFixedDriveWarningForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -367,6 +373,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\NetGestaltTrackSampleInfoForm.resx">
       <DependentUpon>NetGestaltTrackSampleInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\EmbedGeneMetadataWarningForm.resx">
+      <DependentUpon>EmbedGeneMetadataWarningForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SpectrumTableForm.resx">
       <DependentUpon>SpectrumTableForm.cs</DependentUpon>

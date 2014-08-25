@@ -71,6 +71,7 @@ struct Filter
 
         string sqlExpression() const;
         string filterHistoryExpression() const;
+        void parseFilterHistoryExpression(const string& expression);
     };
 
     struct Config
@@ -109,6 +110,9 @@ struct Filter
 
     void filter(const string& idpDbFilepath, pwiz::util::IterationListenerRegistry* ilr = 0);
     void filter(sqlite3* idpDbConnection, pwiz::util::IterationListenerRegistry* ilr = 0);
+
+    static boost::optional<Config> currentConfig(const string& idpDbFilepath);
+    static boost::optional<Config> currentConfig(sqlite3* idpDbConnection);
 
     struct Impl;
 

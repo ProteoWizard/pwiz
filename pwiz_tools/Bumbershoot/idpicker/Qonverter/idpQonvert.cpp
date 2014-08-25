@@ -581,8 +581,12 @@ int main( int argc, char* argv[] )
         if (g_rtConfig->EmbedGeneMetadata)
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
             {
-                cout << "\rEmbedding gene metadata: " << (i+1) << "/" << idpDbFilepaths.size() << flush;
-                Embedder::embedGeneMetadata(bfs::absolute(idpDbFilepaths[i], currentPath).string());
+                IterationListenerRegistry ilr;
+                IterationListenerPtr il(new UserFeedbackProgressMonitor(idpDbFilepaths[i]));
+                ilr.addListener(il, 1);
+
+                il->update(IterationListener::UpdateMessage(i, idpDbFilepaths.size(), "embedding gene metadata\n"));
+                Embedder::embedGeneMetadata(bfs::absolute(idpDbFilepaths[i], currentPath).string(), &ilr);
             }
 
     }

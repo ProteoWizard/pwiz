@@ -236,6 +236,16 @@ void Embedder::EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::Iterati
 }
 
 
+void Embedder::DropGeneMetadata(String^ idpDbFilepath)
+{
+    try
+    {
+        return NativeEmbedder::dropGeneMetadata(ToStdString(idpDbFilepath));
+    }
+    CATCH_AND_FORWARD;
+}
+
+
 void Embedder::Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath)
 {
     try
@@ -244,6 +254,7 @@ void Embedder::Extract(String^ idpDbFilepath, String^ sourceName, String^ output
     }
     CATCH_AND_FORWARD
 }
+
 
 void Embedder::EmbedMS1Metrics(String^ idpDbFilepath,
                      String^ sourceSearchPath,
@@ -261,11 +272,11 @@ void Embedder::EmbedMS1Metrics(String^ idpDbFilepath,
         for each (KeyValuePair<int, XICConfiguration^>^ kvp in xicConfigurationBySource)
             nativeXICConfigurationBySource[(int) kvp->Key] = makeNativeXICConfiguration(kvp->Value);
         NativeEmbedder::EmbedMS1Metrics(ToStdString(idpDbFilepath),
-                              ToStdString(sourceSearchPath),
-                              ToStdString(sourceExtensionPriorityList),
-                              nativeQuantitationMethodBySource,
-                              nativeXICConfigurationBySource,
-                              ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
+                                        ToStdString(sourceSearchPath),
+                                        ToStdString(sourceExtensionPriorityList),
+                                        nativeQuantitationMethodBySource,
+                                        nativeXICConfigurationBySource,
+                                        ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
         System::GC::KeepAlive(ilr);
     }
     CATCH_AND_FORWARD

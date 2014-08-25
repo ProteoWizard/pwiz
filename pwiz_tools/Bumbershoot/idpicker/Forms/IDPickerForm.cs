@@ -262,7 +262,7 @@ namespace IDPicker
                 return;
             }
 
-            toolStripStatusLabel.Text = e.Message;
+            toolStripStatusLabel.Text = e.Message.Length > 0 ? (e.Message[0].ToString().ToUpper() + e.Message.Substring(1)) : String.Empty;
             toolStripProgressBar.Visible = true;
 
             if (e.Total == 0)
@@ -654,7 +654,6 @@ namespace IDPicker
         public void ApplyBasicFilter ()
         {
             clearData();
-            basicFilterControl.Enabled = false;
 
             toolStripStatusLabel.Text = "Applying basic filters...";
             basicFilter.FilteringProgress += progressMonitor.UpdateProgress;
@@ -675,7 +674,7 @@ namespace IDPicker
                 if (e.Result is Exception)
                 {
                     Program.HandleException(e.Result as Exception);
-                    basicFilterControl.Enabled = true;
+                    setControlsWhenDatabaseLocked(false);
                     return;
                 }
 
@@ -708,6 +707,8 @@ namespace IDPicker
 
         void clearData ()
         {
+            setControlsWhenDatabaseLocked(true);
+
             proteinTableForm.ClearData(true);
             peptideTableForm.ClearData(true);
             spectrumTableForm.ClearData(true);
@@ -742,6 +743,14 @@ namespace IDPicker
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
         }
 
+        void setControlsWhenDatabaseLocked(bool isLocked)
+        {
+            breadCrumbControl.Enabled = !isLocked;
+            basicFilterControl.Enabled = !isLocked;
+            geneMetadataToolStripMenuItem.Enabled = !isLocked;
+            layoutToolStripMenuRoot.Enabled = !isLocked;
+        }
+
         void handleStartingSetData(object sender, EventArgs e)
         {
             BeginInvoke(new MethodInvoker(() =>
@@ -753,7 +762,7 @@ namespace IDPicker
                     if (mainViewsLoaded < 0)
                         throw new Exception("mainViewsLoaded < 0 after update from " + sender.ToString());
 
-                    breadCrumbControl.Enabled = basicFilterControl.Enabled = false;
+                    setControlsWhenDatabaseLocked(true);
                     progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
                     {
                         Current = mainViewsLoaded,
@@ -780,13 +789,15 @@ namespace IDPicker
                     });
 
                     if (mainViewsLoaded == 5)
-                        breadCrumbControl.Enabled = basicFilterControl.Enabled = true;
+                        setControlsWhenDatabaseLocked(false);
                 }
             }));
         }
 
         void clearSession()
         {
+            setControlsWhenDatabaseLocked(true);
+
             proteinTableForm.ClearSession();
             peptideTableForm.ClearSession();
             spectrumTableForm.ClearSession();
@@ -930,23 +941,44 @@ namespace IDPicker
 
             Invoke(new MethodInvoker(() =>
             {
-                var sfd = new SaveFileDialog
+                while (true)
                 {
-                    FileName = filename,
-                    AddExtension = true,
-                    RestoreDirectory = true,
-                    DefaultExt = "idpDB",
-                    Filter = "IDPicker Database|*.idpDB",
-                    InitialDirectory = Path.GetDirectoryName(filename).IsNullOrEmpty() ? "" : Path.GetDirectoryName(filename)
-                };
+                    var sfd = new SaveFileDialog
+                    {
+                        FileName = filename,
+                        AddExtension = true,
+                        RestoreDirectory = true,
+                        DefaultExt = "idpDB",
+                        Filter = "IDPicker Database|*.idpDB",
+                        InitialDirectory = Path.GetDirectoryName(filename).IsNullOrEmpty() ? "" : Path.GetDirectoryName(filename)
+                    };
 
-                if (!title.IsNullOrEmpty())
-                    sfd.Title = title;
+                    if (!title.IsNullOrEmpty())
+                        sfd.Title = title;
 
-                if (sfd.ShowDialog() != DialogResult.OK)
-                    cancel = true;
-                else
-                    filename = sfd.FileName;
+                    if (sfd.ShowDialog() != DialogResult.OK)
+                        cancel = true;
+                    else
+                    {
+                        filename = sfd.FileName;
+
+                        // if the file exists, make sure it's not locked by trying to rename it (the dialog already asked the user if they want to overwrite it)
+                        if (File.Exists(filename))
+                            try
+                            {
+                                string randomFilename = filename + Path.GetRandomFileName();
+                                File.Move(filename, randomFilename);
+                                File.Move(randomFilename, filename);
+                            }
+                            catch (IOException)
+                            {
+                                MessageBox.Show("The existing file is locked and cannot be overwritten, please close the program(s) using it or pick another file name.", "Existing File Locked");
+                                continue;
+                            }
+                    }
+
+                    break;
+                }
             }));
 
             if (cancel)
@@ -1065,7 +1097,7 @@ namespace IDPicker
                         // then give the user a chance to override the merge target location
                         if (!Program.IsHeadless &&
                             defaultMergedOutputFilepath == null &&
-                            !saveFileDialog(ref mergeTargetFilepath, "Choose where to create the merged idpDB."))
+                            !saveFileDialog(ref mergeTargetFilepath, "Choose where to create the merged idpDB"))
                             return;
 
                         while (true)
@@ -1074,7 +1106,7 @@ namespace IDPicker
                             {
                                 MessageBox.Show("IDPicker files cannot be merged to a read-only location, pick a writable path.");
 
-                                if (Program.IsHeadless || !saveFileDialog(ref mergeTargetFilepath, "Pick a writable path in which to create the merged idpDB."))
+                                if (Program.IsHeadless || !saveFileDialog(ref mergeTargetFilepath, "Pick a writable path in which to create the merged idpDB"))
                                     return;
 
                                 continue;
@@ -1177,7 +1209,7 @@ namespace IDPicker
                     if (copyLocal)
                     {
                         string newFilename = Path.GetFileName(mergeTargetFilepath);
-                        if (!saveFileDialog(ref newFilename, "Pick a local path to copy the idpDB to."))
+                        if (!saveFileDialog(ref newFilename, "Pick a local path to copy the idpDB to"))
                             return;
 
                         toolStripStatusLabel.Text = "Copying idpDB...";
@@ -1214,24 +1246,26 @@ namespace IDPicker
 
                     // check for embedded gene metadata;
                     // if it isn't there, ask the user if they want to embed it;
-                    // if not, disable gene-related features, else enable gene-related features
-                    if (!Program.IsHeadless && !Embedder.HasGeneMetadata(mergeTargetFilepath))
+                    // if not, disable gene-related features
+                    if (!Program.IsHeadless && !Embedder.HasGeneMetadata(mergeTargetFilepath) && Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata)
                     {
-                        if (MessageBox.Show(this, "In order to enable gene-related features, IDPicker needs to embed gene " +
-                                            "metadata in the idpDB file. It may also download/update the mapping file first. " +
-                                            "If you skip this step, these features will be disabled until you do " +
-                                            "the embed operation from the Tools menu.",
-                                            "Enable Gene Features?",
-                                            MessageBoxButtons.YesNo,
-                                            MessageBoxIcon.Information) == DialogResult.Yes)
+                        bool embedGeneMetadata = true;
+                        Invoke(new MethodInvoker(() =>
+                                                     {
+                                                         var form = new EmbedGeneMetadataWarningForm();
+                                                         if (form.ShowDialog(this) == DialogResult.Ignore)
+                                                             embedGeneMetadata = false;
+                                                     }));
+
+                        if (embedGeneMetadata)
                         {
-                            loadRefSeqGeneMetadata();
+                            loadRefSeqGeneMetadata(); // will call OpenFiles() after embedding, so return immediately
                             return;
                         }
-                        else
-                        {
-
-                        }
+                    }
+                    else
+                    {
+                        // disable gene-related features
                     }
 
 
@@ -1592,7 +1626,7 @@ namespace IDPicker
         public void ApplyQonverterSettings(IDictionary<Analysis, QonverterSettings> qonverterSettings)
         {
             clearData();
-            basicFilterControl.Enabled = false;
+            setControlsWhenDatabaseLocked(true);
 
             var workerThread = new BackgroundWorker()
             {
@@ -1617,7 +1651,7 @@ namespace IDPicker
                 if (e.Result is Exception)
                 {
                     Program.HandleException(e.Result as Exception);
-                    basicFilterControl.Enabled = true;
+                    setControlsWhenDatabaseLocked(false);
                     return;
                 }
 
@@ -2023,7 +2057,9 @@ namespace IDPicker
             try
             {
                 clearSession();
-                Embedder.EmbedGeneMetadata(Text, null);
+                var ilr = new IterationListenerRegistry();
+                ilr.addListener(progressMonitor.GetIterationListenerProxy(), 1);
+                Embedder.EmbedGeneMetadata(Text, ilr);
             }
             catch (Exception ex)
             {
@@ -2036,6 +2072,24 @@ namespace IDPicker
         private void loadGeneMetadataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             loadRefSeqGeneMetadata();
+        }
+
+        private void dropGeneMetadataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (session == null)
+                return;
+
+            try
+            {
+                clearSession();
+                Embedder.DropGeneMetadata(Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "dropping gene metadata failed");
+            }
+
+            OpenFiles(new List<string> { Text }, null);
         }
 
         private void showLogToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2091,8 +2145,15 @@ namespace IDPicker
 
         private void reapplyFiltersToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            session.CreateSQLQuery("DROP TABLE FilterHistory").ExecuteUpdate();
+            session.CreateSQLQuery("DELETE FROM FilterHistory").ExecuteUpdate();
             ApplyBasicFilter();
+        }
+
+        private void geneMetadataToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            bool hasGeneMetadata = Embedder.HasGeneMetadata(Text);
+            loadGeneMetadataToolStripMenuItem.Text = hasGeneMetadata ? "Reload" : "Load";
+            dropGeneMetadataToolStripMenuItem.Enabled = hasGeneMetadata;
         }
     }
 

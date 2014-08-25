@@ -26,6 +26,7 @@
 #include "Embedder.hpp"
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
+#include "Filter.hpp"
 #include "sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -829,8 +830,11 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         }
     }
 
+    // get existing filter config, if any
+    boost::optional<Filter::Config> currentConfig = Filter::currentConfig(idpDbFilepath);
+
     // drop filtered tables and update schema if necessary
-    Qonverter::dropFilters(idpDbFilepath);
+    Qonverter::dropFilters(idpDbFilepath, ilr);
 
     // open the database
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
@@ -874,7 +878,19 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     }
     idpDb.execute("UPDATE Protein SET GeneId='Unmapped_'||Accession WHERE GeneId IS NULL");
     //idpDb.execute("UPDATE Protein SET GeneId='Unmapped' WHERE GeneId IS NULL");
+
+    // gene-level filters may no longer be valid
+    idpDb.execute("DELETE FROM FilterHistory WHERE GeneLevelFiltering = 1");
+
     transaction.commit();
+
+    // if a filter was previously applied, re-apply it
+    if (currentConfig)
+    {
+        Filter filter;
+        filter.config = currentConfig.get();
+        filter.filter(idpDb.connected(), ilr);
+    }
 }
 
 void EmbedMS1Metrics(const string& idpDbFilepath,

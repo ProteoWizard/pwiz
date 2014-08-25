@@ -131,6 +131,7 @@
     <Compile Include="DataModel.cs" />
     <Compile Include="DistinctMatch.cs" />
     <Compile Include="Exporter.cs" />
+    <Compile Include="IterationListenerProxy.cs" />
     <Compile Include="Merger.cs">
       <SubType>Code</SubType>
     </Compile>

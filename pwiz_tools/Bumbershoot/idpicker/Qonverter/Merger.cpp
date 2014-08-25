@@ -45,13 +45,11 @@ typedef IterationListener::UpdateMessage UpdateMessage;
 
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#include <eh.h>
+extern "C" __declspec(dllimport) int __stdcall GetDriveTypeA(const char *);
 static bool isPathOnFixedDrive(const std::string& path)
 {
     bfs::path completePath = bfs::system_complete(path);
-    return GetDriveTypeA(completePath.root_path().string().c_str()) == DRIVE_FIXED;
+    return GetDriveTypeA(completePath.root_path().string().c_str()) == 3; // DRIVE_FIXED
 }
 #else
 static bool isPathOnFixedDrive(const std::string& path)
@@ -175,13 +173,13 @@ boost::format mergePeptideSpectrumMatchScoreNamesSql(
     "    LEFT JOIN merged.PeptideSpectrumMatchScoreName oldName ON newName.Name = oldName.Name\n");
 
 boost::format addNewProteinsSql(
-    "INSERT INTO merged.Protein (Id, Accession, IsDecoy, Length, GeneId, GeneGroup)\n"
-    "    SELECT AfterMergeId, Accession, IsDecoy, Length, GeneId, GeneGroup\n"
+    "INSERT INTO merged.Protein (Id, Accession, IsDecoy, Length)\n"
+    "    SELECT AfterMergeId, Accession, IsDecoy, Length\n"
     "    FROM NewProteins\n"
     "    JOIN %1%.Protein newPro ON BeforeMergeId = newPro.Id;\n"
     "\n"
-    "INSERT INTO merged.ProteinMetadata\n"
-    "    SELECT AfterMergeId, Description, TaxonomyId, GeneName, Chromosome, GeneFamily, GeneDescription\n"
+    "INSERT INTO merged.ProteinMetadata (Id, Description)\n"
+    "    SELECT AfterMergeId, Description\n"
     "    FROM NewProteins\n"
     "    JOIN %1%.ProteinMetadata newPro ON BeforeMergeId = newPro.Id;\n"
     "\n"
@@ -997,7 +995,7 @@ void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>&
             // rename won't work across devices, but try it first
             bfs::rename(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
         }
-        catch (bfs::filesystem_error& e)
+        catch (bfs::filesystem_error&)
         {
             bfs::copy_file(sourceQueue.front()->mergeSourceFilepath, mergeTargetFilepath);
             bfs::remove(sourceQueue.front()->mergeSourceFilepath);

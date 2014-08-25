@@ -43,58 +43,35 @@ obj SchemaUpdater : SchemaUpdater.cpp
 
 lib Qonverter
     : # sources
-        [ glob *Qonverter.cpp ] SchemaUpdater
+        [ glob *Qonverter.cpp ]
+        SchemaUpdater
+        CoreVersion
+        Embedder.cpp
+        XIC.cpp 
+        Parser.cpp
+        Merger.cpp
+        Filter.cpp
+        TotalCounts.cpp
     : # requirements
         <library>..//svm
         <library>/ext/boost//thread
         <library>waffles//waffles
-    : # default-build
-    : # usage-requirements
-        <library>..//svm
-        <library>/ext/boost//thread
-        <library>waffles//waffles
-    ;
-
-lib Parser
-    : # sources
-        Parser.cpp Embedder.cpp CoreVersion XIC.cpp
-    : # requirements
         <library>crawdad//crawdad
-        <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
     : # default-build
     : # usage-requirements
+        <library>..//svm
+        <library>/ext/boost//thread
+        <library>waffles//waffles
         <library>crawdad//crawdad
-        <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
     ;
-
-lib Merger
-    : # sources
-        Merger.cpp SchemaUpdater CoreVersion
-    : # requirements
-        <library>Parser
-    : # default-build
-    : # usage-requirements
-        <library>Parser
-    ;
-
-lib Filter
-    : # sources
-        Filter.cpp TotalCounts.cpp SchemaUpdater
-    : # requirements
-        <library>Parser
-    : # default-build
-    : # usage-requirements
-        <library>Parser
-    ;
-
 
 import path ;
 import generate-version ;
@@ -106,11 +83,22 @@ generate-version.cpp $(ROOT_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(M
 
 obj CoreVersion : CoreVersion.cpp ;
 
-exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Parser ../freicore ;
-exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Merger Filter ;
+exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter ../freicore ;
+exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Qonverter ;
 exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp SchemaUpdater /ext/boost//regex ;
 
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
-unit-test EmbedderTest : EmbedderTest.cpp Parser $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
-unit-test FilterTest : FilterTest.cpp Filter : $(TEAMCITY_TEST_DECORATION) ;
+unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) ;
+unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
+
+#run CommandlineTest.cpp idpQonvert idpAssemble idpQuery
+#    : # args
+#    : # input-files
+#    : # requirements
+#        $(TEAMCITY_TEST_DECORATION)
+#    : # target name
+#        CommandlineTest
+#    : # default-build
+#    ;
+#explicit CommandlineTest ;

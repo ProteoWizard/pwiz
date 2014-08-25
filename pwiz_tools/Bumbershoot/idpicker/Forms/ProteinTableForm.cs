@@ -1856,6 +1856,14 @@ namespace IDPicker.Forms
             if (session != null && session.IsOpen)
                 lock (session)
                 {
+                    if (!Embedder.HasGeneMetadata(session.Connection.GetDataSource()))
+                    {
+                        columnsIrrelevantForGrouping.Add(geneIdColumn);
+                        columnsIrrelevantForGrouping.Add(geneNameColumn);
+                        columnsIrrelevantForGrouping.Add(chromosomeColumn);
+                        columnsIrrelevantForGrouping.Add(geneFamilyColumn);
+                    }
+
                     var quantitationMethods = new Set<QuantitationMethod>(session.Query<SpectrumSource>().Select(o => o.QuantitationMethod).Distinct());
                     if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex) &&
                         !quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))

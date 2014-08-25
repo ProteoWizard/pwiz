@@ -44,13 +44,11 @@ using namespace pwiz::util;
 
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#include <eh.h>
+extern "C" __declspec(dllimport) int __stdcall GetDriveTypeA(const char *);
 static bool isPathOnFixedDrive(const std::string& path)
 {
     bfs::path completePath = bfs::system_complete(path);
-    return GetDriveTypeA(completePath.root_path().string().c_str()) == DRIVE_FIXED;
+    return GetDriveTypeA(completePath.root_path().string().c_str()) == 3; // DRIVE_FIXED
 }
 #else
 static bool isPathOnFixedDrive(const std::string& path)
@@ -417,10 +415,11 @@ struct Filter::Impl
             idpDb.reset(new sqlite3pp::database(idpDbFilepath));
 
             SchemaUpdater::update(idpDb->connected(), ilr);
-            SchemaUpdater::createUserSQLiteFunctions(idpDb->connected());
         }
         else
             idpDb.reset(new sqlite3pp::database(idpDbConnection, false));
+
+        SchemaUpdater::createUserSQLiteFunctions(idpDb->connected());
 
         hasGeneMetadata = Embedder::hasGeneMetadata(idpDb->connected());
     }
@@ -978,6 +977,9 @@ struct Filter::Impl
     {
         try
         {
+            // if no unfiltered tables are present, the database is unfiltered (even if the FilterHistory is non-empty)
+            sqlite3pp::query(db, "SELECT Id FROM UnfilteredProtein LIMIT 1").begin();
+
             sqlite3pp::query previousFilterQuery(db, "SELECT IFNULL(MAX(Id), 0)\n"
                                                      "FROM FilterHistory\n"
                                                      "WHERE MaximumQValue = ?\n"
@@ -1158,6 +1160,14 @@ string Filter::DistinctMatchFormat::filterHistoryExpression() const
     return result.str();
 }
 
+void Filter::DistinctMatchFormat::parseFilterHistoryExpression(const string& expression)
+{
+    istringstream ss(expression);
+    double tmp;
+    ss >> isChargeDistinct >> isAnalysisDistinct >> areModificationsDistinct >> tmp;
+    modificationMassRoundToNearest = tmp;
+}
+
 
 Filter::Filter()
 {}
@@ -1175,6 +1185,66 @@ void Filter::filter(sqlite3* idpDbConnection, pwiz::util::IterationListenerRegis
 {
     _impl.reset(new Impl(idpDbConnection));
     _impl->filter(config, ilr);
+}
+
+boost::optional<Filter::Config> Filter::currentConfig(const string& idpDbFilepath)
+{
+    // open the database
+    sqlite3pp::database idpDb(idpDbFilepath, sqlite3pp::no_mutex);
+
+    return currentConfig(idpDb.connected());
+}
+
+boost::optional<Filter::Config> Filter::currentConfig(sqlite3* idpDbConnection)
+{
+    // open the database
+    sqlite3pp::database db(idpDbConnection, false);
+    
+    sqlite3pp::query currentFilterQuery(db, "SELECT MaximumQValue\n"
+                                            "     , MinimumDistinctPeptides\n"
+                                            "     , MinimumSpectra\n"
+                                            "     , MinimumAdditionalPeptides\n"
+                                            "     , GeneLevelFiltering\n"
+                                            "     , DistinctMatchFormat\n"
+                                            "     , MinimumSpectraPerDistinctMatch\n"
+                                            "     , MinimumSpectraPerDistinctPeptide\n"
+                                            "     , MaximumProteinGroupsPerPeptide\n"
+                                            "FROM FilterHistory\n"
+                                            "ORDER BY Id DESC LIMIT 1");
+    sqlite3pp::query::iterator currentFilterItr = currentFilterQuery.begin();
+
+    try
+    {
+        // if no filter history is present, consider the database unfiltered
+        if (currentFilterItr == currentFilterQuery.end())
+            return boost::optional<Filter::Config>();
+
+        // if no unfiltered tables are present, the database is unfiltered (even if the FilterHistory is non-empty)
+        sqlite3pp::query(db, "SELECT Id FROM UnfilteredProtein LIMIT 1").begin();
+    }
+    catch (sqlite3pp::database_error& e)
+    {
+        if (!bal::icontains(e.what(), "no such table"))
+            throw e;
+        return boost::optional<Filter::Config>();
+    }
+
+    Config currentConfig;
+    string distinctMatchFormat;
+
+    currentFilterItr->getter() >> currentConfig.maxFDRScore
+        >> currentConfig.minDistinctPeptides
+        >> currentConfig.minSpectra
+        >> currentConfig.minAdditionalPeptides
+        >> reinterpret_cast<int&>(currentConfig.geneLevelFiltering)
+        >> distinctMatchFormat
+        >> currentConfig.minSpectraPerDistinctMatch
+        >> currentConfig.minSpectraPerDistinctPeptide
+        >> currentConfig.maxProteinGroupsPerPeptide;
+
+    currentConfig.distinctMatchFormat.parseFilterHistoryExpression(distinctMatchFormat);
+
+    return currentConfig;
 }
 
 

@@ -90,8 +90,10 @@ namespace IDPicker.DataModel
         #endregion
 
         #region Event arguments
-        public class FilteringProgressEventArgs : System.ComponentModel.CancelEventArgs
+        public class FilteringProgressEventArgs : UpdateMessageProxy
         {
+            public FilteringProgressEventArgs() {}
+
             public FilteringProgressEventArgs(string stage, int stageIndex, int stagesTotal, Exception ex)
             {
                 CompletedFilters = stageIndex;
@@ -100,10 +102,10 @@ namespace IDPicker.DataModel
                 FilteringException = ex;
             }
 
-            public int CompletedFilters { get; protected set; }
-            public int TotalFilters { get; protected set; }
+            public int CompletedFilters { get { return IterationIndex; } protected set { IterationIndex = value; } }
+            public int TotalFilters { get { return IterationCount; } protected set { IterationCount = value; } }
 
-            public string FilteringStage { get; protected set; }
+            public string FilteringStage { get { return Message; } protected set { Message = value; } }
             public Exception FilteringException { get; protected set; }
         }
         #endregion
@@ -496,18 +498,6 @@ namespace IDPicker.DataModel
             DropFilters(session.Connection);
         }
 
-        class IterationListenerProxy : pwiz.CLI.util.IterationListener
-        {
-            public DataFilter filter { get; set; }
-
-            public override Status update(UpdateMessage updateMessage)
-            {
-                var eventArgs = new FilteringProgressEventArgs(updateMessage.message, updateMessage.iterationIndex, updateMessage.iterationCount, null);
-                var result = filter.OnFilteringProgress(eventArgs);
-                return result ? Status.Cancel : Status.Ok;
-            }
-        }
-
         public void ApplyBasicFilters(NHibernate.ISession session)
         {
             // free up memory
@@ -528,7 +518,7 @@ namespace IDPicker.DataModel
             filter.Config.MaxProteinGroupsPerPeptide = MaximumProteinGroupsPerPeptide;
 
             var ilr = new pwiz.CLI.util.IterationListenerRegistry();
-            ilr.addListener(new IterationListenerProxy { filter = this }, 1);
+            ilr.addListener(new IterationListenerProxy<FilteringProgressEventArgs>(FilteringProgress), 1);
 
             try
             {

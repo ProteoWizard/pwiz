@@ -116,6 +116,9 @@ static bool HasGeneMetadata(String^ idpDbFilepath);
 /// embed gene metadata in the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
 static void EmbedGeneMetadata(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
+/// remove gene metadata, if any is present, from the idpDB: i.e. gene symbol, name, family, taxonomy, and chromosome location
+static void DropGeneMetadata(String^ idpDbFilepath);
+
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 static void Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath);
 
