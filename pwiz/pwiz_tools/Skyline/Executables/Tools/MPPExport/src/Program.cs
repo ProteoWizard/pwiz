@@ -81,7 +81,7 @@ namespace MPP_Export
             dtOut.Columns.Add("Compound Name"); // Not L10N
             dtOut.Columns.Add("Formula"); // Not L10N
             dtOut.Columns.Add("CAS ID"); // Not L10N
-            dtOut.Columns.Add("Swiss Prot ID"); // Not L10N
+            dtOut.Columns.Add("Swiss-Prot ID"); // Not L10N
 
             // Column headers for replicate area columns generated here.
             for (int i = 0; i < numOfReplicates; i++)
