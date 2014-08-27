@@ -169,33 +169,6 @@ namespace pwiz.SkylineTestA.Results
             }
 
             {
-                // Import with ambiguous windows
-                var windowList = new List<IsolationWindow>
-                {
-                    new IsolationWindow(999.2702214, 1024.270221),
-                    new IsolationWindow(1000.0, 1030.0)
-                };
-                SrmDocument docAmbiguous = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan =>
-                    fullScan.ChangeAcquisitionMethod(fullScan.AcquisitionMethod, new IsolationScheme("Test overlapping", windowList))));
-                AssertEx.Serializable(docAmbiguous);
-                Assert.IsTrue(docContainer.SetDocument(docAmbiguous, doc, false));
-
-                try
-                {
-                    docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1, 2, 2);
-                    Assert.Fail("Expected ambiguous isolation windows.");
-                }
-                catch (Exception x)
-                {
-                    AssertEx.AreComparableStrings(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target__0__, x.Message, 1);
-                }
-
-                // Revert to original document, and get rid of results cache
-                Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document, false));
-                FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
-            }
-
-            {
                 // Import with one isolation window, so one result is discarded.
                 var windowList = new List<IsolationWindow>
                 {

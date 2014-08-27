@@ -459,13 +459,14 @@ namespace pwiz.Skyline.SettingsUI
                 bool overlap = Overlap;
                 int increment = overlap ? 2 : 1;
                 int subtraction = overlap ? 3 : 1;
+                const double tolerance = 0.0001;
                 for (int i = 0; i < sortedWindowList.Count - subtraction; i += increment)
                 {
                     for (int j = 0; j < increment; j ++)
                     {
                         IsolationWindow current = sortedWindowList.ElementAt(i + j);
                         IsolationWindow next = sortedWindowList.ElementAt(i + j + increment);
-                        if (!gapsOk && current.End < next.Start)
+                        if (!gapsOk && next.Start - current.End > tolerance)
                         {
                             if (MultiButtonMsgDlg.Show(this, Resources.EditIsolationSchemeDlg_OkDialog_There_are_gaps_in_a_single_cycle_of_your_extraction_windows__Do_you_want_to_continue_,
                                                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
@@ -474,7 +475,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             gapsOk = true;
                         }
-                        else if (!overlapsOk && current.End > next.Start)
+                        else if (!overlapsOk && current.End - next.Start > tolerance)
                         {
                             if (MultiButtonMsgDlg.Show(this, Resources.EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue,
                                 MultiButtonMsgDlg.BUTTON_YES,

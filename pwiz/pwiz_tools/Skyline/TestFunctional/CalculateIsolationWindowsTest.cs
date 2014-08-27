@@ -72,47 +72,6 @@ namespace pwiz.SkylineTestFunctional
             CheckError(() => _calcDlg.WindowWidth = 1950, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range);
             CheckError(() => _calcDlg.WindowWidth = 1);
 
-            // Check Overlap/Optimize conflict.
-            RunDlg<MultiButtonMsgDlg>(() => 
-                {
-                    _calcDlg.Start = 100;
-                    _calcDlg.End = 101;
-                    _calcDlg.WindowWidth = 1;
-                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
-                    _calcDlg.OptimizeWindowPlacement = true;
-                },
-                msgDlg =>
-                {
-                    AssertEx.Contains(msgDlg.Message, Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization);
-                    msgDlg.Btn1Click();
-                });
-            RunUI(() =>
-                {
-                    Assert.IsTrue(_calcDlg.OptimizeWindowPlacement);
-                    Assert.AreEqual(_calcDlg.Overlap, 0);
-                    _calcDlg.OptimizeWindowPlacement = false;
-                });
-
-            RunDlg<MultiButtonMsgDlg>(() =>
-                {
-                    _calcDlg.Start = 100;
-                    _calcDlg.End = 101;
-                    _calcDlg.WindowWidth = 1;
-                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
-                    _calcDlg.OptimizeWindowPlacement = true;
-                },
-                msgDlg =>
-                {
-                    AssertEx.Contains(msgDlg.Message, Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization);
-                    msgDlg.BtnCancelClick();
-                });
-            RunUI(() =>
-            {
-                Assert.IsFalse(_calcDlg.OptimizeWindowPlacement);
-                Assert.AreEqual(_calcDlg.Overlap, 50);
-            });
-
-
             // Check Margin values.
             CheckError(() =>
                 {
@@ -198,6 +157,112 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.OptimizeWindowPlacement = true;
                 },
                 55, 1901.1140, 988.0570, 5, 25);
+
+            // Overlap without window optimization. Even window width
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                    _calcDlg.Start = 495;
+                    _calcDlg.End = 545;
+                    _calcDlg.WindowWidth = 20;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                    _calcDlg.OptimizeWindowPlacement = false;
+                },
+                495, 515, null, null, null,
+                515, 535, null, null, null,
+                535, 555, null, null, null,
+                485, 505, null, null, null,
+                505, 525, null, null, null,
+                525, 545, null, null, null);
+
+            // Overlap with window optimization. Even window width.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                    _calcDlg.Start = 495;
+                    _calcDlg.End = 545;
+                    _calcDlg.WindowWidth = 20;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                    _calcDlg.OptimizeWindowPlacement = true;
+                },
+                495.4751, 515.4842, null, null, null,
+                515.4842, 535.4933, null, null, null,
+                535.4933, 555.5024, null, null, null,
+                485.4706, 505.4796, null, null, null,
+                505.4796, 525.4887, null, null, null,
+                525.4887, 545.4978, null, null, null);
+
+            // Overlap without window optimization. Even window width. Overlap range not divisble by overlap width.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                    _calcDlg.Start = 495;
+                    _calcDlg.End = 546;
+                    _calcDlg.WindowWidth = 20;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                    _calcDlg.OptimizeWindowPlacement = false;
+                },
+                495, 515, null, null, null,
+                515, 535, null, null, null,
+                535, 555, null, null, null,
+                555, 575, null, null, null,
+                485, 505, null, null, null,
+                505, 525, null, null, null,
+                525, 545, null, null, null,
+                545, 565, null, null, null);
+
+            // Overlap with window optimization. Even window width. Overlap range not divisble by overlap width.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                    _calcDlg.Start = 495;
+                    _calcDlg.End = 546;
+                    _calcDlg.WindowWidth = 20;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                    _calcDlg.OptimizeWindowPlacement = true;
+                },
+                495.4751, 515.4842, null, null, null,
+                515.4842, 535.4933, null, null, null,
+                535.4933, 555.5024, null, null, null,
+                555.5024, 575.5115, null, null, null,
+                485.4706, 505.4796, null, null, null,
+                505.4796, 525.4887, null, null, null,
+                525.4887, 545.4978, null, null, null,
+                545.4978, 565.5069, null, null, null);
+
+            // Overlap without window optimization. Odd window width.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                    _calcDlg.Start = 495;
+                    _calcDlg.End = 501;
+                    _calcDlg.WindowWidth = 3;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                    _calcDlg.OptimizeWindowPlacement = false;
+                },
+                495.0, 498.0, null, null, null,
+                498.0, 501.0, null, null, null,
+                501.0, 504.0, null, null, null,
+                493.5, 496.5, null, null, null,
+                496.5, 499.5, null, null, null,
+                499.5, 502.5, null, null, null);
+
+            // Overlap with window optimization. Odd window width.
+            CheckWindows(() =>
+                {
+                    _calcDlg.WindowType = EditIsolationSchemeDlg.WindowType.MEASUREMENT;
+                    _calcDlg.Start = 495;
+                    _calcDlg.End = 501;
+                    _calcDlg.WindowWidth = 3;
+                    _calcDlg.Deconvolution = EditIsolationSchemeDlg.DeconvolutionMethod.OVERLAP;
+                    _calcDlg.OptimizeWindowPlacement = true;
+                },
+                495.4751, 498.4765, null, null, null,
+                498.4765, 501.4778, null, null, null,
+                501.4778, 504.4792, null, null, null,
+                494.4746, 497.4760, null, null, null,
+                497.4760, 500.4774, null, null, null,
+                500.4774, 503.4787, null, null, null);
 
             // Four windows that fit exactly.
             CheckWindows(() =>

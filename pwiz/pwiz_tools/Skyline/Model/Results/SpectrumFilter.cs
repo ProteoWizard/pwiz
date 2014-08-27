@@ -406,9 +406,15 @@ namespace pwiz.Skyline.Model.Results
             if (!EnabledMsMs || !retentionTime.HasValue || !spectra.Any())
                 yield break;
 
+            var handlingType = _fullScan.IsolationScheme == null || _fullScan.IsolationScheme.SpecialHandling == null
+                ? IsolationScheme.SpecialHandlingType.NONE
+                : _fullScan.IsolationScheme.SpecialHandling;
+            bool ignoreIso = handlingType == IsolationScheme.SpecialHandlingType.OVERLAP ||
+                             handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+            
             foreach (var isoWin in GetIsolationWindows(spectra[0].Precursors))
             {
-                foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod))
+                foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
@@ -613,16 +619,18 @@ namespace pwiz.Skyline.Model.Results
                     // Find containing window.
                 else
                 {
+                    double? bestDeltaMz = null;
+                    // find the window with center closest to the target m/z
                     foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
                     {
                         if (!window.Contains(isolationTargetMz)) continue;
-                        if (isolationWindow != null)
+                        var winCenter = (window.IsolationStart + window.IsolationEnd)/2.0;
+                        var deltaMz = Math.Abs(winCenter - isolationTargetMz);
+                        if (isolationWindow == null || deltaMz < bestDeltaMz)
                         {
-                            throw new InvalidDataException(
-                                string.Format(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target__0__,
-                                    isolationTargetMz));
+                            isolationWindow = window;
+                            bestDeltaMz = deltaMz;
                         }
-                        isolationWindow = window;
                     }
                 }
 

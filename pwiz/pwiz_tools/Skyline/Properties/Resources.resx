@@ -1906,9 +1906,6 @@ Are you sure you want to continue?</value>
   <data name="SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__" xml:space="preserve">
     <value>Two isolation windows contain targets which match the isolation target {0}.</value>
   </data>
-  <data name="SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target__0__" xml:space="preserve">
-    <value>Two isolation windows contain the isolation target {0}.</value>
-  </data>
   <data name="SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows" xml:space="preserve">
     <value>Isolation scheme does not contain any isolation windows</value>
   </data>
@@ -2808,9 +2805,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
     <value>The number of generated windows could not be adjusted to be a multiple of the windows per scan.  Try changing the windows per scan or the End value.</value>
-  </data>
-  <data name="CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization" xml:space="preserve">
-    <value>Window optimization cannot be applied to overlapping isolation windows. Click OK to remove overlap, or Cancel to cancel optimization.</value>
   </data>
   <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
     <value>There is already an annotation defined named '{0}'.</value>
@@ -7808,10 +7802,10 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="MQuestDefaultWeightedShapeCalc_Name_Default_shape__weighted_" xml:space="preserve">
     <value>Default shape (weighted)</value>
   </data>
-    <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
+  <data name="IonTypeExtension_LOCALIZED_VALUES_custom" xml:space="preserve">
     <value>custom</value>
   </data>
-    <data name="TransitionTreeNode_RenderTip_Formula" xml:space="preserve">
+  <data name="TransitionTreeNode_RenderTip_Formula" xml:space="preserve">
     <value>Formula</value>
   </data>
   <data name="CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_" xml:space="preserve">

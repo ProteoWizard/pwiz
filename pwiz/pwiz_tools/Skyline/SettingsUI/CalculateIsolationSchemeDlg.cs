@@ -173,12 +173,12 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // For optimized window placement, we try to align windows with the low spots
-            // in the chromatogram.  This requires us to adjust both the window width
+            // in m/z space.  This requires us to adjust both the window width
             // and the starting offset of the windows.
             if (cbOptimizeWindowPlacement.Checked)
             {
+                windowStep = Math.Ceiling(windowWidth * (100 - overlap) / 100) * OPTIMIZED_WINDOW_WIDTH_MULTIPLE;
                 windowWidth = Math.Ceiling(windowWidth) * OPTIMIZED_WINDOW_WIDTH_MULTIPLE;
-                windowStep = windowWidth * (100 - overlap) / 100;
                 start = Math.Ceiling(start / OPTIMIZED_WINDOW_WIDTH_MULTIPLE) * OPTIMIZED_WINDOW_WIDTH_MULTIPLE + OPTIMIZED_WINDOW_OFFSET;
             }
 
@@ -193,12 +193,12 @@ namespace pwiz.Skyline.SettingsUI
             bool generateEndMargin = (comboMargins.SelectedItem.ToString() == WindowMargin.ASYMMETRIC);
             if (overlap > 0)
             {
-                if (windowCount%2 != 0)
+                if (windowCount%2 == 0)
                 {
                     windowCount ++;
                 }
-                windowCount += 2;
-                start -= windowStep;
+                windowCount ++;
+                start -= (windowWidth - windowStep);
             }
             for (int i = 0; i < windowCount; i++, start += windowStep)
             {
@@ -221,7 +221,10 @@ namespace pwiz.Skyline.SettingsUI
                 if (overlap > 0)
                 {
                     var index = Math.Max(Math.Min(i%2 == 1 ? i/2 : i, isolationWindows.Count), 0);
-                    isolationWindows.Insert(index, window);    
+                    isolationWindows.Insert(index, window);
+                    // when optimized isolation windows are used the windows do not overlap evenly
+                    // the window step must flip-flop between the smaller and larger overlapping region
+                    windowStep = windowWidth - windowStep;
                 }
                 else
                     isolationWindows.Add(window);
@@ -350,25 +353,6 @@ namespace pwiz.Skyline.SettingsUI
 
         private void cbOptimizeWindowPlacement_CheckedChanged(object sender, EventArgs e)
         {
-            double overlap = Overlap;
-            if (cbOptimizeWindowPlacement.Checked && overlap != 0)
-            {
-                if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
-                    this,
-                    Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization,
-                    MultiButtonMsgDlg.BUTTON_OK))
-                {
-                    cbOptimizeWindowPlacement.Checked = false;
-                }
-                else
-                {
-                    comboDeconv.SelectedItem =
-                       Equals(comboDeconv.SelectedItem, EditIsolationSchemeDlg.DeconvolutionMethod.MSX_OVERLAP) ?
-                       EditIsolationSchemeDlg.DeconvolutionMethod.MSX :
-                       EditIsolationSchemeDlg.DeconvolutionMethod.NONE;
-                }
-            }
-
             UpdateWindowCount();
         }
 
