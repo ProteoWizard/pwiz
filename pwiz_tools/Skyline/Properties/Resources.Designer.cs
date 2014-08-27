@@ -2272,17 +2272,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Window optimization cannot be applied to overlapping isolation windows. Click OK to remove overlap, or Cancel to cancel optimization..
-        /// </summary>
-        public static string CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization {
-            get {
-                return ResourceManager.GetString("CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optim" +
-                        "ization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_ov" +
-                        "erlap_or_Cancel_to_cancel_optimization", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Start value must be less than End value..
         /// </summary>
         public static string CalculateIsolationSchemeDlg_OkDialog_Start_value_must_be_less_than_End_value {
@@ -20054,16 +20043,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_" +
                         "the_isolation_target__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Two isolation windows contain the isolation target {0}..
-        /// </summary>
-        public static string SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target__0__ {
-            get {
-                return ResourceManager.GetString("SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target" +
-                        "__0__", resourceCulture);
             }
         }
         

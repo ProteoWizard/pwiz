@@ -640,8 +640,7 @@ namespace pwiz.Skyline.Model.Results
 
                 double isoMzLeft = isolationCenter - isolationWidth.Value / 2.0;
                 double isoMzRight = isoMzLeft + isolationWidth.Value;
-
-                long hash = IsoWindowHasher.Hash(isolationCenter);
+                long hash = IsoWindowHasher.Hash(precursor.IsolationMz.Value);
                 if (_isolationWindowD.ContainsKey(hash))
                     continue;
                 _isolationWindows.Add(new IsoWin(isoMzLeft, isoMzRight));
