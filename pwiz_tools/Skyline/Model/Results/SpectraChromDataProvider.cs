@@ -213,6 +213,8 @@ namespace pwiz.Skyline.Model.Results
                 if (!isSrm && !document.Settings.TransitionSettings.FullScan.IsEnabled)
                     throw new NoFullScanFilteringException(dataFile.FilePath);
 
+                PeptideFinder peptideFinder = isSrm ? new PeptideFinder(document) : null;
+                    
                 // Only mzXML from mzWiff requires the introduction of zero values
                 // during interpolation.
                 _isProcessedScans = dataFile.IsMzWiffXml;
@@ -314,9 +316,10 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         // Process the one SRM spectrum
+                        var colorSeed = peptideFinder.GetColorSeed(precursorMz);
                         ProcessSrmSpectrum(
                             dataSpectrum.RetentionTime.Value,
-                            null,  // Peptide unknown
+                            colorSeed,
                             precursorMz,
                             filterIndex,
                             dataSpectrum.Mzs,
