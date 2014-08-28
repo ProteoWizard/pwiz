@@ -29,6 +29,7 @@ using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -41,6 +42,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         private IStreamManager _streamManager;
         private PooledSessionFactory _pooledSessionFactory;
         public const string EXT_CACHE = ".clc"; // Not L10N
+
+        private ChromatogramLibrarySourceInfo[] _librarySourceFiles;
 
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec) : base(chromatogramLibrarySpec)
         {
@@ -56,6 +59,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             _streamManager = streamManager;
             _pooledSessionFactory = new PooledSessionFactory(streamManager.ConnectionPool, typeof (ChromLibEntity),
                                                              chromatogramLibrarySpec.FilePath);
+
+            _librarySourceFiles = new ChromatogramLibrarySourceInfo[0];
         }
 
         public ChromatogramLibrarySpec LibrarySpec { get; private set; }
@@ -160,7 +165,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override int? FileCount
         {
-            get { return 0; }
+            get { return _librarySourceFiles.Count(); }
         }
 
         private bool Load(ILoadMonitor loader)
@@ -208,6 +213,20 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     LibraryRevision = Convert.ToInt32(libInfo[1]);
                     SchemaVersion = Convert.ToString(libInfo[2]);
 
+                    var rtQuery = session.CreateQuery("SELECT Precursor.Id, SampleFile.Id, RetentionTime FROM PrecursorRetentionTime"); // Not L10N
+                    var rtDictionary = new Dictionary<int, List<KeyValuePair<int, double>>>(); // PrecursorId -> [SampleFileId -> RetentionTime]
+                    foreach (object[] row in rtQuery.List<object[]>())
+                    {
+                        var precursorId = (int) row[0];
+                        var sampleFileId = (int) row[1];
+                        var rt = Convert.ToDouble(row[2]);
+                        if (!rtDictionary.ContainsKey(precursorId))
+                        {
+                            rtDictionary.Add(precursorId, new List<KeyValuePair<int, double>>());
+                        }
+                        rtDictionary[precursorId].Add(new KeyValuePair<int, double>(sampleFileId, rt));
+                    }
+
                     var precursorQuery =
                         session.CreateQuery("SELECT P.Id, P.ModifiedSequence, P.Charge, P.TotalArea FROM " + typeof (Precursor) + // Not L10N
                                             " P"); // Not L10N
@@ -223,6 +242,12 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         var modifiedSequence = (string) row[1];
                         int charge = (int) row[2];
                         double totalArea = Convert.ToDouble(row[3]);
+                        List<KeyValuePair<int, double>> retentionTimes;
+                        var indexedRetentionTimes = new IndexedRetentionTimes();
+                        if (rtDictionary.TryGetValue(id, out retentionTimes))
+                        {
+                            indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
+                        }
                         string modSeqNormal;
                         try
                         {
@@ -236,9 +261,33 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         var libKey = new LibKey(modSeqNormal, charge);
                         IList<SpectrumPeaksInfo.MI> transitionAreas;
                         allTransitionAreas.TryGetValue(id, out transitionAreas);
-                        spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, totalArea, transitionAreas));
+                        spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, totalArea, indexedRetentionTimes, transitionAreas));
                     }
                     SetLibraryEntries(spectrumInfos);
+
+                    var sampleFileQuery =
+                        session.CreateQuery("SELECT Id, FilePath, SampleName, AcquiredTime, ModifiedTime, InstrumentIonizationType, " +
+                                            "InstrumentAnalyzer, InstrumentDetector FROM SampleFile"); // Not L10N
+                    var sampleFiles = new List<ChromatogramLibrarySourceInfo>();
+                    foreach (object[] row in sampleFileQuery.List<object[]>())
+                    {
+                        var id = (int) row[0];
+                        if (row[1] == null || row[2] == null)
+                        {
+                            continue; // Throw an error?
+                        }
+                        var filePath = row[1].ToString();
+                        var sampleName = row[2].ToString();
+                        var acquiredTime = row[3] != null ? row[3].ToString() : string.Empty;
+                        var modifiedTime = row[4] != null ? row[4].ToString() : string.Empty;
+                        var instrumentIonizationType = row[5] != null ? row[5].ToString() : string.Empty;
+                        var instrumentAnalyzer = row[6] != null ? row[6].ToString() : string.Empty;
+                        var instrumentDetector = row[7] != null ? row[7].ToString() : string.Empty;
+                        sampleFiles.Add(new ChromatogramLibrarySourceInfo(id, filePath, sampleName, acquiredTime, modifiedTime, instrumentIonizationType,
+                                                                          instrumentAnalyzer, instrumentDetector));
+                    }
+                    _librarySourceFiles = sampleFiles.ToArray();
+
                     loader.UpdateProgress(status.Complete());
                     return true;
                 }
@@ -248,6 +297,52 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 Trace.TraceWarning(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
                 return false;
             }
+        }
+
+        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
+        {
+            int i = FindEntry(key);
+            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            if (i != -1 && j != -1)
+            {
+                retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
+                return true;
+            }
+
+            return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
+        }
+
+        public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
+        {
+            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            if (j != -1)
+            {
+                var source = _librarySourceFiles[j];
+                ILookup<string, double[]> timesLookup = _libraryEntries.ToLookup(
+                    entry => entry.Key.Sequence,
+                    entry => entry.RetentionTimesByFileId.GetTimes(source.Id));
+                var timesDict = timesLookup.ToDictionary(
+                    grouping => grouping.Key,
+                    grouping =>
+                    {
+                        var array = grouping.SelectMany(values => values).ToArray();
+                        Array.Sort(array);
+                        return array;
+                    });
+                var nonEmptyTimesDict = timesDict
+                    .Where(kvp => kvp.Value.Length > 0)
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                retentionTimes = new LibraryRetentionTimes(filePath.ToString(), nonEmptyTimesDict);
+                return true;
+            }
+
+            return base.TryGetRetentionTimes(filePath, out retentionTimes);
+        }
+
+        public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
+        {
+            return TryGetRetentionTimes(MsDataFileUri.Parse(_librarySourceFiles[fileIndex].FilePath), out retentionTimes);
         }
 
         /// <summary>
@@ -364,10 +459,77 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
         }
 
+        private struct ChromatogramLibrarySourceInfo
+        {
+            public ChromatogramLibrarySourceInfo(int id, string filePath, string sampleName, string acquiredTime, string modifiedTime,
+                string instrumentIonizationType, string instrumentAnalyzer, string instrumentDetector)
+                : this()
+            {
+                Id = id;
+                FilePath = filePath;
+                SampleName = sampleName;
+                AcquiredTime = acquiredTime;
+                ModifiedTime = modifiedTime;
+                InstrumentIonizationType = instrumentIonizationType;
+                InstrumentAnalyzer = instrumentAnalyzer;
+                InstrumentDetector = instrumentDetector;
+            }
+
+            public int Id { get; private set; }
+            public string FilePath { get; private set; }
+            public string SampleName { get; private set; }
+            public string AcquiredTime { get; private set; }
+            public string ModifiedTime { get; private set; }
+            public string InstrumentIonizationType { get; private set; }
+            public string InstrumentAnalyzer { get; private set; }
+            public string InstrumentDetector { get; private set; }
+
+            public void Write(Stream stream)
+            {
+                PrimitiveArrays.WriteOneValue(stream, Id);
+                WriteString(stream, FilePath);
+                WriteString(stream, SampleName);
+                WriteString(stream, AcquiredTime);
+                WriteString(stream, ModifiedTime);
+                WriteString(stream, InstrumentIonizationType);
+                WriteString(stream, InstrumentAnalyzer);
+                WriteString(stream, InstrumentDetector);
+            }
+
+            public static ChromatogramLibrarySourceInfo Read(Stream stream)
+            {
+                int id = PrimitiveArrays.ReadOneValue<int>(stream);
+                string filePath = ReadString(stream);
+                string sampleName = ReadString(stream);
+                string acquiredTime = ReadString(stream);
+                string modifiedTime = ReadString(stream);
+                string instrumentIonizationType = ReadString(stream);
+                string instrumentAnalyzer = ReadString(stream);
+                string instrumentDetector = ReadString(stream);
+                return new ChromatogramLibrarySourceInfo(id, filePath, sampleName, acquiredTime, modifiedTime, instrumentIonizationType,
+                                                         instrumentAnalyzer, instrumentDetector);
+            }
+
+            private static void WriteString(Stream stream, string str)
+            {
+                var bytes = Encoding.UTF8.GetBytes(str);
+                PrimitiveArrays.WriteOneValue(stream, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
+
+            private static string ReadString(Stream stream)
+            {
+                int byteLength = PrimitiveArrays.ReadOneValue<int>(stream);
+                var bytes = new byte[byteLength];
+                stream.Read(bytes, 0, bytes.Length);
+                return Encoding.UTF8.GetString(bytes);
+            }
+        }
+
         private class Serializer
         {
-            private const int CURRENT_VERSION = 2;
-            private const int MIN_READABLE_VERSION = 2;
+            private const int CURRENT_VERSION = 3;
+            private const int MIN_READABLE_VERSION = 3;
 
             private readonly ChromatogramLibrary _library;
             private readonly Stream _stream;
@@ -420,6 +582,11 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 WriteString(_stream, _library.PanoramaServer);
                 PrimitiveArrays.WriteOneValue(_stream, _library.LibraryRevision);
                 WriteString(_stream, _library.SchemaVersion);
+                PrimitiveArrays.WriteOneValue(_stream, _library._librarySourceFiles.Count());
+                foreach (var sampleFile in _library._librarySourceFiles)
+                {
+                    sampleFile.Write(_stream);
+                }
                 PrimitiveArrays.WriteOneValue(_stream, _locationEntries);
                 PrimitiveArrays.WriteOneValue(_stream, _locationHeader);
             }
@@ -438,6 +605,13 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 _library.PanoramaServer = ReadString(_stream);
                 _library.LibraryRevision = PrimitiveArrays.ReadOneValue<int>(_stream);
                 _library.SchemaVersion = ReadString(_stream);
+                var sampleFileCount = PrimitiveArrays.ReadOneValue<int>(_stream);
+                var sampleFiles = new List<ChromatogramLibrarySourceInfo>();
+                for (int i = 0; i < sampleFileCount; i++)
+                {
+                    sampleFiles.Add(ChromatogramLibrarySourceInfo.Read(_stream));
+                }
+                _library._librarySourceFiles = sampleFiles.ToArray();
                 _locationEntries = PrimitiveArrays.ReadOneValue<long>(_stream);
             }
 

@@ -11707,18 +11707,18 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Adding retention times.
         /// </summary>
-        public static string LibraryGridViewDriver_ProcessRetetionTimes_Adding_retention_times {
+        public static string LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times {
             get {
-                return ResourceManager.GetString("LibraryGridViewDriver_ProcessRetetionTimes_Adding_retention_times", resourceCulture);
+                return ResourceManager.GetString("LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Converting retention times from {0}.
         /// </summary>
-        public static string LibraryGridViewDriver_ProcessRetetionTimes_Converting_retention_times_from__0__ {
+        public static string LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__ {
             get {
-                return ResourceManager.GetString("LibraryGridViewDriver_ProcessRetetionTimes_Converting_retention_times_from__0__", resourceCulture);
+                return ResourceManager.GetString("LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__", resourceCulture);
             }
         }
         

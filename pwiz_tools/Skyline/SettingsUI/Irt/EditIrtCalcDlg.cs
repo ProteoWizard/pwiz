@@ -668,7 +668,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
-                            irtAverages = ProcessRetetionTimes(monitor,
+                            irtAverages = ProcessRetentionTimes(monitor,
                                               GetRetentionTimeProviders(document),
                                               document.Settings.MeasuredResults.MSDataFileInfos.Count()));
                         if (status.IsError)
@@ -784,7 +784,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                     return;
                                 }
 
-                                irtAverages = ProcessRetetionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
+                                irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
                             });
                             if (status.IsError)
                             {
@@ -856,7 +856,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         {
                             var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
-                            irtAverages = ProcessRetetionTimes(monitor,
+                            irtAverages = ProcessRetentionTimes(monitor,
                                 new[] { new IrtRetentionTimeProvider(irtCalc.Name, irtDb) }, 1);
                         });
                         if (status.IsError)
@@ -916,11 +916,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetetionTimes(IProgressMonitor monitor,
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
                                           IEnumerable<IRetentionTimeProvider> providers,
                                           int countProviders)
             {
-                var status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetetionTimes_Adding_retention_times);
+                var status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
                 var dictPeptideAverages = new Dictionary<string, IrtPeptideAverages>();
                 int runCount = 0;
                 int regressionLineCount = 0;
@@ -929,7 +929,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (monitor.IsCanceled)
                         return null;
 
-                    string message = string.Format(Resources.LibraryGridViewDriver_ProcessRetetionTimes_Converting_retention_times_from__0__,
+                    string message = string.Format(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__,
                                                    retentionTimeProvider.Name);
                     monitor.UpdateProgress(status = status.ChangeMessage(message));
 

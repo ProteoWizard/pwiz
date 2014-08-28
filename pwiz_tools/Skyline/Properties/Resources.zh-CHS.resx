@@ -2517,10 +2517,10 @@
   <data name="LibraryGridViewDriver_AddIrtDatabase_An_error_occurred_attempting_to_load_the_iRT_database_file__0__" xml:space="preserve">
     <value>尝试加载 iRT 数据库文件{0}出现错误。</value>
   </data>
-  <data name="LibraryGridViewDriver_ProcessRetetionTimes_Adding_retention_times" xml:space="preserve">
+  <data name="LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times" xml:space="preserve">
     <value>添加保留时间</value>
   </data>
-  <data name="LibraryGridViewDriver_ProcessRetetionTimes_Converting_retention_times_from__0__" xml:space="preserve">
+  <data name="LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__" xml:space="preserve">
     <value>从{0}转换保留时间</value>
   </data>
   <data name="LibraryGridViewDriver_AddProcessedIrts_Correlation_to_the_existing_iRT_values_are_not_high_enough_to_allow_retention_time_conversion" xml:space="preserve">

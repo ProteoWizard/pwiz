@@ -26,16 +26,18 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 {
     public class ChromLibSpectrumInfo : ICachedSpectrumInfo, IComparable
     {
-        public ChromLibSpectrumInfo(LibKey key, int id, double peakArea, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas)
+        public ChromLibSpectrumInfo(LibKey key, int id, double peakArea, IndexedRetentionTimes retentionTimesByFileId, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas)
         {
             Key = key;
             Id = id;
             PeakArea = peakArea;
+            RetentionTimesByFileId = retentionTimesByFileId;
             TransitionAreas = ImmutableList.ValueOf(transitionAreas) ?? ImmutableList.Empty<SpectrumPeaksInfo.MI>();
         }
         public LibKey Key { get; private set; }
         public int Id { get; private set; }
         public double PeakArea { get; private set; }
+        public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
         public IList<SpectrumPeaksInfo.MI> TransitionAreas { get; private set; }
         public int CompareTo(object obj)
         {
@@ -50,6 +52,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             Key.Write(stream);
             PrimitiveArrays.WriteOneValue(stream, Id);
             PrimitiveArrays.WriteOneValue(stream, PeakArea);
+            RetentionTimesByFileId.Write(stream);
             PrimitiveArrays.WriteOneValue(stream, TransitionAreas.Count);
             PrimitiveArrays.Write(stream, TransitionAreas.Select(mi => mi.Mz).ToArray());
             PrimitiveArrays.Write(stream, TransitionAreas.Select(mi=>mi.Intensity).ToArray());
@@ -60,6 +63,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             LibKey key = LibKey.Read(stream);
             int id = PrimitiveArrays.ReadOneValue<int>(stream);
             double peakArea = PrimitiveArrays.ReadOneValue<double>(stream);
+            var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
             int mzCount = PrimitiveArrays.ReadOneValue<int>(stream);
             var mzs = PrimitiveArrays.Read<double>(stream, mzCount);
             var areas = PrimitiveArrays.Read<float>(stream, mzCount);
@@ -69,7 +73,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         Mz = mzs[index],
                         Intensity = areas[index]
                     }));
-            return new ChromLibSpectrumInfo(key, id, peakArea, mzAreas);
+            return new ChromLibSpectrumInfo(key, id, peakArea, retentionTimesByFileId, mzAreas);
         }
     }
 }
