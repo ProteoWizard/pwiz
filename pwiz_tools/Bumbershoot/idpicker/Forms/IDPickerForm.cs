@@ -1215,6 +1215,9 @@ namespace IDPicker
                         toolStripStatusLabel.Text = "Copying idpDB...";
                         File.Copy(oldFilename, newFilename, true);
                         mergeTargetFilepath = newFilename;
+
+                        // set main window title
+                        BeginInvoke(new MethodInvoker(() => Text = mergeTargetFilepath));
                     }
                 }
 
@@ -1997,7 +2000,7 @@ namespace IDPicker
 
                         if (form.ShowDialog() == DialogResult.Yes)
                         {
-                            var oldG2Ptime = File.GetCreationTimeUtc(g2pPath);
+                            var oldG2Ptime = File.GetLastWriteTimeUtc(g2pPath);
                             string backupG2Pname = String.Format("{0}.{1}.bak", g2pPath, oldG2Ptime.ToString("yyyyMMddHHmm"));
                             File.Move(g2pPath, backupG2Pname);
                             try

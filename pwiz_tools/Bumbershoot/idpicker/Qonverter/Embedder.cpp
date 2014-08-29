@@ -814,17 +814,18 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     if (!bfs::exists("gene2protein.db3"))
         throw runtime_error("[loadGeneMetadata] gene2protein.db3 not found: download it from http://fenchurch.mc.vanderbilt.edu/bin/g2p/gene2protein.db3 and put it in the IDPicker directory.");
 
-    typedef boost::tuple<string, string, string, boost::optional<string>, boost::optional<string> > GeneTuple;
+    typedef boost::tuple<string, string, string, int, boost::optional<string>, boost::optional<string> > GeneTuple;
     typedef map<string, GeneTuple> ProteinToGeneMap;
     ProteinToGeneMap proteinToGeneMap;
     {
         sqlite::database g2pDb("gene2protein.db3");
-        sqlite::query proteinToGeneQuery(g2pDb, "SELECT ProteinAccession, ApprovedId, ApprovedName, Chromosome, GeneFamily, GeneDescription FROM GeneToProtein");
+        sqlite::query proteinToGeneQuery(g2pDb, "SELECT ProteinAccession, ApprovedId, ApprovedName, Chromosome, TaxonId, GeneFamily, GeneDescription FROM GeneToProtein");
+        string geneId, geneName, chromosome, geneFamily, geneDescription;
+        int taxonId;
         BOOST_FOREACH(sqlite::query::rows row, proteinToGeneQuery)
         {
-            string geneId, geneName, chromosome, geneFamily, geneDescription;
-            boost::tie(geneId, geneName, chromosome, geneFamily, geneDescription) = row.get_columns<string, string, string, string, string>(1, 2, 3, 4, 5);
-            proteinToGeneMap[row.get<string>(0)] = boost::make_tuple(geneId, geneName, chromosome,
+            row.getter(1) >> geneId >> geneName >> chromosome >> taxonId >> geneFamily >> geneDescription;
+            proteinToGeneMap[row.get<string>(0)] = boost::make_tuple(geneId, geneName, chromosome, taxonId,
                                                                      boost::make_optional(!geneFamily.empty(), geneFamily),
                                                                      boost::make_optional(!geneDescription.empty(), geneDescription));
         }
@@ -852,7 +853,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     sqlite::transaction transaction(idpDb);
     sqlite::query proteinIdAccessions(idpDb, "SELECT Id, Accession FROM Protein WHERE IsDecoy=0");
     sqlite::command proteinQuery(idpDb, "UPDATE Protein SET GeneId=? WHERE Id=?");
-    sqlite::command proteinMetadataQuery(idpDb, "UPDATE ProteinMetadata SET TaxonomyId=9606, GeneName=?, Chromosome=?, GeneFamily=?, GeneDescription=? WHERE Id=?");
+    sqlite::command proteinMetadataQuery(idpDb, "UPDATE ProteinMetadata SET GeneName=?, Chromosome=?, TaxonomyId=?, GeneFamily=?, GeneDescription=? WHERE Id=?");
     sregex refseqRegex = sregex::compile("^(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\|)?$");
     BOOST_FOREACH(sqlite::query::rows row, proteinIdAccessions)
     {
@@ -869,10 +870,10 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         proteinQuery.step();
         proteinQuery.reset();
 
-        if (geneTuple.get<3>().is_initialized())
-            proteinMetadataQuery.binder() << geneTuple.get<1>() << geneTuple.get<2>() << geneTuple.get<3>().get() << geneTuple.get<4>().get() << id;
+        if (geneTuple.get<4>().is_initialized())
+            proteinMetadataQuery.binder() << geneTuple.get<1>() << geneTuple.get<2>() << geneTuple.get<3>() << geneTuple.get<4>().get() << geneTuple.get<5>().get() << id;
         else
-            proteinMetadataQuery.binder() << geneTuple.get<1>() << geneTuple.get<2>() << sqlite::ignore << sqlite::ignore << id;
+            proteinMetadataQuery.binder() << geneTuple.get<1>() << geneTuple.get<2>() << geneTuple.get<3>() << sqlite::ignore << sqlite::ignore << id;
         proteinMetadataQuery.step();
         proteinMetadataQuery.reset();
     }
