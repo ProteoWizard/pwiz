@@ -94,11 +94,21 @@ SpectrumList_PrecursorRecalculator::Impl::Impl(const MSData& msd)
     {
         if (!it->get()) continue;
         const InstrumentConfiguration& ic = **it;
-
-        if (targetMassAnalyzerType!=MS_FT_ICR &&
-            targetMassAnalyzerType!=MS_orbitrap)
-            targetMassAnalyzerType = ic.componentList.analyzer(0).cvParamChild(MS_mass_analyzer_type).cvid;
+        
+        BOOST_FOREACH(const Component& component, ic.componentList)
+        {
+            if (component.type == ComponentType_Analyzer)
+                if (targetMassAnalyzerType!=MS_FT_ICR &&
+                    targetMassAnalyzerType!=MS_orbitrap
+                    )
+                    targetMassAnalyzerType = component.cvParamChild(MS_mass_analyzer_type).cvid;
+        }
     }
+    
+    //if (targetMassAnalyzerType!=MS_FT_ICR &&
+    //    targetMassAnalyzerType!=MS_orbitrap)
+    //    targetMassAnalyzerType = ic.componentList.analyzer(0).cvParamChild(MS_mass_analyzer_type).cvid;
+    //}
 
     if (targetMassAnalyzerType!=MS_FT_ICR && targetMassAnalyzerType!=MS_orbitrap)
         throw runtime_error(("[SpectrumList_PrecursorRecalculator] Mass analyzer not supported: " +
