@@ -951,10 +951,12 @@ namespace pwiz.Skyline.Model
                         var peptideMods = settings.PeptideSettings.Modifications;
                         foreach (var typeMods in peptideMods.GetHeavyModifications())
                         {
-                            if (settings.GetPrecursorCalc(labelType, null) != null)
+                            if (settings.GetPrecursorCalc(typeMods.LabelType, null) != null)
                             {
                                 iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence, iDecoy,
                                                            tolerance, provider, settings, out transitionExps);
+                                if (iPrecursor != -1)
+                                    break;
                             }
                         }
                     }
