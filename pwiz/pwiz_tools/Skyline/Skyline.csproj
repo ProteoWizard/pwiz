@@ -957,6 +957,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Model\Results\PeptideChromData.cs" />
+    <Compile Include="Model\Results\PeptideFinder.cs" />
     <Compile Include="Model\Results\PrecursorModSeq.cs" />
     <Compile Include="Model\Results\RatioValue.cs" />
     <Compile Include="Model\Results\RemoteApi\ChorusAccount.cs" />

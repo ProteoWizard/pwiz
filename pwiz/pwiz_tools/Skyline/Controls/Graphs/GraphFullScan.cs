@@ -468,6 +468,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Create curve for all points to provide shading behind stick graph.
+            if (_fullScans.Length > 0 && !_fullScans[0].Centroided)
             {
                 var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150));
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
