@@ -81,7 +81,7 @@ namespace MPP_Export
             dtOut.Columns.Add("Compound Name"); // Not L10N
             dtOut.Columns.Add("Formula"); // Not L10N
             dtOut.Columns.Add("CAS ID"); // Not L10N
-            dtOut.Columns.Add("Swiss Prot ID"); // Not L10N
+            dtOut.Columns.Add("Swiss-Prot ID"); // Not L10N
 
             // Column headers for replicate area columns generated here.
             for (int i = 0; i < numOfReplicates; i++)
@@ -89,7 +89,7 @@ namespace MPP_Export
                 if (csvFields[i + nonPivotCols].Contains(" Area")) // Not L10N
                 {
                     dtOut.Columns.Add(csvFields[i + nonPivotCols].Replace(" Area", ""), typeof(string)); // Not L10N
-                }
+                } 
                 else
                 {
                     dtOut.Columns.Add(csvFields[i + nonPivotCols], typeof(string));
@@ -98,6 +98,11 @@ namespace MPP_Export
 
             foreach (string line in lines)
             {
+                if (line == lines[0]) // Skips column headers.
+                {
+                    continue;
+                }
+
                 csvFields = GetFields(line, ',');
                 var row = dt.NewRow();
                 for (int f = 0; f < colCount; f++)
