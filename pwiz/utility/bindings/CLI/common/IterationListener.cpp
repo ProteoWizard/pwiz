@@ -95,7 +95,7 @@ IterationListenerRegistry::~IterationListenerRegistry()
 void IterationListenerRegistry::addListener(IterationListener^ listener, System::UInt32 iterationPeriod)
 {
     IterationListenerUpdate^ handler = gcnew IterationListenerUpdate(listener, &IterationListener::update);
-    IterationListenerPtr* forwarder = new IterationListenerPtr(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
+    IterationListenerPtr* forwarder = new IterationListenerPtr(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer()));
     _listeners->Add(listener, KeyValuePair<IterationListenerUpdate^, System::IntPtr>(handler, System::IntPtr(forwarder)));
     base().addListener(*forwarder, (size_t) iterationPeriod);
 }
@@ -104,7 +104,7 @@ void IterationListenerRegistry::addListener(IterationListener^ listener, System:
 void IterationListenerRegistry::addListenerWithTimer(IterationListener^ listener, double timePeriod)
 {
     IterationListenerUpdate^ handler = gcnew IterationListenerUpdate(listener, &IterationListener::update);
-    IterationListenerPtr* forwarder = new IterationListenerPtr(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
+    IterationListenerPtr* forwarder = new IterationListenerPtr(new IterationListenerForwarder(Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer()));
     _listeners->Add(listener, KeyValuePair<IterationListenerUpdate^, System::IntPtr>(handler, System::IntPtr(forwarder)));
     base().addListenerWithTimer(*forwarder, timePeriod);
 }
