@@ -461,12 +461,21 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only BiblioSpec libraries contain enough retention time information to support this operation..
+        ///   Looks up a localized string similar to Spectral Libraries.
         /// </summary>
-        public static string AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention_time_information_to_support_this_operation {
+        public static string AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries {
             get {
-                return ResourceManager.GetString("AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention" +
-                        "_time_information_to_support_this_operation", resourceCulture);
+                return ResourceManager.GetString("AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only BiblioSpec and Chromatogram libraries contain enough retention time information to support this operation..
+        /// </summary>
+        public static string AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain_enough_retention_time_information_to_support_this_operation {
+            get {
+                return ResourceManager.GetString("AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain" +
+                        "_enough_retention_time_information_to_support_this_operation", resourceCulture);
             }
         }
         
@@ -517,11 +526,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The file {0} is not a BiblioSpec library..
+        ///   Looks up a localized string similar to The file {0} is not a BiblioSpec or Chromatogram library..
         /// </summary>
-        public static string AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library {
+        public static string AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library {
             get {
-                return ResourceManager.GetString("AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library", resourceCulture);
+                return ResourceManager.GetString("AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_l" +
+                        "ibrary", resourceCulture);
             }
         }
         

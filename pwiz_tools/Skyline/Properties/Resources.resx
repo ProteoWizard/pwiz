@@ -2406,11 +2406,11 @@ Are you sure you want to continue?</value>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
     <value>The file {0} appears to be a redundant library.</value>
   </data>
-  <data name="AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention_time_information_to_support_this_operation" xml:space="preserve">
-    <value>Only BiblioSpec libraries contain enough retention time information to support this operation.</value>
+  <data name="AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain_enough_retention_time_information_to_support_this_operation" xml:space="preserve">
+    <value>Only BiblioSpec and Chromatogram libraries contain enough retention time information to support this operation.</value>
   </data>
-  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library" xml:space="preserve">
-    <value>The file {0} is not a BiblioSpec library.</value>
+  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
+    <value>The file {0} is not a BiblioSpec or Chromatogram library.</value>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__does_not_exist" xml:space="preserve">
     <value>The file {0} does not exist.</value>
@@ -7882,5 +7882,8 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_" xml:space="preserve">
     <value>An error occurred creating options.</value>
+  </data>
+  <data name="AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries" xml:space="preserve">
+    <value>Spectral Libraries</value>
   </data>
 </root>

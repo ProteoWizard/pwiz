@@ -2409,10 +2409,10 @@
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
 <value>ファイル{0}は重複許容ライブラリのようです。</value>
       </data>
-  <data name="AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention_time_information_to_support_this_operation" xml:space="preserve">
+  <data name="AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain_enough_retention_time_information_to_support_this_operation" xml:space="preserve">
 <value>この操作に必要な保持時間情報を含むのはBiblioSpecライブラリだけです。</value>
       </data>
-  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library" xml:space="preserve">
+  <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
 <value>ファイル{0}はBiblioSpecライブラリではありません。</value>
       </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__does_not_exist" xml:space="preserve">

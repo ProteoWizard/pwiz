@@ -465,6 +465,13 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes);
 
+        /// <summary>
+        /// Attempts to get iRT information from the library.
+        /// </summary>
+        /// <param name="retentionTimes">A list of iRTs, if successful</param>
+        /// <returns>True if iRT information was retrieved successfully</returns>
+        public abstract bool TryGetIrts(out LibraryRetentionTimes retentionTimes);
+
         public virtual IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int? fileIndex)
         {
             return new double[0];
@@ -739,6 +746,13 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
+        {
+            // By default, no iRT information is available
+            retentionTimes = null;
+            return false;
+        }
+
         public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
         {
             // By default, no ion mobility information is available
@@ -799,9 +813,9 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
     {
-        private readonly IDictionary<string, double[]> _dictPeptideRetentionTimes;
+        private readonly IDictionary<string, Tuple<TimeSource, double[]>> _dictPeptideRetentionTimes;
 
-        public LibraryRetentionTimes(string path, IDictionary<string, double[]> dictPeptideRetentionTimes)
+        public LibraryRetentionTimes(string path, IDictionary<string, Tuple<TimeSource, double[]>> dictPeptideRetentionTimes)
         {
             Name = path;
             _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
@@ -811,15 +825,15 @@ namespace pwiz.Skyline.Model.Lib
             }
             else
             {
-                MinRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Min();
-                MaxRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Max();
+                MinRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value.Item2).Min();
+                MaxRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value.Item2).Max();
             }
             var listStdev = new List<double>();
-            foreach (double[] times in _dictPeptideRetentionTimes.Values)
+            foreach (Tuple<TimeSource, double[]> times in _dictPeptideRetentionTimes.Values)
             {
-                if (times.Length < 2)
+                if (times.Item2.Length < 2)
                     continue;
-                var statTimes = new Statistics(times);
+                var statTimes = new Statistics(times.Item2);
                 listStdev.Add(statTimes.StdDev());
             }
             var statStdev = new Statistics(listStdev);
@@ -837,9 +851,9 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public double[] GetRetentionTimes(string sequence)
         {
-            double[] retentionTimes;
+            Tuple<TimeSource, double[]> retentionTimes;
             if (_dictPeptideRetentionTimes.TryGetValue(sequence, out retentionTimes))
-                return retentionTimes;
+                return retentionTimes.Item2;
             return new double[0];
         }
 
@@ -881,7 +895,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public TimeSource? GetTimeSource(string sequence)
         {
-            return TimeSource.scan;
+            Tuple<TimeSource, double[]> value;
+            if (_dictPeptideRetentionTimes.TryGetValue(sequence, out value))
+            {
+                return value.Item1;
+            }
+            return null;
         }
 
         public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
@@ -891,7 +910,7 @@ namespace pwiz.Skyline.Model.Lib
                 return from sequence in _dictPeptideRetentionTimes.Keys
                        let time = GetRetentionTime(sequence)
                        where time.HasValue
-                       select new MeasuredRetentionTime(sequence, time.Value);
+                       select new MeasuredRetentionTime(sequence, time.Value, true);
             }
         }
 
@@ -900,11 +919,11 @@ namespace pwiz.Skyline.Model.Lib
             var dict = new Dictionary<string, double>();
             foreach (var entry in _dictPeptideRetentionTimes)
             {
-                if (entry.Value.Length == 0)
+                if (entry.Value.Item2.Length == 0)
                 {
                     continue;
                 }
-                dict.Add(entry.Key, entry.Value.Min());
+                dict.Add(entry.Key, entry.Value.Item2.Min());
             }
             return dict;
         }

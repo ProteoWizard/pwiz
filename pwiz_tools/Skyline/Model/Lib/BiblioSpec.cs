@@ -550,6 +550,12 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
+        {
+            retentionTimes = null;
+            return false;
+        }
+
         // No ion mobility data in BiblioSpec libs (those are ancient - try BiblioSpecLite instead)
         public override bool TryGetIonMobilities(LibKey key, MsDataFileUri filePath, out IonMobilityInfo[] ionMobilities)
         {

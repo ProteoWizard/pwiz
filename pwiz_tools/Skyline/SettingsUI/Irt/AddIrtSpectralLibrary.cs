@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -61,6 +62,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == SpectralLibrarySource.settings)
                     return (LibrarySpec)comboLibrary.SelectedItem;
+                
+                if (Path.GetExtension(textFilePath.Text) == ChromatogramLibrarySpec.EXT)
+                    return new ChromatogramLibrarySpec("__internal__", textFilePath.Text); // Not L10N
+
                 return new BiblioSpecLiteSpec("__internal__", textFilePath.Text); // Not L10N
             }
         }
@@ -84,10 +89,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
                                                     Resources.AddIrtSpectralLibrary_OkDialog_Please_choose_a_non_redundant_library);
                 }
-                else if (!path.EndsWith(BiblioSpecLiteSpec.EXT))
+                else if (!path.EndsWith(BiblioSpecLiteSpec.EXT) && !path.EndsWith(ChromatogramLibrarySpec.EXT))
                 {
-                    message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library, path),
-                                                    Resources.AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention_time_information_to_support_this_operation);
+                    message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library, path),
+                                                    Resources.AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_and_Chromatogram_libraries_contain_enough_retention_time_information_to_support_this_operation);
                 }
                 else if (!File.Exists(path))
                 {
@@ -151,7 +156,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 InitialDirectory = Settings.Default.LibraryDirectory,
                 CheckPathExists = true,
                 DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
+                Filter = TextUtil.FileDialogFiltersAll(
+                    TextUtil.FileDialogFilter(Resources.AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries, BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT)
+                )
             })
             {
                 if (dlg.ShowDialog(this) != DialogResult.OK)

@@ -758,6 +758,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
                 Library library = null;
                 ProcessedIrtAverages irtAverages = null;
+                bool noIrts = true;
                 try
                 {
                     library = libraryManager.TryGetLibrary(librarySpec);
@@ -775,16 +776,25 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 if (library == null)
                                     library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
 
-                                int fileCount = library.FileCount ?? 0;
-                                if (fileCount == 0)
+                                var irtProvider = GetRetentionTimeProvidersIrt(library).ToArray();
+                                if (irtProvider.Any())
                                 {
-                                    string message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_retention_time_information,
-                                                                   librarySpec.FilePath);
-                                    monitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(new IOException(message)));
-                                    return;
+                                    noIrts = false;
+                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider, 1);
                                 }
+                                else
+                                {
+                                    int fileCount = library.FileCount ?? 0;
+                                    if (fileCount == 0)
+                                    {
+                                        string message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_retention_time_information,
+                                                                       librarySpec.FilePath);
+                                        monitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(new IOException(message)));
+                                        return;
+                                    }
 
-                                irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
+                                    irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
+                                }
                             });
                             if (status.IsError)
                             {
@@ -811,7 +821,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                 }
 
-                AddProcessedIrts(irtAverages, true);
+                AddProcessedIrts(irtAverages, noIrts);
+            }
+
+            private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProvidersIrt(Library library)
+            {
+                LibraryRetentionTimes irts;
+                if (library.TryGetIrts(out irts))
+                    yield return irts;
             }
 
             private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProviders(Library library)

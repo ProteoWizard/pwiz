@@ -1,6 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
     namespace="pwiz.Skyline.Model.Lib.ChromLib.Data" assembly="Skyline-daily">
+  <class name="IrtLibrary">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="PeptideModSeq"/>
+    <property name="Standard"/>
+    <property name="Irt"/>
+    <property name="TimeSource"/>
+  </class>
   <class name="IsotopeModification">
     <id name="Id">
       <generator class="native"/>
