@@ -296,7 +296,7 @@ namespace Test
         [TestMethod]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(10, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(11, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
             TestModel.ClassInitialize(null);
@@ -306,6 +306,9 @@ namespace Test
 
 
             // test all revisions without a data filter applied
+            // we don't need to test upgrade from 10 to 11; the extra columns (GeneGroups, Genes) are ignored
+            // we don't need to test upgrade from 9 to 10; the extra tables (XICMetrics, XICMetricsSettings) are ignored
+            // we don't need to test upgrade from 8 to 9; the extra columns (GeneLevelFiltering, DistinctMatchFormat) are ignored
             // we don't need to test upgrade from 7 to 8; the extra columns are ignored
             // we don't need to test upgrade from 5 to 6; it simply forces reapplication of the basic filters
             // we don't need to test upgrade from 4 to 5; it's a simple null value fix

@@ -151,7 +151,7 @@ void Parser::Parse(IEnumerable<String^>^ inputFilepaths, int maxThreads, pwiz::C
     NativeIDPicker::Parser parser;
 
     handler = gcnew Parser::ImportSettingsEventHandler(this, &Parser::marshal);
-    parser.importSettingsCallback.reset(new ImportSettingsForwarder(Marshal::GetFunctionPointerForDelegate(handler).ToPointer()));
+    parser.importSettingsCallback.reset(new ImportSettingsForwarder(Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer()));
 
     try
     {

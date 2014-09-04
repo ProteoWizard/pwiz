@@ -2002,9 +2002,12 @@ namespace IDPicker
                         {
                             var oldG2Ptime = File.GetLastWriteTimeUtc(g2pPath);
                             string backupG2Pname = String.Format("{0}.{1}.bak", g2pPath, oldG2Ptime.ToString("yyyyMMddHHmm"));
-                            File.Move(g2pPath, backupG2Pname);
                             try
                             {
+                                if (!File.Exists(backupG2Pname))
+                                    File.Copy(g2pPath, backupG2Pname);
+                                File.Delete(g2pPath);
+
                                 string g2pDatabaseURL = String.Format("{0}/gene2protein.db3", g2pURL);
                                 lock (Program.WebClient)
                                 {

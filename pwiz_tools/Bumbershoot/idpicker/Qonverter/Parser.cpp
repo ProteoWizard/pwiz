@@ -434,7 +434,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS QonverterSettings (Id INTEGER PRIMARY KEY, QonverterMethod INT, DecoyPrefix TEXT, RerankMatches INT, Kernel INT, MassErrorHandling INT, MissedCleavagesHandling INT, TerminalSpecificityHandling INT, ChargeStateHandling INT, ScoreInfoByName TEXT);"
                       "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT,\n"
                       "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
-                      "                                          Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);"
+                      "                                          Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);"
 
                       "DELETE FROM SpectrumSource;"
                       "DELETE FROM SpectrumSourceMetadata;"

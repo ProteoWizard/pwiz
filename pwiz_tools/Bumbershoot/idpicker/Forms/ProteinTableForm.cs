@@ -358,6 +358,8 @@ namespace IDPicker.Forms
             public int ProteinGroups;
             public int Proteins;
             public double ProteinFDR;
+            public int GeneGroups;
+            public int Genes;
 
             #region Constructor
             public TotalCounts (NHibernate.ISession session, DataFilter dataFilter)
@@ -368,6 +370,8 @@ namespace IDPicker.Forms
                     Clusters = totalCounts.Clusters;
                     ProteinGroups = totalCounts.ProteinGroups;
                     Proteins = totalCounts.Proteins;
+                    GeneGroups = totalCounts.GeneGroups;
+                    Genes = totalCounts.Genes;
                     ProteinFDR = totalCounts.ProteinFDR;
                 }
                 else
@@ -378,6 +382,8 @@ namespace IDPicker.Forms
                                                         "COUNT(DISTINCT pro.Cluster), " +
                                                         "COUNT(DISTINCT pro.ProteinGroup), " +
                                                         "COUNT(DISTINCT pro.id), " +
+                                                        "COUNT(DISTINCT pro.GeneGroup), " +
+                                                        "COUNT(DISTINCT pro.GeneId), " +
                                                         "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) " +
                                                         dataFilter.GetFilteredQueryString(DataFilter.FromProtein))
                                            .UniqueResult<object[]>();
@@ -385,7 +391,9 @@ namespace IDPicker.Forms
                         Clusters = Convert.ToInt32(total[0]);
                         ProteinGroups = Convert.ToInt32(total[1]);
                         Proteins = Convert.ToInt32(total[2]);
-                        float decoyProteins = Convert.ToSingle(total[3]);
+                        GeneGroups = Convert.ToInt32(total[3]);
+                        Genes = Convert.ToInt32(total[4]);
+                        float decoyProteins = Convert.ToSingle(total[5]);
                         // TODO: use correct target/decoy ratio
                         ProteinFDR = 2 * decoyProteins / Proteins;
                     }
@@ -1535,8 +1543,12 @@ namespace IDPicker.Forms
             treeDataGridView.RootRowCount = rows.Count();
 
             // show total counts in the form title
-            Text = TabText = String.Format("Protein View: {0} clusters, {1} protein groups, {2} proteins, {3:0.##%} protein FDR",
-                                           totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR);
+            if (Embedder.HasGeneMetadata(session.Connection.GetDataSource()))
+                Text = TabText = String.Format("Protein View: {0} clusters, {1} protein groups, {2} proteins, {3:0.##%} protein FDR, {4} gene groups, {5} genes",
+                                           totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR, totalCounts.GeneGroups, totalCounts.Genes);
+            else
+                Text = TabText = String.Format("Protein View: {0} clusters, {1} protein groups, {2} proteins, {3:0.##%} protein FDR",
+                                               totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR);
 
             addPivotColumns();
 

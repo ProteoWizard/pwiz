@@ -79,6 +79,8 @@ namespace IDPicker.Forms
             this.clustersColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.proteinGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.proteinsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.geneGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.genesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctMatchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.filteredSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -116,6 +118,8 @@ namespace IDPicker.Forms
             this.clustersColumn,
             this.proteinGroupsColumn,
             this.proteinsColumn,
+            this.geneGroupsColumn,
+            this.genesColumn,
             this.distinctPeptidesColumn,
             this.distinctMatchesColumn,
             this.filteredSpectraColumn,
@@ -312,6 +316,20 @@ namespace IDPicker.Forms
             this.proteinsColumn.ReadOnly = true;
             this.proteinsColumn.Width = 80;
             // 
+            // geneGroupsColumn
+            // 
+            this.geneGroupsColumn.HeaderText = "Gene Groups";
+            this.geneGroupsColumn.Name = "geneGroupsColumn";
+            this.geneGroupsColumn.ReadOnly = true;
+            this.geneGroupsColumn.Width = 105;
+            // 
+            // genesColumn
+            // 
+            this.genesColumn.HeaderText = "Genes";
+            this.genesColumn.Name = "genesColumn";
+            this.genesColumn.ReadOnly = true;
+            this.genesColumn.Width = 80;
+            // 
             // distinctPeptidesColumn
             // 
             this.distinctPeptidesColumn.HeaderText = "Distinct Peptides";
@@ -399,6 +417,8 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn clustersColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn proteinGroupsColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn proteinsColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn geneGroupsColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn genesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctPeptidesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn filteredSpectraColumn;

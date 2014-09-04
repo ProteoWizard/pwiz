@@ -1039,13 +1039,18 @@ namespace IDPicker.DataModel
             var proteinLevelSummary = session.CreateSQLQuery(@"SELECT IFNULL(COUNT(DISTINCT pro.Cluster), 0),
                                                                       IFNULL(COUNT(DISTINCT pro.ProteinGroup), 0),
                                                                       IFNULL(COUNT(DISTINCT pro.Id), 0),
+                                                                      IFNULL(COUNT(DISTINCT pro.GeneGroup), 0),
+                                                                      IFNULL(COUNT(DISTINCT pro.GeneId), 0),
                                                                       IFNULL(SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END), 0)
                                                                FROM Protein pro
                                                               ").UniqueResult<object[]>();
-            Clusters = Convert.ToInt32(proteinLevelSummary[0]);
-            ProteinGroups = Convert.ToInt32(proteinLevelSummary[1]);
-            Proteins = Convert.ToInt32(proteinLevelSummary[2]);
-            double decoyProteins = Convert.ToDouble(proteinLevelSummary[3]);
+            int column = -1;
+            Clusters = Convert.ToInt32(proteinLevelSummary[++column]);
+            ProteinGroups = Convert.ToInt32(proteinLevelSummary[++column]);
+            Proteins = Convert.ToInt32(proteinLevelSummary[++column]);
+            GeneGroups = Convert.ToInt32(proteinLevelSummary[++column]);
+            Genes = Convert.ToInt32(proteinLevelSummary[++column]);
+            double decoyProteins = Convert.ToDouble(proteinLevelSummary[++column]);
             ProteinFDR = 2 * decoyProteins / Proteins;
 
             DistinctPeptides = Convert.ToInt32(session.CreateSQLQuery("SELECT COUNT(*) FROM Peptide").UniqueResult());
@@ -1094,6 +1099,8 @@ namespace IDPicker.DataModel
         public int Clusters { get; private set; }
         public int ProteinGroups { get; private set; }
         public int Proteins { get; private set; }
+        public int GeneGroups { get; private set; }
+        public int Genes { get; private set; }
         public int DistinctPeptides { get; private set; }
         public int DistinctMatches { get; private set; }
         public int FilteredSpectra { get; private set; }

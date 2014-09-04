@@ -84,6 +84,8 @@
             <property name="ProteinFDR"/>
             <property name="PeptideFDR"/>
             <property name="SpectrumFDR"/>
+            <property name="GeneGroups"/>
+            <property name="Genes"/>
         </component>
     </class>
 

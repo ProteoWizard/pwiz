@@ -52,6 +52,8 @@ class TotalCounts
     int clusters() const;
     int proteinGroups() const;
     int proteins() const;
+    int geneGroups() const;
+    int genes() const;
     int distinctPeptides() const;
     int distinctMatches() const;
     sqlite3_int64 filteredSpectra() const;

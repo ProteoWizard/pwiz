@@ -37,7 +37,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 10;
+const int CURRENT_SCHEMA_REVISION = 11;
 
 namespace SchemaUpdater {
 
@@ -106,23 +106,43 @@ struct DistinctDoubleArraySum
     }
 };
 
+
+void update_10_to_11(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    ITERATION_UPDATE(ilr, 10, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    // create new table with GeneGroups and Genes columns
+    db.execute("CREATE TABLE FilterHistoryNew (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT,\n"
+                "                               MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
+                "                               GeneLevelFiltering INT, DistinctMatchFormat TEXT,\n"
+                "                               Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT,\n"
+                "                               ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC)");
+
+    // insert old values into new table (with default values for new columns)
+    db.execute("INSERT INTO FilterHistoryNew SELECT Id, MaximumQValue, MinimumDistinctPeptides, MinimumSpectra, MinimumAdditionalPeptides,\n"
+                "                                    MinimumSpectraPerDistinctMatch, MinimumSpectraPerDistinctPeptide, MaximumProteinGroupsPerPeptide,\n"
+                "                                    GeneLevelFiltering, DistinctMatchFormat,\n"
+                "                                    Clusters, ProteinGroups, Proteins, 0, 0, DistinctPeptides, DistinctMatches, FilteredSpectra,\n"
+                "                                    ProteinFDR, PeptideFDR, SpectrumFDR"
+                "                             FROM FilterHistory");
+
+    // drop old table and rename new table
+    db.execute("DROP TABLE FilterHistory; ALTER TABLE FilterHistoryNew RENAME TO FilterHistory");
+
+    //update_11_to_12(db, ilr);
+}
+
+
 void update_9_to_10(sqlite::database& db, IterationListenerRegistry* ilr)
 {
-    ITERATION_UPDATE(ilr, 8, CURRENT_SCHEMA_REVISION, "updating schema version")
+    ITERATION_UPDATE(ilr, 9, CURRENT_SCHEMA_REVISION, "updating schema version")
 
-    try
-    {
-        // add XICMetrics
-        db.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
-        db.execute("CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
-    }
-    catch (sqlite::database_error& e)
-    {
-        if (!bal::contains(e.what(), "no such") && !bal::contains(e.what(), "duplicate column")) // column or table
-            throw runtime_error(e.what());
-    }
+    // add XICMetrics
+    db.execute("CREATE TABLE IF NOT EXISTS XICMetrics (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);");
+    db.execute("CREATE TABLE IF NOT EXISTS XICMetricsSettings (SourceId INTEGER PRIMARY KEY, TotalSpectra INT, Settings STRING);");
 
-    //update_10_to_11(db, ilr);
+
+    update_10_to_11(db, ilr);
 }
 
 
@@ -130,29 +150,23 @@ void update_8_to_9(sqlite::database& db, IterationListenerRegistry* ilr)
 {
     ITERATION_UPDATE(ilr, 8, CURRENT_SCHEMA_REVISION, "updating schema version")
 
-    try
-    {
-        // add GeneLevelFiltering and DistinctMatchFormat columns to FilterHistory
-        db.execute("ALTER TABLE FilterHistory ADD COLUMN GeneLevelFiltering INT;"
-                   "UPDATE FilterHistory SET GeneLevelFiltering = 0;");
-        db.execute("ALTER TABLE FilterHistory ADD COLUMN DistinctMatchFormat TEXT;"
-                   "UPDATE FilterHistory SET DistinctMatchFormat = '1 0 1 1.0000000';");
+    // create new table with GeneLevelFiltering and DistinctMatchFormat columns
+    db.execute("CREATE TABLE FilterHistoryNew (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT,\n"
+                "                               MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
+                "                               GeneLevelFiltering INT, DistinctMatchFormat TEXT,\n"
+                "                               Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT,\n"
+                "                               ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC)");
 
-        // rename old columns to remove "PerProtein" name (there is no easy, safe way to do this);
-        // note that the new columns must go at the end in the order they were added
-        db.execute("PRAGMA writable_schema = 1;\n"
-                   "UPDATE SQLITE_MASTER SET SQL = 'CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT,\n"
-                   "                                                                          MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
-                   "                                                                          Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT,\n"
-                   "                                                                          ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC,\n"
-                   "                                                                          GeneLevelFiltering INT, DistinctMatchFormat TEXT)' WHERE NAME = 'FilterHistory';\n"
-                   "PRAGMA writable_schema = 0;");
-    }
-    catch (sqlite::database_error& e)
-    {
-        if (!bal::contains(e.what(), "no such") && !bal::contains(e.what(), "duplicate column")) // column or table
-            throw runtime_error(e.what());
-    }
+    // insert old values into new table (with default values for new columns)
+    db.execute("INSERT INTO FilterHistoryNew SELECT Id, MaximumQValue, MinimumDistinctPeptidesPerProtein, MinimumSpectraPerProtein, MinimumAdditionalPeptidesPerProtein,\n"
+                "                                    MinimumSpectraPerDistinctMatch, MinimumSpectraPerDistinctPeptide, MaximumProteinGroupsPerPeptide,\n"
+                "                                    0, '1 0 1 1.0000000',\n"
+                "                                    Clusters, ProteinGroups, Proteins, DistinctPeptides, DistinctMatches, FilteredSpectra,\n"
+                "                                    ProteinFDR, PeptideFDR, SpectrumFDR"
+                "                             FROM FilterHistory");
+
+    // drop old table and rename new table
+    db.execute("DROP TABLE FilterHistory; ALTER TABLE FilterHistoryNew RENAME TO FilterHistory");
 
     update_9_to_10(db, ilr);
 }
@@ -542,6 +556,8 @@ bool update(sqlite3* idpDbConnection, IterationListenerRegistry* ilr)
         update_8_to_9(db, ilr);
     else if (schemaRevision == 9)
         update_9_to_10(db, ilr);
+    else if (schemaRevision == 10)
+        update_10_to_11(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

@@ -1032,14 +1032,14 @@ struct Filter::Impl
 
         db.execute("CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT,\n"
                    "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
-                   "                                          Clusters INT, ProteinGroups INT, Proteins INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);");
+                   "                                          Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);");
 
         sqlite3_int64 nextFilterId = sqlite3pp::query(db, "SELECT IFNULL(MAX(Id), 0)+1 FROM FilterHistory").begin()->get<sqlite3_int64>(0);
 
         // must explicitly specify columns since the 8 to 9 schema upgrade added columns
         string insertFilterSql = "INSERT INTO FilterHistory (Id, MaximumQValue, MinimumDistinctPeptides, MinimumSpectra,  MinimumAdditionalPeptides, GeneLevelFiltering,\n"
                                  "                           DistinctMatchFormat, MinimumSpectraPerDistinctMatch, MinimumSpectraPerDistinctPeptide, MaximumProteinGroupsPerPeptide,\n"
-                                 "                           Clusters, ProteinGroups, Proteins, DistinctPeptides, DistinctMatches, FilteredSpectra, ProteinFDR, PeptideFDR, SpectrumFDR)\n"
+                                 "                           Clusters, ProteinGroups, Proteins, GeneGroups, Genes, DistinctPeptides, DistinctMatches, FilteredSpectra, ProteinFDR, PeptideFDR, SpectrumFDR)\n"
                                  "VALUES\n"
                                  "(\n"
                                  " ?," // Id
@@ -1055,6 +1055,8 @@ struct Filter::Impl
                                  " ?," // Clusters
                                  " ?," // ProteinGroups
                                  " ?," // Proteins
+                                 " ?," // GeneGroups
+                                 " ?," // Genes
                                  " ?," // DistinctPeptides
                                  " ?," // DistinctMatches
                                  " ?," // FilteredSpectra
@@ -1103,6 +1105,8 @@ struct Filter::Impl
                                  totalCounts.clusters() <<
                                  totalCounts.proteinGroups() <<
                                  totalCounts.proteins() <<
+                                 totalCounts.geneGroups() <<
+                                 totalCounts.genes() <<
                                  totalCounts.distinctPeptides() <<
                                  totalCounts.distinctMatches() <<
                                  totalCounts.filteredSpectra() <<

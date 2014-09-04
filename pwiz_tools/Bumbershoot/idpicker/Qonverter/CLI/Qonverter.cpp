@@ -117,7 +117,7 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
     {
         QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
         ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
-            Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+            Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer());
 
         IterationListenerRegistry ilr;
         ilr.addListener(IterationListenerPtr(progressMonitor), 1);
@@ -160,7 +160,7 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
     {
         QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
         ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
-            Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+            Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer());
 
         IterationListenerRegistry ilr;
         ilr.addListener(IterationListenerPtr(progressMonitor), 1);
@@ -180,7 +180,7 @@ void Qonverter::Reset(String^ idpDbFilepath)
     NativeQonverter qonverter;
     QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
     ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
-        Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+        Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer());
 
     IterationListenerRegistry ilr;
     ilr.addListener(IterationListenerPtr(progressMonitor), 1);
@@ -193,7 +193,7 @@ void Qonverter::Reset(System::IntPtr idpDb)
     NativeQonverter qonverter;
     QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this, &Qonverter::marshal);
     ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
-        Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+        Marshal::GetFunctionPointerForDelegate((System::Delegate^) handler).ToPointer());
 
     IterationListenerRegistry ilr;
     ilr.addListener(IterationListenerPtr(progressMonitor), 1);

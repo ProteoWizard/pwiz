@@ -98,17 +98,17 @@ namespace IDPicker.Forms
             chargeStatesForm.ZedGraphControl.IsEnableVPan = false;
             chargeStatesForm.ZedGraphControl.BorderStyle = BorderStyle.None;
 
-            precursorMassErrorForm.ZedGraphControl.ZoomEvent += (sender, before, after) =>
+            precursorMassErrorForm.ZedGraphControl.ZoomEvent += (sender, before, after, mousePosition) =>
             {
                 precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min = Math.Max(0, precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min);
             };
 
-            scanTimeDistributionForm.ZedGraphControl.ZoomEvent += (sender, before, after) =>
+            scanTimeDistributionForm.ZedGraphControl.ZoomEvent += (sender, before, after, mousePosition) =>
             {
                 precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min = Math.Max(0, precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min);
             };
 
-            chargeStatesForm.ZedGraphControl.ZoomEvent += (sender, before, after) =>
+            chargeStatesForm.ZedGraphControl.ZoomEvent += (sender, before, after, mousePosition) =>
             {
                 chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.MajorStepAuto = false;
                 chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.MajorStep = 1;

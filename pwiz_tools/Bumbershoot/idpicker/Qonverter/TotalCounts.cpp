@@ -43,6 +43,8 @@ class TotalCounts::Impl
     int clusters;
     int proteinGroups;
     int proteins;
+    int geneGroups;
+    int genes;
     int distinctPeptides;
     int distinctMatches;
     sqlite3_int64 filteredSpectra;
@@ -60,12 +62,14 @@ TotalCounts::TotalCounts(sqlite3* idpDbConnection)
     sqlite::query proteinLevelSummaryQuery(idpDb, "SELECT IFNULL(COUNT(DISTINCT pro.Cluster), 0),\n"
                                                   "       IFNULL(COUNT(DISTINCT pro.ProteinGroup), 0),\n"
                                                   "       IFNULL(COUNT(DISTINCT pro.Id), 0),\n"
+                                                  "       IFNULL(COUNT(DISTINCT pro.GeneGroup), 0),\n"
+                                                  "       IFNULL(COUNT(DISTINCT pro.GeneId), 0),\n"
                                                   "       IFNULL(SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END), 0)\n"
                                                   "FROM Protein pro");
     {
         sqlite::query::rows queryRow = *proteinLevelSummaryQuery.begin();
         int decoyProteins;
-        queryRow.getter() >> _impl->clusters >> _impl->proteinGroups >> _impl->proteins >> decoyProteins;
+        queryRow.getter() >> _impl->clusters >> _impl->proteinGroups >> _impl->proteins >> _impl->geneGroups >> _impl->genes >> decoyProteins;
         _impl->proteinFDR = 2.0 * decoyProteins / _impl->proteins;
     }
 
@@ -133,6 +137,8 @@ TotalCounts::~TotalCounts() {}
 int TotalCounts::clusters() const { return _impl->clusters; }
 int TotalCounts::proteinGroups() const { return _impl->proteinGroups; }
 int TotalCounts::proteins() const { return _impl->proteins; }
+int TotalCounts::geneGroups() const { return _impl->geneGroups; }
+int TotalCounts::genes() const { return _impl->genes; }
 int TotalCounts::distinctPeptides() const { return _impl->distinctPeptides; }
 int TotalCounts::distinctMatches() const { return _impl->distinctMatches; }
 sqlite3_int64 TotalCounts::filteredSpectra() const { return _impl->filteredSpectra; }

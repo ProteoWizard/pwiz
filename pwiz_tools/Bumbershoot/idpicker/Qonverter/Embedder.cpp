@@ -571,7 +571,7 @@ void embed(const string& idpDbFilepath,
         msd.write(tmpFilepath, config);
 
         // read entire file into memory
-        ifstream tmpFile(tmpFilepath.c_str(), ios::binary|ios::ate);
+        std::ifstream tmpFile(tmpFilepath.c_str(), ios::binary|ios::ate);
         if (!tmpFile)
             throw runtime_error("[embed] error opening temporary file at \"" + tmpFilepath + "\"");
 
