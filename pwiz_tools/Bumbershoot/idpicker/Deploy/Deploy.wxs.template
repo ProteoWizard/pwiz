@@ -148,6 +148,7 @@
 <Component Feature="MainFeature"><File Id="_BaseDataAccess.dll" Name="BaseDataAccess.dll" Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
 <?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
     <Component Feature="MainFeature"><File Id="_BaseDataAccess.dll.config" Name="BaseDataAccess.dll.config" Source="msvc-release\BaseDataAccess.dll.config" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_MIDAC.dll" Name="MIDAC.dll" Source="msvc-release\MIDAC.dll" KeyPath="yes"/></Component>
 <?endif?>
 <Component Feature="MainFeature"><File Id="_BaseError.dll" Name="BaseError.dll" Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
@@ -232,6 +233,7 @@
 
 <!-- Water DLLs -->
 <Component Feature="MainFeature"><File Id="_MassLynxRaw.dll" Name="MassLynxRaw.dll" Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_cdt.dll" Name="cdt.dll" Source="msvc-release\cdt.dll" KeyPath="yes"/></Component>
 
 
               </Directory>
