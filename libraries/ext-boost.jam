@@ -261,6 +261,7 @@ rule init ( version : location : options * )
                 <link>shared:<define>BOOST_NOWIDE_DYN_LINK=1
                 <define>BOOST_NOWIDE_NO_LIB=1
                 <toolset>msvc:<library>shell32
+                <include>$(location)/../boost_aux
             :
             :   <define>BOOST_NOWIDE_NO_LIB=1
                 <link>shared:<define>BOOST_NOWIDE_DYN_LINK=1
