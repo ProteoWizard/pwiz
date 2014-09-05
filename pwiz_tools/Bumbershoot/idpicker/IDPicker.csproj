@@ -22,6 +22,7 @@
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -36,7 +37,6 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -645,7 +645,9 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>call "$(VS100COMNTOOLS)vsvars32.bat" &gt;nul
-editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"</PostBuildEvent>
+editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"
+IF EXIST $(OutDir)setup.exe del $(OutDir)setup.exe
+IF EXIST $(OutDir)Test.passed del $(OutDir)Test.passed</PostBuildEvent>
     <PreBuildEvent>call "$(VS100COMNTOOLS)vsvars32.bat" &gt;nul
 rc.exe $(ProjectDir)/Resources/Resources.rc &gt;nul</PreBuildEvent>
   </PropertyGroup>

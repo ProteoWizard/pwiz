@@ -107,7 +107,8 @@ namespace IDPicker
             if (IsHeadless)
             {
                 Console.Error.WriteLine("\r\nProbable user error: {0}\r\n\r\nIf you suspect it's not a user error, please send the error to:\r\nbumbershoot-support@googlegroups.com", e.Message);
-                System.Diagnostics.Process.GetCurrentProcess().Kill();
+                //System.Diagnostics.Process.GetCurrentProcess().Kill();
+                Environment.Exit(0);
             }
 
             if (MainWindow == null)

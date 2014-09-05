@@ -30,23 +30,23 @@ path-constant THIS_PATH : . ;
 rule msbuild_deploy ( targets + : sources * : properties * )
 {
     local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+
+    if $(address-model) = 64
+    {
+        ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.)-x86_64 ;
+        ARCH on $(targets) = x64 ;
+    }
+    else
+    {
+        ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.)-x86 ;
+        ARCH on $(targets) = x86 ;
+    }
+
     ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
     TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
     OUTPUT_PATH on $(targets) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
-    ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.) ;
-    
-    if $(address-model) = 64
-    {
-        ARCH on $(targets) = x64 ;
-        ARCH_SUFFIX on $(targets) = "-x86_64" ;
-    }
-    else
-    {
-        ARCH on $(targets) = x86 ;
-        ARCH_SUFFIX on $(targets) = "-x86" ;
-    }
 }
 
 actions msbuild_deploy
@@ -56,11 +56,11 @@ actions msbuild_deploy
     msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(ADDRESS_MODEL)
     pushd $(BUILD_PATH)
-    "%WIX%\bin\candle.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
-    "%WIX%\bin\light.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
+    "%WIX%\bin\candle.exe" $(ARTIFACT_NAME).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
+    "%WIX%\bin\light.exe" $(ARTIFACT_NAME).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
     set EXIT=%ERRORLEVEL%
     if %EXIT% NEQ 0 exit %EXIT%
-    copy $(ARTIFACT_NAME)$(ARCH_SUFFIX).msi $(ARTIFACT_NAME).msi
+    echo Built $(ARTIFACT_NAME).msi > $(LOCATION)\\setup.exe
     popd
 }
 
@@ -89,3 +89,63 @@ make setup.exe
         <conditional>@build-location
         <conditional>@msvc-requirement
     ;
+
+
+rule test_msi ( targets + : sources * : properties * )
+{
+    local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+    
+    if $(address-model) = 64
+    {
+        ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.)-x86_64 ;
+        INSTALL_PATH on $(targets) = "%ProgramW6432%\\Bumbershoot\\IDPicker $(version-tag:J=.) 64-bit" ;
+    }
+    else
+    {
+        ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.)-x86 ;
+        INSTALL_PATH on $(targets) = "%ProgramFiles(x86)%\\Bumbershoot\\IDPicker $(version-tag:J=.) 32-bit" ;
+    }
+
+    LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
+}
+
+actions test_msi
+{
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    echo Installing $(ARTIFACT_NAME)...
+    pushd $(BUILD_PATH)
+    msiexec /qb /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
+    set EXIT=%ERRORLEVEL%
+    IF %EXIT% NEQ 0 exit %EXIT%
+
+    set PATH_TMP=%PATH%
+    set PATH=
+    "$(INSTALL_PATH)\IDPicker.exe" --test --headless
+    set TEST_EXIT=%ERRORLEVEL%
+    set PATH=%PATH_TMP%
+
+    echo Uninstalling $(ARTIFACT_NAME)...
+    msiexec /qb /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
+    set EXIT=%ERRORLEVEL%
+    IF %EXIT% NEQ 0 exit %EXIT%
+    
+    IF %TEST_EXIT% NEQ 0 echo Test failed.
+    IF %TEST_EXIT% NEQ 0 exit %TEST_EXIT%
+    echo Deployment test passed.
+    echo Deployment test passed. > $(LOCATION)\\Test.passed
+
+    popd
+}
+
+make Test.passed
+    : # sources
+    : # actions
+        @test_msi
+    : # requirements
+        <variant>debug:<build>no # don't test debug installs
+        <dependency>setup.exe
+        <conditional>@build-location
+        <conditional>@msvc-requirement
+    ;
+explicit Test.passed ;
+alias Test : Test.passed ;

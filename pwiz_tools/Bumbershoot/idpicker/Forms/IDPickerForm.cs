@@ -870,6 +870,20 @@ namespace IDPicker
                     showCommandLineHelp(this, EventArgs.Empty);
                     Close();
                 }
+                else if (arg == "--test")
+                {
+                    try
+                    {
+                        // test that calls to ProteoWizard work
+                        var test = new pwiz.CLI.msdata.MSData();
+                        Console.WriteLine("ProteoWizard MSData {0}", pwiz.CLI.msdata.Version.ToString());
+                    }
+                    catch
+                    {
+                        Console.Error.WriteLine("Unable to load ProteoWizard. Are some DLLs missing?");
+                    }
+                    Close();
+                }
 
                 try
                 {
@@ -1538,7 +1552,8 @@ namespace IDPicker
             // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit;
             //       but it also prevents automatic cleanup of TemporaryMSDataFile objects, which can build up in %TEMP%
             TemporaryMSDataFile.ForceCleanup();
-            Process.GetCurrentProcess().Kill();
+            //Process.GetCurrentProcess().Kill();
+            Environment.Exit(0);
         }
 
 
