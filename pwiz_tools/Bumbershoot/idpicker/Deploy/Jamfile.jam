@@ -114,7 +114,7 @@ actions test_msi
     IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
     echo Installing $(ARTIFACT_NAME)...
     pushd $(BUILD_PATH)
-    msiexec /qb /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
+    msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /i $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 exit %EXIT%
 
@@ -125,7 +125,7 @@ actions test_msi
     set PATH=%PATH_TMP%
 
     echo Uninstalling $(ARTIFACT_NAME)...
-    msiexec /qb /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
+    msiexec /qn /l* $(ARTIFACT_NAME).log /norestart /x $(ARTIFACT_NAME).msi REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
     IF %EXIT% NEQ 0 exit %EXIT%
     
