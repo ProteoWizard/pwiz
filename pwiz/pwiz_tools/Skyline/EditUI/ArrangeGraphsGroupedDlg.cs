@@ -40,6 +40,7 @@ namespace pwiz.Skyline.EditUI
             if (GroupType == GroupGraphsType.distributed)
                 radioDistribute.Checked = true;
             comboSortOrder.SelectedItem = GroupOrder.GetLocalizedString();
+            comboBoxDisplay.SelectedItem = DisplayType.GetLocalizedString(); 
             cbReversed.Checked = Settings.Default.ArrangeGraphsReversed;
         }
 
@@ -82,6 +83,19 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        public DisplayGraphsType DisplayType
+        {
+            get
+            {
+                return Helpers.ParseEnum(Settings.Default.DisplayGraphsType, DisplayGraphsType.Tiled);
+            }
+            set
+            {
+                comboBoxDisplay.SelectedItem = value.GetLocalizedString();
+                Settings.Default.DisplayGraphsType = value.ToString();
+            }
+        }
+
         public bool Reversed { get; private set; }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -102,6 +116,8 @@ namespace pwiz.Skyline.EditUI
             else if (radioDistribute.Checked)
                 GroupType = GroupGraphsType.distributed;
 
+            DisplayType = DisplayGraphsTypeExtension.GetEnum(comboBoxDisplay.SelectedItem.ToString(),
+                DisplayGraphsType.Tiled);
             GroupOrder = GroupGraphsOrderExtension.GetEnum(comboSortOrder.SelectedItem.ToString(), GroupGraphsOrder.Position);
             Reversed = cbReversed.Checked;
             // Only save the reverse flag, if the order is document.  Otherwise,
@@ -114,9 +130,9 @@ namespace pwiz.Skyline.EditUI
     }
 
     public enum GroupGraphsType { separated, distributed }
-
+    public enum DisplayGraphsType { Tiled, Row, Column}
     // ReSharper disable InconsistentNaming
-    public enum GroupGraphsOrder { Position, Document }
+    public enum GroupGraphsOrder { Position, Document, Acquired_Time }
 
     public static class GroupGraphsOrderExtension
     {
@@ -127,7 +143,8 @@ namespace pwiz.Skyline.EditUI
                 return new[]
                 {
                     Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
-                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document
+                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document,
+                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time
                 };
             }
         }
@@ -142,6 +159,36 @@ namespace pwiz.Skyline.EditUI
         }
 
         public static GroupGraphsOrder GetEnum(string enumValue, GroupGraphsOrder defaultValue)
+        {
+            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
+        }
+    }
+
+    public static class DisplayGraphsTypeExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    Resources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled,
+                    Resources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row,
+                    Resources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column
+                };
+            }
+        }
+        public static string GetLocalizedString(this DisplayGraphsType val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static DisplayGraphsType GetEnum(string enumValue)
+        {
+            return Helpers.EnumFromLocalizedString<DisplayGraphsType>(enumValue, LOCALIZED_VALUES);
+        }
+
+        public static DisplayGraphsType GetEnum(string enumValue, DisplayGraphsType defaultValue)
         {
             return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
         }

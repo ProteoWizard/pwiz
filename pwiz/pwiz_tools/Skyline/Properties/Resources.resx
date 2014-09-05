@@ -7880,4 +7880,16 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
     <data name="ChromatogramCache_LoadScanIdBytes_Failure_trying_to_read_scan_IDs" xml:space="preserve">
     <value>Failure trying to read scan IDs</value>
   </data>
+  <data name="GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled" xml:space="preserve">
+    <value>Tiled</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row" xml:space="preserve">
+    <value>Row</value>
+  </data>
+  <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column" xml:space="preserve">
+    <value>Column</value>
+  </data>
 </root>

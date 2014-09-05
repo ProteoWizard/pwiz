@@ -136,6 +136,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AnnotationTest.cs" />
+    <Compile Include="ArrangeGraphsTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
     <Compile Include="ConfigureToolsDlgTest.cs" />
     <Compile Include="DocumentGridTest.cs" />

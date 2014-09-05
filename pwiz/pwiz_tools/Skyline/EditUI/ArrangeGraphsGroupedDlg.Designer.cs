@@ -40,6 +40,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.comboSortOrder = new System.Windows.Forms.ComboBox();
             this.cbReversed = new System.Windows.Forms.CheckBox();
+            this.comboBoxDisplay = new System.Windows.Forms.ComboBox();
+            this.labelDisplay = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -100,7 +102,8 @@
             this.comboSortOrder.FormattingEnabled = true;
             this.comboSortOrder.Items.AddRange(new object[] {
             resources.GetString("comboSortOrder.Items"),
-            resources.GetString("comboSortOrder.Items1")});
+            resources.GetString("comboSortOrder.Items1"),
+            resources.GetString("comboSortOrder.Items2")});
             resources.ApplyResources(this.comboSortOrder, "comboSortOrder");
             this.comboSortOrder.Name = "comboSortOrder";
             // 
@@ -110,12 +113,30 @@
             this.cbReversed.Name = "cbReversed";
             this.cbReversed.UseVisualStyleBackColor = true;
             // 
+            // comboBoxDisplay
+            // 
+            this.comboBoxDisplay.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxDisplay.FormattingEnabled = true;
+            this.comboBoxDisplay.Items.AddRange(new object[] {
+            resources.GetString("comboBoxDisplay.Items"),
+            resources.GetString("comboBoxDisplay.Items1"),
+            resources.GetString("comboBoxDisplay.Items2")});
+            resources.ApplyResources(this.comboBoxDisplay, "comboBoxDisplay");
+            this.comboBoxDisplay.Name = "comboBoxDisplay";
+            // 
+            // labelDisplay
+            // 
+            resources.ApplyResources(this.labelDisplay, "labelDisplay");
+            this.labelDisplay.Name = "labelDisplay";
+            // 
             // ArrangeGraphsGroupedDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.comboBoxDisplay);
+            this.Controls.Add(this.labelDisplay);
             this.Controls.Add(this.cbReversed);
             this.Controls.Add(this.comboSortOrder);
             this.Controls.Add(this.label2);
@@ -147,5 +168,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboSortOrder;
         private System.Windows.Forms.CheckBox cbReversed;
+        private System.Windows.Forms.ComboBox comboBoxDisplay;
+        private System.Windows.Forms.Label labelDisplay;
     }
 }

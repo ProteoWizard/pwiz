@@ -491,5 +491,8 @@
     <Setting Name="StartPageMaximized" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="DisplayGraphsType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Tiled</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
