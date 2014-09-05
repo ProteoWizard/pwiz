@@ -1281,13 +1281,19 @@ vector<double> RawFileImpl::getIsolationWidths(long scanNumber)
     IXRawfile5Ptr raw5 = (IXRawfile5Ptr) raw_;
 
     vector<double> isolationWidths;
-    long nNumMSOrders;
-    checkResult(raw5->GetNumberOfMSOrdersFromScanNum(scanNumber, &nNumMSOrders), "[RawFileImpl::GetNumberOfMSOrdersFromScanNum()] ");
-    for (long i = 0; i < nNumMSOrders; i++)
+
+    long msOrder;
+    checkResult(raw5->GetMSOrderForScanNum(scanNumber, &msOrder), "[RawFileImpl::GetMSOrderForScanNum()] ");
+    if (msOrder == 1)
+        return isolationWidths;
+
+    long numMSOrders;
+    checkResult(raw5->GetNumberOfMSOrdersFromScanNum(scanNumber, &numMSOrders), "[RawFileImpl::GetNumberOfMSOrdersFromScanNum()] ");
+    for (long i = 0; i < numMSOrders; i++)
     {
-        double dIsolationWidth;
-        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber, i, &dIsolationWidth), "[RawFileImpl::GetIsolationWidthForScanNum()] ");
-        isolationWidths.push_back(dIsolationWidth);
+        double isolationWidth;
+        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber, i, &isolationWidth), "[RawFileImpl::GetIsolationWidthForScanNum()] ");
+        isolationWidths.push_back(isolationWidth);
     }
     return isolationWidths;
 }
