@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -2099,7 +2099,7 @@ namespace pwiz.Skyline
                     graphChrom.Show(dockPanel.Panes[firstDocumentPane], DockPaneAlignment.Left, 0.5);
                 else if (!split)
                 {
-                    graphChrom.Show(paneExisting, paneExisting.Contents[0]);
+                    graphChrom.Show(paneExisting, null);  // Add to the end
                 }
                 else
                 {
@@ -3896,12 +3896,27 @@ namespace pwiz.Skyline
 
         public void ArrangeGraphsTiled()
         {
+            ArrangeGraphs(DisplayGraphsType.Tiled);
+        }
+
+        private void arrangeRowMenuItem_Click(object sender, EventArgs e)
+        {
+            ArrangeGraphs(DisplayGraphsType.Row);
+        }
+
+        private void arrangeColumnMenuItem_Click(object sender, EventArgs e)
+        {
+            ArrangeGraphs(DisplayGraphsType.Column);
+        }
+
+        public void ArrangeGraphs(DisplayGraphsType displayGraphsType)
+        {
             var listGraphs = GetArrangeableGraphs();
             if (listGraphs.Count < 2)
                 return;
             using (new DockPanelLayoutLock(dockPanel, true))
             {
-                ArrangeGraphsGrouped(listGraphs, listGraphs.Count, GroupGraphsType.separated);
+                ArrangeGraphsGrouped(listGraphs, listGraphs.Count, GroupGraphsType.separated, displayGraphsType);
             }
         }
 
@@ -3943,13 +3958,13 @@ namespace pwiz.Skyline
 
                     using (new DockPanelLayoutLock(dockPanel, true))
                     {
-                        ArrangeGraphsGrouped(listGraphs, dlg.Groups, dlg.GroupType);
+                        ArrangeGraphsGrouped(listGraphs, dlg.Groups, dlg.GroupType, dlg.DisplayType);
                     }
                 }
             }
         }
 
-        private void ArrangeGraphsGrouped(IList<DockableForm> listGraphs, int groups, GroupGraphsType groupType)
+        private void ArrangeGraphsGrouped(IList<DockableForm> listGraphs, int groups, GroupGraphsType groupType, DisplayGraphsType displayType)
         {
             // First just arrange everything into a single pane
             ArrangeGraphsTabbed(listGraphs);
@@ -3958,9 +3973,21 @@ namespace pwiz.Skyline
             var documentPane = FindPane(listGraphs[0]);
             double width = documentPane.Width;
             double height = documentPane.Height;
-            int rows = 1;
-            while ((height/rows) / (width/(groups/rows + (groups % rows > 0 ? 1 : 0))) > MAX_TILED_ASPECT_RATIO)
-                rows++;
+            int rows;
+            if (displayType == DisplayGraphsType.Row)
+            {
+                rows = 1;
+            }
+            else if (displayType == DisplayGraphsType.Column)
+            {
+                rows = groups;
+            }
+            else
+            {
+                rows = 1;
+                while ((height / rows) / (width / (groups / rows + (groups % rows > 0 ? 1 : 0))) > MAX_TILED_ASPECT_RATIO)
+                    rows++;
+            }
 
             int longRows = groups%rows;
             int columnsShort = groups/rows;
@@ -4063,25 +4090,19 @@ namespace pwiz.Skyline
 
         private List<DockableForm> GetArrangeableGraphs(GroupGraphsOrder order, bool reversed)
         {
-            IList<DockPane> listPanes = dockPanel.Panes;
+            List<DockPane> listPanes = dockPanel.Panes
+                .Where(pane => !pane.IsHidden && pane.DockState == DockState.Document)
+                .ToList();
             if (order == GroupGraphsOrder.Position)
             {
-                var listPanesSorted = new List<DockPane>();
-                foreach (var pane in dockPanel.Panes)
-                {
-                    if (pane.IsHidden || pane.DockState != DockState.Document)
-                        continue;
-                    listPanesSorted.Add(pane);
-                }
-                listPanesSorted.Sort((p1, p2) =>
+                listPanes.Sort((p1, p2) =>
                 {
                     if (p1.Top != p2.Top)
                         return p1.Top - p2.Top;
                     return p1.Left - p2.Left;
                 });
                 if (reversed)
-                    listPanesSorted.Reverse();
-                listPanes = listPanesSorted;
+                    listPanes.Reverse();
             }
 
             var listGraphs = new List<DockableForm>();
@@ -4098,7 +4119,7 @@ namespace pwiz.Skyline
                 }                
             }
 
-            if (order == GroupGraphsOrder.Document)
+            if (order != GroupGraphsOrder.Position)
             {
                 // Populate a dictionary with the desired document order
                 var dictOrder = new Dictionary<DockableForm, int>();
@@ -4111,9 +4132,31 @@ namespace pwiz.Skyline
                     dictOrder.Add(_graphPeakArea, iOrder++);
                 if (DocumentUI.Settings.HasResults)
                 {
-                    foreach (var chromatograms in DocumentUI.Settings.MeasuredResults.Chromatograms)
+                    var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms.ToList();
+                    if (order == GroupGraphsOrder.Acquired_Time)
                     {
-                        var graphChrom = GetGraphChrom(chromatograms.Name);
+                        chromatograms.Sort((c1, c2) =>
+                        {
+                            var time1 = GetRunStartTime(c1);
+                            var time2 = GetRunStartTime(c2);
+                            if (!time1.HasValue && !time2.HasValue)
+                            {
+                                return 0;
+                            }
+                            else if (!time1.HasValue)
+                            {
+                                return 1;
+                            }
+                            else if (!time2.HasValue)
+                            {
+                                return -1;
+                            }
+                            return time1.Value.CompareTo(time2.Value);
+                        });
+                    }
+                    foreach (var chromatogramSet in chromatograms)
+                    {
+                        var graphChrom = GetGraphChrom(chromatogramSet.Name);
                         if (graphChrom != null)
                             dictOrder.Add(graphChrom, iOrder++);
                     }
@@ -4134,6 +4177,23 @@ namespace pwiz.Skyline
                     listGraphs.Reverse();
             }
             return listGraphs;
+        }
+
+        public DateTime? GetRunStartTime(ChromatogramSet chromatogramSet)
+        {
+            DateTime? runStartTime = null;
+            foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
+            {
+                if (!fileInfo.RunStartTime.HasValue)
+                {
+                    continue;
+                }
+                if (!runStartTime.HasValue || runStartTime.Value > fileInfo.RunStartTime.Value)
+                {
+                    runStartTime = fileInfo.RunStartTime;
+                }
+            }
+            return runStartTime;
         }
 
         #endregion
