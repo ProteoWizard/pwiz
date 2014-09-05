@@ -2022,24 +2022,6 @@
   <data name="arrangeTiledMenuItem.Text" xml:space="preserve">
     <value>&amp;Tiled</value>
   </data>
-  <data name="arrangeColumnMenuItem.ShowShortcutKeys" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="arrangeColumnMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
-  </data>
-  <data name="arrangeColumnMenuItem.Text" xml:space="preserve">
-    <value>&amp;Column</value>
-  </data>
-  <data name="arrangeRowMenuItem.ShowShortcutKeys" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="arrangeRowMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>187, 22</value>
-  </data>
-  <data name="arrangeRowMenuItem.Text" xml:space="preserve">
-    <value>&amp;Row</value>
-  </data>
   <data name="arrangedTabbedMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+T</value>
   </data>
@@ -4393,18 +4375,6 @@
     <value>arrangeTiledMenuItem</value>
   </data>
   <data name="&gt;&gt;arrangeTiledMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;arrangeColumnMenuItem.Name" xml:space="preserve">
-    <value>arrangeColumnMenuItem</value>
-  </data>
-  <data name="&gt;&gt;arrangeColumnMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;arrangeRowMenuItem.Name" xml:space="preserve">
-    <value>arrangeRowMenuItem</value>
-  </data>
-  <data name="&gt;&gt;arrangeRowMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;arrangedTabbedMenuItem.Name" xml:space="preserve">

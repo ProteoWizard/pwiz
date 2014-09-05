@@ -5888,33 +5888,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Column.
-        /// </summary>
-        public static string DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column {
-            get {
-                return ResourceManager.GetString("DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Row.
-        /// </summary>
-        public static string DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row {
-            get {
-                return ResourceManager.GetString("DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Tiled.
-        /// </summary>
-        public static string DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled {
-            get {
-                return ResourceManager.GetString("DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Index {0} exceeds length {1}.
         /// </summary>
         public static string DocNodeParent_GetPathTo_Index__0__exceeds_length__1__ {
@@ -9995,15 +9968,6 @@ namespace pwiz.Skyline.Properties {
         public static string GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns {
             get {
                 return ResourceManager.GetString("GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Acquired Time.
-        /// </summary>
-        public static string GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time {
-            get {
-                return ResourceManager.GetString("GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time", resourceCulture);
             }
         }
         

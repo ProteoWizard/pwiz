@@ -324,8 +324,6 @@ namespace pwiz.Skyline
             this.toolStripSeparator32 = new System.Windows.Forms.ToolStripSeparator();
             this.arrangeGraphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangeTiledMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.arrangeColumnMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.arrangeRowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangedTabbedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator39 = new System.Windows.Forms.ToolStripSeparator();
@@ -2501,8 +2499,6 @@ namespace pwiz.Skyline
             // 
             this.arrangeGraphsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.arrangeTiledMenuItem,
-            this.arrangeColumnMenuItem,
-            this.arrangeRowMenuItem,
             this.arrangedTabbedMenuItem,
             this.groupedMenuItem});
             this.arrangeGraphsToolStripMenuItem.Name = "arrangeGraphsToolStripMenuItem";
@@ -2513,18 +2509,6 @@ namespace pwiz.Skyline
             this.arrangeTiledMenuItem.Name = "arrangeTiledMenuItem";
             resources.ApplyResources(this.arrangeTiledMenuItem, "arrangeTiledMenuItem");
             this.arrangeTiledMenuItem.Click += new System.EventHandler(this.arrangeTiledMenuItem_Click);
-            // 
-            // arrangeColumnMenuItem
-            // 
-            this.arrangeColumnMenuItem.Name = "arrangeColumnMenuItem";
-            resources.ApplyResources(this.arrangeColumnMenuItem, "arrangeColumnMenuItem");
-            this.arrangeColumnMenuItem.Click += new System.EventHandler(this.arrangeColumnMenuItem_Click);
-            // 
-            // arrangeRowMenuItem
-            // 
-            this.arrangeRowMenuItem.Name = "arrangeRowMenuItem";
-            resources.ApplyResources(this.arrangeRowMenuItem, "arrangeRowMenuItem");
-            this.arrangeRowMenuItem.Click += new System.EventHandler(this.arrangeRowMenuItem_Click);
             // 
             // arrangedTabbedMenuItem
             // 
@@ -3583,8 +3567,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem sortProteinsByGeneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem compareModelsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem startPageMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem arrangeColumnMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem arrangeRowMenuItem;
     }
 }
 

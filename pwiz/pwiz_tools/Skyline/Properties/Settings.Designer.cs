@@ -1968,17 +1968,5 @@ namespace pwiz.Skyline.Properties {
                 this["StartPageMaximized"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Tiled")]
-        public string DisplayGraphsType {
-            get {
-                return ((string)(this["DisplayGraphsType"]));
-            }
-            set {
-                this["DisplayGraphsType"] = value;
-            }
-        }
     }
 }
